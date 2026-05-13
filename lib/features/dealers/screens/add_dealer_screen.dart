@@ -7,6 +7,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
 
@@ -45,6 +46,10 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
     await repo.upsertDealer(

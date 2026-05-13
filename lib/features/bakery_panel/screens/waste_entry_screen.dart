@@ -9,6 +9,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/product_choice_chips.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/waste_entry.dart';
 import '../providers/bakery_providers.dart';
 
@@ -50,22 +51,28 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
       _err('Adet sıfırdan büyük olmalı.');
       return;
     }
-    final repo = ref.read(bakeryRepositoryProvider);
-    final now = DateTime.now();
-    await repo.addWaste(
-      WasteEntry(
-        id: now.microsecondsSinceEpoch.toString(),
-        product: _product!,
-        quantity: qty,
-        unitValue: value,
-        note: _note.text.trim(),
-        createdAt: now,
-      ),
-    );
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Fire kaydedildi: $qty $_product')),
+    await AuthRequiredGuard.runOrPrompt(
+      context,
+      ref,
+      action: () async {
+        final repo = ref.read(bakeryRepositoryProvider);
+        final now = DateTime.now();
+        await repo.addWaste(
+          WasteEntry(
+            id: now.microsecondsSinceEpoch.toString(),
+            product: _product!,
+            quantity: qty,
+            unitValue: value,
+            note: _note.text.trim(),
+            createdAt: now,
+          ),
+        );
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fire kaydedildi: $qty $_product')),
+        );
+      },
     );
   }
 

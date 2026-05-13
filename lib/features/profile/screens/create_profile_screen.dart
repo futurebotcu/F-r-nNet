@@ -13,6 +13,20 @@ import '../../auth/providers/guest_mode_provider.dart';
 import '../models/bakery_profile.dart';
 import '../providers/profile_provider.dart';
 
+/// Form'da kullanıcı bir şey yazmışsa true. CreateProfileScreen'in escape
+/// confirm dialog'unda kontrol edilir.
+bool _hasDirtyInput({
+  required String name,
+  required String city,
+  required String email,
+  required String password,
+}) {
+  return name.trim().isNotEmpty ||
+      city.trim().isNotEmpty ||
+      email.trim().isNotEmpty ||
+      password.isNotEmpty;
+}
+
 /// Profil oluşturma / tamamlama ekranı.
 ///
 /// V1.3:
@@ -107,6 +121,63 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     final value = (v ?? '').trim();
     if (value.isEmpty) return labelMissing;
     return null;
+  }
+
+  /// V1.3.1 — "Üye olmadan gezmeye devam et" escape hatch.
+  ///
+  /// 3 senaryo:
+  /// 1. currentUser null → guest flag set + /feed
+  /// 2. currentUser var ama profile incomplete → signOut + guest set + /feed
+  /// 3. Form'da yazılı veri varsa → confirm dialog
+  Future<void> _continueAsGuest() async {
+    final dirty = _hasDirtyInput(
+      name: _nameCtrl.text,
+      city: _cityCtrl.text,
+      email: _emailCtrl.text,
+      password: _passwordCtrl.text,
+    );
+    if (dirty) {
+      final keep = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text(AppStrings.profileCreateDiscardTitle),
+          content: const Text(AppStrings.profileCreateDiscardBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text(AppStrings.profileCreateDiscardKeep),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.copper,
+              ),
+              child: const Text(AppStrings.profileCreateDiscardLeave),
+            ),
+          ],
+        ),
+      );
+      if (keep != true) return;
+    }
+
+    final auth = ref.read(authRepositoryProvider);
+    final currentUser = auth?.currentUser;
+
+    // Senaryo 2: incomplete authenticated session → signOut + temizlik.
+    if (currentUser != null) {
+      try {
+        await auth!.signOut();
+      } catch (_) {
+        // Ağ kopuk olsa bile local state temizle.
+      }
+      ref.read(profileControllerProvider.notifier).clear();
+    }
+
+    // Senaryo 1 + 2: guest flag set, feed'e geç.
+    await ref.read(guestModeProvider.notifier).setGuest(true);
+    ref.read(profileControllerProvider.notifier).useGuest();
+    if (!mounted) return;
+    context.go(AppRoutes.feed);
   }
 
   Future<void> _save() async {
@@ -285,6 +356,35 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               label: _submitting ? '…' : AppStrings.save,
               icon: Icons.check_rounded,
               onPressed: _submitting ? null : _save,
+            ),
+            const SizedBox(height: AppSpacing.s),
+            SizedBox(
+              height: 48,
+              child: TextButton(
+                onPressed: _submitting ? null : _continueAsGuest,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textMuted,
+                ),
+                child: const Text(
+                  AppStrings.profileCreateGuestEscape,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+              child: Text(
+                AppStrings.profileCreateGuestHint,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textMuted,
+                  fontSize: 11.5,
+                  height: 1.4,
+                ),
+              ),
             ),
           ],
         ),

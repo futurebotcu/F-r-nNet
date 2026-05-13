@@ -9,6 +9,7 @@ import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/product_choice_chips.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/production_entry.dart';
 import '../providers/bakery_providers.dart';
 
@@ -43,21 +44,27 @@ class _ProductionEntryScreenState
       _err('Adet sıfırdan büyük olmalı.');
       return;
     }
-    final repo = ref.read(bakeryRepositoryProvider);
-    final now = DateTime.now();
-    await repo.addProduction(
-      ProductionEntry(
-        id: now.microsecondsSinceEpoch.toString(),
-        product: _product!,
-        quantity: qty,
-        note: _note.text.trim(),
-        createdAt: now,
-      ),
-    );
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Üretim kaydedildi: $qty $_product')),
+    await AuthRequiredGuard.runOrPrompt(
+      context,
+      ref,
+      action: () async {
+        final repo = ref.read(bakeryRepositoryProvider);
+        final now = DateTime.now();
+        await repo.addProduction(
+          ProductionEntry(
+            id: now.microsecondsSinceEpoch.toString(),
+            product: _product!,
+            quantity: qty,
+            note: _note.text.trim(),
+            createdAt: now,
+          ),
+        );
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Üretim kaydedildi: $qty $_product')),
+        );
+      },
     );
   }
 

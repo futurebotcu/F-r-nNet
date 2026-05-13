@@ -12,6 +12,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../data/recipe_products.dart';
 import '../models/recipe_metadata.dart';
 import '../models/recipe_quantities.dart';
@@ -276,6 +277,12 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
       mediaHints: _existing?.metadata.mediaHints ?? const <String>[],
     );
+
+    // V1.3.1 — guest kullanıcı reçete kaydedemez; AuthRequired sheet açılır.
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
 
     final user = ref.read(currentAuthUserProvider);
     final draft = Recipe(

@@ -10,6 +10,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/product_choice_chips.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 
@@ -64,6 +65,10 @@ class _DealerReturnFormScreenState
     final price = NumberFormatter.parseLoose(_unitPrice.text);
     if (qty <= 0) {
       _err(AppStrings.dealerErrQtyPositive);
+      return;
+    }
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
       return;
     }
     final repo = ref.read(dealerRepositoryProvider);

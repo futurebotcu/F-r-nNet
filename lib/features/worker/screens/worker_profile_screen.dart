@@ -8,6 +8,7 @@ import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/worker_profile.dart';
 import '../providers/worker_providers.dart';
 
@@ -129,6 +130,10 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
   }
 
   Future<void> _save() async {
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     setState(() => _saving = true);
     try {
       final repo = ref.read(workerRepositoryProvider);

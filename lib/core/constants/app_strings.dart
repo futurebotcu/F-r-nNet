@@ -51,6 +51,28 @@ class AppStrings {
   static const String authGuestDataWriteBlock =
       'Bu işlem için giriş yapman gerekiyor.';
 
+  // V1.3.1 — AuthRequired bottom sheet (guest write action prompt)
+  static const String authRequiredTitle =
+      'Hesabını oluştur, kaydın sende kalsın';
+  static const String authRequiredBody =
+      'Bu işlemi kaydetmek için FırınNet hesabı gerekir. Hesap oluşturduğunda '
+      'reçetelerin, bayi kayıtların ve ilanların sana özel saklanır.';
+  static const String authRequiredCreate = 'Hesap oluştur';
+  static const String authRequiredSignIn = 'Giriş yap';
+  static const String authRequiredKeepBrowsing = 'Şimdilik gezmeye devam et';
+
+  // V1.3.1 — Profile create escape hatch
+  static const String profileCreateGuestEscape =
+      'Üye olmadan gezmeye devam et';
+  static const String profileCreateGuestHint =
+      'İstersen daha sonra hesap oluşturabilirsin.';
+  static const String profileCreateDiscardTitle = 'Formdan çıkılsın mı?';
+  static const String profileCreateDiscardBody =
+      'Girdiğin profil bilgileri kaydedilmeyecek. Kayıtsız gezmeye devam '
+      'edebilirsin.';
+  static const String profileCreateDiscardKeep = 'Forma dön';
+  static const String profileCreateDiscardLeave = 'Gezmeye devam et';
+
   // Profile
   static const String accountType = 'Hesap türü';
   static const String accountCommercial = 'Ticari';

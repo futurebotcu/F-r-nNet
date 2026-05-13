@@ -9,6 +9,7 @@ import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/job_seek_post.dart';
 import '../providers/worker_providers.dart';
 
@@ -94,6 +95,10 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Başlık boş olamaz.')),
       );
+      return;
+    }
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
       return;
     }
     setState(() => _saving = true);

@@ -9,6 +9,7 @@ import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 
@@ -54,6 +55,10 @@ class _DealerAdjustmentFormScreenState
       return;
     }
     final signed = _direction == _AdjustDirection.add ? raw : -raw;
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
     await repo.addTransaction(
