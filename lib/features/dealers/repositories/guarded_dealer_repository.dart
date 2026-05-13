@@ -1,0 +1,99 @@
+import '../../auth/services/auth_required_guard.dart';
+import '../models/dealer.dart';
+import '../models/dealer_note.dart';
+import '../models/dealer_price.dart';
+import '../models/dealer_transaction.dart';
+import 'dealer_repository.dart';
+
+/// V1.3.3 — guest write korumalı [DealerRepository] dekoratörü.
+class GuardedDealerRepository implements DealerRepository {
+  GuardedDealerRepository({required this.inner, required this.canWriteCheck});
+
+  final DealerRepository inner;
+  final bool Function() canWriteCheck;
+
+  void _requireWrite(String action) {
+    if (!canWriteCheck()) {
+      throw GuestActionRequiredException(action: action);
+    }
+  }
+
+  // ── Read ────────────────────────────────────────────
+
+  @override
+  Future<List<Dealer>> listDealers({
+    bool? activeOnly,
+    DealerCustomerType? customerType,
+  }) =>
+      inner.listDealers(activeOnly: activeOnly, customerType: customerType);
+
+  @override
+  Future<Dealer?> getDealer(String id) => inner.getDealer(id);
+
+  @override
+  Future<List<DealerPrice>> listPrices(String dealerId) =>
+      inner.listPrices(dealerId);
+
+  @override
+  Future<DealerPrice?> currentPriceFor({
+    required String dealerId,
+    required String productName,
+  }) =>
+      inner.currentPriceFor(dealerId: dealerId, productName: productName);
+
+  @override
+  Future<List<DealerTransaction>> listTransactions(String dealerId) =>
+      inner.listTransactions(dealerId);
+
+  @override
+  Future<List<DealerTransaction>> listAllTransactions() =>
+      inner.listAllTransactions();
+
+  @override
+  Future<List<DealerNote>> listNotes(String dealerId) =>
+      inner.listNotes(dealerId);
+
+  @override
+  Stream<void> watch() => inner.watch();
+
+  // ── Write (guarded) ────────────────────────────────
+
+  @override
+  Future<void> upsertDealer(Dealer dealer) {
+    final action = dealer.customerType == DealerCustomerType.wholesaleCustomer
+        ? 'müşteri eklemek'
+        : 'bayi eklemek';
+    _requireWrite(action);
+    return inner.upsertDealer(dealer);
+  }
+
+  @override
+  Future<void> setActive(String dealerId, {required bool active}) {
+    _requireWrite('bayi durumunu güncellemek');
+    return inner.setActive(dealerId, active: active);
+  }
+
+  @override
+  Future<void> addPrice(DealerPrice price) {
+    _requireWrite('bayi fiyatı eklemek');
+    return inner.addPrice(price);
+  }
+
+  @override
+  Future<void> addTransaction(DealerTransaction tx) {
+    final action = switch (tx.type) {
+      DealerTransactionType.delivery => 'teslimat kaydetmek',
+      DealerTransactionType.returned => 'iade kaydetmek',
+      DealerTransactionType.payment => 'tahsilat kaydetmek',
+      DealerTransactionType.adjustment => 'bakiye düzeltmesi yapmak',
+    };
+    _requireWrite(action);
+    return inner.addTransaction(tx);
+  }
+
+  @override
+  Future<void> addNote(DealerNote note) {
+    _requireWrite('bayi notu eklemek');
+    return inner.addNote(note);
+  }
+}

@@ -3,9 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/providers/can_write_check_provider.dart';
 import '../models/daily_summary.dart';
 import '../models/recipe_record.dart';
 import '../repositories/bakery_repository.dart';
+import '../repositories/guarded_bakery_repository.dart';
+import '../repositories/guarded_recipe_repository.dart';
 import '../repositories/local_bakery_repository.dart';
 import '../repositories/local_recipe_repository.dart';
 import '../repositories/recipe_repository.dart';
@@ -15,14 +18,17 @@ import '../services/recipe_calculator.dart';
 import '../services/recipe_share_text_builder.dart';
 import '../services/report_builder.dart';
 
-/// Bakery repository — Supabase yapılandırılmış + oturum açık ise gerçek
-/// veri katmanı; aksi halde in-memory local (eski mock akış korunur).
+/// V1.3.3 — Guarded wrapper ile sarılı bakery repository.
 final bakeryRepositoryProvider = Provider<BakeryRepository>((ref) {
   final user = ref.watch(currentAuthUserProvider);
+  final BakeryRepository inner;
   if (AppConfig.supabaseEnabled && user != null) {
-    return SupabaseBakeryRepository(sb.Supabase.instance.client);
+    inner = SupabaseBakeryRepository(sb.Supabase.instance.client);
+  } else {
+    inner = LocalBakeryRepository();
   }
-  return LocalBakeryRepository();
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedBakeryRepository(inner: inner, canWriteCheck: canWrite);
 });
 
 final recipeCalculatorProvider = Provider<RecipeCalculator>((ref) {
@@ -33,14 +39,17 @@ final recipeShareTextBuilderProvider = Provider<RecipeShareTextBuilder>((ref) {
   return const RecipeShareTextBuilder();
 });
 
-/// Reçete kütüphanesi repository — Supabase yapılandırılmış + oturum açık ise
-/// SupabaseRecipeRepository; aksi halde LocalRecipeRepository (in-memory).
+/// V1.3.3 — Guarded wrapper ile sarılı recipe repository.
 final recipeRepositoryProvider = Provider<RecipeRepository>((ref) {
   final user = ref.watch(currentAuthUserProvider);
+  final RecipeRepository inner;
   if (AppConfig.supabaseEnabled && user != null) {
-    return SupabaseRecipeRepository(sb.Supabase.instance.client);
+    inner = SupabaseRecipeRepository(sb.Supabase.instance.client);
+  } else {
+    inner = LocalRecipeRepository();
   }
-  return LocalRecipeRepository();
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedRecipeRepository(inner: inner, canWriteCheck: canWrite);
 });
 
 /// Repository değişikliklerini dinleyen "tick" sayacı.

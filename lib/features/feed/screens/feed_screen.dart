@@ -342,15 +342,22 @@ class _CarouselGroupCard extends ConsumerWidget {
           context.push('${AppRoutes.groups}/${group.id}');
           return;
         }
-        final repo = ref.read(socialGroupRepositoryProvider);
-        final r = await repo.joinGroup(group.id);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(r.message)),
+        // V1.3.3 — repo guarded; runGuardedMutation guest exception'ı yakalar.
+        await runGuardedMutation(
+          context,
+          ref,
+          action: () async {
+            final repo = ref.read(socialGroupRepositoryProvider);
+            final r = await repo.joinGroup(group.id);
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(r.message)),
+            );
+            if (r == GroupJoinResult.success) {
+              context.push('${AppRoutes.groups}/${group.id}');
+            }
+          },
         );
-        if (r == GroupJoinResult.success) {
-          context.push('${AppRoutes.groups}/${group.id}');
-        }
       },
     );
   }

@@ -1,41 +1,42 @@
 // Repository provider seçim testi.
 //
-// AppConfig.supabaseEnabled false ise (dart-define verilmedi):
-//   - bakeryRepositoryProvider → LocalBakeryRepository
-//   - dealerRepositoryProvider → LocalDealerRepository (seed: true)
+// V1.3.3 — Provider'lar GuardedX wrapper döner; inner LocalX olur. Test artık
+// wrap kontratını doğrulamayı hedefler: tip GuardedX, davranış inner Local'la
+// aynı (seed dahil).
 //
-// Supabase enabled + currentUser null ise yine Local'a düşer (yan etkisi yok,
-// crash etmez). Bu test sadece "anahtarsız çalıştırma" senaryosunu kanıtlar;
-// Supabase enabled durumu integration test ile karşılanır (canlı client gerekir).
+// AppConfig.supabaseEnabled false ise (dart-define verilmedi):
+//   - bakeryRepositoryProvider → GuardedBakeryRepository(inner: LocalBakeryRepository)
+//   - dealerRepositoryProvider → GuardedDealerRepository(inner: LocalDealerRepository(seed: true))
 
 import 'package:firin_defter/features/bakery_panel/repositories/bakery_repository.dart';
-import 'package:firin_defter/features/bakery_panel/repositories/local_bakery_repository.dart';
+import 'package:firin_defter/features/bakery_panel/repositories/guarded_bakery_repository.dart';
 import 'package:firin_defter/features/bakery_panel/providers/bakery_providers.dart';
 import 'package:firin_defter/features/dealers/repositories/dealer_repository.dart';
-import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
+import 'package:firin_defter/features/dealers/repositories/guarded_dealer_repository.dart';
 import 'package:firin_defter/features/dealers/providers/dealer_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('anahtarsız çalıştırmada bakery repo Local impl', () {
+  test('anahtarsız çalıştırmada bakery repo Guarded wrapper döner', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
     final repo = container.read(bakeryRepositoryProvider);
     expect(repo, isA<BakeryRepository>());
-    expect(repo, isA<LocalBakeryRepository>());
+    expect(repo, isA<GuardedBakeryRepository>());
   });
 
-  test('anahtarsız çalıştırmada dealer repo Local impl + seed', () async {
+  test('anahtarsız çalıştırmada dealer repo Guarded wrapper + seed okunur',
+      () async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
     final repo = container.read(dealerRepositoryProvider);
     expect(repo, isA<DealerRepository>());
-    expect(repo, isA<LocalDealerRepository>());
+    expect(repo, isA<GuardedDealerRepository>());
 
-    // Seed default true: 4 demo bayi gelmeli.
+    // Seed default true: 4 demo bayi inner'dan okunur (read forwards).
     final dealers = await repo.listDealers();
     expect(dealers.length, 4);
   });

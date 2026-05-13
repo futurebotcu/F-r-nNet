@@ -1,17 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/providers/can_write_check_provider.dart';
 import '../models/group_category.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
+import '../repositories/guarded_social_group_repository.dart';
 import '../repositories/local_social_group_repository.dart';
 import '../repositories/social_group_repository.dart';
 import '../services/group_validator.dart';
 
-/// V1: local + seed.
-/// V2: SupabaseSocialGroupRepository — burada swap edilir, UI değişmez.
+/// V1.3.3 — Guarded wrapper ile sarılı social group repository.
 final socialGroupRepositoryProvider =
     Provider<SocialGroupRepository>((ref) {
-  return LocalSocialGroupRepository(seed: true);
+  final SocialGroupRepository inner = LocalSocialGroupRepository(seed: true);
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedSocialGroupRepository(inner: inner, canWriteCheck: canWrite);
 });
 
 final groupValidatorProvider = Provider<GroupValidator>((ref) {

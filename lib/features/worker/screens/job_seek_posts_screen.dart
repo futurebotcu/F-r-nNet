@@ -10,6 +10,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/job_seek_post.dart';
 import '../providers/worker_providers.dart';
 
@@ -165,9 +166,15 @@ class _PostCard extends ConsumerWidget {
 
   Future<void> _toggleActive(BuildContext context, WidgetRef ref) async {
     if (post.id == null) return;
-    await ref
-        .read(workerRepositoryProvider)
-        .upsertJobSeekPost(post.copyWith(isActive: !post.isActive));
+    await runGuardedMutation(
+      context,
+      ref,
+      action: () async {
+        await ref
+            .read(workerRepositoryProvider)
+            .upsertJobSeekPost(post.copyWith(isActive: !post.isActive));
+      },
+    );
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
@@ -190,7 +197,13 @@ class _PostCard extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
-    await ref.read(workerRepositoryProvider).deleteJobSeekPost(post.id!);
+    await runGuardedMutation(
+      context,
+      ref,
+      action: () async {
+        await ref.read(workerRepositoryProvider).deleteJobSeekPost(post.id!);
+      },
+    );
   }
 }
 

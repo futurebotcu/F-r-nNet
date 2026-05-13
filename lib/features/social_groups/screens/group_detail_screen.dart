@@ -409,21 +409,29 @@ class _PrimaryAction extends ConsumerWidget {
       child: FilledButton.icon(
         onPressed: enabled
             ? () async {
-                if (isJoined) {
-                  await repo.leaveGroup(group.id);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(AppStrings.groupDetailLeaveSnackSuccess),
-                    ),
-                  );
-                } else {
-                  final r = await repo.joinGroup(group.id);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(r.message)),
-                  );
-                }
+                // V1.3.3 — guarded repo guest exception atar; helper yakalar.
+                await runGuardedMutation(
+                  context,
+                  ref,
+                  action: () async {
+                    if (isJoined) {
+                      await repo.leaveGroup(group.id);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              AppStrings.groupDetailLeaveSnackSuccess),
+                        ),
+                      );
+                    } else {
+                      final r = await repo.joinGroup(group.id);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(r.message)),
+                      );
+                    }
+                  },
+                );
               }
             : null,
         icon: Icon(icon, size: 18),

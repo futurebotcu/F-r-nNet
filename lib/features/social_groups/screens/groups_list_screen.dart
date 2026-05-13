@@ -10,6 +10,7 @@ import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/group_category.dart';
 import '../models/social_group.dart';
 import '../providers/social_group_providers.dart';
@@ -265,15 +266,21 @@ class _GroupCardWired extends ConsumerWidget {
           context.push('${AppRoutes.groups}/${group.id}');
           return;
         }
-        final repo = ref.read(socialGroupRepositoryProvider);
-        final r = await repo.joinGroup(group.id);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(r.message)),
+        await runGuardedMutation(
+          context,
+          ref,
+          action: () async {
+            final repo = ref.read(socialGroupRepositoryProvider);
+            final r = await repo.joinGroup(group.id);
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(r.message)),
+            );
+            if (r == GroupJoinResult.success) {
+              context.push('${AppRoutes.groups}/${group.id}');
+            }
+          },
         );
-        if (r == GroupJoinResult.success) {
-          context.push('${AppRoutes.groups}/${group.id}');
-        }
       },
     );
   }

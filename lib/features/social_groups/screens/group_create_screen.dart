@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/group_category.dart';
 import '../providers/social_group_providers.dart';
 
@@ -79,22 +80,28 @@ class _GroupCreateScreenState extends ConsumerState<GroupCreateScreen> {
         .where((t) => t.isNotEmpty)
         .toList();
 
-    final group = await repo.createGroup(
-      name: _name.text.trim(),
-      description: _description.text.trim(),
-      category: _category,
-      city: _city.text.trim(),
-      isPrivate: _private,
-      maxMembers: _limit.value,
-      tags: tags,
+    await runGuardedMutation(
+      context,
+      ref,
+      action: () async {
+        final group = await repo.createGroup(
+          name: _name.text.trim(),
+          description: _description.text.trim(),
+          category: _category,
+          city: _city.text.trim(),
+          isPrivate: _private,
+          maxMembers: _limit.value,
+          tags: tags,
+        );
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('${AppStrings.groupCreatedSnack}${group.name}')),
+        );
+        context.push('${AppRoutes.groups}/${group.id}');
+      },
     );
-
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${AppStrings.groupCreatedSnack}${group.name}')),
-    );
-    context.push('${AppRoutes.groups}/${group.id}');
   }
 
   @override

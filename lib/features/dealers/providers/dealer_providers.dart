@@ -3,27 +3,31 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/providers/can_write_check_provider.dart';
 import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
 import '../repositories/dealer_repository.dart';
+import '../repositories/guarded_dealer_repository.dart';
 import '../repositories/local_dealer_repository.dart';
 import '../repositories/supabase_dealer_repository.dart';
 import '../services/dealer_balance_service.dart';
 import '../services/dealer_pdf_builder.dart';
 import '../services/dealer_share_builder.dart';
 
-/// Dealer repository — Supabase yapılandırılmış + oturum açık ise Supabase
-/// (hibrit: dealers + delivery'ler gerçek tabloya, payment/return/adjustment +
-/// price + multi-note compose-local). Aksi halde tam local + demo seed.
+/// V1.3.3 — Guarded wrapper ile sarılı dealer repository.
 final dealerRepositoryProvider = Provider<DealerRepository>((ref) {
   final user = ref.watch(currentAuthUserProvider);
+  final DealerRepository inner;
   if (AppConfig.supabaseEnabled && user != null) {
-    return SupabaseDealerRepository(sb.Supabase.instance.client);
+    inner = SupabaseDealerRepository(sb.Supabase.instance.client);
+  } else {
+    inner = LocalDealerRepository(seed: true);
   }
-  return LocalDealerRepository(seed: true);
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedDealerRepository(inner: inner, canWriteCheck: canWrite);
 });
 
 final dealerBalanceServiceProvider = Provider<DealerBalanceService>((ref) {

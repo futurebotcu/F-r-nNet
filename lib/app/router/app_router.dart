@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/bakery_panel/screens/bakery_panel_screen.dart';
 import '../../features/bakery_panel/screens/calculator_screen.dart';
-import '../../features/bakery_panel/screens/dealer_delivery_screen.dart';
 import '../../features/bakery_panel/screens/end_of_day_screen.dart';
 import '../../features/bakery_panel/screens/production_entry_screen.dart';
 import '../../features/bakery_panel/screens/recipe_detail_screen.dart';
@@ -212,10 +211,11 @@ GoRouter createRouter() {
         builder: (_, __) => const ProductionEntryScreen(),
       ),
       GoRoute(
-        // Legacy: V1'den kalan eski "Bayiye Ver" ekranı; artık panel grid'inde
-        // değil. Yeni Bayi Yönetimi /dealers altında.
+        // V1.3.3 — Legacy /panel/dealer route'u artık /dealers'a redirect.
+        // Eski deeplink'ler (eski build / paylaşılan link) bozulmadan yeni
+        // bayi paneline yönlenir; guest user için StateError leak'i engellenir.
         path: AppRoutes.dealer,
-        builder: (_, __) => const DealerDeliveryScreen(),
+        redirect: (_, __) => AppRoutes.dealers,
       ),
       GoRoute(
         path: AppRoutes.waste,

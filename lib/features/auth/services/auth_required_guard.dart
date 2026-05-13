@@ -83,6 +83,77 @@ class AuthRequiredGuard {
   }
 }
 
+/// Repository katmanından fırlatılan kontrollü exception.
+///
+/// V1.3.3 mimarisi: yazma yetkisi olmayan kullanıcı (guest/unauthenticated)
+/// `Guarded<X>Repository.write*` metodunu çağırdığında bu exception atılır.
+/// UI tarafı [runGuardedMutation] helper'ı ile yakalayıp [AuthRequiredSheet]
+/// açar.
+///
+/// Bu pattern UI-level pre-check'lere ek olarak (defense-in-depth) çalışır;
+/// UI'da unutulan bir guard olsa bile repo katmanı write işlemini engeller.
+class GuestActionRequiredException implements Exception {
+  const GuestActionRequiredException({this.action});
+
+  /// İsteğe bağlı bağlam — örn. 'gruba katılmak', 'reçete kaydetmek'.
+  /// AuthRequired sheet metni şu an statik; bu alan ileride dinamikleştirme
+  /// için kullanılabilir.
+  final String? action;
+
+  @override
+  String toString() => action == null
+      ? 'Guest action blocked.'
+      : 'Guest action blocked: $action';
+}
+
+/// Repository wrapper'larının write metodlarının başında çağıracağı
+/// guard fonksiyonu. Auth yetkisi yoksa [GuestActionRequiredException] atar.
+///
+/// Kullanım (örnek wrapper):
+/// ```dart
+/// class GuardedFooRepository implements FooRepository {
+///   GuardedFooRepository({required this.inner, required this.canWriteCheck});
+///   final FooRepository inner;
+///   final bool Function() canWriteCheck;
+///
+///   void _requireWrite(String action) {
+///     if (!canWriteCheck()) {
+///       throw GuestActionRequiredException(action: action);
+///     }
+///   }
+///
+///   @override
+///   Future<void> save(...) {
+///     _requireWrite('foo kaydetmek');
+///     return inner.save(...);
+///   }
+/// }
+/// ```
+
+/// UI-side mutation runner.
+///
+/// [action]'ı çalıştırır. Eğer içeride `GuestActionRequiredException`
+/// fırlarsa [AuthRequiredSheet] açılır ve sessizce yutulur. Başarılıysa
+/// `true`, engellenirse `false` döner.
+///
+/// Bu helper, UI'da `canWriteWithRef` pre-check'i unutulsa bile repo
+/// katmanının attığı exception'ı yakalayıp kullanıcıyı doğru yere yönlendirir.
+Future<bool> runGuardedMutation(
+  BuildContext context,
+  WidgetRef ref, {
+  required Future<void> Function() action,
+}) async {
+  try {
+    await action();
+    return true;
+  } on GuestActionRequiredException {
+    if (context.mounted) {
+      await showAuthRequiredSheet(context, ref);
+    }
+    return false;
+  }
+}
+
 /// AuthRequired bottom sheet — guest kullanıcıya hesap teklif eder.
 Future<void> showAuthRequiredSheet(BuildContext context, WidgetRef ref) {
   return showModalBottomSheet<void>(

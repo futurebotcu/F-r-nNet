@@ -169,7 +169,15 @@ class _ExperienceCard extends ConsumerWidget {
       ),
     );
     if (ok != true || experience.id == null) return;
-    await ref.read(workerRepositoryProvider).deleteExperience(experience.id!);
+    await runGuardedMutation(
+      context,
+      ref,
+      action: () async {
+        await ref
+            .read(workerRepositoryProvider)
+            .deleteExperience(experience.id!);
+      },
+    );
   }
 }
 

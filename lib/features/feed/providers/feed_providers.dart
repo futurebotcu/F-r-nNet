@@ -1,15 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/providers/can_write_check_provider.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
 import '../repositories/feed_repository.dart';
+import '../repositories/guarded_feed_repository.dart';
 import '../repositories/local_feed_repository.dart';
 
-/// V1: local + seed.
-/// V2: SupabaseFeedRepository — burada swap edilir, UI değişmez.
+/// V1.3.3 — Guarded wrapper ile sarılı feed repository.
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
-  return LocalFeedRepository(seed: true);
+  final FeedRepository inner = LocalFeedRepository(seed: true);
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedFeedRepository(inner: inner, canWriteCheck: canWrite);
 });
 
 /// Repository değişikliklerini dinleyen tick.

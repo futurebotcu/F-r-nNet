@@ -3,18 +3,25 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/providers/can_write_check_provider.dart';
 import '../models/job_seek_post.dart';
 import '../models/worker_profile.dart';
+import '../repositories/guarded_worker_repository.dart';
 import '../repositories/local_worker_repository.dart';
 import '../repositories/supabase_worker_repository.dart';
 import '../repositories/worker_repository.dart';
 
+/// V1.3.3 — Guarded wrapper ile sarılı worker repository.
 final workerRepositoryProvider = Provider<WorkerRepository>((ref) {
   final user = ref.watch(currentAuthUserProvider);
+  final WorkerRepository inner;
   if (AppConfig.supabaseEnabled && user != null) {
-    return SupabaseWorkerRepository(sb.Supabase.instance.client);
+    inner = SupabaseWorkerRepository(sb.Supabase.instance.client);
+  } else {
+    inner = LocalWorkerRepository();
   }
-  return LocalWorkerRepository();
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedWorkerRepository(inner: inner, canWriteCheck: canWrite);
 });
 
 final workerChangesProvider = StreamProvider<void>((ref) {

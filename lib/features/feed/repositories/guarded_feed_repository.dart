@@ -1,0 +1,66 @@
+import '../../auth/services/auth_required_guard.dart';
+import '../models/feed_insight.dart';
+import '../models/feed_post.dart';
+import '../models/post_type.dart';
+import 'feed_repository.dart';
+
+/// V1.3.3 — guest write korumalı [FeedRepository] dekoratörü.
+///
+/// Read metodları doğrudan [inner]'a delege; write metodları
+/// `canWriteCheck()` false dönerse [GuestActionRequiredException] atar.
+class GuardedFeedRepository implements FeedRepository {
+  GuardedFeedRepository({required this.inner, required this.canWriteCheck});
+
+  final FeedRepository inner;
+  final bool Function() canWriteCheck;
+
+  void _requireWrite(String action) {
+    if (!canWriteCheck()) {
+      throw GuestActionRequiredException(action: action);
+    }
+  }
+
+  // ── Read (delege) ────────────────────────────────────────────
+
+  @override
+  Future<List<FeedPost>> listPosts({PostType? type}) =>
+      inner.listPosts(type: type);
+
+  @override
+  Future<List<FeedInsight>> listInsights() => inner.listInsights();
+
+  @override
+  Stream<void> watch() => inner.watch();
+
+  // ── Write (guarded) ───────────────────────────────────────────
+
+  @override
+  Future<FeedPost> addPost({
+    required PostType type,
+    required String author,
+    required String role,
+    required String text,
+    List<String> tags = const <String>[],
+  }) {
+    _requireWrite('feed gönderisi paylaşmak');
+    return inner.addPost(
+      type: type,
+      author: author,
+      role: role,
+      text: text,
+      tags: tags,
+    );
+  }
+
+  @override
+  Future<FeedPost> toggleLike(String postId) {
+    _requireWrite('gönderiyi beğenmek');
+    return inner.toggleLike(postId);
+  }
+
+  @override
+  Future<FeedPost> toggleSave(String postId) {
+    _requireWrite('gönderiyi kaydetmek');
+    return inner.toggleSave(postId);
+  }
+}

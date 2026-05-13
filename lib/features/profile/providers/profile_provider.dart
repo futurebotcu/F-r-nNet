@@ -6,14 +6,20 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../../core/config/app_config.dart';
 import '../../auth/models/auth_user.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/providers/can_write_check_provider.dart';
 import '../models/bakery_profile.dart';
+import '../repositories/guarded_profile_repository.dart';
 import '../repositories/profile_repository.dart';
 import '../repositories/supabase_profile_repository.dart';
 
-/// ProfileRepository — Supabase yoksa null (local-only / guest-only flow).
+/// V1.3.3 — Supabase varsa GuardedProfileRepository; yoksa null
+/// (local-only / guest-only flow korunur).
 final profileRepositoryProvider = Provider<ProfileRepository?>((ref) {
   if (!AppConfig.supabaseEnabled) return null;
-  return SupabaseProfileRepository(sb.Supabase.instance.client);
+  final ProfileRepository inner =
+      SupabaseProfileRepository(sb.Supabase.instance.client);
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedProfileRepository(inner: inner, canWriteCheck: canWrite);
 });
 
 /// `BakeryProfile?` durumunu yönetir.
