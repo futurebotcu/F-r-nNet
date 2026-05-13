@@ -146,6 +146,19 @@ class AppStrings {
   static const String cardMyRecipes = 'Reçetelerim';
   static const String cardMyRecipesSub = 'Hamur hesabı, malzeme, yapılış';
 
+  // V1.2 — yeni ortak/role kartlar
+  static const String cardCalculator = 'Hesaplama Makinesi';
+  static const String cardCalculatorSub = 'Un, su, maya, tuz → adet';
+  static const String cardWorkerProfile = 'Ustalık Bilgilerim';
+  static const String cardWorkerProfileSub = 'Meslek, tecrübe, beceri';
+  static const String cardWorkerExperiences = 'Çalışma Geçmişim';
+  static const String cardWorkerExperiencesSub = 'Önceki iş yerleri ve roller';
+  static const String cardWholesaleCustomers = 'Müşteriler / Bayiler';
+  static const String cardWholesaleCustomersSub =
+      'Teslimat, tahsilat, hesap özeti';
+  static const String cardWholesalePriceList = 'Fiyat Listesi';
+  static const String cardWholesalePriceListSub = 'Toptan fiyatları yönet';
+
   // Toptancı kartlar
   static const String cardPostProductListing = 'Ürün/Hizmet İlanı Ver';
   static const String cardPostProductListingSub = 'Market\'te yayına al';

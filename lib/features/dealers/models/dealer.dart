@@ -40,10 +40,49 @@ extension DealerWorkingTypeLabel on DealerWorkingType {
   }
 }
 
-/// Fırının çalıştığı bir bayi (bakkal, market, simit yeri vb.).
+/// Bayinin müşteri kategorisi.
 ///
-/// V1: in-memory. Şema Supabase'e olduğu gibi taşınabilir:
-/// dealers(id, name, contact_name, phone, area, working_type, is_active, note, created_at)
+/// V1.2: ticari kullanıcının bayisi (`bakery_dealer`) ve toptancı kullanıcısının
+/// müşterisi (`wholesale_customer`) aynı `dealers` tablosunu paylaşır.
+enum DealerCustomerType {
+  bakeryDealer,
+  wholesaleCustomer,
+}
+
+extension DealerCustomerTypeLabel on DealerCustomerType {
+  String get label {
+    switch (this) {
+      case DealerCustomerType.bakeryDealer:
+        return 'Bayi';
+      case DealerCustomerType.wholesaleCustomer:
+        return 'Müşteri';
+    }
+  }
+
+  String get persistKey {
+    switch (this) {
+      case DealerCustomerType.bakeryDealer:
+        return 'bakery_dealer';
+      case DealerCustomerType.wholesaleCustomer:
+        return 'wholesale_customer';
+    }
+  }
+
+  static DealerCustomerType fromPersistKey(String? key) {
+    switch (key) {
+      case 'wholesale_customer':
+        return DealerCustomerType.wholesaleCustomer;
+      case 'bakery_dealer':
+      default:
+        return DealerCustomerType.bakeryDealer;
+    }
+  }
+}
+
+/// Fırının çalıştığı bir bayi (bakkal, market, simit yeri vb.) veya
+/// toptancının bir müşterisi. [customerType] hangisi olduğunu söyler.
+///
+/// Supabase tablosu: `dealers` (V1 + V1.2 sütunları).
 class Dealer {
   const Dealer({
     required this.id,
@@ -54,6 +93,7 @@ class Dealer {
     this.workingType = DealerWorkingType.mixed,
     this.isActive = true,
     this.note = '',
+    this.customerType = DealerCustomerType.bakeryDealer,
     required this.createdAt,
   });
 
@@ -65,6 +105,7 @@ class Dealer {
   final DealerWorkingType workingType;
   final bool isActive;
   final String note;
+  final DealerCustomerType customerType;
   final DateTime createdAt;
 
   Dealer copyWith({
@@ -75,6 +116,7 @@ class Dealer {
     DealerWorkingType? workingType,
     bool? isActive,
     String? note,
+    DealerCustomerType? customerType,
   }) {
     return Dealer(
       id: id,
@@ -85,6 +127,7 @@ class Dealer {
       workingType: workingType ?? this.workingType,
       isActive: isActive ?? this.isActive,
       note: note ?? this.note,
+      customerType: customerType ?? this.customerType,
       createdAt: createdAt,
     );
   }

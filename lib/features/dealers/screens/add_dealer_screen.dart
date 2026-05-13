@@ -11,7 +11,14 @@ import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
 
 class AddDealerScreen extends ConsumerStatefulWidget {
-  const AddDealerScreen({super.key});
+  const AddDealerScreen({
+    super.key,
+    this.customerType = DealerCustomerType.bakeryDealer,
+  });
+
+  /// Bayi mi (ticari) yoksa toptan müşteri mi (toptancı). UI etiketleri ve
+  /// kaydedilen `customer_type` sütunu bu değerden türetilir.
+  final DealerCustomerType customerType;
 
   @override
   ConsumerState<AddDealerScreen> createState() => _AddDealerScreenState();
@@ -49,22 +56,27 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
         area: _area.text.trim(),
         workingType: _wt,
         note: _note.text.trim(),
+        customerType: widget.customerType,
         createdAt: now,
       ),
     );
     if (!mounted) return;
     Navigator.of(context).pop();
+    final what = widget.customerType == DealerCustomerType.wholesaleCustomer
+        ? 'Müşteri eklendi: '
+        : AppStrings.dealerSaveSnack;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${AppStrings.dealerSaveSnack}${_name.text.trim()}'),
-      ),
+      SnackBar(content: Text('$what${_name.text.trim()}')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final title = widget.customerType == DealerCustomerType.wholesaleCustomer
+        ? 'Müşteri Ekle'
+        : AppStrings.dealerAddTitle;
     return PremiumScaffold(
-      appBar: AppBar(title: const Text(AppStrings.dealerAddTitle)),
+      appBar: AppBar(title: Text(title)),
       body: SafeArea(
         child: Form(
           key: _formKey,

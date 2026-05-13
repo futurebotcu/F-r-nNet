@@ -52,6 +52,15 @@ final dealersListProvider =
   return repo.listDealers();
 });
 
+/// customer_type'a göre filtrelenmiş bayi/müşteri listesi (V1.2).
+/// Ticari `bakery_dealer`, toptancı `wholesale_customer` rolünde kullanılır.
+final dealersByTypeProvider = FutureProvider.autoDispose
+    .family<List<Dealer>, DealerCustomerType>((ref, type) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.listDealers(customerType: type);
+});
+
 /// Aktif bayiler (panel hero kartı için).
 final activeDealersListProvider =
     FutureProvider.autoDispose<List<Dealer>>((ref) async {

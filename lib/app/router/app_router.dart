@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/bakery_panel/screens/bakery_panel_screen.dart';
+import '../../features/bakery_panel/screens/calculator_screen.dart';
 import '../../features/bakery_panel/screens/dealer_delivery_screen.dart';
 import '../../features/bakery_panel/screens/end_of_day_screen.dart';
 import '../../features/bakery_panel/screens/production_entry_screen.dart';
@@ -20,7 +21,13 @@ import '../../features/dealers/screens/dealer_list_screen.dart';
 import '../../features/dealers/screens/dealer_payment_form_screen.dart';
 import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
+import '../../features/dealers/screens/wholesale_customers_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/worker/screens/job_seek_post_form_screen.dart';
+import '../../features/worker/screens/job_seek_posts_screen.dart';
+import '../../features/worker/screens/worker_experiences_screen.dart';
+import '../../features/worker/screens/worker_profile_screen.dart';
+import '../../features/dealers/models/dealer.dart' as dealer_models;
 import '../../features/feed/screens/feed_screen.dart';
 import '../../features/social_groups/screens/group_create_screen.dart';
 import '../../features/social_groups/screens/group_detail_screen.dart';
@@ -67,6 +74,19 @@ class AppRoutes {
   // Bayi Yönetimi sub-routes
   static const String dealers = '/dealers';
   static const String dealerNew = '/dealers/new';
+
+  // V1.2: standalone Hesaplama Makinesi (ticari + bireysel ortak araç)
+  static const String calculator = '/calculator';
+
+  // V1.2: Bireysel (Usta) panel route'ları
+  static const String workerProfile = '/worker/profile';
+  static const String workerExperiences = '/worker/experiences';
+  static const String jobSeek = '/worker/job-seek';
+  static const String jobSeekNew = '/worker/job-seek/new';
+
+  // V1.2: Toptancı müşteri yönetimi (dealers altyapısını paylaşır)
+  static const String wholesaleCustomers = '/wholesale/customers';
+  static const String wholesaleCustomerNew = '/wholesale/customers/new';
 
   // Sosyal gruplar (V1)
   static const String groups = '/groups';
@@ -232,6 +252,47 @@ GoRouter createRouter() {
         path: '${AppRoutes.dealers}/:id/adjustment',
         builder: (_, state) => DealerAdjustmentFormScreen(
           dealerId: state.pathParameters['id']!,
+        ),
+      ),
+
+      // V1.2 — Standalone Hesaplama Makinesi
+      GoRoute(
+        path: AppRoutes.calculator,
+        builder: (_, __) => const CalculatorScreen(),
+      ),
+
+      // V1.2 — Bireysel (Usta) panel ekranları
+      GoRoute(
+        path: AppRoutes.workerProfile,
+        builder: (_, __) => const WorkerProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.workerExperiences,
+        builder: (_, __) => const WorkerExperiencesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.jobSeek,
+        builder: (_, __) => const JobSeekPostsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.jobSeekNew,
+        builder: (_, __) => const JobSeekPostFormScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.jobSeek}/:id/edit',
+        builder: (_, state) =>
+            JobSeekPostFormScreen(postId: state.pathParameters['id']!),
+      ),
+
+      // V1.2 — Toptancı müşteri yönetimi (dealers altyapısı paylaşılır)
+      GoRoute(
+        path: AppRoutes.wholesaleCustomers,
+        builder: (_, __) => const WholesaleCustomersScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.wholesaleCustomerNew,
+        builder: (_, __) => const AddDealerScreen(
+          customerType: dealer_models.DealerCustomerType.wholesaleCustomer,
         ),
       ),
 

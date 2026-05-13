@@ -29,12 +29,17 @@ class LocalDealerRepository implements DealerRepository {
   // ─────────────────────────────────────── Dealers
 
   @override
-  Future<List<Dealer>> listDealers({bool? activeOnly}) async {
-    final src = _dealers;
-    final out = activeOnly == true
-        ? src.where((d) => d.isActive).toList()
-        : List<Dealer>.from(src);
-    out.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  Future<List<Dealer>> listDealers({
+    bool? activeOnly,
+    DealerCustomerType? customerType,
+  }) async {
+    Iterable<Dealer> src = _dealers;
+    if (activeOnly == true) src = src.where((d) => d.isActive);
+    if (customerType != null) {
+      src = src.where((d) => d.customerType == customerType);
+    }
+    final out = src.toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return List.unmodifiable(out);
   }
 

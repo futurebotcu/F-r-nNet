@@ -7,38 +7,26 @@ import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
 import 'dealer_repository.dart';
-import 'local_dealer_repository.dart';
 
-/// Hibrit V1 Supabase implementasyonu.
+/// Supabase V1.2 implementasyonu — tüm bayi/müşteri verileri kalıcı tablolarda.
 ///
-/// **Supabase'e gider:**
-/// - dealers tablosu (CRUD)
-/// - dealer_deliveries + dealer_delivery_items (yalnız `type=delivery` transaction'lar)
+/// **Tablo eşlemesi:**
+/// - `dealers` (V1 + V1.2): name, contact_name, working_type, customer_type,
+///   phone, district (area), is_active, note
+/// - `dealer_deliveries` + `dealer_delivery_items`: type=delivery satırları için
+///   (V1'den korundu; line_total trigger'ı çalışıyor)
+/// - `dealer_transactions` (V1.2): type=payment/return/adjustment satırları
+/// - `dealer_prices` (V1.2): bayi+ürün+valid_from
+/// - `dealer_notes` (V1.2): bayi başına çoklu not
 ///
-/// **Hâlâ in-memory (local-only, V1 kısıtı):**
-/// - DealerPrice — Supabase'de tablo yok (V1.1 önerisi: `dealer_prices`).
-/// - DealerNote (multi-note) — Supabase'de yalnız `dealers.note` tek text alanı.
-/// - DealerTransaction(type=return/payment/adjustment) — Supabase'de ayrı
-///   transaction tablosu yok; `dealer_deliveries.paid_amount` + items.returned_quantity
-///   farklı bir modeli temsil eder.
-///
-/// **Uyarı:** local-only kayıtlar app restart'ında kaybolur. Üretim öncesi
-/// V1.1 schema genişletmesi şart.
-///
-/// **Dealer modeli eşlemesi:**
-/// - Flutter `Dealer.contactName / area / workingType` Supabase'de yok →
-///   upsert sırasında atılır. Fetch sırasında default değerlerle doldurulur.
-/// - `Dealer.area` → Supabase `district` alanına yazılır (en yakın eşleşme).
+/// RLS owner-only — bypass yok. Hibrit local kullanım kaldırıldı.
 class SupabaseDealerRepository implements DealerRepository {
-  SupabaseDealerRepository(this._client)
-      : _localExtras = LocalDealerRepository(seed: false);
+  SupabaseDealerRepository(this._client);
 
   final sb.SupabaseClient _client;
-  final LocalDealerRepository _localExtras;
   final StreamController<void> _changes = StreamController<void>.broadcast();
 
   String? _cachedBakeryId;
-  StreamSubscription<void>? _extrasSub;
 
   void _notify() => _changes.add(null);
 
@@ -79,16 +67,25 @@ class SupabaseDealerRepository implements DealerRepository {
 
   // ───────────────────────────────────────────────── Dealer mapping
 
+  static const String _dealerColumns =
+      'id, name, contact_name, phone, district, city, working_type, '
+      'customer_type, is_active, note, created_at';
+
   Dealer _dealerFromRow(Map<String, dynamic> row) {
+    final wtKey = row['working_type'] as String?;
     return Dealer(
       id: row['id'] as String,
       name: (row['name'] as String?) ?? '',
-      contactName: '', // Supabase'de yok
+      contactName: (row['contact_name'] as String?) ?? '',
       phone: (row['phone'] as String?) ?? '',
       area: (row['district'] as String?) ?? (row['city'] as String?) ?? '',
-      workingType: DealerWorkingType.mixed, // Supabase'de yok, default
+      workingType: wtKey != null
+          ? DealerWorkingTypeLabel.fromPersistKey(wtKey)
+          : DealerWorkingType.mixed,
       isActive: (row['is_active'] as bool?) ?? true,
       note: (row['note'] as String?) ?? '',
+      customerType: DealerCustomerTypeLabel.fromPersistKey(
+          row['customer_type'] as String?),
       createdAt: DateTime.parse(row['created_at'] as String),
     );
   }
@@ -96,13 +93,17 @@ class SupabaseDealerRepository implements DealerRepository {
   // ───────────────────────────────────────────────── Dealers
 
   @override
-  Future<List<Dealer>> listDealers({bool? activeOnly}) async {
+  Future<List<Dealer>> listDealers({
+    bool? activeOnly,
+    DealerCustomerType? customerType,
+  }) async {
     _requireUserId();
-    var q = _client
-        .from('dealers')
-        .select('id, name, city, district, phone, note, is_active, created_at');
+    var q = _client.from('dealers').select(_dealerColumns);
     if (activeOnly == true) {
       q = q.eq('is_active', true);
+    }
+    if (customerType != null) {
+      q = q.eq('customer_type', customerType.persistKey);
     }
     final rows = await q.order('name');
     return (rows as List)
@@ -116,7 +117,7 @@ class SupabaseDealerRepository implements DealerRepository {
     _requireUserId();
     final row = await _client
         .from('dealers')
-        .select('id, name, city, district, phone, note, is_active, created_at')
+        .select(_dealerColumns)
         .eq('id', id)
         .maybeSingle();
     if (row == null) return null;
@@ -131,8 +132,11 @@ class SupabaseDealerRepository implements DealerRepository {
       'owner_id': ownerId,
       'bakery_id': bakeryId,
       'name': dealer.name,
+      if (dealer.contactName.isNotEmpty) 'contact_name': dealer.contactName,
       if (dealer.phone.isNotEmpty) 'phone': dealer.phone,
       if (dealer.area.isNotEmpty) 'district': dealer.area,
+      'working_type': dealer.workingType.persistKey,
+      'customer_type': dealer.customerType.persistKey,
       if (dealer.note.isNotEmpty) 'note': dealer.note,
       'is_active': dealer.isActive,
     };
@@ -143,10 +147,7 @@ class SupabaseDealerRepository implements DealerRepository {
         .eq('id', dealer.id)
         .maybeSingle();
     if (existing == null) {
-      // Client tarafında üretilen 'd_{ts}' id'sini Supabase UUID'siyle değiştir.
-      // ID atlanırsa Supabase gen_random_uuid() üretir; sadece yeni satırlar için.
-      payload.remove('owner_id');
-      payload['owner_id'] = ownerId;
+      // Yeni satır — client tarafı ID'sini değil Supabase UUID'sini kullan.
       await _client.from('dealers').insert(payload);
     } else {
       await _client
@@ -167,40 +168,75 @@ class SupabaseDealerRepository implements DealerRepository {
     _notify();
   }
 
-  // ───────────────────────────────────────────────── Prices (local-only)
-  //
-  // Supabase V1 schema'sında dealer_prices tablosu yok. V1.1 önerisi açık.
+  // ───────────────────────────────────────────────── Prices (V1.2 Supabase)
+
+  static const String _priceColumns =
+      'id, dealer_id, product_name, unit_price, valid_from, note, created_at';
+
+  DealerPrice _priceFromRow(Map<String, dynamic> row) {
+    return DealerPrice(
+      id: row['id'] as String,
+      dealerId: row['dealer_id'] as String,
+      productName: (row['product_name'] as String?) ?? '',
+      unitPrice: ((row['unit_price'] as num?) ?? 0).toDouble(),
+      validFrom: DateTime.parse(row['valid_from'] as String),
+      note: (row['note'] as String?) ?? '',
+    );
+  }
 
   @override
-  Future<List<DealerPrice>> listPrices(String dealerId) =>
-      _localExtras.listPrices(dealerId);
+  Future<List<DealerPrice>> listPrices(String dealerId) async {
+    _requireUserId();
+    final rows = await _client
+        .from('dealer_prices')
+        .select(_priceColumns)
+        .eq('dealer_id', dealerId)
+        .order('valid_from', ascending: false);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(_priceFromRow)
+        .toList(growable: false);
+  }
 
   @override
   Future<DealerPrice?> currentPriceFor({
     required String dealerId,
     required String productName,
-  }) =>
-      _localExtras.currentPriceFor(
-        dealerId: dealerId,
-        productName: productName,
-      );
+  }) async {
+    _requireUserId();
+    final row = await _client
+        .from('dealer_prices')
+        .select(_priceColumns)
+        .eq('dealer_id', dealerId)
+        .eq('product_name', productName)
+        .order('valid_from', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    if (row == null) return null;
+    return _priceFromRow(row);
+  }
 
   @override
   Future<void> addPrice(DealerPrice price) async {
-    await _localExtras.addPrice(price);
+    final ownerId = _requireUserId();
+    await _client.from('dealer_prices').insert(<String, dynamic>{
+      'owner_id': ownerId,
+      'dealer_id': price.dealerId,
+      'product_name': price.productName,
+      'unit_price': price.unitPrice,
+      'valid_from': _date(price.validFrom),
+      if (price.note.isNotEmpty) 'note': price.note,
+    });
     _notify();
   }
 
   // ───────────────────────────────────────────────── Transactions
 
-  /// Supabase `dealer_deliveries`+items satırlarını Flutter DealerTransaction
-  /// (type=delivery) listesine map eder.
+  /// dealer_deliveries+items → DealerTransaction(type=delivery)
   Future<List<DealerTransaction>> _fetchDeliveriesAsTransactions(
       {String? dealerId}) async {
     _requireUserId();
-    var q = _client
-        .from('dealer_delivery_items')
-        .select('''
+    var q = _client.from('dealer_delivery_items').select('''
           id, product_name, quantity, unit_price, line_total, created_at,
           delivery:dealer_deliveries!inner(id, dealer_id, delivery_date, note)
         ''');
@@ -222,25 +258,65 @@ class SupabaseDealerRepository implements DealerRepository {
         unitPrice: (row['unit_price'] as num?)?.toDouble(),
         amount: ((row['line_total'] as num?) ?? 0).toDouble(),
         note: (delivery?['note'] as String?) ?? '',
-        createdAt: dateStr != null ? DateTime.parse(dateStr) : DateTime.now(),
+        createdAt:
+            dateStr != null ? DateTime.parse(dateStr) : DateTime.now(),
+      );
+    }).toList(growable: false);
+  }
+
+  /// dealer_transactions → DealerTransaction (payment/return/adjustment)
+  Future<List<DealerTransaction>> _fetchExtrasAsTransactions(
+      {String? dealerId}) async {
+    _requireUserId();
+    var q = _client.from('dealer_transactions').select(
+          'id, dealer_id, type, product_name, quantity, unit_price, '
+          'amount, payment_method, note, created_at',
+        );
+    if (dealerId != null) {
+      q = q.eq('dealer_id', dealerId);
+    }
+    // delivery satırları parallel dealer_deliveries'ten okunduğu için
+    // dealer_transactions sorgusunda delivery'i hariç tut.
+    q = q.neq('type', 'delivery');
+    final rows = await q.order('created_at', ascending: false);
+    return (rows as List).cast<Map<String, dynamic>>().map((row) {
+      final typeKey = (row['type'] as String?) ?? 'adjustment';
+      final pmKey = row['payment_method'] as String?;
+      return DealerTransaction(
+        id: row['id'] as String,
+        dealerId: row['dealer_id'] as String,
+        type: DealerTransactionTypeLabel.fromPersistKey(typeKey),
+        productName: row['product_name'] as String?,
+        quantity: (row['quantity'] as num?)?.toInt(),
+        unitPrice: (row['unit_price'] as num?)?.toDouble(),
+        amount: ((row['amount'] as num?) ?? 0).toDouble(),
+        paymentMethod: pmKey != null
+            ? DealerPaymentMethodLabel.fromPersistKey(pmKey)
+            : null,
+        note: (row['note'] as String?) ?? '',
+        createdAt: DateTime.parse(row['created_at'] as String),
       );
     }).toList(growable: false);
   }
 
   @override
   Future<List<DealerTransaction>> listTransactions(String dealerId) async {
-    final deliveries = await _fetchDeliveriesAsTransactions(dealerId: dealerId);
-    final extras = await _localExtras.listTransactions(dealerId);
-    final out = <DealerTransaction>[...deliveries, ...extras]
+    final results = await Future.wait<List<DealerTransaction>>(<Future<List<DealerTransaction>>>[
+      _fetchDeliveriesAsTransactions(dealerId: dealerId),
+      _fetchExtrasAsTransactions(dealerId: dealerId),
+    ]);
+    final out = <DealerTransaction>[...results[0], ...results[1]]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return List.unmodifiable(out);
   }
 
   @override
   Future<List<DealerTransaction>> listAllTransactions() async {
-    final deliveries = await _fetchDeliveriesAsTransactions();
-    final extras = await _localExtras.listAllTransactions();
-    final out = <DealerTransaction>[...deliveries, ...extras]
+    final results = await Future.wait<List<DealerTransaction>>(<Future<List<DealerTransaction>>>[
+      _fetchDeliveriesAsTransactions(),
+      _fetchExtrasAsTransactions(),
+    ]);
+    final out = <DealerTransaction>[...results[0], ...results[1]]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return List.unmodifiable(out);
   }
@@ -250,9 +326,7 @@ class SupabaseDealerRepository implements DealerRepository {
     if (tx.type == DealerTransactionType.delivery) {
       await _addDeliveryToSupabase(tx);
     } else {
-      // payment / return / adjustment → şimdilik local-only (V1 kısıtı).
-      // Üretim öncesi V1.1 schema önerisi: dealer_transactions tablosu.
-      await _localExtras.addTransaction(tx);
+      await _addExtraToSupabase(tx);
     }
     _notify();
   }
@@ -284,25 +358,61 @@ class SupabaseDealerRepository implements DealerRepository {
     });
   }
 
-  // ───────────────────────────────────────────────── Notes (local-only)
+  Future<void> _addExtraToSupabase(DealerTransaction tx) async {
+    final ownerId = _requireUserId();
+    await _client.from('dealer_transactions').insert(<String, dynamic>{
+      'owner_id': ownerId,
+      'dealer_id': tx.dealerId,
+      'type': tx.type.persistKey,
+      if (tx.productName != null) 'product_name': tx.productName,
+      if (tx.quantity != null) 'quantity': tx.quantity,
+      if (tx.unitPrice != null) 'unit_price': tx.unitPrice,
+      'amount': tx.amount,
+      if (tx.paymentMethod != null)
+        'payment_method': tx.paymentMethod!.persistKey,
+      if (tx.note.isNotEmpty) 'note': tx.note,
+    });
+  }
+
+  // ───────────────────────────────────────────────── Notes (V1.2 Supabase)
+
+  static const String _noteColumns =
+      'id, dealer_id, note, created_at';
+
+  DealerNote _noteFromRow(Map<String, dynamic> row) {
+    return DealerNote(
+      id: row['id'] as String,
+      dealerId: row['dealer_id'] as String,
+      note: (row['note'] as String?) ?? '',
+      createdAt: DateTime.parse(row['created_at'] as String),
+    );
+  }
 
   @override
-  Future<List<DealerNote>> listNotes(String dealerId) =>
-      _localExtras.listNotes(dealerId);
+  Future<List<DealerNote>> listNotes(String dealerId) async {
+    _requireUserId();
+    final rows = await _client
+        .from('dealer_notes')
+        .select(_noteColumns)
+        .eq('dealer_id', dealerId)
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(_noteFromRow)
+        .toList(growable: false);
+  }
 
   @override
   Future<void> addNote(DealerNote note) async {
-    await _localExtras.addNote(note);
+    final ownerId = _requireUserId();
+    await _client.from('dealer_notes').insert(<String, dynamic>{
+      'owner_id': ownerId,
+      'dealer_id': note.dealerId,
+      'note': note.note,
+    });
     _notify();
   }
 
-  // ───────────────────────────────────────────────── Stream
-
   @override
-  Stream<void> watch() {
-    // Local extras değişimlerini de Supabase notify'ına aktarmak için
-    // tek seferlik subscription kurulur.
-    _extrasSub ??= _localExtras.watch().listen((_) => _notify());
-    return _changes.stream;
-  }
+  Stream<void> watch() => _changes.stream;
 }
