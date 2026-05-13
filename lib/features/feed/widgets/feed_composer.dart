@@ -5,6 +5,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/post_type.dart';
 import '../providers/feed_providers.dart';
 
@@ -62,6 +63,11 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.feedComposerEmptyErr)),
       );
+      return;
+    }
+    // V1.3.2 — Feed post oluşturmak kullanıcı sahipliği gerektirir.
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
       return;
     }
     setState(() => _saving = true);

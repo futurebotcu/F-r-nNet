@@ -11,6 +11,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -109,6 +110,11 @@ class RecipeDetailScreen extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
+    // V1.3.2 — Sil owner-only kalıcı işlem; guest engellenir.
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     final repo = ref.read(recipeRepositoryProvider);
     await repo.delete(recipeId);
     if (context.mounted) {
@@ -822,6 +828,13 @@ class _ShareSheet extends ConsumerWidget {
   }
 
   Future<void> _shareToFeed(BuildContext context, WidgetRef ref) async {
+    // V1.3.2 — Feed'e paylaşmak app içinde post oluşturur; üyelik gerektirir.
+    // (Dış sistem paylaşımı — Share.share — guardsız kalmaya devam eder.)
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      Navigator.of(context).pop();
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     final repo = ref.read(feedRepositoryProvider);
     final profile = ref.read(profileControllerProvider);
     final author = (profile?.displayName.isNotEmpty ?? false)

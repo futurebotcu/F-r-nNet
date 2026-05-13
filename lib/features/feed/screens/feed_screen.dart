@@ -10,6 +10,7 @@ import '../../../core/widgets/premium/feed_post_card.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../social_groups/models/social_group.dart';
 import '../../social_groups/providers/social_group_providers.dart';
@@ -444,6 +445,11 @@ class _PostCardWired extends ConsumerWidget {
       isSaved: post.isSaved,
       groupName: post.groupName,
       onLike: () async {
+        // V1.3.2 — Beğeni kullanıcıya bağlı bir favori işlemidir.
+        if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+          await showAuthRequiredSheet(context, ref);
+          return;
+        }
         final updated = await repo.toggleLike(post.id);
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -456,6 +462,11 @@ class _PostCardWired extends ConsumerWidget {
         );
       },
       onSave: () async {
+        // V1.3.2 — "Kaydet" (bookmark) kullanıcıya bağlı bir işlem.
+        if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+          await showAuthRequiredSheet(context, ref);
+          return;
+        }
         final updated = await repo.toggleSave(post.id);
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

@@ -16,6 +16,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../../core/widgets/product_choice_chips.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_note.dart';
@@ -719,6 +720,10 @@ class _PriceSheetState extends ConsumerState<_PriceSheet> {
       _err(AppStrings.dealerErrPricePositive);
       return;
     }
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
     await repo.addPrice(
@@ -1166,6 +1171,10 @@ class _NotesCardState extends ConsumerState<_NotesCard> {
   Future<void> _add() async {
     final t = _ctrl.text.trim();
     if (t.isEmpty) return;
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     setState(() => _saving = true);
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();

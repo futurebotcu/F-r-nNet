@@ -10,6 +10,7 @@ import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/group_category.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
@@ -653,6 +654,11 @@ class _ComposerState extends ConsumerState<_Composer> {
   Future<void> _send() async {
     final t = _ctrl.text.trim();
     if (t.isEmpty || !widget.isJoined) return;
+    // V1.3.2 — Grup mesajı kullanıcı sahipliği gerektirir.
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
     final repo = ref.read(socialGroupRepositoryProvider);
     final now = DateTime.now();
     await repo.postMessage(
