@@ -21,6 +21,36 @@ class AppStrings {
   static const String onboardingFooter =
       'Profil olmadan da kullanabilir, dilediğin zaman kayıt olabilirsin.';
 
+  // V1.3 — Auth Entry (yeni boot landing)
+  static const String authEntryTitle = 'FırınNet\'e hoş geldin';
+  static const String authEntrySubtitle =
+      'Fırıncılar, ustalar ve toptancılar için iş, reçete ve paylaşım ağı.';
+  static const String authEntrySignIn = 'Giriş Yap';
+  static const String authEntrySignUp = 'Hesabım yok, üye ol';
+  static const String authEntryGuest = 'Kayıtsız devam et';
+  static const String authEntryBackendOff =
+      'Canlı giriş kapalı. Kayıtsız devam edebilirsin.';
+
+  // V1.3 — Role select (signup öncesi)
+  static const String roleSelectTitle = 'Hangi rol senin için?';
+  static const String roleSelectSubtitle =
+      'Sektördeki yerini seç — formdaki alanları rolüne göre düzenleriz.';
+  static const String roleCommercialTitle = 'Ticari';
+  static const String roleCommercialSub =
+      'Fırın işletmesi, bayi ve üretim yönetimi';
+  static const String roleIndividualTitle = 'Bireysel';
+  static const String roleIndividualSub =
+      'Usta profili, iş arama ve reçeteler';
+  static const String roleWholesalerTitle = 'Toptancı';
+  static const String roleWholesalerSub =
+      'Müşteri, ürün, fiyat ve teslimat yönetimi';
+
+  // V1.3 — Login & sign-up nav
+  static const String authLoginNoAccountQ = 'Hesabın yok mu? Üye ol';
+  static const String authForgotPassword = 'Şifremi unuttum';
+  static const String authGuestDataWriteBlock =
+      'Bu işlem için giriş yapman gerekiyor.';
+
   // Profile
   static const String accountType = 'Hesap türü';
   static const String accountCommercial = 'Ticari';

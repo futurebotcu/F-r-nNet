@@ -9,7 +9,19 @@ import '../../../app/theme/app_colors.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/services/guest_mode_storage.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../profile/repositories/profile_repository.dart';
 
+/// V1.3 — Splash boot decision.
+///
+/// 6 olası rota:
+///   1. supabaseEnabled=false + guest=false → `/auth` (AuthEntryScreen)
+///   2. supabaseEnabled=false + guest=true  → `/feed` (local guest demo)
+///   3. supabaseEnabled=true  + user=null + guest=false → `/auth`
+///   4. supabaseEnabled=true  + user=null + guest=true  → `/feed`
+///   5. supabaseEnabled=true  + user!=null + profile complete → `/panel`
+///   6. supabaseEnabled=true  + user!=null + profile missing/incomplete → `/profile/create`
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -18,25 +30,61 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _routed = false;
+
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(milliseconds: 1300), _route);
+    // Görsel animasyon için kısa bir bekleme + senkron olmayan kararlar paralel.
+    Timer(const Duration(milliseconds: 700), _route);
   }
 
-  void _route() {
-    if (!mounted) return;
+  Future<void> _route() async {
+    if (!mounted || _routed) return;
+    _routed = true;
+
+    final guest = await GuestModeStorage.instance.read();
+
+    // 1 / 2 — Supabase yapılandırılmamış
     if (!AppConfig.supabaseEnabled) {
-      // Local/mock mod — eski guest-only akış.
-      context.go(AppRoutes.onboarding);
+      if (!mounted) return;
+      if (guest) {
+        ref.read(profileControllerProvider.notifier).useGuest();
+        context.go(AppRoutes.feed);
+      } else {
+        context.go(AppRoutes.authEntry);
+      }
       return;
     }
+
+    // 3 / 4 — Supabase var ama oturum yok
     final user = ref.read(currentAuthUserProvider);
-    if (user != null) {
-      context.go(AppRoutes.panel);
-    } else {
-      context.go(AppRoutes.login);
+    if (user == null) {
+      if (!mounted) return;
+      if (guest) {
+        ref.read(profileControllerProvider.notifier).useGuest();
+        context.go(AppRoutes.feed);
+      } else {
+        context.go(AppRoutes.authEntry);
+      }
+      return;
     }
+
+    // 5 / 6 — Supabase var + oturum var → profile completeness'i değerlendir
+    final repo = ref.read(profileRepositoryProvider);
+    ProfileRepository? r = repo;
+    final profile = r != null ? await r.fetchProfile(user.id) : null;
+    if (!mounted) return;
+
+    if (profile == null || !profile.isComplete) {
+      context.go(AppRoutes.createProfile);
+      return;
+    }
+
+    // Sahip mode → guest flag temizle (auth aktif).
+    await GuestModeStorage.instance.clear();
+    if (!mounted) return;
+    context.go(AppRoutes.panel);
   }
 
   @override

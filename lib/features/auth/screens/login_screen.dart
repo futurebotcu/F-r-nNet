@@ -7,14 +7,17 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
-import '../../profile/providers/profile_provider.dart';
 import '../providers/auth_providers.dart';
+import '../providers/guest_mode_provider.dart';
 
-/// Sade giriş ekranı.
+/// Sade giriş ekranı (V1.3).
 ///
-/// - Supabase yapılandırıldıysa email/şifre ile gerçek auth.
-/// - Yapılandırılmadıysa "Kayıtsız Devam Et" tek aktif yol (uyarı banner'ı).
-/// - Profil oluşturma & misafir akışları sözleşmeli butonlarla bağlı.
+/// Auth Entry'den push edilir; iki aksiyon:
+/// - **Giriş Yap** (`signInWithPassword`) → başarılıysa splash redirect mantığı
+///   profili kontrol edip `/panel` veya `/profile/create`'e götürür.
+/// - **Hesabın yok mu? Üye ol** → `/auth/role-select`.
+///
+/// "Kayıtsız Devam Et" buradan kaldırıldı — boot landing'inde (AuthEntry).
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -61,10 +64,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
       );
+      // Başarılı giriş → guest flag temizlenir (auth varsa guest olmamalı).
+      await ref.read(guestModeProvider.notifier).setGuest(false);
       if (!mounted) return;
-      // Auth state değişimini ProfileController dinler, profile yüklenir;
-      // router redirect'i panel'e geçer.
-      context.go(AppRoutes.panel);
+      // Splash, profile completeness'i yeniden değerlendirip rotalayacak.
+      context.go(AppRoutes.splash);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,18 +85,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final supabaseOn = ref.watch(authRepositoryProvider) != null;
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.authEntry);
+            }
+          },
+        ),
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
-              AppSpacing.xxl,
+              AppSpacing.s,
               AppSpacing.xl,
               AppSpacing.xl,
             ),
             children: [
-              const SizedBox(height: AppSpacing.l),
               Center(
                 child: Container(
                   width: 64,
@@ -184,7 +199,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 validator: supabaseOn ? _validatePassword : null,
               ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.l),
               AppPrimaryButton(
                 label: _submitting ? '…' : AppStrings.authSignInButton,
                 icon: Icons.login_rounded,
@@ -196,28 +211,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: TextButton(
                   onPressed: _submitting
                       ? null
-                      : () => context.push(AppRoutes.createProfile),
+                      : () => context.push(AppRoutes.roleSelect),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
+                    foregroundColor: AppColors.softGold,
                   ),
-                  child: const Text(AppStrings.authSignUpButton),
-                ),
-              ),
-              SizedBox(
-                height: 48,
-                child: TextButton(
-                  onPressed: _submitting
-                      ? null
-                      : () {
-                          ref
-                              .read(profileControllerProvider.notifier)
-                              .useGuest();
-                          context.go(AppRoutes.feed);
-                        },
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textMuted,
+                  child: const Text(
+                    AppStrings.authLoginNoAccountQ,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  child: const Text(AppStrings.continueAsGuest),
                 ),
               ),
             ],

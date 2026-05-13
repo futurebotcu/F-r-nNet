@@ -35,6 +35,10 @@ dependencies:
   # eksikse uygulama local/mock mode'a düşer). Anahtarlar repo'da yok.
   supabase_flutter: ^2.5.6
 
+  # Persistent local flags (V1.3 — guest mode persist, last_seen_app_version vb).
+  # Android: SharedPreferences. iOS: NSUserDefaults. `pm clear` ile silinir.
+  shared_preferences: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

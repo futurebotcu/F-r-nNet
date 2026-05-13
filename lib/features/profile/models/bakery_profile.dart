@@ -34,6 +34,19 @@ class BakeryProfile {
   final String roleBadge;
   final String email;
 
+  /// V1.3 profile completeness sözleşmesi.
+  ///
+  /// Zorunlu: `displayName`, `accountType` (enum daima dolu), `city`,
+  /// `roleBadge`. Eksikse Splash kullanıcıyı `/profile/create`'e yönlendirir.
+  ///
+  /// Guest profile (in-memory `BakeryProfile.guest`) için bu false döner —
+  /// yani Splash guest'i guest mode flag'ine göre değerlendirir, completeness
+  /// üzerinden değil.
+  bool get isComplete =>
+      displayName.trim().isNotEmpty &&
+      city.trim().isNotEmpty &&
+      roleBadge.trim().isNotEmpty;
+
   BakeryProfile copyWith({
     String? displayName,
     AccountType? accountType,

@@ -14,6 +14,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/providers/guest_mode_provider.dart';
 import '../../bakery_panel/models/recipe_record.dart';
 import '../../bakery_panel/providers/bakery_providers.dart';
 import '../../bakery_panel/screens/recipe_visibility_badge.dart';
@@ -91,26 +92,27 @@ class ProfileScreen extends ConsumerWidget {
                           style: TextStyle(color: AppColors.textMuted),
                         ),
                         onPressed: () async {
-                          // Supabase oturumu varsa server-side sign out;
-                          // ardından yerel state temizle ve uygun başlangıç
-                          // ekranına dön (login vs. onboarding).
+                          // V1.3 logout flow:
+                          // 1. Supabase oturumu varsa server-side signOut
+                          // 2. Guest flag temizle (persistent)
+                          // 3. Profile Riverpod state'i temizle
+                          // 4. Auth Entry ekranına dön
                           final auth = ref.read(authRepositoryProvider);
                           if (auth != null) {
                             try {
                               await auth.signOut();
                             } catch (_) {
-                              // Ağ kopuksa bile yerel state'i temizleyelim.
+                              // Ağ kopuksa bile local state'i temizleyelim.
                             }
                           }
+                          await ref
+                              .read(guestModeProvider.notifier)
+                              .setGuest(false);
                           if (!context.mounted) return;
                           ref
                               .read(profileControllerProvider.notifier)
                               .clear();
-                          context.go(
-                            AppConfig.supabaseEnabled
-                                ? AppRoutes.login
-                                : AppRoutes.onboarding,
-                          );
+                          context.go(AppRoutes.authEntry);
                         },
                       ),
                     ),

@@ -22,7 +22,10 @@ import '../../features/dealers/screens/dealer_payment_form_screen.dart';
 import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
+import '../../features/auth/screens/auth_entry_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/role_select_screen.dart';
+import '../../features/profile/models/bakery_profile.dart' as profile_models;
 import '../../features/worker/screens/job_seek_post_form_screen.dart';
 import '../../features/worker/screens/job_seek_posts_screen.dart';
 import '../../features/worker/screens/worker_experiences_screen.dart';
@@ -43,7 +46,9 @@ class AppRoutes {
   const AppRoutes._();
 
   static const String splash = '/';
-  static const String onboarding = '/onboarding';
+  static const String onboarding = '/onboarding'; // legacy alias — Splash artık /auth'a gider
+  static const String authEntry = '/auth';
+  static const String roleSelect = '/auth/role-select';
   static const String login = '/login';
   static const String createProfile = '/profile/create';
 
@@ -102,8 +107,19 @@ GoRouter createRouter() {
         builder: (_, __) => const SplashScreen(),
       ),
       GoRoute(
+        // Legacy mock onboarding — V1.3'te boot landing /auth'a taşındı.
+        // Backward compat için ekran korunuyor (Supabase-off senaryosunda da
+        // splash artık /auth'a gidiyor; bu route hâlâ tanımlı kalıyor).
         path: AppRoutes.onboarding,
         builder: (_, __) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.authEntry,
+        builder: (_, __) => const AuthEntryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.roleSelect,
+        builder: (_, __) => const RoleSelectScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
@@ -111,7 +127,11 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: AppRoutes.createProfile,
-        builder: (_, __) => const CreateProfileScreen(),
+        builder: (_, state) {
+          final roleKey = state.uri.queryParameters['role'];
+          final account = _accountTypeFromKey(roleKey);
+          return CreateProfileScreen(initialAccountType: account);
+        },
       ),
 
       // Ana shell + tab'lar.
@@ -317,4 +337,19 @@ CustomTransitionPage<void> _noTransition(GoRouterState state, Widget child) {
     child: child,
     transitionsBuilder: (_, __, ___, c) => c,
   );
+}
+
+/// `?role=commercial|individual|wholesaler` query parametresinden enum'a
+/// güvenli parse. Bilinmeyen veya boşsa null döner (form default'u kullanır).
+profile_models.AccountType? _accountTypeFromKey(String? key) {
+  switch (key) {
+    case 'commercial':
+      return profile_models.AccountType.commercial;
+    case 'individual':
+      return profile_models.AccountType.individual;
+    case 'wholesaler':
+      return profile_models.AccountType.wholesaler;
+    default:
+      return null;
+  }
 }
