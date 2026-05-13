@@ -40,4 +40,10 @@ abstract class AuthRepository {
   /// Email değişikliği — `auth.users.email` UPDATE'i triggerla profiles'a
   /// senkronize edilir. Profil tablosuna doğrudan email yazılmaz.
   Future<void> updateEmail(String email);
+
+  /// V1.3.5 — Şifre sıfırlama linki gönderir (Supabase email template).
+  /// Tıklanan link Supabase'in default web sayfasına gider; kullanıcı orada
+  /// yeni şifresini belirler. Mobile in-app yeni-şifre belirleme akışı
+  /// (deep link + UpdatePassword screen) sonraki faza bırakıldı.
+  Future<void> resetPasswordForEmail(String email);
 }

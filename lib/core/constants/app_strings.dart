@@ -48,6 +48,28 @@ class AppStrings {
   // V1.3 — Login & sign-up nav
   static const String authLoginNoAccountQ = 'Hesabın yok mu? Üye ol';
   static const String authForgotPassword = 'Şifremi unuttum';
+
+  // V1.3.5 — Şifremi unuttum ekranı
+  static const String authForgotPasswordTitle = 'Şifreni mi unuttun?';
+  static const String authForgotPasswordHint =
+      'E-posta adresine şifre yenileme bağlantısı göndereceğiz.';
+  static const String authForgotPasswordSubmit = 'Reset Link Gönder';
+  static const String authForgotPasswordSent =
+      'Mailini kontrol et — şifre yenileme bağlantısı gönderildi.';
+  static const String authForgotPasswordFail =
+      'Bağlantı gönderilemedi. E-posta adresini kontrol edip tekrar dene.';
+
+  // V1.3.5 — Yasal metinler
+  static const String legalTermsTitle = 'Kullanım Şartları';
+  static const String legalPrivacyTitle = 'Gizlilik Politikası';
+  static const String legalAcceptCheckbox =
+      'Kullanım Şartları ve Gizlilik Politikası\'nı okudum, kabul ediyorum.';
+  static const String legalAcceptRequired =
+      'Devam etmek için kullanım şartlarını ve gizlilik politikasını '
+      'kabul etmelisin.';
+  static const String legalFooterAccept =
+      'Devam ederek Kullanım Şartları ve Gizlilik Politikası\'nı kabul '
+      'etmiş olursun.';
   static const String authGuestDataWriteBlock =
       'Bu işlem için giriş yapman gerekiyor.';
 

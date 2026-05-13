@@ -52,19 +52,31 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
     }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
-    await repo.upsertDealer(
-      Dealer(
-        id: 'd_${now.microsecondsSinceEpoch}',
-        name: _name.text.trim(),
-        contactName: _contact.text.trim(),
-        phone: _phone.text.trim(),
-        area: _area.text.trim(),
-        workingType: _wt,
-        note: _note.text.trim(),
-        customerType: widget.customerType,
-        createdAt: now,
-      ),
-    );
+    try {
+      await repo.upsertDealer(
+        Dealer(
+          id: 'd_${now.microsecondsSinceEpoch}',
+          name: _name.text.trim(),
+          contactName: _contact.text.trim(),
+          phone: _phone.text.trim(),
+          area: _area.text.trim(),
+          workingType: _wt,
+          note: _note.text.trim(),
+          customerType: widget.customerType,
+          createdAt: now,
+        ),
+      );
+    } catch (e) {
+      // V1.3.5 — Supabase/network/validator hatasını kullanıcıya göster.
+      // (Önceden unhandled exception düşüyor, kullanıcı boşta kalıyordu.)
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bayi kaydedilemedi. Lütfen tekrar deneyin.'),
+        ),
+      );
+      return;
+    }
     if (!mounted) return;
     Navigator.of(context).pop();
     final what = widget.customerType == DealerCustomerType.wholesaleCustomer

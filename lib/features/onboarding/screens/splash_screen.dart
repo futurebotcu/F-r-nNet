@@ -84,7 +84,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // Sahip mode → guest flag temizle (auth aktif).
     await GuestModeStorage.instance.clear();
     if (!mounted) return;
-    context.go(AppRoutes.panel);
+    // V1.3.5 — Login sonrası ilk açılış Feed (sektör akışı). Panel'e
+    // bottom nav 5. tab'dan ulaşılır. Brief ürün kararı.
+    context.go(AppRoutes.feed);
   }
 
   @override

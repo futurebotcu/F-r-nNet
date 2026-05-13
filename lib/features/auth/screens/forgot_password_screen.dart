@@ -8,34 +8,30 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../providers/auth_providers.dart';
-import '../providers/guest_mode_provider.dart';
-import '../widgets/legal_footer.dart';
 
-/// Sade giriş ekranı (V1.3).
+/// V1.3.5 — Şifre sıfırlama linki talep ekranı.
 ///
-/// Auth Entry'den push edilir; iki aksiyon:
-/// - **Giriş Yap** (`signInWithPassword`) → başarılıysa splash redirect mantığı
-///   profili kontrol edip `/panel` veya `/profile/create`'e götürür.
-/// - **Hesabın yok mu? Üye ol** → `/auth/role-select`.
-///
-/// "Kayıtsız Devam Et" buradan kaldırıldı — boot landing'inde (AuthEntry).
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+/// `auth.resetPasswordForEmail(email)` çağrısını başlatır; Supabase
+/// kullanıcının e-postasına şifre yenileme linki gönderir. Link tıklanınca
+/// Supabase varsayılan web sayfasına gider; kullanıcı orada yeni şifresini
+/// belirler. Mobile in-app yeni şifre belirleme akışı sonraki faza bırakıldı.
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
   bool _submitting = false;
+  bool _sent = false;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
-    _passwordCtrl.dispose();
     super.dispose();
   }
 
@@ -48,35 +44,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return null;
   }
 
-  String? _validatePassword(String? v) {
-    final value = v ?? '';
-    if (value.isEmpty) return AppStrings.authPasswordRequired;
-    return null;
-  }
-
-  Future<void> _signIn() async {
+  Future<void> _submit() async {
     final auth = ref.read(authRepositoryProvider);
     if (auth == null) return;
     if (!_formKey.currentState!.validate()) return;
     if (_submitting) return;
     setState(() => _submitting = true);
     try {
-      await auth.signIn(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text,
-      );
-      // Başarılı giriş → guest flag temizlenir (auth varsa guest olmamalı).
-      await ref.read(guestModeProvider.notifier).setGuest(false);
+      await auth.resetPasswordForEmail(_emailCtrl.text.trim());
       if (!mounted) return;
-      // Splash, profile completeness'i yeniden değerlendirip rotalayacak.
-      context.go(AppRoutes.splash);
+      setState(() {
+        _sent = true;
+        _submitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.authForgotPasswordSent)),
+      );
     } catch (e) {
       if (!mounted) return;
+      setState(() => _submitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        const SnackBar(content: Text(AppStrings.authForgotPasswordFail)),
       );
-    } finally {
-      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -93,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go(AppRoutes.authEntry);
+              context.go(AppRoutes.login);
             }
           },
         ),
@@ -123,7 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: const Icon(
-                    Icons.local_fire_department_rounded,
+                    Icons.lock_reset_rounded,
                     color: Colors.white,
                     size: 32,
                   ),
@@ -131,19 +120,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: AppSpacing.l),
               Text(
-                AppStrings.authLoginTitle,
+                AppStrings.authForgotPasswordTitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.6,
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.s),
               Text(
-                AppStrings.appPitch,
+                AppStrings.authForgotPasswordHint,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
+                  height: 1.5,
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -177,7 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               TextFormField(
                 controller: _emailCtrl,
-                enabled: supabaseOn && !_submitting,
+                enabled: supabaseOn && !_submitting && !_sent,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
                 decoration: const InputDecoration(
@@ -188,68 +178,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 validator: supabaseOn ? _validateEmail : null,
               ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: _passwordCtrl,
-                enabled: supabaseOn && !_submitting,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: AppStrings.password,
-                  prefixIcon: Icon(Icons.lock_outline,
-                      color: AppColors.textMuted),
-                ),
-                validator: supabaseOn ? _validatePassword : null,
-              ),
-              // V1.3.5 — Şifremi unuttum link.
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _submitting || !supabaseOn
-                      ? null
-                      : () => context.push(AppRoutes.forgotPassword),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.s,
-                      vertical: 4,
-                    ),
-                  ),
-                  child: const Text(
-                    AppStrings.authForgotPassword,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.s),
-              AppPrimaryButton(
-                label: _submitting ? '…' : AppStrings.authSignInButton,
-                icon: Icons.login_rounded,
-                onPressed: (supabaseOn && !_submitting) ? _signIn : null,
-              ),
-              const SizedBox(height: AppSpacing.s),
-              SizedBox(
-                height: 48,
-                child: TextButton(
-                  onPressed: _submitting
-                      ? null
-                      : () => context.push(AppRoutes.roleSelect),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.softGold,
-                  ),
-                  child: const Text(
-                    AppStrings.authLoginNoAccountQ,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: AppSpacing.l),
-              // V1.3.5 — Yasal footer.
-              const LegalFooter(),
+              if (_sent)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.l),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    border: Border.all(
+                      color: AppColors.success.withValues(alpha: 0.32),
+                    ),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.mark_email_read_outlined,
+                          color: AppColors.success, size: 22),
+                      SizedBox(width: AppSpacing.m),
+                      Expanded(
+                        child: Text(
+                          AppStrings.authForgotPasswordSent,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                AppPrimaryButton(
+                  label: _submitting
+                      ? '…'
+                      : AppStrings.authForgotPasswordSubmit,
+                  icon: Icons.send_rounded,
+                  onPressed:
+                      (supabaseOn && !_submitting) ? _submit : null,
+                ),
             ],
           ),
         ),

@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,6 +59,11 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   String _badge = RoleBadges.commercial.first;
   bool _submitting = false;
   bool _isCompletion = false;
+  // V1.3.5 — Yasal kabul checkbox.
+  // Yeni signup'ta zorunlu; completion akışında (zaten signed-in profilini
+  // tamamlıyor) gösterilmez — kabul kayıt anında alınmıştı.
+  bool _legalAccepted = false;
+  bool _legalShowError = false;
 
   @override
   void initState() {
@@ -183,6 +189,15 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_submitting) return;
+
+    // V1.3.5 — Yeni signup'ta yasal kabul zorunlu.
+    if (!_isCompletion && !_legalAccepted) {
+      setState(() => _legalShowError = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.legalAcceptRequired)),
+      );
+      return;
+    }
 
     final displayName = _nameCtrl.text.trim();
     final city = _cityCtrl.text.trim();
@@ -351,6 +366,17 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                 );
               }).toList(),
             ),
+            if (!_isCompletion) ...[
+              const SizedBox(height: 24),
+              _LegalAcceptCheckbox(
+                value: _legalAccepted,
+                showError: _legalShowError && !_legalAccepted,
+                onChanged: (v) => setState(() {
+                  _legalAccepted = v ?? false;
+                  if (_legalAccepted) _legalShowError = false;
+                }),
+              ),
+            ],
             const SizedBox(height: 32),
             AppPrimaryButton(
               label: _submitting ? '…' : AppStrings.save,
@@ -433,6 +459,115 @@ class _AccountTypePicker extends StatelessWidget {
             onTap: () => onChanged(AccountType.wholesaler),
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// V1.3.5 — Yasal metin kabul checkbox'ı (zorunlu, yeni signup için).
+///
+/// Tıklanabilir Kullanım Şartları + Gizlilik Politikası link'leri içerir.
+/// Kabul edilmediğinde [showError] true olur ve kırmızı border + uyarı yazısı
+/// gösterilir.
+class _LegalAcceptCheckbox extends StatelessWidget {
+  const _LegalAcceptCheckbox({
+    required this.value,
+    required this.onChanged,
+    required this.showError,
+  });
+
+  final bool value;
+  final ValueChanged<bool?> onChanged;
+  final bool showError;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = showError
+        ? Colors.red.withValues(alpha: 0.55)
+        : AppColors.borderHairline;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            border: Border.all(
+              color: borderColor,
+              width: showError ? 1.0 : 0.6,
+            ),
+            color: AppColors.card,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.s,
+            vertical: 4,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: value,
+                onChanged: onChanged,
+                activeColor: AppColors.copper,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12, bottom: 12, right: 4),
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.45,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: AppStrings.legalTermsTitle,
+                          style: const TextStyle(
+                            color: AppColors.softGold,
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () =>
+                                context.push(AppRoutes.legalTerms),
+                        ),
+                        const TextSpan(text: ' ve '),
+                        TextSpan(
+                          text: AppStrings.legalPrivacyTitle,
+                          style: const TextStyle(
+                            color: AppColors.softGold,
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () =>
+                                context.push(AppRoutes.legalPrivacy),
+                        ),
+                        const TextSpan(
+                          text: '\'nı okudum, kabul ediyorum.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (showError)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: AppSpacing.s),
+            child: Text(
+              AppStrings.legalAcceptRequired,
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ),
       ],
     );
   }

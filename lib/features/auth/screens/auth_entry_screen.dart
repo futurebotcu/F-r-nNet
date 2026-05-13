@@ -10,6 +10,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/auth_providers.dart';
 import '../providers/guest_mode_provider.dart';
+import '../widgets/legal_footer.dart';
 
 /// V1.3 boot landing — kullanıcıya net 3 seçenek.
 ///
@@ -173,6 +174,9 @@ class AuthEntryScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: AppSpacing.l),
+              // V1.3.5 — Yasal footer.
+              const LegalFooter(),
             ],
           ),
         ),

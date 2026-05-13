@@ -65,6 +65,24 @@ class SupabaseDealerRepository implements DealerRepository {
     return '${dd.year}-$mm-$day';
   }
 
+  /// V1.3.5 — Client-side ID'ler (örn. `'d_<microseconds>'`) Supabase
+  /// `uuid` sütunlarına `eq` query ile gönderildiğinde Postgres
+  /// `22P02 invalid input syntax for type uuid` atıyor. Eq/lookup öncesi
+  /// `looksLikeUuid` ile kontrol et; non-uuid → INSERT path (server
+  /// `gen_random_uuid()` üretir, payload'a id koyma).
+  ///
+  /// Pattern RecipeRepository'deki `id.startsWith('r_')` ve
+  /// WorkerRepository'deki `id.startsWith('l_')` ile aynı kategoride;
+  /// dealer için genelleştirilmiş uuid kontrolü daha sağlam.
+  static final RegExp _uuidPattern = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  );
+
+  /// `value` Postgres uuid formatına uyuyorsa true.
+  /// Public + static — test'lerden çağrılabilir.
+  static bool looksLikeUuid(String value) => _uuidPattern.hasMatch(value);
+
   // ───────────────────────────────────────────────── Dealer mapping
 
   static const String _dealerColumns =
@@ -141,13 +159,22 @@ class SupabaseDealerRepository implements DealerRepository {
       'is_active': dealer.isActive,
     };
 
+    // V1.3.5 — Client `'d_<ts>'` ID'si uuid değil; doğrudan eq sorgusu
+    // 22P02 atıyor. Önce uuid kontrolü yap; non-uuid ise INSERT direkt.
+    if (!looksLikeUuid(dealer.id)) {
+      // Yeni satır — server `gen_random_uuid()` üretir, payload'a id eklenmedi.
+      await _client.from('dealers').insert(payload);
+      _notify();
+      return;
+    }
+
     final existing = await _client
         .from('dealers')
         .select('id')
         .eq('id', dealer.id)
         .maybeSingle();
     if (existing == null) {
-      // Yeni satır — client tarafı ID'sini değil Supabase UUID'sini kullan.
+      // uuid format ama satır yok — yine insert (örn. id elle silinmiş).
       await _client.from('dealers').insert(payload);
     } else {
       await _client

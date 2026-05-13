@@ -22,8 +22,11 @@ import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
 import '../../features/auth/screens/auth_entry_screen.dart';
+import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/role_select_screen.dart';
+import '../../features/legal/screens/privacy_screen.dart';
+import '../../features/legal/screens/terms_screen.dart';
 import '../../features/profile/models/bakery_profile.dart' as profile_models;
 import '../../features/worker/screens/job_seek_post_form_screen.dart';
 import '../../features/worker/screens/job_seek_posts_screen.dart';
@@ -48,8 +51,13 @@ class AppRoutes {
   static const String onboarding = '/onboarding'; // legacy alias — Splash artık /auth'a gider
   static const String authEntry = '/auth';
   static const String roleSelect = '/auth/role-select';
+  static const String forgotPassword = '/auth/forgot';
   static const String login = '/login';
   static const String createProfile = '/profile/create';
+
+  // V1.3.5 — Yasal metin route'ları
+  static const String legalTerms = '/legal/terms';
+  static const String legalPrivacy = '/legal/privacy';
 
   // Ana tablar
   static const String feed = '/feed';
@@ -119,6 +127,18 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.roleSelect,
         builder: (_, __) => const RoleSelectScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.legalTerms,
+        builder: (_, __) => const TermsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.legalPrivacy,
+        builder: (_, __) => const PrivacyScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,

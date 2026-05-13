@@ -79,4 +79,13 @@ class SupabaseAuthRepository implements AuthRepository {
       throw Exception(translateAuthError(e));
     }
   }
+
+  @override
+  Future<void> resetPasswordForEmail(String email) async {
+    try {
+      await _client.auth.resetPasswordForEmail(email);
+    } catch (e) {
+      throw Exception(translateAuthError(e));
+    }
+  }
 }
