@@ -1,0 +1,50 @@
+name: firin_defter
+description: "FırınNet - Fırıncılar için local-first defter uygulaması."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Routing
+  go_router: ^14.6.2
+
+  # Formatting
+  intl: ^0.20.2
+
+  # Sharing (text/PDF)
+  share_plus: ^10.1.2
+
+  # PDF — Bayi Yönetimi V1 hesap özeti üretimi.
+  # Sadece doc oluşturmak için 'pdf'; preview/print 'printing' eklenmedi —
+  # share_plus ile XFile.fromData üzerinden direkt paylaşım yapılıyor.
+  pdf: ^3.11.1
+
+  # Supabase Auth + DB — V1 entegrasyon (opsiyonel: dart-define ile etkinleşir,
+  # eksikse uygulama local/mock mode'a düşer). Anahtarlar repo'da yok.
+  supabase_flutter: ^2.5.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # PDF üretimi için Unicode destekli font (Türkçe + ₺).
+  # Roboto Condensed flutter_gallery_assets'tan alındı, bundled.
+  assets:
+    - assets/fonts/Roboto-Regular.ttf
+    - assets/fonts/Roboto-Bold.ttf
