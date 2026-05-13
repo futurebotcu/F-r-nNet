@@ -21,7 +21,24 @@ final authUserStreamProvider = StreamProvider<AuthUser?>((ref) {
 });
 
 /// Senkron currentUser snapshot'ı — Stream beklemeden hızlı erişim.
+///
+/// V1.3.4 — Auth state'e **reactive**: [authUserStreamProvider] watch'lanır,
+/// böylece signIn / signOut / token refresh sonrası bu provider invalidate
+/// olur ve `repo.currentUser`'dan taze değeri döner.
+///
+/// **Bug'ı önler:** Eski sürümde `Provider<AuthUser?>` body'si bir kez
+/// çalıştığında snapshot cache'leniyordu; signIn başarılı olsa bile Splash
+/// `ref.read(currentAuthUserProvider)` çağrısı eski null değeri görüyor,
+/// kullanıcı `/auth` ekranına atılıyordu. Bu fix tüm auth-bağımlı
+/// provider'ları (`bakeryRepositoryProvider`, `dealerRepositoryProvider`,
+/// `recipeRepositoryProvider`, `workerRepositoryProvider`,
+/// `canWriteCheckProvider`) signIn sonrası taze auth state'e döndürür.
 final currentAuthUserProvider = Provider<AuthUser?>((ref) {
   final repo = ref.watch(authRepositoryProvider);
-  return repo?.currentUser;
+  if (repo == null) return null;
+  // Auth stream'i watch et → emit (signIn/signOut/token refresh) sonrası
+  // bu provider rebuild olur. Watch edilen değer kullanılmıyor; yalnız
+  // dependency oluşturmak için gerekli.
+  ref.watch(authUserStreamProvider);
+  return repo.currentUser;
 });
