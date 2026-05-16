@@ -26,6 +26,15 @@ String translateAuthError(Object error) {
     }
     return 'Sunucu hatası: ${error.message}';
   }
+  // 5xx veya geçici fetch hatası: gotrue retryable olarak işaretler.
+  if (error is AuthRetryableFetchException) {
+    return 'Sunucuya ulaşılamadı. Birkaç saniye sonra tekrar dene.';
+  }
+  // 4xx + non-JSON body (yanlış SUPABASE_URL, proxy/gateway HTML, vb.).
+  // Ham 'Failed to decode error response' kullanıcıya gösterilmez.
+  if (error is AuthUnknownException) {
+    return 'Sunucu bağlantısı yapılandırılamadı. Lütfen daha sonra tekrar dene.';
+  }
   if (error is AuthException) {
     return error.message.isEmpty
         ? 'Kimlik doğrulama hatası.'
