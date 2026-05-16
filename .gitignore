@@ -58,7 +58,9 @@ app.*.map.json
 # Anahtarlar build-time --dart-define ile geçirilir; .env yalnız local dev kolaylığı içindir.
 .env
 .env.*
+*.local.env
 !.env.example
+!.env.local.example
 
 # Yetkilendirme / sertifika dosyaları — kazara commit'i önlemek için.
 *.pem
@@ -72,8 +74,11 @@ GoogleService-Info.plist
 # Geçici scratch klasörü (path quoting hatasından oluşmuş)
 C:devfirinnetqa-screenshotsredesign-pass-1*/
 
-# Claude Code lock dosyaları — paylaşmaya değer içerik yok.
-.claude/scheduled_tasks.lock
+# Claude Code lokal config (settings.local.json, lock vb.) — paylaşmaya değer içerik yok.
+.claude/
+
+# Supabase CLI geçici cache — repo'ya alınmamalı.
+supabase/.temp/
 
 # Bu klasörler test çıktısı veya geçici görsel snapshot tutuyor; repo'ya alma.
 qa-screenshots/

@@ -380,13 +380,33 @@ class _FeedPostsSliver extends ConsumerWidget {
           child: Center(child: CircularProgressIndicator()),
         ),
       ),
-      error: (e, _) => SliverToBoxAdapter(
+      error: (e, _) => const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.l),
-          child: Text('Akış: $e'),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.pageH,
+            vertical: AppSpacing.l,
+          ),
+          child: _FeedEmpty(
+            icon: Icons.cloud_off_rounded,
+            message: AppStrings.feedErrorGeneric,
+          ),
         ),
       ),
       data: (posts) {
+        if (posts.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.pageH,
+                vertical: AppSpacing.l,
+              ),
+              child: _FeedEmpty(
+                icon: Icons.dynamic_feed_outlined,
+                message: AppStrings.feedEmptyState,
+              ),
+            ),
+          );
+        }
         final insights = insightsAsync.maybeWhen(
           data: (list) => list,
           orElse: () => const [],
@@ -521,5 +541,55 @@ class _PostCardWired extends ConsumerWidget {
     if (d.inHours < 24) return '${d.inHours} sa önce';
     if (d.inDays < 2) return 'dün';
     return '${d.inDays} gün önce';
+  }
+}
+
+/// Feed boş veya hata durumu için sade, profesyonel placeholder.
+/// Ham exception mesajı gösterilmez; kullanıcıya net bir aksiyon önerisi.
+class _FeedEmpty extends StatelessWidget {
+  const _FeedEmpty({required this.icon, required this.message});
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.l,
+        vertical: AppSpacing.xl,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.elevatedCard,
+        borderRadius: BorderRadius.circular(AppSpacing.l),
+        border: Border.all(
+          color: AppColors.borderHairline,
+          width: 0.6,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.softGold.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppSpacing.s),
+            ),
+            child: Icon(icon, color: AppColors.softGold, size: 22),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13.5,
+              height: 1.45,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

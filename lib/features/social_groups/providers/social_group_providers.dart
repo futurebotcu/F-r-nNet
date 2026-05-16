@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../core/config/app_config.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
 import '../models/group_category.dart';
 import '../models/group_message.dart';
@@ -7,12 +10,24 @@ import '../models/social_group.dart';
 import '../repositories/guarded_social_group_repository.dart';
 import '../repositories/local_social_group_repository.dart';
 import '../repositories/social_group_repository.dart';
+import '../repositories/supabase_social_group_repository.dart';
 import '../services/group_validator.dart';
 
-/// V1.3.3 — Guarded wrapper ile sarılı social group repository.
+/// Sosyal Omurga V1 — Supabase aktif ve oturum varsa gerçek backend; aksi
+/// halde LocalSocialGroupRepository.
+///
+/// Feed ile aynı pattern: guest kullanıcı için Local seed gezme deneyimi
+/// sağlanır, login açıldığı an Supabase repository devreye girer ve
+/// Guarded wrapper guest yazma aksiyonlarını bloklar.
 final socialGroupRepositoryProvider =
     Provider<SocialGroupRepository>((ref) {
-  final SocialGroupRepository inner = LocalSocialGroupRepository(seed: true);
+  final user = ref.watch(currentAuthUserProvider);
+  final SocialGroupRepository inner;
+  if (AppConfig.supabaseEnabled && user != null) {
+    inner = SupabaseSocialGroupRepository(sb.Supabase.instance.client);
+  } else {
+    inner = LocalSocialGroupRepository(seed: true);
+  }
   final canWrite = ref.watch(canWriteCheckProvider);
   return GuardedSocialGroupRepository(inner: inner, canWriteCheck: canWrite);
 });

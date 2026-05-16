@@ -39,7 +39,20 @@ class GroupDetailScreen extends ConsumerWidget {
         top: false,
         child: groupAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (_, __) => const Padding(
+            padding: EdgeInsets.all(AppSpacing.l),
+            child: Center(
+              child: Text(
+                AppStrings.groupDetailErrorGeneric,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13.5,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ),
           data: (g) {
             if (g == null) {
               return const Center(child: Text(AppStrings.groupDetailNotFound));
@@ -90,7 +103,13 @@ class GroupDetailScreen extends ConsumerWidget {
                   ),
                   child: messagesAsync.when(
                     loading: () => const _MiniLoading(),
-                    error: (e, _) => Text('Mesaj: $e'),
+                    error: (_, __) => const Text(
+                      AppStrings.groupMessagesErrorGeneric,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
                     data: (msgs) => _MessagesList(messages: msgs),
                   ),
                 ),

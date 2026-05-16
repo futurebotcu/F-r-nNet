@@ -171,6 +171,20 @@ class AppStrings {
   // Group highlight banner
   static const String feedGroupHighlightSuffix = ' grubunda öne çıktı';
 
+  // Feed/Groups Sosyal Omurga V1 — kullanıcı dostu hata/boş durumlar.
+  static const String feedErrorGeneric =
+      'Akış şu an yüklenemedi. Bağlantını kontrol edip yeniden dene.';
+  static const String feedEmptyState =
+      'Henüz paylaşım yok. İlk gönderiyi sen at — sektör seni bekliyor.';
+  static const String feedEmptyStateGuest =
+      'Akış henüz boş. Üye olunca ilk gönderiyi sen atabilirsin.';
+  static const String groupsErrorGeneric =
+      'Gruplar yüklenemedi. Bağlantını kontrol edip yeniden dene.';
+  static const String groupMessagesErrorGeneric =
+      'Mesajlar yüklenemedi. Yeniden dener misin?';
+  static const String groupDetailErrorGeneric =
+      'Grup yüklenemedi. Yeniden dener misin?';
+
   // Insight cards
   static const String feedInsightSectionLabel = 'Sektör pulse';
 
