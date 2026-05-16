@@ -121,6 +121,16 @@ class AppStrings {
   static const String authProfileSavedSnack = 'Profil kaydedildi.';
   static const String authProfileCreatedSnack =
       'Hesabın oluşturuldu. Hoş geldin!';
+
+  // V1.4 — Signup sonrası e-posta onayı bekleniyorsa gösterilen dialog.
+  // Supabase Auth ayarında `mailer_autoconfirm = false` olduğu durumda
+  // SupabaseAuthRepository.signUp `needsEmailConfirmation = true` döner.
+  static const String authEmailConfirmTitle = 'E-postanı onayla';
+  static const String authEmailConfirmBody =
+      'Sana bir doğrulama linki gönderdik. Gelen kutunu kontrol et ve '
+      'linke tıkladıktan sonra giriş yapabilirsin.';
+  static const String authEmailConfirmOk = 'Tamam';
+
   static const String authBackendDisabled =
       'Sunucu bağlantısı yapılandırılmadı — bu sürümde yalnız misafir modu çalışır.';
 

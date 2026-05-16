@@ -248,7 +248,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       }
 
       // Yeni signup — handle_new_user triggerı profile'ı oluşturur.
-      await auth.signUp(
+      final result = await auth.signUp(
         email: email,
         password: password,
         metadata: <String, dynamic>{
@@ -258,9 +258,34 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
           'city': city,
         },
       );
-      // Signup başarılıysa guest flag temizlenir.
+      // Signup başarılıysa guest flag temizlenir (her iki durumda da).
       await ref.read(guestModeProvider.notifier).setGuest(false);
       if (!mounted) return;
+
+      // mailer_autoconfirm OFF: Supabase user oluşturdu ama session
+      // vermedi. Splash/Feed'e yönlendirmek yanıltıcı — `currentUser` hâlâ
+      // null. Kullanıcıyı bilgilendir + Login ekranına gönder.
+      if (result.needsEmailConfirmation) {
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogCtx) => AlertDialog(
+            title: const Text(AppStrings.authEmailConfirmTitle),
+            content: const Text(AppStrings.authEmailConfirmBody),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text(AppStrings.authEmailConfirmOk),
+              ),
+            ],
+          ),
+        );
+        if (!mounted) return;
+        context.go(AppRoutes.login);
+        return;
+      }
+
+      // Auto-confirm AÇIK ya da provider doğrudan session verdi: normal akış.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.authProfileCreatedSnack)),
       );

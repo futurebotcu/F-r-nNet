@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/auth_user.dart';
+import '../models/sign_up_result.dart';
 import '../utils/auth_error_translator.dart';
 import 'auth_repository.dart';
 
@@ -21,7 +22,7 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthUser> signUp({
+  Future<SignUpResult> signUp({
     required String email,
     required String password,
     required Map<String, dynamic> metadata,
@@ -34,9 +35,16 @@ class SupabaseAuthRepository implements AuthRepository {
       );
       final user = res.user;
       if (user == null) {
-        throw Exception('Kayıt tamamlandı ama oturum açılmadı.');
+        // GoTrue normalde user dolu döner; bu beklenmedik bir durum.
+        throw Exception('Kayıt tamamlanamadı.');
       }
-      return _from(user)!;
+      // res.session null ise mailer_autoconfirm kapalı; kullanıcı oluşturuldu
+      // ama oturum açık değil. Çağıran UI bu flag'e bakıp "E-postanı onayla"
+      // akışını tetiklemelidir.
+      return SignUpResult(
+        user: _from(user)!,
+        needsEmailConfirmation: res.session == null,
+      );
     } catch (e) {
       throw Exception(translateAuthError(e));
     }

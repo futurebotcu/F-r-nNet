@@ -1,4 +1,5 @@
 import '../models/auth_user.dart';
+import '../models/sign_up_result.dart';
 
 /// Supabase Auth tabanlı kimlik servisi.
 ///
@@ -24,7 +25,12 @@ abstract class AuthRepository {
   ///   'city'            : String?,
   /// }
   /// ```
-  Future<AuthUser> signUp({
+  ///
+  /// Dönen [SignUpResult.needsEmailConfirmation] flag'i çağırana, Supabase'in
+  /// e-posta onayı zorunlu olup olmadığını bildirir. Onay bekleniyorken UI
+  /// kullanıcıyı Feed/Splash'a göndermek yerine bilgilendirme + Login akışı
+  /// göstermelidir (bkz. [SignUpResult]).
+  Future<SignUpResult> signUp({
     required String email,
     required String password,
     required Map<String, dynamic> metadata,

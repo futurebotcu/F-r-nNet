@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firin_defter/features/auth/models/auth_user.dart';
+import 'package:firin_defter/features/auth/models/sign_up_result.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
 import 'package:firin_defter/features/auth/repositories/auth_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,7 +36,7 @@ class _FakeAuthRepository implements AuthRepository {
       throw UnimplementedError();
 
   @override
-  Future<AuthUser> signUp({
+  Future<SignUpResult> signUp({
     required String email,
     required String password,
     required Map<String, dynamic> metadata,
