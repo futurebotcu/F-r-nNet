@@ -78,7 +78,7 @@ class RolePanelCards {
             label: AppStrings.cardMessages,
             subtitle: AppStrings.cardMessagesSub,
             icon: Icons.chat_bubble_outline_rounded,
-            comingSoon: true,
+            route: AppRoutes.messages,
           ),
         ];
 
@@ -127,7 +127,7 @@ class RolePanelCards {
             label: AppStrings.cardMessages,
             subtitle: AppStrings.cardMessagesSub,
             icon: Icons.chat_bubble_outline_rounded,
-            comingSoon: true,
+            route: AppRoutes.messages,
           ),
           PanelCard(
             label: AppStrings.cardMyProfile,
@@ -163,7 +163,7 @@ class RolePanelCards {
             label: AppStrings.cardIncomingMessages,
             subtitle: AppStrings.cardIncomingMessagesSub,
             icon: Icons.mark_email_unread_outlined,
-            comingSoon: true,
+            route: AppRoutes.messages,
           ),
           PanelCard(
             label: AppStrings.cardPriceAnnouncements,

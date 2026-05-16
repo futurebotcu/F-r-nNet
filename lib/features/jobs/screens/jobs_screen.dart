@@ -12,6 +12,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../messages/widgets/start_job_conversation_sheet.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../worker/models/job_seek_post.dart';
@@ -144,7 +145,7 @@ class _LookingList extends ConsumerWidget {
   }
 }
 
-class _JobSeekCard extends StatelessWidget {
+class _JobSeekCard extends ConsumerWidget {
   const _JobSeekCard({required this.post});
   final JobSeekPost post;
 
@@ -175,8 +176,26 @@ class _JobSeekCard extends StatelessWidget {
     return c.trim();
   }
 
+  Future<void> _onContact(BuildContext context, WidgetRef ref) async {
+    final canWrite = AuthRequiredGuard.canWriteWithRef(ref);
+    if (!canWrite) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    await StartJobConversationSheet.showForSeek(context, post);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Job seek kartı: ticari/toptancı kullanıcı iş arayanla iletişime
+    // geçebilir. Bireysel kullanıcı veya kendi ilanı için CTA gizlenir
+    // (onApply=null → JobOpportunityCard CTA'yı hiç render etmez).
+    final profile = ref.watch(profileControllerProvider);
+    final user = ref.watch(currentAuthUserProvider);
+    final isOwn = user != null && post.ownerId == user.id;
+    final isCommercial = profile?.accountType == AccountType.commercial ||
+        profile?.accountType == AccountType.wholesaler;
+    final showCta = !isOwn && (isCommercial || profile == null);
     return JobOpportunityCard(
       position: post.title,
       business: _formatBusiness(),
@@ -185,6 +204,9 @@ class _JobSeekCard extends StatelessWidget {
       experience: _formatExperience(),
       badge: AppStrings.jobsCardBadgeActive,
       shift: null,
+      onApply: showCta ? () => _onContact(context, ref) : null,
+      applyLabel: AppStrings.jobsContact,
+      applyIcon: Icons.chat_bubble_outline_rounded,
     );
   }
 }
@@ -276,7 +298,7 @@ class _HiringList extends ConsumerWidget {
   }
 }
 
-class _JobOfferCard extends StatelessWidget {
+class _JobOfferCard extends ConsumerWidget {
   const _JobOfferCard({required this.offer});
   final JobOfferPost offer;
 
@@ -312,8 +334,21 @@ class _JobOfferCard extends StatelessWidget {
     return AppStrings.jobsCardBusinessFallback;
   }
 
+  Future<void> _onApply(BuildContext context, WidgetRef ref) async {
+    final canWrite = AuthRequiredGuard.canWriteWithRef(ref);
+    if (!canWrite) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    await StartJobConversationSheet.showForOffer(context, offer);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Usta Arıyor kartı: bireysel kullanıcı başvurabilir; kendi ilanı için
+    // CTA gizlenir.
+    final user = ref.watch(currentAuthUserProvider);
+    final isOwn = user != null && offer.ownerId == user.id;
     return JobOpportunityCard(
       position: offer.title,
       business: _formatBusiness(),
@@ -322,78 +357,9 @@ class _JobOfferCard extends StatelessWidget {
       experience: _formatExperience(),
       badge: AppStrings.jobsCardBadgeActive,
       shift: offer.shiftType,
-    );
-  }
-}
-
-// Eski coming-soon yedek widget (kullanılmıyor, referans için):
-class _HiringComingSoon extends StatelessWidget {
-  // ignore: unused_element
-  const _HiringComingSoon();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageH,
-        AppSpacing.l,
-        AppSpacing.pageH,
-        0,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        decoration: BoxDecoration(
-          color: AppColors.elevatedCard,
-          borderRadius: BorderRadius.circular(AppRadius.l),
-          border: Border.all(
-            color: AppColors.copper.withValues(alpha: 0.22),
-            width: 0.8,
-          ),
-          boxShadow: AppShadow.card,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: AppColors.copper.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(AppRadius.s),
-                  ),
-                  child: const Icon(
-                    Icons.bakery_dining_rounded,
-                    color: AppColors.softGold,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.m),
-                Expanded(
-                  child: Text(
-                    AppStrings.jobsHiringComingSoonTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.m),
-            Text(
-              AppStrings.jobsHiringComingSoonBody,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                height: 1.5,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
+      onApply: isOwn ? null : () => _onApply(context, ref),
+      applyLabel: AppStrings.jobsApply,
+      applyIcon: Icons.send_rounded,
     );
   }
 }

@@ -41,6 +41,8 @@ import '../../features/jobs/screens/job_offer_form_screen.dart';
 import '../../features/jobs/screens/jobs_screen.dart';
 import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
+import '../../features/messages/screens/job_conversation_screen.dart';
+import '../../features/messages/screens/messages_list_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
@@ -113,6 +115,10 @@ class AppRoutes {
   // V1 — Marketplace ilanları
   static const String marketListingNew = '/market/listings/new';
   static String marketListingEdit(String id) => '/market/listings/$id/edit';
+
+  // V1 — Job messaging (job_conversations + job_messages)
+  static const String messages = '/messages';
+  static String conversation(String id) => '/messages/$id';
 }
 
 GoRouter createRouter() {
@@ -378,6 +384,17 @@ GoRouter createRouter() {
         path: '/market/listings/:id/edit',
         builder: (_, state) =>
             MarketListingFormScreen(listingId: state.pathParameters['id']!),
+      ),
+
+      // V1 — Job messaging
+      GoRoute(
+        path: AppRoutes.messages,
+        builder: (_, __) => const MessagesListScreen(),
+      ),
+      GoRoute(
+        path: '/messages/:id',
+        builder: (_, state) =>
+            JobConversationScreen(conversationId: state.pathParameters['id']!),
       ),
     ],
   );

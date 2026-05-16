@@ -87,8 +87,16 @@ void main() {
       expect(src.contains('ConsumerStatefulWidget'), isTrue);
     });
 
-    test('İş Veriyorum tarafı coming-soon placeholder', () {
-      expect(src.contains('jobsHiringComingSoonTitle'), isTrue);
+    test('İş Veriyorum tarafı artık gerçek backend (coming-soon yok)', () {
+      // V1 messaging sprint sonrası: _HiringComingSoon placeholder ve
+      // jobsHiringComingSoon* string'leri kaldırıldı, segment gerçek
+      // `activeJobOffersProvider` listesine bağlandı.
+      expect(src.contains('jobsHiringComingSoonTitle'), isFalse,
+          reason: 'coming-soon placeholder kaldırılmış olmalı');
+      expect(src.contains('_HiringComingSoon'), isFalse,
+          reason: 'placeholder widget silinmiş olmalı');
+      expect(src.contains('activeJobOffersProvider'), isTrue,
+          reason: 'gerçek backend listesi kullanılmalı');
     });
   });
 

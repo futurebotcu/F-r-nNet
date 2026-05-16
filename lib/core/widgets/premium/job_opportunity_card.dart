@@ -16,6 +16,9 @@ class JobOpportunityCard extends StatelessWidget {
     this.shift,
     this.featured = false,
     this.onApply,
+    this.applyLabel,
+    this.applyIcon,
+    this.applyEnabled = true,
   });
 
   final String position;
@@ -26,7 +29,20 @@ class JobOpportunityCard extends StatelessWidget {
   final String badge;
   final String? shift;
   final bool featured;
+
+  /// Parent callback. `null` ise CTA gizlenir (sessiz snackbar yerine
+  /// dürüst davranış — parent açıkça "bu kart için aksiyon yok" diyor).
   final VoidCallback? onApply;
+
+  /// Default `AppStrings.jobsApply` ("Başvur"). Job seek kartı için
+  /// "İletişime geç" geçilir.
+  final String? applyLabel;
+
+  /// Default `Icons.send_rounded`. Job seek için chat ikonu da geçilebilir.
+  final IconData? applyIcon;
+
+  /// `false` ise buton görünür ama disabled (örn. kendi ilanı / closed).
+  final bool applyEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -145,37 +161,32 @@ class JobOpportunityCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.l),
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: FilledButton.icon(
-              // V1: parent `onApply` vermezse sessiz `() {}` yerine dürüst
-              // bir snackbar göster. Mesajlaşma backend V2 işi.
-              onPressed: onApply ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(AppStrings.jobsApplyComingSoon),
-                      ),
-                    );
-                  },
-              icon: const Icon(Icons.send_rounded, size: 16),
-              label: const Text(AppStrings.jobsApply),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.s),
-                ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                  letterSpacing: 0.1,
+          // V1 — Job messaging gerçek oldu: onApply parent'tan geçilir.
+          // Parent vermezse CTA hiç render edilmez (boş snackbar/no-op yok).
+          if (onApply != null) ...[
+            const SizedBox(height: AppSpacing.l),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: FilledButton.icon(
+                onPressed: applyEnabled ? onApply : null,
+                icon: Icon(applyIcon ?? Icons.send_rounded, size: 16),
+                label: Text(applyLabel ?? AppStrings.jobsApply),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.copper,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.s),
+                  ),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

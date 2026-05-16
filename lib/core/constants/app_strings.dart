@@ -226,8 +226,51 @@ class AppStrings {
   static const String jobsListHiring = 'Çalışan arayan fırınlar';
   static const String jobsListLooking = 'İş arayan ustalar';
   static const String jobsApply = 'Başvur';
-  static const String jobsApplyComingSoon =
-      'Başvuru yakında — V2\'de iletişim ve mesajlaşma açılacak.';
+  static const String jobsContact = 'İletişime geç';
+
+  // V1 — Job messaging (job_conversations + job_messages)
+  static const String messagesTitle = 'Mesajlar';
+  static const String messagesSubtitle = 'İlanlar üzerinden başlattığın sohbetler';
+  static const String messagesEmpty =
+      'Henüz mesaj yok. Bir ilana başvurduğunda veya iletişime geçtiğinde '
+      'sohbetler burada görünür.';
+  static const String messagesEmptyGuest =
+      'Mesajları görmek için önce giriş yap.';
+  static const String messagesErrorGeneric =
+      'Mesajlar yüklenemedi. Yeniden dener misin?';
+  static const String messagesRelatedJobOffer = 'Usta arayan ilan';
+  static const String messagesRelatedJobSeek = 'İş arayan ilan';
+  static const String messagesClosedBadge = 'KAPALI';
+
+  static const String conversationTitleFallback = 'Sohbet';
+  static const String conversationComposerHint = 'Mesaj yaz…';
+  static const String conversationSendCta = 'Gönder';
+  static const String conversationSendError =
+      'Mesaj gönderilemedi. Yeniden dener misin?';
+  static const String conversationLoadError =
+      'Sohbet yüklenemedi. Yeniden dener misin?';
+  static const String conversationEmptyOwn =
+      'Henüz mesaj yok. İlk mesajı sen yaz.';
+  static const String conversationClosedBanner =
+      'Bu sohbet kapatıldı. Yeni mesaj gönderilemez.';
+  static const String conversationCloseCta = 'Sohbeti kapat';
+  static const String conversationClosedSnack = 'Sohbet kapatıldı.';
+  static const String conversationDeleteOwnCta = 'Mesajı sil';
+  static const String conversationDeletedPlaceholder = '[Mesaj silindi]';
+
+  static const String startConvoSheetTitleOffer = 'İlana başvuru';
+  static const String startConvoSheetTitleSeek = 'İletişime geç';
+  static const String startConvoSheetSubtitleOffer =
+      'Kendini tanıt — kim olduğunu, tecrübeni, neden bu iş için uygun olduğunu yaz.';
+  static const String startConvoSheetSubtitleSeek =
+      'Kısaca tanış — hangi iş için aradığını ve iletişim için ne yapacağını yaz.';
+  static const String startConvoSendCta = 'Mesajı Gönder';
+  static const String startConvoEmptyError = 'Boş mesaj gönderilemez.';
+  static const String startConvoOwnPostError =
+      'Kendi ilanına başvuru yapamazsın.';
+  static const String startConvoGenericError =
+      'Mesaj başlatılamadı. Yeniden dener misin?';
+  static const String startConvoOpenedSnack = 'Mesajın gönderildi.';
 
   // V1 — Profile tehlikeli alan başlığı (hesap silme vurgusu için)
   static const String profileSectionDanger = 'Tehlikeli alan';
@@ -240,14 +283,6 @@ class AppStrings {
       'Henüz aktif iş arayan ilanı yok. İlk ilanı sen ver veya daha sonra tekrar bak.';
   static const String jobsLookingEmptyGuest =
       'Henüz aktif iş arayan ilanı yok. Üye olunca kendin de ilan verebilirsin.';
-  // V2-J1 sprint sonrası — "Usta Arıyor" gerçek backend'e bağlandı.
-  // Bu metin sadece yedek için kalıyor (eskinin referansı); şu an
-  // segmentte gerçek liste gösterilir, coming-soon yok.
-  static const String jobsHiringComingSoonTitle = 'Usta arayan ilanlar yakında';
-  static const String jobsHiringComingSoonBody =
-      'Fırınların usta arayan ilan modülü V2\'de açılır. Şimdilik bireysel '
-      '"İş Arıyor" ilanlarını görebilirsin.';
-
   // V1 — Job offer ("Usta Arıyor") UI copy.
   static const String jobOfferEmpty =
       'Henüz aktif "Usta Arıyor" ilanı yok. Sektörden ilk ilanı bekliyoruz.';
