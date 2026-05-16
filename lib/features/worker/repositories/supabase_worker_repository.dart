@@ -138,6 +138,22 @@ class SupabaseWorkerRepository implements WorkerRepository {
   }
 
   @override
+  Future<List<JobSeekPost>> listActiveJobSeekPosts({int limit = 100}) async {
+    // RLS: job_seek_posts_select_active_or_own → herhangi authenticated user
+    // is_active=true satırları görebilir (worker_and_jobseek migration).
+    final rows = await _client
+        .from('job_seek_posts')
+        .select(_postColumns)
+        .eq('is_active', true)
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(JobSeekPost.fromRow)
+        .toList(growable: false);
+  }
+
+  @override
   Future<JobSeekPost?> getJobSeekPost(String id) async {
     _requireUserId();
     final row = await _client

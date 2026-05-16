@@ -17,6 +17,12 @@ abstract class WorkerRepository {
   Future<void> deleteExperience(String id);
 
   Future<List<JobSeekPost>> listMyJobSeekPosts();
+
+  /// Sektörde aktif olan iş arayan ilanları (is_active=true). Sosyal akış için
+  /// V1 — JobsScreen tab içeriği. RLS authenticated select açık (worker
+  /// migration `job_seek_posts_select_active_or_own`).
+  Future<List<JobSeekPost>> listActiveJobSeekPosts({int limit = 100});
+
   Future<JobSeekPost?> getJobSeekPost(String id);
   Future<JobSeekPost> upsertJobSeekPost(JobSeekPost post);
   Future<void> deleteJobSeekPost(String id);

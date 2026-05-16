@@ -71,6 +71,18 @@ class LocalWorkerRepository implements WorkerRepository {
   }
 
   @override
+  Future<List<JobSeekPost>> listActiveJobSeekPosts({int limit = 100}) async {
+    final out = _posts.where((p) => p.isActive).toList();
+    out.sort((a, b) {
+      final ad = a.createdAt ?? DateTime(1900);
+      final bd = b.createdAt ?? DateTime(1900);
+      return bd.compareTo(ad);
+    });
+    if (out.length > limit) out.length = limit;
+    return List.unmodifiable(out);
+  }
+
+  @override
   Future<JobSeekPost?> getJobSeekPost(String id) async {
     for (final p in _posts) {
       if (p.id == id) return p;

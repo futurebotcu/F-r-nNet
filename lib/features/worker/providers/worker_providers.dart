@@ -44,3 +44,10 @@ final myJobSeekPostsProvider = FutureProvider<List<JobSeekPost>>((ref) async {
   ref.watch(workerChangesProvider);
   return ref.watch(workerRepositoryProvider).listMyJobSeekPosts();
 });
+
+/// Sektörde aktif olan iş arayan ilanları (V1 JobsScreen tab içeriği).
+final activeJobSeekPostsProvider =
+    FutureProvider<List<JobSeekPost>>((ref) async {
+  ref.watch(workerChangesProvider);
+  return ref.watch(workerRepositoryProvider).listActiveJobSeekPosts();
+});

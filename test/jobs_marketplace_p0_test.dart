@@ -1,0 +1,153 @@
+// V1 P0 — Jobs/Marketplace mock temizliği doğrulama testleri.
+//
+//   1. MarketplaceScreen kaynak kodu artık hardcoded ürün/satıcı listesi
+//      içermiyor (Spiral mikser, Konya Değirmen, ₺ 850.000 vb.).
+//   2. JobsScreen kaynak kodu artık hardcoded fırın/usta listesi içermiyor
+//      (_bakeriesHiring, _bakersLooking, Konak Fırını, Selin Pastane vb.).
+//   3. AppShell._tabs içinde `AppRoutes.market` referansı yok (bottom nav'dan
+//      kaldırıldı); Feed / Gruplar / İlanlar / Panel kalır.
+//   4. LocalWorkerRepository.listActiveJobSeekPosts() sadece is_active=true
+//      satırları döner, limit'e saygı duyar.
+//
+// Bu testler refactor'ün gelecekteki bir mock'la geri çekilmesini önler.
+
+import 'dart:io';
+
+import 'package:firin_defter/features/worker/models/job_seek_post.dart';
+import 'package:firin_defter/features/worker/repositories/local_worker_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  group('Marketplace mock cleanup (P0)', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/marketplace/screens/marketplace_screen.dart')
+          .readAsStringSync();
+    });
+
+    test('mock ürün listeleri kaldırıldı', () {
+      // Eski hardcoded items'tan emin bir-iki unique string seç.
+      expect(src.contains('Spiral mikser'), isFalse,
+          reason: 'MarketplaceScreen hâlâ mock ekipman ürünü içeriyor');
+      expect(src.contains('Konya Değirmen'), isFalse,
+          reason: 'MarketplaceScreen hâlâ mock satıcı içeriyor');
+      expect(src.contains('₺ 850.000'), isFalse,
+          reason: 'MarketplaceScreen hâlâ mock fiyat içeriyor');
+      expect(src.contains('Devren Fırın'), isFalse,
+          reason: 'MarketplaceScreen hâlâ mock filtre çipi içeriyor');
+    });
+
+    test('MarketProductCard render edilmiyor', () {
+      expect(src.contains('MarketProductCard'), isFalse,
+          reason: 'Marketplace artık mock kart render etmemeli');
+    });
+
+    test('Coming-soon ekranı kaldı', () {
+      expect(src.contains('marketComingSoonTitle'), isTrue);
+      expect(src.contains('marketComingSoonBody'), isTrue);
+    });
+  });
+
+  group('Jobs mock cleanup (P0)', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/jobs/screens/jobs_screen.dart')
+          .readAsStringSync();
+    });
+
+    test('hardcoded fırın/usta listeleri kaldırıldı', () {
+      expect(src.contains('_bakeriesHiring'), isFalse,
+          reason: 'Eski hardcoded "_bakeriesHiring" listesi kalmamalı');
+      expect(src.contains('_bakersLooking'), isFalse,
+          reason: 'Eski hardcoded "_bakersLooking" listesi kalmamalı');
+    });
+
+    test('mock işletme isimleri kaldırıldı', () {
+      expect(src.contains('Konak Fırını'), isFalse);
+      expect(src.contains('Selin Pastane'), isFalse);
+      expect(src.contains('Ekmek Sepeti'), isFalse);
+      expect(src.contains('Antep Pide Evi'), isFalse);
+    });
+
+    test('mock ustalar kaldırıldı', () {
+      expect(src.contains('Hasan Kara'), isFalse);
+      expect(src.contains('Selin Ateş'), isFalse);
+      expect(src.contains('Burak D.'), isFalse);
+    });
+
+    test('Provider tabanlı listeye bağlandı', () {
+      expect(src.contains('activeJobSeekPostsProvider'), isTrue,
+          reason: 'JobsScreen gerçek provider\'a bağlı olmalı');
+      expect(src.contains('ConsumerStatefulWidget'), isTrue);
+    });
+
+    test('İş Veriyorum tarafı coming-soon placeholder', () {
+      expect(src.contains('jobsHiringComingSoonTitle'), isTrue);
+    });
+  });
+
+  group('AppShell bottom nav (P0)', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/dashboard/screens/app_shell.dart')
+          .readAsStringSync();
+    });
+
+    test('Market tab _tabs listesinden kaldırıldı', () {
+      // _tabs ve AppRoutes.market kombinasyonu birlikte geçmemeli.
+      // _tabs içinde sadece feed, groups, jobs, panel olmalı.
+      expect(src.contains('AppRoutes.market'), isFalse,
+          reason: 'AppShell._tabs hâlâ Market tab\'ını içeriyor');
+    });
+
+    test('Diğer 4 tab korundu', () {
+      expect(src.contains('AppRoutes.feed'), isTrue);
+      expect(src.contains('AppRoutes.groups'), isTrue);
+      expect(src.contains('AppRoutes.jobs'), isTrue);
+      expect(src.contains('AppRoutes.panel'), isTrue);
+    });
+  });
+
+  group('LocalWorkerRepository.listActiveJobSeekPosts', () {
+    test('sadece is_active=true satırları döner', () async {
+      final repo = LocalWorkerRepository();
+      // owner_id null olabilir local'de, sadece is_active filtresine bakılıyor.
+      await repo.upsertJobSeekPost(const JobSeekPost(
+        title: 'Aktif ilan',
+        isActive: true,
+      ));
+      await repo.upsertJobSeekPost(const JobSeekPost(
+        title: 'Kapalı ilan',
+        isActive: false,
+      ));
+      await repo.upsertJobSeekPost(const JobSeekPost(
+        title: 'Başka aktif ilan',
+        isActive: true,
+      ));
+
+      final active = await repo.listActiveJobSeekPosts();
+      expect(active.length, 2);
+      expect(active.every((p) => p.isActive), isTrue);
+      final titles = active.map((p) => p.title).toSet();
+      expect(titles, {'Aktif ilan', 'Başka aktif ilan'});
+    });
+
+    test('limit\'e saygı duyar', () async {
+      final repo = LocalWorkerRepository();
+      for (var i = 0; i < 5; i++) {
+        await repo.upsertJobSeekPost(JobSeekPost(
+          title: 'İlan $i',
+          isActive: true,
+        ));
+      }
+      final active = await repo.listActiveJobSeekPosts(limit: 2);
+      expect(active.length, 2);
+    });
+
+    test('boş listede boş döner (empty state için)', () async {
+      final repo = LocalWorkerRepository();
+      final active = await repo.listActiveJobSeekPosts();
+      expect(active, isEmpty);
+    });
+  });
+}

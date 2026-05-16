@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
@@ -7,95 +10,37 @@ import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/job_opportunity_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../auth/providers/auth_providers.dart';
+import '../../auth/services/auth_required_guard.dart';
+import '../../worker/models/job_seek_post.dart';
+import '../../worker/providers/worker_providers.dart';
 
-class JobsScreen extends StatefulWidget {
+/// V1 İlanlar — gerçek `job_seek_posts` verisine bağlı (P0 mock temizliği).
+///
+/// "Usta Arıyor" segmenti V1'de tablo yok → coming-soon placeholder.
+/// "İş Arıyor" segmenti `activeJobSeekPostsProvider` üzerinden sektörde
+/// `is_active = true` ilanları listeler. Misafir read açık; yeni ilan
+/// vermek isteyen guest [AuthRequiredSheet]'e düşer.
+class JobsScreen extends ConsumerStatefulWidget {
   const JobsScreen({super.key});
 
   @override
-  State<JobsScreen> createState() => _JobsScreenState();
+  ConsumerState<JobsScreen> createState() => _JobsScreenState();
 }
 
-class _JobsScreenState extends State<JobsScreen> {
+class _JobsScreenState extends ConsumerState<JobsScreen> {
   int _segmentIndex = 0;
 
-  static const _bakeriesHiring = <_Job>[
-    _Job(
-      position: 'Taş Fırın Ustası',
-      business: 'Konak Fırını',
-      city: 'İstanbul · Kadıköy',
-      salary: '₺ 38.000 – 45.000',
-      experience: '5+ yıl deneyim',
-      badge: 'Tam zaman',
-      shift: 'Gece vardiyası',
-      featured: true,
-    ),
-    _Job(
-      position: 'Pastacı Yardımcısı',
-      business: 'Selin Pastane',
-      city: 'İzmir · Karşıyaka',
-      salary: '₺ 24.000 + servis',
-      experience: '1+ yıl',
-      badge: 'Tam zaman',
-      shift: 'Gündüz · 09–18',
-    ),
-    _Job(
-      position: 'Tezgâh & Sipariş Sorumlusu',
-      business: 'Ekmek Sepeti',
-      city: 'Ankara · Çankaya',
-      salary: '₺ 22.000',
-      experience: 'Deneyimsiz olabilir',
-      badge: 'Vardiyalı',
-      shift: '07–15 / 15–23',
-    ),
-    _Job(
-      position: 'Pide Ustası',
-      business: 'Antep Pide Evi',
-      city: 'Gaziantep · Şahinbey',
-      salary: '₺ 30.000',
-      experience: '3+ yıl',
-      badge: 'Tam zaman',
-      shift: 'Gündüz',
-    ),
-  ];
-
-  static const _bakersLooking = <_Job>[
-    _Job(
-      position: '12 yıllık ekşi maya ustası',
-      business: 'Hasan Kara',
-      city: 'Konya',
-      salary: 'Beklenti ₺ 40.000+',
-      experience: '12 yıl',
-      badge: 'Aktif',
-      shift: 'Gece üretimi tercih',
-      featured: true,
-    ),
-    _Job(
-      position: 'Pastacı (atölye odaklı)',
-      business: 'Selin Ateş',
-      city: 'İstanbul',
-      salary: 'Beklenti ₺ 32.000',
-      experience: '6 yıl',
-      badge: 'Aktif',
-      shift: 'Gündüz',
-    ),
-    _Job(
-      position: 'Tezgâh & sipariş yardımcısı',
-      business: 'Burak D.',
-      city: 'İzmir',
-      salary: 'Beklenti ₺ 22.000',
-      experience: '2 yıl',
-      badge: 'Aktif',
-      shift: 'Vardiya esnek',
-    ),
-  ];
+  Future<void> _onAddPressed() async {
+    if (AuthRequiredGuard.canWriteWithRef(ref)) {
+      context.push(AppRoutes.jobSeekNew);
+      return;
+    }
+    await showAuthRequiredSheet(context, ref);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final list = _segmentIndex == 0 ? _bakeriesHiring : _bakersLooking;
-    final sectionTitle = _segmentIndex == 0
-        ? AppStrings.jobsListHiring
-        : AppStrings.jobsListLooking;
-
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -111,7 +56,7 @@ class _JobsScreenState extends State<JobsScreen> {
               actions: [
                 HeaderActionButton(
                   icon: Icons.add_rounded,
-                  onTap: () {},
+                  onTap: _onAddPressed,
                 ),
               ],
             ),
@@ -125,28 +70,218 @@ class _JobsScreenState extends State<JobsScreen> {
                 onChange: (i) => setState(() => _segmentIndex = i),
               ),
             ),
-            SectionLabel(title: sectionTitle, trailingLabel: 'Filtre'),
-            Padding(
+            if (_segmentIndex == 0)
+              const _HiringComingSoon()
+            else
+              const _LookingList(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LookingList extends ConsumerWidget {
+  const _LookingList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(activeJobSeekPostsProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel(title: AppStrings.jobsListLooking),
+        async.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (_, __) => const _JobsMessage(
+            icon: Icons.cloud_off_outlined,
+            message: AppStrings.jobsErrorGeneric,
+          ),
+          data: (posts) {
+            if (posts.isEmpty) {
+              final user = ref.watch(currentAuthUserProvider);
+              return _JobsMessage(
+                icon: Icons.inbox_outlined,
+                message: user == null
+                    ? AppStrings.jobsLookingEmptyGuest
+                    : AppStrings.jobsLookingEmpty,
+              );
+            }
+            return Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.pageH,
               ),
               child: Column(
                 children: [
-                  for (var i = 0; i < list.length; i++) ...[
-                    JobOpportunityCard(
-                      position: list[i].position,
-                      business: list[i].business,
-                      city: list[i].city,
-                      salary: list[i].salary,
-                      experience: list[i].experience,
-                      badge: list[i].badge,
-                      shift: list[i].shift,
-                      featured: list[i].featured,
-                    ),
-                    if (i != list.length - 1)
+                  for (var i = 0; i < posts.length; i++) ...[
+                    _JobSeekCard(post: posts[i]),
+                    if (i != posts.length - 1)
                       const SizedBox(height: AppSpacing.m),
                   ],
                 ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _JobSeekCard extends StatelessWidget {
+  const _JobSeekCard({required this.post});
+  final JobSeekPost post;
+
+  String _formatSalary() {
+    final v = post.salaryExpectation;
+    if (v == null || v <= 0) return AppStrings.jobsCardSalaryUnset;
+    return 'Beklenti ₺ ${v.toStringAsFixed(0)}';
+  }
+
+  String _formatExperience() {
+    final y = post.experienceYears;
+    if (y == null || y < 0) return AppStrings.jobsCardExperienceUnset;
+    if (y == 0) return 'Deneyimsiz olabilir';
+    return '$y yıl';
+  }
+
+  String _formatBusiness() {
+    final badge = post.professionBadge;
+    if (badge == null || badge.trim().isEmpty) {
+      return AppStrings.jobsCardBusinessFallback;
+    }
+    return badge.trim();
+  }
+
+  String _formatCity() {
+    final c = post.city;
+    if (c == null || c.trim().isEmpty) return AppStrings.jobsCardCityUnset;
+    return c.trim();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return JobOpportunityCard(
+      position: post.title,
+      business: _formatBusiness(),
+      city: _formatCity(),
+      salary: _formatSalary(),
+      experience: _formatExperience(),
+      badge: AppStrings.jobsCardBadgeActive,
+      shift: null,
+    );
+  }
+}
+
+class _HiringComingSoon extends StatelessWidget {
+  const _HiringComingSoon();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.l,
+        AppSpacing.pageH,
+        0,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        decoration: BoxDecoration(
+          color: AppColors.elevatedCard,
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          border: Border.all(
+            color: AppColors.copper.withValues(alpha: 0.22),
+            width: 0.8,
+          ),
+          boxShadow: AppShadow.card,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.copper.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(AppRadius.s),
+                  ),
+                  child: const Icon(
+                    Icons.bakery_dining_rounded,
+                    color: AppColors.softGold,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.m),
+                Expanded(
+                  child: Text(
+                    AppStrings.jobsHiringComingSoonTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.m),
+            Text(
+              AppStrings.jobsHiringComingSoonBody,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                height: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _JobsMessage extends StatelessWidget {
+  const _JobsMessage({required this.icon, required this.message});
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.l,
+        AppSpacing.pageH,
+        AppSpacing.l,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          border: Border.all(
+            color: AppColors.borderHairline,
+            width: 0.6,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: AppColors.softGold, size: 20),
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      height: 1.5,
+                      color: AppColors.textSecondary,
+                    ),
               ),
             ),
           ],
@@ -236,25 +371,4 @@ class _SegmentTab extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Job {
-  const _Job({
-    required this.position,
-    required this.business,
-    required this.city,
-    required this.salary,
-    required this.experience,
-    required this.badge,
-    this.shift,
-    this.featured = false,
-  });
-  final String position;
-  final String business;
-  final String city;
-  final String salary;
-  final String experience;
-  final String badge;
-  final String? shift;
-  final bool featured;
 }

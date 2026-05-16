@@ -29,6 +29,10 @@ class GuardedWorkerRepository implements WorkerRepository {
   Future<List<JobSeekPost>> listMyJobSeekPosts() => inner.listMyJobSeekPosts();
 
   @override
+  Future<List<JobSeekPost>> listActiveJobSeekPosts({int limit = 100}) =>
+      inner.listActiveJobSeekPosts(limit: limit);
+
+  @override
   Future<JobSeekPost?> getJobSeekPost(String id) => inner.getJobSeekPost(id);
 
   @override

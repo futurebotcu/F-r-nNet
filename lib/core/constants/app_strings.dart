@@ -208,6 +208,33 @@ class AppStrings {
   static const String jobsListLooking = 'İş arayan ustalar';
   static const String jobsApply = 'Başvur';
 
+  // V1 — Jobs gerçek veri durumları (P0 mock temizliği)
+  static const String jobsLookingEmpty =
+      'Henüz aktif iş arayan ilanı yok. İlk ilanı sen ver veya daha sonra tekrar bak.';
+  static const String jobsLookingEmptyGuest =
+      'Henüz aktif iş arayan ilanı yok. Üye olunca kendin de ilan verebilirsin.';
+  static const String jobsHiringComingSoonTitle = 'Usta arayan ilanlar yakında';
+  static const String jobsHiringComingSoonBody =
+      'Fırınların usta arayan ilan modülü V2\'de açılır. Şimdilik bireysel '
+      '"İş Arıyor" ilanlarını görebilirsin.';
+  static const String jobsErrorGeneric =
+      'İlanlar yüklenemedi. Bağlantını kontrol edip yeniden dene.';
+  static const String jobsCardSalaryUnset = 'Ücret belirtilmemiş';
+  static const String jobsCardExperienceUnset = 'Tecrübe belirtilmemiş';
+  static const String jobsCardCityUnset = 'Şehir belirtilmemiş';
+  static const String jobsCardBadgeActive = 'Aktif';
+  static const String jobsCardBusinessFallback = 'FırınNet üyesi';
+
+  // V1 — Marketplace mock temizliği (P0)
+  static const String marketComingSoonTitle = 'Market yakında açılır';
+  static const String marketComingSoonBody =
+      'Doğrulanmış satıcı, gerçek ürün ve mesajlaşma altyapısı V2\'de '
+      'aktive olur. O ana kadar burada ilan göstermiyoruz; sahte ürün '
+      'görmektense boş bir liste daha dürüst.';
+  static const String marketComingSoonHintCommercial =
+      'Ticari rolündeysen Fırın Paneli ve Bayi Paneli üzerinden günlük '
+      'işlerine devam edebilirsin.';
+
   // Role-based dashboard kartları (Panel tab içerikleri)
   static const String panelGreetingPrefix = 'Merhaba';
   static const String panelRoleSubCommercial = 'Atölyeni ve bayilerini yönet';
