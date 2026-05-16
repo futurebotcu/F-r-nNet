@@ -73,8 +73,6 @@ class FeedScreen extends StatelessWidget {
   }
 }
 
-void _noop() {}
-
 class _Story {
   const _Story(this.name, this.icon, this.isMine);
   final String name;
@@ -88,6 +86,9 @@ class _FeedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // V1 — header search icon V1'de _noop'tu (sessiz no-op). Search
+    // backend henüz yok; sessiz tıklama yerine icon hiç gösterilmiyor.
+    // V2'de gerçek search açılınca buraya geri eklenir.
     return FirinNetHeader(
       title: AppStrings.feedTitle,
       subtitle: AppStrings.feedSubtitle,
@@ -96,11 +97,6 @@ class _FeedHeader extends StatelessWidget {
           icon: Icons.groups_2_outlined,
           tooltip: AppStrings.groupsTitle,
           onTap: () => context.go(AppRoutes.groups),
-        ),
-        const SizedBox(width: 8),
-        HeaderActionButton(
-          icon: Icons.search_rounded,
-          onTap: _noop,
         ),
         const SizedBox(width: 8),
         _ProfileAvatarAction(

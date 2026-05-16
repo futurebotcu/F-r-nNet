@@ -207,6 +207,14 @@ class AppStrings {
   static const String jobsListHiring = 'Çalışan arayan fırınlar';
   static const String jobsListLooking = 'İş arayan ustalar';
   static const String jobsApply = 'Başvur';
+  static const String jobsApplyComingSoon =
+      'Başvuru yakında — V2\'de iletişim ve mesajlaşma açılacak.';
+
+  // V1 — Profile tehlikeli alan başlığı (hesap silme vurgusu için)
+  static const String profileSectionDanger = 'Tehlikeli alan';
+  static const String profileDangerHint =
+      'Bu işlem geri alınamaz. Hesabını silmeden önce '
+      'düşündüğünden emin ol.';
 
   // V1 — Jobs gerçek veri durumları (P0 mock temizliği)
   static const String jobsLookingEmpty =

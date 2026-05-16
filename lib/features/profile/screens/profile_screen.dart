@@ -68,14 +68,16 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     child: _PublicRecipesSection(),
                   ),
-                  const SectionLabel(title: 'Hesap'),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pageH,
-                    ),
-                    child: _AccountList(profile: profile),
-                  ),
+                  // V1 P1-A: önceki "Hesap" SectionLabel + _AccountList'i
+                  // (5 NO-OP tile: İşletme Bilgileri, Ürünlerim, Raporlarım,
+                  // E-posta, Ayarlar) kullanıcıyı kandırıyordu — tıklanıyor
+                  // ama hiçbir şey yapmıyordu. Bu satırlara ulaşılacak gerçek
+                  // route'lar zaten panel/recipes/report'tan açık. Section
+                  // tamamen kaldırıldı; profile ekranı sadece kim olduğunu
+                  // gösterir + tehlikeli alanı sunar.
                   const SizedBox(height: AppSpacing.l),
+
+                  // Logout — düşük vurgulu, nötr action.
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.pageH,
@@ -117,33 +119,23 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  // V1 P0 — KVKK / Play account-deletion compliance.
-                  // 2-aşamalı confirmation arkasında çalışan kalıcı hesap
-                  // silme butonu. service_role kullanılmaz; çağrı
-                  // `delete-account` Edge Function üzerinden gider.
+
+                  // V1 P1-F — "Tehlikeli alan" sectionu danger vurgulu.
+                  // KVKK / Play account-deletion compliance. 2-aşamalı
+                  // confirmation arkasında; service_role kullanılmaz, çağrı
+                  // `delete-account` Edge Function üzerinden.
+                  const SizedBox(height: AppSpacing.m),
+                  const SectionLabel(title: AppStrings.profileSectionDanger),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.pageH,
-                      AppSpacing.s,
-                      AppSpacing.pageH,
-                      AppSpacing.l,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageH,
                     ),
-                    child: SizedBox(
-                      height: 50,
-                      child: TextButton.icon(
-                        icon: const Icon(
-                          Icons.delete_forever_outlined,
-                          color: AppColors.danger,
-                        ),
-                        label: const Text(
-                          AppStrings.accountDeleteCta,
-                          style: TextStyle(color: AppColors.danger),
-                        ),
-                        onPressed: () =>
-                            _onDeleteAccountPressed(context, ref),
-                      ),
+                    child: _DangerZoneCard(
+                      onDeletePressed: () =>
+                          _onDeleteAccountPressed(context, ref),
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.l),
                 ],
               ),
       ),
@@ -492,104 +484,83 @@ class _Divider extends StatelessWidget {
       Container(width: 1, height: 32, color: AppColors.surfaceLine);
 }
 
-class _AccountList extends StatelessWidget {
-  const _AccountList({required this.profile});
-  final BakeryProfile profile;
+/// Profilde "Tehlikeli alan" kartı — danger border + uyarı metni + filled
+/// danger button. Görsel ağırlık eski TextButton.icon'a göre net artırıldı,
+/// kullanıcı yanlışlıkla bastı zannıyla geçmez.
+class _DangerZoneCard extends StatelessWidget {
+  const _DangerZoneCard({required this.onDeletePressed});
+  final VoidCallback onDeletePressed;
 
   @override
   Widget build(BuildContext context) {
-    final items = <_Item>[
-      _Item(
-        Icons.business_outlined,
-        'İşletme Bilgileri',
-        '${profile.accountType.label} hesap',
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.l),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(
+          color: AppColors.danger.withValues(alpha: 0.35),
+          width: 0.8,
+        ),
       ),
-      _Item(
-        Icons.bakery_dining_outlined,
-        'Ürünlerim',
-        'Vitrin & paylaşımlar',
-      ),
-      _Item(
-        Icons.summarize_outlined,
-        'Raporlarım',
-        'Geçmiş gün sonu özetleri',
-      ),
-      _Item(
-        Icons.mail_outline_rounded,
-        'E-posta',
-        profile.email.isEmpty ? 'Belirtilmemiş' : profile.email,
-      ),
-      _Item(
-        Icons.settings_outlined,
-        'Ayarlar',
-        'Bildirim, dil, gizlilik',
-      ),
-    ];
-    return PremiumCard(
-      padding: EdgeInsets.zero,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < items.length; i++) ...[
-            _AccountTile(item: items[i]),
-            if (i != items.length - 1)
-              const Divider(
-                height: 0,
-                indent: 60,
-                endIndent: AppSpacing.l,
+          Row(
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                size: 18,
+                color: AppColors.danger,
               ),
-          ],
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: Text(
+                  AppStrings.profileDangerHint,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.danger,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.m),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton.icon(
+              icon: const Icon(
+                Icons.delete_forever_outlined,
+                color: AppColors.danger,
+              ),
+              label: const Text(
+                AppStrings.accountDeleteCta,
+                style: TextStyle(
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                  letterSpacing: 0.1,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(
+                  color: AppColors.danger,
+                  width: 1.2,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+              ),
+              onPressed: onDeletePressed,
+            ),
+          ),
         ],
       ),
     );
   }
-}
-
-class _AccountTile extends StatelessWidget {
-  const _AccountTile({required this.item});
-  final _Item item;
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.l, vertical: 4),
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.softGold.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(AppRadius.s),
-        ),
-        child: Icon(item.icon, color: AppColors.softGold, size: 18),
-      ),
-      title: Text(
-        item.title,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 15,
-        ),
-      ),
-      subtitle: Text(
-        item.subtitle,
-        style: const TextStyle(
-          color: AppColors.textMuted,
-          fontSize: 12.5,
-        ),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: AppColors.textMuted,
-      ),
-      onTap: () {},
-    );
-  }
-}
-
-class _Item {
-  const _Item(this.icon, this.title, this.subtitle);
-  final IconData icon;
-  final String title;
-  final String subtitle;
 }
 
 /// Profilde "Açık Reçeteler" bölümü — yalnız `is_public = true` reçeteler.

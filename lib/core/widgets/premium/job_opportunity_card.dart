@@ -150,7 +150,16 @@ class JobOpportunityCard extends StatelessWidget {
             width: double.infinity,
             height: 44,
             child: FilledButton.icon(
-              onPressed: onApply ?? () {},
+              // V1: parent `onApply` vermezse sessiz `() {}` yerine dürüst
+              // bir snackbar göster. Mesajlaşma backend V2 işi.
+              onPressed: onApply ??
+                  () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(AppStrings.jobsApplyComingSoon),
+                      ),
+                    );
+                  },
               icon: const Icon(Icons.send_rounded, size: 16),
               label: const Text(AppStrings.jobsApply),
               style: FilledButton.styleFrom(

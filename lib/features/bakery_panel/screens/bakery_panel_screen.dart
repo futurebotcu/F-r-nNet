@@ -37,15 +37,11 @@ class BakeryPanelScreen extends ConsumerWidget {
           ),
           padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
           children: [
+            // V1 — header calendar action V1'de () {} no-op idi; tarih
+            // alt başlıkta zaten görünüyor, ek calendar UI V2'ye bırakıldı.
             FirinNetHeader(
               title: AppStrings.panelTitle,
               subtitle: df.format(DateTime.now()),
-              actions: [
-                HeaderActionButton(
-                  icon: Icons.calendar_month_outlined,
-                  onTap: () {},
-                ),
-              ],
             ),
             const SizedBox(height: AppSpacing.xs),
             Padding(
