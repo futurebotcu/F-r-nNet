@@ -61,6 +61,8 @@ app.*.map.json
 *.local.env
 !.env.example
 !.env.local.example
+.env.admin.local
+!.env.admin.local.example
 
 # Yetkilendirme / sertifika dosyaları — kazara commit'i önlemek için.
 *.pem
