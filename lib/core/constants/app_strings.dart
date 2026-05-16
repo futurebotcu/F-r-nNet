@@ -225,6 +225,27 @@ class AppStrings {
   static const String jobsCardBadgeActive = 'Aktif';
   static const String jobsCardBusinessFallback = 'FırınNet üyesi';
 
+  // V1 — Account deletion (P0 / KVKK / Play compliance)
+  static const String accountDeleteCta = 'Hesabımı Sil';
+  static const String accountDeleteConfirmTitle = 'Hesabını silmek istiyor musun?';
+  static const String accountDeleteConfirmBody =
+      'Bu işlem geri alınamaz. Hesabın, profilin, reçeteler, bayi kayıtların, '
+      'fire/üretim verilerin ve sosyal omurga paylaşımların kalıcı silinir.';
+  static const String accountDeleteConfirmKeyword = 'HESABIMI SİL';
+  static const String accountDeleteConfirmFieldLabel =
+      'Onaylamak için "HESABIMI SİL" yaz';
+  static const String accountDeleteConfirmFieldHint = 'HESABIMI SİL';
+  static const String accountDeleteCancel = 'Vazgeç';
+  static const String accountDeleteConfirmButton = 'Hesabı kalıcı sil';
+  static const String accountDeleteLoading = 'Hesap siliniyor…';
+  static const String accountDeleteErrorGeneric =
+      'Hesap silinemedi. Bağlantını kontrol edip yeniden dene.';
+  static const String accountDeleteSuccessSnack = 'Hesabın silindi.';
+  static const String accountDeleteRequireAuth =
+      'Hesap silmek için giriş yapman gerekiyor.';
+  static const String accountDeleteUnsupportedOffline =
+      'Hesap silme yalnız Supabase bağlı modda çalışır.';
+
   // V1 — Marketplace mock temizliği (P0)
   static const String marketComingSoonTitle = 'Market yakında açılır';
   static const String marketComingSoonBody =

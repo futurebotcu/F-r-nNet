@@ -46,4 +46,21 @@ abstract class AuthRepository {
   /// yeni şifresini belirler. Mobile in-app yeni-şifre belirleme akışı
   /// (deep link + UpdatePassword screen) sonraki faza bırakıldı.
   Future<void> resetPasswordForEmail(String email);
+
+  /// V1 — Hesap silme (P0 / KVKK / Play compliance).
+  ///
+  /// Mimari:
+  /// - Client doğrudan `service_role` kullanmaz; bu anahtar mobile binary'ye
+  ///   gömülürse RLS bypass edilir.
+  /// - Client `delete-account` Supabase Edge Function'ını çağırır.
+  /// - Function caller'ın JWT'sini doğrular, **kendi user_id'si dışında bir
+  ///   hesabı silemez** ve server-side service_role ile
+  ///   `auth.admin.deleteUser(user.id)` çağırır.
+  /// - `profiles.id references auth.users(id) on delete cascade` zincirinden
+  ///   tüm sosyal/fırın/bayi/worker verisi otomatik temizlenir.
+  /// - Başarı sonrası local session signOut edilir; mevcut JWT zaten geçersiz.
+  ///
+  /// Implementor'lar mutlaka 2-step UI confirmation arkasında çağrılmasını
+  /// bekler; tek tıkla silinme olmaz.
+  Future<void> deleteAccount();
 }

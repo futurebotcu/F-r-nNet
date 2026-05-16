@@ -88,4 +88,39 @@ class SupabaseAuthRepository implements AuthRepository {
       throw Exception(translateAuthError(e));
     }
   }
+
+  @override
+  Future<void> deleteAccount() async {
+    // Önkoşul: caller'ın aktif bir oturumu olmalı (function caller JWT'sini
+    // server-side doğrular). Yoksa erken hata ver — Edge'e gereksiz çağrı
+    // atılmasın.
+    if (_client.auth.currentUser == null) {
+      throw Exception('Hesap silmek için giriş yapman gerekiyor.');
+    }
+
+    try {
+      final res = await _client.functions.invoke(
+        'delete-account',
+        body: <String, dynamic>{'confirm': true},
+      );
+
+      // Supabase FunctionsResponse status alanı 200 dışı bir kod döndürürse
+      // function hata raporlamış demektir. Body içeriği client'a açılmaz —
+      // function dış dünyaya generic mesaj döner.
+      if (res.status != 200) {
+        throw Exception('Hesap silinemedi.');
+      }
+
+      // Server-side hesap silindiği için mevcut JWT geçersizdir. signOut
+      // best-effort; başarısızlık burada blocker değil — local state
+      // ProfileScreen tarafından temizlenir.
+      try {
+        await _client.auth.signOut();
+      } catch (_) {
+        // user gone — beklenen.
+      }
+    } catch (e) {
+      throw Exception(translateAuthError(e));
+    }
+  }
 }
