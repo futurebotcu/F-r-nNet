@@ -1,0 +1,20 @@
+# FırınNet — Android release signing template.
+#
+# Bu dosyayı `key.properties` olarak kopyalayıp aşağıdaki alanları
+# kendi keystore'unuza göre doldurun. `key.properties` git'e GİRMEZ
+# (android/.gitignore tarafından dışlandı); `*.jks` de aynı şekilde.
+#
+# Kurallar:
+#   • storeFile yolu `android/` klasörüne göredir (örn. "app/upload-keystore.jks").
+#   • Şifreler düz metin tutulur; bu dosyayı dışarı çıkarmayın, paylaşmayın.
+#   • Üretim için kullanılacak keystore'u Google Play Console'da kayıtlı
+#     "Upload Key" ile eşleştirin.
+#   • Bu 4 alan ZORUNLU. Eksik alanla release build kasıtlı olarak fail eder
+#     (debug fallback yok).
+#
+# Keystore üretimi ve detay adımlar: ANDROID_SIGNING_RUNBOOK.md
+
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=app/upload-keystore.jks
