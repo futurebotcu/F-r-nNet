@@ -711,7 +711,8 @@ class _PriceSheetState extends ConsumerState<_PriceSheet> {
   }
 
   Future<void> _save() async {
-    if (_product == null) {
+    final productName = _product?.trim() ?? '';
+    if (productName.isEmpty) {
       _err(AppStrings.dealerErrPickProduct);
       return;
     }
@@ -730,7 +731,7 @@ class _PriceSheetState extends ConsumerState<_PriceSheet> {
       DealerPrice(
         id: 'p_${now.microsecondsSinceEpoch}',
         dealerId: widget.dealerId,
-        productName: _product!,
+        productName: productName,
         unitPrice: price,
         validFrom: now,
       ),
@@ -740,7 +741,7 @@ class _PriceSheetState extends ConsumerState<_PriceSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${AppStrings.dealerPriceSheetSaved}'
-            '$_product · ${NumberFormatter.currency(price)}'),
+            '$productName · ${NumberFormatter.currency(price)}'),
       ),
     );
   }

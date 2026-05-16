@@ -41,7 +41,8 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
   }
 
   Future<void> _save() async {
-    if (_product == null) {
+    final productName = _product?.trim() ?? '';
+    if (productName.isEmpty) {
       _err('Önce bir ürün seç.');
       return;
     }
@@ -60,7 +61,7 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
         await repo.addWaste(
           WasteEntry(
             id: now.microsecondsSinceEpoch.toString(),
-            product: _product!,
+            product: productName,
             quantity: qty,
             unitValue: value,
             note: _note.text.trim(),
@@ -70,7 +71,7 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
         if (!mounted) return;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fire kaydedildi: $qty $_product')),
+          SnackBar(content: Text('Fire kaydedildi: $qty $productName')),
         );
       },
     );

@@ -16,7 +16,6 @@ class FeedPostCard extends StatelessWidget {
     required this.content,
     required this.likeCount,
     required this.commentCount,
-    this.imageGradient,
     this.tags = const <String>[],
     this.type = PostType.production,
     this.isLiked = false,
@@ -36,7 +35,6 @@ class FeedPostCard extends StatelessWidget {
   final String content;
   final int likeCount;
   final int commentCount;
-  final List<Color>? imageGradient;
   final List<String> tags;
 
   final PostType type;
@@ -134,45 +132,6 @@ class FeedPostCard extends StatelessWidget {
               ],
             ),
           ),
-
-          // Görsel — placeholder gradient
-          if (imageGradient != null)
-            AspectRatio(
-              aspectRatio: 5 / 4,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: imageGradient!,
-                  ),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.photo_outlined,
-                        size: 36,
-                        color:
-                            AppColors.textMuted.withValues(alpha: 0.55),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Görsel yüklenmedi',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textMuted
-                              .withValues(alpha: 0.9),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
 
           // İçerik
           Padding(

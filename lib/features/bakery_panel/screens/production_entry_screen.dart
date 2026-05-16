@@ -35,7 +35,8 @@ class _ProductionEntryScreenState
   }
 
   Future<void> _save() async {
-    if (_product == null) {
+    final productName = _product?.trim() ?? '';
+    if (productName.isEmpty) {
       _err('Önce bir ürün seç.');
       return;
     }
@@ -53,7 +54,7 @@ class _ProductionEntryScreenState
         await repo.addProduction(
           ProductionEntry(
             id: now.microsecondsSinceEpoch.toString(),
-            product: _product!,
+            product: productName,
             quantity: qty,
             note: _note.text.trim(),
             createdAt: now,
@@ -62,7 +63,7 @@ class _ProductionEntryScreenState
         if (!mounted) return;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Üretim kaydedildi: $qty $_product')),
+          SnackBar(content: Text('Üretim kaydedildi: $qty $productName')),
         );
       },
     );

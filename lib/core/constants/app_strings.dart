@@ -136,7 +136,6 @@ class AppStrings {
   // Feed
   static const String feedTitle = 'FırınNet';
   static const String feedSubtitle = 'Atölyeden, sektörden, ağından';
-  static const String feedSectionStories = 'Atölyeden anlık';
   static const String feedSectionPosts = 'Bugün ağda';
   static const String feedSectionAll = 'Tümü';
 

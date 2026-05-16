@@ -57,7 +57,8 @@ class _DealerReturnFormScreenState
   }
 
   Future<void> _save() async {
-    if (_product == null) {
+    final productName = _product?.trim() ?? '';
+    if (productName.isEmpty) {
       _err(AppStrings.dealerErrPickReturn);
       return;
     }
@@ -78,7 +79,7 @@ class _DealerReturnFormScreenState
         id: 'tx_${now.microsecondsSinceEpoch}',
         dealerId: widget.dealerId,
         type: DealerTransactionType.returned,
-        productName: _product,
+        productName: productName,
         quantity: qty,
         unitPrice: price,
         amount: qty * price,
@@ -91,7 +92,7 @@ class _DealerReturnFormScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${AppStrings.dealerSaveSnackReturn}'
-            '$qty $_product · '
+            '$qty $productName · '
             '${NumberFormatter.currency(qty * price)}'),
       ),
     );

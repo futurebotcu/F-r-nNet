@@ -64,7 +64,8 @@ class _DealerDeliveryFormScreenState
   }
 
   Future<void> _save() async {
-    if (_product == null) {
+    final productName = _product?.trim() ?? '';
+    if (productName.isEmpty) {
       _err(AppStrings.dealerErrPickProduct);
       return;
     }
@@ -89,7 +90,7 @@ class _DealerDeliveryFormScreenState
         id: 'tx_${now.microsecondsSinceEpoch}',
         dealerId: widget.dealerId,
         type: DealerTransactionType.delivery,
-        productName: _product,
+        productName: productName,
         quantity: qty,
         unitPrice: price,
         amount: qty * price,
@@ -102,7 +103,7 @@ class _DealerDeliveryFormScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${AppStrings.dealerSaveSnackDelivery}'
-            '$qty $_product · '
+            '$qty $productName · '
             '${NumberFormatter.currency(qty * price)}'),
       ),
     );

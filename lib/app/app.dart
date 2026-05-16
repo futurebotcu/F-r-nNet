@@ -30,7 +30,6 @@ class _FirinNetAppState extends State<FirinNetApp> {
       locale: const Locale('tr', 'TR'),
       supportedLocales: const [
         Locale('tr', 'TR'),
-        Locale('en', 'US'),
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

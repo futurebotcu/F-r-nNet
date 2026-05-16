@@ -26,18 +26,6 @@ import '../widgets/insight_card.dart';
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
 
-  static const _stories = <_Story>[
-    _Story('Sen', Icons.add_rounded, true),
-    _Story('Hasan U.', null, false),
-    _Story('Konya Un', null, false),
-    _Story('Selin', null, false),
-    _Story('Pide Evi', null, false),
-    _Story('Mayacı O.', null, false),
-    _Story('Ahmet U.', null, false),
-    _Story('Taş Fırın', null, false),
-    _Story('Ege Susam', null, false),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return PremiumScaffold(
@@ -49,14 +37,6 @@ class FeedScreen extends StatelessWidget {
           ),
           slivers: [
             const SliverToBoxAdapter(child: _FeedHeader()),
-            const SliverToBoxAdapter(
-              child: SectionLabel(
-                title: AppStrings.feedSectionStories,
-                topGap: AppSpacing.s,
-                bottomGap: AppSpacing.s,
-              ),
-            ),
-            const SliverToBoxAdapter(child: _StoryStrip(stories: _stories)),
             const SliverToBoxAdapter(child: _GroupsSection()),
             const SliverToBoxAdapter(child: FeedComposer()),
             const SliverToBoxAdapter(
@@ -72,13 +52,6 @@ class FeedScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Story {
-  const _Story(this.name, this.icon, this.isMine);
-  final String name;
-  final IconData? icon;
-  final bool isMine;
 }
 
 /// Feed üst başlığı — sağ üstte Gruplar tab'ına geçiren kestirme.
@@ -163,98 +136,6 @@ class _ProfileAvatarAction extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────── Story strip
-
-class _StoryStrip extends StatelessWidget {
-  const _StoryStrip({required this.stories});
-
-  final List<_Story> stories;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 92,
-      child: ListView.separated(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-        scrollDirection: Axis.horizontal,
-        itemCount: stories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
-        itemBuilder: (_, i) => _StoryAvatar(story: stories[i]),
-      ),
-    );
-  }
-}
-
-class _StoryAvatar extends StatelessWidget {
-  const _StoryAvatar({required this.story});
-
-  final _Story story;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: story.isMine
-                ? null
-                : const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.softGold, AppColors.copperMuted],
-                  ),
-            color: story.isMine ? AppColors.surface : null,
-            shape: BoxShape.circle,
-            border: story.isMine
-                ? Border.all(
-                    color: AppColors.borderHairline,
-                    width: 0.8,
-                  )
-                : null,
-          ),
-          padding: const EdgeInsets.all(2.5),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppColors.elevatedCard,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: story.icon != null
-                ? Icon(story.icon, color: AppColors.softGold, size: 22)
-                : Text(
-                    story.name[0],
-                    style: const TextStyle(
-                      color: AppColors.softGold,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 7),
-        SizedBox(
-          width: 66,
-          child: Text(
-            story.name,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.1,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -462,7 +343,6 @@ class _PostCardWired extends ConsumerWidget {
       content: post.text,
       likeCount: post.likeCount,
       commentCount: post.commentCount,
-      imageGradient: post.gradient,
       tags: post.tags,
       type: post.type,
       isLiked: post.isLiked,
