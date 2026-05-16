@@ -41,6 +41,27 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// V1.4 — Google ile devam et (OAuth).
+  ///
+  /// Akış: SDK browser açar → kullanıcı Google'da onay verir → provider
+  /// `firinnet://auth-callback` deep link'ine döner → Supabase SDK code
+  /// exchange'i tamamlar → [authStateChanges] emit eder.
+  ///
+  /// Bu metod yalnız akışı başlatır; session geldikten sonra yönlendirme
+  /// caller'ın sorumluluğundadır (`ref.listen(currentAuthUserProvider)`).
+  ///
+  /// Provider dashboard'da etkin değilse ya da deep link callback gelmezse
+  /// `AuthException` fırlatır; UI translator Türkçe mesajı yakalar.
+  Future<void> signInWithGoogle();
+
+  /// V1.4 — Apple ile devam et (OAuth).
+  ///
+  /// iOS App Store gereksinimi: üçüncü taraf social login varsa Apple Sign-In
+  /// de sunulmalı. UI bu butonu sadece iOS'ta gösterir. Android'de bu metoda
+  /// çağrılırsa Supabase yine browser üzerinden Apple flow'unu açar ancak
+  /// Apple Developer tarafında bunun için ayrı bir Service ID gerekir.
+  Future<void> signInWithApple();
+
   Future<void> signOut();
 
   /// Email değişikliği — `auth.users.email` UPDATE'i triggerla profiles'a

@@ -7,9 +7,11 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../models/auth_user.dart';
 import '../providers/auth_providers.dart';
 import '../providers/guest_mode_provider.dart';
 import '../widgets/legal_footer.dart';
+import '../widgets/social_auth_buttons.dart';
 
 /// Sade giriş ekranı (V1.3).
 ///
@@ -84,6 +86,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final supabaseOn = ref.watch(authRepositoryProvider) != null;
+
+    // V1.4 — Social login callback ile session geldiğinde Splash'a yönlendir.
+    ref.listen<AuthUser?>(currentAuthUserProvider, (prev, next) {
+      if (prev == null && next != null && context.mounted) {
+        context.go(AppRoutes.splash);
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -147,6 +157,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
+              // V1.4 — Sosyal giriş üstte; aşağıda klasik e-posta formu.
+              const SocialAuthButtons(),
+              const SizedBox(height: AppSpacing.l),
               if (!supabaseOn)
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.m),

@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/app_strings.dart';
+
 /// Supabase Auth + ağ hatalarını Türkçe, kullanıcıya gösterilebilir
 /// mesajlara çevirir. Bilinmeyen hata için makul bir geri dönüş döndürür.
 ///
@@ -9,6 +11,16 @@ String translateAuthError(Object error) {
   if (error is AuthApiException) {
     final code = error.code ?? '';
     final msg = error.message.toLowerCase();
+    // V1.4 — OAuth provider Dashboard'da etkin değilse.
+    if (code == 'provider_disabled' ||
+        msg.contains('provider is not enabled')) {
+      return AppStrings.authProviderDisabled;
+    }
+    // V1.4 — Kullanıcı browser'da OAuth'u iptal etti.
+    if (code == 'oauth_provider_not_supported' ||
+        msg.contains('oauth') && msg.contains('cancel')) {
+      return AppStrings.authOAuthCancelled;
+    }
     if (code == 'invalid_credentials' || msg.contains('invalid login')) {
       return 'E-posta veya şifre hatalı.';
     }

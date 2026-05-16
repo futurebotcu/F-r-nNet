@@ -131,6 +131,16 @@ class AppStrings {
       'linke tıkladıktan sonra giriş yapabilirsin.';
   static const String authEmailConfirmOk = 'Tamam';
 
+  // V1.4 — Social login (Google + Apple).
+  static const String authContinueWithGoogle = 'Google ile devam et';
+  static const String authContinueWithApple = 'Apple ile devam et';
+  static const String authSocialDivider = 'veya';
+  static const String authProviderDisabled =
+      'Bu giriş yöntemi henüz yapılandırılmadı. Lütfen e-posta ile devam et.';
+  static const String authOAuthCancelled = 'Giriş iptal edildi.';
+  static const String authOAuthFailed =
+      'Giriş tamamlanamadı. Lütfen tekrar dene.';
+
   static const String authBackendDisabled =
       'Sunucu bağlantısı yapılandırılmadı — bu sürümde yalnız misafir modu çalışır.';
 

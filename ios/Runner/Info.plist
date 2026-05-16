@@ -45,5 +45,23 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- V1.4 — Supabase OAuth (Google / Apple) deep link callback.
+	     redirectTo: firinnet://auth-callback (bkz. AppConfig.authRedirectUrl).
+	     Apple Sign-In native akış için ayrıca "Sign in with Apple" capability
+	     Xcode signing tab'ından aktif edilmelidir; bkz.
+	     GOOGLE_APPLE_AUTH_V1_REPORT.md §Apple Developer requirements. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.firinnet.auth-callback</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>firinnet</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

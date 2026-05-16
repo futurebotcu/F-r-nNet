@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../core/config/app_config.dart';
 import '../models/auth_user.dart';
 import '../models/sign_up_result.dart';
 import '../utils/auth_error_translator.dart';
@@ -65,6 +66,30 @@ class SupabaseAuthRepository implements AuthRepository {
         throw Exception('Giriş başarısız.');
       }
       return _from(user)!;
+    } catch (e) {
+      throw Exception(translateAuthError(e));
+    }
+  }
+
+  @override
+  Future<void> signInWithGoogle() async {
+    try {
+      await _client.auth.signInWithOAuth(
+        sb.OAuthProvider.google,
+        redirectTo: AppConfig.authRedirectUrl,
+      );
+    } catch (e) {
+      throw Exception(translateAuthError(e));
+    }
+  }
+
+  @override
+  Future<void> signInWithApple() async {
+    try {
+      await _client.auth.signInWithOAuth(
+        sb.OAuthProvider.apple,
+        redirectTo: AppConfig.authRedirectUrl,
+      );
     } catch (e) {
       throw Exception(translateAuthError(e));
     }

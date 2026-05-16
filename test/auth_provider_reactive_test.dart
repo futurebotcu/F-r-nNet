@@ -44,6 +44,12 @@ class _FakeAuthRepository implements AuthRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> signInWithGoogle() => throw UnimplementedError();
+
+  @override
+  Future<void> signInWithApple() => throw UnimplementedError();
+
+  @override
   Future<void> signOut() => throw UnimplementedError();
 
   @override

@@ -8,9 +8,11 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../models/auth_user.dart';
 import '../providers/auth_providers.dart';
 import '../providers/guest_mode_provider.dart';
 import '../widgets/legal_footer.dart';
+import '../widgets/social_auth_buttons.dart';
 
 /// V1.3 boot landing — kullanıcıya net 3 seçenek.
 ///
@@ -27,6 +29,15 @@ class AuthEntryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final supabaseOn = ref.watch(authRepositoryProvider) != null;
     final theme = Theme.of(context);
+
+    // V1.4 — Social login geri callback'i ile session geldiğinde Splash'a
+    // yönlendir. ref.listen build içinde güvenli (rebuild sırasında yalnız
+    // bir subscription kalır).
+    ref.listen<AuthUser?>(currentAuthUserProvider, (prev, next) {
+      if (prev == null && next != null && context.mounted) {
+        context.go(AppRoutes.splash);
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -119,6 +130,10 @@ class AuthEntryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.l),
               ],
+              // V1.4 — Sosyal giriş: Google + (iOS) Apple. Supabase off ise
+              // SocialAuthButtons içinde butonlar disabled görünür.
+              const SocialAuthButtons(),
+              const SizedBox(height: AppSpacing.s),
               AppPrimaryButton(
                 label: AppStrings.authEntrySignIn,
                 icon: Icons.login_rounded,
