@@ -19,6 +19,7 @@ import '../../social_groups/widgets/group_card.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
 import '../providers/feed_providers.dart';
+import '../widgets/feed_comment_sheet.dart';
 import '../widgets/feed_composer.dart';
 import '../widgets/insight_card.dart';
 
@@ -502,12 +503,8 @@ class _PostCardWired extends ConsumerWidget {
         );
       },
       onComment: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppStrings.feedActionCommentSnack),
-            duration: Duration(milliseconds: 900),
-          ),
-        );
+        // V1 P1-B — Eski snackbar yerine gerçek yorum bottom sheet.
+        FeedCommentSheet.show(context, post.id);
       },
       onShare: () {
         ScaffoldMessenger.of(context).showSnackBar(

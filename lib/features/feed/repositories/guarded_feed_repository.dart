@@ -1,4 +1,5 @@
 import '../../auth/services/auth_required_guard.dart';
+import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
@@ -62,5 +63,33 @@ class GuardedFeedRepository implements FeedRepository {
   Future<FeedPost> toggleSave(String postId) {
     _requireWrite('gönderiyi kaydetmek');
     return inner.toggleSave(postId);
+  }
+
+  // ── Comments (V1 P1-B) ────────────────────────────────────────
+
+  @override
+  Future<List<FeedComment>> listComments(String postId) =>
+      inner.listComments(postId);
+
+  @override
+  Future<FeedComment> addComment({
+    required String postId,
+    required String text,
+    String? currentAuthorName,
+    String? currentAuthorRole,
+  }) {
+    _requireWrite('yorum yazmak');
+    return inner.addComment(
+      postId: postId,
+      text: text,
+      currentAuthorName: currentAuthorName,
+      currentAuthorRole: currentAuthorRole,
+    );
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) {
+    _requireWrite('yorum silmek');
+    return inner.deleteComment(commentId);
   }
 }

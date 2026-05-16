@@ -146,12 +146,12 @@ class RolePanelCards {
             icon: Icons.storefront_rounded,
             route: AppRoutes.wholesaleCustomers,
           ),
-          // Ürün/Hizmet İlanı — V1.2'de comingSoon (Marketplace yayın akışı V1.3)
+          // V1 sprint sonrası — Marketplace yayını gerçek backend'e bağlandı.
           PanelCard(
             label: AppStrings.cardPostProductListing,
             subtitle: AppStrings.cardPostProductListingSub,
             icon: Icons.add_business_outlined,
-            comingSoon: true,
+            route: AppRoutes.marketListingNew,
           ),
           PanelCard(
             label: AppStrings.cardCompanyProfile,

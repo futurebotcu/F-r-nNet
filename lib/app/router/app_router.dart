@@ -37,7 +37,9 @@ import '../../features/feed/screens/feed_screen.dart';
 import '../../features/social_groups/screens/group_create_screen.dart';
 import '../../features/social_groups/screens/group_detail_screen.dart';
 import '../../features/social_groups/screens/groups_list_screen.dart';
+import '../../features/jobs/screens/job_offer_form_screen.dart';
 import '../../features/jobs/screens/jobs_screen.dart';
+import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
@@ -103,6 +105,14 @@ class AppRoutes {
   // Sosyal gruplar (V1)
   static const String groups = '/groups';
   static const String groupCreate = '/groups/create';
+
+  // V1 — Job offer ("Usta Arıyor / İş Veriyorum") ilanları
+  static const String jobOfferNew = '/jobs/offers/new';
+  static String jobOfferEdit(String id) => '/jobs/offers/$id/edit';
+
+  // V1 — Marketplace ilanları
+  static const String marketListingNew = '/market/listings/new';
+  static String marketListingEdit(String id) => '/market/listings/$id/edit';
 }
 
 GoRouter createRouter() {
@@ -346,6 +356,28 @@ GoRouter createRouter() {
         path: '${AppRoutes.groups}/:id',
         builder: (_, state) =>
             GroupDetailScreen(groupId: state.pathParameters['id']!),
+      ),
+
+      // V1 — Job offer form (Usta Arıyor) + edit
+      GoRoute(
+        path: AppRoutes.jobOfferNew,
+        builder: (_, __) => const JobOfferFormScreen(),
+      ),
+      GoRoute(
+        path: '/jobs/offers/:id/edit',
+        builder: (_, state) =>
+            JobOfferFormScreen(postId: state.pathParameters['id']!),
+      ),
+
+      // V1 — Market listing form + edit
+      GoRoute(
+        path: AppRoutes.marketListingNew,
+        builder: (_, __) => const MarketListingFormScreen(),
+      ),
+      GoRoute(
+        path: '/market/listings/:id/edit',
+        builder: (_, state) =>
+            MarketListingFormScreen(listingId: state.pathParameters['id']!),
       ),
     ],
   );

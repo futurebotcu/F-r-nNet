@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
+import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
@@ -55,4 +56,12 @@ final feedInsightsProvider =
   ref.watch(feedChangesProvider);
   final repo = ref.watch(feedRepositoryProvider);
   return repo.listInsights();
+});
+
+/// V1 P1-B — Bir post için yorumlar (eski tarih önce).
+final feedCommentsProvider = FutureProvider.autoDispose
+    .family<List<FeedComment>, String>((ref, postId) async {
+  ref.watch(feedChangesProvider);
+  final repo = ref.watch(feedRepositoryProvider);
+  return repo.listComments(postId);
 });

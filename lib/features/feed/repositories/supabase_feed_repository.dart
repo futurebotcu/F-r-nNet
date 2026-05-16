@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
@@ -273,6 +274,68 @@ class SupabaseFeedRepository implements FeedRepository {
             'grupları açıldı. Yakındaki ustaları takip et.',
       ),
     ];
+  }
+
+  // ─────────────────────────────────────── Comments (V1 P1-B)
+
+  static const String _commentColumns =
+      'id, post_id, owner_id, text, author_name, author_role, '
+      'is_deleted, created_at';
+
+  @override
+  Future<List<FeedComment>> listComments(String postId) async {
+    final rows = await _client
+        .from('feed_comments')
+        .select(_commentColumns)
+        .eq('post_id', postId)
+        .eq('is_deleted', false)
+        .order('created_at', ascending: true)
+        .limit(200);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(FeedComment.fromRow)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<FeedComment> addComment({
+    required String postId,
+    required String text,
+    String? currentAuthorName,
+    String? currentAuthorRole,
+  }) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    final row = await _client
+        .from('feed_comments')
+        .insert(<String, dynamic>{
+          'post_id': postId,
+          'owner_id': userId,
+          'text': text.trim(),
+          // author_name / author_role → server-side snapshot trigger.
+        })
+        .select(_commentColumns)
+        .single();
+    _notify();
+    return FeedComment.fromRow(row);
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    // Soft delete: is_deleted=true. comment_count trigger UPDATE branch
+    // sayacı -1 yapar (yalnızca daha önce visible olan kayıtlar için).
+    await _client
+        .from('feed_comments')
+        .update(<String, dynamic>{'is_deleted': true})
+        .eq('id', commentId)
+        .eq('owner_id', userId);
+    _notify();
   }
 
   @override

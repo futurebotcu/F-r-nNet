@@ -12,15 +12,21 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../profile/models/bakery_profile.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../../worker/models/job_seek_post.dart';
 import '../../worker/providers/worker_providers.dart';
+import '../models/job_offer_post.dart';
+import '../providers/job_offer_providers.dart';
 
-/// V1 İlanlar — gerçek `job_seek_posts` verisine bağlı (P0 mock temizliği).
+/// V1 İlanlar — gerçek `job_seek_posts` + `job_offer_posts` verilerine bağlı.
 ///
-/// "Usta Arıyor" segmenti V1'de tablo yok → coming-soon placeholder.
-/// "İş Arıyor" segmenti `activeJobSeekPostsProvider` üzerinden sektörde
-/// `is_active = true` ilanları listeler. Misafir read açık; yeni ilan
-/// vermek isteyen guest [AuthRequiredSheet]'e düşer.
+/// "Usta Arıyor" segmenti `activeJobOffersProvider` üzerinden ticari/toptancı
+/// işletmelerin yayınladığı aktif ilanları listeler.
+/// "İş Arıyor" segmenti `activeJobSeekPostsProvider` üzerinden bireysel
+/// kullanıcıların yayınladığı aktif ilanları listeler.
+/// "+" CTA segmente göre yönlendirir; role-aware (commercial/wholesaler ↔
+/// individual).
 class JobsScreen extends ConsumerStatefulWidget {
   const JobsScreen({super.key});
 
@@ -32,11 +38,18 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
   int _segmentIndex = 0;
 
   Future<void> _onAddPressed() async {
-    if (AuthRequiredGuard.canWriteWithRef(ref)) {
-      context.push(AppRoutes.jobSeekNew);
+    // Segment'e göre doğru ilan formuna yönlendir.
+    // 0: Usta Arıyor (ticari/toptancı yayını) → /jobs/offers/new
+    // 1: İş Arıyor (bireysel yayını) → /worker/job-seek/new
+    final canWrite = AuthRequiredGuard.canWriteWithRef(ref);
+    if (!canWrite) {
+      await showAuthRequiredSheet(context, ref);
       return;
     }
-    await showAuthRequiredSheet(context, ref);
+    final route = _segmentIndex == 0
+        ? AppRoutes.jobOfferNew
+        : AppRoutes.jobSeekNew;
+    context.push(route);
   }
 
   @override
@@ -71,7 +84,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
               ),
             ),
             if (_segmentIndex == 0)
-              const _HiringComingSoon()
+              const _HiringList()
             else
               const _LookingList(),
           ],
@@ -176,7 +189,146 @@ class _JobSeekCard extends StatelessWidget {
   }
 }
 
+/// V1 — "Usta Arıyor" segmenti: ticari/toptancı işletmelerin yayınladığı
+/// aktif `job_offer_posts` listesi. Empty state dürüst; ticari rol kullanıcı
+/// için CTA "Usta Arıyorum İlanı Ver".
+class _HiringList extends ConsumerWidget {
+  const _HiringList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(activeJobOffersProvider);
+    final profile = ref.watch(profileControllerProvider);
+    final canPostOffer = profile?.accountType == AccountType.commercial ||
+        profile?.accountType == AccountType.wholesaler;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel(title: AppStrings.jobsListHiring),
+        async.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (_, __) => const _JobsMessage(
+            icon: Icons.cloud_off_outlined,
+            message: AppStrings.jobOfferErrorGeneric,
+          ),
+          data: (offers) {
+            if (offers.isEmpty) {
+              final user = ref.watch(currentAuthUserProvider);
+              return Column(
+                children: [
+                  _JobsMessage(
+                    icon: Icons.inbox_outlined,
+                    message: user == null
+                        ? AppStrings.jobOfferEmptyGuest
+                        : AppStrings.jobOfferEmpty,
+                  ),
+                  if (canPostOffer)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pageH,
+                        0,
+                        AppSpacing.pageH,
+                        AppSpacing.l,
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton.icon(
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: const Text(AppStrings.jobOfferAddCta),
+                          onPressed: () =>
+                              context.push(AppRoutes.jobOfferNew),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.copper,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.m),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pageH,
+              ),
+              child: Column(
+                children: [
+                  for (var i = 0; i < offers.length; i++) ...[
+                    _JobOfferCard(offer: offers[i]),
+                    if (i != offers.length - 1)
+                      const SizedBox(height: AppSpacing.m),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _JobOfferCard extends StatelessWidget {
+  const _JobOfferCard({required this.offer});
+  final JobOfferPost offer;
+
+  String _formatSalary() {
+    final min = offer.salaryMin;
+    final max = offer.salaryMax;
+    if (min == null && max == null) return AppStrings.jobsCardSalaryUnset;
+    if (min != null && max != null && max > min) {
+      return '₺ ${min.toStringAsFixed(0)} – ${max.toStringAsFixed(0)}';
+    }
+    final v = (max ?? min)!;
+    return '₺ ${v.toStringAsFixed(0)}';
+  }
+
+  String _formatCity() {
+    final c = offer.city?.trim() ?? '';
+    final d = offer.district?.trim() ?? '';
+    if (c.isEmpty && d.isEmpty) return AppStrings.jobsCardCityUnset;
+    if (d.isEmpty) return c;
+    if (c.isEmpty) return d;
+    return '$c · $d';
+  }
+
+  String _formatExperience() {
+    final e = offer.experienceRequired?.trim();
+    if (e == null || e.isEmpty) return AppStrings.jobsCardExperienceUnset;
+    return e;
+  }
+
+  String _formatBusiness() {
+    final n = offer.authorName?.trim();
+    if (n != null && n.isNotEmpty) return n;
+    return AppStrings.jobsCardBusinessFallback;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return JobOpportunityCard(
+      position: offer.title,
+      business: _formatBusiness(),
+      city: _formatCity(),
+      salary: _formatSalary(),
+      experience: _formatExperience(),
+      badge: AppStrings.jobsCardBadgeActive,
+      shift: offer.shiftType,
+    );
+  }
+}
+
+// Eski coming-soon yedek widget (kullanılmıyor, referans için):
 class _HiringComingSoon extends StatelessWidget {
+  // ignore: unused_element
   const _HiringComingSoon();
 
   @override

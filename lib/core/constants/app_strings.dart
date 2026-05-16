@@ -163,8 +163,27 @@ class AppStrings {
   static const String feedActionUnlikedSnack = 'Beğeni geri alındı.';
   static const String feedActionSavedSnack = 'Kaydedildi.';
   static const String feedActionUnsavedSnack = 'Kayıtlardan çıktı.';
+  // V1 P1-B — Feed yorumlar gerçek UI'a bağlandı; eski snackbar kaldırıldı.
   static const String feedActionCommentSnack =
-      'Yorum yazma yakında — beta için.';
+      'Yorumlar yükleniyor…';
+  static const String feedCommentSheetTitle = 'Yorumlar';
+  static const String feedCommentComposerHint = 'Yorum yaz…';
+  static const String feedCommentSendCta = 'Gönder';
+  static const String feedCommentEmpty =
+      'Henüz yorum yok. İlk yorumu sen yaz.';
+  static const String feedCommentEmptyGuest =
+      'Henüz yorum yok. Üye olunca ilk yorumu sen atabilirsin.';
+  static const String feedCommentErrorGeneric =
+      'Yorumlar yüklenemedi. Yeniden dener misin?';
+  static const String feedCommentEmptyError =
+      'Önce bir şeyler yaz — kısa da olsa.';
+  static const String feedCommentSavedSnack = 'Yorum eklendi.';
+  static const String feedCommentDeleteConfirm =
+      'Bu yorumu silmek istiyor musun?';
+  static const String feedCommentDeleteCta = 'Sil';
+  static const String feedCommentCancelCta = 'Vazgeç';
+  static const String feedCommentDeletedSnack = 'Yorum silindi.';
+  static const String feedCommentOwnLabel = 'Sen';
   static const String feedActionShareSnack = 'Paylaşım menüsü açılıyor…';
   static const String feedActionTagSnack = 'Etiket filtresi yakında: #';
 
@@ -221,10 +240,107 @@ class AppStrings {
       'Henüz aktif iş arayan ilanı yok. İlk ilanı sen ver veya daha sonra tekrar bak.';
   static const String jobsLookingEmptyGuest =
       'Henüz aktif iş arayan ilanı yok. Üye olunca kendin de ilan verebilirsin.';
+  // V2-J1 sprint sonrası — "Usta Arıyor" gerçek backend'e bağlandı.
+  // Bu metin sadece yedek için kalıyor (eskinin referansı); şu an
+  // segmentte gerçek liste gösterilir, coming-soon yok.
   static const String jobsHiringComingSoonTitle = 'Usta arayan ilanlar yakında';
   static const String jobsHiringComingSoonBody =
       'Fırınların usta arayan ilan modülü V2\'de açılır. Şimdilik bireysel '
       '"İş Arıyor" ilanlarını görebilirsin.';
+
+  // V1 — Job offer ("Usta Arıyor") UI copy.
+  static const String jobOfferEmpty =
+      'Henüz aktif "Usta Arıyor" ilanı yok. Sektörden ilk ilanı bekliyoruz.';
+  static const String jobOfferEmptyGuest =
+      'Henüz aktif "Usta Arıyor" ilanı yok. Üye olunca sen de yayınlayabilirsin.';
+  static const String jobOfferErrorGeneric =
+      'İlanlar yüklenemedi. Bağlantını kontrol edip yeniden dene.';
+  static const String jobOfferAddCta = 'Usta Arıyorum İlanı Ver';
+  static const String jobOfferSavedSnack = 'İlanın yayında.';
+
+  // Form
+  static const String jobOfferFormTitleNew = 'Usta Arıyorum İlanı';
+  static const String jobOfferFormTitleEdit = 'İlanı Düzenle';
+  static const String jobOfferFormSubtitle =
+      'Aradığın ustayı net anlat — şehir, vardiya, beklenti.';
+  static const String jobOfferFormSaveCta = 'İlanı Yayınla';
+  static const String jobOfferFieldTitle = 'Başlık';
+  static const String jobOfferFieldTitleHint = 'Örn. Taş Fırın Ustası Aranıyor';
+  static const String jobOfferFieldTitleRequired = 'Başlık gerekli';
+  static const String jobOfferFieldRole = 'Rol / Pozisyon';
+  static const String jobOfferFieldRoleHint = 'Örn. Ekmek Ustası';
+  static const String jobOfferFieldRoleRequired = 'Rol gerekli';
+  static const String jobOfferFieldCity = 'Şehir';
+  static const String jobOfferFieldDistrict = 'İlçe';
+  static const String jobOfferFieldSalaryMin = 'Ücret min (₺)';
+  static const String jobOfferFieldSalaryMax = 'Ücret max (₺)';
+  static const String jobOfferFieldShift = 'Vardiya';
+  static const String jobOfferFieldShiftHint = 'Örn. Gece üretim 23–07';
+  static const String jobOfferFieldExperience = 'Tecrübe';
+  static const String jobOfferFieldExperienceHint = 'Örn. 5+ yıl';
+  static const String jobOfferFieldDescription = 'Açıklama';
+  static const String jobOfferFieldDescriptionHint =
+      'İşin günlük akışı, atölye, beklenti…';
+  static const String jobOfferFieldIsActive = 'İlan yayında';
+  static const String jobOfferFieldIsActiveHint =
+      'Kapatınca listeden çıkar; tekrar açabilirsin.';
+
+  // V1 — Marketplace listing UI copy.
+  static const String marketListingEmpty =
+      'Henüz aktif ürün/hizmet ilanı yok. İlk ilanı sen ver.';
+  static const String marketListingEmptyGuest =
+      'Henüz aktif ürün/hizmet ilanı yok. Üye olunca yayınlayabilirsin.';
+  static const String marketListingErrorGeneric =
+      'Market ilanları yüklenemedi. Yeniden dener misin?';
+  static const String marketListingAddCta = 'Ürün/Hizmet İlanı Ver';
+  static const String marketListingSavedSnack = 'İlanın yayında.';
+
+  static const String marketListingFormTitleNew = 'Ürün/Hizmet İlanı';
+  static const String marketListingFormTitleEdit = 'İlanı Düzenle';
+  static const String marketListingFormSubtitle =
+      'Sattığın ürünü veya hizmeti dürüstçe tanıt.';
+  static const String marketListingFormSaveCta = 'İlanı Yayınla';
+  static const String marketListingFieldTitle = 'Başlık';
+  static const String marketListingFieldTitleHint = 'Örn. Spiral mikser 80 L';
+  static const String marketListingFieldTitleRequired = 'Başlık gerekli';
+  static const String marketListingFieldCategory = 'Kategori';
+  static const String marketListingFieldCategoryRequired = 'Kategori seç';
+  static const String marketListingFieldListingType = 'Tür';
+  static const String marketListingFieldCondition = 'Durum';
+  static const String marketListingFieldDescription = 'Açıklama';
+  static const String marketListingFieldDescriptionHint =
+      'Yıl, durum, garanti, teslimat…';
+  static const String marketListingFieldCity = 'Şehir';
+  static const String marketListingFieldDistrict = 'İlçe';
+  static const String marketListingFieldPrice = 'Fiyat (₺)';
+  static const String marketListingFieldUnit = 'Birim';
+  static const String marketListingFieldUnitHint = 'Örn. adet, kg, paket';
+  static const String marketListingFieldIsActive = 'İlan yayında';
+  static const String marketListingFieldIsActiveHint =
+      'Kapatınca listeden çıkar; tekrar açabilirsin.';
+
+  // Category labels (Türkçe gösterim)
+  static const Map<String, String> marketCategoryLabels = <String, String>{
+    'hammadde': 'Hammadde',
+    'ekipman': 'Ekipman',
+    'devren_firin': 'Devren Fırın',
+    'ikinci_el': 'İkinci El',
+    'ambalaj': 'Ambalaj',
+    'hizmet': 'Hizmet',
+    'diger': 'Diğer',
+  };
+
+  static const Map<String, String> marketListingTypeLabels = <String, String>{
+    'product': 'Ürün',
+    'service': 'Hizmet',
+    'equipment': 'Ekipman',
+  };
+
+  static const Map<String, String> marketConditionLabels = <String, String>{
+    'new': 'Sıfır',
+    'used': 'İkinci el',
+    'as_is': 'Olduğu gibi',
+  };
   static const String jobsErrorGeneric =
       'İlanlar yüklenemedi. Bağlantını kontrol edip yeniden dene.';
   static const String jobsCardSalaryUnset = 'Ücret belirtilmemiş';

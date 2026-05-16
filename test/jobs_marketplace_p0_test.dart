@@ -42,9 +42,15 @@ void main() {
           reason: 'Marketplace artık mock kart render etmemeli');
     });
 
-    test('Coming-soon ekranı kaldı', () {
-      expect(src.contains('marketComingSoonTitle'), isTrue);
-      expect(src.contains('marketComingSoonBody'), isTrue);
+    test('Gerçek market_listings provider\'a bağlı (V1 sprint sonrası)', () {
+      // Bu test başlangıçta "coming-soon ekran kaldı" idi (P0 mock cleanup).
+      // "Gerçek olmayan şeyleri gerçek yap" sprint sonrası coming-soon
+      // kaldırıldı; ekran gerçek `activeMarketListingsProvider`'a bağlandı.
+      expect(src.contains('activeMarketListingsProvider'), isTrue,
+          reason:
+              'Marketplace artık gerçek `market_listings` provider\'a bağlı olmalı');
+      expect(src.contains('marketComingSoonTitle'), isFalse,
+          reason: 'Eski coming-soon kart kaldırılmalı');
     });
   });
 

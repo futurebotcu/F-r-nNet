@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
@@ -25,6 +26,8 @@ class LocalFeedRepository implements FeedRepository {
   final String _meName;
 
   final List<FeedPost> _posts = <FeedPost>[];
+  // V1 P1-B — Local fallback için in-memory yorumlar (post_id -> liste).
+  final Map<String, List<FeedComment>> _comments = <String, List<FeedComment>>{};
 
   final StreamController<void> _changes =
       StreamController<void>.broadcast();
@@ -113,6 +116,77 @@ class LocalFeedRepository implements FeedRepository {
             'grupları açıldı. Yakındaki ustaları takip et.',
       ),
     ];
+  }
+
+  // ─────────────────────────────────────── Comments (V1 P1-B)
+
+  @override
+  Future<List<FeedComment>> listComments(String postId) async {
+    final list = _comments[postId] ?? const <FeedComment>[];
+    final visible = list.where((c) => !c.isDeleted).toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return List.unmodifiable(visible);
+  }
+
+  @override
+  Future<FeedComment> addComment({
+    required String postId,
+    required String text,
+    String? currentAuthorName,
+    String? currentAuthorRole,
+  }) async {
+    final now = DateTime.now();
+    final comment = FeedComment(
+      id: 'fc_${now.microsecondsSinceEpoch}',
+      postId: postId,
+      ownerId: _meId,
+      text: text.trim(),
+      authorName: (currentAuthorName?.trim().isNotEmpty == true)
+          ? currentAuthorName!.trim()
+          : _meName,
+      authorRole: (currentAuthorRole?.trim().isNotEmpty == true)
+          ? currentAuthorRole!.trim()
+          : 'Üye',
+      isDeleted: false,
+      createdAt: now,
+    );
+    (_comments[postId] ??= <FeedComment>[]).add(comment);
+
+    // commentCount sayacı local'de manuel artırılır (server-side trigger yok).
+    final pi = _posts.indexWhere((p) => p.id == postId);
+    if (pi >= 0) {
+      _posts[pi] = _posts[pi].copyWith(commentCount: _posts[pi].commentCount + 1);
+    }
+    _notify();
+    return comment;
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) async {
+    for (final list in _comments.values) {
+      final i = list.indexWhere((c) => c.id == commentId);
+      if (i >= 0) {
+        final old = list[i];
+        if (old.isDeleted) return;
+        list[i] = FeedComment(
+          id: old.id,
+          postId: old.postId,
+          ownerId: old.ownerId,
+          text: old.text,
+          authorName: old.authorName,
+          authorRole: old.authorRole,
+          isDeleted: true,
+          createdAt: old.createdAt,
+        );
+        // commentCount düşür.
+        final pi = _posts.indexWhere((p) => p.id == old.postId);
+        if (pi >= 0 && _posts[pi].commentCount > 0) {
+          _posts[pi] = _posts[pi].copyWith(commentCount: _posts[pi].commentCount - 1);
+        }
+        _notify();
+        return;
+      }
+    }
   }
 
   @override
