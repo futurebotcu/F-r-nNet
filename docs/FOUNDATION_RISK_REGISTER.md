@@ -59,6 +59,7 @@
 | P1.5 | CreateProfileScreen hydrate-then-submit guard | P1 | FIXED | `b2143e7` | `test/create_profile_hydrate_submit_guard_test.dart`, 330/330 | Google completion early-submit smoke önerilir | completion mode'da `_isCompletion && !_profileHydrated` ise submit bloke edilir; `AppStrings.profileStillLoadingError` snackbar; repo save çağrılmaz |
 | P1.14 | Repo hygiene .gitignore gaps | P1 | FIXED | `9405949` | flutter analyze clean, flutter test 330/330 | git status hygiene smoke önerilir | root-level `MCP_*.txt`, `/*.png`, `/*_AUDIT.md`, `/*_REPORT.md`, `/*_LEDGER*.md`, `/*_RUNBOOK*.md` ve explicit noisy files ignore edildi; untracked count ~50 → 4 |
 | P0-A | Hosted Privacy Policy URL missing | P0 | FIXED | `003f93f` | URL: <https://futurebotcu.github.io/F-r-nNet/privacy/> | GitHub Pages /docs privacy page active | Play Console Privacy Policy URL olarak kullanılacak |
+| P0-B | Hosted account deletion URL / web mirror missing | P0 | FIXED | `09de636` | URL: <https://futurebotcu.github.io/F-r-nNet/account-deletion/> | GitHub Pages /docs account deletion page active | Play Console Data Safety account deletion URL final submission checklist'inde manuel girilecek |
 
 ---
 
@@ -68,10 +69,10 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 
 | ID | Title | Severity | Status | Notes |
 |---|---|---|---|---|
-| P0-B | Hosted account deletion URL missing | P0 | OPEN | In-app `delete-account` Edge Function ACTIVE; Play Store 2024+ web mirror istiyor |
 | P0-C | Store listing assets missing | P0 | OPEN | `store/`/`marketing/` klasörü yok; ≥2 screenshot 1080×1920 + 1024×500 feature graphic gerekli |
 
 > P0-A 2026-05-17'de `003f93f` ile FIXED oldu; GitHub Pages URL aktif: <https://futurebotcu.github.io/F-r-nNet/privacy/>
+> P0-B 2026-05-17'de `09de636` ile FIXED oldu; GitHub Pages URL aktif: <https://futurebotcu.github.io/F-r-nNet/account-deletion/>
 
 ---
 
@@ -176,13 +177,14 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 > **Not:** P1.5 2026-05-17'de `b2143e7` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.14 2026-05-17'de `9405949` ile FIXED oldu; **code-side P1 sprinti tamamlandı.**
 > **Not:** P0-A Privacy Policy URL 2026-05-17'de `003f93f` ile oluşturuldu ve GitHub Pages URL'i aktif: <https://futurebotcu.github.io/F-r-nNet/privacy/>
+> **Not:** P0-B Account Deletion URL 2026-05-17'de `09de636` ile oluşturuldu ve GitHub Pages URL'i aktif: <https://futurebotcu.github.io/F-r-nNet/account-deletion/>. Play Console URL girişi final store checklist'inde manuel adım olarak kalıyor.
 
-Risk × payback sırası — kalan iş yalnız ürün kararı + hosting:
+Risk × payback sırası — kalan iş yalnız asset üretimi + manuel store konfigürasyonu:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **P0-B** — Hosted account deletion URL / web mirror | P0 (compliance) | — |
-| 2 | **P0-C** — Store listing assets (screenshots + feature graphic + açıklama) | P0 (compliance) | — |
+| 1 | **P0-C** — Store listing assets (screenshots + feature graphic + açıklama) | P0 (compliance) | — |
+| 2 | **Manual Play Console final configuration** — Privacy Policy URL + Account deletion URL fields | manual checklist | — |
 
 Phase C (sonra): **P1.10** (translate_data_error helper) + **P1.9** (deep link redirect) + **P1.11** (6 ek autoDispose) + **P1.13** (Crashlytics).
 Phase D (genişletme): P2 infra/feature sırası.
