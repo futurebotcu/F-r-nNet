@@ -48,6 +48,9 @@
 | P1.19 | Feed save toggle no try/catch | P1 | FIXED | `55ea49b` | `test/feed_group_write_error_test.dart`, 309/309 | feed offline save smoke önerilir | try/catch + Türkçe snackbar + guest guard korunur |
 | P1.20 | Group leave non-guest errors propagate | P1 | FIXED | `55ea49b` | `test/feed_group_write_error_test.dart`, 309/309 | group offline leave smoke önerilir | try/catch + Türkçe snackbar + runGuardedMutation guest contract korunur |
 | P1.21 | Group message send no error UX | P1 | FIXED | `55ea49b` | `test/feed_group_write_error_test.dart`, 309/309 | group offline message smoke önerilir | try/catch + Türkçe snackbar + input korunur |
+| P1.22 | Dealer price update no try/catch | P1 | FIXED | `638ffec` | `test/dealer_job_seek_write_error_test.dart`, 312/312 | dealer price offline smoke önerilir | try/catch + Türkçe snackbar + sheet açık kalır |
+| P1.24 | Job seek post toggle silent | P1 | FIXED | `638ffec` | `test/dealer_job_seek_write_error_test.dart`, 312/312 | job seek toggle offline smoke önerilir | try/catch + Türkçe snackbar + guest contract korunur |
+| P1.25 | Job seek post delete silent | P1 | FIXED | `638ffec` | `test/dealer_job_seek_write_error_test.dart`, 312/312 | job seek delete offline smoke önerilir | try/catch + Türkçe snackbar + confirm dialog flow korunur |
 
 ---
 
@@ -94,10 +97,10 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 | P1.19 | Feed save toggle no try/catch | P1 | FIXED | `feed_screen.dart:368-384` | Fixed by commit `55ea49b`. try/catch + `AppStrings.feedSaveUpdateError`; aynı `PostCardWired` ortak görünürlük değişimi P1.18 ile. Test: `test/feed_group_write_error_test.dart`. Full suite: 309/309 passed. |
 | P1.20 | Group leave non-guest errors propagate | P1 | FIXED | `group_detail_screen.dart:432-453` | Fixed by commit `55ea49b`. Leave branch'i `runGuardedMutation` içinde try/catch; `on GuestActionRequiredException` rethrow ile guest sheet davranışı korunur; non-guest hatada `AppStrings.groupLeaveError` snackbar; `_PrimaryAction` → `PrimaryActionButton` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Full suite: 309/309 passed. |
 | P1.21 | Group message send no error UX | P1 | FIXED | `group_detail_screen.dart:681-703` | Fixed by commit `55ea49b`. `_send` try/catch + `AppStrings.groupMessageSendError`; mesaj metni hata durumunda input'ta korunur; `on GuestActionRequiredException` ile defense-in-depth sheet; `_Composer` → `GroupComposer` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Full suite: 309/309 passed. |
-| P1.22 | Dealer price update no try/catch | P1 | IN_PROGRESS | `dealer_detail_screen.dart:713-747` | Patch hazır: `_save` try/catch + `AppStrings.dealerPriceSaveError`; hata yolunda sheet AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin; `on GuestActionRequiredException` ile defense-in-depth sheet; `_PriceSheet` → `DealerPriceSheet` (test için 1-karakter görünürlük). Test: `test/dealer_job_seek_write_error_test.dart`. Commit/push bekliyor. |
+| P1.22 | Dealer price update no try/catch | P1 | FIXED | `dealer_detail_screen.dart:713-747` | Fixed by commit `638ffec`. `_save` try/catch + `AppStrings.dealerPriceSaveError`; hata yolunda sheet AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin; `on GuestActionRequiredException` ile defense-in-depth sheet; `_PriceSheet` → `DealerPriceSheet` (test için 1-karakter görünürlük). Test: `test/dealer_job_seek_write_error_test.dart`. Full suite: 312/312 passed. |
 | **P1.23** | **Dealer note add LOADING STUCK on error** | **P1-HIGH** | **FIXED** | `dealer_detail_screen.dart:1172-1208` | Fixed by commit `73034df`. try/catch/finally `repo.addNote` çağrısının etrafına eklendi; Türkçe error snackbar "Not eklenemedi. Lütfen tekrar dene."; `_saving` finally bloğunda `if (mounted)` guard ile reset; hata durumunda kullanıcı not metni input'ta korunuyor; `NotesCard` library-public (test için 1-karakter görünürlük değişimi). Test: `test/dealer_note_add_error_test.dart` (error path + success regression). Full suite: 305/305 passed. |
-| P1.24 | Job seek post toggle silent | P1 | IN_PROGRESS | `job_seek_posts_screen.dart:167-178` | Patch hazır: `_toggleActive` action içinde try/catch + `AppStrings.jobSeekPostToggleError`; `on GuestActionRequiredException` rethrow ile `runGuardedMutation` guest contract korunur; `_PostCard` → `JobSeekPostCard` (test için 1-karakter görünürlük); `app_strings.dart` import eklendi. Test: `test/dealer_job_seek_write_error_test.dart`. Commit/push bekliyor. |
-| P1.25 | Job seek post delete silent | P1 | IN_PROGRESS | `job_seek_posts_screen.dart:180-207` | Patch hazır: `_delete` action içinde try/catch + `AppStrings.jobSeekPostDeleteError`; confirm dialog davranışı korunur; `on GuestActionRequiredException` rethrow. Ortak `JobSeekPostCard` görünürlük değişimi P1.24 ile. Test: `test/dealer_job_seek_write_error_test.dart`. Commit/push bekliyor. |
+| P1.24 | Job seek post toggle silent | P1 | FIXED | `job_seek_posts_screen.dart:167-178` | Fixed by commit `638ffec`. `_toggleActive` action içinde try/catch + `AppStrings.jobSeekPostToggleError`; `on GuestActionRequiredException` rethrow ile `runGuardedMutation` guest contract korunur; `_PostCard` → `JobSeekPostCard` (test için 1-karakter görünürlük); `app_strings.dart` import eklendi. Test: `test/dealer_job_seek_write_error_test.dart`. Full suite: 312/312 passed. |
+| P1.25 | Job seek post delete silent | P1 | FIXED | `job_seek_posts_screen.dart:180-207` | Fixed by commit `638ffec`. `_delete` action içinde try/catch + `AppStrings.jobSeekPostDeleteError`; confirm dialog davranışı korunur; `on GuestActionRequiredException` rethrow. Ortak `JobSeekPostCard` görünürlük değişimi P1.24 ile. Test: `test/dealer_job_seek_write_error_test.dart`. Full suite: 312/312 passed. |
 
 ---
 
@@ -155,20 +158,20 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 
 > **Not:** P1.23 2026-05-17'de `73034df` + `c92d094` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.18-P1.21 2026-05-17'de `55ea49b` ile FIXED oldu; sıradan çıkarıldı.
+> **Not:** P1.22/P1.24/P1.25 2026-05-17'de `638ffec` ile FIXED oldu; sıradan çıkarıldı.
 
 Risk × payback sırası — her satır küçük testli atomic commit:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **P1.22 + P1.24 + P1.25 batch** — Dealer price update + job seek toggle/delete | 🟡 3 × P1 | ~50 satır + 3 test (template aynı) |
-| 2 | **P1.6** — Recipe save missing catch | P1 | ~15 satır + 1 test |
-| 3 | **P1.7** — 4 dealer form try/catch (delivery/payment/return/adjustment) | P1 × 4 | ~60 satır + 4 test |
-| 4 | **P1.2** — SplashScreen Timer dispose | P1 | ~5 satır |
-| 5 | **P1.3** — performDeleteAccount cleanup ordering | P1 | ~10 satır |
-| 6 | **P1.4** — Guest+session mutual exclusion guard | P1 | ~10 satır + 1 test |
-| 7 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
-| 8 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
-| 9 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
+| 1 | **P1.6** — Recipe save missing catch | P1 | ~15 satır + 1 test |
+| 2 | **P1.7** — 4 dealer form try/catch (delivery/payment/return/adjustment) | P1 × 4 | ~60 satır + 4 test |
+| 3 | **P1.2** — SplashScreen Timer dispose | P1 | ~5 satır |
+| 4 | **P1.3** — performDeleteAccount cleanup ordering | P1 | ~10 satır |
+| 5 | **P1.4** — Guest+session mutual exclusion guard | P1 | ~10 satır + 1 test |
+| 6 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
+| 7 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
+| 8 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
 
 Phase C (sonra): **P1.10** (translate_data_error helper) + **P1.9** (deep link redirect) + **P1.11** (6 ek autoDispose) + **P1.13** (Crashlytics).
 Phase D (genişletme): P2 infra/feature sırası.
