@@ -125,7 +125,7 @@ class DealerDetailScreen extends ConsumerWidget {
                     loading: () => const _MiniLoading(),
                     error: (e, _) => Text('Not: $e'),
                     data: (notes) =>
-                        _NotesCard(dealerId: d.id, notes: notes),
+                        NotesCard(dealerId: d.id, notes: notes),
                   ),
                 ),
               ],
@@ -1150,16 +1150,19 @@ class _TxRow extends StatelessWidget {
 
 // ─────────────────────────────────────── Notes
 
-class _NotesCard extends ConsumerStatefulWidget {
-  const _NotesCard({required this.dealerId, required this.notes});
+/// V1.4 P1.23 — Widget regresyon testi tarafından doğrudan pump
+/// edilebilmesi için sınıf library-public (underscore'suz). Sadece bu
+/// dosyada construct ediliyor; UI'a yeni surface eklemiyor.
+class NotesCard extends ConsumerStatefulWidget {
+  const NotesCard({super.key, required this.dealerId, required this.notes});
   final String dealerId;
   final List<DealerNote> notes;
 
   @override
-  ConsumerState<_NotesCard> createState() => _NotesCardState();
+  ConsumerState<NotesCard> createState() => _NotesCardState();
 }
 
-class _NotesCardState extends ConsumerState<_NotesCard> {
+class _NotesCardState extends ConsumerState<NotesCard> {
   final _ctrl = TextEditingController();
   bool _saving = false;
 
@@ -1179,17 +1182,29 @@ class _NotesCardState extends ConsumerState<_NotesCard> {
     setState(() => _saving = true);
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
-    await repo.addNote(
-      DealerNote(
-        id: 'n_${now.microsecondsSinceEpoch}',
-        dealerId: widget.dealerId,
-        note: t,
-        createdAt: now,
-      ),
-    );
-    if (!mounted) return;
-    _ctrl.clear();
-    setState(() => _saving = false);
+    try {
+      await repo.addNote(
+        DealerNote(
+          id: 'n_${now.microsecondsSinceEpoch}',
+          dealerId: widget.dealerId,
+          note: t,
+          createdAt: now,
+        ),
+      );
+      if (!mounted) return;
+      _ctrl.clear();
+    } catch (_) {
+      if (!mounted) return;
+      // Not metni input'ta korunur ki kullanıcı tek tıkla tekrar
+      // deneyebilsin. Ham exception UI'a sızmaz.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.dealerNoteAddError)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
   }
 
   @override

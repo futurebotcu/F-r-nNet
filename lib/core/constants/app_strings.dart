@@ -707,6 +707,10 @@ class AppStrings {
   static const String dealerNotesEmpty =
       'Bu bayi için henüz not eklenmedi.';
   static const String dealerNotesAddHint = 'Yeni not ekle…';
+  // V1.4 P1.23 — addNote exception olursa ham hata kullanıcıya sızmasın;
+  // not metni input'ta korunur, kullanıcı tekrar deneyebilir.
+  static const String dealerNoteAddError =
+      'Not eklenemedi. Lütfen tekrar dene.';
 
   // Forms — Delivery
   static const String dealerDeliveryTitle = 'Bayiye Ürün Ver';

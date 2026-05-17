@@ -90,7 +90,7 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 | P1.20 | Group leave non-guest errors propagate | P1 | OPEN | `group_detail_screen.dart:432-453` | `runGuardedMutation` sadece guest exception yakalar |
 | P1.21 | Group message send no error UX | P1 | OPEN | `group_detail_screen.dart:681-703` | no success snackbar, no error snackbar |
 | P1.22 | Dealer price update no try/catch | P1 | OPEN | `dealer_detail_screen.dart:713-747` | `_PriceSheet._save` |
-| **P1.23** | **Dealer note add LOADING STUCK on error** | **P1-HIGH** | **OPEN** | `dealer_detail_screen.dart:1172-1193` | **P0.1 ile aynı şekil**: `_saving=true` kalır, buton ölü; tek farkı sekonder ekran |
+| **P1.23** | **Dealer note add LOADING STUCK on error** | **P1-HIGH** | **IN_PROGRESS** | `dealer_detail_screen.dart:1172-1208` | Patch hazır (try/catch/finally + Türkçe error snackbar + saving reset in finally), regression test `test/dealer_note_add_error_test.dart` yazıldı; `NotesCard` library-public yapıldı (test için 1-karakter görünürlük değişimi). Commit/push bekliyor; commit sonrası mini docs update ile FIXED + hash. |
 | P1.24 | Job seek post toggle silent | P1 | OPEN | `job_seek_posts_screen.dart:167-178` | toggle on/off bilinmiyor, snackbar yok |
 | P1.25 | Job seek post delete silent | P1 | OPEN | `job_seek_posts_screen.dart:180-207` | confirm dialog var ama sonuç bildirim yok |
 
