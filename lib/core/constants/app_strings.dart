@@ -94,6 +94,12 @@ class AppStrings {
       'edebilirsin.';
   static const String profileCreateDiscardKeep = 'Forma dön';
   static const String profileCreateDiscardLeave = 'Gezmeye devam et';
+  // V1.4 P1.5 — Completion mode'da ProfileController async hydrate eder.
+  // Hydrate bitmeden submit denenirse form default değerleri Supabase'e
+  // yazılırdı (örn. accountType=commercial + badge=first). Guard bilgi
+  // ver + submit'i bloke et.
+  static const String profileStillLoadingError =
+      'Profil bilgilerin hazırlanıyor. Lütfen birkaç saniye sonra tekrar dene.';
 
   // Profile
   static const String accountType = 'Hesap türü';

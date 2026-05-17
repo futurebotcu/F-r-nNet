@@ -233,6 +233,23 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_submitting) return;
 
+    // V1.4 P1.5 — Erken submit guard.
+    //
+    // Completion mode'da `_hydrateFromProfile` async tetiklenir ve mevcut
+    // profilden `_accountType` + `_badge` değerlerini koşulsuz overwrite
+    // eder (display_name/city/email yalnız boşken doldurulur, ama
+    // accountType/badge her zaman). Hydrate tamamlanmadan kullanıcı
+    // Kaydet'e basarsa default `commercial`/`first-badge` Supabase'e yazılır.
+    // Guard kullanıcıyı bilgilendirip submit'i bloke eder; hydrate tamamlanır
+    // tamamlanmaz `_profileHydrated = true` olur ve tekrar Kaydet çalışır.
+    if (_isCompletion && !_profileHydrated) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.profileStillLoadingError)),
+      );
+      return;
+    }
+
     // V1.3.5 — Yeni signup'ta yasal kabul zorunlu.
     if (!_isCompletion && !_legalAccepted) {
       setState(() => _legalShowError = true);
