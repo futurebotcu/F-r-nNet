@@ -9,6 +9,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/providers/guest_mode_provider.dart';
 import '../../auth/services/guest_mode_storage.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../profile/repositories/profile_repository.dart';
@@ -70,6 +71,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     // 3 / 4 — Supabase var ama oturum yok
     final user = ref.read(currentAuthUserProvider);
+
+    // V1.4 P1.4 — Defensive mutual-exclusion guard.
+    //
+    // Supabase aktif + signed-in user + guest flag aynı anda true olamaz.
+    // Race condition senaryoları:
+    //   - OAuth callback sırasında "Kayıtsız Devam Et" storage yazımı
+    //     araya girer ve user oturum aldıktan sonra guest=true kalır.
+    //   - Uninstall/reinstall sonrası eski guest flag SharedPreferences'ta
+    //     korunmuş olur (bazı OEM'lerde app data tam silinmez).
+    // setGuest(false) hem Riverpod state hem SharedPreferences'ı tek
+    // çağrıda senkronize eder. user == null branch'i bu noktadan sonra
+    // davranışını değiştirmez (zaten user != null olduğu için 5/6 yoluna
+    // düşer); guard sadece tutarsız state'i temizler.
+    if (user != null && guest) {
+      await ref.read(guestModeProvider.notifier).setGuest(false);
+      if (!mounted) return;
+    }
+
     if (user == null) {
       if (!mounted) return;
       if (guest) {
