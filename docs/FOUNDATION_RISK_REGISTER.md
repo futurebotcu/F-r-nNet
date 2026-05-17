@@ -44,6 +44,10 @@
 | P0.1 | Feed composer `addPost` error handling | P0 | FIXED | `b23956c` | `test/feed_composer_error_test.dart` (2 yeni), 303/303 | offline composer smoke önerilir | try/catch/finally + Türkçe error snackbar + mounted guard + text korunur |
 | P1.1 | Provider stale-cache autoDispose | P1 | FIXED | `f1020f7` | 303/303 (regresyon yok) | optional | `recipesListProvider`, `todaySummaryProvider`, `activeJobOffersProvider`, `myWorkerProfileProvider` |
 | P1.23 | Dealer note add loading-stuck on error | P1-HIGH | FIXED | `73034df` | `test/dealer_note_add_error_test.dart`, 305/305 | dealer note offline smoke önerilir | try/catch/finally + Türkçe snackbar + saving reset; `NotesCard` library-public (test için 1-karakter görünürlük değişimi) |
+| P1.18 | Feed like toggle no try/catch | P1 | FIXED | `55ea49b` | `test/feed_group_write_error_test.dart`, 309/309 | feed offline like smoke önerilir | try/catch + Türkçe snackbar + guest guard korunur |
+| P1.19 | Feed save toggle no try/catch | P1 | FIXED | `55ea49b` | `test/feed_group_write_error_test.dart`, 309/309 | feed offline save smoke önerilir | try/catch + Türkçe snackbar + guest guard korunur |
+| P1.20 | Group leave non-guest errors propagate | P1 | FIXED | `55ea49b` | `test/feed_group_write_error_test.dart`, 309/309 | group offline leave smoke önerilir | try/catch + Türkçe snackbar + runGuardedMutation guest contract korunur |
+| P1.21 | Group message send no error UX | P1 | FIXED | `55ea49b` | `test/feed_group_write_error_test.dart`, 309/309 | group offline message smoke önerilir | try/catch + Türkçe snackbar + input korunur |
 
 ---
 
@@ -86,10 +90,10 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 
 | ID | Title | Severity | Status | Source | Notes |
 |---|---|---|---|---|---|
-| P1.18 | Feed like toggle no try/catch | P1 | IN_PROGRESS | `feed_screen.dart:351-367` | Patch hazır: try/catch + `AppStrings.feedLikeUpdateError`; `on GuestActionRequiredException` ile defense-in-depth sheet açma korunuyor; `_PostCardWired` → `PostCardWired` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Commit/push bekliyor. |
-| P1.19 | Feed save toggle no try/catch | P1 | IN_PROGRESS | `feed_screen.dart:368-384` | Patch hazır: try/catch + `AppStrings.feedSaveUpdateError`; aynı `PostCardWired` ortak görünürlük değişimi P1.18 ile. Test: `test/feed_group_write_error_test.dart`. Commit/push bekliyor. |
-| P1.20 | Group leave non-guest errors propagate | P1 | IN_PROGRESS | `group_detail_screen.dart:432-453` | Patch hazır: leave branch'i `runGuardedMutation` içinde try/catch; `on GuestActionRequiredException` rethrow ile guest sheet davranışı korunur; non-guest hatada `AppStrings.groupLeaveError` snackbar; `_PrimaryAction` → `PrimaryActionButton` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Commit/push bekliyor. |
-| P1.21 | Group message send no error UX | P1 | IN_PROGRESS | `group_detail_screen.dart:681-703` | Patch hazır: `_send` try/catch + `AppStrings.groupMessageSendError`; mesaj metni hata durumunda input'ta korunur; `on GuestActionRequiredException` ile defense-in-depth sheet; `_Composer` → `GroupComposer` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Commit/push bekliyor. |
+| P1.18 | Feed like toggle no try/catch | P1 | FIXED | `feed_screen.dart:351-367` | Fixed by commit `55ea49b`. try/catch + `AppStrings.feedLikeUpdateError`; `on GuestActionRequiredException` ile defense-in-depth sheet açma korunuyor; `_PostCardWired` → `PostCardWired` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Full suite: 309/309 passed. |
+| P1.19 | Feed save toggle no try/catch | P1 | FIXED | `feed_screen.dart:368-384` | Fixed by commit `55ea49b`. try/catch + `AppStrings.feedSaveUpdateError`; aynı `PostCardWired` ortak görünürlük değişimi P1.18 ile. Test: `test/feed_group_write_error_test.dart`. Full suite: 309/309 passed. |
+| P1.20 | Group leave non-guest errors propagate | P1 | FIXED | `group_detail_screen.dart:432-453` | Fixed by commit `55ea49b`. Leave branch'i `runGuardedMutation` içinde try/catch; `on GuestActionRequiredException` rethrow ile guest sheet davranışı korunur; non-guest hatada `AppStrings.groupLeaveError` snackbar; `_PrimaryAction` → `PrimaryActionButton` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Full suite: 309/309 passed. |
+| P1.21 | Group message send no error UX | P1 | FIXED | `group_detail_screen.dart:681-703` | Fixed by commit `55ea49b`. `_send` try/catch + `AppStrings.groupMessageSendError`; mesaj metni hata durumunda input'ta korunur; `on GuestActionRequiredException` ile defense-in-depth sheet; `_Composer` → `GroupComposer` (test için 1-karakter görünürlük). Test: `test/feed_group_write_error_test.dart`. Full suite: 309/309 passed. |
 | P1.22 | Dealer price update no try/catch | P1 | OPEN | `dealer_detail_screen.dart:713-747` | `_PriceSheet._save` |
 | **P1.23** | **Dealer note add LOADING STUCK on error** | **P1-HIGH** | **FIXED** | `dealer_detail_screen.dart:1172-1208` | Fixed by commit `73034df`. try/catch/finally `repo.addNote` çağrısının etrafına eklendi; Türkçe error snackbar "Not eklenemedi. Lütfen tekrar dene."; `_saving` finally bloğunda `if (mounted)` guard ile reset; hata durumunda kullanıcı not metni input'ta korunuyor; `NotesCard` library-public (test için 1-karakter görünürlük değişimi). Test: `test/dealer_note_add_error_test.dart` (error path + success regression). Full suite: 305/305 passed. |
 | P1.24 | Job seek post toggle silent | P1 | OPEN | `job_seek_posts_screen.dart:167-178` | toggle on/off bilinmiyor, snackbar yok |
@@ -150,12 +154,13 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 ## Current Repair Order
 
 > **Not:** P1.23 2026-05-17'de `73034df` + `c92d094` ile FIXED oldu; sıradan çıkarıldı.
+> **Not:** P1.18-P1.21 2026-05-17'de `55ea49b` ile FIXED oldu; sıradan çıkarıldı.
 
 Risk × payback sırası — her satır küçük testli atomic commit:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **P1.18 + P1.19 + P1.20 + P1.21 + P1.22 + P1.24 + P1.25 batch** — 7 toggle/non-form write action error handling | 🟡 7 × P1 | ~100 satır + 5-7 test (template aynı) |
+| 1 | **P1.22 + P1.24 + P1.25 batch** — Dealer price update + job seek toggle/delete | 🟡 3 × P1 | ~50 satır + 3 test (template aynı) |
 | 2 | **P1.6** — Recipe save missing catch | P1 | ~15 satır + 1 test |
 | 3 | **P1.7** — 4 dealer form try/catch (delivery/payment/return/adjustment) | P1 × 4 | ~60 satır + 4 test |
 | 4 | **P1.2** — SplashScreen Timer dispose | P1 | ~5 satır |
