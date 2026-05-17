@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
@@ -415,13 +416,23 @@ class PostCardWired extends ConsumerWidget {
         // V1 P1-B — Eski snackbar yerine gerçek yorum bottom sheet.
         FeedCommentSheet.show(context, post.id);
       },
-      onShare: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppStrings.feedActionShareSnack),
-            duration: Duration(milliseconds: 900),
-          ),
-        );
+      onShare: () async {
+        // V1 P1-C — Eski fake snackbar yerine gerçek native share.
+        // Auth gerekmez; share_plus offline çalışır. URL/deep link yok
+        // (prod landing hazır olunca P2'de eklenir).
+        try {
+          await Share.share(
+            _buildShareText(post),
+            subject: AppStrings.feedShareSubject,
+          );
+        } catch (_) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(AppStrings.feedShareError),
+            ),
+          );
+        }
       },
       onTagTap: (tag) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -443,6 +454,24 @@ class PostCardWired extends ConsumerWidget {
     if (d.inHours < 24) return '${d.inHours} sa önce';
     if (d.inDays < 2) return 'dün';
     return '${d.inDays} gün önce';
+  }
+
+  /// V1 P1-C — Native share metni. URL/deep link içermez (prod landing
+  /// hazır olunca P2'de eklenecek). Saf fonksiyon — test edilebilir.
+  static String _buildShareText(FeedPost post) {
+    final buf = StringBuffer()
+      ..writeln("FırınNet'te bir paylaşım")
+      ..writeln()
+      ..writeln(post.text.trim())
+      ..writeln()
+      ..write('Paylaşan: ${post.author}');
+    if (post.tags.isNotEmpty) {
+      buf
+        ..writeln()
+        ..writeln()
+        ..write(post.tags.map((t) => '#$t').join(' '));
+    }
+    return buf.toString();
   }
 }
 

@@ -239,7 +239,14 @@ class AppStrings {
   static const String feedCommentCancelCta = 'Vazgeç';
   static const String feedCommentDeletedSnack = 'Yorum silindi.';
   static const String feedCommentOwnLabel = 'Sen';
+  // V1 P1-C — Eski fake share snackbar. Native share aktif edildiğinden
+  // onShare içinde artık KULLANILMAZ; key tek dependent test referansı
+  // sürdürmek için tutuluyor.
   static const String feedActionShareSnack = 'Paylaşım menüsü açılıyor…';
+  // V1 P1-C — Native share (share_plus) için subject + hata snackbar.
+  static const String feedShareSubject = 'FırınNet — Paylaşım';
+  static const String feedShareError =
+      'Paylaşım açılamadı. Lütfen tekrar dene.';
   static const String feedActionTagSnack = 'Etiket filtresi yakında: #';
 
   // Group highlight banner
