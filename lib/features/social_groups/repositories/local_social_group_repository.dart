@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../models/group_category.dart';
+import '../models/group_join_request.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -151,6 +152,112 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
   Future<void> postMessage(GroupMessage m) async {
     _messages.add(m);
     _notify();
+  }
+
+  // ─────────────────────────────────────── Private join requests (V1 P1-D)
+
+  final List<GroupJoinRequest> _requests = <GroupJoinRequest>[];
+
+  @override
+  Future<GroupJoinRequest> requestJoinGroup(
+    String groupId,
+    {String? message,}
+  ) async {
+    final existingIdx = _requests.indexWhere(
+      (r) => r.groupId == groupId && r.requesterId == _meId,
+    );
+    final now = DateTime.now();
+    GroupJoinRequest req;
+    if (existingIdx >= 0) {
+      final old = _requests[existingIdx];
+      if (old.status == GroupJoinRequestStatus.pending) {
+        return old;
+      }
+      req = GroupJoinRequest(
+        id: old.id,
+        groupId: groupId,
+        requesterId: _meId,
+        status: GroupJoinRequestStatus.pending,
+        message: message ?? old.message,
+        createdAt: now,
+      );
+      _requests[existingIdx] = req;
+    } else {
+      req = GroupJoinRequest(
+        id: 'r_${now.microsecondsSinceEpoch}',
+        groupId: groupId,
+        requesterId: _meId,
+        status: GroupJoinRequestStatus.pending,
+        message: message,
+        createdAt: now,
+      );
+      _requests.add(req);
+    }
+    _notify();
+    return req;
+  }
+
+  @override
+  Future<GroupJoinRequest?> getMyJoinRequest(String groupId) async {
+    for (final r in _requests) {
+      if (r.groupId == groupId && r.requesterId == _meId) return r;
+    }
+    return null;
+  }
+
+  @override
+  Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId) async {
+    return List.unmodifiable(
+      _requests.where(
+        (r) =>
+            r.groupId == groupId &&
+            r.status == GroupJoinRequestStatus.pending,
+      ),
+    );
+  }
+
+  @override
+  Future<GroupJoinRequest> approveJoinRequest(String requestId) async {
+    final i = _requests.indexWhere((r) => r.id == requestId);
+    if (i < 0) throw StateError('Request not found: $requestId');
+    final old = _requests[i];
+    final upd = GroupJoinRequest(
+      id: old.id,
+      groupId: old.groupId,
+      requesterId: old.requesterId,
+      status: GroupJoinRequestStatus.approved,
+      message: old.message,
+      createdAt: old.createdAt,
+      decidedAt: DateTime.now(),
+    );
+    _requests[i] = upd;
+    _joined.add(old.groupId);
+    final gi = _groups.indexWhere((g) => g.id == old.groupId);
+    if (gi >= 0) {
+      _groups[gi] = _groups[gi]
+          .copyWith(currentMemberCount: _groups[gi].currentMemberCount + 1);
+    }
+    _notify();
+    return upd;
+  }
+
+  @override
+  Future<GroupJoinRequest> rejectJoinRequest(String requestId) async {
+    final i = _requests.indexWhere((r) => r.id == requestId);
+    if (i < 0) throw StateError('Request not found: $requestId');
+    final old = _requests[i];
+    final upd = GroupJoinRequest(
+      id: old.id,
+      groupId: old.groupId,
+      requesterId: old.requesterId,
+      status: GroupJoinRequestStatus.rejected,
+      message: old.message,
+      createdAt: old.createdAt,
+      decidedAt: DateTime.now(),
+    );
+    _requests[i] = upd;
+    _notify();
+    return upd;
   }
 
   @override

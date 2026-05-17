@@ -243,6 +243,40 @@ class AppStrings {
   // onShare içinde artık KULLANILMAZ; key tek dependent test referansı
   // sürdürmek için tutuluyor.
   static const String feedActionShareSnack = 'Paylaşım menüsü açılıyor…';
+
+  // V1 P1-D — Private group join requests + in-app notifications.
+  static const String notificationsTitle = 'Bildirimler';
+  static const String notificationsEmptyTitle = 'Henüz bildirimin yok';
+  static const String notificationsEmptyBody =
+      'Katılım istekleri ve önemli gelişmeler burada görünür.';
+  static const String notificationsErrorGeneric =
+      'Bildirimler yüklenemedi. Yeniden dener misin?';
+  static const String notificationsMarkAllRead = 'Tümünü okundu işaretle';
+  static const String notificationsTileTitle = 'Bildirimler';
+  static const String notificationsTileSubtitle =
+      'Katılım istekleri ve grup hareketleri';
+  static const String groupJoinRequestSend = 'Katılma isteği gönder';
+  static const String groupJoinRequestPending = 'İstek gönderildi';
+  static const String groupJoinRequestRejectedLabel = 'İstek reddedildi';
+  static const String groupJoinRequestResend = 'Tekrar istek gönder';
+  static const String groupJoinRequestSent =
+      'Katılma isteğin gönderildi.';
+  static const String groupJoinRequestError =
+      'Katılma isteği gönderilemedi. Lütfen tekrar dene.';
+  static const String groupJoinRequestApproved =
+      'Katılım isteği kabul edildi.';
+  static const String groupJoinRequestRejected =
+      'Katılım isteği reddedildi.';
+  static const String groupJoinRequestDecideError =
+      'İstek güncellenemedi. Lütfen tekrar dene.';
+  static const String groupJoinRequestsTitle = 'Katılım istekleri';
+  static const String groupJoinRequestsEmpty =
+      'Bekleyen katılım isteği yok.';
+  static const String groupPrivateInfo =
+      'Bu grup katılım onaylıdır. İçeriği görmek için katılma isteği gönderebilirsin.';
+  static const String groupApprovalRequiredBadge = 'Katılım onaylı';
+  static const String groupJoinRequestApproveCta = 'Kabul Et';
+  static const String groupJoinRequestRejectCta = 'Reddet';
   // V1 P1-C — Native share (share_plus) için subject + hata snackbar.
   static const String feedShareSubject = 'FırınNet — Paylaşım';
   static const String feedShareError =

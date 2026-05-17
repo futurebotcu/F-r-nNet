@@ -27,6 +27,7 @@ import 'package:firin_defter/features/feed/screens/feed_screen.dart';
 import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/providers/profile_provider.dart';
 import 'package:firin_defter/features/social_groups/models/group_category.dart';
+import 'package:firin_defter/features/social_groups/models/group_join_request.dart';
 import 'package:firin_defter/features/social_groups/models/group_message.dart';
 import 'package:firin_defter/features/social_groups/models/social_group.dart';
 import 'package:firin_defter/features/social_groups/providers/social_group_providers.dart';
@@ -140,6 +141,30 @@ class _ThrowingGroupRepo implements SocialGroupRepository {
   @override
   Future<List<GroupMessage>> listMessages(String groupId) =>
       _local.listMessages(groupId);
+
+  // V1 P1-D — Private join requests delegation (test scope: no throw).
+  @override
+  Future<GroupJoinRequest> requestJoinGroup(
+    String groupId, {
+    String? message,
+  }) =>
+      _local.requestJoinGroup(groupId, message: message);
+
+  @override
+  Future<GroupJoinRequest?> getMyJoinRequest(String groupId) =>
+      _local.getMyJoinRequest(groupId);
+
+  @override
+  Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId) =>
+      _local.listPendingJoinRequests(groupId);
+
+  @override
+  Future<GroupJoinRequest> approveJoinRequest(String requestId) =>
+      _local.approveJoinRequest(requestId);
+
+  @override
+  Future<GroupJoinRequest> rejectJoinRequest(String requestId) =>
+      _local.rejectJoinRequest(requestId);
 
   @override
   Stream<void> watch() => _changes.stream;

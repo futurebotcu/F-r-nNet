@@ -46,6 +46,14 @@ class SettingsScreen extends ConsumerWidget {
                       onTap: () => context.push(AppRoutes.createProfile),
                     ),
                     const _TileDivider(),
+                    // V1 P1-D — Bildirimler tile'ı.
+                    SettingsTile(
+                      icon: Icons.notifications_outlined,
+                      title: AppStrings.notificationsTileTitle,
+                      subtitle: AppStrings.notificationsTileSubtitle,
+                      onTap: () => context.push(AppRoutes.notifications),
+                    ),
+                    const _TileDivider(),
                     SettingsTile(
                       icon: Icons.logout_rounded,
                       title: AppStrings.settingsSignOut,

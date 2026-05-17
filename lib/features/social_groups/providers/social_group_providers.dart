@@ -5,6 +5,7 @@ import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
 import '../models/group_category.dart';
+import '../models/group_join_request.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../repositories/guarded_social_group_repository.dart';
@@ -85,4 +86,22 @@ final isJoinedProvider = Provider.family<bool, String>((ref, id) {
   ref.watch(groupChangesProvider);
   final repo = ref.watch(socialGroupRepositoryProvider);
   return repo.isJoined(id);
+});
+
+// ─────────────────────────────────────── V1 P1-D — Private join requests
+
+/// Belirli bir grup için geçerli kullanıcının request'i (varsa).
+final myJoinRequestProvider = FutureProvider.autoDispose
+    .family<GroupJoinRequest?, String>((ref, groupId) async {
+  ref.watch(groupChangesProvider);
+  final repo = ref.watch(socialGroupRepositoryProvider);
+  return repo.getMyJoinRequest(groupId);
+});
+
+/// Bir grubun pending istekleri — yalnız grup owner görür (RLS).
+final pendingJoinRequestsProvider = FutureProvider.autoDispose
+    .family<List<GroupJoinRequest>, String>((ref, groupId) async {
+  ref.watch(groupChangesProvider);
+  final repo = ref.watch(socialGroupRepositoryProvider);
+  return repo.listPendingJoinRequests(groupId);
 });

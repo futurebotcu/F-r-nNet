@@ -123,7 +123,11 @@ class GroupCard extends StatelessWidget {
                         ),
                         if (group.isPrivate)
                           _MiniBadge(
-                            label: AppStrings.groupBadgePrivate,
+                            // V1 P1-D — "Özel grup" yerine ürün karar: private
+                            // gruplar listede görünür ama içerik gated.
+                            // Badge ifadesi "Katılım onaylı" — kullanıcıya
+                            // join akışının onaylı olduğunu söyler.
+                            label: AppStrings.groupApprovalRequiredBadge,
                             color: AppColors.softGold,
                           ),
                         if (isJoined)

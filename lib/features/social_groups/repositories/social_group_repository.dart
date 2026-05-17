@@ -1,4 +1,5 @@
 import '../models/group_category.dart';
+import '../models/group_join_request.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -44,6 +45,24 @@ abstract class SocialGroupRepository {
   Future<List<GroupMessage>> listMessages(String groupId);
 
   Future<void> postMessage(GroupMessage m);
+
+  // ─────────────────────────────────────── Private group join requests (V1 P1-D)
+
+  /// Private gruba katılım isteği gönderir; mevcut pending varsa onu döner.
+  /// `request_group_join` RPC üzerinden gerçekleşir.
+  Future<GroupJoinRequest> requestJoinGroup(String groupId, {String? message});
+
+  /// Geçerli kullanıcının bu grup için isteği var mı? (status veya null.)
+  Future<GroupJoinRequest?> getMyJoinRequest(String groupId);
+
+  /// Bir grubun pending isteklerini owner görür (RLS kontrolü server-side).
+  Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId);
+
+  /// Pending isteği approve eder; member olarak ekler + notification atar.
+  Future<GroupJoinRequest> approveJoinRequest(String requestId);
+
+  /// Pending isteği reject eder + notification atar.
+  Future<GroupJoinRequest> rejectJoinRequest(String requestId);
 
   /// Repository içeriği değiştiğinde yayın.
   Stream<void> watch();

@@ -1,5 +1,6 @@
 import '../../auth/services/auth_required_guard.dart';
 import '../models/group_category.dart';
+import '../models/group_join_request.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -87,5 +88,37 @@ class GuardedSocialGroupRepository implements SocialGroupRepository {
   Future<void> postMessage(GroupMessage m) {
     _requireWrite('grup mesajı göndermek');
     return inner.postMessage(m);
+  }
+
+  // ── Private join requests (V1 P1-D) ────────────────────────────
+
+  @override
+  Future<GroupJoinRequest> requestJoinGroup(
+    String groupId, {
+    String? message,
+  }) {
+    _requireWrite('katılma isteği göndermek');
+    return inner.requestJoinGroup(groupId, message: message);
+  }
+
+  /// Read-only — guest user de okuyabilir (auth gerekirse Supabase RLS keser).
+  @override
+  Future<GroupJoinRequest?> getMyJoinRequest(String groupId) =>
+      inner.getMyJoinRequest(groupId);
+
+  @override
+  Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId) =>
+      inner.listPendingJoinRequests(groupId);
+
+  @override
+  Future<GroupJoinRequest> approveJoinRequest(String requestId) {
+    _requireWrite('katılım isteğini onaylamak');
+    return inner.approveJoinRequest(requestId);
+  }
+
+  @override
+  Future<GroupJoinRequest> rejectJoinRequest(String requestId) {
+    _requireWrite('katılım isteğini reddetmek');
+    return inner.rejectJoinRequest(requestId);
   }
 }

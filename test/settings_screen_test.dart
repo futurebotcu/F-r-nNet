@@ -113,8 +113,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // V1.4 Phase 1: bilerek dışarıda bırakılan başlıklar.
+      // V1 P1-D NOTU: "Bildirimler" artık GERÇEK feature olarak eklendi
+      // (NotificationsScreen + /notifications route), bu yüzden forbidden
+      // listesinden çıkarıldı. Diğer fake başlıklar hâlâ yasak.
       const forbidden = [
-        'Bildirimler',
         'Tema',
         'Dil',
         'Karanlık mod',

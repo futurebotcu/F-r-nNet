@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/group_category.dart';
+import '../models/group_join_request.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -342,6 +343,116 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
       // author_name / author_role server-side trigger ile.
     });
     _notify();
+  }
+
+  // ─────────────────────────────────────── Private join requests (V1 P1-D)
+
+  static const String _requestColumns =
+      'id, group_id, requester_id, status, message, decided_by, decided_at, '
+      'created_at, updated_at';
+
+  @override
+  Future<GroupJoinRequest> requestJoinGroup(
+    String groupId, {
+    String? message,
+  }) async {
+    final row = await _client.rpc(
+      'request_group_join',
+      params: <String, dynamic>{
+        'p_group_id': groupId,
+        if (message != null && message.trim().isNotEmpty)
+          'p_message': message.trim(),
+      },
+    );
+    if (row == null) {
+      throw StateError('request_group_join boş döndü');
+    }
+    final map = Map<String, dynamic>.from(row as Map);
+    _notify();
+    return GroupJoinRequest.fromRow(map);
+  }
+
+  @override
+  Future<GroupJoinRequest?> getMyJoinRequest(String groupId) async {
+    final userId = _currentUserId;
+    if (userId == null) return null;
+    final row = await _client
+        .from('group_join_requests')
+        .select(_requestColumns)
+        .eq('group_id', groupId)
+        .eq('requester_id', userId)
+        .maybeSingle();
+    if (row == null) return null;
+    return GroupJoinRequest.fromRow(row);
+  }
+
+  @override
+  Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId) async {
+    // Önce request satırları (RLS: yalnız group owner görür); ardından
+    // tek bir profile lookup ile display_name/badge/city snapshot eşle.
+    final rows = await _client
+        .from('group_join_requests')
+        .select(_requestColumns)
+        .eq('group_id', groupId)
+        .eq('status', 'pending')
+        .order('created_at', ascending: true);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    if (list.isEmpty) return const <GroupJoinRequest>[];
+
+    final ids = list
+        .map((r) => r['requester_id'] as String)
+        .toSet()
+        .toList(growable: false);
+
+    final profiles = await _client
+        .from('profiles')
+        .select('id, display_name, profession_badge, city')
+        .inFilter('id', ids);
+    final byId = <String, Map<String, dynamic>>{
+      for (final p in (profiles as List).cast<Map<String, dynamic>>())
+        p['id'] as String: p,
+    };
+
+    return list
+        .map((r) => GroupJoinRequest.fromRow(
+              r,
+              profileRow: byId[r['requester_id'] as String],
+            ))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<GroupJoinRequest> approveJoinRequest(String requestId) async {
+    final row = await _client.rpc(
+      'decide_group_join_request',
+      params: <String, dynamic>{
+        'p_request_id': requestId,
+        'p_approve': true,
+      },
+    );
+    if (row == null) {
+      throw StateError('decide_group_join_request boş döndü');
+    }
+    // Yeni üye eklendi → joined cache'i de invalidate edelim ki taze listJoined.
+    _joinedLoaded = false;
+    _notify();
+    return GroupJoinRequest.fromRow(Map<String, dynamic>.from(row as Map));
+  }
+
+  @override
+  Future<GroupJoinRequest> rejectJoinRequest(String requestId) async {
+    final row = await _client.rpc(
+      'decide_group_join_request',
+      params: <String, dynamic>{
+        'p_request_id': requestId,
+        'p_approve': false,
+      },
+    );
+    if (row == null) {
+      throw StateError('decide_group_join_request boş döndü');
+    }
+    _notify();
+    return GroupJoinRequest.fromRow(Map<String, dynamic>.from(row as Map));
   }
 
   @override

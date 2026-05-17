@@ -10,8 +10,10 @@ import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/group_category.dart';
+import '../models/group_join_request.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../providers/social_group_providers.dart';
@@ -57,6 +59,10 @@ class GroupDetailScreen extends ConsumerWidget {
             if (g == null) {
               return const Center(child: Text(AppStrings.groupDetailNotFound));
             }
+            // V1 P1-D — Private + non-member içerik gated; mesajlar gizli.
+            final user = ref.watch(currentAuthUserProvider);
+            final isOwner = user != null && g.ownerId == user.id;
+            final contentVisible = !g.isPrivate || joined || isOwner;
             return ListView(
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
@@ -94,32 +100,56 @@ class GroupDetailScreen extends ConsumerWidget {
                     isJoined: joined,
                   ),
                 ),
-                const SectionLabel(
-                  title: AppStrings.groupDetailMessagesSection,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageH,
+                // Owner için pending istekler bölümü.
+                if (isOwner) ...[
+                  const SectionLabel(
+                    title: AppStrings.groupJoinRequestsTitle,
                   ),
-                  child: messagesAsync.when(
-                    loading: () => const _MiniLoading(),
-                    error: (_, __) => const Text(
-                      AppStrings.groupMessagesErrorGeneric,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageH,
                     ),
-                    data: (msgs) => _MessagesList(messages: msgs),
+                    child: PendingRequestsSection(groupId: g.id),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.s),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageH,
+                ],
+                if (!contentVisible)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageH,
+                      AppSpacing.l,
+                      AppSpacing.pageH,
+                      0,
+                    ),
+                    child: _PrivateGatedInfo(),
+                  )
+                else ...[
+                  const SectionLabel(
+                    title: AppStrings.groupDetailMessagesSection,
                   ),
-                  child: GroupComposer(group: g, isJoined: joined),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageH,
+                    ),
+                    child: messagesAsync.when(
+                      loading: () => const _MiniLoading(),
+                      error: (_, __) => const Text(
+                        AppStrings.groupMessagesErrorGeneric,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      data: (msgs) => _MessagesList(messages: msgs),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.s),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageH,
+                    ),
+                    child: GroupComposer(group: g, isJoined: joined),
+                  ),
+                ],
               ],
             );
           },
@@ -395,6 +425,9 @@ class _FullBanner extends StatelessWidget {
 /// V1.4 P1.20 — Widget regresyon testi tarafından doğrudan pump
 /// edilebilmesi için library-public (underscore'suz). Sadece bu dosyada
 /// construct ediliyor; UI'a yeni surface eklemiyor.
+///
+/// V1 P1-D: Private + non-member kullanıcı için "Katılma isteği gönder"
+/// akışı. Pending istek varsa label "İstek gönderildi" + disabled.
 class PrimaryActionButton extends ConsumerWidget {
   const PrimaryActionButton({
     super.key,
@@ -407,6 +440,29 @@ class PrimaryActionButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(socialGroupRepositoryProvider);
+    final user = ref.watch(currentAuthUserProvider);
+    final isOwner = user != null && group.ownerId == user.id;
+    // Private + non-member: katılma isteği akışı; mevcut request lookup.
+    if (group.isPrivate && !isJoined && !isOwner) {
+      final requestAsync = ref.watch(myJoinRequestProvider(group.id));
+      return requestAsync.when(
+        loading: () => const SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+        ),
+        error: (_, __) => _RequestButton(
+          group: group,
+          existing: null,
+          repo: repo,
+        ),
+        data: (existing) => _RequestButton(
+          group: group,
+          existing: existing,
+          repo: repo,
+        ),
+      );
+    }
     final String label;
     final IconData icon;
     final Color color;
@@ -497,6 +553,350 @@ class PrimaryActionButton extends ConsumerWidget {
             letterSpacing: 0.1,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// V1 P1-D — Private grup için Request-Join button.
+///
+/// State:
+/// - existing == null veya status == cancelled → "Katılma isteği gönder"
+/// - status == pending → "İstek gönderildi" (disabled)
+/// - status == rejected → "Tekrar istek gönder"
+/// - status == approved → bu widget normalde gösterilmez (joined olmuş olmalı)
+class _RequestButton extends ConsumerWidget {
+  const _RequestButton({
+    required this.group,
+    required this.existing,
+    required this.repo,
+  });
+
+  final SocialGroup group;
+  final GroupJoinRequest? existing;
+  final dynamic repo;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final String label;
+    final bool enabled;
+    final IconData icon;
+
+    if (existing?.status == GroupJoinRequestStatus.pending) {
+      label = AppStrings.groupJoinRequestPending;
+      enabled = false;
+      icon = Icons.hourglass_top_rounded;
+    } else if (existing?.status == GroupJoinRequestStatus.rejected) {
+      label = AppStrings.groupJoinRequestResend;
+      enabled = true;
+      icon = Icons.refresh_rounded;
+    } else {
+      label = AppStrings.groupJoinRequestSend;
+      enabled = true;
+      icon = Icons.send_outlined;
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: FilledButton.icon(
+        onPressed: enabled
+            ? () async {
+                await runGuardedMutation(
+                  context,
+                  ref,
+                  action: () async {
+                    try {
+                      await repo.requestJoinGroup(group.id);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(AppStrings.groupJoinRequestSent),
+                        ),
+                      );
+                      ref.invalidate(myJoinRequestProvider(group.id));
+                    } on GuestActionRequiredException {
+                      rethrow;
+                    } catch (_) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(AppStrings.groupJoinRequestError),
+                        ),
+                      );
+                    }
+                  },
+                );
+              }
+            : null,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.copper,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: AppColors.surface,
+          disabledForegroundColor: AppColors.textMuted,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14.5,
+            letterSpacing: 0.1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// V1 P1-D — Private + non-member için içerik gating mesajı (mesaj listesi
+/// yerine).
+class _PrivateGatedInfo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.l),
+      decoration: BoxDecoration(
+        color: AppColors.elevatedCard,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(
+          color: AppColors.borderHairline,
+          width: 0.6,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Icon(
+            Icons.lock_outline_rounded,
+            color: AppColors.softGold,
+            size: 20,
+          ),
+          SizedBox(width: AppSpacing.m),
+          Expanded(
+            child: Text(
+              AppStrings.groupPrivateInfo,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// V1 P1-D — Grup owner için pending join requests listesi.
+///
+/// Library-public (test edilebilirlik için underscore'suz); yalnız
+/// group_detail_screen kullanıyor.
+class PendingRequestsSection extends ConsumerWidget {
+  const PendingRequestsSection({super.key, required this.groupId});
+
+  final String groupId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(pendingJoinRequestsProvider(groupId));
+    return async.when(
+      loading: () => const _MiniLoading(),
+      error: (_, __) => const Text(
+        AppStrings.groupJoinRequestDecideError,
+        style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+      ),
+      data: (items) {
+        if (items.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+            child: Text(
+              AppStrings.groupJoinRequestsEmpty,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
+            ),
+          );
+        }
+        return Column(
+          children: [
+            for (final r in items)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.s),
+                child: _PendingRequestRow(
+                  request: r,
+                  groupId: groupId,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PendingRequestRow extends ConsumerStatefulWidget {
+  const _PendingRequestRow({
+    required this.request,
+    required this.groupId,
+  });
+  final GroupJoinRequest request;
+  final String groupId;
+
+  @override
+  ConsumerState<_PendingRequestRow> createState() =>
+      _PendingRequestRowState();
+}
+
+class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
+  bool _busy = false;
+
+  Future<void> _decide(bool approve) async {
+    setState(() => _busy = true);
+    final repo = ref.read(socialGroupRepositoryProvider);
+    try {
+      if (approve) {
+        await repo.approveJoinRequest(widget.request.id);
+      } else {
+        await repo.rejectJoinRequest(widget.request.id);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(approve
+              ? AppStrings.groupJoinRequestApproved
+              : AppStrings.groupJoinRequestRejected),
+        ),
+      );
+      ref.invalidate(pendingJoinRequestsProvider(widget.groupId));
+    } on GuestActionRequiredException {
+      if (mounted) await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(AppStrings.groupJoinRequestDecideError),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = widget.request;
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.elevatedCard,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.softGold.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  (r.requesterName?.isNotEmpty == true)
+                      ? r.requesterName![0].toUpperCase()
+                      : '?',
+                  style: const TextStyle(
+                    color: AppColors.softGold,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      r.requesterName ?? '—',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if ((r.requesterBadge ?? r.requesterCity) != null &&
+                        ((r.requesterBadge?.isNotEmpty ?? false) ||
+                            (r.requesterCity?.isNotEmpty ?? false)))
+                      Text(
+                        [
+                          if (r.requesterBadge?.isNotEmpty == true)
+                            r.requesterBadge!,
+                          if (r.requesterCity?.isNotEmpty == true)
+                            r.requesterCity!,
+                        ].join(' · '),
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (r.message != null && r.message!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              r.message!,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.s),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _busy ? null : () => _decide(false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                    side: const BorderSide(
+                      color: AppColors.borderHairline,
+                      width: 0.6,
+                    ),
+                  ),
+                  child: const Text(AppStrings.groupJoinRequestRejectCta),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _busy ? null : () => _decide(true),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.copper,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text(AppStrings.groupJoinRequestApproveCta),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

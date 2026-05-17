@@ -43,6 +43,7 @@ import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
 import '../../features/messages/screens/job_conversation_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
@@ -70,6 +71,9 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String settingsAbout = '/settings/about';
   static const String settingsDataInfo = '/settings/data-info';
+
+  // V1 P1-D — Uygulama içi bildirimler.
+  static const String notifications = '/notifications';
 
   // Ana tablar
   static const String feed = '/feed';
@@ -238,6 +242,12 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.settingsDataInfo,
         builder: (_, __) => const DataInfoScreen(),
+      ),
+
+      // V1 P1-D — Bildirimler ekranı.
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, __) => const NotificationsScreen(),
       ),
 
       // Üretim Yönetimi alt ekranları (shell dışında, tam ekran).
