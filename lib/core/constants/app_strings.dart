@@ -206,6 +206,12 @@ class AppStrings {
   static const String feedActionUnlikedSnack = 'Beğeni geri alındı.';
   static const String feedActionSavedSnack = 'Kaydedildi.';
   static const String feedActionUnsavedSnack = 'Kayıtlardan çıktı.';
+  // V1.4 P1.18 — toggleLike network/repo exception → kullanıcıya Türkçe.
+  static const String feedLikeUpdateError =
+      'Beğeni güncellenemedi. Lütfen tekrar dene.';
+  // V1.4 P1.19 — toggleSave network/repo exception → kullanıcıya Türkçe.
+  static const String feedSaveUpdateError =
+      'Kaydetme işlemi tamamlanamadı. Lütfen tekrar dene.';
   // V1 P1-B — Feed yorumlar gerçek UI'a bağlandı; eski snackbar kaldırıldı.
   static const String feedActionCommentSnack =
       'Yorumlar yükleniyor…';
@@ -829,6 +835,12 @@ class AppStrings {
       'Mesaj yazmak için önce gruba katıl.';
   static const String groupDetailJoinSnackSuccess = 'Gruba katıldın.';
   static const String groupDetailLeaveSnackSuccess = 'Gruptan ayrıldın.';
+  // V1.4 P1.20 — leaveGroup non-guest/network exception → Türkçe.
+  static const String groupLeaveError =
+      'Gruptan çıkılamadı. Lütfen tekrar dene.';
+  // V1.4 P1.21 — postMessage exception → Türkçe; input metni korunur.
+  static const String groupMessageSendError =
+      'Mesaj gönderilemedi. Lütfen tekrar dene.';
   static const String groupDetailPinnedBadge = 'SABİTLENDİ';
 
   // Group create

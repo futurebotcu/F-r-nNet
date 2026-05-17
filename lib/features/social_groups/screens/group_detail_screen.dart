@@ -89,7 +89,7 @@ class GroupDetailScreen extends ConsumerWidget {
                     AppSpacing.pageH,
                     0,
                   ),
-                  child: _PrimaryAction(
+                  child: PrimaryActionButton(
                     group: g,
                     isJoined: joined,
                   ),
@@ -118,7 +118,7 @@ class GroupDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageH,
                   ),
-                  child: _Composer(group: g, isJoined: joined),
+                  child: GroupComposer(group: g, isJoined: joined),
                 ),
               ],
             );
@@ -392,8 +392,15 @@ class _FullBanner extends StatelessWidget {
   }
 }
 
-class _PrimaryAction extends ConsumerWidget {
-  const _PrimaryAction({required this.group, required this.isJoined});
+/// V1.4 P1.20 — Widget regresyon testi tarafından doğrudan pump
+/// edilebilmesi için library-public (underscore'suz). Sadece bu dosyada
+/// construct ediliyor; UI'a yeni surface eklemiyor.
+class PrimaryActionButton extends ConsumerWidget {
+  const PrimaryActionButton({
+    super.key,
+    required this.group,
+    required this.isJoined,
+  });
   final SocialGroup group;
   final bool isJoined;
 
@@ -434,14 +441,29 @@ class _PrimaryAction extends ConsumerWidget {
                   ref,
                   action: () async {
                     if (isJoined) {
-                      await repo.leaveGroup(group.id);
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              AppStrings.groupDetailLeaveSnackSuccess),
-                        ),
-                      );
+                      // V1.4 P1.20 — leaveGroup network/Postgrest hatalarını
+                      // yakalayıp Türkçe snackbar göster. GuestActionRequired
+                      // ise rethrow et ki runGuardedMutation yakalayıp
+                      // AuthRequired sheet'i açabilsin.
+                      try {
+                        await repo.leaveGroup(group.id);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                AppStrings.groupDetailLeaveSnackSuccess),
+                          ),
+                        );
+                      } on GuestActionRequiredException {
+                        rethrow;
+                      } catch (_) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(AppStrings.groupLeaveError),
+                          ),
+                        );
+                      }
                     } else {
                       final r = await repo.joinGroup(group.id);
                       if (!context.mounted) return;
@@ -660,16 +682,23 @@ class _PinnedBadge extends StatelessWidget {
 
 // ─────────────────────────────────────── Composer
 
-class _Composer extends ConsumerStatefulWidget {
-  const _Composer({required this.group, required this.isJoined});
+/// V1.4 P1.21 — Widget regresyon testi tarafından doğrudan pump
+/// edilebilmesi için library-public (underscore'suz). Sadece bu dosyada
+/// construct ediliyor; UI'a yeni surface eklemiyor.
+class GroupComposer extends ConsumerStatefulWidget {
+  const GroupComposer({
+    super.key,
+    required this.group,
+    required this.isJoined,
+  });
   final SocialGroup group;
   final bool isJoined;
 
   @override
-  ConsumerState<_Composer> createState() => _ComposerState();
+  ConsumerState<GroupComposer> createState() => _ComposerState();
 }
 
-class _ComposerState extends ConsumerState<_Composer> {
+class _ComposerState extends ConsumerState<GroupComposer> {
   final _ctrl = TextEditingController();
 
   @override
@@ -688,18 +717,32 @@ class _ComposerState extends ConsumerState<_Composer> {
     }
     final repo = ref.read(socialGroupRepositoryProvider);
     final now = DateTime.now();
-    await repo.postMessage(
-      GroupMessage(
-        id: 'gm_${now.microsecondsSinceEpoch}',
-        groupId: widget.group.id,
-        authorName: 'Misafir',
-        authorRole: 'Üye',
-        text: t,
-        createdAt: now,
-      ),
-    );
-    if (!mounted) return;
-    _ctrl.clear();
+    try {
+      await repo.postMessage(
+        GroupMessage(
+          id: 'gm_${now.microsecondsSinceEpoch}',
+          groupId: widget.group.id,
+          authorName: 'Misafir',
+          authorRole: 'Üye',
+          text: t,
+          createdAt: now,
+        ),
+      );
+      if (!mounted) return;
+      _ctrl.clear();
+    } on GuestActionRequiredException {
+      // Defense-in-depth: pre-check sonrası repo katmanı guest exception
+      // atarsa sessizce yutmayalım — auth sheet aç.
+      if (!mounted) return;
+      await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      if (!mounted) return;
+      // Mesaj input'ta korunur (clear çağrılmaz) ki kullanıcı tek tıkla
+      // tekrar deneyebilsin. Ham exception UI'a sızmaz.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.groupMessageSendError)),
+      );
+    }
   }
 
   @override

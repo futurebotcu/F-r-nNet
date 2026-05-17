@@ -305,7 +305,7 @@ class _FeedPostsSliver extends ConsumerWidget {
             itemBuilder: (_, i) {
               final item = injected[i];
               if (item is FeedPost) {
-                return _PostCardWired(post: item);
+                return PostCardWired(post: item);
               }
               return InsightCard(insight: item as FeedInsight);
             },
@@ -329,8 +329,11 @@ class _FeedPostsSliver extends ConsumerWidget {
   }
 }
 
-class _PostCardWired extends ConsumerWidget {
-  const _PostCardWired({required this.post});
+/// V1.4 P1.18/P1.19 — Widget regresyon testi tarafından doğrudan pump
+/// edilebilmesi için library-public (underscore'suz). Sadece feed_screen
+/// içinde construct ediliyor; UI'a yeni surface eklemiyor.
+class PostCardWired extends ConsumerWidget {
+  const PostCardWired({super.key, required this.post});
   final FeedPost post;
 
   @override
@@ -354,16 +357,30 @@ class _PostCardWired extends ConsumerWidget {
           await showAuthRequiredSheet(context, ref);
           return;
         }
-        final updated = await repo.toggleLike(post.id);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(updated.isLiked
-                ? AppStrings.feedActionLikedSnack
-                : AppStrings.feedActionUnlikedSnack),
-            duration: const Duration(milliseconds: 900),
-          ),
-        );
+        try {
+          final updated = await repo.toggleLike(post.id);
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(updated.isLiked
+                  ? AppStrings.feedActionLikedSnack
+                  : AppStrings.feedActionUnlikedSnack),
+              duration: const Duration(milliseconds: 900),
+            ),
+          );
+        } on GuestActionRequiredException {
+          // Defense-in-depth: pre-check geçtikten sonra repo katmanı yine
+          // guest exception atarsa sessizce yutmayalım — auth sheet aç.
+          if (!context.mounted) return;
+          await showAuthRequiredSheet(context, ref);
+        } catch (_) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(AppStrings.feedLikeUpdateError),
+            ),
+          );
+        }
       },
       onSave: () async {
         // V1.3.2 — "Kaydet" (bookmark) kullanıcıya bağlı bir işlem.
@@ -371,16 +388,28 @@ class _PostCardWired extends ConsumerWidget {
           await showAuthRequiredSheet(context, ref);
           return;
         }
-        final updated = await repo.toggleSave(post.id);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(updated.isSaved
-                ? AppStrings.feedActionSavedSnack
-                : AppStrings.feedActionUnsavedSnack),
-            duration: const Duration(milliseconds: 900),
-          ),
-        );
+        try {
+          final updated = await repo.toggleSave(post.id);
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(updated.isSaved
+                  ? AppStrings.feedActionSavedSnack
+                  : AppStrings.feedActionUnsavedSnack),
+              duration: const Duration(milliseconds: 900),
+            ),
+          );
+        } on GuestActionRequiredException {
+          if (!context.mounted) return;
+          await showAuthRequiredSheet(context, ref);
+        } catch (_) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(AppStrings.feedSaveUpdateError),
+            ),
+          );
+        }
       },
       onComment: () {
         // V1 P1-B — Eski snackbar yerine gerçek yorum bottom sheet.
