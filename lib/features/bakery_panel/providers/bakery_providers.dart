@@ -59,7 +59,14 @@ final recipeChangesProvider = StreamProvider<void>((ref) {
 });
 
 /// Kullanıcının kayıtlı reçeteleri.
-final recipesListProvider = FutureProvider<List<Recipe>>((ref) async {
+///
+/// V1.4 P1.1 — autoDispose: ekran kapanınca cache temizlenir. Auth/role
+/// değişiminde önceki kullanıcının reçeteleri görünmesin diye eklendi
+/// (provider zaten `recipeRepositoryProvider`'ı watch ettiği için auth state
+/// değişiminde repo yenilenir; autoDispose listener kalmadığında state'i de
+/// silerek bellek tutmamasını sağlar).
+final recipesListProvider =
+    FutureProvider.autoDispose<List<Recipe>>((ref) async {
   ref.watch(recipeChangesProvider);
   final repo = ref.watch(recipeRepositoryProvider);
   return repo.list();
@@ -86,7 +93,13 @@ final bakeryChangesProvider = StreamProvider<void>((ref) {
 });
 
 /// "Bugün"ü tetik olarak repository değişikliklerine bağlanmış özet.
-final todaySummaryProvider = FutureProvider<DailySummary>((ref) async {
+///
+/// V1.4 P1.1 — autoDispose: `DateTime.now()` provider body'sinde hesaplanır,
+/// gece yarısı geçildikten sonra eski "today" cache'inin kalmaması için
+/// ekran kapanışında state silinir. Ekran tekrar açılınca yeni gün için
+/// yeniden fetch.
+final todaySummaryProvider =
+    FutureProvider.autoDispose<DailySummary>((ref) async {
   ref.watch(bakeryChangesProvider);
   final repo = ref.watch(bakeryRepositoryProvider);
   final now = DateTime.now();

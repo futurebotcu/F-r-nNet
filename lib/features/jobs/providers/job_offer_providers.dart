@@ -27,8 +27,10 @@ final jobOfferChangesProvider = StreamProvider<void>((ref) {
   return repo.watch();
 });
 
+/// V1.4 P1.1 — autoDispose: jobs ekranı kapandığında listenicisi kalmayan
+/// provider state'i silinir. Sayfa tekrar açıldığında taze fetch.
 final activeJobOffersProvider =
-    FutureProvider<List<JobOfferPost>>((ref) async {
+    FutureProvider.autoDispose<List<JobOfferPost>>((ref) async {
   ref.watch(jobOfferChangesProvider);
   return ref.watch(jobOfferRepositoryProvider).listActiveOffers();
 });

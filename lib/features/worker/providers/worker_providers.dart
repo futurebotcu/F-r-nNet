@@ -29,7 +29,11 @@ final workerChangesProvider = StreamProvider<void>((ref) {
   return repo.watch();
 });
 
-final myWorkerProfileProvider = FutureProvider<WorkerProfile?>((ref) async {
+/// V1.4 P1.1 — autoDispose: `getMyProfile()` currentUser'a bağlı; sign-out
+/// sonrası workerRepositoryProvider değişir, autoDispose ile birlikte
+/// listener kalmadığında önceki kullanıcının profil cache'i temizlenir.
+final myWorkerProfileProvider =
+    FutureProvider.autoDispose<WorkerProfile?>((ref) async {
   ref.watch(workerChangesProvider);
   return ref.watch(workerRepositoryProvider).getMyProfile();
 });
