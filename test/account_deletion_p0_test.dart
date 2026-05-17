@@ -86,6 +86,47 @@ void main() {
         isTrue,
       );
     });
+
+    test('P1.3 — success path cleanup sırası: '
+        'dialog pop → setGuest → clear → mounted → snackbar → go', () {
+      // V1.4 P1.3 — yavaş cihazda profile state orphan kalmasın diye
+      // cleanup (setGuest + clear) mounted guard ÖNCESİ tamamlanır.
+      // Snackbar/go ise mounted check sonrasıdır.
+      final idxDeleteAwait = src.indexOf('await auth.deleteAccount();');
+      final idxSetGuest = src.indexOf(
+        'setGuest(false)',
+        idxDeleteAwait,
+      );
+      final idxClear = src.indexOf(
+        'profileControllerProvider.notifier).clear()',
+        idxSetGuest,
+      );
+      final idxMountedAfterClear = src.indexOf(
+        'if (!context.mounted) return;',
+        idxClear,
+      );
+      final idxSnack = src.indexOf(
+        'accountDeleteSuccessSnack',
+        idxMountedAfterClear,
+      );
+      final idxGo = src.indexOf(
+        'AppRoutes.authEntry',
+        idxSnack,
+      );
+
+      expect(idxDeleteAwait, greaterThan(-1),
+          reason: 'auth.deleteAccount() await edilmiş olmalı');
+      expect(idxSetGuest, greaterThan(idxDeleteAwait),
+          reason: 'setGuest(false) deleteAccount sonrası çağrılmalı');
+      expect(idxClear, greaterThan(idxSetGuest),
+          reason: 'profileController.clear() setGuest sonrası çağrılmalı');
+      expect(idxMountedAfterClear, greaterThan(idxClear),
+          reason: 'mounted guard clear() sonrası gelmeli (cleanup unconditional)');
+      expect(idxSnack, greaterThan(idxMountedAfterClear),
+          reason: 'success snackbar mounted guard sonrası fire etmeli');
+      expect(idxGo, greaterThan(idxSnack),
+          reason: 'authEntry route snackbar sonrası gelmeli');
+    });
   });
 
   group('SettingsScreen delete tile (source) — V1.4', () {

@@ -77,23 +77,40 @@ Future<void> performDeleteAccount(
 
   try {
     await auth.deleteAccount();
-    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
 
+    // V1.4 P1.3 — Net cleanup sıralaması:
+    //   1) Loading dialog'u kapat (mounted gate'li; unmounted ise dialog
+    //      zaten yok).
+    //   2) Guest flag temizle (await edilir — SharedPreferences yazımı).
+    //   3) Profile state temizle (sync; ref.read üzerinden Riverpod
+    //      notifier'a erişir, widget unmount edilse bile çalışır).
+    //   4) mounted guard.
+    //   5) Success snackbar + auth entry route.
+    // Önceki sürüm `clear()` çağrısını mounted check sonrasına koyduğu
+    // için yavaş cihazda widget unmount olursa profile state orphan
+    // kalabiliyordu. Şimdi cleanup her durumda tamamlanır.
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
     await ref.read(guestModeProvider.notifier).setGuest(false);
-    if (!context.mounted) return;
     ref.read(profileControllerProvider.notifier).clear();
 
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text(AppStrings.accountDeleteSuccessSnack)),
     );
     context.go(AppRoutes.authEntry);
   } catch (_) {
-    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    // Hata yolu: loading dialog kapanır, ham exception sızmaz, kullanıcı
+    // generic Türkçe mesajı görür. Local state'e dokunulmaz (silme
+    // başarısız oldu, kullanıcının session'ı hâlâ geçerli olabilir).
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.accountDeleteErrorGeneric)),
-      );
+      Navigator.of(context, rootNavigator: true).pop();
     }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.accountDeleteErrorGeneric)),
+    );
   }
 }
 
