@@ -39,6 +39,10 @@ dependencies:
   # Android: SharedPreferences. iOS: NSUserDefaults. `pm clear` ile silinir.
   shared_preferences: ^2.3.2
 
+  # V1.4 — Hakkında ekranında gerçek sürüm ve build numarası göstermek için.
+  # Native channel cevap vermezse fallback "—" gösterilir (sahte versiyon basılmaz).
+  package_info_plus: ^8.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -317,6 +317,61 @@ class AppStrings {
       'Bu işlem geri alınamaz. Hesabını silmeden önce '
       'düşündüğünden emin ol.';
 
+  // V1.4 — Settings (Ayarlar) menüsü Phase 1.
+  // Sahte/çalışmayan tile eklenmez: bildirim/tema/dil/destek/help yok.
+  static const String settingsTitle = 'Ayarlar';
+  static const String settingsTooltip = 'Ayarlar';
+
+  // Section başlıkları
+  static const String settingsSectionAccount = 'Hesap';
+  static const String settingsSectionSecurity = 'Güvenlik ve Veri';
+  static const String settingsSectionLegal = 'Yasal';
+  static const String settingsSectionApp = 'Uygulama';
+
+  // Tile etiketleri
+  static const String settingsEditProfile = 'Profilimi düzenle';
+  static const String settingsEditProfileSubtitle =
+      'Ad, hesap türü, şehir ve meslek rozetini güncelle.';
+  static const String settingsSignOut = 'Çıkış yap';
+  static const String settingsSignOutSubtitle =
+      'Bu cihazda oturumunu kapat.';
+  static const String settingsDeleteAccount = 'Hesabımı sil';
+  static const String settingsDeleteAccountSubtitle =
+      'Hesabını ve tüm verilerini kalıcı olarak siler.';
+  static const String settingsDataInfo = 'Verilerim hakkında bilgi';
+  static const String settingsDataInfoSubtitle =
+      'Hangi veriler tutuluyor, hesap silindiğinde ne olur?';
+  static const String settingsPrivacy = 'Gizlilik Politikası';
+  static const String settingsTerms = 'Kullanım Şartları';
+  static const String settingsAbout = 'Hakkında';
+  static const String settingsAboutSubtitle =
+      'FırınNet hakkında ve sürüm bilgisi.';
+
+  // Verilerim hakkında bilgi statik ekranı
+  static const String dataInfoTitle = 'Verilerim hakkında bilgi';
+  static const String dataInfoBody =
+      'FırınNet hesabında profil bilgilerin (ad, hesap türü, şehir, '
+      'meslek rozeti, e-posta), fırın paneli kayıtların (üretim, fire, '
+      'reçeteler), bayi/müşteri kayıtların, iş ilanı/marketplace '
+      'paylaşımların ve sosyal akış içeriklerin (gönderiler, beğeniler, '
+      'yorumlar, gruplar, mesajlar) tutulur.\n\n'
+      'Hesabını sildiğinde, hesabına bağlı bu veriler de silinir.\n\n'
+      'Bu metin yasal bir döküman değildir; özet bilgilendirme amaçlıdır. '
+      'Yasal kapsam için Gizlilik Politikası ve Kullanım Şartları '
+      'sayfalarına bakabilirsin.';
+
+  // Hakkında statik ekranı
+  static const String aboutTitle = 'Hakkında';
+  static const String aboutAppLine = 'FırınNet';
+  static const String aboutTagline =
+      'Fırıncılar ve sektör kullanıcıları için sosyal ağ ve iş yönetimi.';
+  static const String aboutBody =
+      'V1: Sektör akışı (feed), gruplar, fırın paneli (üretim, fire, '
+      'reçete kütüphanesi, bayi yönetimi), iş ilanı ve marketplace '
+      'akışları, hesap güvenliği.\n\n'
+      'Apple ile giriş yakında eklenecek.';
+  static const String aboutVersionLabel = 'Sürüm';
+
   // V1 — Jobs gerçek veri durumları (P0 mock temizliği)
   static const String jobsLookingEmpty =
       'Henüz aktif iş arayan ilanı yok. İlk ilanı sen ver veya daha sonra tekrar bak.';

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
-import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
@@ -14,7 +13,6 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/providers/auth_providers.dart';
-import '../../auth/providers/guest_mode_provider.dart';
 import '../../bakery_panel/models/recipe_record.dart';
 import '../../bakery_panel/providers/bakery_providers.dart';
 import '../../bakery_panel/screens/recipe_visibility_badge.dart';
@@ -43,7 +41,17 @@ class ProfileScreen extends ConsumerWidget {
             : ListView(
                 padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
                 children: [
-                  const FirinNetHeader(title: 'Profil', showLogo: false),
+                  FirinNetHeader(
+                    title: 'Profil',
+                    showLogo: false,
+                    actions: [
+                      HeaderActionButton(
+                        icon: Icons.settings_outlined,
+                        tooltip: AppStrings.settingsTooltip,
+                        onTap: () => context.push(AppRoutes.settings),
+                      ),
+                    ],
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.pageH,
@@ -77,232 +85,14 @@ class ProfileScreen extends ConsumerWidget {
                   // gösterir + tehlikeli alanı sunar.
                   const SizedBox(height: AppSpacing.l),
 
-                  // Logout — düşük vurgulu, nötr action.
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pageH,
-                    ),
-                    child: SizedBox(
-                      height: 50,
-                      child: TextButton.icon(
-                        icon: const Icon(
-                          Icons.logout_rounded,
-                          color: AppColors.textMuted,
-                        ),
-                        label: const Text(
-                          'Profilden Çık',
-                          style: TextStyle(color: AppColors.textMuted),
-                        ),
-                        onPressed: () async {
-                          // V1.3 logout flow:
-                          // 1. Supabase oturumu varsa server-side signOut
-                          // 2. Guest flag temizle (persistent)
-                          // 3. Profile Riverpod state'i temizle
-                          // 4. Auth Entry ekranına dön
-                          final auth = ref.read(authRepositoryProvider);
-                          if (auth != null) {
-                            try {
-                              await auth.signOut();
-                            } catch (_) {
-                              // Ağ kopuksa bile local state'i temizleyelim.
-                            }
-                          }
-                          await ref
-                              .read(guestModeProvider.notifier)
-                              .setGuest(false);
-                          if (!context.mounted) return;
-                          ref
-                              .read(profileControllerProvider.notifier)
-                              .clear();
-                          context.go(AppRoutes.authEntry);
-                        },
-                      ),
-                    ),
-                  ),
-
-                  // V1 P1-F — "Tehlikeli alan" sectionu danger vurgulu.
-                  // KVKK / Play account-deletion compliance. 2-aşamalı
-                  // confirmation arkasında; service_role kullanılmaz, çağrı
-                  // `delete-account` Edge Function üzerinden.
-                  const SizedBox(height: AppSpacing.m),
-                  const SectionLabel(title: AppStrings.profileSectionDanger),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pageH,
-                    ),
-                    child: _DangerZoneCard(
-                      onDeletePressed: () =>
-                          _onDeleteAccountPressed(context, ref),
-                    ),
-                  ),
+                  // V1.4 — Profile ekranındaki "Profilden Çık" ve "Tehlikeli
+                  // alan" Settings ekranına (`/settings`) taşındı. Hesap
+                  // aksiyonları artık tek yerden (auth_actions.dart) yönetilir.
+                  // Profile ekranı sadeleşti: hero + stats + açık reçeteler.
+                  // Settings'e erişim header sağ üstündeki gear ikonundan.
                   const SizedBox(height: AppSpacing.l),
                 ],
               ),
-      ),
-    );
-  }
-
-  Future<void> _onDeleteAccountPressed(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    if (!AppConfig.supabaseEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(AppStrings.accountDeleteUnsupportedOffline),
-        ),
-      );
-      return;
-    }
-    final auth = ref.read(authRepositoryProvider);
-    final user = ref.read(currentAuthUserProvider);
-    if (auth == null || user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.accountDeleteRequireAuth)),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const _DeleteAccountConfirmDialog(),
-    );
-    if (confirmed != true || !context.mounted) return;
-
-    // Loading dialog (dismissable değil).
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const _DeleteAccountLoading(),
-    );
-
-    try {
-      await auth.deleteAccount();
-      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-
-      await ref.read(guestModeProvider.notifier).setGuest(false);
-      if (!context.mounted) return;
-      ref.read(profileControllerProvider.notifier).clear();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.accountDeleteSuccessSnack)),
-      );
-      context.go(AppRoutes.authEntry);
-    } catch (_) {
-      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppStrings.accountDeleteErrorGeneric),
-          ),
-        );
-      }
-    }
-  }
-}
-
-/// 2-step confirmation: "HESABIMI SİL" yazılana kadar kalıcı sil butonu
-/// disabled. Body'de net data-loss açıklaması.
-class _DeleteAccountConfirmDialog extends StatefulWidget {
-  const _DeleteAccountConfirmDialog();
-
-  @override
-  State<_DeleteAccountConfirmDialog> createState() =>
-      _DeleteAccountConfirmDialogState();
-}
-
-class _DeleteAccountConfirmDialogState
-    extends State<_DeleteAccountConfirmDialog> {
-  final _ctrl = TextEditingController();
-  bool _enabled = false;
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _onChanged(String value) {
-    final ok = value.trim().toUpperCase() ==
-        AppStrings.accountDeleteConfirmKeyword;
-    if (ok != _enabled) {
-      setState(() => _enabled = ok);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.elevatedCard,
-      title: const Text(AppStrings.accountDeleteConfirmTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            AppStrings.accountDeleteConfirmBody,
-            style: TextStyle(height: 1.45),
-          ),
-          const SizedBox(height: AppSpacing.m),
-          Text(
-            AppStrings.accountDeleteConfirmFieldLabel,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _ctrl,
-            autocorrect: false,
-            enableSuggestions: false,
-            textCapitalization: TextCapitalization.characters,
-            onChanged: _onChanged,
-            decoration: const InputDecoration(
-              hintText: AppStrings.accountDeleteConfirmFieldHint,
-              isDense: true,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text(AppStrings.accountDeleteCancel),
-        ),
-        FilledButton(
-          onPressed:
-              _enabled ? () => Navigator.of(context).pop(true) : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.danger,
-            foregroundColor: Colors.white,
-          ),
-          child: const Text(AppStrings.accountDeleteConfirmButton),
-        ),
-      ],
-    );
-  }
-}
-
-class _DeleteAccountLoading extends StatelessWidget {
-  const _DeleteAccountLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.elevatedCard,
-      content: Row(
-        children: const [
-          SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          SizedBox(width: AppSpacing.m),
-          Expanded(child: Text(AppStrings.accountDeleteLoading)),
-        ],
       ),
     );
   }
@@ -482,85 +272,6 @@ class _Divider extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       Container(width: 1, height: 32, color: AppColors.surfaceLine);
-}
-
-/// Profilde "Tehlikeli alan" kartı — danger border + uyarı metni + filled
-/// danger button. Görsel ağırlık eski TextButton.icon'a göre net artırıldı,
-/// kullanıcı yanlışlıkla bastı zannıyla geçmez.
-class _DangerZoneCard extends StatelessWidget {
-  const _DangerZoneCard({required this.onDeletePressed});
-  final VoidCallback onDeletePressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.l),
-      decoration: BoxDecoration(
-        color: AppColors.danger.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppRadius.l),
-        border: Border.all(
-          color: AppColors.danger.withValues(alpha: 0.35),
-          width: 0.8,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                size: 18,
-                color: AppColors.danger,
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Expanded(
-                child: Text(
-                  AppStrings.profileDangerHint,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.danger,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.m),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: OutlinedButton.icon(
-              icon: const Icon(
-                Icons.delete_forever_outlined,
-                color: AppColors.danger,
-              ),
-              label: const Text(
-                AppStrings.accountDeleteCta,
-                style: TextStyle(
-                  color: AppColors.danger,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.5,
-                  letterSpacing: 0.1,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(
-                  color: AppColors.danger,
-                  width: 1.2,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                ),
-              ),
-              onPressed: onDeletePressed,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Profilde "Açık Reçeteler" bölümü — yalnız `is_public = true` reçeteler.

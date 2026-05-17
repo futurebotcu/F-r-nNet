@@ -33,20 +33,28 @@ void main() {
     });
   });
 
-  group('ProfileScreen delete account UI (source)', () {
+  group('Delete account flow UI (source) — V1.4 shared auth_actions', () {
+    // V1.4: Hesap silme akışı `profile_screen.dart` içinden çıkarılıp
+    // ortak `auth/services/auth_actions.dart`'a taşındı. Settings ve
+    // Profile ekranları aynı dialog/dialog logic'i kullanır.
     late String src;
     setUpAll(() {
-      src = File('lib/features/profile/screens/profile_screen.dart')
+      src = File('lib/features/auth/services/auth_actions.dart')
           .readAsStringSync();
     });
 
-    test('Hesabı Sil CTA referansı var', () {
-      expect(src.contains('AppStrings.accountDeleteCta'), isTrue);
-      expect(src.contains('delete_forever_outlined'), isTrue);
+    test('public DeleteAccountConfirmDialog tanımlı', () {
+      expect(src.contains('class DeleteAccountConfirmDialog'), isTrue);
+      expect(src.contains('class DeleteAccountLoading'), isTrue);
+      expect(
+        src.contains('AppColors.danger'),
+        isTrue,
+        reason: 'Onay butonu danger renkte vurgulanmalı',
+      );
     });
 
     test('2-step confirmation dialog HESABIMI SİL keyword bekliyor', () {
-      expect(src.contains('_DeleteAccountConfirmDialog'), isTrue);
+      expect(src.contains('DeleteAccountConfirmDialog'), isTrue);
       expect(
         src.contains('AppStrings.accountDeleteConfirmKeyword'),
         isTrue,
@@ -55,7 +63,7 @@ void main() {
     });
 
     test('loading dialog ve hata snackbar var', () {
-      expect(src.contains('_DeleteAccountLoading'), isTrue);
+      expect(src.contains('DeleteAccountLoading'), isTrue);
       expect(src.contains('AppStrings.accountDeleteErrorGeneric'), isTrue);
     });
 
@@ -80,6 +88,21 @@ void main() {
     });
   });
 
+  group('SettingsScreen delete tile (source) — V1.4', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/settings/screens/settings_screen.dart')
+          .readAsStringSync();
+    });
+
+    test('Settings "Hesabımı sil" tile performDeleteAccount çağırır', () {
+      expect(src.contains('AppStrings.settingsDeleteAccount'), isTrue);
+      expect(src.contains('performDeleteAccount(context, ref)'), isTrue);
+      expect(src.contains('danger: true'), isTrue,
+          reason: 'Silme tile danger flag ile kırmızı tonda gösterilmeli');
+    });
+  });
+
   group('delete-account Edge Function (source)', () {
     late String src;
     setUpAll(() {
@@ -94,7 +117,7 @@ void main() {
         reason: 'Function service_role\'ü env\'den okumalı',
       );
       // Hardcoded JWT format'ı (eyJ...) kontrol — function'da olmamalı.
-      final hasHardcodedJwt = RegExp(r"eyJ[A-Za-z0-9_-]{20,}").hasMatch(src);
+      final hasHardcodedJwt = RegExp(r'eyJ[A-Za-z0-9_-]{20,}').hasMatch(src);
       expect(hasHardcodedJwt, isFalse,
           reason: 'Function source\'unda hardcoded JWT olmamalı');
     });
@@ -105,7 +128,7 @@ void main() {
     });
 
     test('confirm=true zorunlu', () {
-      expect(src.contains("body?.confirm !== true"), isTrue);
+      expect(src.contains('body?.confirm !== true'), isTrue);
     });
 
     test('caller kendi user_id\'sinden başkasını silemez', () {
@@ -121,7 +144,7 @@ void main() {
 
     test('verify_jwt + service_role server-side disiplini', () {
       // Caller JWT ayrı bir client'la doğrulanıyor; admin client ayrı.
-      expect(src.contains("auth.getUser"), isTrue);
+      expect(src.contains('auth.getUser'), isTrue);
       expect(src.contains('createClient'), isTrue);
     });
   });

@@ -47,6 +47,9 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/settings/screens/about_screen.dart';
+import '../../features/settings/screens/data_info_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
 
 class AppRoutes {
   const AppRoutes._();
@@ -62,6 +65,11 @@ class AppRoutes {
   // V1.3.5 — Yasal metin route'ları
   static const String legalTerms = '/legal/terms';
   static const String legalPrivacy = '/legal/privacy';
+
+  // V1.4 — Ayarlar menüsü (gear icon → /settings)
+  static const String settings = '/settings';
+  static const String settingsAbout = '/settings/about';
+  static const String settingsDataInfo = '/settings/data-info';
 
   // Ana tablar
   static const String feed = '/feed';
@@ -215,6 +223,21 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.profile,
         builder: (_, __) => const ProfileScreen(),
+      ),
+
+      // V1.4 — Ayarlar menüsü. Profile gear icon push'u ile açılır;
+      // bottom nav tab değil, shell üstünde full-screen.
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (_, __) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsAbout,
+        builder: (_, __) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsDataInfo,
+        builder: (_, __) => const DataInfoScreen(),
       ),
 
       // Üretim Yönetimi alt ekranları (shell dışında, tam ekran).
