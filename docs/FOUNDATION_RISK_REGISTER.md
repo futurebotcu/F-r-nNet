@@ -57,6 +57,7 @@
 | P1.3 | performDeleteAccount state cleanup ordering | P1 | FIXED | `3e8aef3` | `test/account_deletion_p0_test.dart`, 320/320 | account deletion live E2E önerilir | deleteAccount → dialog pop → setGuest(false) await → profile.clear() → mounted guard → snackbar → /auth; profile cleanup artık mounted guard arkasında atlanamaz |
 | P1.4 | Guest + Supabase session mutual exclusion guard | P1 | FIXED | `93609b1` | `test/splash_guest_session_guard_test.dart`, 325/325 | OAuth/guest restart smoke önerilir | Splash `_route` içinde `user != null && guest` true ise `setGuest(false)`; 6 route senaryosu ve `_routed` guard değişmedi |
 | P1.5 | CreateProfileScreen hydrate-then-submit guard | P1 | FIXED | `b2143e7` | `test/create_profile_hydrate_submit_guard_test.dart`, 330/330 | Google completion early-submit smoke önerilir | completion mode'da `_isCompletion && !_profileHydrated` ise submit bloke edilir; `AppStrings.profileStillLoadingError` snackbar; repo save çağrılmaz |
+| P1.14 | Repo hygiene .gitignore gaps | P1 | FIXED | `9405949` | flutter analyze clean, flutter test 330/330 | git status hygiene smoke önerilir | root-level `MCP_*.txt`, `/*.png`, `/*_AUDIT.md`, `/*_REPORT.md`, `/*_LEDGER*.md`, `/*_RUNBOOK*.md` ve explicit noisy files ignore edildi; untracked count ~50 → 4 |
 
 ---
 
@@ -90,7 +91,7 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 | P1.11 | Additional provider `autoDispose` candidates | P1 | OPEN | 6 provider: `myJobOffersProvider`, `myMarketListingsProvider`, `myWorkerExperiencesProvider`, `myJobSeekPostsProvider`, `activeJobSeekPostsProvider`, `guestModeBootProvider` | P1.1 pattern repeat |
 | P1.12 | Legal text final hukuki review | P1 | OPEN | `privacy_screen.dart:120-151`, `terms_screen.dart:120-151` | "V1 draft" banner kaldırılmadan release yok |
 | P1.13 | Crashlytics / observability | P1 | OPEN | `pubspec.yaml` firebase yok, `main.dart` FlutterError.onError hook yok | Firebase Crashlytics veya Sentry |
-| P1.14 | Repo hygiene `.gitignore` gaps | P1 | IN_PROGRESS | `.gitignore` | Patch hazır: 8 root-anchored pattern eklendi → `MCP_*.txt`, `/*.png`, `/*_AUDIT.md`, `/*_REPORT.md`, `/*_LEDGER*.md`, `/*_RUNBOOK*.md`, `/BUTTON_ACTION_REALITY_MATRIX.md`, `/DEALER_ADD_FAILURE_AUDIT.md`. `git status` untracked count ~50 → 4'e düştü. Mevcut tracked `docs/FOUNDATION_RISK_REGISTER.md` ve kök tracked `*_REPORT.md`/`*_AUDIT.md` dosyaları gitignore'dan etkilenmiyor (git ignore yalnız untracked'ı kontrol eder). Kalan 4 untracked .md pattern dışında — user spec'te listelenmediği için bilinçli olarak dahil edilmedi. Test: kod değişmediği için ekstra test yok; full suite 330/330 sürekliliği yeterli. Commit/push bekliyor. |
+| P1.14 | Repo hygiene `.gitignore` gaps | P1 | FIXED | `.gitignore` | Fixed by commit `9405949`. Full suite: 330/330 passed. Kod davranışı değişmedi; sadece repo hygiene. 8 root-anchored pattern eklendi → `MCP_*.txt`, `/*.png`, `/*_AUDIT.md`, `/*_REPORT.md`, `/*_LEDGER*.md`, `/*_RUNBOOK*.md`, `/BUTTON_ACTION_REALITY_MATRIX.md`, `/DEALER_ADD_FAILURE_AUDIT.md`. `git status` untracked count ~50 → 4'e düştü. Mevcut tracked `docs/FOUNDATION_RISK_REGISTER.md` ve kök tracked `*_REPORT.md`/`*_AUDIT.md` dosyaları gitignore'dan etkilenmiyor. Kalan 4 untracked .md pattern dışında — user spec'te listelenmediği için bilinçli olarak dahil edilmedi. |
 | P1.15 | Supabase HIBP leaked password protection | P1 | OPEN | Auth dashboard ayarı (advisor WARN) | Dashboard → Auth → Password Security |
 | P1.16 | `auth_required_guard` prior risks dokümantasyon/test | P1 | OPEN | `auth_required_guard.dart` 5 prior hidden risk | hâlâ kodda; doc/test kapsamı eksik |
 | P1.17 | `USING true` policy yorum/test | P1 | OPEN | `feed_likes`, `worker_experiences`, `worker_profiles` SELECT policies | kasıtlı community visibility ama explicit comment yok |
@@ -171,13 +172,13 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 > **Not:** P1.3 2026-05-17'de `3e8aef3` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.4 2026-05-17'de `93609b1` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.5 2026-05-17'de `b2143e7` ile FIXED oldu; sıradan çıkarıldı.
+> **Not:** P1.14 2026-05-17'de `9405949` ile FIXED oldu; **code-side P1 sprinti tamamlandı.**
 
-Risk × payback sırası — her satır küçük testli atomic commit:
+Risk × payback sırası — kalan iş yalnız ürün kararı + hosting:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
-| 2 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
+| 1 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
 
 Phase C (sonra): **P1.10** (translate_data_error helper) + **P1.9** (deep link redirect) + **P1.11** (6 ek autoDispose) + **P1.13** (Crashlytics).
 Phase D (genişletme): P2 infra/feature sırası.
