@@ -41,6 +41,47 @@ void main() {
     });
   });
 
+  group('translateAuthError — V1.4 invalid_client (Google config)', () {
+    test('code == invalid_client → Türkçe Google config mesajı', () {
+      final err = AuthApiException(
+        'oauth2: invalid_client - The provided client secret is invalid.',
+        code: 'invalid_client',
+        statusCode: '500',
+      );
+      expect(translateAuthError(err), AppStrings.authGoogleConfigError);
+    });
+
+    test('message içinde "client secret is invalid" → Türkçe Google config mesajı',
+        () {
+      final err = AuthApiException(
+        '500: Unable to exchange external code: client secret is invalid',
+        statusCode: '500',
+      );
+      expect(translateAuthError(err), AppStrings.authGoogleConfigError);
+    });
+  });
+
+  group('translateAuthError — V1.4 rate limit', () {
+    test('msg contains "rate limit" → Türkçe', () {
+      final err = AuthApiException(
+        'email rate limit exceeded',
+        statusCode: '429',
+      );
+      expect(translateAuthError(err),
+          'Çok fazla deneme. Birkaç dakika sonra tekrar dene.');
+    });
+
+    test('code == over_request_rate_limit → Türkçe', () {
+      final err = AuthApiException(
+        'too many requests',
+        code: 'over_request_rate_limit',
+        statusCode: '429',
+      );
+      expect(translateAuthError(err),
+          'Çok fazla deneme. Birkaç dakika sonra tekrar dene.');
+    });
+  });
+
   group('translateAuthError — regression (mevcut mapping korunur)', () {
     test('invalid_credentials Türkçe kalır', () {
       final err = AuthApiException('Invalid login credentials',

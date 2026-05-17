@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// V1.4 — SocialAuthButtons platform/visibility contract.
 class _StubRepo implements AuthRepository {
   final _ctrl = StreamController<AuthUser?>.broadcast();
+  int googleCalls = 0;
+  int appleCalls = 0;
 
   @override
   AuthUser? get currentUser => null;
@@ -37,12 +39,12 @@ class _StubRepo implements AuthRepository {
 
   @override
   Future<void> signInWithGoogle() async {
-    // Test: yalnız çağrılabilir olmalı; gerçek OAuth tetiklenmez.
+    googleCalls++;
   }
 
   @override
   Future<void> signInWithApple() async {
-    // Test: yalnız çağrılabilir olmalı; gerçek OAuth tetiklenmez.
+    appleCalls++;
   }
 
   @override
@@ -127,6 +129,61 @@ void main() {
         _wrap(repo: _StubRepo(), platform: TargetPlatform.android),
       );
       expect(find.text(AppStrings.authSocialDivider), findsOneWidget);
+    });
+
+    testWidgets('iOS: Apple butonu altında "Yakında" badge görünür',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(repo: _StubRepo(), platform: TargetPlatform.iOS),
+      );
+      expect(find.text(AppStrings.authAppleComingSoonBadge), findsOneWidget,
+          reason: 'kAppleSignInComingSoon true iken "Yakında" badge gösterilir.');
+    });
+
+    testWidgets('Android: "Yakında" badge görünmez (Apple zaten gizli)',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(repo: _StubRepo(), platform: TargetPlatform.android),
+      );
+      expect(find.text(AppStrings.authAppleComingSoonBadge), findsNothing);
+    });
+
+    testWidgets(
+        'iOS: Apple butonu tıklanır → snackbar gösterilir, signInWithApple ÇAĞRILMAZ',
+        (tester) async {
+      final repo = _StubRepo();
+      await tester.pumpWidget(
+        _wrap(repo: repo, platform: TargetPlatform.iOS),
+      );
+      // pre-tap kanıt
+      expect(repo.appleCalls, 0);
+
+      await tester.tap(find.byKey(const ValueKey('social_btn_apple')));
+      await tester.pump(); // snackbar enqueue
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(repo.appleCalls, 0,
+          reason:
+              'kAppleSignInComingSoon true iken Apple tıklaması OAuth tetiklemez.');
+      expect(find.text(AppStrings.authAppleComingSoonSnack), findsOneWidget,
+          reason: 'Türkçe "Apple ile giriş yakında..." snackbar gösterilir.');
+    });
+
+    testWidgets(
+        'Android: Google butonu tıklanır → signInWithGoogle ÇAĞRILIR',
+        (tester) async {
+      final repo = _StubRepo();
+      await tester.pumpWidget(
+        _wrap(repo: repo, platform: TargetPlatform.android),
+      );
+      expect(repo.googleCalls, 0);
+
+      await tester.tap(find.byKey(const ValueKey('social_btn_google')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(repo.googleCalls, 1,
+          reason: 'Google butonu aktif; tıklama signInWithGoogle çağırır.');
     });
   });
 }

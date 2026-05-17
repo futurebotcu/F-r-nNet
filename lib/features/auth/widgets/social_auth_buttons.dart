@@ -7,14 +7,23 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../providers/auth_providers.dart';
 
+/// V1.4 — Apple "Yakında" modu.
+///
+/// `true` iken Apple butonu (sadece iOS'ta) görünür ama tıklayınca OAuth
+/// tetiklenmez; bilinçli roadmap snackbar mesajı gösterilir. Apple Developer
+/// (Service ID, Key ID, .p8) + iOS Xcode capability + macOS smoke ortamı
+/// hazır olduğunda `false` çevrilir.
+const bool kAppleSignInComingSoon = true;
+
 /// V1.4 — Google + Apple ile devam et grubu.
 ///
 /// AuthEntryScreen ve LoginScreen'in üst kısmında ortak kullanılır.
-/// - Google: tüm platformlarda görünür.
-/// - Apple: yalnız iOS'ta görünür (Android'de gizlenir).
+/// - Google: tüm platformlarda görünür. Aktif.
+/// - Apple: yalnız iOS'ta görünür (Android'de gizlenir). `kAppleSignInComingSoon`
+///   true iken broken feature yerine "Yakında" badge + snackbar.
 /// - Supabase aktif değilse (mock/local mode) tüm butonlar disabled.
-/// - Buton tıklanır → ilgili `signInWithGoogle/Apple` çağrısı → SDK browser
-///   açar. Auth state change ekranı dinleyen widget tarafından yakalanır.
+/// - Google tıklanır → `signInWithGoogle` → SDK browser açar. Auth state change
+///   ekranı dinleyen widget tarafından yakalanır.
 class SocialAuthButtons extends ConsumerStatefulWidget {
   const SocialAuthButtons({super.key, this.compact = false});
 
@@ -57,6 +66,17 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Apple "Yakında" davranışı — OAuth çağrılmaz, sadece bilgi snackbar'ı.
+  void _showAppleComingSoon() {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text(AppStrings.authAppleComingSoonSnack),
+        duration: Duration(seconds: 4),
+      ),
+    );
   }
 
   @override
@@ -110,16 +130,23 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
             height: 56,
             child: FilledButton.icon(
               key: const ValueKey('social_btn_apple'),
-              onPressed: enabled
-                  ? () => _runProvider(
-                        () => repo.signInWithApple(),
-                        fallbackError: AppStrings.authOAuthFailed,
-                      )
-                  : null,
+              // V1.4 — "Yakında" modunda buton enabled (kullanıcı tıklayıp
+              // bilgi alabilsin) ama OAuth çağrısı yapılmaz; sadece
+              // `_showAppleComingSoon` snackbar gösterilir.
+              onPressed: !enabled
+                  ? null
+                  : (kAppleSignInComingSoon
+                      ? _showAppleComingSoon
+                      : () => _runProvider(
+                            () => repo.signInWithApple(),
+                            fallbackError: AppStrings.authOAuthFailed,
+                          )),
               icon: const Icon(Icons.apple_rounded, color: Colors.white),
               label: const Text(AppStrings.authContinueWithApple),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.black,
+                backgroundColor: kAppleSignInComingSoon
+                    ? Colors.black.withValues(alpha: 0.45)
+                    : Colors.black,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor:
                     Colors.black.withValues(alpha: 0.55),
@@ -133,6 +160,20 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
               ),
             ),
           ),
+          if (kAppleSignInComingSoon) ...[
+            const SizedBox(height: 4),
+            Center(
+              child: Text(
+                AppStrings.authAppleComingSoonBadge,
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ],
         ],
         if (!widget.compact) ...[
           const SizedBox(height: AppSpacing.l),

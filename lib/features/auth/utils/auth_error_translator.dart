@@ -21,6 +21,15 @@ String translateAuthError(Object error) {
         msg.contains('oauth') && msg.contains('cancel')) {
       return AppStrings.authOAuthCancelled;
     }
+    // V1.4 — GoTrue Google `code → token` exchange'inde Google
+    // `invalid_client` dönerse (Client Secret yanlış/rotate). Server log'da
+    // "oauth2: invalid_client - The provided client secret is invalid" gibi
+    // satır görünür; client'a 500/redirect döner ama mesaj yansıyabilir.
+    if (code == 'invalid_client' ||
+        msg.contains('invalid_client') ||
+        msg.contains('client secret is invalid')) {
+      return AppStrings.authGoogleConfigError;
+    }
     // V1.4 — GoTrue server-side e-posta reddi (örn. .test / .example TLD,
     // disposable domain block list, RFC dışı format).
     if (code == 'email_address_invalid' ||

@@ -149,6 +149,18 @@ class AppStrings {
   static const String authOAuthFailed =
       'Giriş tamamlanamadı. Lütfen tekrar dene.';
 
+  // V1.4 — Apple iOS-only "coming soon" davranışı: provider Supabase'te
+  // kapalı, native iOS Sign in with Apple capability/Service ID/.p8 hazır
+  // değil. Butona dokunulursa OAuth tetiklenmez; bilinçli roadmap mesajı.
+  static const String authAppleComingSoonBadge = 'Yakında';
+  static const String authAppleComingSoonSnack =
+      'Apple ile giriş yakında eklenecek.';
+
+  // V1.4 — GoTrue Google `code → token` exchange aşamasında Google'dan
+  // `invalid_client` dönerse (Client ID/Secret yanlış veya rotate edilmiş).
+  static const String authGoogleConfigError =
+      'Google giriş ayarı hatalı. Lütfen daha sonra tekrar dene.';
+
   static const String authBackendDisabled =
       'Sunucu bağlantısı yapılandırılmadı — bu sürümde yalnız misafir modu çalışır.';
 
