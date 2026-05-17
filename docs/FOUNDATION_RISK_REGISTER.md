@@ -51,6 +51,7 @@
 | P1.22 | Dealer price update no try/catch | P1 | FIXED | `638ffec` | `test/dealer_job_seek_write_error_test.dart`, 312/312 | dealer price offline smoke önerilir | try/catch + Türkçe snackbar + sheet açık kalır |
 | P1.24 | Job seek post toggle silent | P1 | FIXED | `638ffec` | `test/dealer_job_seek_write_error_test.dart`, 312/312 | job seek toggle offline smoke önerilir | try/catch + Türkçe snackbar + guest contract korunur |
 | P1.25 | Job seek post delete silent | P1 | FIXED | `638ffec` | `test/dealer_job_seek_write_error_test.dart`, 312/312 | job seek delete offline smoke önerilir | try/catch + Türkçe snackbar + confirm dialog flow korunur |
+| P1.6 | Recipe save raw error handling | P1 | FIXED | `a7621d2` | `test/recipe_save_error_test.dart`, 314/314 | recipe offline save smoke önerilir | raw "Kaydedilemedi: $e" kaldırıldı; AppStrings.recipeSaveError + GuestActionRequiredException defense-in-depth |
 
 ---
 
@@ -76,7 +77,7 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 | P1.3 | `performDeleteAccount` state cleanup ordering | P1 | OPEN | `auth_actions.dart:82-89` | await sıralaması + snackbar/go race |
 | P1.4 | Guest + Supabase session mutual exclusion guard | P1 | OPEN | `splash_screen.dart` redirect logic | defensive: `if (user!=null && isGuest) setGuest(false)` |
 | P1.5 | `CreateProfileScreen` hydrate-then-submit guard | P1 | OPEN | `create_profile_screen.dart:89-126` | `_profileHydrated` UI'yı kontrol ediyor ama submit'i değil |
-| P1.6 | Recipe save missing catch | P1 | IN_PROGRESS | `recipe_editor_screen.dart:310-335` | Patch hazır: catch zaten vardı ama raw `Kaydedilemedi: $e` sızıntısı yapıyordu. Şimdi `on GuestActionRequiredException` clause + `catch (_)` `AppStrings.recipeSaveError` Türkçe snackbar. `app_strings.dart` import eklendi. Test: `test/recipe_save_error_test.dart` (error path + success regression). Commit/push bekliyor. |
+| P1.6 | Recipe save missing catch | P1 | FIXED | `recipe_editor_screen.dart:310-335` | Fixed by commit `a7621d2`. Catch zaten vardı ama raw `Kaydedilemedi: $e` sızıntısı yapıyordu. Şimdi `on GuestActionRequiredException` clause + `catch (_)` `AppStrings.recipeSaveError` Türkçe snackbar. `app_strings.dart` import eklendi. Test: `test/recipe_save_error_test.dart` (error path + success regression). Full suite: 314/314 passed. |
 | P1.7 | Dealer form save try/catch gaps | P1 | OPEN | `dealer_delivery/payment/return/adjustment_form_screen.dart` × 4 | try/catch yok |
 | P1.8 | Worker / job seek raw error mapping | P1 | OPEN | `worker_profile_screen.dart:132`, `job_seek_post_form_screen.dart:93` | `Kaydedilemedi: $e` raw EN |
 | P1.9 | Email confirmation deep link state restore | P1 | OPEN | `app_router.dart` redirect callback yok | confirmation link app dışında açılırsa state kaybı |
@@ -159,19 +160,19 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 > **Not:** P1.23 2026-05-17'de `73034df` + `c92d094` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.18-P1.21 2026-05-17'de `55ea49b` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.22/P1.24/P1.25 2026-05-17'de `638ffec` ile FIXED oldu; sıradan çıkarıldı.
+> **Not:** P1.6 2026-05-17'de `a7621d2` ile FIXED oldu; sıradan çıkarıldı.
 
 Risk × payback sırası — her satır küçük testli atomic commit:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **P1.6** — Recipe save missing catch | P1 | ~15 satır + 1 test |
-| 2 | **P1.7** — 4 dealer form try/catch (delivery/payment/return/adjustment) | P1 × 4 | ~60 satır + 4 test |
-| 3 | **P1.2** — SplashScreen Timer dispose | P1 | ~5 satır |
-| 4 | **P1.3** — performDeleteAccount cleanup ordering | P1 | ~10 satır |
-| 5 | **P1.4** — Guest+session mutual exclusion guard | P1 | ~10 satır + 1 test |
-| 6 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
-| 7 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
-| 8 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
+| 1 | **P1.7** — 4 dealer form try/catch (delivery/payment/return/adjustment) | P1 × 4 | ~60 satır + 4 test |
+| 2 | **P1.2** — SplashScreen Timer dispose | P1 | ~5 satır |
+| 3 | **P1.3** — performDeleteAccount cleanup ordering | P1 | ~10 satır |
+| 4 | **P1.4** — Guest+session mutual exclusion guard | P1 | ~10 satır + 1 test |
+| 5 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
+| 6 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
+| 7 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
 
 Phase C (sonra): **P1.10** (translate_data_error helper) + **P1.9** (deep link redirect) + **P1.11** (6 ek autoDispose) + **P1.13** (Crashlytics).
 Phase D (genişletme): P2 infra/feature sırası.
