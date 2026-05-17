@@ -65,6 +65,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   // tamamlıyor) gösterilmez — kabul kayıt anında alınmıştı.
   bool _legalAccepted = false;
   bool _legalShowError = false;
+  // V1.4 — ProfileController async hydrate olduğunda formu bir kez pre-fill
+  // etmek için (kullanıcı yazdığı değerleri sonradan ezmeyelim).
+  bool _profileHydrated = false;
 
   @override
   void initState() {
@@ -72,11 +75,23 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     _accountType = widget.initialAccountType ?? AccountType.commercial;
     _badge = _badgesForRole(_accountType).first;
 
-    // Eğer kullanıcı zaten signed-in (incomplete profile completion akışı),
-    // mevcut alanlardan ön doldurma yap.
+    // Mode kararı — kontrat:
+    //   1) profileController hydrate (BakeryProfile != null) → completion
+    //      + profile alanlarıyla pre-fill.
+    //   2) profile hydrate değil ama auth user var (Google/OAuth veya email
+    //      confirm sonrası) → completion. Email auth user'dan; diğer alanlar
+    //      profileController hydrate olunca [`ref.listen`]'da doldurulur.
+    //   3) Hiçbiri yok → klasik email/şifre signup mode.
+    //
+    // V1.4 fix — Önceki sürümde yalnız (1) kontrol ediliyordu; ProfileController
+    // async olduğu için (`_loadFor`) Google login dönüşünde state null olur,
+    // ekran signup mode'a düşerdi.
     final existing = ref.read(profileControllerProvider);
+    final authUser = ref.read(currentAuthUserProvider);
+
     if (existing != null) {
       _isCompletion = true;
+      _profileHydrated = true;
       _accountType = existing.accountType;
       _nameCtrl.text = existing.displayName;
       _cityCtrl.text = existing.city;
@@ -85,7 +100,29 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       _badge = preset.contains(existing.roleBadge) && existing.roleBadge.isNotEmpty
           ? existing.roleBadge
           : preset.first;
+    } else if (authUser != null) {
+      _isCompletion = true;
+      _emailCtrl.text = authUser.email ?? '';
+      // displayName / city / badge / accountType profileController hydrate
+      // olunca [`build`] içindeki ref.listen ile doldurulur.
     }
+  }
+
+  /// V1.4 — ProfileController async hydrate olunca completion mode formunu
+  /// bir kez pre-fill et. `_profileHydrated` flag'i sonsuz setState ve user
+  /// input ezme riskini engeller.
+  void _hydrateFromProfile(BakeryProfile profile) {
+    if (_profileHydrated) return;
+    _profileHydrated = true;
+    if (_nameCtrl.text.isEmpty) _nameCtrl.text = profile.displayName;
+    if (_cityCtrl.text.isEmpty) _cityCtrl.text = profile.city;
+    if (_emailCtrl.text.isEmpty) _emailCtrl.text = profile.email;
+    _accountType = profile.accountType;
+    final preset = _badgesForRole(_accountType);
+    _badge = preset.contains(profile.roleBadge) && profile.roleBadge.isNotEmpty
+        ? profile.roleBadge
+        : preset.first;
+    if (mounted) setState(() {});
   }
 
   List<String> _badgesForRole(AccountType type) {
@@ -322,6 +359,14 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     final supabaseOn = ref.watch(authRepositoryProvider) != null;
     final badges = _badgesForRole(_accountType);
     final title = _isCompletion ? 'Profili Tamamla' : AppStrings.createProfile;
+
+    // V1.4 — Google/OAuth completion akışında profileController hydrate'i
+    // initState'ten sonra gelir. İlk non-null transition'da formu pre-fill et.
+    ref.listen<BakeryProfile?>(profileControllerProvider, (prev, next) {
+      if (next == null) return;
+      if (!_isCompletion) return;
+      _hydrateFromProfile(next);
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
