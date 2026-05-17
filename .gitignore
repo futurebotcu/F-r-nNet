@@ -86,3 +86,17 @@ supabase/.temp/
 qa-screenshots/
 screenshots/
 
+# V1.4 P1.14 — Repo hijyeni. Repo kökünde biriken audit/log/screenshot
+# dosyalarının yanlışlıkla commit'e girmesini önle. Root slash kullanıldı
+# (sadece kök; alt klasörlerdeki — örn. docs/FOUNDATION_RISK_REGISTER.md
+# — etkilenmez). Mevcut tracked dosyalar gitignore'dan etkilenmez (yalnız
+# yeni untracked dosyalar için geçerli).
+MCP_*.txt
+/*.png
+/*_AUDIT.md
+/*_REPORT.md
+/*_LEDGER*.md
+/*_RUNBOOK*.md
+/BUTTON_ACTION_REALITY_MATRIX.md
+/DEALER_ADD_FAILURE_AUDIT.md
+
