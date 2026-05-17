@@ -149,20 +149,21 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 
 ## Current Repair Order
 
+> **Not:** P1.23 2026-05-17'de `73034df` + `c92d094` ile FIXED oldu; sıradan çıkarıldı.
+
 Risk × payback sırası — her satır küçük testli atomic commit:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **P1.23** — Dealer note add try/catch/finally + Türkçe error snackbar | P1-HIGH (loading stuck) | ~25 satır + 1 test |
-| 2 | **P1.18 + P1.19 + P1.20 + P1.21 + P1.22 + P1.24 + P1.25 batch** — 7 toggle/non-form write action error handling | 🟡 7 × P1 | ~100 satır + 5-7 test (template aynı) |
-| 3 | **P1.6** — Recipe save missing catch | P1 | ~15 satır + 1 test |
-| 4 | **P1.7** — 4 dealer form try/catch (delivery/payment/return/adjustment) | P1 × 4 | ~60 satır + 4 test |
-| 5 | **P1.2** — SplashScreen Timer dispose | P1 | ~5 satır |
-| 6 | **P1.3** — performDeleteAccount cleanup ordering | P1 | ~10 satır |
-| 7 | **P1.4** — Guest+session mutual exclusion guard | P1 | ~10 satır + 1 test |
-| 8 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
-| 9 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
-| 10 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
+| 1 | **P1.18 + P1.19 + P1.20 + P1.21 + P1.22 + P1.24 + P1.25 batch** — 7 toggle/non-form write action error handling | 🟡 7 × P1 | ~100 satır + 5-7 test (template aynı) |
+| 2 | **P1.6** — Recipe save missing catch | P1 | ~15 satır + 1 test |
+| 3 | **P1.7** — 4 dealer form try/catch (delivery/payment/return/adjustment) | P1 × 4 | ~60 satır + 4 test |
+| 4 | **P1.2** — SplashScreen Timer dispose | P1 | ~5 satır |
+| 5 | **P1.3** — performDeleteAccount cleanup ordering | P1 | ~10 satır |
+| 6 | **P1.4** — Guest+session mutual exclusion guard | P1 | ~10 satır + 1 test |
+| 7 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
+| 8 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
+| 9 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
 
 Phase C (sonra): **P1.10** (translate_data_error helper) + **P1.9** (deep link redirect) + **P1.11** (6 ek autoDispose) + **P1.13** (Crashlytics).
 Phase D (genişletme): P2 infra/feature sırası.
