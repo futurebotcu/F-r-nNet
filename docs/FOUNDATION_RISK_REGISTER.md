@@ -74,7 +74,7 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 
 | ID | Title | Severity | Status | Source | Notes |
 |---|---|---|---|---|---|
-| P1.2 | SplashScreen Timer cancel in `dispose()` | P1 | OPEN | `splash_screen.dart:39` | `_routed` flag double-route kapatıyor ama Timer kaynak |
+| P1.2 | SplashScreen Timer cancel in `dispose()` | P1 | IN_PROGRESS | `splash_screen.dart:39` | Patch hazır: `Timer? _timer` field eklendi; `initState` artık `_timer = Timer(...)` ile referans tutuyor; `dispose()` override eklendi → `_timer?.cancel(); super.dispose();`. `_routed` flag + route decision logic değişmedi; davranış aynı, sadece kaynak hijyeni. Test: ek dosya yok (davranış değişmediği için full suite yeterli). Full suite: 319/319 passed. Commit/push bekliyor. |
 | P1.3 | `performDeleteAccount` state cleanup ordering | P1 | OPEN | `auth_actions.dart:82-89` | await sıralaması + snackbar/go race |
 | P1.4 | Guest + Supabase session mutual exclusion guard | P1 | OPEN | `splash_screen.dart` redirect logic | defensive: `if (user!=null && isGuest) setGuest(false)` |
 | P1.5 | `CreateProfileScreen` hydrate-then-submit guard | P1 | OPEN | `create_profile_screen.dart:89-126` | `_profileHydrated` UI'yı kontrol ediyor ama submit'i değil |

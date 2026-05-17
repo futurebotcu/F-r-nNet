@@ -31,12 +31,23 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool _routed = false;
+  // V1.4 P1.2 — Timer field olarak tutuluyor ki dispose'da cancel
+  // edilebilsin. Önceden anonim Timer'dı; widget pop edilirse callback
+  // hâlâ tetikleniyor, _routed flag double-route'u kapatıyor ama Timer
+  // process'i ölü widget üzerinde kaynak israfı yapıyordu.
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     // Görsel animasyon için kısa bir bekleme + senkron olmayan kararlar paralel.
-    Timer(const Duration(milliseconds: 700), _route);
+    _timer = Timer(const Duration(milliseconds: 700), _route);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _route() async {
