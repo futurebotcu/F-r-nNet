@@ -21,6 +21,12 @@ String translateAuthError(Object error) {
         msg.contains('oauth') && msg.contains('cancel')) {
       return AppStrings.authOAuthCancelled;
     }
+    // V1.4 — GoTrue server-side e-posta reddi (örn. .test / .example TLD,
+    // disposable domain block list, RFC dışı format).
+    if (code == 'email_address_invalid' ||
+        (msg.contains('email address') && msg.contains('invalid'))) {
+      return AppStrings.authEmailAddressInvalid;
+    }
     if (code == 'invalid_credentials' || msg.contains('invalid login')) {
       return 'E-posta veya şifre hatalı.';
     }

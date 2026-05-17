@@ -11,6 +11,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/guest_mode_provider.dart';
+import '../../auth/utils/email_validator.dart';
 import '../models/bakery_profile.dart';
 import '../providers/profile_provider.dart';
 
@@ -112,6 +113,11 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     if (value.isEmpty) return AppStrings.authEmailRequired;
     if (!value.contains('@') || !value.contains('.')) {
       return AppStrings.authEmailInvalid;
+    }
+    // V1.4 — RFC 6761'de reserved test TLD'leri Supabase Auth tarafında
+    // `email_address_invalid` ile reddediliyor. Kullanıcıyı baştan uyar.
+    if (isReservedTestTldEmail(value)) {
+      return AppStrings.authEmailTestTldNotAllowed;
     }
     return null;
   }
@@ -292,8 +298,18 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       context.go(AppRoutes.splash);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      final messenger = ScaffoldMessenger.of(context);
+      // V1.4 — Default 4 sn snackbar kullanıcı tarafından kaçırılıyordu.
+      // 7 sn göster + "Tamam" action ile dismiss edebilsin.
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          duration: const Duration(seconds: 7),
+          action: SnackBarAction(
+            label: AppStrings.commonOk,
+            onPressed: messenger.hideCurrentSnackBar,
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);

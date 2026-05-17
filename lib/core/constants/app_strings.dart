@@ -117,6 +117,14 @@ class AppStrings {
   static const String authEmailInvalid = 'Geçerli bir e-posta gir';
   static const String authPasswordRequired = 'Şifre gerekli';
   static const String authPasswordTooShort = 'Şifre en az 6 karakter olmalı';
+
+  // V1.4 — Email adresi server-side reject (örn. .test/.example/.invalid TLD,
+  // disposable domain block list, vb.) veya client-side reserved TLD guard.
+  static const String authEmailAddressInvalid =
+      'Bu e-posta adresi kabul edilmiyor. Lütfen geçerli bir e-posta adresi gir.';
+  static const String authEmailTestTldNotAllowed =
+      'Test uzantılı e-posta kullanılamaz. Lütfen gerçek bir e-posta adresi gir.';
+  static const String commonOk = 'Tamam';
   static const String authSignedOutSnack = 'Çıkış yapıldı.';
   static const String authProfileSavedSnack = 'Profil kaydedildi.';
   static const String authProfileCreatedSnack =
