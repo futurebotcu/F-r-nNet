@@ -48,25 +48,39 @@ class _DealerPaymentFormScreenState
     }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
-    await repo.addTransaction(
-      DealerTransaction(
-        id: 'tx_${now.microsecondsSinceEpoch}',
-        dealerId: widget.dealerId,
-        type: DealerTransactionType.payment,
-        amount: amount,
-        paymentMethod: _method,
-        note: _note.text.trim(),
-        createdAt: now,
-      ),
-    );
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${AppStrings.dealerSaveSnackPayment}'
-            '${NumberFormatter.currency(amount)} (${_method.label})'),
-      ),
-    );
+    try {
+      await repo.addTransaction(
+        DealerTransaction(
+          id: 'tx_${now.microsecondsSinceEpoch}',
+          dealerId: widget.dealerId,
+          type: DealerTransactionType.payment,
+          amount: amount,
+          paymentMethod: _method,
+          note: _note.text.trim(),
+          createdAt: now,
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${AppStrings.dealerSaveSnackPayment}'
+              '${NumberFormatter.currency(amount)} (${_method.label})'),
+        ),
+      );
+    } on GuestActionRequiredException {
+      // V1.4 P1.7 — Defense-in-depth: pre-check sonrası repo katmanı yine
+      // guest exception atarsa auth sheet aç.
+      if (!mounted) return;
+      await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      // V1.4 P1.7 — Ham PostgrestException/network UI'a sızmaz. Form AÇIK
+      // kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.dealerPaymentSaveError)),
+      );
+    }
   }
 
   void _err(String msg) {

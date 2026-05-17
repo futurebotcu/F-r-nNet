@@ -771,6 +771,17 @@ class AppStrings {
   static const String dealerSaveSnackAdjustment =
       'Bakiye düzeltmesi kaydedildi: ';
 
+  // V1.4 P1.7 — 4 dealer form save exception olursa Türkçe error snackbar.
+  // Form AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin.
+  static const String dealerDeliverySaveError =
+      'Teslimat kaydedilemedi. Lütfen tekrar dene.';
+  static const String dealerPaymentSaveError =
+      'Ödeme kaydedilemedi. Lütfen tekrar dene.';
+  static const String dealerReturnSaveError =
+      'İade kaydedilemedi. Lütfen tekrar dene.';
+  static const String dealerAdjustmentSaveError =
+      'Düzeltme kaydedilemedi. Lütfen tekrar dene.';
+
   // Price sheet (V1.1)
   static const String dealerPriceSheetTitle = 'Fiyat ekle / güncelle';
   static const String dealerPriceSheetProduct = 'Ürün';
