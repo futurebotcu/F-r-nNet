@@ -43,6 +43,7 @@
 |---|---|---|---|---|---|---|---|
 | P0.1 | Feed composer `addPost` error handling | P0 | FIXED | `b23956c` | `test/feed_composer_error_test.dart` (2 yeni), 303/303 | offline composer smoke önerilir | try/catch/finally + Türkçe error snackbar + mounted guard + text korunur |
 | P1.1 | Provider stale-cache autoDispose | P1 | FIXED | `f1020f7` | 303/303 (regresyon yok) | optional | `recipesListProvider`, `todaySummaryProvider`, `activeJobOffersProvider`, `myWorkerProfileProvider` |
+| P1.23 | Dealer note add loading-stuck on error | P1-HIGH | FIXED | `73034df` | `test/dealer_note_add_error_test.dart`, 305/305 | dealer note offline smoke önerilir | try/catch/finally + Türkçe snackbar + saving reset; `NotesCard` library-public (test için 1-karakter görünürlük değişimi) |
 
 ---
 
@@ -90,7 +91,7 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 | P1.20 | Group leave non-guest errors propagate | P1 | OPEN | `group_detail_screen.dart:432-453` | `runGuardedMutation` sadece guest exception yakalar |
 | P1.21 | Group message send no error UX | P1 | OPEN | `group_detail_screen.dart:681-703` | no success snackbar, no error snackbar |
 | P1.22 | Dealer price update no try/catch | P1 | OPEN | `dealer_detail_screen.dart:713-747` | `_PriceSheet._save` |
-| **P1.23** | **Dealer note add LOADING STUCK on error** | **P1-HIGH** | **IN_PROGRESS** | `dealer_detail_screen.dart:1172-1208` | Patch hazır (try/catch/finally + Türkçe error snackbar + saving reset in finally), regression test `test/dealer_note_add_error_test.dart` yazıldı; `NotesCard` library-public yapıldı (test için 1-karakter görünürlük değişimi). Commit/push bekliyor; commit sonrası mini docs update ile FIXED + hash. |
+| **P1.23** | **Dealer note add LOADING STUCK on error** | **P1-HIGH** | **FIXED** | `dealer_detail_screen.dart:1172-1208` | Fixed by commit `73034df`. try/catch/finally `repo.addNote` çağrısının etrafına eklendi; Türkçe error snackbar "Not eklenemedi. Lütfen tekrar dene."; `_saving` finally bloğunda `if (mounted)` guard ile reset; hata durumunda kullanıcı not metni input'ta korunuyor; `NotesCard` library-public (test için 1-karakter görünürlük değişimi). Test: `test/dealer_note_add_error_test.dart` (error path + success regression). Full suite: 305/305 passed. |
 | P1.24 | Job seek post toggle silent | P1 | OPEN | `job_seek_posts_screen.dart:167-178` | toggle on/off bilinmiyor, snackbar yok |
 | P1.25 | Job seek post delete silent | P1 | OPEN | `job_seek_posts_screen.dart:180-207` | confirm dialog var ama sonuç bildirim yok |
 
