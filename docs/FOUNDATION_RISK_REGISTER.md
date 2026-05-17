@@ -76,7 +76,7 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 | P1.3 | `performDeleteAccount` state cleanup ordering | P1 | OPEN | `auth_actions.dart:82-89` | await sıralaması + snackbar/go race |
 | P1.4 | Guest + Supabase session mutual exclusion guard | P1 | OPEN | `splash_screen.dart` redirect logic | defensive: `if (user!=null && isGuest) setGuest(false)` |
 | P1.5 | `CreateProfileScreen` hydrate-then-submit guard | P1 | OPEN | `create_profile_screen.dart:89-126` | `_profileHydrated` UI'yı kontrol ediyor ama submit'i değil |
-| P1.6 | Recipe save missing catch | P1 | OPEN | `recipe_editor_screen.dart` | try var, catch yok; raw `Kaydedilemedi: $e` |
+| P1.6 | Recipe save missing catch | P1 | IN_PROGRESS | `recipe_editor_screen.dart:310-335` | Patch hazır: catch zaten vardı ama raw `Kaydedilemedi: $e` sızıntısı yapıyordu. Şimdi `on GuestActionRequiredException` clause + `catch (_)` `AppStrings.recipeSaveError` Türkçe snackbar. `app_strings.dart` import eklendi. Test: `test/recipe_save_error_test.dart` (error path + success regression). Commit/push bekliyor. |
 | P1.7 | Dealer form save try/catch gaps | P1 | OPEN | `dealer_delivery/payment/return/adjustment_form_screen.dart` × 4 | try/catch yok |
 | P1.8 | Worker / job seek raw error mapping | P1 | OPEN | `worker_profile_screen.dart:132`, `job_seek_post_form_screen.dart:93` | `Kaydedilemedi: $e` raw EN |
 | P1.9 | Email confirmation deep link state restore | P1 | OPEN | `app_router.dart` redirect callback yok | confirmation link app dışında açılırsa state kaybı |

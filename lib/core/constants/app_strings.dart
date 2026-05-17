@@ -605,6 +605,10 @@ class AppStrings {
   static const String wastePct = 'Fire oranı (%)';
   static const String recipeHint =
       'Varsayılan: 50 kg un · %60 su · %1 maya · %2 tuz · 250 gr · %3 fire';
+  // V1.4 P1.6 — Recipe save exception olursa ham hata sızmasın; form
+  // verisi korunur, kullanıcı tekrar deneyebilir.
+  static const String recipeSaveError =
+      'Reçete kaydedilemedi. Lütfen tekrar dene.';
 
   // Generic
   static const String today = 'Bugün';

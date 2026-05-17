@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
@@ -325,10 +326,19 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       } else {
         context.pop();
       }
-    } catch (e) {
+    } on GuestActionRequiredException {
+      // V1.4 P1.6 — Defense-in-depth: pre-check (canWriteWithRef line 282)
+      // sonrası repo katmanı yine guest exception atarsa sessizce yutmayalım;
+      // ham mesaj yerine auth sheet aç.
+      if (!mounted) return;
+      await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      // V1.4 P1.6 — Ham PostgrestException/network hatası UI'a sızmaz;
+      // form alanları korunur (setState reset edilmez), kullanıcı tek tıkla
+      // tekrar deneyebilir.
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kaydedilemedi: $e')),
+        const SnackBar(content: Text(AppStrings.recipeSaveError)),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
