@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -52,7 +53,7 @@ class JobSeekPostsScreen extends ConsumerWidget {
               itemCount: items.length,
               separatorBuilder: (_, __) =>
                   const SizedBox(height: AppSpacing.s),
-              itemBuilder: (_, i) => _PostCard(post: items[i]),
+              itemBuilder: (_, i) => JobSeekPostCard(post: items[i]),
             );
           },
         ),
@@ -61,8 +62,11 @@ class JobSeekPostsScreen extends ConsumerWidget {
   }
 }
 
-class _PostCard extends ConsumerWidget {
-  const _PostCard({required this.post});
+/// V1.4 P1.24/P1.25 — Widget regresyon testi tarafından doğrudan pump
+/// edilebilmesi için library-public (underscore'suz). Sadece bu dosyada
+/// construct ediliyor; UI'a yeni surface eklemiyor.
+class JobSeekPostCard extends ConsumerWidget {
+  const JobSeekPostCard({super.key, required this.post});
   final JobSeekPost post;
 
   @override
@@ -170,9 +174,23 @@ class _PostCard extends ConsumerWidget {
       context,
       ref,
       action: () async {
-        await ref
-            .read(workerRepositoryProvider)
-            .upsertJobSeekPost(post.copyWith(isActive: !post.isActive));
+        // V1.4 P1.24 — upsertJobSeekPost network/Postgrest hatalarını
+        // yakalayıp Türkçe snackbar göster. GuestActionRequired ise rethrow
+        // et ki runGuardedMutation yakalayıp AuthRequired sheet'i açabilsin.
+        try {
+          await ref
+              .read(workerRepositoryProvider)
+              .upsertJobSeekPost(post.copyWith(isActive: !post.isActive));
+        } on GuestActionRequiredException {
+          rethrow;
+        } catch (_) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(AppStrings.jobSeekPostToggleError),
+            ),
+          );
+        }
       },
     );
   }
@@ -201,7 +219,21 @@ class _PostCard extends ConsumerWidget {
       context,
       ref,
       action: () async {
-        await ref.read(workerRepositoryProvider).deleteJobSeekPost(post.id!);
+        // V1.4 P1.25 — deleteJobSeekPost network/Postgrest hatalarını
+        // yakalayıp Türkçe snackbar göster. GuestActionRequired ise rethrow
+        // et ki runGuardedMutation auth sheet'i açabilsin.
+        try {
+          await ref.read(workerRepositoryProvider).deleteJobSeekPost(post.id!);
+        } on GuestActionRequiredException {
+          rethrow;
+        } catch (_) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(AppStrings.jobSeekPostDeleteError),
+            ),
+          );
+        }
       },
     );
   }

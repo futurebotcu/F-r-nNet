@@ -145,7 +145,7 @@ class DealerDetailScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
-      builder: (ctx) => _PriceSheet(dealerId: dealerId),
+      builder: (ctx) => DealerPriceSheet(dealerId: dealerId),
     );
   }
 }
@@ -692,15 +692,19 @@ class _PricesCard extends StatelessWidget {
 
 // ─────────────────────────────────────── Price sheet (V1.1)
 
-class _PriceSheet extends ConsumerStatefulWidget {
-  const _PriceSheet({required this.dealerId});
+/// V1.4 P1.22 — Widget regresyon testi tarafından doğrudan pump
+/// edilebilmesi için library-public (underscore'suz). Sadece bu dosyada
+/// `showModalBottomSheet` ile construct ediliyor; UI'a yeni surface
+/// eklemiyor.
+class DealerPriceSheet extends ConsumerStatefulWidget {
+  const DealerPriceSheet({super.key, required this.dealerId});
   final String dealerId;
 
   @override
-  ConsumerState<_PriceSheet> createState() => _PriceSheetState();
+  ConsumerState<DealerPriceSheet> createState() => _PriceSheetState();
 }
 
-class _PriceSheetState extends ConsumerState<_PriceSheet> {
+class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
   String? _product;
   final _price = TextEditingController();
 
@@ -727,23 +731,37 @@ class _PriceSheetState extends ConsumerState<_PriceSheet> {
     }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
-    await repo.addPrice(
-      DealerPrice(
-        id: 'p_${now.microsecondsSinceEpoch}',
-        dealerId: widget.dealerId,
-        productName: productName,
-        unitPrice: price,
-        validFrom: now,
-      ),
-    );
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${AppStrings.dealerPriceSheetSaved}'
-            '$productName · ${NumberFormatter.currency(price)}'),
-      ),
-    );
+    try {
+      await repo.addPrice(
+        DealerPrice(
+          id: 'p_${now.microsecondsSinceEpoch}',
+          dealerId: widget.dealerId,
+          productName: productName,
+          unitPrice: price,
+          validFrom: now,
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${AppStrings.dealerPriceSheetSaved}'
+              '$productName · ${NumberFormatter.currency(price)}'),
+        ),
+      );
+    } on GuestActionRequiredException {
+      // Defense-in-depth: pre-check geçtikten sonra repo katmanı guest
+      // exception atarsa sessizce yutmayalım — auth sheet aç.
+      if (!mounted) return;
+      await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      if (!mounted) return;
+      // Sheet AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tek tıkla
+      // tekrar deneyebilsin. Ham exception UI'a sızmaz.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.dealerPriceSaveError)),
+      );
+    }
   }
 
   void _err(String msg) {

@@ -776,6 +776,17 @@ class AppStrings {
   static const String dealerPriceSheetSaved = 'Fiyat kaydedildi: ';
   static const String dealerPriceSheetNoteHint =
       'Eski fiyat geçmişte kalır, yeni fiyat aktif olur.';
+  // V1.4 P1.22 — addPrice exception olursa ham hata sızmasın; sheet açık
+  // kalır, kullanıcı tekrar deneyebilir.
+  static const String dealerPriceSaveError =
+      'Fiyat kaydedilemedi. Lütfen tekrar dene.';
+  // V1.4 P1.24 — upsertJobSeekPost (toggle) exception olursa Türkçe hata.
+  static const String jobSeekPostToggleError =
+      'İlan durumu güncellenemedi. Lütfen tekrar dene.';
+  // V1.4 P1.25 — deleteJobSeekPost exception olursa Türkçe hata; confirm
+  // dialog'a dokunulmaz.
+  static const String jobSeekPostDeleteError =
+      'İlan silinemedi. Lütfen tekrar dene.';
 
   // Common errors
   static const String dealerErrPickProduct = 'Önce bir ürün seç.';
