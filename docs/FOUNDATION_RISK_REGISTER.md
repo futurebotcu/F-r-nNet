@@ -58,6 +58,7 @@
 | P1.4 | Guest + Supabase session mutual exclusion guard | P1 | FIXED | `93609b1` | `test/splash_guest_session_guard_test.dart`, 325/325 | OAuth/guest restart smoke önerilir | Splash `_route` içinde `user != null && guest` true ise `setGuest(false)`; 6 route senaryosu ve `_routed` guard değişmedi |
 | P1.5 | CreateProfileScreen hydrate-then-submit guard | P1 | FIXED | `b2143e7` | `test/create_profile_hydrate_submit_guard_test.dart`, 330/330 | Google completion early-submit smoke önerilir | completion mode'da `_isCompletion && !_profileHydrated` ise submit bloke edilir; `AppStrings.profileStillLoadingError` snackbar; repo save çağrılmaz |
 | P1.14 | Repo hygiene .gitignore gaps | P1 | FIXED | `9405949` | flutter analyze clean, flutter test 330/330 | git status hygiene smoke önerilir | root-level `MCP_*.txt`, `/*.png`, `/*_AUDIT.md`, `/*_REPORT.md`, `/*_LEDGER*.md`, `/*_RUNBOOK*.md` ve explicit noisy files ignore edildi; untracked count ~50 → 4 |
+| P0-A | Hosted Privacy Policy URL missing | P0 | FIXED | `003f93f` | URL: <https://futurebotcu.github.io/F-r-nNet/privacy/> | GitHub Pages /docs privacy page active | Play Console Privacy Policy URL olarak kullanılacak |
 
 ---
 
@@ -67,9 +68,10 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 
 | ID | Title | Severity | Status | Notes |
 |---|---|---|---|---|
-| P0-A | Hosted Privacy Policy URL missing | P0 | OPEN | In-app `privacy_screen.dart` "V1 draft" banner var; Play Console external URL ister |
 | P0-B | Hosted account deletion URL missing | P0 | OPEN | In-app `delete-account` Edge Function ACTIVE; Play Store 2024+ web mirror istiyor |
 | P0-C | Store listing assets missing | P0 | OPEN | `store/`/`marketing/` klasörü yok; ≥2 screenshot 1080×1920 + 1024×500 feature graphic gerekli |
+
+> P0-A 2026-05-17'de `003f93f` ile FIXED oldu; GitHub Pages URL aktif: <https://futurebotcu.github.io/F-r-nNet/privacy/>
 
 ---
 
@@ -173,12 +175,14 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 > **Not:** P1.4 2026-05-17'de `93609b1` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.5 2026-05-17'de `b2143e7` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.14 2026-05-17'de `9405949` ile FIXED oldu; **code-side P1 sprinti tamamlandı.**
+> **Not:** P0-A Privacy Policy URL 2026-05-17'de `003f93f` ile oluşturuldu ve GitHub Pages URL'i aktif: <https://futurebotcu.github.io/F-r-nNet/privacy/>
 
 Risk × payback sırası — kalan iş yalnız ürün kararı + hosting:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
+| 1 | **P0-B** — Hosted account deletion URL / web mirror | P0 (compliance) | — |
+| 2 | **P0-C** — Store listing assets (screenshots + feature graphic + açıklama) | P0 (compliance) | — |
 
 Phase C (sonra): **P1.10** (translate_data_error helper) + **P1.9** (deep link redirect) + **P1.11** (6 ek autoDispose) + **P1.13** (Crashlytics).
 Phase D (genişletme): P2 infra/feature sırası.
