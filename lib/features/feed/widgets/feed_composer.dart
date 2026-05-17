@@ -72,23 +72,35 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
     }
     setState(() => _saving = true);
     final repo = ref.read(feedRepositoryProvider);
-    await repo.addPost(
-      type: _type,
-      author: AppStrings.feedComposerYouAuthor,
-      role: AppStrings.feedComposerYouRole,
-      text: text,
-    );
-    if (!mounted) return;
-    setState(() {
-      _saving = false;
-      _expanded = false;
-      _textCtrl.clear();
-      _type = PostType.production;
-    });
-    _focus.unfocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.feedComposerSavedSnack)),
-    );
+    try {
+      await repo.addPost(
+        type: _type,
+        author: AppStrings.feedComposerYouAuthor,
+        role: AppStrings.feedComposerYouRole,
+        text: text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _expanded = false;
+        _textCtrl.clear();
+        _type = PostType.production;
+      });
+      _focus.unfocus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedComposerSavedSnack)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      // Composer expanded kalır + kullanıcının yazdığı metin korunur ki
+      // tek tıkla tekrar deneyebilsin. Ham exception UI'a sızmaz.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedPostCreateError)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
   }
 
   @override

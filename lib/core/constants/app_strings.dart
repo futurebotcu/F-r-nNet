@@ -191,6 +191,10 @@ class AppStrings {
   static const String feedComposerCancel = 'Vazgeç';
   static const String feedComposerYouAuthor = 'Sen';
   static const String feedComposerYouRole = 'Misafir · FırınNet';
+  // V1.4 P0.1 — addPost exception olursa kullanıcıya ham İngilizce hata
+  // sızmasın; composer expanded kalır, kullanıcı tekrar deneyebilir.
+  static const String feedPostCreateError =
+      'Gönderi paylaşılamadı. Lütfen tekrar dene.';
 
   // Post actions
   static const String feedActionLike = 'Beğen';
