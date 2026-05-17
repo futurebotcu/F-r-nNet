@@ -55,6 +55,7 @@
 | P1.7 | Dealer form save try/catch gaps | P1 | FIXED | `450493f` | `test/dealer_form_save_error_test.dart`, 319/319 | dealer form offline smoke önerilir | delivery/payment/return/adjustment form save handler'ları try/catch; Türkçe snackbar; form hata durumunda açık kalır; GuestActionRequiredException defense-in-depth |
 | P1.2 | SplashScreen Timer cancel in dispose | P1 | FIXED | `e4e0a7b` | full suite 319/319 | splash cold-start smoke önerilir | Timer field olarak tutuluyor; dispose içinde cancel ediliyor; `_route`/`_routed` logic değişmedi |
 | P1.3 | performDeleteAccount state cleanup ordering | P1 | FIXED | `3e8aef3` | `test/account_deletion_p0_test.dart`, 320/320 | account deletion live E2E önerilir | deleteAccount → dialog pop → setGuest(false) await → profile.clear() → mounted guard → snackbar → /auth; profile cleanup artık mounted guard arkasında atlanamaz |
+| P1.4 | Guest + Supabase session mutual exclusion guard | P1 | FIXED | `93609b1` | `test/splash_guest_session_guard_test.dart`, 325/325 | OAuth/guest restart smoke önerilir | Splash `_route` içinde `user != null && guest` true ise `setGuest(false)`; 6 route senaryosu ve `_routed` guard değişmedi |
 
 ---
 
@@ -78,7 +79,7 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 |---|---|---|---|---|---|
 | P1.2 | SplashScreen Timer cancel in `dispose()` | P1 | FIXED | `splash_screen.dart:39` | Fixed by commit `e4e0a7b`. Full suite: 319/319 passed. Timer dispose lifecycle hygiene; route behavior unchanged. `Timer? _timer` field eklendi; `initState` artık `_timer = Timer(...)` ile referans tutuyor; `dispose()` override eklendi → `_timer?.cancel(); super.dispose();`. `_routed` flag + route decision logic değişmedi. |
 | P1.3 | `performDeleteAccount` state cleanup ordering | P1 | FIXED | `auth_actions.dart:78-115` | Fixed by commit `3e8aef3`. Cleanup (setGuest await + profileController.clear) artık mounted guard ÖNCESİ tamamlanır — yavaş cihazda widget unmount olursa profile state orphan kalmaz. Yeni sıra: deleteAccount → dialog pop → setGuest await → clear → mounted check → snackbar → go. Hata yolu da cleaner: dialog pop → mounted check → error snackbar. Test: `test/account_deletion_p0_test.dart` (P1.3 order-assertion eklendi). Full suite: 320/320 passed. |
-| P1.4 | Guest + Supabase session mutual exclusion guard | P1 | IN_PROGRESS | `splash_screen.dart` `_route()` | Patch hazır: `_route()` içinde user fetch SONRASI + `user == null` branch ÖNCESİ defensive guard eklendi → `if (user != null && guest) { await ref.read(guestModeProvider.notifier).setGuest(false); if (!mounted) return; }`. `guestModeProvider` import eklendi. 6 senaryo route logic'i ve `_routed` double-route guard değişmedi. Test: `test/splash_guest_session_guard_test.dart` (source-level 5 assertion). Commit/push bekliyor. |
+| P1.4 | Guest + Supabase session mutual exclusion guard | P1 | FIXED | `splash_screen.dart` `_route()` | Fixed by commit `93609b1`. `_route()` içinde user fetch SONRASI + `user == null` branch ÖNCESİ defensive guard eklendi → `if (user != null && guest) { await ref.read(guestModeProvider.notifier).setGuest(false); if (!mounted) return; }`. `guestModeProvider` import eklendi. 6 senaryo route logic'i ve `_routed` double-route guard değişmedi. Test: `test/splash_guest_session_guard_test.dart`. Full suite: 325/325 passed. |
 | P1.5 | `CreateProfileScreen` hydrate-then-submit guard | P1 | OPEN | `create_profile_screen.dart:89-126` | `_profileHydrated` UI'yı kontrol ediyor ama submit'i değil |
 | P1.6 | Recipe save missing catch | P1 | FIXED | `recipe_editor_screen.dart:310-335` | Fixed by commit `a7621d2`. Catch zaten vardı ama raw `Kaydedilemedi: $e` sızıntısı yapıyordu. Şimdi `on GuestActionRequiredException` clause + `catch (_)` `AppStrings.recipeSaveError` Türkçe snackbar. `app_strings.dart` import eklendi. Test: `test/recipe_save_error_test.dart` (error path + success regression). Full suite: 314/314 passed. |
 | P1.7 | Dealer form save try/catch gaps | P1 | FIXED | `dealer_delivery/payment/return/adjustment_form_screen.dart` × 4 | Fixed by commit `450493f`. 4 form `_save` aynı try/catch/`on GuestActionRequiredException`/`catch (_)` şemasına alındı; hata yolunda Navigator.pop **çağrılmaz** (form açık kalır), kullanıcı tekrar deneyebilir; ham PostgrestException sızıntısı yok; 4 yeni `AppStrings.dealer{Delivery,Payment,Return,Adjustment}SaveError` eklendi. Test: `test/dealer_form_save_error_test.dart` (5 widget regression). Full suite: 319/319 passed. |
@@ -167,15 +168,15 @@ Bu üçü **kod değil**, ürün kararı + hosting + asset üretimi gerektirir.
 > **Not:** P1.7 2026-05-17'de `450493f` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.2 2026-05-17'de `e4e0a7b` ile FIXED oldu; sıradan çıkarıldı.
 > **Not:** P1.3 2026-05-17'de `3e8aef3` ile FIXED oldu; sıradan çıkarıldı.
+> **Not:** P1.4 2026-05-17'de `93609b1` ile FIXED oldu; sıradan çıkarıldı.
 
 Risk × payback sırası — her satır küçük testli atomic commit:
 
 | # | İş | Risk | Boyut |
 |---|---|---|---|
-| 1 | **P1.4** — Guest+session mutual exclusion guard | P1 | ~10 satır + 1 test |
-| 2 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
-| 3 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
-| 4 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
+| 1 | **P1.5** — CreateProfileScreen hydrate-then-submit lock | P1 | ~15 satır + 1 test |
+| 2 | **P1.14** — `.gitignore` patternları (`MCP_*.txt`, root `*.png`, audit `*.md`) | P1 | ~10 satır gitignore |
+| 3 | **Store/release P0-A/B/C** — Hosted Privacy + Account deletion URL + store assets (ürün kararı) | P0 (compliance) | — |
 
 Phase C (sonra): **P1.10** (translate_data_error helper) + **P1.9** (deep link redirect) + **P1.11** (6 ek autoDispose) + **P1.13** (Crashlytics).
 Phase D (genişletme): P2 infra/feature sırası.
