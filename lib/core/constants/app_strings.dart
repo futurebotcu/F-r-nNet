@@ -277,6 +277,11 @@ class AppStrings {
   static const String groupApprovalRequiredBadge = 'Katılım onaylı';
   static const String groupJoinRequestApproveCta = 'Kabul Et';
   static const String groupJoinRequestRejectCta = 'Reddet';
+
+  /// G.N4 — Owner grup kartında pending request count badge metni.
+  /// Tekil: "1 bekleyen istek". Çoğul: "{N} bekleyen istek".
+  static String groupPendingRequestCount(int count) =>
+      count == 1 ? '1 bekleyen istek' : '$count bekleyen istek';
   // V1 P1-C — Native share (share_plus) için subject + hata snackbar.
   static const String feedShareSubject = 'FırınNet — Paylaşım';
   static const String feedShareError =

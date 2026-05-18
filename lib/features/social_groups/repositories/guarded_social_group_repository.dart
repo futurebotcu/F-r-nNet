@@ -110,6 +110,11 @@ class GuardedSocialGroupRepository implements SocialGroupRepository {
   Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId) =>
       inner.listPendingJoinRequests(groupId);
 
+  /// Read-only — guarded yazma gerektirmez.
+  @override
+  Future<int> pendingJoinRequestCount(String groupId) =>
+      inner.pendingJoinRequestCount(groupId);
+
   @override
   Future<GroupJoinRequest> approveJoinRequest(String requestId) {
     _requireWrite('katılım isteğini onaylamak');

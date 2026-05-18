@@ -422,6 +422,24 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
   }
 
   @override
+  Future<int> pendingJoinRequestCount(String groupId) async {
+    // G.N4 — count(*) RLS-filtered: owner için pending sayısı; başka
+    // kullanıcılar için 0 (RLS satır filtresi). Hata olursa 0 döneriz —
+    // badge sessizce gizlenir, owner UX'i kırılmaz.
+    try {
+      final res = await _client
+          .from('group_join_requests')
+          .select('id')
+          .eq('group_id', groupId)
+          .eq('status', 'pending')
+          .count(sb.CountOption.exact);
+      return res.count;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  @override
   Future<GroupJoinRequest> approveJoinRequest(String requestId) async {
     final row = await _client.rpc(
       'decide_group_join_request',

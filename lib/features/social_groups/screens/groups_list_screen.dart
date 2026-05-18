@@ -10,6 +10,7 @@ import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../notifications/widgets/notifications_header_action.dart';
 import '../models/group_category.dart';
@@ -268,11 +269,24 @@ class _GroupCardWired extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final joined = ref.watch(isJoinedProvider(group.id));
+    // G.N4 — Owner kendi grup kartında "X bekleyen istek" sinyali görür.
+    // Owner değilse provider hiç watch edilmez (autoDispose; fazladan
+    // network çağrısı yok). Compact varyantta GroupCard kendi pill'i
+    // gizler — yine de count'u pass etmek zararsız.
+    final user = ref.watch(currentAuthUserProvider);
+    final isOwner = user != null && group.ownerId == user.id;
+    final pendingCount = isOwner
+        ? ref.watch(pendingJoinRequestCountProvider(group.id)).maybeWhen(
+              data: (n) => n,
+              orElse: () => 0,
+            )
+        : 0;
     return GroupCard(
       group: group,
       isJoined: joined,
       width: width,
       compact: compact,
+      pendingRequestCount: pendingCount,
       onTap: () => context.push('${AppRoutes.groups}/${group.id}'),
       onPrimary: () async {
         if (joined) {

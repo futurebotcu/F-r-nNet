@@ -58,6 +58,11 @@ abstract class SocialGroupRepository {
   /// Bir grubun pending isteklerini owner görür (RLS kontrolü server-side).
   Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId);
 
+  /// G.N4 — Bir grubun pending istek SAYISI. Owner kart badge'i için.
+  /// RLS server tarafında satır filtreler; owner değilse 0 döner.
+  /// Hata olursa 0 döner (UI badge gizlenir — sessiz fallback).
+  Future<int> pendingJoinRequestCount(String groupId);
+
   /// Pending isteği approve eder; member olarak ekler + notification atar.
   Future<GroupJoinRequest> approveJoinRequest(String requestId);
 

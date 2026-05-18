@@ -159,6 +159,10 @@ class _ThrowingGroupRepo implements SocialGroupRepository {
       _local.listPendingJoinRequests(groupId);
 
   @override
+  Future<int> pendingJoinRequestCount(String groupId) =>
+      _local.pendingJoinRequestCount(groupId);
+
+  @override
   Future<GroupJoinRequest> approveJoinRequest(String requestId) =>
       _local.approveJoinRequest(requestId);
 

@@ -17,6 +17,7 @@ class GroupCard extends StatelessWidget {
     this.onTap,
     this.compact = false,
     this.width,
+    this.pendingRequestCount = 0,
   });
 
   final SocialGroup group;
@@ -31,6 +32,12 @@ class GroupCard extends StatelessWidget {
   /// `true` → Feed carousel'de kullanılan dar kart varyantı.
   final bool compact;
   final double? width;
+
+  /// G.N4 — Owner kartında "X bekleyen istek" badge'i için.
+  /// 0 ise badge gizlenir. Card kendi içinde owner logic bilmez; çağıran
+  /// (groups_list_screen) owner-check'i yapar ve count'u pass eder.
+  /// Compact varyantta gizlenir (carousel yüksekliği taşmasın).
+  final int pendingRequestCount;
 
   static const _seedGradients = <List<Color>>[
     [Color(0xFFF3E6D3), Color(0xFFE5D2B0)],
@@ -168,6 +175,13 @@ class GroupCard extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.m),
                   _MembersRow(group: group),
+                  // G.N4 — Owner kartında pending request count pill.
+                  // Compact varyantta (Joined carousel) yer kalmaz; sadece
+                  // full kart varyantında gösterilir.
+                  if (pendingRequestCount > 0 && !compact) ...[
+                    const SizedBox(height: AppSpacing.s),
+                    _PendingRequestsPill(count: pendingRequestCount),
+                  ],
                   const SizedBox(height: AppSpacing.m),
                   _PrimaryCta(
                     group: group,
@@ -331,6 +345,54 @@ class _PrimaryCta extends StatelessWidget {
           ),
         ),
         child: Text(label),
+      ),
+    );
+  }
+}
+
+/// G.N4 — Owner kartında "X bekleyen istek" sinyali.
+///
+/// Sadece [GroupCard.pendingRequestCount] > 0 olduğunda render edilir;
+/// `compact` varyantta gösterilmez. Owner grup detayına girmeden
+/// bekleyen istek olduğunu fark etsin diye var.
+class _PendingRequestsPill extends StatelessWidget {
+  const _PendingRequestsPill({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.m,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.copper.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: AppColors.copper.withValues(alpha: 0.36),
+          width: 0.6,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.hourglass_top_rounded,
+            size: 13,
+            color: AppColors.copper,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            AppStrings.groupPendingRequestCount(count),
+            style: const TextStyle(
+              color: AppColors.copper,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
       ),
     );
   }

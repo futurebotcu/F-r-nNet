@@ -105,3 +105,14 @@ final pendingJoinRequestsProvider = FutureProvider.autoDispose
   final repo = ref.watch(socialGroupRepositoryProvider);
   return repo.listPendingJoinRequests(groupId);
 });
+
+/// G.N4 — Bir grubun pending istek SAYISI (count-only).
+///
+/// Owner kart badge'i için (lightweight; full list yerine sadece sayı).
+/// RLS server-side: owner görmüyorsa 0; hata olursa 0 (sessiz fallback).
+final pendingJoinRequestCountProvider = FutureProvider.autoDispose
+    .family<int, String>((ref, groupId) async {
+  ref.watch(groupChangesProvider);
+  final repo = ref.watch(socialGroupRepositoryProvider);
+  return repo.pendingJoinRequestCount(groupId);
+});

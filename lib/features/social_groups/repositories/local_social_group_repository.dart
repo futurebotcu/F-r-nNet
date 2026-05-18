@@ -217,6 +217,15 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
   }
 
   @override
+  Future<int> pendingJoinRequestCount(String groupId) async {
+    return _requests
+        .where((r) =>
+            r.groupId == groupId &&
+            r.status == GroupJoinRequestStatus.pending)
+        .length;
+  }
+
+  @override
   Future<GroupJoinRequest> approveJoinRequest(String requestId) async {
     final i = _requests.indexWhere((r) => r.id == requestId);
     if (i < 0) throw StateError('Request not found: $requestId');
