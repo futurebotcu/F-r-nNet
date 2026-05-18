@@ -279,10 +279,47 @@ class AppStrings {
   static const String groupJoinRequestRejectCta = 'Reddet';
 
   /// Groups V1 Sprint 1 / GB-1 — Owner primary status (kurucu için).
-  /// "Katıl"/"Ayrıl" yerine kurucuya bu metin gösterilir. Yönetim menüsü
-  /// Sprint 3'te eklenecek; o yüzden subtitle "yakında" diyor.
+  /// "Katıl"/"Ayrıl" yerine kurucuya bu metin gösterilir.
+  /// Sprint 2'de "Yönet" trailing'i eklendi; status card artık tıklanır.
   static const String groupOwnerStatusTitle = 'Bu grubun kurucususun';
-  static const String groupOwnerStatusSubtitle = 'Yönetim seçenekleri yakında';
+  static const String groupOwnerStatusSubtitle = 'Yönet menüsüne dokun';
+
+  /// V1 Sprint 2 — Üyeler / Yönet / Gruptan çık / Grubu kapat metinleri.
+  static const String groupManage = 'Yönet';
+  static const String groupMembers = 'Üyeler';
+  static const String groupMembersEmpty =
+      'Bu grubun üyeleri henüz görünmüyor.';
+  static const String groupFounder = 'Kurucu';
+  static const String groupRemoveMember = 'Üyeyi çıkar';
+  static const String groupLeave = 'Gruptan çık';
+  static const String groupLeaveConfirmTitle = 'Gruptan çık?';
+  static const String groupLeaveConfirmBodyTransfer =
+      'Liderlik otomatik olarak başka bir üyeye geçecek.';
+  static const String groupLeaveConfirmBodyClose =
+      'Grupta başka üye yok. Grup kapatılacak.';
+  static const String groupLeaveConfirmBodyMember =
+      'Gruptan çıkmak istediğine emin misin?';
+  static const String groupLeft = 'Gruptan çıktın.';
+  static const String groupLeftTransferred =
+      'Gruptan çıktın. Liderlik başka bir üyeye geçti.';
+  static const String groupLeftClosed = 'Gruptan çıktın. Grup kapatıldı.';
+  // Not: `groupLeaveError` zaten aşağıda V1.4 P1.20'de tanımlı; bu blok
+  // yeniden tanımlamaz.
+  static const String groupDelete = 'Grubu kapat';
+  static const String groupDeleteConfirmTitle = 'Grubu kapat?';
+  static const String groupDeleteConfirmBody =
+      'Grup listeden kalkacak. Bu işlem geri alınamaz.';
+  static const String groupDeleteCta = 'Kapat';
+  static const String groupDeleteSuccess = 'Grup kapatıldı.';
+  static const String groupDeleteError =
+      'Grup kapatılamadı. Lütfen tekrar dene.';
+  static const String groupMemberRemoveConfirmTitle = 'Üyeyi çıkar?';
+  static const String groupMemberRemoveConfirmBody =
+      'Üye gruptan çıkarılacak. Tekrar katılmak için istek göndermesi gerekir.';
+  static const String groupMemberRemoveCta = 'Çıkar';
+  static const String groupMemberRemoveSuccess = 'Üye gruptan çıkarıldı.';
+  static const String groupMemberRemoveError =
+      'Üye çıkarılamadı. Lütfen tekrar dene.';
 
   /// G.N4 — Owner grup kartında pending request count badge metni.
   /// Tekil: "1 bekleyen istek". Çoğul: "{N} bekleyen istek".

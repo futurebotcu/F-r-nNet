@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../models/group_category.dart';
 import '../models/group_join_request.dart';
+import '../models/group_member.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -28,6 +29,12 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
   final List<SocialGroup> _groups = <SocialGroup>[];
   final Set<String> _joined = <String>{};
   final List<GroupMessage> _messages = <GroupMessage>[];
+
+  /// V1 Sprint 2 — Tam üye listesi grup başına. Local repo'da test/seed
+  /// simulation için. createGroup/joinGroup/approve/leave/remove flow'ları
+  /// bu mapi senkron tutar.
+  final Map<String, List<GroupMemberProfile>> _membersByGroup =
+      <String, List<GroupMemberProfile>>{};
 
   final StreamController<void> _changes =
       StreamController<void>.broadcast();
@@ -80,6 +87,15 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
     if (g.isFull) return GroupJoinResult.full;
     _groups[i] = g.copyWith(currentMemberCount: g.currentMemberCount + 1);
     _joined.add(id);
+    // Üye listesini senkron tut.
+    _membersByGroup
+        .putIfAbsent(id, () => <GroupMemberProfile>[])
+        .add(GroupMemberProfile(
+          userId: _meId,
+          displayName: _meName,
+          role: 'member',
+          joinedAt: DateTime.now(),
+        ));
     _notify();
     return GroupJoinResult.success;
   }
@@ -94,6 +110,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
     _groups[i] =
         g.copyWith(currentMemberCount: newCount < 0 ? 0 : newCount);
     _joined.remove(id);
+    _membersByGroup[id]?.removeWhere((m) => m.userId == _meId);
     _notify();
   }
 
@@ -129,8 +146,35 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
     );
     _groups.insert(0, g);
     _joined.add(id);
+    // Owner'ı tam üye listesine kaydet (kurucu).
+    _membersByGroup[id] = <GroupMemberProfile>[
+      GroupMemberProfile(
+        userId: _meId,
+        displayName: _meName,
+        role: 'owner',
+        joinedAt: now,
+      ),
+    ];
     _notify();
     return g;
+  }
+
+  /// V1 Sprint 2 — Test/seed helper: harici üye ekle.
+  ///
+  /// Local repo gerçek auth simülasyonu yapmaz; ikinci kullanıcıyı doğrudan
+  /// üye listesine eklemek için. Sadece test ve guest seed senaryoları
+  /// kullanır; production'da hiçbir yerden çağrılmaz.
+  void addMemberDirectly(String groupId, GroupMemberProfile profile) {
+    _membersByGroup
+        .putIfAbsent(groupId, () => <GroupMemberProfile>[])
+        .add(profile);
+    final i = _groups.indexWhere((g) => g.id == groupId);
+    if (i >= 0) {
+      _groups[i] = _groups[i].copyWith(
+        currentMemberCount: _groups[i].currentMemberCount + 1,
+      );
+    }
+    _notify();
   }
 
   // ─────────────────────────────────────── Messages
@@ -246,6 +290,15 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
       _groups[gi] = _groups[gi]
           .copyWith(currentMemberCount: _groups[gi].currentMemberCount + 1);
     }
+    // Requester'ı tam üye listesine ekle (placeholder profile bilgisiyle).
+    _membersByGroup
+        .putIfAbsent(old.groupId, () => <GroupMemberProfile>[])
+        .add(GroupMemberProfile(
+          userId: old.requesterId,
+          displayName: 'FırınNet Kullanıcısı',
+          role: 'member',
+          joinedAt: DateTime.now(),
+        ));
     _notify();
     return upd;
   }
@@ -267,6 +320,106 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
     _requests[i] = upd;
     _notify();
     return upd;
+  }
+
+  // ─────────────────────────────────────── Sprint 2 — Members management
+
+  @override
+  Future<List<GroupMemberProfile>> listMembers(String groupId) async {
+    final list = _membersByGroup[groupId];
+    if (list == null) return const <GroupMemberProfile>[];
+    final sorted = List<GroupMemberProfile>.from(list)
+      ..sort((a, b) => a.joinedAt.compareTo(b.joinedAt));
+    return List.unmodifiable(sorted);
+  }
+
+  @override
+  Future<void> removeMember(String groupId, String memberId) async {
+    final gi = _groups.indexWhere((g) => g.id == groupId);
+    if (gi < 0) throw StateError('group_not_found');
+    final g = _groups[gi];
+    if (g.ownerId != _meId) throw StateError('not_group_owner');
+    if (memberId == g.ownerId) throw StateError('cannot_remove_owner');
+    final list = _membersByGroup[groupId];
+    if (list == null) throw StateError('member_not_found');
+    final before = list.length;
+    list.removeWhere((m) => m.userId == memberId);
+    if (list.length == before) throw StateError('member_not_found');
+    _groups[gi] = g.copyWith(
+      currentMemberCount: (g.currentMemberCount - 1).clamp(0, 1 << 30),
+    );
+    _notify();
+  }
+
+  @override
+  Future<GroupLeaveOutcome> leaveGroupSafely(String groupId) async {
+    final gi = _groups.indexWhere((g) => g.id == groupId);
+    if (gi < 0) throw StateError('group_not_found');
+    final g = _groups[gi];
+    final members = _membersByGroup.putIfAbsent(
+      groupId,
+      () => <GroupMemberProfile>[],
+    );
+
+    // Non-owner: kendisini çıkar.
+    if (g.ownerId != _meId) {
+      members.removeWhere((m) => m.userId == _meId);
+      _joined.remove(groupId);
+      _groups[gi] = g.copyWith(
+        currentMemberCount: (g.currentMemberCount - 1).clamp(0, 1 << 30),
+      );
+      _notify();
+      return GroupLeaveOutcome.left;
+    }
+
+    // Owner: en eski non-owner üyeyi bul.
+    final candidates = members.where((m) => m.userId != _meId).toList()
+      ..sort((a, b) => a.joinedAt.compareTo(b.joinedAt));
+
+    if (candidates.isEmpty) {
+      // Tek üye → grup kapatılır.
+      _joined.remove(groupId);
+      _groups.removeAt(gi);
+      _membersByGroup.remove(groupId);
+      _notify();
+      return GroupLeaveOutcome.closed;
+    }
+
+    // Devir: en eski üyeyi owner yap.
+    final next = candidates.first;
+    final nextIdx = members.indexWhere((m) => m.userId == next.userId);
+    members[nextIdx] = next.copyWith(role: 'owner');
+    members.removeWhere((m) => m.userId == _meId);
+    _joined.remove(groupId);
+    _groups[gi] = SocialGroup(
+      id: g.id,
+      name: g.name,
+      description: g.description,
+      category: g.category,
+      ownerName: next.displayName,
+      ownerId: next.userId,
+      city: g.city,
+      isPrivate: g.isPrivate,
+      maxMembers: g.maxMembers,
+      currentMemberCount: (g.currentMemberCount - 1).clamp(0, 1 << 30),
+      createdAt: g.createdAt,
+      tags: g.tags,
+      visualSeed: g.visualSeed,
+    );
+    _notify();
+    return GroupLeaveOutcome.transferred;
+  }
+
+  @override
+  Future<void> closeGroup(String groupId) async {
+    final gi = _groups.indexWhere((g) => g.id == groupId);
+    if (gi < 0) return;
+    final g = _groups[gi];
+    if (g.ownerId != _meId) throw StateError('not_group_owner');
+    _groups.removeAt(gi);
+    _membersByGroup.remove(groupId);
+    _joined.remove(groupId);
+    _notify();
   }
 
   @override

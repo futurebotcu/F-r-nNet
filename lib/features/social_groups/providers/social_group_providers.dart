@@ -6,6 +6,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
 import '../models/group_category.dart';
 import '../models/group_join_request.dart';
+import '../models/group_member.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../repositories/guarded_social_group_repository.dart';
@@ -115,4 +116,15 @@ final pendingJoinRequestCountProvider = FutureProvider.autoDispose
   ref.watch(groupChangesProvider);
   final repo = ref.watch(socialGroupRepositoryProvider);
   return repo.pendingJoinRequestCount(groupId);
+});
+
+/// V1 Sprint 2 — Bir grubun üyeleri (profile snapshot ile).
+///
+/// Üyeler sheet'i için. RLS server-side gating yapar: katılım onaylı grupta
+/// owner+member görür; public grupta authenticated user görür.
+final groupMembersProvider = FutureProvider.autoDispose
+    .family<List<GroupMemberProfile>, String>((ref, groupId) async {
+  ref.watch(groupChangesProvider);
+  final repo = ref.watch(socialGroupRepositoryProvider);
+  return repo.listMembers(groupId);
 });

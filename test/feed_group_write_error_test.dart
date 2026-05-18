@@ -28,6 +28,7 @@ import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/providers/profile_provider.dart';
 import 'package:firin_defter/features/social_groups/models/group_category.dart';
 import 'package:firin_defter/features/social_groups/models/group_join_request.dart';
+import 'package:firin_defter/features/social_groups/models/group_member.dart';
 import 'package:firin_defter/features/social_groups/models/group_message.dart';
 import 'package:firin_defter/features/social_groups/models/social_group.dart';
 import 'package:firin_defter/features/social_groups/providers/social_group_providers.dart';
@@ -170,6 +171,29 @@ class _ThrowingGroupRepo implements SocialGroupRepository {
   Future<GroupJoinRequest> rejectJoinRequest(String requestId) =>
       _local.rejectJoinRequest(requestId);
 
+  // Sprint 2 — Members management (test scope: pure local delegation).
+  @override
+  Future<List<GroupMemberProfile>> listMembers(String groupId) =>
+      _local.listMembers(groupId);
+
+  @override
+  Future<void> removeMember(String groupId, String memberId) =>
+      _local.removeMember(groupId, memberId);
+
+  @override
+  Future<GroupLeaveOutcome> leaveGroupSafely(String groupId) {
+    leaveCalls++;
+    if (throwOnLeave) {
+      return Future<GroupLeaveOutcome>.error(
+        Exception('network boom (leave_safely)'),
+      );
+    }
+    return _local.leaveGroupSafely(groupId);
+  }
+
+  @override
+  Future<void> closeGroup(String groupId) => _local.closeGroup(groupId);
+
   @override
   Stream<void> watch() => _changes.stream;
 }
@@ -299,8 +323,8 @@ void main() {
   );
 
   testWidgets(
-    'P1.20 — leaveGroup throws → Türkçe hata snackbar; '
-    'runGuardedMutation davranışı korunur',
+    'P1.20 — leaveGroupSafely throws → Türkçe hata snackbar '
+    '(Sprint 2: confirm dialog → RPC fail → groupLeaveError)',
     (tester) async {
       final repo = _ThrowingGroupRepo(throwOnLeave: true);
       await tester.pumpWidget(
@@ -310,20 +334,35 @@ void main() {
         ),
       );
 
-      // isJoined=true → buton "Gruptan ayrıl" + logout ikonu.
+      // isJoined=true → buton "Ayrıl" + logout ikonu.
       expect(find.byIcon(Icons.logout_rounded), findsOneWidget);
 
+      // 1. Ayrıl butonuna bas → confirm dialog açılır.
       await tester.tap(find.byIcon(Icons.logout_rounded));
       await tester.pumpAndSettle();
+      expect(
+        find.text(AppStrings.groupLeaveConfirmTitle),
+        findsOneWidget,
+        reason: 'Sprint 2 — confirm dialog görünmeli',
+      );
 
-      expect(repo.leaveCalls, 1);
+      // 2. Dialog "Gruptan çık" butonuna bas → RPC çağrılır, fırlatır.
+      await tester.tap(find.text(AppStrings.groupLeave));
+      await tester.pumpAndSettle();
+
+      expect(repo.leaveCalls, 1,
+          reason: 'leaveGroupSafely tek sefer çağrılmalı');
       expect(
         find.text(AppStrings.groupLeaveError),
         findsOneWidget,
-        reason: 'leaveGroup fırlattığında Türkçe hata gösterilmeli.',
+        reason: 'leaveGroupSafely fırlattığında Türkçe hata gösterilmeli.',
       );
       // Success snackbar görünmemeli.
-      expect(find.text(AppStrings.groupDetailLeaveSnackSuccess), findsNothing);
+      expect(find.text(AppStrings.groupLeft), findsNothing);
+      expect(
+        find.text(AppStrings.groupLeftTransferred),
+        findsNothing,
+      );
     },
   );
 

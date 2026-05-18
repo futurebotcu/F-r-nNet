@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/group_category.dart';
 import '../models/group_join_request.dart';
+import '../models/group_member.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -481,6 +482,84 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
     }
     _notify();
     return GroupJoinRequest.fromRow(Map<String, dynamic>.from(row as Map));
+  }
+
+  // ─────────────────────────────────────── Sprint 2 — Members management
+
+  @override
+  Future<List<GroupMemberProfile>> listMembers(String groupId) async {
+    // group_members + profiles join. RLS server tarafında gating yapar:
+    // private grupta non-member empty döner.
+    final memberRows = await _client
+        .from('group_members')
+        .select('owner_id, role, joined_at')
+        .eq('group_id', groupId)
+        .order('joined_at', ascending: true);
+    final memberList = (memberRows as List).cast<Map<String, dynamic>>();
+    if (memberList.isEmpty) return const <GroupMemberProfile>[];
+
+    final userIds = memberList
+        .map((r) => r['owner_id'] as String)
+        .toSet()
+        .toList(growable: false);
+
+    final profileRows = await _client
+        .from('profiles')
+        .select('id, display_name, profession_badge, city')
+        .inFilter('id', userIds);
+    final byId = <String, Map<String, dynamic>>{
+      for (final p in (profileRows as List).cast<Map<String, dynamic>>())
+        p['id'] as String: p,
+    };
+
+    return memberList.map((r) {
+      final p = byId[r['owner_id'] as String];
+      return GroupMemberProfile(
+        userId: r['owner_id'] as String,
+        displayName: (p?['display_name'] as String?) ?? 'FırınNet Kullanıcısı',
+        professionBadge: p?['profession_badge'] as String?,
+        city: p?['city'] as String?,
+        role: (r['role'] as String?) ?? 'member',
+        joinedAt: DateTime.parse(r['joined_at'] as String),
+      );
+    }).toList(growable: false);
+  }
+
+  @override
+  Future<void> removeMember(String groupId, String memberId) async {
+    await _client.rpc(
+      'remove_group_member',
+      params: <String, dynamic>{
+        'p_group_id': groupId,
+        'p_member_id': memberId,
+      },
+    );
+    _notify();
+  }
+
+  @override
+  Future<GroupLeaveOutcome> leaveGroupSafely(String groupId) async {
+    final res = await _client.rpc(
+      'leave_group_safely',
+      params: <String, dynamic>{'p_group_id': groupId},
+    );
+    // Owner çıkışında joined cache'i geçersiz kıl; sonraki listJoined refresh
+    // doğru durumu çekecek.
+    _joinedLoaded = false;
+    _joinedCache.remove(groupId);
+    _notify();
+    return GroupLeaveOutcome.fromPersist(res as String?);
+  }
+
+  @override
+  Future<void> closeGroup(String groupId) async {
+    // RLS social_groups_update_own owner için yeterli; RPC gerekmez.
+    await _client
+        .from('social_groups')
+        .update(<String, dynamic>{'is_deleted': true})
+        .eq('id', groupId);
+    _joinedCache.remove(groupId);
+    _notify();
   }
 
   @override

@@ -1,5 +1,6 @@
 import '../models/group_category.dart';
 import '../models/group_join_request.dart';
+import '../models/group_member.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -68,6 +69,25 @@ abstract class SocialGroupRepository {
 
   /// Pending isteği reject eder + notification atar.
   Future<GroupJoinRequest> rejectJoinRequest(String requestId);
+
+  // ─────────────────────────────────────── Sprint 2 — Members management
+
+  /// V1 Sprint 2 — Bir grubun üyelerinin profil snapshot listesi.
+  /// RLS: katılım onaylı grupta yalnız owner+member görür; public grupta
+  /// authenticated user görür.
+  Future<List<GroupMemberProfile>> listMembers(String groupId);
+
+  /// V1 Sprint 2 — Owner-only üye çıkarma. `remove_group_member` RPC.
+  /// Owner kendisini çıkaramaz (leave_group_safely kullanılmalı).
+  Future<void> removeMember(String groupId, String memberId);
+
+  /// V1 Sprint 2 — Atomik çıkış: owner için auto-handoff/close,
+  /// non-owner için kendi çıkışı. `leave_group_safely` RPC.
+  Future<GroupLeaveOutcome> leaveGroupSafely(String groupId);
+
+  /// V1 Sprint 2 — Owner soft-delete: `social_groups.is_deleted=true`.
+  /// RLS update_own zaten owner'a yetki veriyor; RPC gerekmez.
+  Future<void> closeGroup(String groupId);
 
   /// Repository içeriği değiştiğinde yayın.
   Stream<void> watch();

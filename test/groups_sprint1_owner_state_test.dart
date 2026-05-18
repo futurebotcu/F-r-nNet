@@ -289,10 +289,11 @@ void main() {
       expect(AppStrings.groupOwnerStatusTitle, 'Bu grubun kurucususun');
     });
 
-    test('groupOwnerStatusSubtitle = "Yönetim seçenekleri yakında"', () {
+    test('groupOwnerStatusSubtitle Sprint 2\'de "Yönet menüsüne dokun"', () {
+      // Sprint 2 — status card tıklanabilir oldu; subtitle aksiyon ipucu.
       expect(
         AppStrings.groupOwnerStatusSubtitle,
-        'Yönetim seçenekleri yakında',
+        'Yönet menüsüne dokun',
       );
     });
   });

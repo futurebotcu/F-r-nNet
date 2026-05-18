@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -12,8 +13,10 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../../app/router/app_router.dart';
 import '../models/group_category.dart';
 import '../models/group_join_request.dart';
+import '../models/group_member.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../providers/social_group_providers.dart';
@@ -100,6 +103,21 @@ class GroupDetailScreen extends ConsumerWidget {
                     isJoined: joined,
                   ),
                 ),
+                // Sprint 2 — Üyeler giriş satırı. contentVisible kullanıcılar
+                // için gösterilir (owner, member, public-non-member).
+                if (contentVisible)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageH,
+                      AppSpacing.s,
+                      AppSpacing.pageH,
+                      0,
+                    ),
+                    child: _MembersEntryRow(
+                      group: g,
+                      isOwner: isOwner,
+                    ),
+                  ),
                 // Owner için pending istekler bölümü.
                 if (isOwner) ...[
                   const SectionLabel(
@@ -451,8 +469,13 @@ class PrimaryActionButton extends ConsumerWidget {
     // hiçbir koşulda gösterilmez. Owner kendi grubuna zaten bağlı; ayrıca
     // owner gruptan ayrılamaz (leaveGroup silent no-op, GB-8). Cache race
     // (GB-2) ile isJoined=false dönse bile owner branch en başta yakalanır.
+    //
+    // Sprint 2 — Status card artık tıklanabilir: yönet sheet açar
+    // (Üyeler / Gruptan çık / Grubu kapat).
     if (isOwner) {
-      return const _OwnerStatusCard();
+      return _OwnerStatusCard(
+        onTap: () => _openOwnerManageSheet(context, ref, group),
+      );
     }
     // Private + non-member: katılma isteği akışı; mevcut request lookup.
     if (group.isPrivate && !isJoined && !isOwner) {
@@ -503,42 +526,28 @@ class PrimaryActionButton extends ConsumerWidget {
       child: FilledButton.icon(
         onPressed: enabled
             ? () async {
+                // Sprint 2 — Non-owner "Ayrıl" artık confirm dialog ile
+                // leave_group_safely RPC'ye çevrilir. Owner branch en üstte
+                // _OwnerStatusCard'a düşer, buraya gelmez.
+                if (isJoined) {
+                  await _confirmAndLeaveGroup(
+                    context,
+                    ref,
+                    group,
+                    isOwner: false,
+                  );
+                  return;
+                }
                 // V1.3.3 — guarded repo guest exception atar; helper yakalar.
                 await runGuardedMutation(
                   context,
                   ref,
                   action: () async {
-                    if (isJoined) {
-                      // V1.4 P1.20 — leaveGroup network/Postgrest hatalarını
-                      // yakalayıp Türkçe snackbar göster. GuestActionRequired
-                      // ise rethrow et ki runGuardedMutation yakalayıp
-                      // AuthRequired sheet'i açabilsin.
-                      try {
-                        await repo.leaveGroup(group.id);
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                AppStrings.groupDetailLeaveSnackSuccess),
-                          ),
-                        );
-                      } on GuestActionRequiredException {
-                        rethrow;
-                      } catch (_) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(AppStrings.groupLeaveError),
-                          ),
-                        );
-                      }
-                    } else {
-                      final r = await repo.joinGroup(group.id);
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(r.message)),
-                      );
-                    }
+                    final r = await repo.joinGroup(group.id);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(r.message)),
+                    );
                   },
                 );
               }
@@ -574,11 +583,15 @@ class PrimaryActionButton extends ConsumerWidget {
 /// gösterilen pasif durum kartı. Kurucuya "Katıl"/"Ayrıl" hiç gösterilmesin
 /// diye var. Yönetim menüsü Sprint 3'te eklenecek (şu an passive).
 class _OwnerStatusCard extends StatelessWidget {
-  const _OwnerStatusCard();
+  const _OwnerStatusCard({this.onTap});
+
+  /// Sprint 2 — tıklanırsa yönet sheet açılır. Test/legacy kullanımda
+  /// `onTap` null kalabilir (sadece status göstergesi).
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.l,
@@ -593,14 +606,14 @@ class _OwnerStatusCard extends StatelessWidget {
         ),
       ),
       child: Row(
-        children: const [
-          Icon(
+        children: [
+          const Icon(
             Icons.shield_moon_rounded,
             color: AppColors.copper,
             size: 20,
           ),
-          SizedBox(width: AppSpacing.s),
-          Expanded(
+          const SizedBox(width: AppSpacing.s),
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -626,8 +639,20 @@ class _OwnerStatusCard extends StatelessWidget {
               ],
             ),
           ),
+          if (onTap != null)
+            const Icon(
+              Icons.tune_rounded,
+              color: AppColors.copper,
+              size: 18,
+            ),
         ],
       ),
+    );
+    if (onTap == null) return card;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: card,
     );
   }
 }
@@ -1307,4 +1332,509 @@ class _MiniLoading extends StatelessWidget {
           ),
         ),
       );
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// Sprint 2 — Members entry, manage sheet, members sheet + leave/close flow
+// ═════════════════════════════════════════════════════════════════════════
+
+/// "Üyeler · 4" girişi. Tap → üyeler bottom sheet.
+class _MembersEntryRow extends ConsumerWidget {
+  const _MembersEntryRow({required this.group, required this.isOwner});
+
+  final SocialGroup group;
+  final bool isOwner;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PremiumCard(
+      padding: EdgeInsets.zero,
+      onTap: () => _openMembersSheet(context, ref, group, isOwner: isOwner),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.l,
+          vertical: AppSpacing.m,
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.group_rounded,
+              color: AppColors.softGold,
+              size: 18,
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Text(
+                '${AppStrings.groupMembers} · ${group.currentMemberCount}',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMuted,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Owner status card'a tap → yönet sheet açar.
+void _openOwnerManageSheet(
+  BuildContext context,
+  WidgetRef ref,
+  SocialGroup group,
+) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
+    ),
+    builder: (sheetCtx) => SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: AppSpacing.m),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.borderHairline,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _ManageSheetTile(
+            icon: Icons.group_rounded,
+            label: AppStrings.groupMembers,
+            onTap: () {
+              Navigator.of(sheetCtx).pop();
+              _openMembersSheet(context, ref, group, isOwner: true);
+            },
+          ),
+          _ManageSheetTile(
+            icon: Icons.logout_rounded,
+            label: AppStrings.groupLeave,
+            onTap: () {
+              Navigator.of(sheetCtx).pop();
+              _confirmAndLeaveGroup(context, ref, group, isOwner: true);
+            },
+          ),
+          _ManageSheetTile(
+            icon: Icons.delete_outline_rounded,
+            label: AppStrings.groupDelete,
+            danger: true,
+            onTap: () {
+              Navigator.of(sheetCtx).pop();
+              _confirmAndCloseGroup(context, ref, group);
+            },
+          ),
+          const SizedBox(height: AppSpacing.m),
+        ],
+      ),
+    ),
+  );
+}
+
+class _ManageSheetTile extends StatelessWidget {
+  const _ManageSheetTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.danger = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = danger ? AppColors.danger : AppColors.textPrimary;
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 14.5,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+/// Üyeler bottom sheet.
+void _openMembersSheet(
+  BuildContext context,
+  WidgetRef ref,
+  SocialGroup group, {
+  required bool isOwner,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
+    ),
+    builder: (sheetCtx) => SafeArea(
+      top: false,
+      child: FractionallySizedBox(
+        heightFactor: 0.75,
+        child: _MembersSheetBody(group: group, isOwnerViewing: isOwner),
+      ),
+    ),
+  );
+}
+
+class _MembersSheetBody extends ConsumerWidget {
+  const _MembersSheetBody({required this.group, required this.isOwnerViewing});
+
+  final SocialGroup group;
+  final bool isOwnerViewing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(groupMembersProvider(group.id));
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: AppSpacing.m),
+        Container(
+          width: 36,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AppColors.borderHairline,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.l),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.group_rounded,
+                color: AppColors.softGold,
+                size: 18,
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: Text(
+                  '${AppStrings.groupMembers} · ${group.currentMemberCount}',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: async.when(
+            loading: () => const _MiniLoading(),
+            error: (_, __) => const Padding(
+              padding: EdgeInsets.all(AppSpacing.l),
+              child: Center(
+                child: Text(
+                  AppStrings.groupMembersEmpty,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+            data: (members) {
+              if (members.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.l),
+                  child: Center(
+                    child: Text(
+                      AppStrings.groupMembersEmpty,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                ),
+                itemCount: members.length,
+                separatorBuilder: (_, __) => const Divider(
+                  height: 0,
+                  color: AppColors.borderHairline,
+                ),
+                itemBuilder: (_, i) {
+                  final m = members[i];
+                  return _MemberRow(
+                    member: m,
+                    canRemove: isOwnerViewing && !m.isOwner,
+                    onRemove: () =>
+                        _confirmAndRemoveMember(context, ref, group, m),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MemberRow extends StatelessWidget {
+  const _MemberRow({
+    required this.member,
+    required this.canRemove,
+    required this.onRemove,
+  });
+
+  final GroupMemberProfile member;
+  final bool canRemove;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitleParts = <String>[
+      if (member.professionBadge?.isNotEmpty ?? false) member.professionBadge!,
+      if (member.city?.isNotEmpty ?? false) member.city!,
+    ];
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.softGold.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(AppRadius.s),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          member.displayName.isNotEmpty
+              ? member.displayName[0].toUpperCase()
+              : '?',
+          style: const TextStyle(
+            color: AppColors.softGold,
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+          ),
+        ),
+      ),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              member.displayName,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (member.isOwner) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.copper.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(
+                  color: AppColors.copper.withValues(alpha: 0.32),
+                  width: 0.6,
+                ),
+              ),
+              child: const Text(
+                AppStrings.groupFounder,
+                style: TextStyle(
+                  color: AppColors.copper,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      subtitle: subtitleParts.isEmpty
+          ? null
+          : Text(
+              subtitleParts.join(' · '),
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
+            ),
+      trailing: canRemove
+          ? IconButton(
+              icon: const Icon(
+                Icons.person_remove_outlined,
+                color: AppColors.danger,
+                size: 20,
+              ),
+              tooltip: AppStrings.groupRemoveMember,
+              onPressed: onRemove,
+            )
+          : null,
+    );
+  }
+}
+
+// ── Confirm helpers ──────────────────────────────────────────────────────
+
+Future<bool> _showConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String body,
+  required String confirmLabel,
+  bool danger = false,
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (dctx) => AlertDialog(
+      title: Text(title),
+      content: Text(body),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dctx).pop(false),
+          child: const Text('İptal'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dctx).pop(true),
+          style: danger
+              ? FilledButton.styleFrom(backgroundColor: AppColors.danger)
+              : null,
+          child: Text(confirmLabel),
+        ),
+      ],
+    ),
+  );
+  return ok == true;
+}
+
+Future<void> _confirmAndLeaveGroup(
+  BuildContext context,
+  WidgetRef ref,
+  SocialGroup group, {
+  required bool isOwner,
+}) async {
+  final body = isOwner
+      ? (group.currentMemberCount <= 1
+          ? AppStrings.groupLeaveConfirmBodyClose
+          : AppStrings.groupLeaveConfirmBodyTransfer)
+      : AppStrings.groupLeaveConfirmBodyMember;
+
+  final ok = await _showConfirmDialog(
+    context,
+    title: AppStrings.groupLeaveConfirmTitle,
+    body: body,
+    confirmLabel: AppStrings.groupLeave,
+  );
+  if (!ok || !context.mounted) return;
+
+  final repo = ref.read(socialGroupRepositoryProvider);
+  try {
+    final outcome = await repo.leaveGroupSafely(group.id);
+    if (!context.mounted) return;
+    final msg = switch (outcome) {
+      GroupLeaveOutcome.transferred => AppStrings.groupLeftTransferred,
+      GroupLeaveOutcome.closed => AppStrings.groupLeftClosed,
+      GroupLeaveOutcome.left => AppStrings.groupLeft,
+    };
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    context.go(AppRoutes.groups);
+  } on GuestActionRequiredException {
+    if (context.mounted) await showAuthRequiredSheet(context, ref);
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.groupLeaveError)),
+    );
+  }
+}
+
+Future<void> _confirmAndCloseGroup(
+  BuildContext context,
+  WidgetRef ref,
+  SocialGroup group,
+) async {
+  final ok = await _showConfirmDialog(
+    context,
+    title: AppStrings.groupDeleteConfirmTitle,
+    body: AppStrings.groupDeleteConfirmBody,
+    confirmLabel: AppStrings.groupDeleteCta,
+    danger: true,
+  );
+  if (!ok || !context.mounted) return;
+
+  final repo = ref.read(socialGroupRepositoryProvider);
+  try {
+    await repo.closeGroup(group.id);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.groupDeleteSuccess)),
+    );
+    context.go(AppRoutes.groups);
+  } on GuestActionRequiredException {
+    if (context.mounted) await showAuthRequiredSheet(context, ref);
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.groupDeleteError)),
+    );
+  }
+}
+
+Future<void> _confirmAndRemoveMember(
+  BuildContext context,
+  WidgetRef ref,
+  SocialGroup group,
+  GroupMemberProfile member,
+) async {
+  final ok = await _showConfirmDialog(
+    context,
+    title: AppStrings.groupMemberRemoveConfirmTitle,
+    body: AppStrings.groupMemberRemoveConfirmBody,
+    confirmLabel: AppStrings.groupMemberRemoveCta,
+    danger: true,
+  );
+  if (!ok || !context.mounted) return;
+
+  final repo = ref.read(socialGroupRepositoryProvider);
+  try {
+    await repo.removeMember(group.id, member.userId);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.groupMemberRemoveSuccess)),
+    );
+    ref.invalidate(groupMembersProvider(group.id));
+  } on GuestActionRequiredException {
+    if (context.mounted) await showAuthRequiredSheet(context, ref);
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.groupMemberRemoveError)),
+    );
+  }
 }

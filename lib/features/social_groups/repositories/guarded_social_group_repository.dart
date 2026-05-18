@@ -1,6 +1,7 @@
 import '../../auth/services/auth_required_guard.dart';
 import '../models/group_category.dart';
 import '../models/group_join_request.dart';
+import '../models/group_member.dart';
 import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../services/group_join_result.dart';
@@ -125,5 +126,30 @@ class GuardedSocialGroupRepository implements SocialGroupRepository {
   Future<GroupJoinRequest> rejectJoinRequest(String requestId) {
     _requireWrite('katılım isteğini reddetmek');
     return inner.rejectJoinRequest(requestId);
+  }
+
+  // ─────────────────────────────────────── Sprint 2 — Members management
+
+  /// Read-only — RLS server tarafında gating yapar.
+  @override
+  Future<List<GroupMemberProfile>> listMembers(String groupId) =>
+      inner.listMembers(groupId);
+
+  @override
+  Future<void> removeMember(String groupId, String memberId) {
+    _requireWrite('üye çıkarmak');
+    return inner.removeMember(groupId, memberId);
+  }
+
+  @override
+  Future<GroupLeaveOutcome> leaveGroupSafely(String groupId) {
+    _requireWrite('gruptan çıkmak');
+    return inner.leaveGroupSafely(groupId);
+  }
+
+  @override
+  Future<void> closeGroup(String groupId) {
+    _requireWrite('grubu kapatmak');
+    return inner.closeGroup(groupId);
   }
 }
