@@ -94,11 +94,18 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
   }
 
   /// Mevcut kullanıcının üye olduğu grup id'lerini çekip cache'ler.
+  ///
+  /// Sprint 1 / GB-2 — Cache içeriği gerçekten değişirse `_notify()` çağrılır
+  /// ki `isJoinedProvider` (sync, `groupChangesProvider` watch'lar) stale
+  /// kalmasın. Diff-check zorunlu: aksi halde `listJoined` her çağrıda
+  /// refresh → notify → tick → listJoined sonsuz döngüsüne girer.
   Future<void> _refreshJoinedCache() async {
     final userId = _currentUserId;
+    final previous = Set<String>.from(_joinedCache);
     _joinedCache.clear();
     if (userId == null) {
       _joinedLoaded = true;
+      if (previous.isNotEmpty) _notify();
       return;
     }
     final rows = await _client
@@ -109,6 +116,9 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
       _joinedCache.add((r as Map<String, dynamic>)['group_id'] as String);
     }
     _joinedLoaded = true;
+    final changed = previous.length != _joinedCache.length ||
+        !previous.containsAll(_joinedCache);
+    if (changed) _notify();
   }
 
   Future<void> _ensureJoinedCache() async {

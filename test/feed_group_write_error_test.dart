@@ -335,7 +335,11 @@ void main() {
       await tester.pumpWidget(
         _wrapGroup(
           repo,
-          GroupComposer(group: _sampleGroup(), isJoined: true),
+          GroupComposer(
+            group: _sampleGroup(),
+            isJoined: true,
+            isOwner: false,
+          ),
         ),
       );
 

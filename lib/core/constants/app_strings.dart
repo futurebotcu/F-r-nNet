@@ -278,6 +278,12 @@ class AppStrings {
   static const String groupJoinRequestApproveCta = 'Kabul Et';
   static const String groupJoinRequestRejectCta = 'Reddet';
 
+  /// Groups V1 Sprint 1 / GB-1 — Owner primary status (kurucu için).
+  /// "Katıl"/"Ayrıl" yerine kurucuya bu metin gösterilir. Yönetim menüsü
+  /// Sprint 3'te eklenecek; o yüzden subtitle "yakında" diyor.
+  static const String groupOwnerStatusTitle = 'Bu grubun kurucususun';
+  static const String groupOwnerStatusSubtitle = 'Yönetim seçenekleri yakında';
+
   /// G.N4 — Owner grup kartında pending request count badge metni.
   /// Tekil: "1 bekleyen istek". Çoğul: "{N} bekleyen istek".
   static String groupPendingRequestCount(int count) =>

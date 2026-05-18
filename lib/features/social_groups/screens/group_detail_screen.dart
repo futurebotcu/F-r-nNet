@@ -147,7 +147,11 @@ class GroupDetailScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.pageH,
                     ),
-                    child: GroupComposer(group: g, isJoined: joined),
+                    child: GroupComposer(
+                      group: g,
+                      isJoined: joined,
+                      isOwner: isOwner,
+                    ),
                   ),
                 ],
               ],
@@ -443,6 +447,13 @@ class PrimaryActionButton extends ConsumerWidget {
     final repo = ref.read(socialGroupRepositoryProvider);
     final user = ref.watch(currentAuthUserProvider);
     final isOwner = user != null && group.ownerId == user.id;
+    // Sprint 1 / GB-1 — Owner için "Katıl"/"Ayrıl"/"Katılma isteği gönder"
+    // hiçbir koşulda gösterilmez. Owner kendi grubuna zaten bağlı; ayrıca
+    // owner gruptan ayrılamaz (leaveGroup silent no-op, GB-8). Cache race
+    // (GB-2) ile isJoined=false dönse bile owner branch en başta yakalanır.
+    if (isOwner) {
+      return const _OwnerStatusCard();
+    }
     // Private + non-member: katılma isteği akışı; mevcut request lookup.
     if (group.isPrivate && !isJoined && !isOwner) {
       final requestAsync = ref.watch(myJoinRequestProvider(group.id));
@@ -554,6 +565,68 @@ class PrimaryActionButton extends ConsumerWidget {
             letterSpacing: 0.1,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Sprint 1 / GB-1 — Owner kullanıcısı için PrimaryActionButton yerine
+/// gösterilen pasif durum kartı. Kurucuya "Katıl"/"Ayrıl" hiç gösterilmesin
+/// diye var. Yönetim menüsü Sprint 3'te eklenecek (şu an passive).
+class _OwnerStatusCard extends StatelessWidget {
+  const _OwnerStatusCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.l,
+        vertical: AppSpacing.m,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.copper.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(
+          color: AppColors.copper.withValues(alpha: 0.32),
+          width: 0.6,
+        ),
+      ),
+      child: Row(
+        children: const [
+          Icon(
+            Icons.shield_moon_rounded,
+            color: AppColors.copper,
+            size: 20,
+          ),
+          SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  AppStrings.groupOwnerStatusTitle,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14.5,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  AppStrings.groupOwnerStatusSubtitle,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1091,9 +1164,15 @@ class GroupComposer extends ConsumerStatefulWidget {
     super.key,
     required this.group,
     required this.isJoined,
+    required this.isOwner,
   });
   final SocialGroup group;
   final bool isJoined;
+
+  /// Sprint 1 / GB-3 — Owner kendi grubuna her zaman mesaj yazabilmeli.
+  /// isJoined cache race'i (GB-2) owner için sıfıra indirilse bile, composer
+  /// burada da owner'ı bağımsız olarak yetkilendirir.
+  final bool isOwner;
 
   @override
   ConsumerState<GroupComposer> createState() => _ComposerState();
@@ -1101,6 +1180,11 @@ class GroupComposer extends ConsumerStatefulWidget {
 
 class _ComposerState extends ConsumerState<GroupComposer> {
   final _ctrl = TextEditingController();
+
+  /// Sprint 1 / GB-3 — Yazma yetkisi: owner VEYA üye.
+  /// isJoined tek başına yeterli değil; owner cache race senaryosunda
+  /// false dönse bile composer açık kalır.
+  bool get _effectiveCanWrite => widget.isOwner || widget.isJoined;
 
   @override
   void dispose() {
@@ -1110,7 +1194,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
 
   Future<void> _send() async {
     final t = _ctrl.text.trim();
-    if (t.isEmpty || !widget.isJoined) return;
+    if (t.isEmpty || !_effectiveCanWrite) return;
     // V1.3.2 — Grup mesajı kullanıcı sahipliği gerektirir.
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
@@ -1148,7 +1232,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isJoined) {
+    if (!_effectiveCanWrite) {
       return PremiumCard(
         padding: const EdgeInsets.all(AppSpacing.m),
         child: const Row(
