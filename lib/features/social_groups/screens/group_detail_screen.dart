@@ -219,7 +219,8 @@ class _GroupHero extends StatelessWidget {
               ),
               if (group.isPrivate)
                 _MiniBadge(
-                  label: AppStrings.groupBadgePrivate,
+                  // G.N5 — Tek terim: "Katılım onaylı".
+                  label: AppStrings.groupApprovalRequiredBadge,
                   color: AppColors.softGold,
                 ),
             ],

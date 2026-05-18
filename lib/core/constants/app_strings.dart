@@ -887,7 +887,8 @@ class AppStrings {
   static const String groupActionOpen = 'Aç';
   static const String groupActionFull = 'Dolu';
   static const String groupActionLeave = 'Ayrıl';
-  static const String groupBadgePrivate = 'Özel';
+  // V1 P1-D / G.N5 — "Özel" badge kaldırıldı. Tek terim: "Katılım onaylı"
+  // (bkz. groupApprovalRequiredBadge). Gizli değil, sadece içerik gated.
   static const String groupBadgePublic = 'Açık';
   static const String groupBadgeMember = 'Üye';
   static const String groupBadgeUnlimited = 'Sınırsız';
@@ -928,7 +929,8 @@ class AppStrings {
   static const String groupCreateFieldCityHint = 'Bölgesel grup ise yaz';
   static const String groupCreateFieldPrivacy = 'Görünürlük';
   static const String groupCreatePrivacyPublic = 'Açık — herkes katılabilir';
-  static const String groupCreatePrivacyPrivate = 'Özel — onayla katılım';
+  static const String groupCreatePrivacyPrivate =
+      'Katılım onaylı — istek ile katılım';
   static const String groupCreateFieldLimit = 'Katılımcı limiti';
   static const String groupCreateLimitUnlimited = 'Sınırsız';
   static const String groupCreateFieldTags = 'Etiketler (virgülle ayır)';

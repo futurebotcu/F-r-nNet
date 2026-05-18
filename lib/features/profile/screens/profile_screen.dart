@@ -16,7 +16,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../bakery_panel/models/recipe_record.dart';
 import '../../bakery_panel/providers/bakery_providers.dart';
 import '../../bakery_panel/screens/recipe_visibility_badge.dart';
-import '../../notifications/providers/notification_providers.dart';
+import '../../notifications/widgets/notifications_header_action.dart';
 import '../models/bakery_profile.dart';
 import '../providers/profile_provider.dart';
 
@@ -46,8 +46,8 @@ class ProfileScreen extends ConsumerWidget {
                     title: 'Profil',
                     showLogo: false,
                     actions: [
-                      // V1 P1-D — Bildirimler + unread badge.
-                      _NotificationsHeaderAction(),
+                      // V1 P1-D — Bildirimler + unread badge (shared).
+                      const NotificationsHeaderAction(),
                       const SizedBox(width: 8),
                       HeaderActionButton(
                         icon: Icons.settings_outlined,
@@ -98,52 +98,6 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
       ),
-    );
-  }
-}
-
-/// V1 P1-D — Header'da bell icon + unread badge. Tap → /notifications.
-class _NotificationsHeaderAction extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(unreadNotificationsCountProvider).maybeWhen(
-          data: (n) => n,
-          orElse: () => 0,
-        );
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        HeaderActionButton(
-          icon: Icons.notifications_none_rounded,
-          tooltip: AppStrings.notificationsTitle,
-          onTap: () => context.push(AppRoutes.notifications),
-        ),
-        if (unread > 0)
-          Positioned(
-            right: -2,
-            top: -2,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              decoration: BoxDecoration(
-                color: AppColors.copper,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.surface, width: 1),
-              ),
-              child: Text(
-                unread > 99 ? '99+' : '$unread',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  height: 1.0,
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

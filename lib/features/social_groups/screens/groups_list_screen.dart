@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../notifications/widgets/notifications_header_action.dart';
 import '../models/group_category.dart';
 import '../models/social_group.dart';
 import '../providers/social_group_providers.dart';
@@ -54,6 +55,10 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                   subtitle: 'Sektör konuşmaları, bölgesel ağlar',
                   showLogo: false,
                   actions: [
+                    // G.N1 — Gruplar header'da bildirim bell + badge. Owner
+                    // grup detayına girmeden pending istekleri fark etsin.
+                    const NotificationsHeaderAction(),
+                    const SizedBox(width: 8),
                     HeaderActionButton(
                       icon: Icons.add_rounded,
                       tooltip: AppStrings.groupsCreateTooltip,

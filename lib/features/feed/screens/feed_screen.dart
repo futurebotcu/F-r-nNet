@@ -12,6 +12,7 @@ import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../notifications/widgets/notifications_header_action.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../social_groups/models/social_group.dart';
 import '../../social_groups/providers/social_group_providers.dart';
@@ -73,6 +74,10 @@ class _FeedHeader extends StatelessWidget {
           tooltip: AppStrings.groupsTitle,
           onTap: () => context.go(AppRoutes.groups),
         ),
+        const SizedBox(width: 8),
+        // G.N1 — Feed header'da bildirim bell + badge. Profile'a girmeden
+        // istek/onay bildirimini görmek için.
+        const NotificationsHeaderAction(),
         const SizedBox(width: 8),
         _ProfileAvatarAction(
           onTap: () => context.push(AppRoutes.profile),
