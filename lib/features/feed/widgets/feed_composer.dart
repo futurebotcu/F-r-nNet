@@ -124,26 +124,42 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
     });
     final repo = ref.read(feedRepositoryProvider);
     try {
-      final post = await repo.addPost(
-        type: _type,
-        author: AppStrings.feedComposerYouAuthor,
-        role: AppStrings.feedComposerYouRole,
-        text: text,
-      );
-      // V1 Social S3 — Foto eklendiyse upload at; başarısız olursa post
-      // korunur, kullanıcıya uyarı verilir (kısmi başarı).
-      var uploadFailed = false;
+      final post = await repo
+          .addPost(
+            type: _type,
+            author: AppStrings.feedComposerYouAuthor,
+            role: AppStrings.feedComposerYouRole,
+            text: text,
+          )
+          .timeout(const Duration(seconds: 30));
+      // V1 Feed P0 — Foto eklendiyse upload at; başarısız olursa post da
+      // rollback edilir ki kullanıcı "gönderi gitti ama resim yok" durumuna
+      // düşmesin. Sessiz text-only fallback kaldırıldı.
       final bytes = _pickedBytes;
       final ext = _pickedExt;
       if (bytes != null && ext != null) {
         try {
-          await repo.uploadFeedImage(
-            postId: post.id,
-            bytes: bytes,
-            fileExtension: ext,
-          );
+          await repo
+              .uploadFeedImage(
+                postId: post.id,
+                bytes: bytes,
+                fileExtension: ext,
+              )
+              .timeout(const Duration(seconds: 60));
         } catch (_) {
-          uploadFailed = true;
+          // Image upload başarısız → text post'u soft-delete et.
+          try {
+            await repo.deletePost(post.id);
+          } catch (_) {
+            // Best-effort; rollback fail olursa kullanıcı tek post görür
+            // (resim yok). Net mesaj yine üstte gösterilir.
+          }
+          if (!mounted) return;
+          setState(() {
+            _saving = false;
+            _composerError = AppStrings.feedComposerUploadError;
+          });
+          return;
         }
       }
       if (!mounted) return;
@@ -156,11 +172,7 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
       });
       _focus.unfocus();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(uploadFailed
-              ? AppStrings.feedComposerUploadError
-              : AppStrings.feedComposerSavedSnack),
-        ),
+        const SnackBar(content: Text(AppStrings.feedComposerSavedSnack)),
       );
     } catch (_) {
       if (!mounted) return;

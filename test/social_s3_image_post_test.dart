@@ -118,9 +118,10 @@ void main() {
         AppStrings.feedComposerPickError,
         'Resim seçilemedi. Lütfen tekrar dene.',
       );
+      // V1 Feed P0 — image upload P0 fix: silent text-only fallback kaldırıldı.
       expect(
         AppStrings.feedComposerUploadError,
-        'Resim yüklenemedi. Gönderi metin olarak kaydedildi.',
+        'Resim yüklenemedi. Gönderi paylaşılmadı.',
       );
       expect(AppStrings.feedImageLoadError, 'Resim yüklenemedi.');
     });

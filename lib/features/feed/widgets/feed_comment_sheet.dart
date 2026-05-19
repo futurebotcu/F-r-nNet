@@ -72,12 +72,17 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
     final repo = ref.read(feedRepositoryProvider);
     final profile = ref.read(profileControllerProvider);
     try {
-      await repo.addComment(
-        postId: widget.postId,
-        text: text,
-        currentAuthorName: profile?.displayName,
-        currentAuthorRole: profile?.roleBadge,
-      );
+      // V1 P0 — `_sending=true` stuck kalmasın diye timeout. Network hang
+      // veya yavaş cevap durumunda 30s sonra TimeoutException atar; catch
+      // yakalar; finally _sending=false yapar.
+      await repo
+          .addComment(
+            postId: widget.postId,
+            text: text,
+            currentAuthorName: profile?.displayName,
+            currentAuthorRole: profile?.roleBadge,
+          )
+          .timeout(const Duration(seconds: 30));
       if (!mounted) return;
       _ctrl.clear();
       ref.invalidate(feedCommentsProvider(widget.postId));

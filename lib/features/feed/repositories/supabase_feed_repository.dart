@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -245,7 +246,12 @@ class SupabaseFeedRepository implements FeedRepository {
       throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
     }
     final ext = fileExtension.toLowerCase().replaceAll('.', '');
-    final mediaId = _newMediaId();
+    // V1 P0 — RFC-4122 v4 UUID. Önceki implementasyon hex-timestamp tabanlı
+    // bir string üretiyordu (örn. `0006522be759e1e9-0`); Postgres `uuid`
+    // tipine cast'lenince `22P02 invalid_text_representation` atıyor ve
+    // feed_media INSERT sessizce fail oluyordu. Storage'a dosya yüklenmiş
+    // ama DB satırı yok → orphan + UI'da resim yok.
+    final mediaId = _generateUuidV4();
     final path = '$userId/$postId/$mediaId.$ext';
     final mime = _mimeForImageExt(ext);
 
@@ -260,27 +266,38 @@ class SupabaseFeedRepository implements FeedRepository {
         );
 
     // 2) feed_media INSERT — RLS owner_id = auth.uid() + post owner cross-check.
-    final row = await _client
-        .from('feed_media')
-        .insert(<String, dynamic>{
-          'id': mediaId,
-          'post_id': postId,
-          'owner_id': userId,
-          'media_type': 'image',
-          'storage_path': path,
-          if (width != null) 'width': width,
-          if (height != null) 'height': height,
-          'size_bytes': bytes.length,
-        })
-        .select(
-          'id, post_id, owner_id, media_type, storage_path, '
-          'width, height, size_bytes, created_at',
-        )
-        .single();
-
-    final publicUrl = _client.storage.from('feed-media').getPublicUrl(path);
-    _notify();
-    return FeedMedia.fromRow(row, publicUrl: publicUrl);
+    // INSERT fail olursa storage objesini geri al (orphan engelle).
+    try {
+      final row = await _client
+          .from('feed_media')
+          .insert(<String, dynamic>{
+            'id': mediaId,
+            'post_id': postId,
+            'owner_id': userId,
+            'media_type': 'image',
+            'storage_path': path,
+            if (width != null) 'width': width,
+            if (height != null) 'height': height,
+            'size_bytes': bytes.length,
+          })
+          .select(
+            'id, post_id, owner_id, media_type, storage_path, '
+            'width, height, size_bytes, created_at',
+          )
+          .single();
+      final publicUrl =
+          _client.storage.from('feed-media').getPublicUrl(path);
+      _notify();
+      return FeedMedia.fromRow(row, publicUrl: publicUrl);
+    } catch (e) {
+      // INSERT fail → storage cleanup (best-effort). Hata caller'a iletilir.
+      try {
+        await _client.storage.from('feed-media').remove(<String>[path]);
+      } catch (_) {
+        // Storage remove'u yakalamaya gerek yok — INSERT zaten ana hata.
+      }
+      rethrow;
+    }
   }
 
   static String _mimeForImageExt(String ext) {
@@ -299,16 +316,20 @@ class SupabaseFeedRepository implements FeedRepository {
     }
   }
 
-  /// gen_random_uuid() server-side default'a sahip; biz path için önceden
-  /// üretmek istediğimiz için client-side bir uuid v4 üretiriz.
-  static String _newMediaId() {
-    // Basit RFC-4122 v4 — supabase_flutter pubspec'inde `uuid` paketi yok,
-    // dart:math + DateTime ile yeterli benzersizlik (path collision riski
-    // ihmal edilebilir; ek olarak storage upsert=false coraşma yakalar).
-    final now = DateTime.now().microsecondsSinceEpoch.toRadixString(16);
-    final rnd = (now.hashCode ^ identityHashCode(now)).toUnsigned(32)
-        .toRadixString(16);
-    return '${now.padLeft(16, '0')}-$rnd';
+  /// RFC 4122 v4 UUID — `Random.secure()` + version/variant bit-set.
+  /// Postgres `uuid` tipinin beklediği `8-4-4-4-12` hex formatı.
+  static String _generateUuidV4() {
+    final rnd = Random.secure();
+    final bytes = List<int>.generate(16, (_) => rnd.nextInt(256));
+    // Version 4: bytes[6] üst 4 bit = 0100.
+    bytes[6] = (bytes[6] & 0x0F) | 0x40;
+    // Variant RFC 4122: bytes[8] üst 2 bit = 10.
+    bytes[8] = (bytes[8] & 0x3F) | 0x80;
+    String h(int start, int end) => bytes
+        .sublist(start, end)
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
+    return '${h(0, 4)}-${h(4, 6)}-${h(6, 8)}-${h(8, 10)}-${h(10, 16)}';
   }
 
   @override

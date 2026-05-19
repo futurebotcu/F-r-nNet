@@ -285,8 +285,10 @@ class AppStrings {
   static const String feedComposerRemovePhoto = 'Resmi kaldır';
   static const String feedComposerPickError =
       'Resim seçilemedi. Lütfen tekrar dene.';
+  // V1 Feed P0 — image upload P0 fix: silent text-only fallback kaldırıldı.
+  // Resim upload başarısız olursa post da rollback edilir; net hata.
   static const String feedComposerUploadError =
-      'Resim yüklenemedi. Gönderi metin olarak kaydedildi.';
+      'Resim yüklenemedi. Gönderi paylaşılmadı.';
   static const String feedImageLoadError = 'Resim yüklenemedi.';
   static const String feedImageViewerTitle = 'Resim';
   // V1 P1-C — Eski fake share snackbar. Native share aktif edildiğinden
