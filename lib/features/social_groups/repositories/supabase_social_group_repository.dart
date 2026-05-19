@@ -400,7 +400,12 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
   @override
   Future<List<GroupJoinRequest>> listPendingJoinRequests(String groupId) async {
     // Önce request satırları (RLS: yalnız group owner görür); ardından
-    // tek bir profile lookup ile display_name/badge/city snapshot eşle.
+    // public_profile_snapshot RPC ile display_name/badge/city eşle.
+    //
+    // V1 Closure — Doğrudan `.from('profiles').inFilter(...)` kullanamayız:
+    // profiles RLS owner-only (id = auth.uid()), bu nedenle owner için bile
+    // requester profilleri filtrelenip empty döner. RPC SECURITY DEFINER,
+    // yalnız üç güvenli kolon döner.
     final rows = await _client
         .from('group_join_requests')
         .select(_requestColumns)
@@ -415,14 +420,7 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
         .toSet()
         .toList(growable: false);
 
-    final profiles = await _client
-        .from('profiles')
-        .select('id, display_name, profession_badge, city')
-        .inFilter('id', ids);
-    final byId = <String, Map<String, dynamic>>{
-      for (final p in (profiles as List).cast<Map<String, dynamic>>())
-        p['id'] as String: p,
-    };
+    final byId = await _fetchPublicProfileSnapshots(ids);
 
     return list
         .map((r) => GroupJoinRequest.fromRow(
@@ -488,8 +486,13 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
 
   @override
   Future<List<GroupMemberProfile>> listMembers(String groupId) async {
-    // group_members + profiles join. RLS server tarafında gating yapar:
-    // private grupta non-member empty döner.
+    // group_members satırları RLS gating'i altında çekilir; ardından
+    // public_profile_snapshot RPC ile display_name/badge/city eşle.
+    //
+    // V1 Closure — Doğrudan `.from('profiles').inFilter(...)` profiles
+    // owner-only RLS yüzünden caller harici hiçbir satır döndürmez (her
+    // üye "FırınNet Kullanıcısı" fallback'ine düşerdi). RPC SECURITY
+    // DEFINER, yalnız üç güvenli kolon döner.
     final memberRows = await _client
         .from('group_members')
         .select('owner_id, role, joined_at')
@@ -503,14 +506,7 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
         .toSet()
         .toList(growable: false);
 
-    final profileRows = await _client
-        .from('profiles')
-        .select('id, display_name, profession_badge, city')
-        .inFilter('id', userIds);
-    final byId = <String, Map<String, dynamic>>{
-      for (final p in (profileRows as List).cast<Map<String, dynamic>>())
-        p['id'] as String: p,
-    };
+    final byId = await _fetchPublicProfileSnapshots(userIds);
 
     return memberList.map((r) {
       final p = byId[r['owner_id'] as String];
@@ -523,6 +519,33 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
         joinedAt: DateTime.parse(r['joined_at'] as String),
       );
     }).toList(growable: false);
+  }
+
+  /// V1 Closure — Public profil alanlarını id listesi için RPC üzerinden
+  /// çeker. profiles RLS owner-only olduğundan caller harici satırları
+  /// REST select ile alamazdı; bu RPC SECURITY DEFINER ve yalnız üç güvenli
+  /// kolonu (id, display_name, profession_badge, city) döner.
+  ///
+  /// Boş id listesi → boş Map (RPC çağrılmaz).
+  /// RPC hata atarsa (örn. fonksiyon henüz canlı değilse) sessizce boş
+  /// Map döner; UI tarafı fallback "FırınNet Kullanıcısı" gösterir.
+  Future<Map<String, Map<String, dynamic>>> _fetchPublicProfileSnapshots(
+    List<String> ids,
+  ) async {
+    if (ids.isEmpty) return const <String, Map<String, dynamic>>{};
+    try {
+      final rows = await _client.rpc(
+        'public_profile_snapshot',
+        params: <String, dynamic>{'p_user_ids': ids},
+      );
+      if (rows is! List) return const <String, Map<String, dynamic>>{};
+      return <String, Map<String, dynamic>>{
+        for (final p in rows.cast<Map<String, dynamic>>())
+          p['id'] as String: p,
+      };
+    } catch (_) {
+      return const <String, Map<String, dynamic>>{};
+    }
   }
 
   @override
