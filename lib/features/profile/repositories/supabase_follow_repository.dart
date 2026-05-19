@@ -110,5 +110,29 @@ class SupabaseFollowRepository implements FollowRepository {
   }
 
   @override
+  Future<List<String>> listFollowerIds(String userId) async {
+    final rows = await _client
+        .from('profile_follows')
+        .select('follower_id')
+        .eq('following_id', userId)
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .map((r) => (r as Map<String, dynamic>)['follower_id'] as String)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<String>> listFollowingIds(String userId) async {
+    final rows = await _client
+        .from('profile_follows')
+        .select('following_id')
+        .eq('follower_id', userId)
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .map((r) => (r as Map<String, dynamic>)['following_id'] as String)
+        .toList(growable: false);
+  }
+
+  @override
   Stream<void> watch() => _changes.stream;
 }

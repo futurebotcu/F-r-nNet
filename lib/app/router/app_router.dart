@@ -48,7 +48,8 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
-import '../../features/profile/screens/public_profile_screen.dart';
+import '../../features/social/profile/profile_page.dart';
+import '../../features/social/profile/user_list_page.dart';
 import '../../features/settings/screens/about_screen.dart';
 import '../../features/settings/screens/data_info_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -235,12 +236,28 @@ GoRouter createRouter() {
         builder: (_, __) => const ProfileScreen(),
       ),
 
-      // V1 Social S1 — Public profile (`/u/:userId`).
-      // Başka kullanıcının profili. FeedPostCard yazar tap → push.
+      // V1 Social F2 — Donor-first SocialProfilePage (`/u/:userId`).
+      // Eski `PublicProfileScreen` deprecate edildi (F7 cleanup'ta silinir).
       GoRoute(
         path: '${AppRoutes.userPublicProfile}/:userId',
-        builder: (_, state) => PublicProfileScreen(
+        builder: (_, state) => SocialProfilePage(
           userId: state.pathParameters['userId']!,
+        ),
+      ),
+      // F2 — Followers list (`/u/:userId/followers`).
+      GoRoute(
+        path: '${AppRoutes.userPublicProfile}/:userId/followers',
+        builder: (_, state) => SocialUserListPage(
+          userId: state.pathParameters['userId']!,
+          kind: UserListKind.followers,
+        ),
+      ),
+      // F2 — Following list (`/u/:userId/following`).
+      GoRoute(
+        path: '${AppRoutes.userPublicProfile}/:userId/following',
+        builder: (_, state) => SocialUserListPage(
+          userId: state.pathParameters['userId']!,
+          kind: UserListKind.following,
         ),
       ),
 

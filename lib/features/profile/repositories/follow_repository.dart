@@ -24,6 +24,13 @@ abstract class FollowRepository {
   /// edenler; following = `userId`'nin takip ettikleri.
   Future<({int followers, int following})> getFollowCounts(String userId);
 
+  /// V1 Social F2 — `userId`'yi takip eden user id'leri (most recent first).
+  /// Followers list page için. RLS SELECT public; herkes okuyabilir.
+  Future<List<String>> listFollowerIds(String userId);
+
+  /// V1 Social F2 — `userId`'nin takip ettiği user id'leri.
+  Future<List<String>> listFollowingIds(String userId);
+
   /// Repository değişikliklerinde tetiklenir (UI invalidation için).
   Stream<void> watch();
 }

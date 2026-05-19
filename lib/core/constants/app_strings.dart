@@ -270,6 +270,15 @@ class AppStrings {
       'Bu kullanıcı henüz gönderi paylaşmadı.';
   static const String publicProfileSelfHint = 'Bu senin profilin';
 
+  // V1 Social F2 — Profile statistics tile labels.
+  static const String profileStatPosts = 'Gönderi';
+  static const String profileStatFollowers = 'Takipçi';
+  static const String profileStatFollowing = 'Takip';
+  static const String followersListTitle = 'Takipçiler';
+  static const String followingListTitle = 'Takip edilenler';
+  static const String followersEmpty = 'Henüz takipçi yok.';
+  static const String followingEmpty = 'Henüz takip edilen yok.';
+
   // V1 Social S2 — Follow / Subscriptions
   static const String followCtaFollow = 'Takip et';
   static const String followCtaUnfollow = 'Takipten çık';

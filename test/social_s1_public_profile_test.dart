@@ -147,7 +147,10 @@ void main() {
         isTrue,
         reason: 'GoRoute path PublicProfileScreen ile bağlanmalı',
       );
-      expect(src.contains('PublicProfileScreen('), isTrue);
+      // F2 Donor-First Rebuild — eski PublicProfileScreen yerini
+      // SocialProfilePage aldı (eski widget dosyada deprecate). Route
+      // hâlâ /u/:userId; sadece builder değişti.
+      expect(src.contains('SocialProfilePage('), isTrue);
     });
 
     test('PostCardWired onAuthorTap public profile route\'a push eder', () {

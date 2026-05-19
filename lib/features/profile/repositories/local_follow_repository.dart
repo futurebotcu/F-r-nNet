@@ -60,5 +60,19 @@ class LocalFollowRepository implements FollowRepository {
   }
 
   @override
+  Future<List<String>> listFollowerIds(String userId) async {
+    final out = <String>[];
+    for (final entry in _follows.entries) {
+      if (entry.value.contains(userId)) out.add(entry.key);
+    }
+    return out;
+  }
+
+  @override
+  Future<List<String>> listFollowingIds(String userId) async {
+    return List<String>.from(_follows[userId] ?? const <String>{});
+  }
+
+  @override
   Stream<void> watch() => _changes.stream;
 }

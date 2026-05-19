@@ -82,9 +82,9 @@ class _FeedHeader extends StatelessWidget {
         // istek/onay bildirimini görmek için.
         const NotificationsHeaderAction(),
         const SizedBox(width: 8),
-        _ProfileAvatarAction(
-          onTap: () => context.push(AppRoutes.profile),
-        ),
+        // V1 Social F2 — Kendi avatar tap → donor-style SocialProfilePage
+        // (own user id). Route logic widget içinde (Consumer scope).
+        const _ProfileAvatarAction(),
       ],
     );
   }
@@ -94,9 +94,7 @@ class _FeedHeader extends StatelessWidget {
 /// Profil ana tab'dan çıkarıldığı için (V Nav-Profile-To-Jobs) en sağda durur;
 /// tıklamayla `/profile` full-screen push olur.
 class _ProfileAvatarAction extends ConsumerWidget {
-  const _ProfileAvatarAction({required this.onTap});
-
-  final VoidCallback onTap;
+  const _ProfileAvatarAction();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -104,6 +102,14 @@ class _ProfileAvatarAction extends ConsumerWidget {
     final initial = (profile?.displayName.isNotEmpty ?? false)
         ? profile!.displayName[0].toUpperCase()
         : 'M';
+    void onTap() {
+      final user = ref.read(currentAuthUserProvider);
+      if (user != null) {
+        context.push('${AppRoutes.userPublicProfile}/${user.id}');
+      } else {
+        context.push(AppRoutes.profile);
+      }
+    }
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(

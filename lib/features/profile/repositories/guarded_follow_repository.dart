@@ -47,5 +47,13 @@ class GuardedFollowRepository implements FollowRepository {
       inner.getFollowCounts(userId);
 
   @override
+  Future<List<String>> listFollowerIds(String userId) =>
+      inner.listFollowerIds(userId);
+
+  @override
+  Future<List<String>> listFollowingIds(String userId) =>
+      inner.listFollowingIds(userId);
+
+  @override
   Stream<void> watch() => inner.watch();
 }
