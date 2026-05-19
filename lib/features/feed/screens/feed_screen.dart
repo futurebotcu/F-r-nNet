@@ -455,6 +455,13 @@ class PostCardWired extends ConsumerWidget {
       onDelete: _isOwner(ref, post)
           ? () => _confirmAndDeletePost(context, ref, post)
           : null,
+      // V1 Social S1 — Yazar tap → public profile. ownerId boşsa
+      // (eski local seed senaryosu) inert kalır.
+      onAuthorTap: post.ownerId.isEmpty
+          ? null
+          : () => context.push(
+                '${AppRoutes.userPublicProfile}/${post.ownerId}',
+              ),
     );
   }
 

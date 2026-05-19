@@ -28,6 +28,10 @@ class GuardedFeedRepository implements FeedRepository {
       inner.listPosts(type: type);
 
   @override
+  Future<List<FeedPost>> listPostsByOwner(String ownerId) =>
+      inner.listPostsByOwner(ownerId);
+
+  @override
   Future<List<FeedInsight>> listInsights() => inner.listInsights();
 
   @override

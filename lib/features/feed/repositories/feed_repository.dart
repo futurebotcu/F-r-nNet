@@ -12,6 +12,11 @@ abstract class FeedRepository {
   /// Tüm postlar (newest first). Opsiyonel tip filtresi.
   Future<List<FeedPost>> listPosts({PostType? type});
 
+  /// V1 Social S1 — Belirli bir kullanıcının post listesi (newest first).
+  /// Public profile sayfası için. `is_deleted=false` filtreli; RLS herkesi
+  /// public feed select için zaten yetkilendiriyor.
+  Future<List<FeedPost>> listPostsByOwner(String ownerId);
+
   /// Yeni post ekle (composer'dan). Postu döner.
   Future<FeedPost> addPost({
     required PostType type,

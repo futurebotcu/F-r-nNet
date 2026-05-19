@@ -28,6 +28,7 @@ class FeedPostCard extends StatelessWidget {
     this.onTagTap,
     this.onGoToGroup,
     this.onDelete,
+    this.onAuthorTap,
   });
 
   final String author;
@@ -56,6 +57,10 @@ class FeedPostCard extends StatelessWidget {
   /// gösterilmez. Wired tarafı (PostCardWired) currentAuthUser.id ile
   /// post.ownerId'yi kıyaslayıp bu callback'i ya verir ya null bırakır.
   final VoidCallback? onDelete;
+
+  /// V1 Social S1 — Yazar avatar/isim satırına tap. Public profile push
+  /// için. null ise tap inert.
+  final VoidCallback? onAuthorTap;
 
   @override
   Widget build(BuildContext context) {
@@ -93,45 +98,55 @@ class FeedPostCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: const BoxDecoration(
-                    color: AppColors.elevatedCard,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    author.isNotEmpty ? author[0].toUpperCase() : '?',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppColors.softGold,
-                      fontWeight: FontWeight.w800,
+                // V1 Social S1 — Avatar + isim satırı tap → public profile.
+                // onAuthorTap null ise GestureDetector inert kalır.
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onAuthorTap,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: AppColors.elevatedCard,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      author.isNotEmpty ? author[0].toUpperCase() : '?',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: AppColors.softGold,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.m),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        author,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onAuthorTap,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          author,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        '$role · $timeAgo',
-                        style: theme.textTheme.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                        const SizedBox(height: 1),
+                        Text(
+                          '$role · $timeAgo',
+                          style: theme.textTheme.bodySmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 _TypeBadge(type: type),

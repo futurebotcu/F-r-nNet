@@ -258,6 +258,17 @@ class AppStrings {
   static const String feedPostDeleteSuccess = 'Gönderi silindi.';
   static const String feedPostDeleteError =
       'Gönderi silinemedi. Lütfen tekrar dene.';
+
+  // V1 Social S1 — Public profile sayfası.
+  static const String publicProfileTitle = 'Profil';
+  static const String publicProfileFallbackTitle = 'FırınNet Kullanıcısı';
+  static const String publicProfileLoadError =
+      'Profil yüklenemedi. Yeniden dener misin?';
+  static String publicProfilePostsHeading(int count) =>
+      count == 1 ? '1 gönderi' : '$count gönderi';
+  static const String publicProfilePostsEmpty =
+      'Bu kullanıcı henüz gönderi paylaşmadı.';
+  static const String publicProfileSelfHint = 'Bu senin profilin';
   // V1 P1-C — Eski fake share snackbar. Native share aktif edildiğinden
   // onShare içinde artık KULLANILMAZ; key tek dependent test referansı
   // sürdürmek için tutuluyor.

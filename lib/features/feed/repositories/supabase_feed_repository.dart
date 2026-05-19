@@ -146,6 +146,30 @@ class SupabaseFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<List<FeedPost>> listPostsByOwner(String ownerId) async {
+    // V1 Social S1 — Public profile sayfası için.
+    final rows = await _client
+        .from('feed_posts')
+        .select(_postColumns)
+        .eq('is_deleted', false)
+        .eq('owner_id', ownerId)
+        .order('created_at', ascending: false)
+        .limit(100);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final ids = list.map((r) => r['id'] as String).toList(growable: false);
+    final results = await Future.wait<Set<String>>(<Future<Set<String>>>[
+      _fetchLikedSet(ids),
+      _fetchSavedSet(ids),
+    ]);
+    final liked = results[0];
+    final saved = results[1];
+    return list
+        .map((row) =>
+            _fromRow(row, likedPostIds: liked, savedPostIds: saved))
+        .toList(growable: false);
+  }
+
+  @override
   Future<FeedPost> addPost({
     required PostType type,
     required String author,

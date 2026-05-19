@@ -65,3 +65,12 @@ final feedCommentsProvider = FutureProvider.autoDispose
   final repo = ref.watch(feedRepositoryProvider);
   return repo.listComments(postId);
 });
+
+/// V1 Social S1 — Belirli kullanıcının post listesi (public profile için).
+/// Newest first; feedChangesProvider tick ile invalidate olur.
+final userPostsProvider = FutureProvider.autoDispose
+    .family<List<FeedPost>, String>((ref, ownerId) async {
+  ref.watch(feedChangesProvider);
+  final repo = ref.watch(feedRepositoryProvider);
+  return repo.listPostsByOwner(ownerId);
+});

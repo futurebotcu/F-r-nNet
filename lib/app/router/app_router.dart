@@ -48,6 +48,7 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/profile/screens/public_profile_screen.dart';
 import '../../features/settings/screens/about_screen.dart';
 import '../../features/settings/screens/data_info_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -108,6 +109,11 @@ class AppRoutes {
 
   // V1.2: Bireysel (Usta) panel route'ları
   static const String workerProfile = '/worker/profile';
+
+  // V1 Social S1 — Public profile by user id (any user). Bottom nav profile
+  // tab path'i (`/profile`) own-only; bu path başkasının profilini görmek
+  // için. Yol kısa (`/u/:userId`) — gelecekte share URL şablonu için iyi.
+  static const String userPublicProfile = '/u';
   static const String workerExperiences = '/worker/experiences';
   static const String jobSeek = '/worker/job-seek';
   static const String jobSeekNew = '/worker/job-seek/new';
@@ -227,6 +233,15 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.profile,
         builder: (_, __) => const ProfileScreen(),
+      ),
+
+      // V1 Social S1 — Public profile (`/u/:userId`).
+      // Başka kullanıcının profili. FeedPostCard yazar tap → push.
+      GoRoute(
+        path: '${AppRoutes.userPublicProfile}/:userId',
+        builder: (_, state) => PublicProfileScreen(
+          userId: state.pathParameters['userId']!,
+        ),
       ),
 
       // V1.4 — Ayarlar menüsü. Profile gear icon push'u ile açılır;
