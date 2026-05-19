@@ -267,13 +267,21 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
     }
 
     // Grup var mı ve görünür mü? Görünmüyorsa RLS sayesinde null döner.
+    // V1 P0 — is_private kolonu da çekilir; private gruplar `joinGroup`
+    // yolundan değil `requestJoinGroup` ile katılır. RLS server tarafında
+    // da aynı kontrolü yapar (group_members_insert_self policy), ama
+    // client-side erken reddetme UX için temiz: gereksiz REST INSERT
+    // attempt + 403 round-trip'i önler.
     final groupRow = await _client
         .from('social_groups')
-        .select('id, max_members, member_count, is_deleted')
+        .select('id, max_members, member_count, is_deleted, is_private')
         .eq('id', id)
         .maybeSingle();
     if (groupRow == null || (groupRow['is_deleted'] as bool? ?? false)) {
       return GroupJoinResult.notFound;
+    }
+    if ((groupRow['is_private'] as bool?) ?? false) {
+      return GroupJoinResult.requiresApproval;
     }
 
     try {

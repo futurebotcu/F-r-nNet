@@ -4,6 +4,13 @@ enum GroupJoinResult {
   full,
   alreadyJoined,
   notFound,
+
+  /// V1 P0 — Private grup için `joinGroup` yolu kapalı; üyelik yalnız
+  /// `requestJoinGroup` + owner onayı zinciriyle. UI tarafı zaten private
+  /// gruplar için doğru CTA'yı (`Katılma isteği gönder`) gösteriyor; bu
+  /// değer defansif erken-reddetme — kart/handler bu sonucu görürse private
+  /// flow'a yönlendirme yapmalı veya kullanıcıya bilgi vermelidir.
+  requiresApproval,
 }
 
 extension GroupJoinResultLabel on GroupJoinResult {
@@ -17,6 +24,8 @@ extension GroupJoinResultLabel on GroupJoinResult {
         return 'Zaten bu gruptasın.';
       case GroupJoinResult.notFound:
         return 'Grup bulunamadı.';
+      case GroupJoinResult.requiresApproval:
+        return 'Bu grup katılım onaylı. Katılma isteği gönderebilirsin.';
     }
   }
 }

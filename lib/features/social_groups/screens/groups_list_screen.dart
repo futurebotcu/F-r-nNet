@@ -314,6 +314,39 @@ class _GroupCardWired extends ConsumerWidget {
           context.push('${AppRoutes.groups}/${group.id}');
           return;
         }
+        // V1 P0 — Private gruplar `joinGroup` yolundan değil
+        // `requestJoinGroup` ile katılır. Liste kartı CTA'sı "Katılma
+        // isteği gönder" gösterir; handler RPC'yi tetikler. Onay sonrası
+        // notification + sonraki listJoined refresh ile member olunur.
+        if (group.isPrivate) {
+          await runGuardedMutation(
+            context,
+            ref,
+            action: () async {
+              final repo = ref.read(socialGroupRepositoryProvider);
+              try {
+                await repo.requestJoinGroup(group.id);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(AppStrings.groupJoinRequestSent),
+                  ),
+                );
+                ref.invalidate(myJoinRequestProvider(group.id));
+              } on GuestActionRequiredException {
+                rethrow;
+              } catch (_) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(AppStrings.groupJoinRequestError),
+                  ),
+                );
+              }
+            },
+          );
+          return;
+        }
         await runGuardedMutation(
           context,
           ref,

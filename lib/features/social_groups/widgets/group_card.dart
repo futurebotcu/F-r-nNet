@@ -325,6 +325,15 @@ class _PrimaryCta extends StatelessWidget {
       bg = AppColors.surfaceLine;
       fg = AppColors.textMuted;
       enabled = false;
+    } else if (group.isPrivate) {
+      // V1 P0 — Private grup için liste kartında doğrudan `joinGroup`
+      // çağırma yolu kapalı. "Katılma isteği gönder" CTA'sı; handler
+      // `_GroupCardWired.onPrimary` private branch'ine dispatch eder
+      // (requestJoinGroup RPC).
+      label = AppStrings.groupJoinRequestSend;
+      bg = AppColors.copper;
+      fg = AppColors.textPrimary;
+      enabled = true;
     } else {
       label = AppStrings.groupActionJoin;
       bg = AppColors.copper;

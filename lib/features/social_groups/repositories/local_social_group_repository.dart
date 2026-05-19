@@ -84,6 +84,12 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
     if (i == -1) return GroupJoinResult.notFound;
     if (_joined.contains(id)) return GroupJoinResult.alreadyJoined;
     final g = _groups[i];
+    // V1 P0 — Private grup direct joinGroup yolundan üye alamaz; üyelik
+    // `requestJoinGroup` + onay zinciriyle. Local repo Supabase repo ile
+    // davranış paritesi tutar.
+    if (g.isPrivate && g.ownerId != _meId) {
+      return GroupJoinResult.requiresApproval;
+    }
     if (g.isFull) return GroupJoinResult.full;
     _groups[i] = g.copyWith(currentMemberCount: g.currentMemberCount + 1);
     _joined.add(id);
