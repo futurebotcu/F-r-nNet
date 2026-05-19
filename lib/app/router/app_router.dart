@@ -33,7 +33,8 @@ import '../../features/worker/screens/job_seek_posts_screen.dart';
 import '../../features/worker/screens/worker_experiences_screen.dart';
 import '../../features/worker/screens/worker_profile_screen.dart';
 import '../../features/dealers/models/dealer.dart' as dealer_models;
-import '../../features/feed/screens/feed_screen.dart';
+import '../../features/social/composer/social_composer_page.dart';
+import '../../features/social/feed/social_feed_page.dart';
 import '../../features/social_groups/screens/group_create_screen.dart';
 import '../../features/social_groups/screens/group_detail_screen.dart';
 import '../../features/social_groups/screens/groups_list_screen.dart';
@@ -115,6 +116,10 @@ class AppRoutes {
   // tab path'i (`/profile`) own-only; bu path başkasının profilini görmek
   // için. Yol kısa (`/u/:userId`) — gelecekte share URL şablonu için iyi.
   static const String userPublicProfile = '/u';
+
+  // V1 Donor-First Social Rebuild — yeni composer ekranı (post oluşturma).
+  // SocialFeedPage'deki FAB bu route'a push eder.
+  static const String socialComposer = '/social/composer';
   static const String workerExperiences = '/worker/experiences';
   static const String jobSeek = '/worker/job-seek';
   static const String jobSeekNew = '/worker/job-seek/new';
@@ -193,9 +198,13 @@ GoRouter createRouter() {
         builder: (_, __, child) => AppShell(child: child),
         routes: <RouteBase>[
           GoRoute(
+            // V1 Donor-First Social Rebuild — eski FeedScreen yerine donor-
+            // style SocialFeedPage. Eski FeedScreen dosyası karantinada
+            // (lib/features/feed/screens/feed_screen.dart); F-cleanup
+            // commit'inde silinir.
             path: AppRoutes.feed,
             pageBuilder: (_, state) =>
-                _noTransition(state, const FeedScreen()),
+                _noTransition(state, const SocialFeedPage()),
           ),
           GoRoute(
             // Sosyal Gruplar — bottom nav 2. tab (V Nav-Social-Priority-Fix).
@@ -259,6 +268,14 @@ GoRouter createRouter() {
           userId: state.pathParameters['userId']!,
           kind: UserListKind.following,
         ),
+      ),
+
+      // V1 Donor-First Social Rebuild — composer ayrı tam ekran route.
+      // SocialFeedPage'deki FAB bu route'a push eder; eski FeedComposer
+      // (sliver olarak feed üstüne gömülüydü) artık kullanılmaz.
+      GoRoute(
+        path: AppRoutes.socialComposer,
+        builder: (_, __) => const SocialComposerPage(),
       ),
 
       // V1.4 — Ayarlar menüsü. Profile gear icon push'u ile açılır;

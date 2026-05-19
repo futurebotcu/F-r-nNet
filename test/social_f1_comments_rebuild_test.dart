@@ -4,9 +4,14 @@
 // Background:
 //   Mevcut FeedCommentSheet `isScrollControlled: true` modunda
 //   `Column(min) + Flexible(list)` çakışmasından dolayı RenderFlex
-//   unbounded assertion ile çiziyordu. Donor (itsezlife instagram
-//   clone) `CommentsPage` pattern'ı — full Scaffold + DraggableScrollableSheet —
-//   port edildi. Yeni dosya: `lib/features/social/comments/comments_page.dart`.
+//   unbounded assertion ile çiziyordu. F1 ilk denemesi donor (itsezlife
+//   instagram clone) `CommentsPage` pattern'ını `showModalBottomSheet` +
+//   `DraggableScrollableSheet` ile port etti; ancak gerçek cihazda
+//   Scaffold içindeki `bottomNavigationBar` slot'u + klavye `viewInsets`
+//   ile çift inset sorunu sheet'i render edemedi. F1-fix: tam ekran
+//   `MaterialPageRoute(fullscreenDialog)` — Scaffold tek başına standart
+//   route'ta çalışır, klavye handling sorunsuz. Yeni dosya:
+//   `lib/features/social/comments/comments_page.dart`.
 //
 // F0 iskelet:
 //   * lib/features/social/models/social_comment.dart
@@ -97,19 +102,53 @@ void main() {
   });
 
   group('F1 — Source-level CommentsPage donor pattern', () {
-    final src = File(
+    final rawSrc = File(
       'lib/features/social/comments/comments_page.dart',
     ).readAsStringSync();
+    // Doc/yorum satırlarını strip et — geçmiş denemelerle ilgili
+    // referanslar (DraggableScrollableSheet vb.) açıklamada kalabilir
+    // ama gerçek kodda olmamalı.
+    final src = rawSrc
+        .split('\n')
+        .where((l) => !l.trimLeft().startsWith('//'))
+        .where((l) => !l.trimLeft().startsWith('///'))
+        .join('\n');
 
-    test('DraggableScrollableSheet kullanılıyor (bounded layout)', () {
-      expect(src.contains('DraggableScrollableSheet'), isTrue);
-      expect(src.contains('initialChildSize: 0.85'), isTrue);
+    test('Tam ekran MaterialPageRoute kullanılıyor (fullscreenDialog)', () {
+      // F1-fix: DraggableScrollableSheet + showModalBottomSheet yerine
+      // tam ekran modal route. Scaffold içindeki bottomNavigationBar
+      // composer + klavye inset'i çift handling sorunundan kurtarıldı.
+      expect(src.contains('MaterialPageRoute'), isTrue);
+      expect(src.contains('fullscreenDialog: true'), isTrue);
+      // Eski DraggableScrollableSheet pattern artık kullanılmıyor.
+      expect(
+        src.contains('DraggableScrollableSheet'),
+        isFalse,
+        reason: 'F1-fix sonrası bounded sheet pattern kaldırıldı',
+      );
+      expect(
+        src.contains('showModalBottomSheet'),
+        isFalse,
+        reason: 'F1-fix sonrası bottom sheet yerine fullscreen route',
+      );
     });
 
-    test('Full Scaffold + bottomNavigationBar composer', () {
+    test('Full Scaffold + composer in body Column (F1-fix v2)', () {
+      // F1-fix v2: bottomNavigationBar slot bazı cihazlarda composer'ı
+      // render etmedi (kullanıcı raporu: "yorum yaz gönder vs yok").
+      // Daha tutarlı yapı: body Column + Expanded(list) + composer
+      // sabit altta. Klavye `resizeToAvoidBottomInset: true` ile yönetilir.
       expect(src.contains('return Scaffold('), isTrue);
-      expect(src.contains('bottomNavigationBar:'), isTrue);
       expect(src.contains('resizeToAvoidBottomInset: true'), isTrue);
+      // Composer body içinde Column'un son child'ı olmalı.
+      expect(src.contains('_CommentComposer('), isTrue);
+      expect(src.contains('Expanded('), isTrue);
+      // Eski bottomNavigationBar yaklaşımı kullanılmıyor.
+      expect(
+        src.contains('bottomNavigationBar:'),
+        isFalse,
+        reason: 'F1-fix v2 sonrası bottomNavigationBar slot kaldırıldı',
+      );
     });
 
     test('Compose timeout + inline error + finally busy reset', () {
@@ -123,6 +162,22 @@ void main() {
 
     test('Guest CTA: "Yorum yazmak için giriş yap"', () {
       expect(src.contains('AppStrings.feedCommentGuestCta'), isTrue);
+    });
+
+    test('P0 — Twitter detail pattern: AppBar "Gönderi" + post header', () {
+      // AppBar başlığı: "Yorumlar" → "Gönderi" (Twitter post detail).
+      expect(src.contains('AppStrings.postDetailTitle'), isTrue);
+      // Üstte post context header bloğu render eder.
+      expect(src.contains('_PostContextHeader'), isTrue);
+      // Section heading: "Yorumlar (N)"
+      expect(src.contains('AppStrings.postCommentsHeading'), isTrue);
+      // Post context için feedPostByIdProvider watch ediliyor.
+      expect(src.contains('feedPostByIdProvider'), isTrue);
+    });
+
+    test('P0 — AppBar leading "geri" oku (Twitter), X değil', () {
+      // Tam ekran modal route ama Twitter post detail mantığında geri ok.
+      expect(src.contains('Icons.arrow_back_rounded'), isTrue);
     });
   });
 
@@ -174,9 +229,10 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        // Composer TextField + Gönder butonu görünür
+        // F1-fix v3: composer TextField + yuvarlak Gönder ikonu (copper).
+        // Eski FilledButton.icon "Gönder" label kaldırıldı → icon-only.
         expect(find.byType(TextField), findsOneWidget);
-        expect(find.text('Gönder'), findsOneWidget);
+        expect(find.byIcon(Icons.send_rounded), findsOneWidget);
       },
     );
 

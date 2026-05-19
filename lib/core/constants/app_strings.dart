@@ -185,6 +185,24 @@ class AppStrings {
   static const String feedSectionPosts = 'Bugün ağda';
   static const String feedSectionAll = 'Tümü';
 
+  // V1 Donor-First Social Rebuild — yeni SocialFeedPage için ek string'ler.
+  static const String feedLoadError =
+      'Akış yüklenemedi. Bağlantını kontrol edip yeniden dener misin?';
+  static const String feedEmpty =
+      'Henüz paylaşım yok. İlk gönderiyi sen at — ağ buradan büyür.';
+  static const String feedComposerNewPostCta = 'Paylaş';
+  static const String retry = 'Yeniden dene';
+  static const String storiesMyStoryLabel = 'Hikayem';
+  static const String storiesEmptyHint = 'Hikaye akışı yakında.';
+  static const String postCommentsCountLabel = 'yorum';
+  static const String postViewAllComments = 'Tüm yorumları gör';
+
+  // V1 P0 — Twitter-style post detail (yorum sayfası başlığı + section heading).
+  static const String postDetailTitle = 'Gönderi';
+  static String postCommentsHeading(int n) => 'Yorumlar ($n)';
+  static const String postLikesShortLabel = 'beğeni';
+  static const String postCommentsShortLabel = 'yorum';
+
   // Feed quality (composer + interaction)
   static const String feedComposerPrompt = 'Ne paylaşmak istiyorsun?';
   static const String feedComposerExpandHint =

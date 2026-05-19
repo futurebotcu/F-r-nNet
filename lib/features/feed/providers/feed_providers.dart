@@ -74,3 +74,19 @@ final userPostsProvider = FutureProvider.autoDispose
   final repo = ref.watch(feedRepositoryProvider);
   return repo.listPostsByOwner(ownerId);
 });
+
+/// V1 P0 — Twitter-style yorum sayfası üstündeki post context header için
+/// tek post lookup. V1: ana feed liste içinden first-where; küçük feed
+/// performans uygun. Bulunamazsa null (yeni paylaşılmış post + cache miss
+/// senaryosu için header sade fallback'e düşer). V2'de Supabase tarafına
+/// dedicated `feed_post_by_id` RPC eklenebilir.
+final feedPostByIdProvider = FutureProvider.autoDispose
+    .family<FeedPost?, String>((ref, postId) async {
+  ref.watch(feedChangesProvider);
+  final repo = ref.watch(feedRepositoryProvider);
+  final posts = await repo.listPosts();
+  for (final p in posts) {
+    if (p.id == postId) return p;
+  }
+  return null;
+});
