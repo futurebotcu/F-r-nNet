@@ -21,9 +21,10 @@ import '../../social_groups/services/group_join_result.dart';
 import '../../social_groups/widgets/group_card.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
+import '../../social/comments/comments_page.dart';
 import '../providers/feed_providers.dart';
 import '../repositories/feed_repository.dart';
-import '../widgets/feed_comment_sheet.dart';
+import '../widgets/feed_comment_sheet.dart'; // ignore: unused_import
 import '../widgets/feed_composer.dart';
 import '../widgets/insight_card.dart';
 
@@ -391,8 +392,10 @@ class _PostCardWiredState extends ConsumerState<PostCardWired> {
       onLike: _likeBusy ? null : () => _onLikePressed(repo),
       onSave: _saveBusy ? null : () => _onSavePressed(repo),
       onComment: () {
-        // V1 P1-B — Eski snackbar yerine gerçek yorum bottom sheet.
-        FeedCommentSheet.show(context, post.id);
+        // V1 Donor-First Social Rebuild F1 — Eski FeedCommentSheet
+        // (layout assertion ile açılmıyordu) yerine donor-style
+        // SocialCommentsPage (full Scaffold + DraggableScrollableSheet).
+        SocialCommentsPage.show(context, post.id);
       },
       onShare: _shareBusy ? null : _onSharePressed,
       onTagTap: (tag) {

@@ -110,7 +110,11 @@ void main() {
         () {
       expect(src.contains('onAuthorTap:'), isTrue);
       expect(src.contains('onDelete: _isOwner(ref, post)'), isTrue);
-      expect(src.contains('FeedCommentSheet.show(context, post.id)'), isTrue);
+      // F1 Donor-First Comments Rebuild — FeedCommentSheet.show yerine
+      // SocialCommentsPage.show çağrılıyor. Eski FeedCommentSheet widget'ı
+      // dosyada kalıyor (F7 cleanup'ta silinecek) ama feed_screen
+      // tarafından artık çağrılmıyor.
+      expect(src.contains('SocialCommentsPage.show(context, post.id)'), isTrue);
     });
   });
 }
