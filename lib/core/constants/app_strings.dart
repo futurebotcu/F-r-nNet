@@ -325,6 +325,14 @@ class AppStrings {
   /// Tekil: "1 bekleyen istek". Çoğul: "{N} bekleyen istek".
   static String groupPendingRequestCount(int count) =>
       count == 1 ? '1 bekleyen istek' : '$count bekleyen istek';
+
+  /// V1 UX Reset — chat-centric grup ekranı için kısa metinler.
+  static const String groupFirstMessage = 'İlk mesajı sen yaz';
+  static String groupInfoMembers(int count) => '$count üye';
+  static String groupJoinRequestsCompact(int count) =>
+      count == 1 ? '1 katılım isteği' : '$count katılım isteği';
+  static const String groupJoinRequestsMenu = 'Katılım istekleri';
+  static const String groupJoinNowCta = 'Sohbete katıl';
   // V1 P1-C — Native share (share_plus) için subject + hata snackbar.
   static const String feedShareSubject = 'FırınNet — Paylaşım';
   static const String feedShareError =

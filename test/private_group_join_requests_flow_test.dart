@@ -105,13 +105,16 @@ void main() {
         final src = File(
           'lib/features/social_groups/screens/group_detail_screen.dart',
         ).readAsStringSync();
+        // V1 UX Reset — _GroupBody içinde local değişken adı `group`.
         expect(
           src.contains(
-            'final contentVisible = !g.isPrivate || joined || isOwner;',
+            'final contentVisible = !group.isPrivate || joined || isOwner;',
           ),
           isTrue,
         );
-        expect(src.contains('_PrivateGatedInfo()'), isTrue);
+        // V1 UX Reset — gated widget yeni adı `_PrivateGated`; chat yerine
+        // ana akışta `_PrivateGated(group: group)` çağrılır.
+        expect(src.contains('_PrivateGated(group: group)'), isTrue);
         expect(src.contains('AppStrings.groupPrivateInfo'), isTrue);
       },
     );

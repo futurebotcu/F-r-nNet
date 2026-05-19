@@ -35,6 +35,9 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
     final allAsync = ref.watch(groupsListProvider(_category));
     final joinedAsync = ref.watch(joinedGroupsProvider);
 
+    // V1 UX Reset — FAB kaldırıldı (header'daki + butonu yeterli; bottom nav
+    // + kart "Aç" butonu üst üste binmesin diye). Header bildirim + grup
+    // oluştur aksiyonu hâlâ erişilebilir.
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -45,6 +48,17 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
           ),
           data: (all) {
             final filtered = _applySearch(all);
+            final isDefaultView = _query.isEmpty && _category == null;
+            // V1 UX Reset — "Tüm gruplar" altında joined grupları gösterme
+            // (yukarıda kompakt joined satırı var; tekrar bloğu kaldır).
+            // Arama/kategori durumunda full liste — kullanıcı bir şey arıyor.
+            final joinedIds = joinedAsync.maybeWhen(
+              data: (list) => list.map((g) => g.id).toSet(),
+              orElse: () => <String>{},
+            );
+            final allListItems = isDefaultView
+                ? filtered.where((g) => !joinedIds.contains(g.id)).toList()
+                : filtered;
             return ListView(
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
@@ -99,16 +113,13 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                   selected: _category,
                   onChange: (c) => setState(() => _category = c),
                 ),
-                if (_query.isEmpty && _category == null) ...[
-                  const SectionLabel(
-                    title: AppStrings.groupsSectionJoined,
-                    topGap: AppSpacing.l,
-                  ),
+                if (isDefaultView) ...[
                   joinedAsync.when(
                     loading: () => const _MiniLoading(),
                     error: (_, __) => const Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pageH,
+                      ),
                       child: Text(
                         AppStrings.groupsErrorGeneric,
                         style: TextStyle(
@@ -117,13 +128,28 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                         ),
                       ),
                     ),
-                    data: (joined) => _JoinedRow(joined: joined),
+                    data: (joined) {
+                      if (joined.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionLabel(
+                            title: AppStrings.groupsSectionJoined,
+                            topGap: AppSpacing.l,
+                          ),
+                          _JoinedRow(joined: joined),
+                        ],
+                      );
+                    },
                   ),
-                  const SectionLabel(
-                    title: AppStrings.groupsSectionAll,
-                  ),
+                  if (allListItems.isNotEmpty)
+                    const SectionLabel(
+                      title: AppStrings.groupsSectionAll,
+                    ),
                 ],
-                if (filtered.isEmpty)
+                if (allListItems.isEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.pageH,
@@ -140,7 +166,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                     ),
                   )
                 else
-                  for (final g in filtered)
+                  for (final g in allListItems)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.pageH,
@@ -154,13 +180,6 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
             );
           },
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.groupCreate),
-        backgroundColor: AppColors.copper,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(AppStrings.groupsCreateCta),
       ),
     );
   }
@@ -236,8 +255,10 @@ class _JoinedRow extends ConsumerWidget {
         ),
       );
     }
+    // V1 UX Reset — joined satırı daha kompakt: yükseklik 290 → 200, kart
+    // genişliği 280 → 240. Carousel artık ana akışı ezmiyor.
     return SizedBox(
-      height: 290,
+      height: 200,
       child: ListView.separated(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
@@ -246,7 +267,7 @@ class _JoinedRow extends ConsumerWidget {
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.s),
         itemBuilder: (_, i) => _GroupCardWired(
           group: joined[i],
-          width: 280,
+          width: 240,
           compact: true,
         ),
       ),

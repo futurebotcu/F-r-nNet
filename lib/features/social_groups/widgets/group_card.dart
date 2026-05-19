@@ -55,6 +55,13 @@ class GroupCard extends StatelessWidget {
     final theme = Theme.of(context);
     final gradient = _seedGradients[group.visualSeed.abs() % 8];
 
+    // V1 UX Reset — kompakt kart düzeni:
+    //   * "Katılım onaylı" badge'i joined kullanıcıya gösterilmez (zaten onayı
+    //     geçmiş); yer açılır, kategori şeridinde "Fir..." kesilmesi ortadan
+    //     kalkar.
+    //   * Joined kart → "Aç" CTA kaldırılır (tüm kart tap zaten açıyor).
+    //   * Padding xs azaltıldı; description compact'ta gizlenir.
+    final showApprovalBadge = group.isPrivate && !isJoined;
     return SizedBox(
       width: width,
       child: Container(
@@ -74,13 +81,13 @@ class GroupCard extends StatelessWidget {
             onTap: onTap,
             splashColor: AppColors.softGold.withValues(alpha: 0.06),
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.l),
+              padding: EdgeInsets.all(compact ? AppSpacing.m : AppSpacing.l),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Cover / category strip
                   Container(
-                    height: compact ? 64 : 72,
+                    height: compact ? 56 : 64,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -93,12 +100,15 @@ class GroupCard extends StatelessWidget {
                         width: 0.6,
                       ),
                     ),
-                    padding: const EdgeInsets.all(AppSpacing.m),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.m,
+                      vertical: AppSpacing.s,
+                    ),
                     child: Row(
                       children: [
                         Container(
-                          width: 36,
-                          height: 36,
+                          width: 32,
+                          height: 32,
                           decoration: BoxDecoration(
                             color: AppColors.background.withValues(alpha: 0.7),
                             borderRadius:
@@ -111,7 +121,7 @@ class GroupCard extends StatelessWidget {
                           child: Icon(
                             _categoryIcon(group.category),
                             color: AppColors.softGold,
-                            size: 20,
+                            size: 18,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s),
@@ -128,29 +138,20 @@ class GroupCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (group.isPrivate)
+                        if (showApprovalBadge)
                           _MiniBadge(
-                            // V1 P1-D / G.N5 — Private gruplar listede
-                            // görünür ama içerik gated. Tek terim:
-                            // "Katılım onaylı" — kullanıcı gizli değil,
-                            // onaylı katılım olduğunu anlasın.
                             label: AppStrings.groupApprovalRequiredBadge,
                             color: AppColors.softGold,
                           ),
                         if (isJoined)
-                          Padding(
-                            padding: EdgeInsets.only(
-                              left: group.isPrivate ? 4 : 0,
-                            ),
-                            child: _MiniBadge(
-                              label: AppStrings.groupBadgeMember,
-                              color: AppColors.success,
-                            ),
+                          _MiniBadge(
+                            label: AppStrings.groupBadgeMember,
+                            color: AppColors.success,
                           ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.m),
+                  const SizedBox(height: AppSpacing.s),
                   Text(
                     group.name,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -163,31 +164,37 @@ class GroupCard extends StatelessWidget {
                     maxLines: compact ? 1 : 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    group.description,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      height: 1.4,
-                      color: AppColors.textSecondary,
+                  if (!compact) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      group.description,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        height: 1.4,
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: compact ? 2 : 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.m),
+                  ],
+                  const SizedBox(height: AppSpacing.s),
                   _MembersRow(group: group),
                   // G.N4 — Owner kartında pending request count pill.
-                  // Compact varyantta (Joined carousel) yer kalmaz; sadece
-                  // full kart varyantında gösterilir.
+                  // Compact varyantta gösterilmez (yer kalmaz).
                   if (pendingRequestCount > 0 && !compact) ...[
                     const SizedBox(height: AppSpacing.s),
                     _PendingRequestsPill(count: pendingRequestCount),
                   ],
-                  const SizedBox(height: AppSpacing.m),
-                  _PrimaryCta(
-                    group: group,
-                    isJoined: isJoined,
-                    onPressed: onPrimary,
-                  ),
+                  // V1 UX Reset — Joined kartlarda primary CTA gösterilmez;
+                  // kullanıcı zaten üye, "Aç" tap'i kartın kendisinden.
+                  // Non-joined → Katıl / Dolu butonları görünür.
+                  if (!isJoined) ...[
+                    const SizedBox(height: AppSpacing.s),
+                    _PrimaryCta(
+                      group: group,
+                      isJoined: isJoined,
+                      onPressed: onPrimary,
+                    ),
+                  ],
                 ],
               ),
             ),
