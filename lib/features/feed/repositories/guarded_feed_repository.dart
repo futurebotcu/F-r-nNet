@@ -54,6 +54,12 @@ class GuardedFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<void> deletePost(String postId) {
+    _requireWrite('gönderiyi silmek');
+    return inner.deletePost(postId);
+  }
+
+  @override
   Future<FeedPost> toggleLike(String postId) {
     _requireWrite('gönderiyi beğenmek');
     return inner.toggleLike(postId);

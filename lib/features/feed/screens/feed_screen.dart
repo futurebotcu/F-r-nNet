@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/feed_post_card.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../notifications/widgets/notifications_header_action.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -450,7 +451,59 @@ class PostCardWired extends ConsumerWidget {
       onGoToGroup: post.groupId == null
           ? null
           : () => context.push('${AppRoutes.groups}/${post.groupId}'),
+      // V1 Feed F1 — Owner için ⋮ menü; başkası için null (menü gizli).
+      onDelete: _isOwner(ref, post)
+          ? () => _confirmAndDeletePost(context, ref, post)
+          : null,
     );
+  }
+
+  /// Auth'lu kullanıcı bu post'un sahibi mi? Guest user için her zaman false.
+  static bool _isOwner(WidgetRef ref, FeedPost post) {
+    final user = ref.watch(currentAuthUserProvider);
+    return user != null && user.id == post.ownerId;
+  }
+
+  /// V1 Feed F1 — Soft-delete confirm + repo call + snackbar.
+  static Future<void> _confirmAndDeletePost(
+    BuildContext context,
+    WidgetRef ref,
+    FeedPost post,
+  ) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => AlertDialog(
+        title: const Text(AppStrings.feedPostDeleteConfirmTitle),
+        content: const Text(AppStrings.feedPostDeleteConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dctx).pop(false),
+            child: const Text(AppStrings.feedPostDeleteCancelCta),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text(AppStrings.feedPostDeleteCta),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final repo = ref.read(feedRepositoryProvider);
+    try {
+      await repo.deletePost(post.id);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedPostDeleteSuccess)),
+      );
+    } on GuestActionRequiredException {
+      if (context.mounted) await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedPostDeleteError)),
+      );
+    }
   }
 
   String _timeAgo(DateTime t) {

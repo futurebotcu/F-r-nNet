@@ -253,6 +253,7 @@ Widget _wrapGroup(SocialGroupRepository repo, Widget child) {
 FeedPost _samplePost() {
   return FeedPost(
     id: 'p1',
+    ownerId: 'test_owner_1',
     type: PostType.production,
     author: 'Hasan Usta',
     role: 'Fırıncı',

@@ -21,6 +21,11 @@ abstract class FeedRepository {
     List<String> tags = const <String>[],
   });
 
+  /// V1 Feed F1 — Owner-only post soft-delete. `feed_posts.is_deleted=true`.
+  /// RLS DELETE/UPDATE policy zaten owner-only; defansif olarak client
+  /// `eq('owner_id', userId)` da ekler. Owner olmayan çağrı sessiz no-op.
+  Future<void> deletePost(String postId);
+
   /// Like toggle: false → true (count+1), true → false (count-1).
   Future<FeedPost> toggleLike(String postId);
 

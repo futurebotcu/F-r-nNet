@@ -69,6 +69,7 @@ class SupabaseFeedRepository implements FeedRepository {
     final tagsRaw = row['tags'] as List?;
     return FeedPost(
       id: id,
+      ownerId: (row['owner_id'] as String?) ?? '',
       type: PostTypeMeta.fromPersistKey((row['type'] as String?) ?? 'question'),
       author: (row['author_name'] as String?) ?? 'FırınNet Kullanıcısı',
       role: (row['author_role'] as String?) ?? 'Üye',
@@ -169,6 +170,24 @@ class SupabaseFeedRepository implements FeedRepository {
         .single();
     _notify();
     return _fromRow(row, likedPostIds: <String>{}, savedPostIds: <String>{});
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    // V1 Feed F1 — Soft-delete. RLS UPDATE policy `owner_id = auth.uid()`;
+    // defansif olarak client de `eq('owner_id', userId)` ekler. Yorum/like
+    // satırları is_deleted=false select policy'si üzerinden zaten gizlenir
+    // (post is_deleted=true olunca cascade'e gerek yok).
+    await _client
+        .from('feed_posts')
+        .update(<String, dynamic>{'is_deleted': true})
+        .eq('id', postId)
+        .eq('owner_id', userId);
+    _notify();
   }
 
   @override

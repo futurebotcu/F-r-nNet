@@ -52,6 +52,9 @@ class _ThrowingFeedRepo implements FeedRepository {
   Future<List<FeedPost>> listPosts({PostType? type}) async => <FeedPost>[];
 
   @override
+  Future<void> deletePost(String postId) async {}
+
+  @override
   Future<FeedPost> toggleLike(String postId) async =>
       throw UnimplementedError();
 

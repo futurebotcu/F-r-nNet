@@ -13,6 +13,7 @@ import 'post_type.dart';
 class FeedPost {
   const FeedPost({
     required this.id,
+    required this.ownerId,
     required this.type,
     required this.author,
     required this.role,
@@ -29,6 +30,12 @@ class FeedPost {
   });
 
   final String id;
+
+  /// V1 Feed F1 — Post sahibinin user id'si (`feed_posts.owner_id`).
+  /// UI tarafı owner-only aksiyonları (örn. "Gönderiyi sil") bu alana
+  /// `currentAuthUserProvider`'ı kıyaslayarak kapatır/açar.
+  final String ownerId;
+
   final PostType type;
   final String author;
   final String role;
@@ -55,6 +62,7 @@ class FeedPost {
   }) {
     return FeedPost(
       id: id,
+      ownerId: ownerId,
       type: type,
       author: author,
       role: role,

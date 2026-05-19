@@ -247,6 +247,17 @@ class AppStrings {
   static const String feedCommentErrorSubmit =
       'Yorum gönderilemedi. Lütfen tekrar dene.';
   static const String feedCommentGuestCta = 'Yorum yazmak için giriş yap';
+
+  // V1 Feed F1 — Owner post-delete metinleri.
+  static const String feedPostMenuDelete = 'Gönderiyi sil';
+  static const String feedPostDeleteConfirmTitle = 'Bu gönderiyi sil?';
+  static const String feedPostDeleteConfirmBody =
+      'Gönderi feed\'den kalkacak. Bu işlem geri alınamaz.';
+  static const String feedPostDeleteCta = 'Sil';
+  static const String feedPostDeleteCancelCta = 'Vazgeç';
+  static const String feedPostDeleteSuccess = 'Gönderi silindi.';
+  static const String feedPostDeleteError =
+      'Gönderi silinemedi. Lütfen tekrar dene.';
   // V1 P1-C — Eski fake share snackbar. Native share aktif edildiğinden
   // onShare içinde artık KULLANILMAZ; key tek dependent test referansı
   // sürdürmek için tutuluyor.

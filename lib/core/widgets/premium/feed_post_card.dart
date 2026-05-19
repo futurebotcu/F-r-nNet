@@ -27,6 +27,7 @@ class FeedPostCard extends StatelessWidget {
     this.onShare,
     this.onTagTap,
     this.onGoToGroup,
+    this.onDelete,
   });
 
   final String author;
@@ -50,6 +51,11 @@ class FeedPostCard extends StatelessWidget {
   final VoidCallback? onShare;
   final ValueChanged<String>? onTagTap;
   final VoidCallback? onGoToGroup;
+
+  /// V1 Feed F1 — Sadece post sahibi için verilir. null ise ⋮ menü
+  /// gösterilmez. Wired tarafı (PostCardWired) currentAuthUser.id ile
+  /// post.ownerId'yi kıyaslayıp bu callback'i ya verir ya null bırakır.
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +135,10 @@ class FeedPostCard extends StatelessWidget {
                   ),
                 ),
                 _TypeBadge(type: type),
+                if (onDelete != null) ...[
+                  const SizedBox(width: 4),
+                  _OwnerMenu(onDelete: onDelete!),
+                ],
               ],
             ),
           ),
@@ -388,6 +398,52 @@ class _Action extends StatelessWidget {
         minimumSize: const Size(0, 36),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
+    );
+  }
+}
+
+/// V1 Feed F1 — Post sahibi için kart sağ üstünde küçük `⋮` PopupMenu.
+/// Şu an tek aksiyon: "Gönderiyi sil". V2'de "Düzenle", "Sabitle" vb.
+/// buraya eklenebilir.
+class _OwnerMenu extends StatelessWidget {
+  const _OwnerMenu({required this.onDelete});
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      icon: const Icon(
+        Icons.more_vert_rounded,
+        size: 18,
+        color: AppColors.textMuted,
+      ),
+      tooltip: AppStrings.feedPostMenuDelete,
+      padding: EdgeInsets.zero,
+      onSelected: (key) {
+        if (key == 'delete') onDelete();
+      },
+      itemBuilder: (_) => const [
+        PopupMenuItem<String>(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                size: 18,
+                color: AppColors.danger,
+              ),
+              SizedBox(width: AppSpacing.s),
+              Text(
+                AppStrings.feedPostMenuDelete,
+                style: TextStyle(
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

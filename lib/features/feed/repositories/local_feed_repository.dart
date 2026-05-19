@@ -53,6 +53,7 @@ class LocalFeedRepository implements FeedRepository {
     final now = DateTime.now();
     final post = FeedPost(
       id: 'fp_${now.microsecondsSinceEpoch}',
+      ownerId: _meId,
       type: type,
       author: author,
       role: role,
@@ -64,6 +65,19 @@ class LocalFeedRepository implements FeedRepository {
     _posts.insert(0, post);
     _notify();
     return post;
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    // V1 Feed F1 — Local parity: owner soft-delete. Listede görünmesin diye
+    // doğrudan kaldırıyoruz (Supabase'de is_deleted=true SELECT filtresiyle
+    // benzer davranış).
+    final i = _posts.indexWhere((p) => p.id == postId);
+    if (i == -1) return;
+    if (_posts[i].ownerId != _meId) return; // owner-only no-op
+    _posts.removeAt(i);
+    _comments.remove(postId);
+    _notify();
   }
 
   @override
@@ -215,6 +229,7 @@ class LocalFeedRepository implements FeedRepository {
     _posts.addAll([
       FeedPost(
         id: 'fp_seed_1',
+        ownerId: 'seed_owner_1',
         type: PostType.production,
         author: 'Hasan Kara',
         role: 'Usta Fırıncı · Konya',
@@ -230,6 +245,7 @@ class LocalFeedRepository implements FeedRepository {
       ),
       FeedPost(
         id: 'fp_seed_2',
+        ownerId: 'seed_owner_2',
         type: PostType.supply,
         author: 'Konya Değirmen',
         role: 'Uncu · Toptan tedarik',
@@ -245,6 +261,7 @@ class LocalFeedRepository implements FeedRepository {
       ),
       FeedPost(
         id: 'fp_seed_3',
+        ownerId: 'seed_owner_3',
         type: PostType.question,
         author: 'Selin Ateş',
         role: 'Pastacı · İstanbul Kadıköy',
@@ -260,6 +277,7 @@ class LocalFeedRepository implements FeedRepository {
       ),
       FeedPost(
         id: 'fp_seed_4',
+        ownerId: 'seed_owner_4',
         type: PostType.equipment,
         author: 'Kara Endüstri',
         role: 'Ekipman · İstanbul Bayrampaşa',
@@ -275,6 +293,7 @@ class LocalFeedRepository implements FeedRepository {
       ),
       FeedPost(
         id: 'fp_seed_5',
+        ownerId: 'seed_owner_5',
         type: PostType.job,
         author: 'Konak Fırını',
         role: 'Fırın · İstanbul Kadıköy',
@@ -289,6 +308,7 @@ class LocalFeedRepository implements FeedRepository {
       ),
       FeedPost(
         id: 'fp_seed_6',
+        ownerId: 'seed_owner_6',
         type: PostType.production,
         author: 'Mehmet Taş Fırın',
         role: 'Fırın Sahibi · Gaziantep',
@@ -306,6 +326,7 @@ class LocalFeedRepository implements FeedRepository {
       // popüler gruplardan dinamik üretilir.
       FeedPost(
         id: 'fp_seed_g1',
+        ownerId: 'seed_owner_g1',
         type: PostType.groupHighlight,
         author: 'Konya Değirmen',
         role: 'Uncu · Toptan',
