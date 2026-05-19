@@ -15,9 +15,12 @@
 
 import 'dart:async';
 
+import 'dart:typed_data';
+
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/feed/models/feed_comment.dart';
 import 'package:firin_defter/features/feed/models/feed_insight.dart';
+import 'package:firin_defter/features/feed/models/feed_media.dart';
 import 'package:firin_defter/features/feed/models/feed_post.dart';
 import 'package:firin_defter/features/feed/models/post_type.dart';
 import 'package:firin_defter/features/feed/providers/feed_providers.dart';
@@ -57,6 +60,16 @@ class _ThrowingFeedRepo implements FeedRepository {
 
   @override
   Future<void> deletePost(String postId) async {}
+
+  @override
+  Future<FeedMedia> uploadFeedImage({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+  }) async =>
+      throw UnimplementedError();
 
   @override
   Future<FeedPost> toggleLike(String postId) async =>

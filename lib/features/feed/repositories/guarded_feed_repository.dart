@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import '../../auth/services/auth_required_guard.dart';
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
+import '../models/feed_media.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
 import 'feed_repository.dart';
@@ -61,6 +64,24 @@ class GuardedFeedRepository implements FeedRepository {
   Future<void> deletePost(String postId) {
     _requireWrite('gönderiyi silmek');
     return inner.deletePost(postId);
+  }
+
+  @override
+  Future<FeedMedia> uploadFeedImage({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+  }) {
+    _requireWrite('gönderiye resim eklemek');
+    return inner.uploadFeedImage(
+      postId: postId,
+      bytes: bytes,
+      fileExtension: fileExtension,
+      width: width,
+      height: height,
+    );
   }
 
   @override

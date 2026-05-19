@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
@@ -26,6 +29,12 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
   final _textCtrl = TextEditingController();
   final _focus = FocusNode();
   bool _saving = false;
+
+  /// V1 Social S3 — Seçilmiş resim bytes + extension. null ise foto yok.
+  Uint8List? _pickedBytes;
+  String? _pickedExt;
+  /// V1 Social S3 — Upload kısmen başarısızsa kullanıcıya inline uyarı.
+  String? _composerError;
 
   static const _composerTypes = <PostType>[
     PostType.production,
@@ -54,6 +63,45 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
       _expanded = false;
       _textCtrl.clear();
       _type = PostType.production;
+      _pickedBytes = null;
+      _pickedExt = null;
+      _composerError = null;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final x = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        imageQuality: 85,
+      );
+      if (x == null) return;
+      final bytes = await x.readAsBytes();
+      final name = x.name;
+      final dot = name.lastIndexOf('.');
+      final ext = (dot >= 0 && dot < name.length - 1)
+          ? name.substring(dot + 1).toLowerCase()
+          : 'jpg';
+      if (!mounted) return;
+      setState(() {
+        _pickedBytes = bytes;
+        _pickedExt = ext;
+        _composerError = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() =>
+            _composerError = AppStrings.feedComposerPickError);
+      }
+    }
+  }
+
+  void _removePickedImage() {
+    setState(() {
+      _pickedBytes = null;
+      _pickedExt = null;
     });
   }
 
@@ -70,32 +118,54 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _composerError = null;
+    });
     final repo = ref.read(feedRepositoryProvider);
     try {
-      await repo.addPost(
+      final post = await repo.addPost(
         type: _type,
         author: AppStrings.feedComposerYouAuthor,
         role: AppStrings.feedComposerYouRole,
         text: text,
       );
+      // V1 Social S3 — Foto eklendiyse upload at; başarısız olursa post
+      // korunur, kullanıcıya uyarı verilir (kısmi başarı).
+      var uploadFailed = false;
+      final bytes = _pickedBytes;
+      final ext = _pickedExt;
+      if (bytes != null && ext != null) {
+        try {
+          await repo.uploadFeedImage(
+            postId: post.id,
+            bytes: bytes,
+            fileExtension: ext,
+          );
+        } catch (_) {
+          uploadFailed = true;
+        }
+      }
       if (!mounted) return;
       setState(() {
         _expanded = false;
         _textCtrl.clear();
         _type = PostType.production;
+        _pickedBytes = null;
+        _pickedExt = null;
       });
       _focus.unfocus();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedComposerSavedSnack)),
+        SnackBar(
+          content: Text(uploadFailed
+              ? AppStrings.feedComposerUploadError
+              : AppStrings.feedComposerSavedSnack),
+        ),
       );
     } catch (_) {
       if (!mounted) return;
-      // Composer expanded kalır + kullanıcının yazdığı metin korunur ki
-      // tek tıkla tekrar deneyebilsin. Ham exception UI'a sızmaz.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedPostCreateError)),
-      );
+      setState(
+          () => _composerError = AppStrings.feedPostCreateError);
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -244,6 +314,88 @@ class _FeedComposerState extends ConsumerState<FeedComposer> {
               ),
             ),
           ),
+          const SizedBox(height: AppSpacing.m),
+          // V1 Social S3 — Resim preview (varsa) + foto ekle/kaldır CTA.
+          if (_pickedBytes != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              child: Image.memory(
+                _pickedBytes!,
+                fit: BoxFit.cover,
+                height: 180,
+                width: double.infinity,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _saving ? null : _removePickedImage,
+                icon: const Icon(Icons.close_rounded, size: 16),
+                label: const Text(AppStrings.feedComposerRemovePhoto),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.danger,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _saving ? null : _pickImage,
+                icon: const Icon(Icons.photo_library_outlined, size: 18),
+                label: const Text(AppStrings.feedComposerAddPhoto),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.softGold,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (_composerError != null) ...[
+            const SizedBox(height: AppSpacing.s),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.m,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppRadius.m),
+                border: Border.all(
+                  color: AppColors.danger.withValues(alpha: 0.32),
+                  width: 0.6,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 16,
+                    color: AppColors.danger,
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Expanded(
+                    child: Text(
+                      _composerError!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.m),
           // Sağa hizalı paylaş butonu. Önceki sürüm `Row(Spacer + SizedBox(height: 44, child: FilledButton.icon))`
           // kullanıyordu — SizedBox height-only olduğundan FilledButton'a Row'dan gelen width-constraint'i

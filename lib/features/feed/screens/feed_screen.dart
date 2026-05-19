@@ -358,6 +358,8 @@ class PostCardWired extends ConsumerWidget {
       isLiked: post.isLiked,
       isSaved: post.isSaved,
       groupName: post.groupName,
+      // V1 Social S3 — Post'a bağlı ilk image varsa preview göster.
+      imageUrl: post.firstImage?.publicUrl,
       onLike: () async {
         // V1.3.2 — Beğeni kullanıcıya bağlı bir favori işlemidir.
         if (!AuthRequiredGuard.canWriteWithRef(ref)) {

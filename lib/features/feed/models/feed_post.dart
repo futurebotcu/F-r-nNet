@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'feed_media.dart';
 import 'post_type.dart';
 
 /// Bir kullanıcı paylaşımı veya gruptan öne çıkmış mesaj.
@@ -27,6 +28,7 @@ class FeedPost {
     this.isSaved = false,
     this.groupId,
     this.groupName,
+    this.mediaList = const <FeedMedia>[],
   });
 
   final String id;
@@ -52,13 +54,25 @@ class FeedPost {
   final String? groupId;
   final String? groupName;
 
+  /// V1 Social S3 — Post'a bağlı medya satırları (image V1; video V1.2).
+  /// Boş liste = yalnız metin. UI tarafı `mediaList.isEmpty` ise medya
+  /// preview göstermez. V1'de tipik olarak 0 veya 1 eleman.
+  final List<FeedMedia> mediaList;
+
   bool get isGroupHighlight => type == PostType.groupHighlight;
+  bool get hasImage => mediaList.any((m) => m.isImage);
+  FeedMedia? get firstImage =>
+      mediaList.where((m) => m.isImage).cast<FeedMedia?>().firstWhere(
+            (m) => true,
+            orElse: () => null,
+          );
 
   FeedPost copyWith({
     int? likeCount,
     int? commentCount,
     bool? isLiked,
     bool? isSaved,
+    List<FeedMedia>? mediaList,
   }) {
     return FeedPost(
       id: id,
@@ -76,6 +90,7 @@ class FeedPost {
       isSaved: isSaved ?? this.isSaved,
       groupId: groupId,
       groupName: groupName,
+      mediaList: mediaList ?? this.mediaList,
     );
   }
 }

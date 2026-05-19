@@ -43,6 +43,12 @@ dependencies:
   # Native channel cevap vermezse fallback "—" gösterilir (sahte versiyon basılmaz).
   package_info_plus: ^8.0.2
 
+  # V1 Social S3 — Feed image post.
+  # image_picker: galeri/kameradan resim seçimi.
+  # cached_network_image: post kartı + full-screen viewer'da lazy/cached image.
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -29,6 +30,7 @@ class FeedPostCard extends StatelessWidget {
     this.onGoToGroup,
     this.onDelete,
     this.onAuthorTap,
+    this.imageUrl,
   });
 
   final String author;
@@ -61,6 +63,11 @@ class FeedPostCard extends StatelessWidget {
   /// V1 Social S1 — Yazar avatar/isim satırına tap. Public profile push
   /// için. null ise tap inert.
   final VoidCallback? onAuthorTap;
+
+  /// V1 Social S3 — Post'a bağlı görsel URL. null ise medya preview
+  /// render edilmez. Birden çok medya destekleniyorsa caller şu an için
+  /// yalnız ilk image'ı verir (V1 tek görsel).
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -174,6 +181,51 @@ class FeedPostCard extends StatelessWidget {
               ),
             ),
           ),
+
+          // V1 Social S3 — Görsel preview (varsa). Tap → full-screen viewer.
+          if (imageUrl != null && imageUrl!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.l,
+                0,
+                AppSpacing.l,
+                AppSpacing.m,
+              ),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _openImageViewer(context, imageUrl!),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                  child: AspectRatio(
+                    aspectRatio: 4 / 3,
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        color: AppColors.elevatedCard,
+                        alignment: Alignment.center,
+                        child: const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 1.6),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        color: AppColors.elevatedCard,
+                        alignment: Alignment.center,
+                        child: const Text(
+                          AppStrings.feedImageLoadError,
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // Etiketler
           if (tags.isNotEmpty)
@@ -412,6 +464,55 @@ class _Action extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         minimumSize: const Size(0, 36),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+}
+
+/// V1 Social S3 — Post görselini tam ekran açan basit viewer.
+/// `InteractiveViewer` ile pinch/pan; AppBar `Kapat`. Caller sadece
+/// imageUrl verir, başka state yok.
+void _openImageViewer(BuildContext context, String imageUrl) {
+  Navigator.of(context).push<void>(
+    MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (_) => _FullScreenImageViewer(imageUrl: imageUrl),
+    ),
+  );
+}
+
+class _FullScreenImageViewer extends StatelessWidget {
+  const _FullScreenImageViewer({required this.imageUrl});
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          AppStrings.feedImageViewerTitle,
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 1,
+          maxScale: 4,
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.contain,
+            placeholder: (_, __) => const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+            errorWidget: (_, __, ___) => const Text(
+              AppStrings.feedImageLoadError,
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
       ),
     );
   }

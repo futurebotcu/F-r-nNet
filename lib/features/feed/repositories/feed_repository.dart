@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
+import '../models/feed_media.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
 
@@ -24,6 +27,23 @@ abstract class FeedRepository {
     required String role,
     required String text,
     List<String> tags = const <String>[],
+  });
+
+  /// V1 Social S3 — Mevcut bir post'a image attach et.
+  ///
+  /// Akış:
+  ///   1. Supabase Storage `feed-media` bucket'ına bytes yüklenir
+  ///      ({owner_id}/{post_id}/{media_id}.{ext} path).
+  ///   2. `feed_media` satırı INSERT edilir.
+  ///   3. Geri dönen `FeedMedia` modelinde publicUrl dolu olur.
+  ///
+  /// Local impl test/seed için sahte URL üretir.
+  Future<FeedMedia> uploadFeedImage({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
   });
 
   /// V1 Feed F1 — Owner-only post soft-delete. `feed_posts.is_deleted=true`.

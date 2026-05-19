@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
+import '../models/feed_media.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
 import 'feed_repository.dart';
@@ -72,6 +74,42 @@ class LocalFeedRepository implements FeedRepository {
     _posts.insert(0, post);
     _notify();
     return post;
+  }
+
+  @override
+  Future<FeedMedia> uploadFeedImage({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+  }) async {
+    // Local impl: fake URL + in-memory append. Test/seed için yeterli.
+    final i = _posts.indexWhere((p) => p.id == postId);
+    if (i == -1) {
+      throw StateError('Post not found: $postId');
+    }
+    final post = _posts[i];
+    final now = DateTime.now();
+    final mediaId = 'fm_${now.microsecondsSinceEpoch}';
+    final ext = fileExtension.toLowerCase().replaceAll('.', '');
+    final path = '${post.ownerId}/$postId/$mediaId.$ext';
+    final media = FeedMedia(
+      id: mediaId,
+      postId: postId,
+      ownerId: post.ownerId,
+      mediaType: 'image',
+      storagePath: path,
+      publicUrl: 'local://$path',
+      width: width,
+      height: height,
+      sizeBytes: bytes.length,
+      createdAt: now,
+    );
+    final newList = <FeedMedia>[...post.mediaList, media];
+    _posts[i] = post.copyWith(mediaList: newList);
+    _notify();
+    return media;
   }
 
   @override

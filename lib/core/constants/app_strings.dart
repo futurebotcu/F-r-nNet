@@ -278,6 +278,17 @@ class AppStrings {
       'Takip işlemi tamamlanamadı. Lütfen tekrar dene.';
   static String followCountFollowers(int n) => '$n takipçi';
   static String followCountFollowing(int n) => '$n takip';
+
+  // V1 Social S3 — Feed image post.
+  static const String feedComposerAddPhoto = 'Foto ekle';
+  static const String feedComposerPhotoSelected = 'Foto seçildi';
+  static const String feedComposerRemovePhoto = 'Resmi kaldır';
+  static const String feedComposerPickError =
+      'Resim seçilemedi. Lütfen tekrar dene.';
+  static const String feedComposerUploadError =
+      'Resim yüklenemedi. Gönderi metin olarak kaydedildi.';
+  static const String feedImageLoadError = 'Resim yüklenemedi.';
+  static const String feedImageViewerTitle = 'Resim';
   // V1 P1-C — Eski fake share snackbar. Native share aktif edildiğinden
   // onShare içinde artık KULLANILMAZ; key tek dependent test referansı
   // sürdürmek için tutuluyor.

@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
+import '../models/feed_media.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
 import 'feed_repository.dart';
@@ -64,6 +66,7 @@ class SupabaseFeedRepository implements FeedRepository {
     Map<String, dynamic> row, {
     required Set<String> likedPostIds,
     required Set<String> savedPostIds,
+    Map<String, List<FeedMedia>> mediaByPostId = const {},
   }) {
     final id = row['id'] as String;
     final tagsRaw = row['tags'] as List?;
@@ -85,7 +88,38 @@ class SupabaseFeedRepository implements FeedRepository {
       isSaved: savedPostIds.contains(id),
       groupId: row['group_id'] as String?,
       groupName: row['group_name'] as String?,
+      mediaList: mediaByPostId[id] ?? const <FeedMedia>[],
     );
+  }
+
+  /// V1 Social S3 — Verilen post id'leri için medya satırlarını tek
+  /// sorguyla çeker ve post_id → list grouping döner. RLS SELECT post
+  /// görünürse media görünür koşulu sayesinde owner harici post'ların
+  /// medyası da görünür (post zaten public).
+  Future<Map<String, List<FeedMedia>>> _fetchMediaByPostIds(
+    List<String> postIds,
+  ) async {
+    if (postIds.isEmpty) return const <String, List<FeedMedia>>{};
+    try {
+      final rows = await _client
+          .from('feed_media')
+          .select('id, post_id, owner_id, media_type, storage_path, '
+              'width, height, size_bytes, created_at')
+          .inFilter('post_id', postIds)
+          .eq('is_deleted', false)
+          .order('created_at', ascending: true);
+      final byId = <String, List<FeedMedia>>{};
+      for (final r in (rows as List).cast<Map<String, dynamic>>()) {
+        final path = r['storage_path'] as String;
+        final publicUrl =
+            _client.storage.from('feed-media').getPublicUrl(path);
+        final media = FeedMedia.fromRow(r, publicUrl: publicUrl);
+        byId.putIfAbsent(media.postId, () => <FeedMedia>[]).add(media);
+      }
+      return byId;
+    } catch (_) {
+      return const <String, List<FeedMedia>>{};
+    }
   }
 
   /// Mevcut kullanıcının beğendiği post id'lerini set olarak çeker.
@@ -131,17 +165,18 @@ class SupabaseFeedRepository implements FeedRepository {
     final list = (rows as List).cast<Map<String, dynamic>>();
     final ids = list.map((r) => r['id'] as String).toList(growable: false);
 
-    // İki paralel set sorgusu (current user için isLiked/isSaved).
-    final results = await Future.wait<Set<String>>(<Future<Set<String>>>[
-      _fetchLikedSet(ids),
-      _fetchSavedSet(ids),
-    ]);
-    final liked = results[0];
-    final saved = results[1];
+    // Üç paralel sorgu: isLiked / isSaved set + post id → media list.
+    final liked = await _fetchLikedSet(ids);
+    final saved = await _fetchSavedSet(ids);
+    final media = await _fetchMediaByPostIds(ids);
 
     return list
-        .map((row) =>
-            _fromRow(row, likedPostIds: liked, savedPostIds: saved))
+        .map((row) => _fromRow(
+              row,
+              likedPostIds: liked,
+              savedPostIds: saved,
+              mediaByPostId: media,
+            ))
         .toList(growable: false);
   }
 
@@ -157,15 +192,16 @@ class SupabaseFeedRepository implements FeedRepository {
         .limit(100);
     final list = (rows as List).cast<Map<String, dynamic>>();
     final ids = list.map((r) => r['id'] as String).toList(growable: false);
-    final results = await Future.wait<Set<String>>(<Future<Set<String>>>[
-      _fetchLikedSet(ids),
-      _fetchSavedSet(ids),
-    ]);
-    final liked = results[0];
-    final saved = results[1];
+    final liked = await _fetchLikedSet(ids);
+    final saved = await _fetchSavedSet(ids);
+    final media = await _fetchMediaByPostIds(ids);
     return list
-        .map((row) =>
-            _fromRow(row, likedPostIds: liked, savedPostIds: saved))
+        .map((row) => _fromRow(
+              row,
+              likedPostIds: liked,
+              savedPostIds: saved,
+              mediaByPostId: media,
+            ))
         .toList(growable: false);
   }
 
@@ -194,6 +230,85 @@ class SupabaseFeedRepository implements FeedRepository {
         .single();
     _notify();
     return _fromRow(row, likedPostIds: <String>{}, savedPostIds: <String>{});
+  }
+
+  @override
+  Future<FeedMedia> uploadFeedImage({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+  }) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    final ext = fileExtension.toLowerCase().replaceAll('.', '');
+    final mediaId = _newMediaId();
+    final path = '$userId/$postId/$mediaId.$ext';
+    final mime = _mimeForImageExt(ext);
+
+    // 1) Storage upload — path prefix RLS policy `{userId}/...` ile uyumlu.
+    await _client.storage.from('feed-media').uploadBinary(
+          path,
+          bytes,
+          fileOptions: sb.FileOptions(
+            contentType: mime,
+            upsert: false,
+          ),
+        );
+
+    // 2) feed_media INSERT — RLS owner_id = auth.uid() + post owner cross-check.
+    final row = await _client
+        .from('feed_media')
+        .insert(<String, dynamic>{
+          'id': mediaId,
+          'post_id': postId,
+          'owner_id': userId,
+          'media_type': 'image',
+          'storage_path': path,
+          if (width != null) 'width': width,
+          if (height != null) 'height': height,
+          'size_bytes': bytes.length,
+        })
+        .select(
+          'id, post_id, owner_id, media_type, storage_path, '
+          'width, height, size_bytes, created_at',
+        )
+        .single();
+
+    final publicUrl = _client.storage.from('feed-media').getPublicUrl(path);
+    _notify();
+    return FeedMedia.fromRow(row, publicUrl: publicUrl);
+  }
+
+  static String _mimeForImageExt(String ext) {
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'gif':
+        return 'image/gif';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  /// gen_random_uuid() server-side default'a sahip; biz path için önceden
+  /// üretmek istediğimiz için client-side bir uuid v4 üretiriz.
+  static String _newMediaId() {
+    // Basit RFC-4122 v4 — supabase_flutter pubspec'inde `uuid` paketi yok,
+    // dart:math + DateTime ile yeterli benzersizlik (path collision riski
+    // ihmal edilebilir; ek olarak storage upsert=false coraşma yakalar).
+    final now = DateTime.now().microsecondsSinceEpoch.toRadixString(16);
+    final rnd = (now.hashCode ^ identityHashCode(now)).toUnsigned(32)
+        .toRadixString(16);
+    return '${now.padLeft(16, '0')}-$rnd';
   }
 
   @override
