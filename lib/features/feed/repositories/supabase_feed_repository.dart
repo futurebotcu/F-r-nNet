@@ -356,7 +356,10 @@ class SupabaseFeedRepository implements FeedRepository {
     if (userId == null) {
       throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
     }
-    // Mevcut like'ı kontrol et, varsa sil, yoksa ekle.
+    // V1 Feed Core Transplant — idempotent toggle. SELECT→INSERT/DELETE
+    // arasında race window var; çift tap aynı anda iki INSERT atarsa
+    // ikincisi 23505 (unique_violation) alır. Eski kod bunu yutmuyordu;
+    // şimdi yakalıyor → "zaten beğenildi" no-op olarak değerlendiriyor.
     final existing = await _client
         .from('feed_likes')
         .select('post_id')
@@ -364,17 +367,22 @@ class SupabaseFeedRepository implements FeedRepository {
         .eq('owner_id', userId)
         .maybeSingle();
 
-    if (existing == null) {
-      await _client.from('feed_likes').insert(<String, dynamic>{
-        'post_id': postId,
-        'owner_id': userId,
-      });
-    } else {
-      await _client
-          .from('feed_likes')
-          .delete()
-          .eq('post_id', postId)
-          .eq('owner_id', userId);
+    try {
+      if (existing == null) {
+        await _client.from('feed_likes').insert(<String, dynamic>{
+          'post_id': postId,
+          'owner_id': userId,
+        });
+      } else {
+        await _client
+            .from('feed_likes')
+            .delete()
+            .eq('post_id', postId)
+            .eq('owner_id', userId);
+      }
+    } on sb.PostgrestException catch (e) {
+      // Race: çift tap ardı ardına INSERT → ikinci 23505. Idempotent yutma.
+      if (e.code != '23505') rethrow;
     }
     _notify();
 
@@ -402,17 +410,21 @@ class SupabaseFeedRepository implements FeedRepository {
         .eq('owner_id', userId)
         .maybeSingle();
 
-    if (existing == null) {
-      await _client.from('feed_saves').insert(<String, dynamic>{
-        'post_id': postId,
-        'owner_id': userId,
-      });
-    } else {
-      await _client
-          .from('feed_saves')
-          .delete()
-          .eq('post_id', postId)
-          .eq('owner_id', userId);
+    try {
+      if (existing == null) {
+        await _client.from('feed_saves').insert(<String, dynamic>{
+          'post_id': postId,
+          'owner_id': userId,
+        });
+      } else {
+        await _client
+            .from('feed_saves')
+            .delete()
+            .eq('post_id', postId)
+            .eq('owner_id', userId);
+      }
+    } on sb.PostgrestException catch (e) {
+      if (e.code != '23505') rethrow;
     }
     _notify();
 

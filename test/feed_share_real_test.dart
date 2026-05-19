@@ -79,18 +79,20 @@ void main() {
         reason: 'Native share hata olursa Türkçe snackbar fire etmeli',
       );
 
-      // Yapısal sıra: try → Share.share → catch → feedShareError snackbar.
-      final idxOnShare = feedScreenSrc.indexOf('onShare: () async {');
-      expect(idxOnShare, greaterThan(-1),
-          reason: 'onShare async handler olmalı');
-      final idxTry = feedScreenSrc.indexOf('try {', idxOnShare);
+      // V1 Feed Core Transplant — Share handler artık ayrı bir method
+      // (`_onSharePressed`). Yapısal sıra: method → try → Share.share →
+      // catch → feedShareError snackbar.
+      final idxHandler = feedScreenSrc.indexOf('_onSharePressed()');
+      expect(idxHandler, greaterThan(-1),
+          reason: '_onSharePressed handler method olarak bulunmalı');
+      final idxTry = feedScreenSrc.indexOf('try {', idxHandler);
       final idxShareCall = feedScreenSrc.indexOf('Share.share(', idxTry);
       final idxCatch = feedScreenSrc.indexOf('} catch (_) {', idxShareCall);
       final idxErrorString =
           feedScreenSrc.indexOf('AppStrings.feedShareError', idxCatch);
 
-      // Tüm noktalar onShare içinde sırayla bulunmalı.
-      expect(idxTry, greaterThan(idxOnShare));
+      // Tüm noktalar handler içinde sırayla bulunmalı.
+      expect(idxTry, greaterThan(idxHandler));
       expect(idxShareCall, greaterThan(idxTry));
       expect(idxCatch, greaterThan(idxShareCall));
       expect(idxErrorString, greaterThan(idxCatch),

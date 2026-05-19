@@ -22,6 +22,7 @@ import '../../social_groups/widgets/group_card.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
 import '../providers/feed_providers.dart';
+import '../repositories/feed_repository.dart';
 import '../widgets/feed_comment_sheet.dart';
 import '../widgets/feed_composer.dart';
 import '../widgets/insight_card.dart';
@@ -339,12 +340,27 @@ class _FeedPostsSliver extends ConsumerWidget {
 /// V1.4 P1.18/P1.19 — Widget regresyon testi tarafından doğrudan pump
 /// edilebilmesi için library-public (underscore'suz). Sadece feed_screen
 /// içinde construct ediliyor; UI'a yeni surface eklemiyor.
-class PostCardWired extends ConsumerWidget {
+///
+/// V1 Feed Core Transplant — Per-action busy lock: rapid double-tap'i
+/// hard-block eder ki repo katmanına ardışık iki çağrı gitmesin (race
+/// window'da 23505 unique violation veya inkonsistant state önlenir).
+class PostCardWired extends ConsumerStatefulWidget {
   const PostCardWired({super.key, required this.post});
   final FeedPost post;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PostCardWired> createState() => _PostCardWiredState();
+}
+
+class _PostCardWiredState extends ConsumerState<PostCardWired> {
+  bool _likeBusy = false;
+  bool _saveBusy = false;
+  bool _shareBusy = false;
+
+  FeedPost get post => widget.post;
+
+  @override
+  Widget build(BuildContext context) {
     final repo = ref.read(feedRepositoryProvider);
     return FeedPostCard(
       author: post.author,
@@ -360,88 +376,13 @@ class PostCardWired extends ConsumerWidget {
       groupName: post.groupName,
       // V1 Social S3 — Post'a bağlı ilk image varsa preview göster.
       imageUrl: post.firstImage?.publicUrl,
-      onLike: () async {
-        // V1.3.2 — Beğeni kullanıcıya bağlı bir favori işlemidir.
-        if (!AuthRequiredGuard.canWriteWithRef(ref)) {
-          await showAuthRequiredSheet(context, ref);
-          return;
-        }
-        try {
-          final updated = await repo.toggleLike(post.id);
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(updated.isLiked
-                  ? AppStrings.feedActionLikedSnack
-                  : AppStrings.feedActionUnlikedSnack),
-              duration: const Duration(milliseconds: 900),
-            ),
-          );
-        } on GuestActionRequiredException {
-          // Defense-in-depth: pre-check geçtikten sonra repo katmanı yine
-          // guest exception atarsa sessizce yutmayalım — auth sheet aç.
-          if (!context.mounted) return;
-          await showAuthRequiredSheet(context, ref);
-        } catch (_) {
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppStrings.feedLikeUpdateError),
-            ),
-          );
-        }
-      },
-      onSave: () async {
-        // V1.3.2 — "Kaydet" (bookmark) kullanıcıya bağlı bir işlem.
-        if (!AuthRequiredGuard.canWriteWithRef(ref)) {
-          await showAuthRequiredSheet(context, ref);
-          return;
-        }
-        try {
-          final updated = await repo.toggleSave(post.id);
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(updated.isSaved
-                  ? AppStrings.feedActionSavedSnack
-                  : AppStrings.feedActionUnsavedSnack),
-              duration: const Duration(milliseconds: 900),
-            ),
-          );
-        } on GuestActionRequiredException {
-          if (!context.mounted) return;
-          await showAuthRequiredSheet(context, ref);
-        } catch (_) {
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppStrings.feedSaveUpdateError),
-            ),
-          );
-        }
-      },
+      onLike: _likeBusy ? null : () => _onLikePressed(repo),
+      onSave: _saveBusy ? null : () => _onSavePressed(repo),
       onComment: () {
         // V1 P1-B — Eski snackbar yerine gerçek yorum bottom sheet.
         FeedCommentSheet.show(context, post.id);
       },
-      onShare: () async {
-        // V1 P1-C — Eski fake snackbar yerine gerçek native share.
-        // Auth gerekmez; share_plus offline çalışır. URL/deep link yok
-        // (prod landing hazır olunca P2'de eklenir).
-        try {
-          await Share.share(
-            _buildShareText(post),
-            subject: AppStrings.feedShareSubject,
-          );
-        } catch (_) {
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppStrings.feedShareError),
-            ),
-          );
-        }
-      },
+      onShare: _shareBusy ? null : _onSharePressed,
       onTagTap: (tag) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -465,6 +406,88 @@ class PostCardWired extends ConsumerWidget {
                 '${AppRoutes.userPublicProfile}/${post.ownerId}',
               ),
     );
+  }
+
+  // V1 Feed Core Transplant — Action handler'ları metoda çekildi ve
+  // per-action busy lock + Future.timeout ile sarıldı.
+
+  Future<void> _onLikePressed(FeedRepository repo) async {
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    setState(() => _likeBusy = true);
+    try {
+      final updated =
+          await repo.toggleLike(post.id).timeout(const Duration(seconds: 15));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(updated.isLiked
+              ? AppStrings.feedActionLikedSnack
+              : AppStrings.feedActionUnlikedSnack),
+          duration: const Duration(milliseconds: 900),
+        ),
+      );
+    } on GuestActionRequiredException {
+      if (!mounted) return;
+      await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedLikeUpdateError)),
+      );
+    } finally {
+      if (mounted) setState(() => _likeBusy = false);
+    }
+  }
+
+  Future<void> _onSavePressed(FeedRepository repo) async {
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    setState(() => _saveBusy = true);
+    try {
+      final updated =
+          await repo.toggleSave(post.id).timeout(const Duration(seconds: 15));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(updated.isSaved
+              ? AppStrings.feedActionSavedSnack
+              : AppStrings.feedActionUnsavedSnack),
+          duration: const Duration(milliseconds: 900),
+        ),
+      );
+    } on GuestActionRequiredException {
+      if (!mounted) return;
+      await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedSaveUpdateError)),
+      );
+    } finally {
+      if (mounted) setState(() => _saveBusy = false);
+    }
+  }
+
+  Future<void> _onSharePressed() async {
+    setState(() => _shareBusy = true);
+    try {
+      await Share.share(
+        _buildShareText(post),
+        subject: AppStrings.feedShareSubject,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedShareError)),
+      );
+    } finally {
+      if (mounted) setState(() => _shareBusy = false);
+    }
   }
 
   /// Auth'lu kullanıcı bu post'un sahibi mi? Guest user için her zaman false.
