@@ -8,7 +8,9 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../feed/screens/feed_screen.dart';
+import '../providers/follow_providers.dart';
 import '../providers/profile_provider.dart';
+import '../widgets/follow_button.dart';
 
 /// V1 Social S1 — Public profile sayfası (`/profile/:userId`).
 ///
@@ -49,6 +51,7 @@ class PublicProfileScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
           children: [
             _ProfileHeader(
+              userId: userId,
               profileAsync: profileAsync,
               postsCount: postsAsync.maybeWhen(
                 data: (l) => l.length,
@@ -115,19 +118,22 @@ class PublicProfileScreen extends ConsumerWidget {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends ConsumerWidget {
   const _ProfileHeader({
+    required this.userId,
     required this.profileAsync,
     required this.postsCount,
     required this.isSelf,
   });
 
+  final String userId;
   final AsyncValue<PublicProfile?> profileAsync;
   final int? postsCount;
   final bool isSelf;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final followCounts = ref.watch(followCountsProvider(userId));
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
@@ -226,73 +232,92 @@ class _ProfileHeader extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 8),
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
                       children: [
                         if (postsCount != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.m,
-                              vertical: 4,
+                          _StatPill(
+                            label: AppStrings.publicProfilePostsHeading(
+                              postsCount!,
                             ),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.copper.withValues(alpha: 0.12),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
-                              border: Border.all(
-                                color: AppColors.copper
-                                    .withValues(alpha: 0.32),
-                                width: 0.6,
-                              ),
-                            ),
-                            child: Text(
-                              AppStrings.publicProfilePostsHeading(
-                                postsCount!,
-                              ),
-                              style: const TextStyle(
-                                color: AppColors.copper,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11.5,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
+                            color: AppColors.copper,
                           ),
-                        if (isSelf) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.m,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.softGold
-                                  .withValues(alpha: 0.14),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
-                              border: Border.all(
-                                color: AppColors.softGold
-                                    .withValues(alpha: 0.36),
-                                width: 0.6,
-                              ),
-                            ),
-                            child: const Text(
-                              AppStrings.publicProfileSelfHint,
-                              style: TextStyle(
-                                color: AppColors.softGold,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11.5,
-                              ),
-                            ),
+                        // V1 Social S2 — followers + following counts.
+                        followCounts.maybeWhen(
+                          data: (c) => _StatPill(
+                            label: AppStrings.followCountFollowers(c.followers),
+                            color: AppColors.softGold,
                           ),
-                        ],
+                          orElse: () => const SizedBox.shrink(),
+                        ),
+                        followCounts.maybeWhen(
+                          data: (c) => _StatPill(
+                            label: AppStrings.followCountFollowing(c.following),
+                            color: AppColors.softGold,
+                          ),
+                          orElse: () => const SizedBox.shrink(),
+                        ),
+                        if (isSelf)
+                          _StatPill(
+                            label: AppStrings.publicProfileSelfHint,
+                            color: AppColors.softGold,
+                            soft: true,
+                          ),
                       ],
                     ),
+                    if (!isSelf) ...[
+                      const SizedBox(height: AppSpacing.s),
+                      // V1 Social S2 — Takip et / Takipten çık.
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FollowButton(userId: userId),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  const _StatPill({
+    required this.label,
+    required this.color,
+    this.soft = false,
+  });
+  final String label;
+  final Color color;
+  final bool soft;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.m,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: soft ? 0.14 : 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: color.withValues(alpha: soft ? 0.36 : 0.32),
+          width: 0.6,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w800,
+          fontSize: 11.5,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }

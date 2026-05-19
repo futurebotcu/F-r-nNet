@@ -269,6 +269,15 @@ class AppStrings {
   static const String publicProfilePostsEmpty =
       'Bu kullanıcı henüz gönderi paylaşmadı.';
   static const String publicProfileSelfHint = 'Bu senin profilin';
+
+  // V1 Social S2 — Follow / Subscriptions
+  static const String followCtaFollow = 'Takip et';
+  static const String followCtaUnfollow = 'Takipten çık';
+  static const String followFollowing = 'Takip ediyorsun';
+  static const String followError =
+      'Takip işlemi tamamlanamadı. Lütfen tekrar dene.';
+  static String followCountFollowers(int n) => '$n takipçi';
+  static String followCountFollowing(int n) => '$n takip';
   // V1 P1-C — Eski fake share snackbar. Native share aktif edildiğinden
   // onShare içinde artık KULLANILMAZ; key tek dependent test referansı
   // sürdürmek için tutuluyor.
