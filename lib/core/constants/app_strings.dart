@@ -239,6 +239,14 @@ class AppStrings {
   static const String feedCommentCancelCta = 'Vazgeç';
   static const String feedCommentDeletedSnack = 'Yorum silindi.';
   static const String feedCommentOwnLabel = 'Sen';
+  // V1 — Yorum sheet UX hardening: composer altta inline error + guest CTA.
+  // Network exception ayrı mesaj; gerçek sebep snackbar yerine sheet içinde
+  // görünür (bottom sheet üstüne snackbar açılamadığı için).
+  static const String feedCommentErrorNetwork =
+      'Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.';
+  static const String feedCommentErrorSubmit =
+      'Yorum gönderilemedi. Lütfen tekrar dene.';
+  static const String feedCommentGuestCta = 'Yorum yazmak için giriş yap';
   // V1 P1-C — Eski fake share snackbar. Native share aktif edildiğinden
   // onShare içinde artık KULLANILMAZ; key tek dependent test referansı
   // sürdürmek için tutuluyor.

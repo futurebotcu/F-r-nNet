@@ -42,6 +42,12 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
   final _ctrl = TextEditingController();
   bool _sending = false;
 
+  /// V1 — Yorum sheet UX hardening: snackbar bottom sheet'in altında kaldığı
+  /// için kullanıcıya görünmüyordu; hata ve doğrulama mesajlarını sheet
+  /// içinde inline gösteririz. Başarı için snackbar yerine input clear +
+  /// listede beliren yeni yorum yeterli görsel geri bildirim.
+  String? _inlineError;
+
   @override
   void dispose() {
     _ctrl.dispose();
@@ -51,9 +57,7 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
   Future<void> _onSendPressed() async {
     final text = _ctrl.text.trim();
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedCommentEmptyError)),
-      );
+      setState(() => _inlineError = AppStrings.feedCommentEmptyError);
       return;
     }
     final canWrite = AuthRequiredGuard.canWriteWithRef(ref);
@@ -61,7 +65,10 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    setState(() => _sending = true);
+    setState(() {
+      _sending = true;
+      _inlineError = null;
+    });
     final repo = ref.read(feedRepositoryProvider);
     final profile = ref.read(profileControllerProvider);
     try {
@@ -71,23 +78,35 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
         currentAuthorName: profile?.displayName,
         currentAuthorRole: profile?.roleBadge,
       );
+      if (!mounted) return;
       _ctrl.clear();
       ref.invalidate(feedCommentsProvider(widget.postId));
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedCommentSavedSnack)),
-      );
+      // Başarı için snackbar AÇILMAZ — sheet üstünden görünmeyecek. Yeni
+      // yorum listede ascending sort ile dipte beliriyor; bu yeterli
+      // görsel geri bildirim.
     } on GuestActionRequiredException {
       if (mounted) await showAuthRequiredSheet(context, ref);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.feedCommentErrorGeneric)),
-        );
+        setState(() => _inlineError = _humanizeError(e));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  /// Ham exception'ı kullanıcıya anlamlı Türkçe mesaja çevirir. Network
+  /// kategorisi ayrı tutulur; geri kalanı generic submit hatası.
+  String _humanizeError(Object e) {
+    final s = e.toString().toLowerCase();
+    if (s.contains('socketexception') ||
+        s.contains('failed host lookup') ||
+        s.contains('network is unreachable') ||
+        s.contains('timeoutexception') ||
+        s.contains('clientexception')) {
+      return AppStrings.feedCommentErrorNetwork;
+    }
+    return AppStrings.feedCommentErrorSubmit;
   }
 
   Future<void> _onDeletePressed(FeedComment c) async {
@@ -113,17 +132,13 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
     final repo = ref.read(feedRepositoryProvider);
     try {
       await repo.deleteComment(c.id);
+      if (!mounted) return;
       ref.invalidate(feedCommentsProvider(widget.postId));
+      // Başarı snackbar'ı sheet altında görünmez — silinen yorum listeden
+      // kaybolur, bu yeterli görsel geri bildirim.
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.feedCommentDeletedSnack)),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.feedCommentErrorGeneric)),
-        );
+        setState(() => _inlineError = _humanizeError(e));
       }
     }
   }
@@ -226,7 +241,53 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
               ),
             ),
             const Divider(height: 0, color: AppColors.borderHairline),
-            // Composer
+            // V1 — Inline error banner: snackbar bottom sheet'in altında
+            // görünmediği için, validation/submit/network hataları burada
+            // görünür kalır.
+            if (_inlineError != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.fromLTRB(
+                  AppSpacing.l,
+                  AppSpacing.s,
+                  AppSpacing.l,
+                  0,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.m,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.danger.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                  border: Border.all(
+                    color: AppColors.danger.withValues(alpha: 0.32),
+                    width: 0.6,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      size: 16,
+                      color: AppColors.danger,
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                    Expanded(
+                      child: Text(
+                        _inlineError!,
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // Composer — auth user için TextField + send; guest için CTA.
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.l,
@@ -234,49 +295,85 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
                 AppSpacing.l,
                 AppSpacing.s,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _ctrl,
-                      minLines: 1,
-                      maxLines: 4,
-                      textInputAction: TextInputAction.send,
-                      enabled: !_sending,
-                      decoration: const InputDecoration(
-                        hintText: AppStrings.feedCommentComposerHint,
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => _onSendPressed(),
+              child: user == null
+                  ? _GuestComposerCta(
+                      onLogin: () => showAuthRequiredSheet(context, ref),
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _ctrl,
+                            minLines: 1,
+                            maxLines: 4,
+                            textInputAction: TextInputAction.send,
+                            enabled: !_sending,
+                            decoration: const InputDecoration(
+                              hintText: AppStrings.feedCommentComposerHint,
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                            ),
+                            onSubmitted: (_) => _onSendPressed(),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.s),
+                        FilledButton.icon(
+                          icon: _sending
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 1.6,
+                                      valueColor: AlwaysStoppedAnimation(
+                                          Colors.white)),
+                                )
+                              : const Icon(Icons.send_rounded, size: 16),
+                          onPressed: _sending ? null : _onSendPressed,
+                          label: const Text(AppStrings.feedCommentSendCta),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.copper,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.s),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.s),
-                  FilledButton.icon(
-                    icon: _sending
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 1.6,
-                                valueColor: AlwaysStoppedAnimation(
-                                    Colors.white)),
-                          )
-                        : const Icon(Icons.send_rounded, size: 16),
-                    onPressed: _sending ? null : _onSendPressed,
-                    label: const Text(AppStrings.feedCommentSendCta),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.copper,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.s),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// V1 — Guest kullanıcı için composer alanı: TextField yerine "Giriş yap"
+/// CTA. Sheet okuma için açık kalır (mevcut yorumları görür), ama yazma
+/// girişimi auth bottom sheet'e yönlendirilir.
+class _GuestComposerCta extends StatelessWidget {
+  const _GuestComposerCta({required this.onLogin});
+  final VoidCallback onLogin;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: FilledButton.icon(
+        onPressed: onLogin,
+        icon: const Icon(Icons.login_rounded, size: 16),
+        label: const Text(AppStrings.feedCommentGuestCta),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.copper,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.s),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 13.5,
+          ),
         ),
       ),
     );
