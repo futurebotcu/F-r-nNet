@@ -152,14 +152,31 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
   Widget build(BuildContext context) {
     final async = ref.watch(feedCommentsProvider(widget.postId));
     final user = ref.watch(currentAuthUserProvider);
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final mq = MediaQuery.of(context);
+    final bottomInset = mq.viewInsets.bottom;
+    // V1 Comment Reality Fix — Donor pattern (instagram clone) sheet'i
+    // full Scaffold + DraggableScrollableSheet ile kuruyor. Bizim sheet
+    // `Column(mainAxisSize: min) + Flexible(...)` deseni
+    // `isScrollControlled: true` modunda **unbounded height** alıyor ve
+    // `RenderFlex children have non-zero flex but incoming height
+    // constraints are unbounded` assertion'ı ile sheet'i hiç çizmiyordu —
+    // emülatörde yorum butonuna tıklayınca yalnız dim arka plan kalıyor,
+    // sheet açılmıyordu.
+    //
+    // Minimum fix: dış sarmayı ekranın %85'ine sabitle. İçerideki
+    // `Flexible(child: list)` artık bounded → ListView/loading/empty
+    // düzgün çiziliyor. Donor'un DraggableScrollableSheet'i daha esnek
+    // (drag-to-resize) ama V1 için fixed-height yeterli.
+    final sheetHeight = (mq.size.height - mq.padding.top) * 0.85;
     return SafeArea(
       top: false,
       child: Padding(
         padding: EdgeInsets.only(bottom: bottomInset),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: SizedBox(
+          height: sheetHeight,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
             // Sheet handle + başlık
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -346,7 +363,8 @@ class _FeedCommentSheetState extends ConsumerState<FeedCommentSheet> {
                       ],
                     ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

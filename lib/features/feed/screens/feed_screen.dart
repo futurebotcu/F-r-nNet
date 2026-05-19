@@ -357,7 +357,19 @@ class _PostCardWiredState extends ConsumerState<PostCardWired> {
   bool _saveBusy = false;
   bool _shareBusy = false;
 
+  /// V1 Comment Reality Fix — Optimistic UI overrides. Tap olunca anında
+  /// UI flip; backend success → override clear (provider tick güncel
+  /// state'i getirir). Backend fail → override revert + snackbar. null =
+  /// override yok, post.isLiked/saved doğrudan kullanılır.
+  bool? _likedOverride;
+  bool? _savedOverride;
+  int? _likeCountOverride;
+
   FeedPost get post => widget.post;
+
+  bool get _displayIsLiked => _likedOverride ?? post.isLiked;
+  bool get _displayIsSaved => _savedOverride ?? post.isSaved;
+  int get _displayLikeCount => _likeCountOverride ?? post.likeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -367,12 +379,12 @@ class _PostCardWiredState extends ConsumerState<PostCardWired> {
       role: post.role,
       timeAgo: _timeAgo(post.createdAt),
       content: post.text,
-      likeCount: post.likeCount,
+      likeCount: _displayLikeCount,
       commentCount: post.commentCount,
       tags: post.tags,
       type: post.type,
-      isLiked: post.isLiked,
-      isSaved: post.isSaved,
+      isLiked: _displayIsLiked,
+      isSaved: _displayIsSaved,
       groupName: post.groupName,
       // V1 Social S3 — Post'a bağlı ilk image varsa preview göster.
       imageUrl: post.firstImage?.publicUrl,
@@ -416,27 +428,49 @@ class _PostCardWiredState extends ConsumerState<PostCardWired> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    setState(() => _likeBusy = true);
+    // V1 Comment Reality Fix — Optimistic flip: tap olunca UI anında
+    // değişir; backend cevabını saniyelerce bekletmeyiz. Hata olursa
+    // revert.
+    final wasLiked = _displayIsLiked;
+    final wasCount = _displayLikeCount;
+    final newLiked = !wasLiked;
+    final newCount = newLiked
+        ? (wasCount + 1)
+        : (wasCount > 0 ? wasCount - 1 : 0);
+    setState(() {
+      _likeBusy = true;
+      _likedOverride = newLiked;
+      _likeCountOverride = newCount;
+    });
     try {
-      final updated =
-          await repo.toggleLike(post.id).timeout(const Duration(seconds: 15));
+      await repo.toggleLike(post.id).timeout(const Duration(seconds: 15));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(updated.isLiked
-              ? AppStrings.feedActionLikedSnack
-              : AppStrings.feedActionUnlikedSnack),
-          duration: const Duration(milliseconds: 900),
-        ),
-      );
+      // Backend OK — override'ı clear et; sonraki provider tick güncel
+      // post.isLiked ile dolduracak. Tick gelmeden override'ı temizlemek
+      // önemli ki kullanıcı tekrar tıklarsa state tutarsız kalmasın.
+      setState(() {
+        _likedOverride = null;
+        _likeCountOverride = null;
+      });
     } on GuestActionRequiredException {
-      if (!mounted) return;
-      await showAuthRequiredSheet(context, ref);
+      // Revert
+      if (mounted) {
+        setState(() {
+          _likedOverride = wasLiked;
+          _likeCountOverride = wasCount;
+        });
+        await showAuthRequiredSheet(context, ref);
+      }
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedLikeUpdateError)),
-      );
+      if (mounted) {
+        setState(() {
+          _likedOverride = wasLiked;
+          _likeCountOverride = wasCount;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.feedLikeUpdateError)),
+        );
+      }
     } finally {
       if (mounted) setState(() => _likeBusy = false);
     }
@@ -447,27 +481,28 @@ class _PostCardWiredState extends ConsumerState<PostCardWired> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    setState(() => _saveBusy = true);
+    final wasSaved = _displayIsSaved;
+    final newSaved = !wasSaved;
+    setState(() {
+      _saveBusy = true;
+      _savedOverride = newSaved;
+    });
     try {
-      final updated =
-          await repo.toggleSave(post.id).timeout(const Duration(seconds: 15));
+      await repo.toggleSave(post.id).timeout(const Duration(seconds: 15));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(updated.isSaved
-              ? AppStrings.feedActionSavedSnack
-              : AppStrings.feedActionUnsavedSnack),
-          duration: const Duration(milliseconds: 900),
-        ),
-      );
+      setState(() => _savedOverride = null);
     } on GuestActionRequiredException {
-      if (!mounted) return;
-      await showAuthRequiredSheet(context, ref);
+      if (mounted) {
+        setState(() => _savedOverride = wasSaved);
+        await showAuthRequiredSheet(context, ref);
+      }
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedSaveUpdateError)),
-      );
+      if (mounted) {
+        setState(() => _savedOverride = wasSaved);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.feedSaveUpdateError)),
+        );
+      }
     } finally {
       if (mounted) setState(() => _saveBusy = false);
     }
