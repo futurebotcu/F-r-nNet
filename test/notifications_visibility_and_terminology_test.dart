@@ -98,8 +98,10 @@ void main() {
 
   group('G.N1 — Bell surface kablolaması (source-level)', () {
     test('Feed header NotificationsHeaderAction kullanıyor', () {
+      // V2 Commit 4 cleanup: eski feed_screen.dart silindi. Header
+      // SocialFeedPage'a taşındı (_SocialFeedHeader).
       final src = File(
-        'lib/features/feed/screens/feed_screen.dart',
+        'lib/features/social/feed/social_feed_page.dart',
       ).readAsStringSync();
       expect(src.contains('NotificationsHeaderAction'), isTrue,
           reason: 'Feed header bell entry point içermeli');

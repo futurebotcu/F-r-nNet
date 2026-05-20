@@ -14,9 +14,8 @@
 //   * Upload fail → text post rollback (silent text-only fallback YOK).
 //   * Type chips FırınNet'e özgü (Üretim / Soru / Tedarik / Ekipman / İş).
 //
-// Eski `lib/features/feed/widgets/feed_composer.dart` (SliverToBoxAdapter
-// olarak feed üstüne gömülüydü) artık kullanılmaz; F-cleanup commit'inde
-// silinir.
+// V2 Commit 4 cleanup — eski FeedComposer (SliverToBoxAdapter) tamamen
+// silindi; bu page donor-first composer'ın tek girişi.
 
 import 'dart:typed_data';
 

@@ -181,13 +181,14 @@ void main() {
     });
   });
 
-  group('F1 — Wiring feed_screen → SocialCommentsPage', () {
+  group('F1 — Wiring SocialPostCard → SocialCommentsPage', () {
+    // V2 Commit 4 cleanup: eski feed_screen.dart silindi. Wiring artık
+    // SocialPostCard'da (action row + comments preview).
     final src = File(
-      'lib/features/feed/screens/feed_screen.dart',
+      'lib/features/social/post/social_post_card.dart',
     ).readAsStringSync();
 
     test('onComment: SocialCommentsPage.show çağırıyor', () {
-      // Yorum strip et (yorumlar metni içerebilir)
       final stripped = src
           .split('\n')
           .where((l) => !l.trimLeft().startsWith('//'))
@@ -195,21 +196,19 @@ void main() {
       expect(
         stripped.contains('SocialCommentsPage.show(context, post.id)'),
         isTrue,
-        reason: 'Eski FeedCommentSheet.show kaldırıldı, yeni donor '
-            'pattern bağlandı',
+        reason: 'Action row + CommentsPreview SocialCommentsPage açar',
       );
     });
 
-    test('Eski FeedCommentSheet artık aktif çağrılmıyor', () {
+    test('Eski FeedCommentSheet hiçbir yerde kullanılmıyor', () {
       final stripped = src
           .split('\n')
           .where((l) => !l.trimLeft().startsWith('//'))
           .join('\n');
       expect(
-        stripped.contains('FeedCommentSheet.show'),
+        stripped.contains('FeedCommentSheet'),
         isFalse,
-        reason: 'Eski sheet F7 cleanup\'a kadar dosyada kalır ama '
-            'feed_screen tarafından çağrılmaz',
+        reason: 'V2 Commit 4 cleanup: FeedCommentSheet tamamen silindi',
       );
     });
   });

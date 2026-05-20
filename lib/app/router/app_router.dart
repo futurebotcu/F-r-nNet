@@ -211,10 +211,8 @@ GoRouter createRouter() {
         builder: (_, __, child) => AppShell(child: child),
         routes: <RouteBase>[
           GoRoute(
-            // V1 Donor-First Social Rebuild — eski FeedScreen yerine donor-
-            // style SocialFeedPage. Eski FeedScreen dosyası karantinada
-            // (lib/features/feed/screens/feed_screen.dart); F-cleanup
-            // commit'inde silinir.
+            // V2 Commit 4 cleanup — Legacy FeedScreen tamamen silindi.
+            // SocialFeedPage donor-first sosyal akış.
             path: AppRoutes.feed,
             pageBuilder: (_, state) =>
                 _noTransition(state, const SocialFeedPage()),
@@ -259,7 +257,7 @@ GoRouter createRouter() {
       ),
 
       // V1 Social F2 — Donor-first SocialProfilePage (`/u/:userId`).
-      // Eski `PublicProfileScreen` deprecate edildi (F7 cleanup'ta silinir).
+      // (V2 Commit 4 cleanup — eski PublicProfileScreen tamamen silindi.)
       GoRoute(
         path: '${AppRoutes.userPublicProfile}/:userId',
         builder: (_, state) => SocialProfilePage(
@@ -284,8 +282,8 @@ GoRouter createRouter() {
       ),
 
       // V1 Donor-First Social Rebuild — composer ayrı tam ekran route.
-      // SocialFeedPage'deki FAB bu route'a push eder; eski FeedComposer
-      // (sliver olarak feed üstüne gömülüydü) artık kullanılmaz.
+      // SocialFeedPage'deki FAB bu route'a push eder.
+      // (V2 Commit 4 cleanup — eski FeedComposer tamamen silindi.)
       GoRoute(
         path: AppRoutes.socialComposer,
         builder: (_, __) => const SocialComposerPage(),

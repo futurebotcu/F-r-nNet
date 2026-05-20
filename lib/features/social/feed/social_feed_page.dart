@@ -14,8 +14,8 @@
 //   * Composer ayrı route (`/social/composer`); donor pattern.
 //   * Post kartı `SocialPostCard` (donor `PostLarge` widget tree).
 //
-// Eski `FeedScreen` (lib/features/feed/screens/feed_screen.dart) artık
-// router'dan çağrılmaz; F-cleanup commit'inde silinir.
+// V2 Commit 4 cleanup — eski FeedScreen tamamen silindi; bu page
+// donor-first sosyal akışın tek girişi.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

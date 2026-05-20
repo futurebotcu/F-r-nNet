@@ -255,7 +255,7 @@ void main() {
     });
   });
 
-  group('Donor-First — Eski sosyal sistem karantinada', () {
+  group('Donor-First — Legacy social cleanup (V2 Commit 4)', () {
     test('Router\'da FeedScreen import yok ve /feed → SocialFeedPage', () {
       final routerSrc = _strip(
         File('lib/app/router/app_router.dart').readAsStringSync(),
@@ -263,17 +263,35 @@ void main() {
       expect(routerSrc.contains('FeedScreen()'), isFalse);
     });
 
-    test('Eski feed_screen.dart dosyası hâlâ var (cleanup öncesi karantina)',
-        () {
-      // F-cleanup commit'ine kadar eski dosya silinmiyor (test/import
-      // zincirleri için). Sadece router tarafından çağrılmıyor.
+    test('Eski feed_screen.dart dosyası tamamen silindi', () {
       final f = File('lib/features/feed/screens/feed_screen.dart');
-      expect(f.existsSync(), isTrue, reason: 'Cleanup öncesi orphan');
+      expect(f.existsSync(), isFalse,
+          reason: 'V2 Commit 4: legacy FeedScreen + PostCardWired silindi');
     });
 
-    test('Eski feed_composer.dart dosyası hâlâ var (karantina)', () {
+    test('Eski feed_composer.dart dosyası tamamen silindi', () {
       final f = File('lib/features/feed/widgets/feed_composer.dart');
-      expect(f.existsSync(), isTrue, reason: 'Cleanup öncesi orphan');
+      expect(f.existsSync(), isFalse,
+          reason: 'V2 Commit 4: legacy FeedComposer silindi');
+    });
+
+    test('Eski feed_comment_sheet.dart dosyası tamamen silindi', () {
+      final f = File('lib/features/feed/widgets/feed_comment_sheet.dart');
+      expect(f.existsSync(), isFalse,
+          reason: 'V2 Commit 4: legacy FeedCommentSheet silindi');
+    });
+
+    test('Eski premium/feed_post_card.dart dosyası tamamen silindi', () {
+      final f = File('lib/core/widgets/premium/feed_post_card.dart');
+      expect(f.existsSync(), isFalse,
+          reason: 'V2 Commit 4: legacy FeedPostCard silindi');
+    });
+
+    test('Eski public_profile_screen.dart dosyası tamamen silindi', () {
+      final f = File('lib/features/profile/screens/public_profile_screen.dart');
+      expect(f.existsSync(), isFalse,
+          reason: 'V2 Commit 4: legacy PublicProfileScreen silindi '
+              '(SocialProfilePage F2\'de yerini almıştı)');
     });
   });
 }

@@ -138,8 +138,10 @@ void main() {
 
   group('F2 — Source-level: feed header avatar tap → own public profile',
       () {
+    // V2 Commit 4 cleanup: eski feed_screen.dart silindi. Header
+    // SocialFeedPage'a taşındı (_SocialFeedHeader → _ProfileAvatarAction).
     final src = File(
-      'lib/features/feed/screens/feed_screen.dart',
+      'lib/features/social/feed/social_feed_page.dart',
     ).readAsStringSync();
 
     test('Avatar tap currentAuthUser.id ile userPublicProfile route\'a gider',
