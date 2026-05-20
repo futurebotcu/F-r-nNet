@@ -44,6 +44,7 @@ import '../../features/social_groups/screens/groups_list_screen.dart';
 import '../../features/jobs/screens/job_offer_form_screen.dart';
 import '../../features/jobs/screens/jobs_screen.dart';
 import '../../features/marketplace/screens/market_listing_form_screen.dart';
+import '../../features/marketplace/screens/marketplace_detail_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
 import '../../features/messages/screens/job_conversation_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
@@ -151,6 +152,7 @@ class AppRoutes {
 
   // V1 — Marketplace ilanları
   static const String marketListingNew = '/market/listings/new';
+  static String marketListingDetail(String id) => '/market/listings/$id';
   static String marketListingEdit(String id) => '/market/listings/$id/edit';
 
   // V1 — Job messaging (job_conversations + job_messages)
@@ -490,7 +492,10 @@ GoRouter createRouter() {
             JobOfferFormScreen(postId: state.pathParameters['id']!),
       ),
 
-      // V1 — Market listing form + edit
+      // V1 — Market listing form + edit + detail.
+      // Path sırası önemli: literal `/new` önce, sonra `/:id/edit` (3 segment),
+      // sonra `/:id` (2 segment). Aksi halde `/new` yanlışlıkla `:id` olarak
+      // yakalanabilir.
       GoRoute(
         path: AppRoutes.marketListingNew,
         builder: (_, __) => const MarketListingFormScreen(),
@@ -499,6 +504,12 @@ GoRouter createRouter() {
         path: '/market/listings/:id/edit',
         builder: (_, state) =>
             MarketListingFormScreen(listingId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/market/listings/:id',
+        builder: (_, state) => MarketplaceDetailScreen(
+          listingId: state.pathParameters['id']!,
+        ),
       ),
 
       // V1 — Job messaging

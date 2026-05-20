@@ -271,8 +271,14 @@ void main() {
     });
 
     test('coming-soon ekran yerine gerçek liste var', () {
-      // Eski coming-soon başlığı kaldırıldı; activeMarketListingsProvider gözüküyor.
-      expect(src.contains('activeMarketListingsProvider'), isTrue,
+      // Eski coming-soon başlığı kaldırıldı; gerçek listing provider'ı
+      // bağlandı. M2'de filter desteği için provider adı genişledi
+      // (`activeMarketListingsProvider` → `filteredMarketListingsProvider`),
+      // invariant aynı: gerçek bir provider bağlı + coming-soon mock yok.
+      final hasRealProvider =
+          src.contains('activeMarketListingsProvider') ||
+              src.contains('filteredMarketListingsProvider');
+      expect(hasRealProvider, isTrue,
           reason: 'Marketplace artık gerçek listingleri çekmeli');
       expect(src.contains('marketComingSoonTitle'), isFalse,
           reason: 'Eski coming-soon kart kaldırılmalı');

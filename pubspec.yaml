@@ -58,6 +58,10 @@ dependencies:
   video_player: ^2.9.2
   chewie: ^1.8.5
 
+  # V1 Market V2 Commit M2 — contact panel için tel: / wa.me / https:// açma.
+  # Flutter resmî paket.
+  url_launcher: ^6.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

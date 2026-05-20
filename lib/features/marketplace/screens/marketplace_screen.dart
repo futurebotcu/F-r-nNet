@@ -1,3 +1,16 @@
+// FırınNet Market V1 M2 — Ana marketplace ekranı.
+//
+// Donor pattern referansı: Bagisto `category_page.dart`:
+//   header + search/filter row + chip row + product grid + filter sheet.
+// FırınNet adaptasyonu:
+//   * Header (FirinNetHeader) + + (yeni ilan) action.
+//   * Listing_type chip row (Tümü / Ekipman satışı / Fırın devri).
+//   * Filter buton → MarketplaceFiltersSheet (yan menü değil bottom sheet).
+//   * Active filter chips row.
+//   * MarketplaceListingCard (image + title + price + chips + save).
+//   * Tap → /market/listings/:id (detail).
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,15 +21,13 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
-import '../../../core/widgets/premium/section_label.dart';
-import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../models/market_filters.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
+import '../widgets/marketplace_filters_sheet.dart';
+import '../widgets/marketplace_listing_card.dart';
 
-/// V1 Market — gerçek `market_listings` verisine bağlı (V2 sprint sonrası
-/// coming-soon kaldırıldı). Authenticated user kendi ilanını yayınlayabilir;
-/// herkes aktif ilanları okur.
 class MarketplaceScreen extends ConsumerStatefulWidget {
   const MarketplaceScreen({super.key});
 
@@ -25,7 +36,7 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
 }
 
 class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
-  String? _activeCategory;
+  MarketFilters _filters = const MarketFilters();
 
   Future<void> _onAddPressed() async {
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -35,10 +46,47 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
     context.push(AppRoutes.marketListingNew);
   }
 
+  Future<void> _openFilters() async {
+    final result = await MarketplaceFiltersSheet.show(
+      context,
+      initial: _filters,
+    );
+    if (result != null) {
+      setState(() => _filters = result);
+    }
+  }
+
+  void _setListingType(String? type) {
+    setState(() {
+      _filters = _filters.copyWith(
+        listingType: type,
+        clearListingType: type == null,
+      );
+    });
+  }
+
+  Future<void> _toggleSave(MarketListing l) async {
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    final repo = ref.read(marketListingRepositoryProvider);
+    try {
+      if (l.isSavedByMe) {
+        await repo.unsaveListing(l.id!);
+      } else {
+        await repo.saveListing(l.id!);
+      }
+      ref.invalidate(filteredMarketListingsProvider(_filters));
+      ref.invalidate(savedMarketListingsProvider);
+    } catch (e) {
+      debugPrint('[FirinNet][Market] toggle save error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(activeMarketListingsProvider(_activeCategory));
-    final user = ref.watch(currentAuthUserProvider);
+    final async = ref.watch(filteredMarketListingsProvider(_filters));
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -53,6 +101,12 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                 subtitle: AppStrings.marketSubtitle,
                 actions: [
                   HeaderActionButton(
+                    icon: Icons.tune_rounded,
+                    tooltip: AppStrings.marketFilterCta,
+                    onTap: _openFilters,
+                  ),
+                  const SizedBox(width: 6),
+                  HeaderActionButton(
                     icon: Icons.add_rounded,
                     tooltip: AppStrings.marketListingAddCta,
                     onTap: _onAddPressed,
@@ -61,41 +115,32 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               ),
             ),
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: 44,
-                child: ListView.separated(
-                  physics: const BouncingScrollPhysics(),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: AppStrings.marketCategoryLabels.length + 1,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, i) {
-                    if (i == 0) {
-                      final selected = _activeCategory == null;
-                      return ChoiceChip(
-                        label: const Text('Tümü'),
-                        selected: selected,
-                        onSelected: (_) =>
-                            setState(() => _activeCategory = null),
-                      );
-                    }
-                    final entry =
-                        AppStrings.marketCategoryLabels.entries.toList()[i - 1];
-                    final selected = _activeCategory == entry.key;
-                    return ChoiceChip(
-                      label: Text(entry.value),
-                      selected: selected,
-                      onSelected: (_) =>
-                          setState(() => _activeCategory = entry.key),
-                    );
-                  },
-                ),
+              child: _ListingTypeChipRow(
+                selected: _filters.listingType,
+                onSelect: _setListingType,
               ),
             ),
-            const SliverToBoxAdapter(
-              child: SectionLabel(title: 'Aktif ilanlar'),
-            ),
+            if (_filters.activeCount > 0)
+              SliverToBoxAdapter(
+                child: _ActiveFilterChipRow(
+                  filters: _filters,
+                  onClear: () => setState(() => _filters = const MarketFilters()),
+                  onRemoveType: () =>
+                      setState(() => _filters = _filters.copyWith(clearListingType: true)),
+                  onRemoveEquipment: () =>
+                      setState(() => _filters = _filters.copyWith(clearEquipmentCategory: true)),
+                  onRemoveCity: () =>
+                      setState(() => _filters = _filters.copyWith(clearCity: true)),
+                  onRemovePrice: () => setState(() => _filters = _filters.copyWith(
+                        clearMinPrice: true,
+                        clearMaxPrice: true,
+                      )),
+                  onRemoveCondition: () =>
+                      setState(() => _filters = _filters.copyWith(clearCondition: true)),
+                  onRemoveNegotiable: () => setState(
+                      () => _filters = _filters.copyWith(negotiableOnly: false)),
+                ),
+              ),
             async.when(
               loading: () => const SliverToBoxAdapter(
                 child: Padding(
@@ -111,35 +156,39 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               ),
               data: (items) {
                 if (items.isEmpty) {
-                  return SliverToBoxAdapter(
+                  return const SliverToBoxAdapter(
                     child: _MarketMessage(
                       icon: Icons.inbox_outlined,
-                      message: user == null
-                          ? AppStrings.marketListingEmptyGuest
-                          : AppStrings.marketListingEmpty,
+                      message: AppStrings.marketListingEmpty,
                     ),
                   );
                 }
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pageH,
-                    0,
+                    AppSpacing.s,
                     AppSpacing.pageH,
-                    AppSpacing.l,
+                    AppSpacing.xxl,
                   ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (_, i) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.m),
-                        child: _MarketListingCard(listing: items[i]),
-                      ),
-                      childCount: items.length,
-                    ),
+                  sliver: SliverList.separated(
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: AppSpacing.m),
+                    itemBuilder: (_, i) {
+                      final l = items[i];
+                      return MarketplaceListingCard(
+                        listing: l,
+                        onTap: () => context.push(
+                          '/market/listings/${l.id}',
+                        ),
+                        onToggleSave:
+                            l.id == null ? null : () => _toggleSave(l),
+                      );
+                    },
                   ),
                 );
               },
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
           ],
         ),
       ),
@@ -147,127 +196,187 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
   }
 }
 
-class _MarketListingCard extends StatelessWidget {
-  const _MarketListingCard({required this.listing});
-  final MarketListing listing;
+class _ListingTypeChipRow extends StatelessWidget {
+  const _ListingTypeChipRow({
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final String? selected;
+  final void Function(String? type) onSelect;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final categoryLabel =
-        AppStrings.marketCategoryLabels[listing.category] ?? listing.category;
-    final priceText = listing.price == null
-        ? '—'
-        : '₺ ${listing.price!.toStringAsFixed(0)}'
-            '${listing.unit != null && listing.unit!.isNotEmpty ? ' / ${listing.unit}' : ''}';
-    final city = (listing.city ?? '').trim();
-    final district = (listing.district ?? '').trim();
-    final location = city.isEmpty && district.isEmpty
-        ? '—'
-        : (district.isEmpty
-            ? city
-            : (city.isEmpty ? district : '$city · $district'));
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.l),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppRadius.l),
-        border: Border.all(color: AppColors.borderHairline, width: 0.6),
-        boxShadow: AppShadow.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  listing.title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    letterSpacing: -0.2,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(
-                      color: AppColors.borderHairline, width: 0.6),
-                ),
-                child: Text(
-                  categoryLabel,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.s),
-          if (listing.description != null && listing.description!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.s),
-              child: Text(
-                listing.description!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
+          _typeChip(label: 'Tümü', value: null),
+          const SizedBox(width: 8),
+          for (final e in AppStrings.marketListingTypeLabels.entries) ...[
+            _typeChip(label: e.value, value: e.key),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _typeChip({required String label, required String? value}) {
+    final isSelected = selected == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      selectedColor: AppColors.softGold.withValues(alpha: 0.18),
+      backgroundColor: AppColors.surface,
+      side: BorderSide(
+        color: isSelected ? AppColors.softGold : AppColors.borderHairline,
+        width: isSelected ? 1.0 : 0.6,
+      ),
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.softGold : AppColors.textPrimary,
+        fontWeight: FontWeight.w700,
+      ),
+      onSelected: (_) => onSelect(value),
+    );
+  }
+}
+
+class _ActiveFilterChipRow extends StatelessWidget {
+  const _ActiveFilterChipRow({
+    required this.filters,
+    required this.onClear,
+    required this.onRemoveType,
+    required this.onRemoveEquipment,
+    required this.onRemoveCity,
+    required this.onRemovePrice,
+    required this.onRemoveCondition,
+    required this.onRemoveNegotiable,
+  });
+
+  final MarketFilters filters;
+  final VoidCallback onClear;
+  final VoidCallback onRemoveType;
+  final VoidCallback onRemoveEquipment;
+  final VoidCallback onRemoveCity;
+  final VoidCallback onRemovePrice;
+  final VoidCallback onRemoveCondition;
+  final VoidCallback onRemoveNegotiable;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.pageH,
+        vertical: AppSpacing.s,
+      ),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (filters.listingType != null)
+            _RemovableChip(
+              label: AppStrings.marketListingTypeLabels[filters.listingType!] ??
+                  filters.listingType!,
+              onRemove: onRemoveType,
             ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _Pill(icon: Icons.payments_outlined, label: priceText),
-              _Pill(icon: Icons.place_outlined, label: location),
-              if (listing.authorName != null &&
-                  listing.authorName!.isNotEmpty)
-                _Pill(icon: Icons.storefront_outlined, label: listing.authorName!),
-            ],
+          if (filters.equipmentCategory != null)
+            _RemovableChip(
+              label: AppStrings.marketEquipmentCategoryLabels[
+                      filters.equipmentCategory!] ??
+                  filters.equipmentCategory!,
+              onRemove: onRemoveEquipment,
+            ),
+          if ((filters.city ?? '').isNotEmpty)
+            _RemovableChip(label: filters.city!, onRemove: onRemoveCity),
+          if (filters.minPrice != null || filters.maxPrice != null)
+            _RemovableChip(
+              label: _priceRangeLabel(filters),
+              onRemove: onRemovePrice,
+            ),
+          if (filters.condition != null)
+            _RemovableChip(
+              label: AppStrings.marketConditionLabels[filters.condition!] ??
+                  filters.condition!,
+              onRemove: onRemoveCondition,
+            ),
+          if (filters.negotiableOnly)
+            _RemovableChip(
+              label: AppStrings.marketFilterNegotiable,
+              onRemove: onRemoveNegotiable,
+            ),
+          TextButton.icon(
+            onPressed: onClear,
+            icon: const Icon(Icons.clear_all, size: 16),
+            label: const Text(AppStrings.marketFilterClearAll),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 36),
+              visualDensity: VisualDensity.compact,
+            ),
           ),
         ],
       ),
     );
   }
+
+  static String _priceRangeLabel(MarketFilters f) {
+    final lo = f.minPrice;
+    final hi = f.maxPrice;
+    if (lo != null && hi != null) {
+      return '₺${lo.toStringAsFixed(0)}–${hi.toStringAsFixed(0)}';
+    }
+    if (lo != null) return '≥ ₺${lo.toStringAsFixed(0)}';
+    if (hi != null) return '≤ ₺${hi.toStringAsFixed(0)}';
+    return '—';
+  }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill({required this.icon, required this.label});
-  final IconData icon;
+class _RemovableChip extends StatelessWidget {
+  const _RemovableChip({required this.label, required this.onRemove});
   final String label;
+  final VoidCallback onRemove;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.s),
-        border: Border.all(color: AppColors.borderHairline, width: 0.6),
+        color: AppColors.softGold.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: AppColors.softGold.withValues(alpha: 0.4),
+          width: 0.6,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: AppColors.softGold),
-          const SizedBox(width: 5),
           Text(
             label,
             style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 11.5,
+              color: AppColors.softGold,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(width: 4),
+          InkWell(
+            onTap: onRemove,
+            borderRadius: BorderRadius.circular(12),
+            child: const Padding(
+              padding: EdgeInsets.all(2),
+              child: Icon(
+                Icons.close_rounded,
+                size: 14,
+                color: AppColors.softGold,
+              ),
             ),
           ),
         ],
@@ -280,36 +389,26 @@ class _MarketMessage extends StatelessWidget {
   const _MarketMessage({required this.icon, required this.message});
   final IconData icon;
   final String message;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageH,
-        AppSpacing.l,
-        AppSpacing.pageH,
-        AppSpacing.l,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.pageH,
+        vertical: AppSpacing.xxl,
       ),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.l),
-          border: Border.all(
-              color: AppColors.borderHairline, width: 0.6),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Center(
+        child: Column(
           children: [
-            Icon(icon, color: AppColors.softGold, size: 20),
-            const SizedBox(width: AppSpacing.m),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.5,
-                      color: AppColors.textSecondary,
-                    ),
+            Icon(icon, size: 36, color: AppColors.textMuted),
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

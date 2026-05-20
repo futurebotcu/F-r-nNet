@@ -45,8 +45,14 @@ void main() {
     test('Gerçek market_listings provider\'a bağlı (V1 sprint sonrası)', () {
       // Bu test başlangıçta "coming-soon ekran kaldı" idi (P0 mock cleanup).
       // "Gerçek olmayan şeyleri gerçek yap" sprint sonrası coming-soon
-      // kaldırıldı; ekran gerçek `activeMarketListingsProvider`'a bağlandı.
-      expect(src.contains('activeMarketListingsProvider'), isTrue,
+      // kaldırıldı; ekran gerçek listing provider'a bağlandı. M2'de
+      // filter desteği için `activeMarketListingsProvider` yerine
+      // `filteredMarketListingsProvider` kullanılıyor; invariant gerçek
+      // bir listing provider + coming-soon mock yok.
+      final hasRealProvider =
+          src.contains('activeMarketListingsProvider') ||
+              src.contains('filteredMarketListingsProvider');
+      expect(hasRealProvider, isTrue,
           reason:
               'Marketplace artık gerçek `market_listings` provider\'a bağlı olmalı');
       expect(src.contains('marketComingSoonTitle'), isFalse,

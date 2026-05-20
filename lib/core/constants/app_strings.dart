@@ -716,17 +716,100 @@ class AppStrings {
     'diger': 'Diğer',
   };
 
+  // V1 Market M1+M2: ana iki sınıflandırma (eski jenerik tipleri kaldırıldı).
   static const Map<String, String> marketListingTypeLabels = <String, String>{
-    'product': 'Ürün',
-    'service': 'Hizmet',
-    'equipment': 'Ekipman',
+    'equipment_sale': 'Ekipman satışı',
+    'bakery_transfer': 'Fırın devri',
   };
 
   static const Map<String, String> marketConditionLabels = <String, String>{
     'new': 'Sıfır',
     'used': 'İkinci el',
-    'as_is': 'Olduğu gibi',
+    'refurbished': 'Yenilenmiş',
   };
+
+  // V1 Market M2: ekipman alt kategorisi (listing_type=equipment_sale için).
+  static const Map<String, String> marketEquipmentCategoryLabels =
+      <String, String>{
+    'oven': 'Fırın',
+    'mixer': 'Hamur karıştırıcı',
+    'dough_divider': 'Hamur böleri',
+    'proofing': 'Mayalama dolabı',
+    'refrigerator': 'Buzdolabı',
+    'display_counter': 'Vitrin / Reyon',
+    'vehicle': 'Servis aracı',
+    'other': 'Diğer',
+  };
+
+  // V1 Market M2 — UI labels
+  static const String marketFilterCta = 'Filtrele';
+  static const String marketFilterTitle = 'Filtreler';
+  static const String marketFilterClearAll = 'Tümünü temizle';
+  static const String marketFilterApply = 'Uygula';
+  static const String marketFilterListingType = 'İlan türü';
+  static const String marketFilterEquipmentCategory = 'Ekipman kategorisi';
+  static const String marketFilterCity = 'Şehir';
+  static const String marketFilterDistrict = 'İlçe';
+  static const String marketFilterPriceRange = 'Fiyat aralığı';
+  static const String marketFilterMinPrice = 'En az';
+  static const String marketFilterMaxPrice = 'En çok';
+  static const String marketFilterCondition = 'Durum';
+  static const String marketFilterNegotiable = 'Pazarlık var';
+
+  static const String marketDetailTitle = 'İlan detayı';
+  static const String marketDetailDescription = 'Açıklama';
+  static const String marketDetailAttributes = 'Özellikler';
+  static const String marketDetailOwnerSection = 'İlan sahibi';
+  static const String marketDetailViewProfileCta = 'Profili gör';
+  static const String marketDetailNoPhoto = 'Fotoğraf eklenmemiş.';
+
+  static const String marketContactInApp = 'Mesaj gönder';
+  static const String marketContactPhone = 'Ara';
+  static const String marketContactWhatsapp = 'WhatsApp';
+  static const String marketContactShareCta = 'Paylaş';
+  static const String marketContactSaveCta = 'Kaydet';
+  static const String marketContactSavedCta = 'Kaydedildi';
+
+  static const String marketAttrBrand = 'Marka';
+  static const String marketAttrModel = 'Model';
+  static const String marketAttrYear = 'Yıl';
+  static const String marketAttrCondition = 'Durum';
+  static const String marketAttrCategory = 'Kategori';
+  static const String marketAttrEquipmentCategory = 'Ekipman tipi';
+  static const String marketAttrCity = 'Şehir';
+  static const String marketAttrDistrict = 'İlçe';
+  static const String marketAttrNegotiable = 'Pazarlık';
+  static const String marketAttrPrice = 'Fiyat';
+  static const String marketAttrCurrency = 'Para birimi';
+  static const String marketAttrRentPrice = 'Aylık kira';
+  static const String marketAttrTransferPrice = 'Devir bedeli';
+  static const String marketAttrAreaM2 = 'Alan (m²)';
+  static const String marketAttrHasLicense = 'Ruhsatlı';
+  static const String marketAttrEquipmentIncluded = 'Ekipman dahil';
+
+  static const String marketAttrYes = 'Evet';
+  static const String marketAttrNo = 'Hayır';
+
+  // Form (genişletilmiş)
+  static const String marketListingFieldBrand = 'Marka';
+  static const String marketListingFieldModel = 'Model';
+  static const String marketListingFieldYear = 'Yıl';
+  static const String marketListingFieldEquipmentCategory = 'Ekipman tipi';
+  static const String marketListingFieldRentPrice = 'Aylık kira (₺)';
+  static const String marketListingFieldTransferPrice = 'Devir bedeli (₺)';
+  static const String marketListingFieldAreaM2 = 'Alan (m²)';
+  static const String marketListingFieldEquipmentIncluded =
+      'Ekipman dahil';
+  static const String marketListingFieldHasLicense = 'Ruhsat var';
+  static const String marketListingFieldNegotiable = 'Pazarlığa açık';
+  static const String marketListingFieldContactPhone = 'Telefon';
+  static const String marketListingFieldContactWhatsapp = 'WhatsApp';
+  static const String marketListingFieldPhotos = 'Fotoğraflar';
+  static const String marketListingPickPhotoCta = 'Foto seç';
+  static const String marketListingCapturePhotoCta = 'Foto çek';
+  static const String marketListingPhotoMaxHint = 'En fazla 6 fotoğraf.';
+  static const String marketListingPublishCta = 'Yayınla';
+  static const String marketListingPublishingCta = 'Yayınlanıyor…';
   static const String jobsErrorGeneric =
       'İlanlar yüklenemedi. Bağlantını kontrol edip yeniden dene.';
   static const String jobsCardSalaryUnset = 'Ücret belirtilmemiş';
