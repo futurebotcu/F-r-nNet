@@ -75,6 +75,113 @@ final userPostsProvider = FutureProvider.autoDispose
   return repo.listPostsByOwner(ownerId);
 });
 
+/// V2 Social Core — donor `posts_repository.getPage(offset, limit)` muadili
+/// paged feed state. AsyncNotifier ile: ilk yükleme 20 post, scroll altta
+/// loadMore +20, pull-to-refresh sıfırla. `hasMore` son sayfada false döner.
+///
+/// State akışı:
+///   * `build()` → `listPostsPage(offset:0, limit:20)`.
+///   * `loadMore()` → mevcut posts + yeni sayfa (limit kadar gelmezse
+///     hasMore=false).
+///   * `refresh()` → state sıfırla, ilk sayfayı tekrar çek (pull-to-refresh).
+///
+/// `feedChangesProvider` tick (post add/delete/like/save) sonrası UI
+/// invalidate; sayfaları sıfırdan yükler. Donor BLoC `FeedPageRequested`
+/// event'inin Riverpod transpozesi.
+class FeedPagedState {
+  const FeedPagedState({
+    required this.posts,
+    required this.isLoadingMore,
+    required this.hasMore,
+    required this.error,
+  });
+
+  final List<FeedPost> posts;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final Object? error;
+
+  FeedPagedState copyWith({
+    List<FeedPost>? posts,
+    bool? isLoadingMore,
+    bool? hasMore,
+    Object? error,
+  }) =>
+      FeedPagedState(
+        posts: posts ?? this.posts,
+        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+        hasMore: hasMore ?? this.hasMore,
+        error: error,
+      );
+}
+
+class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
+  static const int _pageSize = 20;
+
+  @override
+  Future<FeedPagedState> build() async {
+    // feedChangesProvider tick → provider invalidate → ilk sayfayı tekrar
+    // çek. Donor `FeedRefreshRequested` benzeri davranış.
+    ref.watch(feedChangesProvider);
+    final repo = ref.watch(feedRepositoryProvider);
+    final first = await repo.listPostsPage(offset: 0, limit: _pageSize);
+    return FeedPagedState(
+      posts: first,
+      isLoadingMore: false,
+      hasMore: first.length == _pageSize,
+      error: null,
+    );
+  }
+
+  /// Sonraki sayfayı çek. Mevcut state üzerine append'ler.
+  /// `isLoadingMore=true` sırasında tekrar çağrı no-op.
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (current.isLoadingMore || !current.hasMore) return;
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    try {
+      final repo = ref.read(feedRepositoryProvider);
+      final next = await repo.listPostsPage(
+        offset: current.posts.length,
+        limit: _pageSize,
+      );
+      state = AsyncData(
+        FeedPagedState(
+          posts: <FeedPost>[...current.posts, ...next],
+          isLoadingMore: false,
+          hasMore: next.length == _pageSize,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      state = AsyncData(
+        current.copyWith(isLoadingMore: false, error: e),
+      );
+    }
+  }
+
+  /// Pull-to-refresh — state sıfırla ve ilk sayfayı tekrar çek.
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(feedRepositoryProvider);
+      final first = await repo.listPostsPage(offset: 0, limit: _pageSize);
+      return FeedPagedState(
+        posts: first,
+        isLoadingMore: false,
+        hasMore: first.length == _pageSize,
+        error: null,
+      );
+    });
+  }
+}
+
+final feedPagedNotifierProvider =
+    AsyncNotifierProvider<FeedPagedNotifier, FeedPagedState>(
+  FeedPagedNotifier.new,
+);
+
 /// V1 P0 — Twitter-style yorum sayfası üstündeki post context header için
 /// tek post lookup. V1: ana feed liste içinden first-where; küçük feed
 /// performans uygun. Bulunamazsa null (yeni paylaşılmış post + cache miss

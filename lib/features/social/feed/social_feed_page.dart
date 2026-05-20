@@ -56,22 +56,39 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
   final _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    // V2 Social Core — donor `inview_notifier_list` muadili: ScrollController
+    // listener ile bottom-threshold (300 px) altta `loadMore()` tetikler.
+    // Yeni dependency eklemiyoruz; native ScrollController yeterli.
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    final atBottomZone = pos.pixels >= pos.maxScrollExtent - 300;
+    if (atBottomZone) {
+      // No-op if already loading or hasMore=false (notifier guard).
+      ref.read(feedPagedNotifierProvider.notifier).loadMore();
+    }
+  }
+
   Future<void> _onRefresh() async {
-    // Provider tick ile yeniden çekim — feedChangesProvider zaten her
-    // mutation sonrası tick atıyor; manuel refresh için invalidate.
-    ref.invalidate(feedPostsProvider);
+    await ref.read(feedPagedNotifierProvider.notifier).refresh();
     ref.invalidate(feedInsightsProvider);
-    await ref.read(feedPostsProvider(null).future);
   }
 
   @override
   Widget build(BuildContext context) {
-    final postsAsync = ref.watch(feedPostsProvider(null));
+    final pagedAsync = ref.watch(feedPagedNotifierProvider);
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -83,11 +100,13 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
               child: RefreshIndicator.adaptive(
                 color: AppColors.copper,
                 onRefresh: _onRefresh,
-                child: postsAsync.when(
+                child: pagedAsync.when(
                   loading: () => const _FeedLoading(),
                   error: (e, _) => _FeedError(onRetry: _onRefresh),
-                  data: (posts) => _FeedList(
-                    posts: posts,
+                  data: (state) => _FeedList(
+                    posts: state.posts,
+                    isLoadingMore: state.isLoadingMore,
+                    hasMore: state.hasMore,
                     scrollController: _scrollController,
                   ),
                 ),
@@ -194,9 +213,16 @@ class _ComposerFab extends ConsumerWidget {
 const bool _kShowStories = false;
 
 class _FeedList extends ConsumerWidget {
-  const _FeedList({required this.posts, required this.scrollController});
+  const _FeedList({
+    required this.posts,
+    required this.isLoadingMore,
+    required this.hasMore,
+    required this.scrollController,
+  });
 
   final List<FeedPost> posts;
+  final bool isLoadingMore;
+  final bool hasMore;
   final ScrollController scrollController;
 
   @override
@@ -216,6 +242,8 @@ class _FeedList extends ConsumerWidget {
         ],
       );
     }
+    final int headerCount = _kShowStories ? 2 : 0;
+    final int footerCount = isLoadingMore || !hasMore ? 1 : 0;
     return ListView.builder(
       controller: scrollController,
       physics: const AlwaysScrollableScrollPhysics(
@@ -225,7 +253,7 @@ class _FeedList extends ConsumerWidget {
         top: AppSpacing.s,
         bottom: AppSpacing.xxxl,
       ),
-      itemCount: posts.length + (_kShowStories ? 2 : 0),
+      itemCount: posts.length + headerCount + footerCount,
       itemBuilder: (_, i) {
         if (_kShowStories) {
           if (i == 0) return const SocialStoriesCarousel();
@@ -235,11 +263,42 @@ class _FeedList extends ConsumerWidget {
               color: AppColors.borderHairline,
             );
           }
-          final post = posts[i - 2];
+        }
+        final postIndex = i - headerCount;
+        if (postIndex < posts.length) {
+          final post = posts[postIndex];
           return SocialPostCard(key: ValueKey(post.id), post: post);
         }
-        final post = posts[i];
-        return SocialPostCard(key: ValueKey(post.id), post: post);
+        // Footer: bottom indicator veya "End of feed" satırı.
+        if (isLoadingMore) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 1.8),
+              ),
+            ),
+          );
+        }
+        // !hasMore: "Akışın sonu" mesajı sade.
+        return const Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.l,
+            vertical: AppSpacing.l,
+          ),
+          child: Center(
+            child: Text(
+              AppStrings.feedEndOfList,
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
       },
     );
   }

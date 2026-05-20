@@ -207,6 +207,76 @@ class SupabaseFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<List<FeedPost>> listPostsPage({
+    int offset = 0,
+    int limit = 20,
+    PostType? type,
+  }) async {
+    // V2 Social Core — donor `posts_repository.getPage` paged akışı.
+    // is_deleted=false korunur; range(offset, offset+limit-1) inclusive.
+    var q = _client
+        .from('feed_posts')
+        .select(_postColumns)
+        .eq('is_deleted', false);
+    if (type != null) {
+      q = q.eq('type', type.persistKey);
+    }
+    final rows = await q
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final ids = list.map((r) => r['id'] as String).toList(growable: false);
+    final liked = await _fetchLikedSet(ids);
+    final saved = await _fetchSavedSet(ids);
+    final media = await _fetchMediaByPostIds(ids);
+    return list
+        .map((row) => _fromRow(
+              row,
+              likedPostIds: liked,
+              savedPostIds: saved,
+              mediaByPostId: media,
+            ))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<FeedPost> updatePost({
+    required String postId,
+    required String text,
+    List<String>? tags,
+  }) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    // V2 Social Core — donor `updatePost(caption)` muadili. Owner-only.
+    // Soft-delete RLS RETURNING için SELECT policy zaten owner-self
+    // soft-deleted satırı görür; UPDATE WITH CHECK owner_id=auth.uid()
+    // burada da geçer. 0-row update silent-fail kapatılır: `.select`
+    // boş dönerse StateError.
+    final updateMap = <String, dynamic>{
+      'text': text.trim(),
+      if (tags != null) 'tags': tags,
+    };
+    final rows = await _client
+        .from('feed_posts')
+        .update(updateMap)
+        .eq('id', postId)
+        .eq('owner_id', userId)
+        .select(_postColumns);
+    if ((rows as List).isEmpty) {
+      throw StateError(
+        'Gönderi güncellenemedi: yetki yok veya kayıt bulunamadı.',
+      );
+    }
+    final row = (rows.first as Map).cast<String, dynamic>();
+    // Liked/saved set'leri tek post için ayrıca çekmeye gerek yok;
+    // UI invalidate sonrası feed listesi tekrar dolar.
+    _notify();
+    return _fromRow(row, likedPostIds: <String>{}, savedPostIds: <String>{});
+  }
+
+  @override
   Future<FeedPost> addPost({
     required PostType type,
     required String author,

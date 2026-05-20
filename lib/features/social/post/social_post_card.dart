@@ -208,6 +208,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       // invalidate. Feed listesi + profile post listesi + comments
       // page'in post header cache'i hepsi refresh olsun.
       ref.invalidate(feedPostsProvider);
+      ref.invalidate(feedPagedNotifierProvider);
       ref.invalidate(feedPostByIdProvider(post.id));
       ref.invalidate(userPostsProvider(post.ownerId));
       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,6 +263,9 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             isOwner: isOwner,
             onAuthorTap: _onAuthorTap,
             onDelete: isOwner ? _onDeleteTap : null,
+            onEdit: isOwner
+                ? () => context.push(AppRoutes.socialPostEditFor(post.id))
+                : null,
             onGoToGroup: post.groupId == null
                 ? null
                 : () => context.push('${AppRoutes.groups}/${post.groupId}'),
@@ -311,6 +315,7 @@ class _Header extends StatelessWidget {
     required this.isOwner,
     required this.onAuthorTap,
     required this.onDelete,
+    required this.onEdit,
     required this.onGoToGroup,
   });
 
@@ -319,6 +324,7 @@ class _Header extends StatelessWidget {
   final bool isOwner;
   final VoidCallback onAuthorTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
   final VoidCallback? onGoToGroup;
 
   @override
@@ -420,7 +426,7 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          if (onDelete != null || onGoToGroup != null)
+          if (onDelete != null || onEdit != null || onGoToGroup != null)
             PopupMenuButton<String>(
               icon: const Icon(
                 Icons.more_horiz_rounded,
@@ -428,10 +434,26 @@ class _Header extends StatelessWidget {
               ),
               color: AppColors.elevatedCard,
               onSelected: (v) {
+                if (v == 'edit') onEdit?.call();
                 if (v == 'delete') onDelete?.call();
                 if (v == 'group') onGoToGroup?.call();
               },
               itemBuilder: (_) => [
+                if (onEdit != null)
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 18,
+                          color: AppColors.textPrimary,
+                        ),
+                        SizedBox(width: 8),
+                        Text(AppStrings.postEditMenuItem),
+                      ],
+                    ),
+                  ),
                 if (onGoToGroup != null)
                   const PopupMenuItem(
                     value: 'group',

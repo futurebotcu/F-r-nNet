@@ -45,6 +45,21 @@ class LocalFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<List<FeedPost>> listPostsPage({
+    int offset = 0,
+    int limit = 20,
+    PostType? type,
+  }) async {
+    final src = type == null
+        ? List<FeedPost>.from(_posts)
+        : _posts.where((p) => p.type == type).toList();
+    src.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (offset >= src.length) return const <FeedPost>[];
+    final end = (offset + limit).clamp(0, src.length);
+    return List.unmodifiable(src.sublist(offset, end));
+  }
+
+  @override
   Future<List<FeedPost>> listPostsByOwner(String ownerId) async {
     final src = _posts.where((p) => p.ownerId == ownerId).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -123,6 +138,43 @@ class LocalFeedRepository implements FeedRepository {
     _posts.removeAt(i);
     _comments.remove(postId);
     _notify();
+  }
+
+  @override
+  Future<FeedPost> updatePost({
+    required String postId,
+    required String text,
+    List<String>? tags,
+  }) async {
+    final i = _posts.indexWhere((p) => p.id == postId);
+    if (i == -1) {
+      throw StateError('Gönderi güncellenemedi: kayıt bulunamadı.');
+    }
+    final old = _posts[i];
+    if (old.ownerId != _meId) {
+      throw StateError('Gönderi güncellenemedi: yetki yok.');
+    }
+    final updated = FeedPost(
+      id: old.id,
+      ownerId: old.ownerId,
+      type: old.type,
+      author: old.author,
+      role: old.role,
+      text: text.trim(),
+      createdAt: old.createdAt,
+      tags: tags != null ? List.unmodifiable(tags) : old.tags,
+      gradient: old.gradient,
+      likeCount: old.likeCount,
+      commentCount: old.commentCount,
+      isLiked: old.isLiked,
+      isSaved: old.isSaved,
+      groupId: old.groupId,
+      groupName: old.groupName,
+      mediaList: old.mediaList,
+    );
+    _posts[i] = updated;
+    _notify();
+    return updated;
   }
 
   @override

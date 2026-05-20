@@ -203,6 +203,18 @@ class AppStrings {
   static const String postLikesShortLabel = 'beğeni';
   static const String postCommentsShortLabel = 'yorum';
 
+  // V2 Social Core — pagination + post edit
+  static const String feedEndOfList = 'Akışın sonu.';
+  static const String postEditTitle = 'Gönderiyi düzenle';
+  static const String postEditSaveCta = 'Kaydet';
+  static const String postEditCancelCta = 'Vazgeç';
+  static const String postEditEmptyError =
+      'Metin boş olamaz — bir şeyler yaz.';
+  static const String postEditSavedSnack = 'Gönderi güncellendi.';
+  static const String postEditError =
+      'Gönderi güncellenemedi. Tekrar dener misin?';
+  static const String postEditMenuItem = 'Düzenle';
+
   // Feed quality (composer + interaction)
   static const String feedComposerPrompt = 'Ne paylaşmak istiyorsun?';
   static const String feedComposerExpandHint =

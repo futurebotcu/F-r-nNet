@@ -105,9 +105,16 @@ void main() {
       expect(src.contains('ListView'), isTrue);
     });
 
-    test('feedPostsProvider + feedInsightsProvider invalidate akışı', () {
-      expect(src.contains('feedPostsProvider'), isTrue);
-      expect(src.contains('ref.invalidate(feedPostsProvider)'), isTrue);
+    test('Paged feed notifier akışı (V2: feedPagedNotifierProvider)', () {
+      // V2 Social Core: tekli feedPostsProvider yerine paged AsyncNotifier.
+      // Pull-to-refresh notifier.refresh() çağırır; loadMore bottom scroll'da.
+      expect(src.contains('feedPagedNotifierProvider'), isTrue);
+      expect(
+        src.contains('feedPagedNotifierProvider.notifier'),
+        isTrue,
+      );
+      expect(src.contains('.refresh()'), isTrue);
+      expect(src.contains('.loadMore()'), isTrue);
     });
 
     test('FloatingActionButton SocialComposer route\'a push eder', () {

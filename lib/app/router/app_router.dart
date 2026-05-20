@@ -35,6 +35,7 @@ import '../../features/worker/screens/worker_profile_screen.dart';
 import '../../features/dealers/models/dealer.dart' as dealer_models;
 import '../../features/social/composer/social_composer_page.dart';
 import '../../features/social/feed/social_feed_page.dart';
+import '../../features/social/post/social_post_edit_page.dart';
 import '../../features/social_groups/screens/group_create_screen.dart';
 import '../../features/social_groups/screens/group_detail_screen.dart';
 import '../../features/social_groups/screens/groups_list_screen.dart';
@@ -120,6 +121,11 @@ class AppRoutes {
   // V1 Donor-First Social Rebuild — yeni composer ekranı (post oluşturma).
   // SocialFeedPage'deki FAB bu route'a push eder.
   static const String socialComposer = '/social/composer';
+
+  // V2 Social Core — donor `AppRoutes.postEdit` muadili. Owner-only edit
+  // ekranı; SocialPostCard ⋮ menüsünden "Düzenle" push eder.
+  static const String socialPostEdit = '/social/post';
+  static String socialPostEditFor(String postId) => '$socialPostEdit/$postId/edit';
   static const String workerExperiences = '/worker/experiences';
   static const String jobSeek = '/worker/job-seek';
   static const String jobSeekNew = '/worker/job-seek/new';
@@ -276,6 +282,15 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.socialComposer,
         builder: (_, __) => const SocialComposerPage(),
+      ),
+
+      // V2 Social Core — Post edit ekranı (donor `AppRoutes.postEdit`).
+      // SocialPostCard ⋮ menüsünden "Düzenle" push eder; owner-only.
+      GoRoute(
+        path: '${AppRoutes.socialPostEdit}/:postId/edit',
+        builder: (_, state) => SocialPostEditPage(
+          postId: state.pathParameters['postId']!,
+        ),
       ),
 
       // V1.4 — Ayarlar menüsü. Profile gear icon push'u ile açılır;

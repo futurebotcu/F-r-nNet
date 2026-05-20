@@ -15,10 +15,30 @@ abstract class FeedRepository {
   /// Tüm postlar (newest first). Opsiyonel tip filtresi.
   Future<List<FeedPost>> listPosts({PostType? type});
 
+  /// V2 Social Core — donor `posts_repository.getPage(offset, limit)`
+  /// muadili. Paged feed; ilk yükleme `offset=0,limit=20`, scroll altta
+  /// `offset+=limit`. `is_deleted=false` filtresi korunur, `created_at`
+  /// desc; media/liked/saved mapping aynı `_postColumns` yolu.
+  Future<List<FeedPost>> listPostsPage({
+    int offset = 0,
+    int limit = 20,
+    PostType? type,
+  });
+
   /// V1 Social S1 — Belirli bir kullanıcının post listesi (newest first).
   /// Public profile sayfası için. `is_deleted=false` filtreli; RLS herkesi
   /// public feed select için zaten yetkilendiriyor.
   Future<List<FeedPost>> listPostsByOwner(String ownerId);
+
+  /// V2 Social Core — donor `posts_repository.updatePost(id, caption)`
+  /// muadili. Owner-only edit: caption + tags güncellenir. Supabase impl
+  /// `.select('id').eq('owner_id', userId)` ile 0-row update durumunda
+  /// `StateError` fırlatır (silent fail kapatıldı).
+  Future<FeedPost> updatePost({
+    required String postId,
+    required String text,
+    List<String>? tags,
+  });
 
   /// Yeni post ekle (composer'dan). Postu döner.
   Future<FeedPost> addPost({

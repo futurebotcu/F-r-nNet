@@ -31,6 +31,14 @@ class GuardedFeedRepository implements FeedRepository {
       inner.listPosts(type: type);
 
   @override
+  Future<List<FeedPost>> listPostsPage({
+    int offset = 0,
+    int limit = 20,
+    PostType? type,
+  }) =>
+      inner.listPostsPage(offset: offset, limit: limit, type: type);
+
+  @override
   Future<List<FeedPost>> listPostsByOwner(String ownerId) =>
       inner.listPostsByOwner(ownerId);
 
@@ -64,6 +72,16 @@ class GuardedFeedRepository implements FeedRepository {
   Future<void> deletePost(String postId) {
     _requireWrite('gönderiyi silmek');
     return inner.deletePost(postId);
+  }
+
+  @override
+  Future<FeedPost> updatePost({
+    required String postId,
+    required String text,
+    List<String>? tags,
+  }) {
+    _requireWrite('gönderiyi düzenlemek');
+    return inner.updatePost(postId: postId, text: text, tags: tags);
   }
 
   @override

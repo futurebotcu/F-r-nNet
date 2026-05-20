@@ -55,11 +55,27 @@ class _ThrowingFeedRepo implements FeedRepository {
   Future<List<FeedPost>> listPosts({PostType? type}) async => <FeedPost>[];
 
   @override
+  Future<List<FeedPost>> listPostsPage({
+    int offset = 0,
+    int limit = 20,
+    PostType? type,
+  }) async =>
+      <FeedPost>[];
+
+  @override
   Future<List<FeedPost>> listPostsByOwner(String ownerId) async =>
       <FeedPost>[];
 
   @override
   Future<void> deletePost(String postId) async {}
+
+  @override
+  Future<FeedPost> updatePost({
+    required String postId,
+    required String text,
+    List<String>? tags,
+  }) async =>
+      throw UnimplementedError();
 
   @override
   Future<FeedMedia> uploadFeedImage({
