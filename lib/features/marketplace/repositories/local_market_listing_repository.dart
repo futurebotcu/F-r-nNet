@@ -73,14 +73,20 @@ class LocalMarketListingRepository implements MarketListingRepository {
           m.equipmentCategory != filters.equipmentCategory) {
         return false;
       }
-      if (filters.city != null &&
-          filters.city!.isNotEmpty &&
-          m.city != filters.city) {
+      // V1 Market M2 controlled-data fix: filtre kod üzerinden.
+      if (filters.countryCode != null &&
+          filters.countryCode!.isNotEmpty &&
+          m.countryCode != filters.countryCode) {
         return false;
       }
-      if (filters.district != null &&
-          filters.district!.isNotEmpty &&
-          m.district != filters.district) {
+      if (filters.cityCode != null &&
+          filters.cityCode!.isNotEmpty &&
+          m.cityCode != filters.cityCode) {
+        return false;
+      }
+      if (filters.districtCode != null &&
+          filters.districtCode!.isNotEmpty &&
+          m.districtCode != filters.districtCode) {
         return false;
       }
       if (filters.minPrice != null &&
@@ -167,6 +173,10 @@ class LocalMarketListingRepository implements MarketListingRepository {
         areaM2: listing.areaM2,
         contactPhone: listing.contactPhone,
         contactWhatsapp: listing.contactWhatsapp,
+        // V1 Market M2 controlled-data fix
+        countryCode: listing.countryCode,
+        cityCode: listing.cityCode,
+        districtCode: listing.districtCode,
       );
       _notify();
       return _items[idx];
@@ -200,6 +210,10 @@ class LocalMarketListingRepository implements MarketListingRepository {
       areaM2: listing.areaM2,
       contactPhone: listing.contactPhone,
       contactWhatsapp: listing.contactWhatsapp,
+      // V1 Market M2 controlled-data fix
+      countryCode: listing.countryCode,
+      cityCode: listing.cityCode,
+      districtCode: listing.districtCode,
       authorName: listing.authorName,
       authorRole: listing.authorRole,
       createdAt: listing.createdAt ?? now,

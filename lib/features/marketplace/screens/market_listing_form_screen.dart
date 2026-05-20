@@ -24,11 +24,14 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
+import '../widgets/location_picker.dart';
 
 class _PickedPhoto {
   _PickedPhoto({required this.bytes, required this.ext});
@@ -53,8 +56,6 @@ class _MarketListingFormScreenState
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _description = TextEditingController();
-  final _city = TextEditingController();
-  final _district = TextEditingController();
   final _price = TextEditingController();
   final _unit = TextEditingController();
   final _brand = TextEditingController();
@@ -67,15 +68,21 @@ class _MarketListingFormScreenState
   final _contactWhatsapp = TextEditingController();
 
   String _category = 'ekipman';
-  String _listingType = 'equipment_sale';
+  String _listingType = MarketplaceTaxonomy.defaultListingType;
   String? _condition;
   String? _equipmentCategory;
-  String _contactPreference = 'in_app';
+  String _contactPreference =
+      MarketplaceTaxonomy.defaultContactPreference;
+  String _currency = MarketplaceTaxonomy.defaultCurrency;
   bool _negotiable = false;
   bool? _equipmentIncluded;
   bool? _hasLicense;
   String _status = 'active';
   String? _error;
+
+  // V1 Market M2 controlled-data: serbest TextField yerine picker.
+  TurkeyProvince? _selectedProvince;
+  TurkeyDistrict? _selectedDistrict;
 
   // Photos: edit'te server-side mevcut, ek olarak picker'dan eklenen.
   final List<_PickedPhoto> _newPhotos = [];
@@ -103,8 +110,6 @@ class _MarketListingFormScreenState
     }
     _title.text = m.title;
     _description.text = m.description ?? '';
-    _city.text = m.city ?? '';
-    _district.text = m.district ?? '';
     _price.text = m.price?.toStringAsFixed(0) ?? '';
     _unit.text = m.unit ?? '';
     _brand.text = m.brand ?? '';
@@ -120,10 +125,22 @@ class _MarketListingFormScreenState
     _condition = m.condition;
     _equipmentCategory = m.equipmentCategory;
     _contactPreference = m.contactPreference;
+    _currency = MarketplaceTaxonomy.isValidCurrency(m.currency)
+        ? m.currency
+        : MarketplaceTaxonomy.defaultCurrency;
     _negotiable = m.negotiable;
     _equipmentIncluded = m.equipmentIncluded;
     _hasLicense = m.hasLicense;
     _status = m.status;
+    // Lokasyon hydrate — code → controlled-vocabulary lookup.
+    _selectedProvince = TurkeyLocations.findProvinceByCode(m.cityCode) ??
+        TurkeyLocations.findProvinceByName(m.city);
+    if (_selectedProvince != null) {
+      _selectedDistrict = TurkeyLocations.findDistrict(
+        _selectedProvince!.code,
+        m.districtCode,
+      );
+    }
     setState(() => _loaded = true);
   }
 
@@ -131,8 +148,6 @@ class _MarketListingFormScreenState
   void dispose() {
     _title.dispose();
     _description.dispose();
-    _city.dispose();
-    _district.dispose();
     _price.dispose();
     _unit.dispose();
     _brand.dispose();
@@ -218,9 +233,13 @@ class _MarketListingFormScreenState
       description: _description.text.trim().isEmpty
           ? null
           : _description.text.trim(),
-      city: _city.text.trim().isEmpty ? null : _city.text.trim(),
-      district:
-          _district.text.trim().isEmpty ? null : _district.text.trim(),
+      // V1 Market M2 controlled-data fix — picker'dan code + display label.
+      countryCode: MarketplaceTaxonomy.defaultCountryCode,
+      cityCode: _selectedProvince?.code,
+      city: _selectedProvince?.name,
+      districtCode: _selectedDistrict?.code,
+      district: _selectedDistrict?.name,
+      currency: _currency,
       price: isEquip ? double.tryParse(_price.text.trim()) : null,
       unit: isEquip && _unit.text.trim().isNotEmpty
           ? _unit.text.trim()
@@ -289,6 +308,46 @@ class _MarketListingFormScreenState
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  // ─── Location picker handlers ────────────────────────────────────
+
+  Future<void> _openProvincePicker() async {
+    final picked = await LocationPicker.showProvincePicker(
+      context,
+      initialCode: _selectedProvince?.code,
+    );
+    if (picked == null) return;
+    setState(() {
+      if (_selectedProvince?.code != picked.code) {
+        // İl değişti → ilçe sıfırla.
+        _selectedDistrict = null;
+      }
+      _selectedProvince = picked;
+    });
+  }
+
+  Future<void> _openDistrictPicker() async {
+    final province = _selectedProvince;
+    if (province == null) return;
+    final picked = await LocationPicker.showDistrictPicker(
+      context,
+      province: province,
+      initialCode: _selectedDistrict?.code,
+    );
+    if (picked == null) return;
+    setState(() => _selectedDistrict = picked);
+  }
+
+  void _clearProvince() {
+    setState(() {
+      _selectedProvince = null;
+      _selectedDistrict = null;
+    });
+  }
+
+  void _clearDistrict() {
+    setState(() => _selectedDistrict = null);
+  }
+
   // ─── Build ────────────────────────────────────────────────────────
 
   @override
@@ -336,21 +395,22 @@ class _MarketListingFormScreenState
                     ),
                     const SizedBox(height: AppSpacing.m),
 
-                    // ── Listing type ──
+                    // ── Listing type (controlled-vocabulary) ──
                     DropdownButtonFormField<String>(
                       initialValue: _listingType,
                       decoration: const InputDecoration(
                         labelText:
                             AppStrings.marketListingFieldListingType,
                       ),
-                      items: AppStrings.marketListingTypeLabels.entries
+                      items: MarketplaceTaxonomy.listingTypes.entries
                           .map((e) => DropdownMenuItem(
                                 value: e.key,
                                 child: Text(e.value),
                               ))
                           .toList(),
                       onChanged: (v) => setState(
-                        () => _listingType = v ?? 'equipment_sale',
+                        () => _listingType = v ??
+                            MarketplaceTaxonomy.defaultListingType,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),
@@ -396,7 +456,7 @@ class _MarketListingFormScreenState
                         items: [
                           const DropdownMenuItem<String?>(
                               value: null, child: Text('—')),
-                          ...AppStrings.marketEquipmentCategoryLabels.entries
+                          ...MarketplaceTaxonomy.equipmentCategories.entries
                               .map(
                             (e) => DropdownMenuItem<String?>(
                               value: e.key,
@@ -417,7 +477,7 @@ class _MarketListingFormScreenState
                         items: [
                           const DropdownMenuItem<String?>(
                               value: null, child: Text('—')),
-                          ...AppStrings.marketConditionLabels.entries.map(
+                          ...MarketplaceTaxonomy.conditions.entries.map(
                             (e) => DropdownMenuItem<String?>(
                               value: e.key,
                               child: Text(e.value),
@@ -556,26 +616,33 @@ class _MarketListingFormScreenState
                       const SizedBox(height: AppSpacing.m),
                     ],
 
-                    // ── Location ──
+                    // ── Location (controlled vocabulary picker) ──
                     Row(
                       children: [
                         Expanded(
-                          child: TextFormField(
-                            controller: _city,
-                            decoration: const InputDecoration(
-                              labelText:
-                                  AppStrings.marketListingFieldCity,
-                            ),
+                          child: LocationPickerField(
+                            label: AppStrings.marketListingFieldCity,
+                            value: _selectedProvince?.name,
+                            hint: 'İl seç',
+                            onTap: _openProvincePicker,
+                            onClear: _selectedProvince == null
+                                ? null
+                                : _clearProvince,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s),
                         Expanded(
-                          child: TextFormField(
-                            controller: _district,
-                            decoration: const InputDecoration(
-                              labelText:
-                                  AppStrings.marketListingFieldDistrict,
-                            ),
+                          child: LocationPickerField(
+                            label: AppStrings.marketListingFieldDistrict,
+                            value: _selectedDistrict?.name,
+                            hint: _selectedProvince == null
+                                ? 'Önce il seç'
+                                : 'İlçe seç',
+                            enabled: _selectedProvince != null,
+                            onTap: _openDistrictPicker,
+                            onClear: _selectedDistrict == null
+                                ? null
+                                : _clearDistrict,
                           ),
                         ),
                       ],
@@ -608,6 +675,25 @@ class _MarketListingFormScreenState
                     ),
                     const SizedBox(height: AppSpacing.m),
 
+                    // ── Currency (controlled-vocabulary) ──
+                    DropdownButtonFormField<String>(
+                      initialValue: _currency,
+                      decoration: const InputDecoration(
+                        labelText: 'Para birimi',
+                      ),
+                      items: MarketplaceTaxonomy.currencies.entries
+                          .map((e) => DropdownMenuItem(
+                                value: e.key,
+                                child: Text(e.value),
+                              ))
+                          .toList(),
+                      onChanged: (v) => setState(
+                        () => _currency =
+                            v ?? MarketplaceTaxonomy.defaultCurrency,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+
                     // ── Contact ──
                     _SectionLabel(label: 'İletişim'),
                     DropdownButtonFormField<String>(
@@ -615,28 +701,23 @@ class _MarketListingFormScreenState
                       decoration: const InputDecoration(
                         labelText: 'Tercih edilen iletişim',
                       ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'in_app',
-                          child: Text('Uygulama içi mesaj'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'phone',
-                          child: Text('Telefon'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'whatsapp',
-                          child: Text('WhatsApp'),
-                        ),
-                      ],
+                      items: MarketplaceTaxonomy.contactPreferences.entries
+                          .map((e) => DropdownMenuItem(
+                                value: e.key,
+                                child: Text(e.value),
+                              ))
+                          .toList(),
                       onChanged: (v) => setState(
-                        () => _contactPreference = v ?? 'in_app',
+                        () => _contactPreference = v ??
+                            MarketplaceTaxonomy.defaultContactPreference,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),
                     TextFormField(
                       controller: _contactPhone,
                       keyboardType: TextInputType.phone,
+                      enabled: _contactPreference !=
+                          MarketplaceTaxonomy.contactPreferenceInApp,
                       decoration: const InputDecoration(
                         labelText:
                             AppStrings.marketListingFieldContactPhone,
@@ -647,6 +728,8 @@ class _MarketListingFormScreenState
                     TextFormField(
                       controller: _contactWhatsapp,
                       keyboardType: TextInputType.phone,
+                      enabled: _contactPreference !=
+                          MarketplaceTaxonomy.contactPreferenceInApp,
                       decoration: const InputDecoration(
                         labelText:
                             AppStrings.marketListingFieldContactWhatsapp,

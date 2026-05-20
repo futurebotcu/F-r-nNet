@@ -4,8 +4,10 @@
 //      içermiyor (Spiral mikser, Konya Değirmen, ₺ 850.000 vb.).
 //   2. JobsScreen kaynak kodu artık hardcoded fırın/usta listesi içermiyor
 //      (_bakeriesHiring, _bakersLooking, Konak Fırını, Selin Pastane vb.).
-//   3. AppShell._tabs içinde `AppRoutes.market` referansı yok (bottom nav'dan
-//      kaldırıldı); Feed / Gruplar / İlanlar / Panel kalır.
+//   3. AppShell._tabs Feed / Gruplar / Market / İlanlar / Panel sırasını
+//      barındırır. (P0 cleanup'ta gizlenen Market tab, V1 Market M1+M2
+//      gerçek backend tamamlandıktan sonra V Nav-Marketplace-Restore ile
+//      bottom nav'da 3. konumda geri eklendi.)
 //   4. LocalWorkerRepository.listActiveJobSeekPosts() sadece is_active=true
 //      satırları döner, limit'e saygı duyar.
 //
@@ -106,25 +108,31 @@ void main() {
     });
   });
 
-  group('AppShell bottom nav (P0)', () {
+  group('AppShell bottom nav', () {
     late String src;
     setUpAll(() {
       src = File('lib/features/dashboard/screens/app_shell.dart')
           .readAsStringSync();
     });
 
-    test('Market tab _tabs listesinden kaldırıldı', () {
-      // _tabs ve AppRoutes.market kombinasyonu birlikte geçmemeli.
-      // _tabs içinde sadece feed, groups, jobs, panel olmalı.
-      expect(src.contains('AppRoutes.market'), isFalse,
-          reason: 'AppShell._tabs hâlâ Market tab\'ını içeriyor');
-    });
-
-    test('Diğer 4 tab korundu', () {
+    // V Nav-Marketplace-Restore (V1 Market M2 sonrası):
+    // P0 cleanup zamanında Market tab gizlenmişti (mock ürünler dürüst değil
+    // gerekçesi). V1 Market M1+M2 ile gerçek market_listings backend (RLS +
+    // media + saves + classified marketplace UI) tamamlandı; tab geri eklendi.
+    test('5 tab tanımlı: Feed, Gruplar, Market, İlanlar, Panel', () {
       expect(src.contains('AppRoutes.feed'), isTrue);
       expect(src.contains('AppRoutes.groups'), isTrue);
+      expect(src.contains('AppRoutes.market'), isTrue,
+          reason:
+              'V2 backend açıldı; Market tab AppShell._tabs içinde olmalı');
       expect(src.contains('AppRoutes.jobs'), isTrue);
       expect(src.contains('AppRoutes.panel'), isTrue);
+    });
+
+    test('Market tab label "Market" + storefront ikonu', () {
+      expect(src.contains("label: 'Market'"), isTrue);
+      expect(src.contains('Icons.storefront_outlined'), isTrue);
+      expect(src.contains('Icons.storefront_rounded'), isTrue);
     });
   });
 

@@ -44,6 +44,10 @@ class MarketListing {
     this.contactPhone,
     this.contactWhatsapp,
     this.viewCount = 0,
+    // V1 Market M2 controlled-data fix — canonical lokasyon kodları.
+    this.countryCode = 'TR',
+    this.cityCode,
+    this.districtCode,
     this.mediaList = const <MarketListingMedia>[],
     this.isSavedByMe = false,
   });
@@ -110,6 +114,17 @@ class MarketListing {
   final String? contactWhatsapp;
   final int viewCount;
 
+  /// V1 Market M2 — controlled data: canonical ülke kodu (V1: 'TR').
+  final String countryCode;
+
+  /// V1 Market M2 — controlled data: TR plaka kodu ('34' = İstanbul).
+  /// `city` text alanı display label olarak yan yana saklanır.
+  final String? cityCode;
+
+  /// V1 Market M2 — controlled data: ilçe kebab-case slug ('kadikoy').
+  /// `district` text alanı display label olarak yan yana saklanır.
+  final String? districtCode;
+
   /// Detail/card için yan-yüklenen media (repository tarafında doldurur).
   final List<MarketListingMedia> mediaList;
 
@@ -150,6 +165,9 @@ class MarketListing {
     String? contactPhone,
     String? contactWhatsapp,
     int? viewCount,
+    String? countryCode,
+    String? cityCode,
+    String? districtCode,
     List<MarketListingMedia>? mediaList,
     bool? isSavedByMe,
   }) {
@@ -187,6 +205,9 @@ class MarketListing {
       contactPhone: contactPhone ?? this.contactPhone,
       contactWhatsapp: contactWhatsapp ?? this.contactWhatsapp,
       viewCount: viewCount ?? this.viewCount,
+      countryCode: countryCode ?? this.countryCode,
+      cityCode: cityCode ?? this.cityCode,
+      districtCode: districtCode ?? this.districtCode,
       mediaList: mediaList ?? this.mediaList,
       isSavedByMe: isSavedByMe ?? this.isSavedByMe,
     );
@@ -229,6 +250,9 @@ class MarketListing {
     if (areaM2 != null) row['area_m2'] = areaM2;
     if (contactPhone != null) row['contact_phone'] = contactPhone;
     if (contactWhatsapp != null) row['contact_whatsapp'] = contactWhatsapp;
+    row['country_code'] = countryCode;
+    if (cityCode != null) row['city_code'] = cityCode;
+    if (districtCode != null) row['district_code'] = districtCode;
     return row;
   }
 
@@ -282,6 +306,9 @@ class MarketListing {
       contactPhone: row['contact_phone'] as String?,
       contactWhatsapp: row['contact_whatsapp'] as String?,
       viewCount: (row['view_count'] as num?)?.toInt() ?? 0,
+      countryCode: (row['country_code'] as String?) ?? 'TR',
+      cityCode: row['city_code'] as String?,
+      districtCode: row['district_code'] as String?,
       mediaList: mediaList,
       isSavedByMe: isSavedByMe,
     );

@@ -41,7 +41,9 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
       'status, is_deleted, equipment_category, currency, negotiable, '
       'brand, model, year, rent_price, transfer_price, '
       'equipment_included, has_license, area_m2, '
-      'contact_phone, contact_whatsapp, view_count';
+      'contact_phone, contact_whatsapp, view_count, '
+      // V1 Market M2 controlled-data fix
+      'country_code, city_code, district_code';
 
   static const String _mediaColumns =
       'id, listing_id, owner_id, storage_path, sort_order, '
@@ -180,11 +182,17 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
     if (filters.equipmentCategory != null) {
       q = q.eq('equipment_category', filters.equipmentCategory!);
     }
-    if (filters.city != null && filters.city!.isNotEmpty) {
-      q = q.eq('city', filters.city!);
+    // V1 Market M2 controlled-data fix: filtreleme canonical kod üzerinden.
+    // city/district text alanları sadece display label; serbest-text
+    // filtreleme dropped (veri kalitesi nedeniyle).
+    if (filters.countryCode != null && filters.countryCode!.isNotEmpty) {
+      q = q.eq('country_code', filters.countryCode!);
     }
-    if (filters.district != null && filters.district!.isNotEmpty) {
-      q = q.eq('district', filters.district!);
+    if (filters.cityCode != null && filters.cityCode!.isNotEmpty) {
+      q = q.eq('city_code', filters.cityCode!);
+    }
+    if (filters.districtCode != null && filters.districtCode!.isNotEmpty) {
+      q = q.eq('district_code', filters.districtCode!);
     }
     if (filters.minPrice != null) {
       q = q.gte('price', filters.minPrice!);

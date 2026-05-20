@@ -214,24 +214,30 @@ void main() {
     });
 
     test('Filter setleri + activeCount', () {
+      // V1 M2 controlled-data fix: city aktif sayımı cityCode'a bağlandı
+      // (display label 'city' tek başına aktif sayılmaz; picker zorunlu).
       const f = MarketFilters(
         listingType: 'equipment_sale',
-        city: 'Istanbul',
+        cityCode: '34',
+        city: 'İstanbul',
         minPrice: 1000,
         maxPrice: 50000,
       );
       expect(f.isEmpty, isFalse);
-      expect(f.activeCount, 3); // type + city + price range (tek slot)
+      expect(f.activeCount, 3); // type + city (code) + price range (tek slot)
     });
 
     test('copyWith clear* flag\'leri', () {
       const f = MarketFilters(
         listingType: 'equipment_sale',
-        city: 'Istanbul',
+        cityCode: '34',
+        city: 'İstanbul',
       );
       final cleared = f.copyWith(clearListingType: true);
       expect(cleared.listingType, isNull);
-      expect(cleared.city, 'Istanbul');
+      // V1 M2: clearCity flag'i atılmadıkça city + cityCode taşınır.
+      expect(cleared.cityCode, '34');
+      expect(cleared.city, 'İstanbul');
     });
 
     test('Equality + hashCode (provider family cache key)', () {

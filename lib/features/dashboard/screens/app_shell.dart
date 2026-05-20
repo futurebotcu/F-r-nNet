@@ -10,16 +10,16 @@ class AppShell extends StatelessWidget {
 
   final Widget child;
 
-  // V Nav-Marketplace-Cleanup (P0):
-  // Market tab kaldırıldı — backend yokken hardcoded mock ürünleri kullanıcıya
-  // gerçek pazar yeri gibi göstermek dürüst değil. /market route'u deeplink
-  // uyumu için açık; ekran coming-soon gösterir. V2'de backend açılınca tab
-  // geri eklenir.
+  // V Nav-Marketplace-Restore (V1 Market M2 sonrası):
+  // Market tab geri eklendi. Önceki P0 cleanup'ta mock ürünler dürüst değil
+  // diye gizlenmişti; V1 Market M1+M2 ile gerçek market_listings backend
+  // (RLS + media + saves + classified marketplace UI) tamamlandı, V2 ön
+  // koşulu karşılandı. Sıra: Feed → Gruplar → Market (orta) → İlanlar →
+  // Panel. Market 3. konum (Twitter/X "explore"-benzeri orta vurgu).
   //
   // V Nav-Profile-To-Jobs:
-  // Sektör ağı kalitesi için ilanlar (work) ana navigasyonda görünür hale
-  // getirildi. Profil ana tab'dan çıkarıldı (Feed header avatar üzerinden
-  // erişilir); ProfileScreen ve /profile route geriye dönük kalır.
+  // Profil ana tab'dan çıkarıldı (Feed header avatar üzerinden erişilir);
+  // ProfileScreen ve /profile route geriye dönük kalır.
   static const _tabs = <_TabSpec>[
     _TabSpec(
       AppRoutes.feed,
@@ -35,6 +35,14 @@ class AppShell extends StatelessWidget {
         icon: Icons.groups_2_outlined,
         activeIcon: Icons.groups_2_rounded,
         label: 'Gruplar',
+      ),
+    ),
+    _TabSpec(
+      AppRoutes.market,
+      PremiumNavItem(
+        icon: Icons.storefront_outlined,
+        activeIcon: Icons.storefront_rounded,
+        label: 'Market',
       ),
     ),
     _TabSpec(

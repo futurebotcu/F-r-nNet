@@ -3,14 +3,20 @@
 // Donor pattern: Bagisto `filter_bottom_sheet.dart` + `filter_chip_row.dart`.
 // FırınNet'te listing_type V1'de iki sabit ('equipment_sale',
 // 'bakery_transfer'); city/price/condition/equipment_category filtreleri
-// classified marketplace UX için yeterli. V2'de category alt-filter +
-// negotiable/rent range/transfer range eklenebilir.
+// classified marketplace UX için yeterli.
+//
+// V1 Market M2 controlled-data fix: city/district artık serbest text değil
+// — picker'dan gelen cityCode/districtCode canonical kodlarla filtrelenir.
+// city/district display label olarak yan yana taşınır.
 
 class MarketFilters {
   const MarketFilters({
     this.listingType,
     this.equipmentCategory,
+    this.countryCode,
+    this.cityCode,
     this.city,
+    this.districtCode,
     this.district,
     this.minPrice,
     this.maxPrice,
@@ -25,6 +31,13 @@ class MarketFilters {
   /// Sadece listing_type='equipment_sale' için anlamlı.
   final String? equipmentCategory;
 
+  /// V1 Market M2 — controlled data canonical kodları.
+  final String? countryCode;
+  final String? cityCode;
+  final String? districtCode;
+
+  /// Display label'lar (UI active chip rozetinde gösterilir; filter
+  /// kullanımı code üzerinden).
   final String? city;
   final String? district;
 
@@ -43,8 +56,8 @@ class MarketFilters {
   bool get isEmpty =>
       listingType == null &&
       equipmentCategory == null &&
-      (city == null || city!.isEmpty) &&
-      (district == null || district!.isEmpty) &&
+      (cityCode == null || cityCode!.isEmpty) &&
+      (districtCode == null || districtCode!.isEmpty) &&
       minPrice == null &&
       maxPrice == null &&
       condition == null &&
@@ -55,8 +68,8 @@ class MarketFilters {
     var n = 0;
     if (listingType != null) n++;
     if (equipmentCategory != null) n++;
-    if (city != null && city!.isNotEmpty) n++;
-    if (district != null && district!.isNotEmpty) n++;
+    if (cityCode != null && cityCode!.isNotEmpty) n++;
+    if (districtCode != null && districtCode!.isNotEmpty) n++;
     if (minPrice != null || maxPrice != null) n++;
     if (condition != null) n++;
     if (negotiableOnly) n++;
@@ -68,8 +81,12 @@ class MarketFilters {
     bool clearListingType = false,
     String? equipmentCategory,
     bool clearEquipmentCategory = false,
+    String? countryCode,
+    bool clearCountryCode = false,
+    String? cityCode,
     String? city,
     bool clearCity = false,
+    String? districtCode,
     String? district,
     bool clearDistrict = false,
     double? minPrice,
@@ -86,7 +103,12 @@ class MarketFilters {
       equipmentCategory: clearEquipmentCategory
           ? null
           : (equipmentCategory ?? this.equipmentCategory),
+      countryCode:
+          clearCountryCode ? null : (countryCode ?? this.countryCode),
+      cityCode: clearCity ? null : (cityCode ?? this.cityCode),
       city: clearCity ? null : (city ?? this.city),
+      districtCode:
+          clearDistrict ? null : (districtCode ?? this.districtCode),
       district: clearDistrict ? null : (district ?? this.district),
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
       maxPrice: clearMaxPrice ? null : (maxPrice ?? this.maxPrice),
@@ -102,8 +124,9 @@ class MarketFilters {
       other is MarketFilters &&
           other.listingType == listingType &&
           other.equipmentCategory == equipmentCategory &&
-          other.city == city &&
-          other.district == district &&
+          other.countryCode == countryCode &&
+          other.cityCode == cityCode &&
+          other.districtCode == districtCode &&
           other.minPrice == minPrice &&
           other.maxPrice == maxPrice &&
           other.condition == condition &&
@@ -113,8 +136,9 @@ class MarketFilters {
   int get hashCode => Object.hash(
         listingType,
         equipmentCategory,
-        city,
-        district,
+        countryCode,
+        cityCode,
+        districtCode,
         minPrice,
         maxPrice,
         condition,

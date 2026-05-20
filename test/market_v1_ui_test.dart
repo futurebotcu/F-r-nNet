@@ -147,16 +147,20 @@ void main() {
     });
 
     test('Listing type chips + conditional equipment_category', () {
-      expect(src.contains('marketListingTypeLabels'), isTrue);
-      expect(src.contains("_f.listingType == 'equipment_sale'"), isTrue,
+      // V1 M2 controlled-data fix sonrası: AppStrings.marketListingTypeLabels
+      // yerine MarketplaceTaxonomy.listingTypes; equipment kategori conditional
+      // listingTypeEquipmentSale sabitiyle eşleşir.
+      expect(src.contains('MarketplaceTaxonomy.listingTypes'), isTrue);
+      expect(
+          src.contains('MarketplaceTaxonomy.listingTypeEquipmentSale'), isTrue,
           reason: 'Equipment kategorisi sadece equipment_sale seçilince');
-      expect(src.contains('marketEquipmentCategoryLabels'), isTrue);
+      expect(src.contains('MarketplaceTaxonomy.equipmentCategories'), isTrue);
     });
 
     test('Price range min/max + condition + negotiable', () {
       expect(src.contains('marketFilterMinPrice'), isTrue);
       expect(src.contains('marketFilterMaxPrice'), isTrue);
-      expect(src.contains('marketConditionLabels'), isTrue);
+      expect(src.contains('MarketplaceTaxonomy.conditions'), isTrue);
       expect(src.contains('marketFilterNegotiable'), isTrue);
     });
   });
@@ -201,10 +205,11 @@ void main() {
     });
 
     test('Default listing_type equipment_sale (product YOK)', () {
-      expect(src.contains("_listingType = 'equipment_sale'"), isTrue);
+      // V1 M2 controlled-data fix sonrası: default değer taxonomy
+      // sabitinden gelir; literal 'equipment_sale' yerine
+      // MarketplaceTaxonomy.defaultListingType kullanılır.
+      expect(src.contains('MarketplaceTaxonomy.defaultListingType'), isTrue);
       // V1 M1 narrowing — kodda artık 'product' atama/değer literal'ı yok.
-      // Yorumlardaki 'product' geçişi (Bagisto referansı vb.) muafiyet için
-      // SQL'deki gibi sadece kod satırlarına bakıyoruz: yorumları ayıkla.
       final codeOnly = src
           .split('\n')
           .map((l) => l.trimLeft())
@@ -232,7 +237,23 @@ void main() {
       expect(src.contains('marketListingFieldNegotiable'), isTrue);
       expect(src.contains('marketListingFieldContactPhone'), isTrue);
       expect(src.contains('marketListingFieldContactWhatsapp'), isTrue);
-      expect(src.contains("_contactPreference = 'in_app'"), isTrue);
+      // V1 M2 controlled-data fix: default value taxonomy sabitinden gelir.
+      expect(src.contains('MarketplaceTaxonomy.defaultContactPreference'),
+          isTrue);
+    });
+  });
+
+  group('M2 — AppShell exposure', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/dashboard/screens/app_shell.dart')
+          .readAsStringSync();
+    });
+    test('Market AppShell._tabs içinde ve label "Market"', () {
+      expect(src.contains('AppRoutes.market'), isTrue,
+          reason: 'Market tab ana bottom nav\'da görünmeli');
+      expect(src.contains("label: 'Market'"), isTrue);
+      expect(src.contains('Icons.storefront_outlined'), isTrue);
     });
   });
 

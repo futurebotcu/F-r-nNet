@@ -1,8 +1,9 @@
-// FırınNet Market V1 M2 — Filter bottom sheet.
+// FırınNet Market V1 M2 — Filter bottom sheet (controlled-data).
 //
-// Donor pattern: Bagisto `filter_bottom_sheet.dart` (Filters title + clear all
-// + apply CTA). FırınNet V1 sade: listing_type + equipment_category +
-// city + price range + condition + negotiable. Sort V2'ye.
+// Donor pattern: Bagisto `filter_bottom_sheet.dart` (Filters title + clear
+// all + apply CTA). V1 Market M2 controlled-data fix: il/ilçe LocationPicker
+// üzerinden seçilir, serbest TextField yok. Listing_type, ekipman kategorisi,
+// durum tek bir taxonomy'den beslenir.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +11,10 @@ import 'package:flutter/services.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/turkey_locations.dart';
+import '../data/marketplace_taxonomy.dart';
 import '../models/market_filters.dart';
+import 'location_picker.dart';
 
 class MarketplaceFiltersSheet extends StatefulWidget {
   const MarketplaceFiltersSheet({
@@ -44,7 +48,9 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
   late MarketFilters _f;
   final _minCtrl = TextEditingController();
   final _maxCtrl = TextEditingController();
-  final _cityCtrl = TextEditingController();
+
+  TurkeyProvince? _province;
+  TurkeyDistrict? _district;
 
   @override
   void initState() {
@@ -52,29 +58,37 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
     _f = widget.initial;
     if (_f.minPrice != null) _minCtrl.text = _f.minPrice!.toStringAsFixed(0);
     if (_f.maxPrice != null) _maxCtrl.text = _f.maxPrice!.toStringAsFixed(0);
-    if (_f.city != null) _cityCtrl.text = _f.city!;
+    _province = TurkeyLocations.findProvinceByCode(_f.cityCode);
+    if (_province != null) {
+      _district = TurkeyLocations.findDistrict(
+        _province!.code,
+        _f.districtCode,
+      );
+    }
   }
 
   @override
   void dispose() {
     _minCtrl.dispose();
     _maxCtrl.dispose();
-    _cityCtrl.dispose();
     super.dispose();
   }
 
   void _apply() {
     final minP = double.tryParse(_minCtrl.text.trim());
     final maxP = double.tryParse(_maxCtrl.text.trim());
-    final city = _cityCtrl.text.trim();
     Navigator.of(context).pop(
       _f.copyWith(
         minPrice: minP,
         clearMinPrice: minP == null,
         maxPrice: maxP,
         clearMaxPrice: maxP == null,
-        city: city.isEmpty ? null : city,
-        clearCity: city.isEmpty,
+        cityCode: _province?.code,
+        city: _province?.name,
+        clearCity: _province == null,
+        districtCode: _district?.code,
+        district: _district?.name,
+        clearDistrict: _district == null,
       ),
     );
   }
@@ -84,8 +98,33 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
       _f = const MarketFilters();
       _minCtrl.clear();
       _maxCtrl.clear();
-      _cityCtrl.clear();
+      _province = null;
+      _district = null;
     });
+  }
+
+  Future<void> _openProvincePicker() async {
+    final picked = await LocationPicker.showProvincePicker(
+      context,
+      initialCode: _province?.code,
+    );
+    if (picked == null) return;
+    setState(() {
+      if (_province?.code != picked.code) _district = null;
+      _province = picked;
+    });
+  }
+
+  Future<void> _openDistrictPicker() async {
+    final p = _province;
+    if (p == null) return;
+    final picked = await LocationPicker.showDistrictPicker(
+      context,
+      province: p,
+      initialCode: _district?.code,
+    );
+    if (picked == null) return;
+    setState(() => _district = picked);
   }
 
   @override
@@ -96,7 +135,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
       child: Padding(
         padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
         child: SizedBox(
-          height: mq.size.height * 0.78,
+          height: mq.size.height * 0.85,
           child: Column(
             children: [
               // Title bar
@@ -159,8 +198,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                           onTap: () => setState(
                               () => _f = _f.copyWith(clearListingType: true)),
                         ),
-                        for (final e
-                            in AppStrings.marketListingTypeLabels.entries)
+                        for (final e in MarketplaceTaxonomy.listingTypes.entries)
                           _Chip(
                             label: e.value,
                             selected: _f.listingType == e.key,
@@ -169,7 +207,8 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                           ),
                       ],
                     ),
-                    if (_f.listingType == 'equipment_sale') ...[
+                    if (_f.listingType ==
+                        MarketplaceTaxonomy.listingTypeEquipmentSale) ...[
                       const SizedBox(height: AppSpacing.l),
                       _SectionLabel(
                         label: AppStrings.marketFilterEquipmentCategory,
@@ -182,11 +221,11 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                             label: 'Tümü',
                             selected: _f.equipmentCategory == null,
                             onTap: () => setState(
-                              () => _f = _f.copyWith(clearEquipmentCategory: true),
+                              () => _f =
+                                  _f.copyWith(clearEquipmentCategory: true),
                             ),
                           ),
-                          for (final e in AppStrings
-                              .marketEquipmentCategoryLabels.entries)
+                          for (final e in MarketplaceTaxonomy.equipmentCategories.entries)
                             _Chip(
                               label: e.value,
                               selected: _f.equipmentCategory == e.key,
@@ -200,13 +239,38 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                     ],
                     const SizedBox(height: AppSpacing.l),
                     _SectionLabel(label: AppStrings.marketFilterCity),
-                    TextField(
-                      controller: _cityCtrl,
-                      decoration: const InputDecoration(
-                        hintText: 'Örn. Istanbul',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: LocationPickerField(
+                            label: 'İl',
+                            value: _province?.name,
+                            hint: 'İl seç',
+                            onTap: _openProvincePicker,
+                            onClear: _province == null
+                                ? null
+                                : () => setState(() {
+                                      _province = null;
+                                      _district = null;
+                                    }),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.s),
+                        Expanded(
+                          child: LocationPickerField(
+                            label: 'İlçe',
+                            value: _district?.name,
+                            hint: _province == null
+                                ? 'Önce il seç'
+                                : 'İlçe seç',
+                            enabled: _province != null,
+                            onTap: _openDistrictPicker,
+                            onClear: _district == null
+                                ? null
+                                : () => setState(() => _district = null),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.l),
                     _SectionLabel(label: AppStrings.marketFilterPriceRange),
@@ -256,7 +320,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                               () => _f = _f.copyWith(clearCondition: true)),
                         ),
                         for (final e
-                            in AppStrings.marketConditionLabels.entries)
+                            in MarketplaceTaxonomy.conditions.entries)
                           _Chip(
                             label: e.value,
                             selected: _f.condition == e.key,
