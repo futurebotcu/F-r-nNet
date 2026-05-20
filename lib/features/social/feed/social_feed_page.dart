@@ -207,10 +207,10 @@ class _ComposerFab extends ConsumerWidget {
   }
 }
 
-/// V1: Stories aktif değil — kullanıcı raporu: "boş story slot Instagram
-/// hissi veriyor". V5 (story create + viewer aktive) gelince
-/// `_kShowStories = true` yapılır.
-const bool _kShowStories = false;
+/// V2 Social Core Commit 2 — Stories aktif. Carousel kendisi içeride
+/// "aktif story yok + guest" durumunda boş render eder (SizedBox.shrink),
+/// böylece ekran şişirme yok.
+const bool _kShowStories = true;
 
 class _FeedList extends ConsumerWidget {
   const _FeedList({

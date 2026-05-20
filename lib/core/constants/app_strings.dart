@@ -194,6 +194,26 @@ class AppStrings {
   static const String retry = 'Yeniden dene';
   static const String storiesMyStoryLabel = 'Hikayem';
   static const String storiesEmptyHint = 'Hikaye akışı yakında.';
+
+  // V2 Social Core Commit 2 — stories
+  static const String storyCreateTitle = 'Hikaye ekle';
+  static const String storyCreatePickCta = 'Galeriden seç';
+  static const String storyCreateShareCta = 'Paylaş';
+  static const String storyCreatePickError =
+      'Görsel seçilemedi. Tekrar dener misin?';
+  static const String storyCreateUploadError =
+      'Hikaye yüklenemedi. Bağlantını kontrol et.';
+  static const String storyCreateSavedSnack = 'Hikayen paylaşıldı.';
+  static const String storyCreateGuestCta = 'Hikaye paylaşmak için giriş yap';
+  static const String storyViewerTitle = 'Hikaye';
+  static const String storyDeleteConfirm = 'Bu hikayeyi silmek istiyor musun?';
+  static const String storyDeleteCta = 'Sil';
+  static const String storyDeleteCancelCta = 'Vazgeç';
+  static const String storyDeletedSnack = 'Hikaye silindi.';
+  static const String storyDeleteFailed =
+      'Hikaye silinemedi. Tekrar dener misin?';
+  static const String storyAddMyHint = 'Galeriden bir görsel seç.';
+  static const String storyExpiresInHint = '24 saat sonra kaybolur.';
   static const String postCommentsCountLabel = 'yorum';
   static const String postViewAllComments = 'Tüm yorumları gör';
 

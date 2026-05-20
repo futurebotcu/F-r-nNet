@@ -1,26 +1,29 @@
-// FırınNet — Donor-first stories carousel (iskelet).
+// FırınNet Social V2 Commit 2 — Stories carousel (aktif).
 //
-// Donor: lib/stories/widgets/stories_carousel.dart (StoriesCarousel). Donor
-// pattern: feed üstünde 124px yükseklikte yatay liste; ilk eleman "My Story"
-// (own avatar + add button), ardından following users + her birinin son
-// hikayesi.
-//
-// FırınNet V1 iskelet:
-//   * "Hikayem" slot (own avatar + add icon)
-//   * Following stories henüz yok — V5'te story create + view eklenecek.
-//   * Tap V1'de no-op (story creation route'u yok); tooltip ile bilgilendirme.
-//
-// Geleneksel donor widget tree korunur, sadece tıklama davranışı V1'de
-// pasif. V5'te `CreateStoriesPage` ve `StoriesPage` viewer aktive edilecek.
+// Donor: lib/stories/widgets/stories_carousel.dart. FırınNet adaptasyonu:
+//   * Donor `UserStoriesAvatar` (gradient story ring) ALMA — kullanıcı
+//     kararı: Instagram gradient ring zorlaması istemiyoruz.
+//   * Sade FırınNet kart: avatar + isim + ince halka (var olduğunda).
+//   * Aktif story yoksa carousel **gizlenir** (story row ekran şişirmez).
+//   * "Hikayem" slotu hep görünür (auth varsa create push, guest CTA).
+//   * Tıklama:
+//       - "Hikayem" → /social/stories/create (auth gerekli)
+//       - Bir kullanıcı avatarı → /social/stories/viewer?ownerId=...
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../models/social_profile.dart';
+import '../providers/social_providers.dart';
+import 'models/social_story.dart';
 
 class SocialStoriesCarousel extends ConsumerWidget {
   const SocialStoriesCarousel({super.key});
@@ -29,6 +32,27 @@ class SocialStoriesCarousel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentAuthUserProvider);
+    final storiesAsync = ref.watch(socialFreshStoriesProvider);
+    final stories = storiesAsync.maybeWhen(
+      data: (l) => l,
+      orElse: () => const <SocialStory>[],
+    );
+
+    // Distinct owner list newest first — her kullanıcı carousel'de tek
+    // avatar olarak görünür.
+    final seen = <String>{};
+    final distinctOwners = <SocialStory>[];
+    for (final s in stories) {
+      if (seen.add(s.ownerId)) distinctOwners.add(s);
+    }
+
+    // Aktif story yok + auth'lu kullanıcı yok → carousel hiç gösterme
+    // (ekran şişirme yok). Auth varsa "Hikayem" slot'unu göster.
+    if (distinctOwners.isEmpty && user == null) {
+      return const SizedBox.shrink();
+    }
+
     return SizedBox(
       height: _height,
       child: ListView.separated(
@@ -37,16 +61,39 @@ class SocialStoriesCarousel extends ConsumerWidget {
           horizontal: AppSpacing.pageH,
           vertical: AppSpacing.s,
         ),
-        itemCount: 1, // V1: sadece "Hikayem" slot
+        // +1: "Hikayem" slot (auth'lu kullanıcı varsa) en başta.
+        itemCount: (user != null ? 1 : 0) + distinctOwners.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.m),
-        itemBuilder: (_, i) => const _MyStoryAvatar(),
+        itemBuilder: (_, i) {
+          if (user != null && i == 0) {
+            // V1 P0 — Hikayem slot: create page'e push.
+            return _MyStorySlot(
+              onTap: () {
+                if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+                  showAuthRequiredSheet(context, ref);
+                  return;
+                }
+                context.push(AppRoutes.storyCreate);
+              },
+            );
+          }
+          final offset = user != null ? i - 1 : i;
+          final story = distinctOwners[offset];
+          return _OwnerStorySlot(
+            ownerId: story.ownerId,
+            onTap: () => context.push(
+              '${AppRoutes.storyViewer}?ownerId=${story.ownerId}',
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-class _MyStoryAvatar extends ConsumerWidget {
-  const _MyStoryAvatar();
+class _MyStorySlot extends ConsumerWidget {
+  const _MyStorySlot({required this.onTap});
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,8 +104,9 @@ class _MyStoryAvatar extends ConsumerWidget {
         : (user?.email?.isNotEmpty == true
             ? user!.email![0].toUpperCase()
             : 'M');
-    return Tooltip(
-      message: AppStrings.storiesEmptyHint,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.m),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -67,38 +115,21 @@ class _MyStoryAvatar extends ConsumerWidget {
               Container(
                 width: 60,
                 height: 60,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [
-                      AppColors.softGold,
-                      AppColors.copper,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  color: AppColors.softGold.withValues(alpha: 0.16),
+                  border: Border.all(
+                    color: AppColors.softGold.withValues(alpha: 0.32),
+                    width: 0.8,
                   ),
                 ),
-                padding: const EdgeInsets.all(2),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.elevatedCard,
-                  ),
-                  padding: const EdgeInsets.all(2),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.softGold.withValues(alpha: 0.16),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      initial,
-                      style: const TextStyle(
-                        color: AppColors.softGold,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                      ),
-                    ),
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: AppColors.softGold,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
                   ),
                 ),
               ),
@@ -135,6 +166,67 @@ class _MyStoryAvatar extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OwnerStorySlot extends ConsumerWidget {
+  const _OwnerStorySlot({required this.ownerId, required this.onTap});
+  final String ownerId;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(socialProfileProvider(ownerId));
+    final name = profileAsync.maybeWhen(
+      data: (p) => p.displayNameOrFallback,
+      orElse: () => SocialProfile.fallbackName,
+    );
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.m),
+      child: SizedBox(
+        width: 64,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Sade FırınNet halka: ince copper border, gradient yok.
+            Container(
+              width: 60,
+              height: 60,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.softGold.withValues(alpha: 0.14),
+                border: Border.all(
+                  color: AppColors.copper,
+                  width: 1.6,
+                ),
+              ),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: AppColors.softGold,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

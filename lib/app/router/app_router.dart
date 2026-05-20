@@ -36,6 +36,8 @@ import '../../features/dealers/models/dealer.dart' as dealer_models;
 import '../../features/social/composer/social_composer_page.dart';
 import '../../features/social/feed/social_feed_page.dart';
 import '../../features/social/post/social_post_edit_page.dart';
+import '../../features/social/stories/story_create_page.dart';
+import '../../features/social/stories/story_viewer_page.dart';
 import '../../features/social_groups/screens/group_create_screen.dart';
 import '../../features/social_groups/screens/group_detail_screen.dart';
 import '../../features/social_groups/screens/groups_list_screen.dart';
@@ -126,6 +128,11 @@ class AppRoutes {
   // ekranı; SocialPostCard ⋮ menüsünden "Düzenle" push eder.
   static const String socialPostEdit = '/social/post';
   static String socialPostEditFor(String postId) => '$socialPostEdit/$postId/edit';
+
+  // V2 Social Core Commit 2 — story create + viewer (donor
+  // `AppRoutes.createStories` + `AppRoutes.stories` muadili).
+  static const String storyCreate = '/social/stories/create';
+  static const String storyViewer = '/social/stories/viewer';
   static const String workerExperiences = '/worker/experiences';
   static const String jobSeek = '/worker/job-seek';
   static const String jobSeekNew = '/worker/job-seek/new';
@@ -291,6 +298,19 @@ GoRouter createRouter() {
         builder: (_, state) => SocialPostEditPage(
           postId: state.pathParameters['postId']!,
         ),
+      ),
+
+      // V2 Social Core Commit 2 — story create + viewer.
+      GoRoute(
+        path: AppRoutes.storyCreate,
+        builder: (_, __) => const SocialStoryCreatePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.storyViewer,
+        builder: (_, state) {
+          final ownerId = state.uri.queryParameters['ownerId'] ?? '';
+          return SocialStoryViewerPage(ownerId: ownerId);
+        },
       ),
 
       // V1.4 — Ayarlar menüsü. Profile gear icon push'u ile açılır;

@@ -12,6 +12,11 @@ import '../repositories/guarded_social_comments_repository.dart';
 import '../repositories/local_social_comments_repository.dart';
 import '../repositories/social_comments_repository.dart';
 import '../repositories/supabase_social_comments_repository.dart';
+import '../stories/models/social_story.dart';
+import '../stories/repositories/guarded_social_stories_repository.dart';
+import '../stories/repositories/local_social_stories_repository.dart';
+import '../stories/repositories/social_stories_repository.dart';
+import '../stories/repositories/supabase_social_stories_repository.dart';
 
 /// FırınNet Social — provider katmanı.
 ///
@@ -153,4 +158,48 @@ final socialFollowingIdsProvider = FutureProvider.autoDispose
   ref.watch(followChangesProvider);
   final repo = ref.watch(followRepositoryProvider);
   return repo.listFollowingIds(userId);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Stories (V2 Commit 2)
+// ═══════════════════════════════════════════════════════════════════════
+
+final socialStoriesRepositoryProvider =
+    Provider<SocialStoriesRepository>((ref) {
+  final user = ref.watch(currentAuthUserProvider);
+  final SocialStoriesRepository inner;
+  if (AppConfig.supabaseEnabled && user != null) {
+    inner = SupabaseSocialStoriesRepository(sb.Supabase.instance.client);
+  } else {
+    inner = LocalSocialStoriesRepository(
+      currentUserId: user?.id ?? 'me_misafir',
+    );
+  }
+  final canWrite = ref.watch(canWriteCheckProvider);
+  return GuardedSocialStoriesRepository(
+    inner: inner,
+    canWriteCheck: canWrite,
+  );
+});
+
+/// Repo tick → UI invalidate.
+final socialStoriesChangesProvider = StreamProvider<void>((ref) {
+  final repo = ref.watch(socialStoriesRepositoryProvider);
+  return repo.watch();
+});
+
+/// Tüm fresh story listesi (carousel için; herkesten).
+final socialFreshStoriesProvider =
+    FutureProvider.autoDispose<List<SocialStory>>((ref) async {
+  ref.watch(socialStoriesChangesProvider);
+  final repo = ref.watch(socialStoriesRepositoryProvider);
+  return repo.listFreshStories();
+});
+
+/// Belirli kullanıcının fresh story listesi (kendi avatar tap için).
+final socialUserFreshStoriesProvider = FutureProvider.autoDispose
+    .family<List<SocialStory>, String>((ref, ownerId) async {
+  ref.watch(socialStoriesChangesProvider);
+  final repo = ref.watch(socialStoriesRepositoryProvider);
+  return repo.listFreshStoriesOf(ownerId);
 });
