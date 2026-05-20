@@ -88,6 +88,17 @@ class _ThrowingFeedRepo implements FeedRepository {
       throw UnimplementedError();
 
   @override
+  Future<FeedMedia> uploadFeedVideo({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+    int? durationMs,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
   Future<FeedPost> toggleLike(String postId) async =>
       throw UnimplementedError();
 

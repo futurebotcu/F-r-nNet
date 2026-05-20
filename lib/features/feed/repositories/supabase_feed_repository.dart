@@ -386,6 +386,80 @@ class SupabaseFeedRepository implements FeedRepository {
     }
   }
 
+  static String _mimeForVideoExt(String ext) {
+    switch (ext) {
+      case 'mp4':
+      case 'm4v':
+        return 'video/mp4';
+      case 'mov':
+        return 'video/quicktime';
+      case 'webm':
+        return 'video/webm';
+      default:
+        return 'video/mp4';
+    }
+  }
+
+  @override
+  Future<FeedMedia> uploadFeedVideo({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+    int? durationMs,
+  }) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    final ext = fileExtension.toLowerCase().replaceAll('.', '');
+    final mediaId = _generateUuidV4();
+    final path = '$userId/$postId/$mediaId.$ext';
+    final mime = _mimeForVideoExt(ext);
+
+    // 1) Storage upload — path prefix RLS owner_id=auth.uid().
+    await _client.storage.from('feed-media').uploadBinary(
+          path,
+          bytes,
+          fileOptions: sb.FileOptions(
+            contentType: mime,
+            upsert: false,
+          ),
+        );
+
+    // 2) feed_media INSERT — media_type='video' + size_bytes.
+    // INSERT fail → storage rollback.
+    try {
+      final row = await _client
+          .from('feed_media')
+          .insert(<String, dynamic>{
+            'id': mediaId,
+            'post_id': postId,
+            'owner_id': userId,
+            'media_type': 'video',
+            'storage_path': path,
+            if (width != null) 'width': width,
+            if (height != null) 'height': height,
+            'size_bytes': bytes.length,
+          })
+          .select(
+            'id, post_id, owner_id, media_type, storage_path, '
+            'width, height, size_bytes, created_at',
+          )
+          .single();
+      final publicUrl =
+          _client.storage.from('feed-media').getPublicUrl(path);
+      _notify();
+      return FeedMedia.fromRow(row, publicUrl: publicUrl);
+    } catch (e) {
+      try {
+        await _client.storage.from('feed-media').remove(<String>[path]);
+      } catch (_) {}
+      rethrow;
+    }
+  }
+
   /// RFC 4122 v4 UUID — `Random.secure()` + version/variant bit-set.
   /// Postgres `uuid` tipinin beklediği `8-4-4-4-12` hex formatı.
   static String _generateUuidV4() {

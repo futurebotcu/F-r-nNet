@@ -214,6 +214,22 @@ class AppStrings {
       'Hikaye silinemedi. Tekrar dener misin?';
   static const String storyAddMyHint = 'Galeriden bir görsel seç.';
   static const String storyExpiresInHint = '24 saat sonra kaybolur.';
+
+  // V2 Social Core Commit 3 — Video post
+  static const String composerPickVideoCta = 'Video ekle';
+  static const String composerPickVideoChangeCta = 'Video değiştir';
+  static const String composerRemoveVideoCta = 'Videoyu kaldır';
+  static const String composerVideoTooLargeError =
+      'Video çok büyük (maks 50 MB). Daha kısa bir video seç.';
+  static const String composerVideoTooLongError =
+      'Video çok uzun (maks 60 saniye).';
+  static const String composerVideoPickError =
+      'Video seçilemedi. Tekrar dener misin?';
+  static const String composerVideoUploadError =
+      'Video yüklenemedi. Bağlantını kontrol et.';
+  static const String postVideoTapToPlay = 'Oynatmak için dokun';
+  static const String postVideoPlaybackError =
+      'Video oynatılamadı. Tekrar dener misin?';
   static const String postCommentsCountLabel = 'yorum';
   static const String postViewAllComments = 'Tüm yorumları gör';
 

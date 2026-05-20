@@ -42,12 +42,25 @@ class SocialComposerPage extends ConsumerStatefulWidget {
 }
 
 class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
+  /// V2 Commit 3 — Tek post'a tek media (image VEYA video). Multi-image
+  /// veya image+video kombosu V3'e bırakıldı.
+  static const int _maxVideoBytes = 50 * 1024 * 1024; // 50 MB
+  static const Duration _maxVideoDuration = Duration(seconds: 60);
+
   final _textCtrl = TextEditingController();
   final _focus = FocusNode();
   PostType _type = PostType.production;
   bool _saving = false;
+
+  // Image picked
   Uint8List? _pickedBytes;
   String? _pickedExt;
+
+  // V2 Commit 3 — Video picked (image ile mutually exclusive)
+  Uint8List? _pickedVideoBytes;
+  String? _pickedVideoExt;
+  int? _pickedVideoDurationMs;
+
   String? _composerError;
 
   static const _types = <PostType>[
@@ -108,6 +121,53 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     });
   }
 
+  Future<void> _pickVideo() async {
+    try {
+      final picker = ImagePicker();
+      final x = await picker.pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: _maxVideoDuration,
+      );
+      if (x == null) return;
+      final bytes = await x.readAsBytes();
+      if (bytes.length > _maxVideoBytes) {
+        if (mounted) {
+          setState(() =>
+              _composerError = AppStrings.composerVideoTooLargeError);
+        }
+        return;
+      }
+      final name = x.name;
+      final dot = name.lastIndexOf('.');
+      final ext = (dot >= 0 && dot < name.length - 1)
+          ? name.substring(dot + 1).toLowerCase()
+          : 'mp4';
+      if (!mounted) return;
+      // Image ve video mutually exclusive — biri seçilince diğeri sıfırlanır.
+      setState(() {
+        _pickedVideoBytes = bytes;
+        _pickedVideoExt = ext;
+        _pickedBytes = null;
+        _pickedExt = null;
+        _composerError = null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _composerError = AppStrings.composerVideoPickError,
+        );
+      }
+    }
+  }
+
+  void _removePickedVideo() {
+    setState(() {
+      _pickedVideoBytes = null;
+      _pickedVideoExt = null;
+      _pickedVideoDurationMs = null;
+    });
+  }
+
   Future<void> _submit() async {
     final text = _textCtrl.text.trim();
     if (text.isEmpty) {
@@ -136,6 +196,8 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
           .timeout(const Duration(seconds: 30));
       final bytes = _pickedBytes;
       final ext = _pickedExt;
+      final videoBytes = _pickedVideoBytes;
+      final videoExt = _pickedVideoExt;
       if (bytes != null && ext != null) {
         try {
           await repo
@@ -153,6 +215,28 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
           setState(() {
             _saving = false;
             _composerError = AppStrings.feedComposerUploadError;
+          });
+          return;
+        }
+      } else if (videoBytes != null && videoExt != null) {
+        // V2 Commit 3 — Video upload (image ile mutually exclusive).
+        try {
+          await repo
+              .uploadFeedVideo(
+                postId: post.id,
+                bytes: videoBytes,
+                fileExtension: videoExt,
+                durationMs: _pickedVideoDurationMs,
+              )
+              .timeout(const Duration(seconds: 120));
+        } catch (_) {
+          try {
+            await repo.deletePost(post.id);
+          } catch (_) {}
+          if (!mounted) return;
+          setState(() {
+            _saving = false;
+            _composerError = AppStrings.composerVideoUploadError;
           });
           return;
         }
@@ -236,10 +320,16 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
             vertical: AppSpacing.m,
           ),
           children: [
-            if (_pickedBytes != null) _MediaPreview(
-              bytes: _pickedBytes!,
-              onRemove: _removePickedImage,
-            ),
+            if (_pickedBytes != null)
+              _MediaPreview(
+                bytes: _pickedBytes!,
+                onRemove: _removePickedImage,
+              ),
+            if (_pickedVideoBytes != null)
+              _VideoPickedPreview(
+                bytes: _pickedVideoBytes!,
+                onRemove: _removePickedVideo,
+              ),
             const SizedBox(height: AppSpacing.m),
             TextField(
               controller: _textCtrl,
@@ -305,26 +395,62 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               }).toList(),
             ),
             const SizedBox(height: AppSpacing.m),
-            OutlinedButton.icon(
-              onPressed: _saving ? null : _pickImage,
-              icon: const Icon(
-                Icons.photo_library_outlined,
-                size: 16,
-              ),
-              label: Text(
-                _pickedBytes == null ? 'Foto ekle' : 'Foto değiştir',
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                side: const BorderSide(
-                  color: AppColors.borderHairline,
-                  width: 0.8,
+            // V2 Commit 3 — Image ve video butonları yan yana; mutually
+            // exclusive (biri seçilince diğeri sıfırlanır).
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _saving ? null : _pickImage,
+                    icon: const Icon(
+                      Icons.photo_library_outlined,
+                      size: 16,
+                    ),
+                    label: Text(
+                      _pickedBytes == null ? 'Foto ekle' : 'Foto değiştir',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      side: const BorderSide(
+                        color: AppColors.borderHairline,
+                        width: 0.8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.s),
+                      ),
+                    ),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.s),
+                const SizedBox(width: AppSpacing.s),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _saving ? null : _pickVideo,
+                    icon: const Icon(
+                      Icons.videocam_outlined,
+                      size: 16,
+                    ),
+                    label: Text(
+                      _pickedVideoBytes == null
+                          ? AppStrings.composerPickVideoCta
+                          : AppStrings.composerPickVideoChangeCta,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      side: const BorderSide(
+                        color: AppColors.borderHairline,
+                        width: 0.8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppRadius.s),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
             if (_composerError != null) ...[
               const SizedBox(height: AppSpacing.m),
@@ -362,6 +488,90 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// V2 Commit 3 — Video preview kartı. Composer'da seçilen video'nun
+/// preview'ı için sade kart (thumbnail üretimi V3'e bırakıldı; şimdilik
+/// dosya ikonu + bilgi).
+class _VideoPickedPreview extends StatelessWidget {
+  const _VideoPickedPreview({required this.bytes, required this.onRemove});
+
+  final Uint8List bytes;
+  final VoidCallback onRemove;
+
+  String _humanSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(
+          color: AppColors.borderHairline,
+          width: 0.6,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.softGold.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppRadius.s),
+            ),
+            child: const Icon(
+              Icons.play_circle_outlined,
+              color: AppColors.softGold,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Video seçildi',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _humanSize(bytes.length),
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onRemove,
+            icon: const Icon(
+              Icons.close_rounded,
+              color: AppColors.textMuted,
+              size: 22,
+            ),
+            tooltip: AppStrings.composerRemoveVideoCta,
+          ),
+        ],
       ),
     );
   }

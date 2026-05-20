@@ -36,6 +36,7 @@ import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../feed/repositories/feed_repository.dart';
 import '../comments/comments_page.dart';
+import 'widgets/social_post_video.dart';
 
 class SocialPostCard extends ConsumerStatefulWidget {
   const SocialPostCard({super.key, required this.post});
@@ -240,6 +241,9 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   Widget build(BuildContext context) {
     final repo = ref.read(feedRepositoryProvider);
     final imageUrl = post.firstImage?.publicUrl;
+    // V2 Commit 3 — Video post desteği. Image yoksa video varsa player
+    // render edilir. Tek post'ta image OR video (V3'te kombo).
+    final videoUrl = post.firstVideo?.publicUrl;
     final isOwner = _isOwner();
     return Container(
       margin: const EdgeInsets.fromLTRB(
@@ -272,7 +276,10 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
           ),
           _Caption(author: post.author, text: post.text),
           if (post.tags.isNotEmpty) _TagsRow(tags: post.tags),
-          if (imageUrl != null) _PostMedia(imageUrl: imageUrl),
+          if (imageUrl != null)
+            _PostMedia(imageUrl: imageUrl)
+          else if (videoUrl != null)
+            SocialPostVideo(url: videoUrl),
           _ActionRow(
             isLiked: _displayLiked,
             isSaved: _displaySaved,

@@ -92,6 +92,42 @@ class LocalFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<FeedMedia> uploadFeedVideo({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+    int? durationMs,
+  }) async {
+    final i = _posts.indexWhere((p) => p.id == postId);
+    if (i == -1) {
+      throw StateError('Post not found: $postId');
+    }
+    final post = _posts[i];
+    final now = DateTime.now();
+    final mediaId = 'fm_v_${now.microsecondsSinceEpoch}';
+    final ext = fileExtension.toLowerCase().replaceAll('.', '');
+    final path = '${post.ownerId}/$postId/$mediaId.$ext';
+    final media = FeedMedia(
+      id: mediaId,
+      postId: postId,
+      ownerId: post.ownerId,
+      mediaType: 'video',
+      storagePath: path,
+      publicUrl: 'local://$path',
+      width: width,
+      height: height,
+      sizeBytes: bytes.length,
+      createdAt: now,
+    );
+    final newList = <FeedMedia>[...post.mediaList, media];
+    _posts[i] = post.copyWith(mediaList: newList);
+    _notify();
+    return media;
+  }
+
+  @override
   Future<FeedMedia> uploadFeedImage({
     required String postId,
     required Uint8List bytes,

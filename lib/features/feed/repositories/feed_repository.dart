@@ -66,6 +66,21 @@ abstract class FeedRepository {
     int? height,
   });
 
+  /// V2 Social Core Commit 3 — Mevcut bir post'a video attach et.
+  ///
+  /// Image upload ile aynı pattern: Storage upload → `feed_media` INSERT
+  /// `media_type='video'`. Boyut/süre guard composer tarafında uygulanır.
+  /// `feed-media` bucket public; client side `cached_network_image` yerine
+  /// `video_player + chewie` ile oynatılır.
+  Future<FeedMedia> uploadFeedVideo({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+    int? durationMs,
+  });
+
   /// V1 Feed F1 — Owner-only post soft-delete. `feed_posts.is_deleted=true`.
   /// RLS DELETE/UPDATE policy zaten owner-only; defansif olarak client
   /// `eq('owner_id', userId)` da ekler. Owner olmayan çağrı sessiz no-op.

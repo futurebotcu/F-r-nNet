@@ -49,6 +49,15 @@ dependencies:
   image_picker: ^1.1.2
   cached_network_image: ^3.4.1
 
+  # V2 Social Core Commit 3 — video post desteği.
+  # video_player: native Android/iOS video oynatıcı (Flutter resmî).
+  # chewie: video_player üstünde Material UI controls (play/pause/seek/full-screen).
+  # Donor `lib/feed/post/video/` PostVideoPlayer muadili — Riverpod ile
+  # bağlanır, kullanıcının "autoplay zorunlu değil" kararı gereği
+  # autoPlay=false default.
+  video_player: ^2.9.2
+  chewie: ^1.8.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -61,8 +61,18 @@ class FeedPost {
 
   bool get isGroupHighlight => type == PostType.groupHighlight;
   bool get hasImage => mediaList.any((m) => m.isImage);
+  bool get hasVideo => mediaList.any((m) => m.isVideo);
   FeedMedia? get firstImage =>
       mediaList.where((m) => m.isImage).cast<FeedMedia?>().firstWhere(
+            (m) => true,
+            orElse: () => null,
+          );
+
+  /// V2 Social Core Commit 3 — Video post desteği. UI ilk video media'yı
+  /// player ile render eder; donor `post_view.dart` `withCustomVideoPlayer`
+  /// muadili.
+  FeedMedia? get firstVideo =>
+      mediaList.where((m) => m.isVideo).cast<FeedMedia?>().firstWhere(
             (m) => true,
             orElse: () => null,
           );

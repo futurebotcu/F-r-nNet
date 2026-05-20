@@ -103,6 +103,26 @@ class GuardedFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<FeedMedia> uploadFeedVideo({
+    required String postId,
+    required Uint8List bytes,
+    required String fileExtension,
+    int? width,
+    int? height,
+    int? durationMs,
+  }) {
+    _requireWrite('gönderiye video eklemek');
+    return inner.uploadFeedVideo(
+      postId: postId,
+      bytes: bytes,
+      fileExtension: fileExtension,
+      width: width,
+      height: height,
+      durationMs: durationMs,
+    );
+  }
+
+  @override
   Future<FeedPost> toggleLike(String postId) {
     _requireWrite('gönderiyi beğenmek');
     return inner.toggleLike(postId);
