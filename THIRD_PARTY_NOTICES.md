@@ -97,3 +97,38 @@ Port edilen kod **donor source'un birebir kopyası DEĞİLDİR**:
 
 Bu liste, Bagisto MIT lisansı altında derivative work attribution
 şartını karşılamak içindir.
+
+---
+
+## flutter_chat_ui + flutter_chat_core (flyer.chat)
+
+V1 Messaging M1 sprint — sohbet ekranı UI renderer'ı için pubspec
+bağımlılığı olarak alındı. Vendor kopya yok; paket olarak konsume edilir.
+
+- **Yazar**: Vitaly Demin / flyer.chat
+- **Lisans**: flutter_chat_ui Apache-2.0, flutter_chat_core MIT
+- **Kaynak**: <https://github.com/flyerhq/flutter-chat-ui> · pub.dev:
+  <https://pub.dev/packages/flutter_chat_ui>
+
+### Paketten kullanılanlar
+
+- Mesaj balonu (text bubble) + auto-scroll list
+- Input composer (text field + send button)
+- ChatController + Message modellerine map (text only V1)
+- Theming primitives (FırınNet AppColors ile)
+
+### Paketten alınmayanlar
+
+- Backend / auth / push: FırınNet kendi Supabase repo katmanını bağlar
+- Audio / video / file attachment: V1.1+ (image V1.1)
+- Reaction / reply / typing: V1.2+
+
+## insideapp-srl/flutter_supabase_chat_core (Apache-2.0)
+
+V1 Messaging M1 schema + RLS **pattern referansı** olarak okundu.
+Kod copy YOK, paket dependency YOK. Sadece `conversations + participants
++ messages` desen ve RLS policy şekli incelendi; FırınNet kendi schema'sına
+(`public.` snake_case) uyarlandı.
+
+- **Kaynak**: <https://github.com/insideapp-srl/flutter_supabase_chat_core>
+

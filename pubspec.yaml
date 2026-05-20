@@ -62,6 +62,13 @@ dependencies:
   # Flutter resmî paket.
   url_launcher: ^6.3.1
 
+  # V1 Messaging M1 — Chat UI renderer (donor: flyer.chat).
+  # flutter_chat_ui Apache-2.0, flutter_chat_core MIT. Backend YOK; bizim
+  # Supabase repository katmanımız bağlanır. Komple vendor kopya yok.
+  # flutter_chat_ui 2.11.x flutter_chat_core 2.9.x'e bağımlı (resmi).
+  flutter_chat_ui: ^2.11.1
+  flutter_chat_core: ^2.9.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
