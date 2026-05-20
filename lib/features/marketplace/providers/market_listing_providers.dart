@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
+import '../models/market_filters.dart';
 import '../models/market_listing.dart';
 import '../repositories/guarded_market_listing_repository.dart';
 import '../repositories/local_market_listing_repository.dart';
@@ -41,4 +42,28 @@ final myMarketListingsProvider =
     FutureProvider<List<MarketListing>>((ref) async {
   ref.watch(marketListingChangesProvider);
   return ref.watch(marketListingRepositoryProvider).listMine();
+});
+
+/// V2 Market expansion — filter object + media/saves sidecar.
+/// `MarketFilters` immutable + Object.hash sayesinde family cache OK.
+final filteredMarketListingsProvider = FutureProvider.family
+    .autoDispose<List<MarketListing>, MarketFilters>((ref, filters) async {
+  ref.watch(marketListingChangesProvider);
+  return ref
+      .watch(marketListingRepositoryProvider)
+      .listFiltered(filters);
+});
+
+/// V2 Market expansion — tek bir ilan + media + isSavedByMe.
+final marketListingByIdProvider = FutureProvider.family
+    .autoDispose<MarketListing?, String>((ref, id) async {
+  ref.watch(marketListingChangesProvider);
+  return ref.watch(marketListingRepositoryProvider).getListing(id);
+});
+
+/// V2 Market expansion — kullanıcının kaydettiği ilanlar.
+final savedMarketListingsProvider =
+    FutureProvider.autoDispose<List<MarketListing>>((ref) async {
+  ref.watch(marketListingChangesProvider);
+  return ref.watch(marketListingRepositoryProvider).listSavedListings();
 });

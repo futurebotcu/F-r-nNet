@@ -142,6 +142,9 @@ void main() {
     });
 
     test('LocalMarketListingRepository upsert + filter + delete', () async {
+      // V1 Market expansion (commit M1): visibility artık `status='active'
+      // AND is_deleted=false`. setActive (eski is_active toggle) deprecated;
+      // setStatus('paused') yeni yol.
       final repo = LocalMarketListingRepository();
       final m1 = await repo.upsertListing(const MarketListing(
         title: 'Spiral mikser',
@@ -157,25 +160,29 @@ void main() {
       expect(list.length, 1);
       expect(list.first.title, 'Spiral mikser');
 
-      await repo.setActive(m1.id!, false);
+      await repo.setStatus(m1.id!, 'paused');
       list = await repo.listActive();
       expect(list.length, 1);
       expect(list.first.title, 'Tip 550 un');
     });
 
     test('MarketListing.toInsertRow kategori + tür zorunlu', () {
+      // V1 Market expansion: default listingType='equipment_sale'.
+      // is_active artık toInsertRow'da gönderilmiyor (DB default'u
+      // kullanılır). status + is_deleted DB tarafında.
       const m = MarketListing(
         title: 'X',
         category: 'ekipman',
-        listingType: 'product',
+        listingType: 'equipment_sale',
         price: 1000,
       );
       final row = m.toInsertRow('owner-1');
       expect(row['owner_id'], 'owner-1');
       expect(row['category'], 'ekipman');
-      expect(row['listing_type'], 'product');
+      expect(row['listing_type'], 'equipment_sale');
       expect(row['price'], 1000);
-      expect(row['is_active'], isTrue);
+      // currency default 'TRY' gönderilir
+      expect(row['currency'], 'TRY');
     });
   });
 

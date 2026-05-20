@@ -50,3 +50,50 @@ Alt-paket lisansları (`packages/gallery_media_picker/`,
 `packages/image_picker_plus/`, `packages/stories_editor/`) **alınmamıştır**;
 sadece üst-seviye `lib/feed/`, `lib/comments/`, `lib/user_profile/`,
 `lib/stories/` widget yapısı referans alındı.
+
+## bagisto/opensource-ecommerce-mobile-app
+
+- **Yazar**: Bagisto / Webkul Software
+- **Lisans**: MIT — bkz. `third_party/bagisto_opensource_ecommerce_mobile_app/LICENSE`
+- **Kaynak**: <https://github.com/bagisto/opensource-ecommerce-mobile-app>
+
+FırınNet **Market V1** classified marketplace ekranları (listing card,
+filter sheet, product detail, image gallery, action panel) Bagisto'nun
+mobile e-commerce uygulamasından **pattern referansı** ile uyarlanmıştır.
+
+### Donor'dan alınan UI/UX patternleri
+
+- Category chip row + active filter chips
+- Filter bottom sheet (city / price / category / condition)
+- Product detail page layout (AppBar + image carousel + info section +
+  description + attributes + sticky action bar)
+- Product image carousel (PageView + dot indicator)
+- Fullscreen image viewer (InteractiveViewer + tap-to-zoom)
+- Loading/empty/error state ritmi
+
+### Donor'dan **alınmayan** (kapsam dışı; classified marketplace V1)
+
+- Cart / checkout / order / payment / shipping
+- Bagisto Laravel API entegrasyonu (FırınNet Supabase kullanır)
+- Customer account commerce logic
+- Discount coupons, wishlist, reviews, bundle/booking/grouped products
+- Push notification (FCM) — FırınNet kendi notifications ayrı
+- BLoC state class'ları (Riverpod transpoze)
+- ML kit image search (kapsam dışı)
+- Bagisto storefront config / API key kurulumu
+
+### Derivative status
+
+Port edilen kod **donor source'un birebir kopyası DEĞİLDİR**:
+
+1. State management Bagisto BLoC → FırınNet Riverpod.
+2. Veri katmanı Bagisto Laravel API → Supabase tabloları + sıkı RLS.
+3. Model isimleri FırınNet schema'sına (`market_listings`,
+   `market_listing_media`, `market_listing_saves`) bağlı.
+4. UI text Türkçe + classified vocabulary (Ekipman satışı / Fırın devri).
+5. Tema FırınNet `AppColors` + `AppTokens` set'i.
+6. E-ticaret payment/order yerine **classified contact panel** (telefon
+   / WhatsApp / app içi mesaj — gelecek sprint).
+
+Bu liste, Bagisto MIT lisansı altında derivative work attribution
+şartını karşılamak içindir.
