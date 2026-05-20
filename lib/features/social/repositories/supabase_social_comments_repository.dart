@@ -74,11 +74,23 @@ class SupabaseSocialCommentsRepository implements SocialCommentsRepository {
     if (userId == null) {
       throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
     }
-    await _client
+    // V1 P0 Hardening — Supabase `update().eq().eq()` zinciri 0 row
+    // affect ettiğinde exception fırlatmıyor → UI sahte başarı snackbar
+    // gösteriyor, DB değişmiyor (kullanıcı raporu "buton göründü ama
+    // silme çalışmadı"). `.select('id')` ile dönen liste boşsa
+    // owner-mismatch / not-found / RLS reddi durumunu üst katmana
+    // taşı; comments_page `catch (e)` dalı net hata snackbar'ı gösterir.
+    final rows = await _client
         .from('feed_comments')
         .update(<String, dynamic>{'is_deleted': true})
         .eq('id', commentId)
-        .eq('owner_id', userId);
+        .eq('owner_id', userId)
+        .select('id');
+    if ((rows as List).isEmpty) {
+      throw StateError(
+        'Yorum silinemedi: yetki yok veya kayıt bulunamadı.',
+      );
+    }
     _notify();
   }
 

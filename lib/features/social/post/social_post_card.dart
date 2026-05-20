@@ -194,16 +194,32 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       ),
     );
     if (ok != true || !mounted) return;
+    debugPrint('[FirinNet][PostCard] delete tap postId=${post.id}');
     final repo = ref.read(feedRepositoryProvider);
     try {
-      await repo.deletePost(post.id);
+      await repo
+          .deletePost(post.id)
+          .timeout(const Duration(seconds: 15));
+      debugPrint(
+        '[FirinNet][PostCard] delete success postId=${post.id}',
+      );
       if (!mounted) return;
+      // V1 P0 wiring-fix: _notify() stream tick'ine ek olarak manuel
+      // invalidate. Feed listesi + profile post listesi + comments
+      // page'in post header cache'i hepsi refresh olsun.
+      ref.invalidate(feedPostsProvider);
+      ref.invalidate(feedPostByIdProvider(post.id));
+      ref.invalidate(userPostsProvider(post.ownerId));
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.feedPostDeleteSuccess)),
       );
     } on GuestActionRequiredException {
+      debugPrint(
+        '[FirinNet][PostCard] delete blocked: guest guard postId=${post.id}',
+      );
       if (mounted) await showAuthRequiredSheet(context, ref);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[FirinNet][PostCard] delete error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.feedPostDeleteError)),
@@ -342,58 +358,66 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.m),
+          // V1 P0 wiring-fix: author name area artık geniş Expanded InkWell
+          // değil; sadece author Text + role/time satırı kendi tap target'ı
+          // kadar tıklanabilir. Kartın ortasının (geniş Expanded) yanlışlıkla
+          // profile push tetiklemesi engellendi.
           Expanded(
-            child: InkWell(
-              onTap: onAuthorTap,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          post.author,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15.5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: onAuthorTap,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            post.author,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15.5,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      _TypeBadge(type: post.type),
-                    ],
+                        const SizedBox(width: 6),
+                        _TypeBadge(type: post.type),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        post.role,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12.5,
-                        ),
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      post.role,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12.5,
                       ),
-                      const Text(
-                        '  •  ',
-                        style: TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12.5,
-                        ),
+                    ),
+                    const Text(
+                      '  •  ',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12.5,
                       ),
-                      Text(
-                        timeAgo,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12.5,
-                        ),
+                    ),
+                    Text(
+                      timeAgo,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12.5,
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           if (onDelete != null || onGoToGroup != null)
@@ -732,6 +756,9 @@ class _TagsRow extends StatelessWidget {
   }
 }
 
+/// "Tüm yorumları gör →" — net link görünümü. Daha önce muted/küçük
+/// satırdı, kullanıcı "kart tıklanınca yanlış akış" hissi yaşıyordu;
+/// chevron + softGold renk ile tap-edilebilir olduğu net.
 class _CommentsPreview extends StatelessWidget {
   const _CommentsPreview({required this.count, required this.onTap});
   final int count;
@@ -739,23 +766,36 @@ class _CommentsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = '$count ${AppStrings.postCommentsCountLabel} — '
-        '${AppStrings.postViewAllComments}';
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.l,
-          AppSpacing.xs,
-          AppSpacing.l,
-          AppSpacing.s,
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.l,
+            AppSpacing.s,
+            AppSpacing.l,
+            AppSpacing.s,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$count ${AppStrings.postCommentsCountLabel}  —  '
+                '${AppStrings.postViewAllComments}',
+                style: const TextStyle(
+                  color: AppColors.softGold,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.softGold,
+                size: 18,
+              ),
+            ],
           ),
         ),
       ),

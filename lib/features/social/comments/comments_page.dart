@@ -623,13 +623,31 @@ class _CommentItem extends ConsumerWidget {
       ),
     );
     if (ok != true || !context.mounted) return;
+    debugPrint('[FirinNet][Comments] delete tap id=${comment.id}');
     final repo = ref.read(socialCommentsRepositoryProvider);
+    final messenger = ScaffoldMessenger.maybeOf(context);
     try {
       await repo
           .deleteComment(comment.id)
           .timeout(const Duration(seconds: 15));
+      debugPrint('[FirinNet][Comments] delete success id=${comment.id}');
+      // V1 P0 wiring-fix: _notify() stream tick'ine ek olarak manuel
+      // invalidate. autoDispose.family bazı senaryolarda watch
+      // round-trip'ini geç yakaladığı için garantili refresh.
+      ref.invalidate(socialCommentsProvider(postId));
+      // Yorum sayısı (post header'daki "N yorum") da refresh.
+      ref.invalidate(feedPostByIdProvider(postId));
+      messenger?.showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedCommentDeletedSnack)),
+      );
+    } on GuestActionRequiredException {
+      debugPrint('[FirinNet][Comments] delete blocked: guest guard');
+      if (context.mounted) await showAuthRequiredSheet(context, ref);
     } catch (e) {
       debugPrint('[FirinNet][Comments] delete error: $e');
+      messenger?.showSnackBar(
+        const SnackBar(content: Text(AppStrings.feedCommentDeleteFailed)),
+      );
     }
   }
 }

@@ -342,11 +342,24 @@ class SupabaseFeedRepository implements FeedRepository {
     // defansif olarak client de `eq('owner_id', userId)` ekler. Yorum/like
     // satırları is_deleted=false select policy'si üzerinden zaten gizlenir
     // (post is_deleted=true olunca cascade'e gerek yok).
-    await _client
+    //
+    // V1 P0 Hardening — `update().eq().eq()` zinciri 0 row affect ettiğinde
+    // exception fırlatmıyor → UI sahte başarı snackbar gösteriyor, DB
+    // değişmiyor (kullanıcı raporu "post silme çalışmıyor"). `.select('id')`
+    // ile dönen liste boşsa owner-mismatch / not-found / RLS reddi
+    // durumunu üst katmana taşı; PostCard `catch (e)` dalı net hata
+    // snackbar'ı gösterir.
+    final rows = await _client
         .from('feed_posts')
         .update(<String, dynamic>{'is_deleted': true})
         .eq('id', postId)
-        .eq('owner_id', userId);
+        .eq('owner_id', userId)
+        .select('id');
+    if ((rows as List).isEmpty) {
+      throw StateError(
+        'Gönderi silinemedi: yetki yok veya kayıt bulunamadı.',
+      );
+    }
     _notify();
   }
 

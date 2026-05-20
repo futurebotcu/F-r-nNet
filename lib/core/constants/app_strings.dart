@@ -256,6 +256,8 @@ class AppStrings {
   static const String feedCommentDeleteCta = 'Sil';
   static const String feedCommentCancelCta = 'Vazgeç';
   static const String feedCommentDeletedSnack = 'Yorum silindi.';
+  static const String feedCommentDeleteFailed =
+      'Yorum silinemedi. Bağlantını kontrol et ve tekrar dene.';
   static const String feedCommentOwnLabel = 'Sen';
   // V1 — Yorum sheet UX hardening: composer altta inline error + guest CTA.
   // Network exception ayrı mesaj; gerçek sebep snackbar yerine sheet içinde
