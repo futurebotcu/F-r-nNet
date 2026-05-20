@@ -41,7 +41,17 @@ class _SocialStoryCreatePageState
   Future<void> _pickImage() => _captureOrPick(ImageSource.gallery);
   Future<void> _capturePhoto() => _captureOrPick(ImageSource.camera);
 
+  /// V2 Commit 3.6 — Story camera regression fix. ImageSource.camera
+  /// dönen XFile bazı Android sürümlerinde `name` field'ını ham path
+  /// olarak ya da uzantısız bir geçici dosya olarak verir; bu durumda
+  /// upload `.jpg` fallback ile çalışmalı.
+  ///
+  /// Sağlam ext çıkarma: önce x.name'den, yoksa x.path'ten dene, en son
+  /// `.jpg` fallback. Kamera iptal edilirse (x==null) sessizce dön.
   Future<void> _captureOrPick(ImageSource source) async {
+    debugPrint(
+      '[FirinNet][StoryCreate] pick start source=$source',
+    );
     try {
       final picker = ImagePicker();
       final x = await picker.pickImage(
@@ -49,13 +59,16 @@ class _SocialStoryCreatePageState
         maxWidth: 1920,
         imageQuality: 85,
       );
-      if (x == null) return;
+      if (x == null) {
+        debugPrint('[FirinNet][StoryCreate] pick cancelled');
+        return;
+      }
       final bytes = await x.readAsBytes();
-      final name = x.name;
-      final dot = name.lastIndexOf('.');
-      final ext = (dot >= 0 && dot < name.length - 1)
-          ? name.substring(dot + 1).toLowerCase()
-          : 'jpg';
+      final ext = _extractExt(x.name, x.path);
+      debugPrint(
+        '[FirinNet][StoryCreate] pick got name=${x.name} ext=$ext '
+        'bytes=${bytes.length}',
+      );
       if (!mounted) return;
       setState(() {
         _pickedBytes = bytes;
@@ -68,6 +81,26 @@ class _SocialStoryCreatePageState
         setState(() => _inlineError = AppStrings.storyCreatePickError);
       }
     }
+  }
+
+  /// Sağlam image extension çıkarma: name → path → 'jpg' fallback.
+  /// Sadece bilinen image extension'larını kabul eder; bilinmiyorsa
+  /// 'jpg' (en yaygın kamera çıktısı).
+  static String _extractExt(String name, String path) {
+    const known = <String>{'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'};
+    String fromCandidate(String c) {
+      final dot = c.lastIndexOf('.');
+      if (dot <= 0 || dot >= c.length - 1) return '';
+      return c.substring(dot + 1).toLowerCase().replaceAll(
+            RegExp(r'[^a-z0-9]'),
+            '',
+          );
+    }
+    final fromName = fromCandidate(name);
+    if (known.contains(fromName)) return fromName;
+    final fromPath = fromCandidate(path);
+    if (known.contains(fromPath)) return fromPath;
+    return 'jpg';
   }
 
   Future<void> _share() async {

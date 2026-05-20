@@ -20,6 +20,7 @@
 
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -90,6 +91,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   Future<void> _capturePhoto() => _captureOrPickImage(ImageSource.camera);
 
   Future<void> _captureOrPickImage(ImageSource source) async {
+    debugPrint('[FirinNet][Composer] pickImage source=$source');
     try {
       final picker = ImagePicker();
       final x = await picker.pickImage(
@@ -97,13 +99,17 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
         maxWidth: 1920,
         imageQuality: 85,
       );
-      if (x == null) return;
+      if (x == null) {
+        debugPrint('[FirinNet][Composer] pickImage cancelled');
+        return;
+      }
       final bytes = await x.readAsBytes();
-      final name = x.name;
-      final dot = name.lastIndexOf('.');
-      final ext = (dot >= 0 && dot < name.length - 1)
-          ? name.substring(dot + 1).toLowerCase()
-          : 'jpg';
+      // V2 Commit 3.6 — Sağlam ext: bilinen image extension'ları + fallback.
+      final ext = _extractImageExt(x.name, x.path);
+      debugPrint(
+        '[FirinNet][Composer] pickImage got name=${x.name} ext=$ext '
+        'bytes=${bytes.length}',
+      );
       if (!mounted) return;
       // Image ve video mutually exclusive — biri seçilince diğeri sıfırlanır.
       setState(() {
@@ -114,11 +120,29 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
         _pickedVideoDurationMs = null;
         _composerError = null;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[FirinNet][Composer] pickImage error: $e');
       if (mounted) {
         setState(() => _composerError = AppStrings.feedComposerPickError);
       }
     }
+  }
+
+  static String _extractImageExt(String name, String path) {
+    const known = <String>{'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'};
+    String fromCandidate(String c) {
+      final dot = c.lastIndexOf('.');
+      if (dot <= 0 || dot >= c.length - 1) return '';
+      return c.substring(dot + 1).toLowerCase().replaceAll(
+            RegExp(r'[^a-z0-9]'),
+            '',
+          );
+    }
+    final fromName = fromCandidate(name);
+    if (known.contains(fromName)) return fromName;
+    final fromPath = fromCandidate(path);
+    if (known.contains(fromPath)) return fromPath;
+    return 'jpg';
   }
 
   void _removePickedImage() {
@@ -132,26 +156,33 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   Future<void> _captureVideo() => _captureOrPickVideo(ImageSource.camera);
 
   Future<void> _captureOrPickVideo(ImageSource source) async {
+    debugPrint('[FirinNet][Composer] pickVideo source=$source');
     try {
       final picker = ImagePicker();
       final x = await picker.pickVideo(
         source: source,
         maxDuration: _maxVideoDuration,
       );
-      if (x == null) return;
+      if (x == null) {
+        debugPrint('[FirinNet][Composer] pickVideo cancelled');
+        return;
+      }
       final bytes = await x.readAsBytes();
       if (bytes.length > _maxVideoBytes) {
+        debugPrint(
+          '[FirinNet][Composer] pickVideo too large bytes=${bytes.length}',
+        );
         if (mounted) {
           setState(() =>
               _composerError = AppStrings.composerVideoTooLargeError);
         }
         return;
       }
-      final name = x.name;
-      final dot = name.lastIndexOf('.');
-      final ext = (dot >= 0 && dot < name.length - 1)
-          ? name.substring(dot + 1).toLowerCase()
-          : 'mp4';
+      final ext = _extractVideoExt(x.name, x.path);
+      debugPrint(
+        '[FirinNet][Composer] pickVideo got name=${x.name} ext=$ext '
+        'bytes=${bytes.length}',
+      );
       if (!mounted) return;
       // Image ve video mutually exclusive — biri seçilince diğeri sıfırlanır.
       setState(() {
@@ -161,13 +192,31 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
         _pickedExt = null;
         _composerError = null;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[FirinNet][Composer] pickVideo error: $e');
       if (mounted) {
         setState(
           () => _composerError = AppStrings.composerVideoPickError,
         );
       }
     }
+  }
+
+  static String _extractVideoExt(String name, String path) {
+    const known = <String>{'mp4', 'm4v', 'mov', 'webm', '3gp'};
+    String fromCandidate(String c) {
+      final dot = c.lastIndexOf('.');
+      if (dot <= 0 || dot >= c.length - 1) return '';
+      return c.substring(dot + 1).toLowerCase().replaceAll(
+            RegExp(r'[^a-z0-9]'),
+            '',
+          );
+    }
+    final fromName = fromCandidate(name);
+    if (known.contains(fromName)) return fromName;
+    final fromPath = fromCandidate(path);
+    if (known.contains(fromPath)) return fromPath;
+    return 'mp4';
   }
 
   void _removePickedVideo() {

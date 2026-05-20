@@ -9,9 +9,9 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../feed/providers/feed_providers.dart';
-import '../../feed/screens/feed_screen.dart';
 import '../../profile/providers/follow_providers.dart';
 import '../../profile/widgets/follow_button.dart';
+import '../post/social_post_card.dart';
 import '../providers/social_providers.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_statistics.dart';
@@ -126,18 +126,16 @@ class SocialProfilePage extends ConsumerWidget {
                       ),
                     );
                   }
+                  // V2 Commit 3.6 — Profile post list eski PostCardWired
+                  // (sadece image render eder) yerine SocialPostCard
+                  // kullanır. SocialPostCard image + video birlikte
+                  // destekler; aynı widget feed ile profile'da tutarlı
+                  // davranır (kullanıcı raporu: video feed'de görünüyor
+                  // ama profile'da görünmüyordu).
                   return Column(
                     children: [
                       for (final p in posts)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.pageH,
-                            AppSpacing.s,
-                            AppSpacing.pageH,
-                            0,
-                          ),
-                          child: PostCardWired(post: p),
-                        ),
+                        SocialPostCard(key: ValueKey(p.id), post: p),
                     ],
                   );
                 },
