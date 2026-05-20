@@ -38,11 +38,14 @@ class _SocialStoryCreatePageState
   bool _saving = false;
   String? _inlineError;
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage() => _captureOrPick(ImageSource.gallery);
+  Future<void> _capturePhoto() => _captureOrPick(ImageSource.camera);
+
+  Future<void> _captureOrPick(ImageSource source) async {
     try {
       final picker = ImagePicker();
       final x = await picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 1920,
         imageQuality: 85,
       );
@@ -126,43 +129,60 @@ class _SocialStoryCreatePageState
           ),
         ),
         centerTitle: true,
-        actions: [
-          if (hasPicked)
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.s),
-              child: FilledButton(
-                onPressed: _saving ? null : _share,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.copper,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.s),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.m,
-                    vertical: AppSpacing.xs,
-                  ),
-                ),
-                child: _saving
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.8,
-                          valueColor:
-                              AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      )
-                    : const Text(
-                        AppStrings.storyCreateShareCta,
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-              ),
-            ),
-        ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, color: AppColors.borderHairline),
+        ),
+      ),
+      // V2 Commit 3.5 — Sticky bottom "Hikayeyi paylaş" CTA. Donor
+      // `PublishPostButton` muadili.
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageH,
+            AppSpacing.s,
+            AppSpacing.pageH,
+            AppSpacing.m,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: (hasPicked && !_saving) ? _share : null,
+              icon: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.send_rounded, size: 18),
+              label: Text(
+                _saving
+                    ? AppStrings.storySharingCta
+                    : AppStrings.storyShareCta,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15.5,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.copper,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    AppColors.copper.withValues(alpha: 0.35),
+                disabledForegroundColor:
+                    Colors.white.withValues(alpha: 0.7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
       body: SafeArea(
@@ -212,21 +232,59 @@ class _SocialStoryCreatePageState
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    FilledButton.icon(
-                      onPressed: _saving ? null : _pickImage,
-                      icon: const Icon(Icons.image_outlined, size: 18),
-                      label: const Text(
-                        AppStrings.storyCreatePickCta,
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.copper,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.l,
-                          vertical: AppSpacing.s,
+                    // V2 Commit 3.5 — Foto seç + Foto çek butonları
+                    // yan yana.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: _saving ? null : _pickImage,
+                            icon: const Icon(
+                              Icons.photo_library_outlined,
+                              size: 18,
+                            ),
+                            label: const Text(
+                              AppStrings.storyCreatePickCta,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.copper,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.s,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: AppSpacing.s),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _saving ? null : _capturePhoto,
+                            icon: const Icon(
+                              Icons.photo_camera_outlined,
+                              size: 18,
+                            ),
+                            label: const Text(
+                              AppStrings.storyCapturePhotoCta,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.textPrimary,
+                              side: const BorderSide(
+                                color: AppColors.borderHairline,
+                                width: 0.8,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.s,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -247,16 +305,33 @@ class _SocialStoryCreatePageState
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _saving
-                          ? null
-                          : () {
-                              setState(() {
-                                _pickedBytes = null;
-                                _pickedExt = null;
-                              });
-                            },
-                      icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: const Text('Değiştir'),
+                      onPressed: _saving ? null : _pickImage,
+                      icon: const Icon(
+                        Icons.photo_library_outlined,
+                        size: 16,
+                      ),
+                      label: const Text('Galeriden değiştir'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        side: const BorderSide(
+                          color: AppColors.borderHairline,
+                          width: 0.8,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.s,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _saving ? null : _capturePhoto,
+                      icon: const Icon(
+                        Icons.photo_camera_outlined,
+                        size: 16,
+                      ),
+                      label: const Text('Yeniden çek'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
                         side: const BorderSide(

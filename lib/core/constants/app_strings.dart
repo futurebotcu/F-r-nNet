@@ -216,9 +216,24 @@ class AppStrings {
   static const String storyExpiresInHint = '24 saat sonra kaybolur.';
 
   // V2 Social Core Commit 3 — Video post
-  static const String composerPickVideoCta = 'Video ekle';
+  static const String composerPickVideoCta = 'Video seç';
   static const String composerPickVideoChangeCta = 'Video değiştir';
   static const String composerRemoveVideoCta = 'Videoyu kaldır';
+
+  // V2 Social Core Commit 3.5 — Composer media fix (kamera + sticky CTA)
+  static const String composerPromptHeadline =
+      'Fotoğraf, video veya deneyimini paylaş.';
+  static const String composerPickPhotoCta = 'Foto seç';
+  static const String composerCapturePhotoCta = 'Foto çek';
+  static const String composerCaptureVideoCta = 'Video çek';
+  static const String composerShareCta = 'Paylaş';
+  static const String composerSharingCta = 'Paylaşılıyor…';
+  static const String composerMediaSectionLabel = 'Medya';
+
+  // Story create — kamera + sticky CTA
+  static const String storyCapturePhotoCta = 'Foto çek';
+  static const String storyShareCta = 'Hikayeyi paylaş';
+  static const String storySharingCta = 'Paylaşılıyor…';
   static const String composerVideoTooLargeError =
       'Video çok büyük (maks 50 MB). Daha kısa bir video seç.';
   static const String composerVideoTooLongError =

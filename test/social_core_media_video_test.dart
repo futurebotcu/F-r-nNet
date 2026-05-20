@@ -249,7 +249,9 @@ void main() {
 
   group('V2 Commit 3 — AppStrings video sabitleri', () {
     test('Composer + post-card video metinleri', () {
-      expect(AppStrings.composerPickVideoCta, 'Video ekle');
+      // V2 Commit 3.5'te "Video ekle" → "Video seç" rename edildi (4-buton
+      // pattern: Foto seç / Foto çek / Video seç / Video çek).
+      expect(AppStrings.composerPickVideoCta, 'Video seç');
       expect(AppStrings.composerVideoTooLargeError.contains('50 MB'), isTrue);
       expect(AppStrings.composerVideoTooLongError.contains('60'), isTrue);
       expect(AppStrings.postVideoPlaybackError.contains('oynatılamadı'), isTrue);

@@ -86,11 +86,14 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage() => _captureOrPickImage(ImageSource.gallery);
+  Future<void> _capturePhoto() => _captureOrPickImage(ImageSource.camera);
+
+  Future<void> _captureOrPickImage(ImageSource source) async {
     try {
       final picker = ImagePicker();
       final x = await picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 1920,
         imageQuality: 85,
       );
@@ -102,9 +105,13 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
           ? name.substring(dot + 1).toLowerCase()
           : 'jpg';
       if (!mounted) return;
+      // Image ve video mutually exclusive — biri seçilince diğeri sıfırlanır.
       setState(() {
         _pickedBytes = bytes;
         _pickedExt = ext;
+        _pickedVideoBytes = null;
+        _pickedVideoExt = null;
+        _pickedVideoDurationMs = null;
         _composerError = null;
       });
     } catch (_) {
@@ -121,11 +128,14 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     });
   }
 
-  Future<void> _pickVideo() async {
+  Future<void> _pickVideo() => _captureOrPickVideo(ImageSource.gallery);
+  Future<void> _captureVideo() => _captureOrPickVideo(ImageSource.camera);
+
+  Future<void> _captureOrPickVideo(ImageSource source) async {
     try {
       final picker = ImagePicker();
       final x = await picker.pickVideo(
-        source: ImageSource.gallery,
+        source: source,
         maxDuration: _maxVideoDuration,
       );
       if (x == null) return;
@@ -254,6 +264,17 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     }
   }
 
+  /// V2 Commit 3.5 — Composer "share-ready" mı?
+  /// Metin VEYA medya (image/video) varsa true. CTA enabled/disabled
+  /// state'i bu flag'e bağlı (boş tıklamayla snackbar yerine sessiz
+  /// disabled görünüm).
+  bool get _canShare {
+    if (_saving) return false;
+    final hasText = _textCtrl.text.trim().isNotEmpty;
+    final hasMedia = _pickedBytes != null || _pickedVideoBytes != null;
+    return hasText || hasMedia;
+  }
+
   @override
   Widget build(BuildContext context) {
     return PremiumScaffold(
@@ -274,42 +295,61 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.s),
-            child: FilledButton(
-              onPressed: _saving ? null : _submit,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.s),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.m,
-                  vertical: AppSpacing.xs,
-                ),
-              ),
-              child: _saving
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppColors.borderHairline),
+        ),
+      ),
+      // V2 Commit 3.5 — Sticky bottom "Paylaş" CTA. Donor `share_post.dart`
+      // `PublishPostButton` muadili. AppBar action'da küçük buton yerine
+      // ekran altında büyük, görünür, parmağa yakın primary CTA.
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageH,
+            AppSpacing.s,
+            AppSpacing.pageH,
+            AppSpacing.m,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: _canShare ? _submit : null,
+              icon: _saving
                   ? const SizedBox(
-                      width: 14,
-                      height: 14,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
-                        strokeWidth: 1.8,
+                        strokeWidth: 2,
                         valueColor:
                             AlwaysStoppedAnimation(Colors.white),
                       ),
                     )
-                  : const Text(
-                      AppStrings.feedComposerSubmit,
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                  : const Icon(Icons.send_rounded, size: 18),
+              label: Text(
+                _saving
+                    ? AppStrings.composerSharingCta
+                    : AppStrings.composerShareCta,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15.5,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.copper,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    AppColors.copper.withValues(alpha: 0.35),
+                disabledForegroundColor:
+                    Colors.white.withValues(alpha: 0.7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+              ),
             ),
           ),
-        ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.borderHairline),
         ),
       ),
       body: SafeArea(
@@ -320,6 +360,17 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
             vertical: AppSpacing.m,
           ),
           children: [
+            // V2 Commit 3.5 — Composer prompt headline (Twitter/Facebook
+            // "What's happening?" muadili FırınNet dilinde).
+            const Text(
+              AppStrings.composerPromptHeadline,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 14.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.m),
             if (_pickedBytes != null)
               _MediaPreview(
                 bytes: _pickedBytes!,
@@ -330,7 +381,8 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                 bytes: _pickedVideoBytes!,
                 onRemove: _removePickedVideo,
               ),
-            const SizedBox(height: AppSpacing.m),
+            if (_pickedBytes != null || _pickedVideoBytes != null)
+              const SizedBox(height: AppSpacing.m),
             TextField(
               controller: _textCtrl,
               focusNode: _focus,
@@ -338,6 +390,9 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               maxLines: 12,
               maxLength: 1200,
               enabled: !_saving,
+              // V2 Commit 3.5 — onChanged setState ile sticky Paylaş
+              // CTA disabled→enabled state'i güncellenir.
+              onChanged: (_) => setState(() {}),
               decoration: const InputDecoration(
                 hintText: AppStrings.feedComposerExpandHint,
                 border: OutlineInputBorder(),
@@ -395,59 +450,59 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               }).toList(),
             ),
             const SizedBox(height: AppSpacing.m),
-            // V2 Commit 3 — Image ve video butonları yan yana; mutually
-            // exclusive (biri seçilince diğeri sıfırlanır).
+            // V2 Commit 3.5 — Medya section label + 4-buton 2x2 grid.
+            // Donor `selector` + image_picker_plus muadili: galeri seç /
+            // anlık çek için ayrı butonlar (foto + video).
+            const Text(
+              AppStrings.composerMediaSectionLabel,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            // İlk satır: Foto seç + Foto çek
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _saving ? null : _pickImage,
-                    icon: const Icon(
-                      Icons.photo_library_outlined,
-                      size: 16,
-                    ),
-                    label: Text(
-                      _pickedBytes == null ? 'Foto ekle' : 'Foto değiştir',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(
-                        color: AppColors.borderHairline,
-                        width: 0.8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.s),
-                      ),
-                    ),
+                  child: _MediaButton(
+                    icon: Icons.photo_library_outlined,
+                    label: AppStrings.composerPickPhotoCta,
+                    enabled: !_saving,
+                    onPressed: _pickImage,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _saving ? null : _pickVideo,
-                    icon: const Icon(
-                      Icons.videocam_outlined,
-                      size: 16,
-                    ),
-                    label: Text(
-                      _pickedVideoBytes == null
-                          ? AppStrings.composerPickVideoCta
-                          : AppStrings.composerPickVideoChangeCta,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(
-                        color: AppColors.borderHairline,
-                        width: 0.8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.s),
-                      ),
-                    ),
+                  child: _MediaButton(
+                    icon: Icons.photo_camera_outlined,
+                    label: AppStrings.composerCapturePhotoCta,
+                    enabled: !_saving,
+                    onPressed: _capturePhoto,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s),
+            // İkinci satır: Video seç + Video çek
+            Row(
+              children: [
+                Expanded(
+                  child: _MediaButton(
+                    icon: Icons.video_library_outlined,
+                    label: AppStrings.composerPickVideoCta,
+                    enabled: !_saving,
+                    onPressed: _pickVideo,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s),
+                Expanded(
+                  child: _MediaButton(
+                    icon: Icons.videocam_outlined,
+                    label: AppStrings.composerCaptureVideoCta,
+                    enabled: !_saving,
+                    onPressed: _captureVideo,
                   ),
                 ),
               ],
@@ -487,6 +542,74 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// V2 Commit 3.5 — Medya seç/çek butonu. Sade outline kart, ikon
+/// üstte + label altta. Touch target ≥48 px.
+class _MediaButton extends StatelessWidget {
+  const _MediaButton({
+    required this.icon,
+    required this.label,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onPressed : null,
+        borderRadius: BorderRadius.circular(AppRadius.s),
+        child: Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.s),
+            border: Border.all(
+              color: enabled
+                  ? AppColors.borderHairline
+                  : AppColors.borderHairline.withValues(alpha: 0.4),
+              width: 0.8,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: enabled
+                    ? AppColors.softGold
+                    : AppColors.textMuted,
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: enabled
+                        ? AppColors.textPrimary
+                        : AppColors.textMuted,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
