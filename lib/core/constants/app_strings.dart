@@ -677,6 +677,23 @@ class AppStrings {
   static const String marketListingEmptyGuest =
       'Henüz aktif ürün/hizmet ilanı yok. Üye olunca yayınlayabilirsin.';
 
+  // V1 Messaging M1.2 — generic chat labels.
+  static const String messagingDefaultTitle = 'Mesaj';
+  static const String messagesUnknownUser = 'FırınNet kullanıcısı';
+  static const String messagingContextMarket = 'Market ilanı';
+  static const String messagingContextJobOffer = 'İş ilanı';
+  static const String messagingContextJobSeek = 'İş arayan ilanı';
+  static const String messagingSendError =
+      'Mesaj gönderilemedi. Bağlantını kontrol edip tekrar dene.';
+  static const String messagingStartError =
+      'Sohbet başlatılamadı. Yeniden dene.';
+  static const String messagingMessageCtaProfile = 'Mesaj';
+  static const String messagingMessageCtaMarket = 'Satıcıya mesaj gönder';
+  static const String messagingAuthRequiredMarketReason =
+      'Bu satıcıya mesaj göndermek için giriş yap.';
+  static const String messagingAuthRequiredProfileReason =
+      'Mesaj göndermek için giriş yap.';
+
   // V1 Market M3 polish — empty state.
   static const String marketEmptyTitle = 'Henüz ilan yok';
   static const String marketEmptySubtitle =

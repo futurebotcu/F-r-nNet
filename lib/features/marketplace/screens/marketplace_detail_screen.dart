@@ -21,6 +21,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../messaging/providers/messaging_providers.dart';
 import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
@@ -213,12 +214,37 @@ class MarketplaceDetailScreen extends ConsumerWidget {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    // V2'de job_conversations benzeri marketplace_conversations eklenecek.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('İlan içi mesajlaşma yakında — şimdilik telefon/WhatsApp.'),
-      ),
-    );
+    // M1.2: generic messaging sistemine geçildi. Owner ilanına kendi
+    // başlatamaz (RPC SECURITY DEFINER taraf self-DM ve owner mismatch
+    // reddi yapar; UI tarafında da pre-check).
+    final me = ref.read(currentAuthUserProvider);
+    if (l.id == null || l.ownerId == null) return;
+    if (me != null && me.id == l.ownerId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kendi ilanına mesaj başlatamazsın.')),
+      );
+      return;
+    }
+    try {
+      final convId = await ref
+          .read(messagingRepositoryProvider)
+          .findOrCreateDirectConversation(
+            otherUserId: l.ownerId!,
+            contextType: 'market_listing',
+            contextId: l.id,
+          );
+      if (!context.mounted) return;
+      context.push('/messages/$convId');
+    } on GuestActionRequiredException {
+      if (context.mounted) await showAuthRequiredSheet(context, ref);
+    } catch (e) {
+      debugPrint('[FirinNet][Market] open chat error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.messagingStartError)),
+        );
+      }
+    }
   }
 
   Future<void> _ownerAction(

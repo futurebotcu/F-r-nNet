@@ -100,6 +100,21 @@ class SupabaseMessagingRepository implements MessagingRepository {
         r['conversation_id'] as String: r['user_id'] as String,
     };
 
+    // M1.2: profiles.display_name join sidecar — ChatScreen AppBar
+    // ve MessagesListScreen kartında karşı kullanıcı adı için.
+    final otherUserIds = otherByConv.values.toSet().toList();
+    final nameById = <String, String>{};
+    if (otherUserIds.isNotEmpty) {
+      final profileRows = await _client
+          .from('profiles')
+          .select('id, display_name')
+          .inFilter('id', otherUserIds);
+      for (final r in (profileRows as List).cast<Map<String, dynamic>>()) {
+        nameById[r['id'] as String] =
+            (r['display_name'] as String?) ?? '';
+      }
+    }
+
     // 4) Last message snapshot — V1 için her conv için son 1 mesaj.
     //    (N+1 ama V1'de küçük; V1.1 view ile optimize.)
     final lastMsgByConv = <String, Map<String, dynamic>>{};
@@ -142,9 +157,11 @@ class SupabaseMessagingRepository implements MessagingRepository {
         // Rough unread; tam sayı RPC'den çekmek isteniyorsa unreadCount() çağrısı.
         unread = 1;
       }
+      final otherUid = otherByConv[id];
       out.add(Conversation.fromRow(
         c,
-        otherUserId: otherByConv[id],
+        otherUserId: otherUid,
+        otherUserName: otherUid != null ? nameById[otherUid] : null,
         lastMessageContent: lastMsg?['content'] as String?,
         lastMessageSenderId: lastMsg?['sender_id'] as String?,
         lastMessageCreatedAt: lastMsgCreated,
@@ -203,9 +220,22 @@ class SupabaseMessagingRepository implements MessagingRepository {
 
     final unread = await unreadCount(id);
 
+    // M1.2 sidecar: otherUserName join
+    final otherUid = otherRow?['user_id'] as String?;
+    String? otherName;
+    if (otherUid != null) {
+      final p = await _client
+          .from('profiles')
+          .select('display_name')
+          .eq('id', otherUid)
+          .maybeSingle();
+      otherName = (p?['display_name'] as String?);
+    }
+
     return Conversation.fromRow(
       row,
-      otherUserId: otherRow?['user_id'] as String?,
+      otherUserId: otherUid,
+      otherUserName: otherName,
       lastMessageContent: lastMsg?['content'] as String?,
       lastMessageSenderId: lastMsg?['sender_id'] as String?,
       lastMessageCreatedAt: lastMsgCreated,

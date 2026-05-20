@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter/foundation.dart';
+
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../../feed/providers/feed_providers.dart';
+import '../../messaging/providers/messaging_providers.dart';
 import '../../profile/providers/follow_providers.dart';
 import '../../profile/widgets/follow_button.dart';
 import '../post/social_post_card.dart';
@@ -83,9 +87,41 @@ class SocialProfilePage extends ConsumerWidget {
                     AppSpacing.pageH,
                     0,
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FollowButton(userId: userId),
+                  child: Row(
+                    children: [
+                      Expanded(child: FollowButton(userId: userId)),
+                      const SizedBox(width: AppSpacing.s),
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                _openProfileChat(context, ref, userId),
+                            icon: const Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 18,
+                            ),
+                            label: const Text(
+                              AppStrings.messagingMessageCtaProfile,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.textPrimary,
+                              side: const BorderSide(
+                                color: AppColors.borderHairline,
+                                width: 0.8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.m),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               const SizedBox(height: AppSpacing.m),
@@ -145,5 +181,37 @@ class SocialProfilePage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// M1.2: profile non-self "Mesaj" CTA. AuthRequiredGuard + generic
+  /// messaging RPC ile direct DM conversation aç → ChatScreen push.
+  Future<void> _openProfileChat(
+    BuildContext context,
+    WidgetRef ref,
+    String otherUserId,
+  ) async {
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    try {
+      final convId = await ref
+          .read(messagingRepositoryProvider)
+          .findOrCreateDirectConversation(
+            otherUserId: otherUserId,
+            contextType: 'profile_direct',
+          );
+      if (!context.mounted) return;
+      context.push('/messages/$convId');
+    } on GuestActionRequiredException {
+      if (context.mounted) await showAuthRequiredSheet(context, ref);
+    } catch (e) {
+      debugPrint('[FirinNet][Profile] open chat error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.messagingStartError)),
+        );
+      }
+    }
   }
 }

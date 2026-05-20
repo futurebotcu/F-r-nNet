@@ -48,6 +48,7 @@ import '../../features/marketplace/screens/marketplace_detail_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
 import '../../features/messages/screens/job_conversation_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
+import '../../features/messaging/screens/chat_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
@@ -513,14 +514,25 @@ GoRouter createRouter() {
       ),
 
       // V1 — Job messaging
+      // M1.2: /messages → MessagesListScreen (generic conversations).
+      // /messages/:id → ChatScreen (generic). Eski JobConversationScreen
+      // legacy ekran olarak korunur ve job offer/seek detail içinde ayrı
+      // /messages/legacy/:id route'tan ulaşılabilir kalır.
       GoRoute(
         path: AppRoutes.messages,
         builder: (_, __) => const MessagesListScreen(),
       ),
       GoRoute(
+        path: '/messages/legacy/:id',
+        builder: (_, state) => JobConversationScreen(
+          conversationId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
         path: '/messages/:id',
-        builder: (_, state) =>
-            JobConversationScreen(conversationId: state.pathParameters['id']!),
+        builder: (_, state) => ChatScreen(
+          conversationId: state.pathParameters['id']!,
+        ),
       ),
     ],
   );
