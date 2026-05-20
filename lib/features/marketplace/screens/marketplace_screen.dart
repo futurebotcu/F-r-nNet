@@ -131,6 +131,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                       setState(() => _filters = _filters.copyWith(clearEquipmentCategory: true)),
                   onRemoveCity: () =>
                       setState(() => _filters = _filters.copyWith(clearCity: true)),
+                  onRemoveDistrict: () => setState(
+                      () => _filters = _filters.copyWith(clearDistrict: true)),
                   onRemovePrice: () => setState(() => _filters = _filters.copyWith(
                         clearMinPrice: true,
                         clearMaxPrice: true,
@@ -156,10 +158,16 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               ),
               data: (items) {
                 if (items.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: _MarketMessage(
-                      icon: Icons.inbox_outlined,
-                      message: AppStrings.marketListingEmpty,
+                  // M3 polish (C): filtre aktifse farklı mesaj + clear CTA;
+                  // boş listede ise "İlk ilanı oluştur" CTA.
+                  final filterActive = _filters.activeCount > 0;
+                  return SliverToBoxAdapter(
+                    child: _MarketEmptyState(
+                      filterActive: filterActive,
+                      onAddPressed: _onAddPressed,
+                      onClearFilters: () => setState(
+                        () => _filters = const MarketFilters(),
+                      ),
                     ),
                   );
                 }
@@ -252,6 +260,7 @@ class _ActiveFilterChipRow extends StatelessWidget {
     required this.onRemoveType,
     required this.onRemoveEquipment,
     required this.onRemoveCity,
+    required this.onRemoveDistrict,
     required this.onRemovePrice,
     required this.onRemoveCondition,
     required this.onRemoveNegotiable,
@@ -262,6 +271,7 @@ class _ActiveFilterChipRow extends StatelessWidget {
   final VoidCallback onRemoveType;
   final VoidCallback onRemoveEquipment;
   final VoidCallback onRemoveCity;
+  final VoidCallback onRemoveDistrict;
   final VoidCallback onRemovePrice;
   final VoidCallback onRemoveCondition;
   final VoidCallback onRemoveNegotiable;
@@ -294,6 +304,11 @@ class _ActiveFilterChipRow extends StatelessWidget {
             ),
           if ((filters.city ?? '').isNotEmpty)
             _RemovableChip(label: filters.city!, onRemove: onRemoveCity),
+          if ((filters.district ?? '').isNotEmpty)
+            _RemovableChip(
+              label: filters.district!,
+              onRemove: onRemoveDistrict,
+            ),
           if (filters.minPrice != null || filters.maxPrice != null)
             _RemovableChip(
               label: _priceRangeLabel(filters),
@@ -410,6 +425,134 @@ class _MarketMessage extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// M3 polish (C): boş/filtre-empty durum için ikon + başlık + alt
+/// açıklama + birincil CTA. Filtre aktifse "Filtreleri temizle" alternatifi
+/// gösterilir; boş liste için "İlk ilanı oluştur" CTA.
+class _MarketEmptyState extends StatelessWidget {
+  const _MarketEmptyState({
+    required this.filterActive,
+    required this.onAddPressed,
+    required this.onClearFilters,
+  });
+
+  final bool filterActive;
+  final VoidCallback onAddPressed;
+  final VoidCallback onClearFilters;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = filterActive
+        ? AppStrings.marketEmptyFilteredTitle
+        : AppStrings.marketEmptyTitle;
+    final subtitle = filterActive
+        ? AppStrings.marketEmptyFilteredSubtitle
+        : AppStrings.marketEmptySubtitle;
+    final icon = filterActive
+        ? Icons.filter_alt_off_outlined
+        : Icons.storefront_outlined;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.xxxl,
+        AppSpacing.pageH,
+        AppSpacing.xxl,
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.softGold.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.softGold.withValues(alpha: 0.28),
+                  width: 0.8,
+                ),
+              ),
+              child: Icon(icon, size: 32, color: AppColors.softGold),
+            ),
+            const SizedBox(height: AppSpacing.m),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 17,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13.5,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.l),
+            if (filterActive)
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: onClearFilters,
+                  icon: const Icon(Icons.clear_all_rounded, size: 18),
+                  label: const Text(
+                    AppStrings.marketEmptyClearFiltersCta,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(
+                      color: AppColors.borderHairline,
+                      width: 0.8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: onAddPressed,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text(
+                    AppStrings.marketEmptyCta,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.copper,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

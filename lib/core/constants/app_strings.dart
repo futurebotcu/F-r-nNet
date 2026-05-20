@@ -676,6 +676,17 @@ class AppStrings {
       'Henüz aktif ürün/hizmet ilanı yok. İlk ilanı sen ver.';
   static const String marketListingEmptyGuest =
       'Henüz aktif ürün/hizmet ilanı yok. Üye olunca yayınlayabilirsin.';
+
+  // V1 Market M3 polish — empty state.
+  static const String marketEmptyTitle = 'Henüz ilan yok';
+  static const String marketEmptySubtitle =
+      'Sektör seninle başlasın — ekipmanını sat ya da devrini ilan ver.';
+  static const String marketEmptyCta = 'İlk ilanı oluştur';
+  static const String marketEmptyFilteredTitle =
+      'Bu filtrelerle ilan bulunamadı';
+  static const String marketEmptyFilteredSubtitle =
+      'Filtreleri biraz gevşetip tekrar dene.';
+  static const String marketEmptyClearFiltersCta = 'Filtreleri temizle';
   static const String marketListingErrorGeneric =
       'Market ilanları yüklenemedi. Yeniden dener misin?';
   static const String marketListingAddCta = 'Ürün/Hizmet İlanı Ver';

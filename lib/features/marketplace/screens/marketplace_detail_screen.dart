@@ -21,6 +21,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
 import '../widgets/marketplace_contact_panel.dart';
@@ -391,25 +392,16 @@ class _InfoSection extends StatelessWidget {
           if ((listing.city ?? '').isNotEmpty ||
               (listing.district ?? '').isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s),
-            Row(
+            // M3 polish: controlled-data lokasyon chip görünümü — basit
+            // ikon + metin yerine yumuşak softGold rozet (B planı).
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
               children: [
-                const Icon(
-                  Icons.place_outlined,
-                  size: 16,
-                  color: AppColors.textMuted,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  [
-                    if ((listing.city ?? '').isNotEmpty) listing.city,
-                    if ((listing.district ?? '').isNotEmpty) listing.district,
-                  ].whereType<String>().join(' · '),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                if ((listing.city ?? '').isNotEmpty)
+                  _LocationChip(label: listing.city!),
+                if ((listing.district ?? '').isNotEmpty)
+                  _LocationChip(label: listing.district!),
               ],
             ),
           ],
@@ -587,6 +579,21 @@ class _AttributesGrid extends StatelessWidget {
       out.add(MapEntry(AppStrings.marketAttrNegotiable,
           AppStrings.marketAttrYes));
     }
+    // M3 polish: controlled-data taxonomy label vurgusu.
+    final contactLabel = MarketplaceTaxonomy.contactPreferenceLabel(
+      listing.contactPreference,
+    );
+    if (contactLabel.isNotEmpty) {
+      out.add(MapEntry('İletişim', contactLabel));
+    }
+    if (listing.currency.isNotEmpty &&
+        listing.currency != MarketplaceTaxonomy.defaultCurrency) {
+      final cur =
+          MarketplaceTaxonomy.currencyLabel(listing.currency);
+      if (cur.isNotEmpty) {
+        out.add(MapEntry(AppStrings.marketAttrCurrency, cur));
+      }
+    }
     return out;
   }
 
@@ -752,6 +759,47 @@ class _OwnerSection extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// M3 polish: detail InfoSection lokasyon vurgusu — yumuşak softGold
+/// rozet (M2 type badge ile aynı görsel dil).
+class _LocationChip extends StatelessWidget {
+  const _LocationChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.softGold.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: AppColors.softGold.withValues(alpha: 0.32),
+          width: 0.6,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.place_outlined,
+            size: 13,
+            color: AppColors.softGold,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.softGold,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }
