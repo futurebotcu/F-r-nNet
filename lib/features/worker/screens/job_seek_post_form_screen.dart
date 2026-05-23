@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -35,6 +36,8 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
   final _experience = TextEditingController();
   final _salary = TextEditingController();
   final _description = TextEditingController();
+  /// Listing Contact Phone Sprint — opsiyonel.
+  final _contactPhone = TextEditingController();
 
   /// M5 — taxonomy code.
   String? _professionCode;
@@ -77,6 +80,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
         ? p.salaryExpectation!.toStringAsFixed(0)
         : '';
     _description.text = p.description ?? '';
+    _contactPhone.text = p.contactPhone ?? '';
     // M5 — code öncelikli; yoksa legacy label'dan çevir.
     _professionCode = p.professionBadgeCode ??
         FirinnetTaxonomy.professionCodeFromLabel(p.professionBadge);
@@ -90,7 +94,16 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     _experience.dispose();
     _salary.dispose();
     _description.dispose();
+    _contactPhone.dispose();
     super.dispose();
+  }
+
+  /// Telefon normalize — boşluk/tire/parantez temizle. Boş → null.
+  static String? _normalizePhone(String raw) {
+    final cleaned =
+        raw.trim().replaceAll(RegExp(r'[\s\-()]+'), '');
+    if (cleaned.isEmpty) return null;
+    return cleaned;
   }
 
   Future<void> _save() async {
@@ -129,6 +142,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
         description: _description.text.trim().isEmpty
             ? null
             : _description.text.trim(),
+        contactPhone: _normalizePhone(_contactPhone.text),
         isActive: _isActive,
       );
       await ref.read(workerRepositoryProvider).upsertJobSeekPost(draft);
@@ -289,6 +303,17 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: AppSpacing.s),
+            TextField(
+              controller: _contactPhone,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: AppStrings.listingContactPhoneLabel,
+                hintText: AppStrings.listingContactPhoneHint,
+                helperText: AppStrings.listingContactPhoneHelper,
+                helperMaxLines: 2,
+              ),
             ),
             const SizedBox(height: AppSpacing.s),
             TextField(

@@ -35,6 +35,8 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   final _salaryMax = TextEditingController();
   final _shiftType = TextEditingController();
   final _experience = TextEditingController();
+  /// Listing Contact Phone Sprint — opsiyonel telefon (doğrulama yok).
+  final _contactPhone = TextEditingController();
   bool _isActive = true;
   bool _saving = false;
   bool _loaded = false;
@@ -76,6 +78,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     _salaryMax.text = p.salaryMax?.toStringAsFixed(0) ?? '';
     _shiftType.text = p.shiftType ?? '';
     _experience.text = p.experienceRequired ?? '';
+    _contactPhone.text = p.contactPhone ?? '';
     _isActive = p.isActive;
     setState(() => _loaded = true);
   }
@@ -89,7 +92,17 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     _salaryMax.dispose();
     _shiftType.dispose();
     _experience.dispose();
+    _contactPhone.dispose();
     super.dispose();
+  }
+
+  /// Telefon normalize: sadece boşlukları/tireleri temizle; aşırı validasyon
+  /// yok. Boş string → null.
+  static String? _normalizePhone(String raw) {
+    final cleaned =
+        raw.trim().replaceAll(RegExp(r'[\s\-()]+'), '');
+    if (cleaned.isEmpty) return null;
+    return cleaned;
   }
 
   Future<void> _onSavePressed() async {
@@ -120,6 +133,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
           _shiftType.text.trim().isEmpty ? null : _shiftType.text.trim(),
       experienceRequired:
           _experience.text.trim().isEmpty ? null : _experience.text.trim(),
+      contactPhone: _normalizePhone(_contactPhone.text),
       isActive: _isActive,
     );
     try {
@@ -293,6 +307,17 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                       decoration: const InputDecoration(
                         labelText: AppStrings.jobOfferFieldExperience,
                         hintText: AppStrings.jobOfferFieldExperienceHint,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+                    TextFormField(
+                      controller: _contactPhone,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.listingContactPhoneLabel,
+                        hintText: AppStrings.listingContactPhoneHint,
+                        helperText: AppStrings.listingContactPhoneHelper,
+                        helperMaxLines: 2,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),

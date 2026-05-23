@@ -20,6 +20,7 @@ class JobOfferPost {
     this.experienceRequired,
     this.isActive = true,
     this.contactPreference = 'in_app',
+    this.contactPhone,
     this.authorName,
     this.authorRole,
     this.createdAt,
@@ -51,6 +52,11 @@ class JobOfferPost {
   final String? experienceRequired;
   final bool isActive;
   final String contactPreference;
+
+  /// Opsiyonel telefon numarası — sahibinin rızasıyla ilanda public görünür.
+  /// Doğrulama YOK. Boşsa ilanda "Ara" butonu görünmez.
+  final String? contactPhone;
+
   final String? authorName;
   final String? authorRole;
   final DateTime? createdAt;
@@ -70,6 +76,7 @@ class JobOfferPost {
     String? experienceRequired,
     bool? isActive,
     String? contactPreference,
+    String? contactPhone,
   }) {
     return JobOfferPost(
       id: id,
@@ -88,6 +95,7 @@ class JobOfferPost {
       experienceRequired: experienceRequired ?? this.experienceRequired,
       isActive: isActive ?? this.isActive,
       contactPreference: contactPreference ?? this.contactPreference,
+      contactPhone: contactPhone ?? this.contactPhone,
       authorName: authorName,
       authorRole: authorRole,
       createdAt: createdAt,
@@ -116,6 +124,8 @@ class JobOfferPost {
         'experience_required': experienceRequired,
       'is_active': isActive,
       'contact_preference': contactPreference,
+      if (contactPhone != null && contactPhone!.trim().isNotEmpty)
+        'contact_phone': contactPhone!.trim(),
     };
   }
 
@@ -139,6 +149,7 @@ class JobOfferPost {
       isActive: (row['is_active'] as bool?) ?? true,
       contactPreference:
           (row['contact_preference'] as String?) ?? 'in_app',
+      contactPhone: row['contact_phone'] as String?,
       authorName: row['author_name'] as String?,
       authorRole: row['author_role'] as String?,
       createdAt: parse(row['created_at'] as String?),

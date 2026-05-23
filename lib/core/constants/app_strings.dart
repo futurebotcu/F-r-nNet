@@ -726,6 +726,16 @@ class AppStrings {
   // Profile M4 Polish — paged posts.
   static const String profilePostsLoadMore = 'Daha fazla göster';
 
+  // Listing Contact Phone Sprint — opsiyonel telefon paylaşımı.
+  static const String listingContactPhoneLabel = 'Telefon numarası (opsiyonel)';
+  static const String listingContactPhoneHint = 'Örn. 0532 123 45 67';
+  static const String listingContactPhoneHelper =
+      'Numaranı yazarsan ilanda görünür ve arayan kişi seni doğrudan arayabilir. '
+      'Doğrulama yapılmaz — paylaşmak istemiyorsan boş bırak.';
+  static const String listingContactCallCta = 'Ara';
+  static const String listingContactWhatsappCta = 'WhatsApp';
+  static const String listingContactCallError = 'Arama ekranı açılamadı.';
+
   // V1 Messaging M1.2 — generic chat labels.
   static const String messagingDefaultTitle = 'Mesaj';
   static const String messagesUnknownUser = 'FırınNet kullanıcısı';

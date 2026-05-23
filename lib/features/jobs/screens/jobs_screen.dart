@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/listing_phone_cta.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/job_opportunity_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -196,7 +197,7 @@ class _JobSeekCard extends ConsumerWidget {
     final isCommercial = profile?.accountType == AccountType.commercial ||
         profile?.accountType == AccountType.wholesaler;
     final showCta = !isOwn && (isCommercial || profile == null);
-    return JobOpportunityCard(
+    final card = JobOpportunityCard(
       position: post.title,
       business: _formatBusiness(),
       city: _formatCity(),
@@ -207,6 +208,25 @@ class _JobSeekCard extends ConsumerWidget {
       onApply: showCta ? () => _onContact(context, ref) : null,
       applyLabel: AppStrings.jobsContact,
       applyIcon: Icons.chat_bubble_outline_rounded,
+    );
+    // Listing Contact Phone Sprint — sahibi telefon paylaştıysa Ara CTA.
+    if (!ListingPhoneCta.hasPhone(post.contactPhone) || isOwn) {
+      return card;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        card,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageH,
+            0,
+            AppSpacing.pageH,
+            AppSpacing.s,
+          ),
+          child: ListingPhoneCta(phone: post.contactPhone, compact: true),
+        ),
+      ],
     );
   }
 }
@@ -349,7 +369,7 @@ class _JobOfferCard extends ConsumerWidget {
     // CTA gizlenir.
     final user = ref.watch(currentAuthUserProvider);
     final isOwn = user != null && offer.ownerId == user.id;
-    return JobOpportunityCard(
+    final card = JobOpportunityCard(
       position: offer.title,
       business: _formatBusiness(),
       city: _formatCity(),
@@ -360,6 +380,25 @@ class _JobOfferCard extends ConsumerWidget {
       onApply: isOwn ? null : () => _onApply(context, ref),
       applyLabel: AppStrings.jobsApply,
       applyIcon: Icons.send_rounded,
+    );
+    // Listing Contact Phone Sprint — sahibi telefon paylaştıysa Ara CTA.
+    if (!ListingPhoneCta.hasPhone(offer.contactPhone) || isOwn) {
+      return card;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        card,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageH,
+            0,
+            AppSpacing.pageH,
+            AppSpacing.s,
+          ),
+          child: ListingPhoneCta(phone: offer.contactPhone, compact: true),
+        ),
+      ],
     );
   }
 }

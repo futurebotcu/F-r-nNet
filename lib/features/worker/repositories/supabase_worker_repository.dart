@@ -123,7 +123,8 @@ class SupabaseWorkerRepository implements WorkerRepository {
   static const String _postColumns =
       'id, owner_id, title, profession_badge, profession_badge_code, '
       'city, city_code, experience_years, '
-      'salary_expectation, description, is_active, created_at, updated_at';
+      'salary_expectation, description, is_active, '
+      'contact_phone, contact_preference, created_at, updated_at';
 
   @override
   Future<List<JobSeekPost>> listMyJobSeekPosts() async {

@@ -15,6 +15,8 @@ class JobSeekPost {
     this.salaryExpectation,
     this.description,
     this.isActive = true,
+    this.contactPhone,
+    this.contactPreference = 'in_app',
     this.createdAt,
     this.updatedAt,
   });
@@ -40,6 +42,15 @@ class JobSeekPost {
   final double? salaryExpectation;
   final String? description;
   final bool isActive;
+
+  /// Opsiyonel telefon — sahibinin rızasıyla ilanda public görünür.
+  /// Doğrulama yok. Boşsa ilanda "Ara" butonu görünmez.
+  final String? contactPhone;
+
+  /// `in_app` (default) / `phone` / `whatsapp`. M6B migration sonrası
+  /// DB CHECK ile sınırlandırılmış.
+  final String contactPreference;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -55,6 +66,8 @@ class JobSeekPost {
     double? salaryExpectation,
     String? description,
     bool? isActive,
+    String? contactPhone,
+    String? contactPreference,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -70,6 +83,8 @@ class JobSeekPost {
       salaryExpectation: salaryExpectation ?? this.salaryExpectation,
       description: description ?? this.description,
       isActive: isActive ?? this.isActive,
+      contactPhone: contactPhone ?? this.contactPhone,
+      contactPreference: contactPreference ?? this.contactPreference,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -89,6 +104,9 @@ class JobSeekPost {
         if (description != null && description!.isNotEmpty)
           'description': description,
         'is_active': isActive,
+        if (contactPhone != null && contactPhone!.trim().isNotEmpty)
+          'contact_phone': contactPhone!.trim(),
+        'contact_preference': contactPreference,
       };
 
   factory JobSeekPost.fromRow(Map<String, dynamic> row) {
@@ -105,6 +123,9 @@ class JobSeekPost {
       salaryExpectation: (row['salary_expectation'] as num?)?.toDouble(),
       description: row['description'] as String?,
       isActive: (row['is_active'] as bool?) ?? true,
+      contactPhone: row['contact_phone'] as String?,
+      contactPreference:
+          (row['contact_preference'] as String?) ?? 'in_app',
       createdAt: p(row['created_at'] as String?),
       updatedAt: p(row['updated_at'] as String?),
     );
