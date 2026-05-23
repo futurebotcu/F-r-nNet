@@ -28,6 +28,7 @@ class SupabaseProfileRepository implements ProfileRepository {
       city: (row['city'] as String?) ?? '',
       roleBadge: (row['profession_badge'] as String?) ?? '',
       email: (row['email'] as String?) ?? '',
+      avatarUrl: (row['avatar_url'] as String?),
     );
   }
 
@@ -55,6 +56,10 @@ class SupabaseProfileRepository implements ProfileRepository {
       'profession_badge':
           profile.roleBadge.isEmpty ? null : profile.roleBadge,
       'city': profile.city.isEmpty ? null : profile.city,
+      'avatar_url':
+          (profile.avatarUrl == null || profile.avatarUrl!.isEmpty)
+              ? null
+              : profile.avatarUrl,
     };
     final updated = await _client
         .from(_table)

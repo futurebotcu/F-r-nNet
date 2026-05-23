@@ -26,6 +26,7 @@ class BakeryProfile {
     required this.city,
     required this.roleBadge,
     required this.email,
+    this.avatarUrl,
   });
 
   final String displayName;
@@ -33,6 +34,10 @@ class BakeryProfile {
   final String city;
   final String roleBadge;
   final String email;
+
+  /// M3 Profile Self-Edit — Supabase storage `avatars/` bucket public URL.
+  /// null veya boş ise ProfileHeader initial fallback gösterir.
+  final String? avatarUrl;
 
   /// V1.3 profile completeness sözleşmesi.
   ///
@@ -53,6 +58,7 @@ class BakeryProfile {
     String? city,
     String? roleBadge,
     String? email,
+    Object? avatarUrl = _sentinel,
   }) {
     return BakeryProfile(
       displayName: displayName ?? this.displayName,
@@ -60,8 +66,13 @@ class BakeryProfile {
       city: city ?? this.city,
       roleBadge: roleBadge ?? this.roleBadge,
       email: email ?? this.email,
+      avatarUrl: identical(avatarUrl, _sentinel)
+          ? this.avatarUrl
+          : avatarUrl as String?,
     );
   }
+
+  static const Object _sentinel = Object();
 
   static const BakeryProfile guest = BakeryProfile(
     displayName: 'Misafir',

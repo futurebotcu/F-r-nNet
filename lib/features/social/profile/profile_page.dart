@@ -36,6 +36,7 @@ import '../../profile/models/public_profile_detail.dart';
 import '../../profile/providers/follow_providers.dart';
 import '../../profile/providers/public_profile_detail_provider.dart';
 import '../../profile/widgets/follow_button.dart';
+import '../../profile/widgets/profile_edit_sheet.dart';
 import '../post/social_post_card.dart';
 import '../providers/social_providers.dart';
 import 'widgets/profile_header.dart';
@@ -124,7 +125,7 @@ class SocialProfilePage extends ConsumerWidget {
                 ),
                 child: isSelf
                     ? _SelfEditCta(
-                        onTap: () => context.push(AppRoutes.workerProfile),
+                        onTap: () => ProfileEditSheet.show(context),
                       )
                     : Row(
                         children: [

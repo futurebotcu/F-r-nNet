@@ -701,6 +701,26 @@ class AppStrings {
     'wholesaler': 'Toptancı',
   };
 
+  // Profile Self-Edit M3 — temel bilgiler sheet.
+  static const String profileEditSheetTitle = 'Temel bilgiler';
+  static const String profileEditNameLabel = 'Ad';
+  static const String profileEditCityLabel = 'Şehir';
+  static const String profileEditAccountTypeLabel = 'Hesap tipi';
+  static const String profileEditAvatarChange = 'Fotoğraf değiştir';
+  static const String profileEditAvatarUploading = 'Yükleniyor…';
+  static const String profileEditAvatarErrorPick =
+      'Fotoğraf seçilemedi. Lütfen tekrar dene.';
+  static const String profileEditAvatarErrorUpload =
+      'Fotoğraf yüklenemedi. Lütfen tekrar dene.';
+  static const String profileEditSaveCta = 'Kaydet';
+  static const String profileEditSaving = 'Kaydediliyor…';
+  static const String profileEditSaveSuccess =
+      'Profil bilgilerin güncellendi.';
+  static const String profileEditSaveError =
+      'Kaydedilemedi. Lütfen tekrar dene.';
+  static const String profileEditNameRequired = 'Adın boş olamaz.';
+  static const String profileEditWorkerLink = 'Ustalık bilgilerini düzenle';
+
   // V1 Messaging M1.2 — generic chat labels.
   static const String messagingDefaultTitle = 'Mesaj';
   static const String messagesUnknownUser = 'FırınNet kullanıcısı';
