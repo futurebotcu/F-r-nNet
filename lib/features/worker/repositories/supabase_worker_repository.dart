@@ -30,7 +30,8 @@ class SupabaseWorkerRepository implements WorkerRepository {
   static const String _profileColumns =
       'id, owner_id, profession_badge, profession_badge_code, '
       'experience_years, cities, city_codes, '
-      'shift_preference, salary_expectation, work_type, skills, bio, '
+      'shift_preference, salary_expectation, work_type, '
+      'skills, skill_codes, bio, '
       'created_at, updated_at';
 
   @override

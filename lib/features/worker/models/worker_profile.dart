@@ -16,6 +16,7 @@ class WorkerProfile {
     this.salaryExpectation,
     this.workType,
     this.skills = const <String>[],
+    this.skillCodes = const <String>[],
     this.bio,
     this.createdAt,
     this.updatedAt,
@@ -51,7 +52,13 @@ class WorkerProfile {
   /// tam_zamanli / part_time / sezonluk
   final String? workType;
 
+  /// Türkçe label (eski text array, display fallback).
   final List<String> skills;
+
+  /// M7 — ASCII code listesi (`simit`, `eksi_maya`, ...). UI önce
+  /// taxonomy label çevirir; yoksa [skills] (eski label) fallback.
+  final List<String> skillCodes;
+
   final String? bio;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -65,6 +72,7 @@ class WorkerProfile {
       salaryExpectation == null &&
       (workType == null || workType!.isEmpty) &&
       skills.isEmpty &&
+      skillCodes.isEmpty &&
       (bio == null || bio!.isEmpty);
 
   WorkerProfile copyWith({
@@ -79,6 +87,7 @@ class WorkerProfile {
     double? salaryExpectation,
     String? workType,
     List<String>? skills,
+    List<String>? skillCodes,
     String? bio,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -95,6 +104,7 @@ class WorkerProfile {
       salaryExpectation: salaryExpectation ?? this.salaryExpectation,
       workType: workType ?? this.workType,
       skills: skills ?? this.skills,
+      skillCodes: skillCodes ?? this.skillCodes,
       bio: bio ?? this.bio,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -115,6 +125,7 @@ class WorkerProfile {
         if (salaryExpectation != null) 'salary_expectation': salaryExpectation,
         if (workType != null && workType!.isNotEmpty) 'work_type': workType,
         'skills': skills,
+        if (skillCodes.isNotEmpty) 'skill_codes': skillCodes,
         if (bio != null && bio!.isNotEmpty) 'bio': bio,
       };
 
@@ -132,6 +143,8 @@ class WorkerProfile {
       salaryExpectation: (row['salary_expectation'] as num?)?.toDouble(),
       workType: row['work_type'] as String?,
       skills: (row['skills'] as List?)?.cast<String>() ?? const <String>[],
+      skillCodes:
+          (row['skill_codes'] as List?)?.cast<String>() ?? const <String>[],
       bio: row['bio'] as String?,
       createdAt: row['created_at'] != null
           ? DateTime.parse(row['created_at'] as String)

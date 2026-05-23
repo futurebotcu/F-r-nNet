@@ -81,12 +81,18 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
 
   final _experience = TextEditingController();
   final _salary = TextEditingController();
-  final _skills = TextEditingController();
   final _bio = TextEditingController();
 
   /// M6A — çalışmak istediği iller (multi-select). Önce city_codes,
   /// yoksa eski cities[] label'lardan çevirim.
   final List<TurkeyProvince> _selectedProvinces = <TurkeyProvince>[];
+
+  /// M7 — beceriler (multi-select taxonomy code'ları). UI label render eder;
+  /// save'de skill_codes + skills dual-write.
+  final List<String> _selectedSkillCodes = <String>[];
+
+  /// M7 — taxonomy cap (DB CHECK ile aynı).
+  static const int _maxSkillSelection = 10;
 
   bool _loading = true;
   bool _saving = false;
@@ -129,7 +135,20 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
           _selectedProvinces.add(prov);
         }
       }
-      _skills.text = p.skills.join(', ');
+      // M7 — skill_codes öncelikli; yoksa eski skills (label) → code çevirim.
+      _selectedSkillCodes.clear();
+      final skillSeen = <String>{};
+      for (final c in p.skillCodes) {
+        if (FirinnetTaxonomy.isValidWorkerSkillCode(c) && skillSeen.add(c)) {
+          _selectedSkillCodes.add(c);
+        }
+      }
+      for (final label in p.skills) {
+        final code = FirinnetTaxonomy.workerSkillCodeFromLabel(label);
+        if (code != null && skillSeen.add(code)) {
+          _selectedSkillCodes.add(code);
+        }
+      }
       _bio.text = p.bio ?? '';
     }
     setState(() => _loading = false);
@@ -139,9 +158,35 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
   void dispose() {
     _experience.dispose();
     _salary.dispose();
-    _skills.dispose();
     _bio.dispose();
     super.dispose();
+  }
+
+  Future<void> _openSkillPicker() async {
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (_) => _SkillPickerSheet(
+        initialSelected: List<String>.from(_selectedSkillCodes),
+        maxSelection: _maxSkillSelection,
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        _selectedSkillCodes
+          ..clear()
+          ..addAll(result);
+      });
+    }
+  }
+
+  void _removeSkill(String code) {
+    setState(() => _selectedSkillCodes.remove(code));
   }
 
   Future<void> _addProvince() async {
@@ -170,11 +215,12 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
       final cities = <String>[
         for (final p in _selectedProvinces) p.name,
       ];
-      final skills = _skills.text
-          .split(',')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .toList();
+      // M7 — dual-write: skill_codes (taxonomy) + skills (label fallback).
+      final skillCodes = List<String>.from(_selectedSkillCodes);
+      final skills = <String>[
+        for (final c in skillCodes)
+          FirinnetTaxonomy.workerSkillLabel(c) ?? c,
+      ];
       // M5 — dual-write: code (yeni) + label (backward compat).
       final code = _professionCode;
       final label =
@@ -195,6 +241,7 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
             : NumberFormatter.parseLoose(_salary.text),
         workType: _workType,
         skills: skills,
+        skillCodes: skillCodes,
         bio: _bio.text.trim().isEmpty ? null : _bio.text.trim(),
       );
       await repo.upsertMyProfile(draft);
@@ -293,12 +340,10 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
             ),
             const SizedBox(height: AppSpacing.l),
             const _Section('BECERİLER'),
-            TextField(
-              controller: _skills,
-              decoration: const InputDecoration(
-                labelText: 'Beceriler / notlar (virgülle ayır)',
-                hintText: 'taş fırın, ekşi maya, pasta süsleme',
-              ),
+            _SkillsPicker(
+              selectedCodes: _selectedSkillCodes,
+              onAdd: _saving ? null : _openSkillPicker,
+              onRemove: _saving ? null : _removeSkill,
             ),
             const SizedBox(height: AppSpacing.l),
             const _Section('KISA AÇIKLAMA'),
@@ -485,6 +530,232 @@ class _CitiesPicker extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// M7 — beceri chip listesi + "Beceri ekle/değiştir" CTA. Boş listede
+/// sadece CTA; her chip'te X delete.
+class _SkillsPicker extends StatelessWidget {
+  const _SkillsPicker({
+    required this.selectedCodes,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final List<String> selectedCodes;
+  final VoidCallback? onAdd;
+  final void Function(String)? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (final code in selectedCodes)
+          InputChip(
+            label: Text(
+              FirinnetTaxonomy.workerSkillLabel(code) ?? code,
+            ),
+            backgroundColor: AppColors.card,
+            labelStyle: const TextStyle(
+              color: AppColors.softGold,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+            deleteIcon: const Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: AppColors.textMuted,
+            ),
+            onDeleted:
+                onRemove == null ? null : () => onRemove!(code),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              side: BorderSide(
+                color: AppColors.copper.withValues(alpha: 0.55),
+                width: 0.6,
+              ),
+            ),
+          ),
+        ActionChip(
+          avatar: const Icon(
+            Icons.add_rounded,
+            size: 16,
+            color: AppColors.softGold,
+          ),
+          label: Text(
+            selectedCodes.isEmpty ? 'Beceri ekle' : 'Beceri değiştir',
+            style: const TextStyle(
+              color: AppColors.softGold,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+          ),
+          onPressed: onAdd,
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            side: const BorderSide(
+              color: AppColors.borderHairline,
+              width: 0.6,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// M7 — bottom sheet: 14 entry skill chip multi-select; cap'i geçince
+/// uyarı snackbar. Onayla / Vazgeç ile kapanır.
+class _SkillPickerSheet extends StatefulWidget {
+  const _SkillPickerSheet({
+    required this.initialSelected,
+    required this.maxSelection,
+  });
+
+  final List<String> initialSelected;
+  final int maxSelection;
+
+  @override
+  State<_SkillPickerSheet> createState() => _SkillPickerSheetState();
+}
+
+class _SkillPickerSheetState extends State<_SkillPickerSheet> {
+  late final Set<String> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = <String>{...widget.initialSelected};
+  }
+
+  void _toggle(String code) {
+    setState(() {
+      if (_selected.contains(code)) {
+        _selected.remove(code);
+      } else {
+        if (_selected.length >= widget.maxSelection) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'En fazla ${widget.maxSelection} beceri seçebilirsin.',
+              ),
+            ),
+          );
+          return;
+        }
+        _selected.add(code);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: viewInsets),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.l,
+            AppSpacing.m,
+            AppSpacing.l,
+            AppSpacing.l,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.m),
+                  decoration: BoxDecoration(
+                    color: AppColors.borderHairline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                'Beceriler',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Birden fazla seçebilirsin (en fazla ${widget.maxSelection}).',
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12.5,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.l),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final e in FirinnetTaxonomy.workerSkillEntries)
+                    FilterChip(
+                      label: Text(e.value),
+                      selected: _selected.contains(e.key),
+                      onSelected: (_) => _toggle(e.key),
+                      selectedColor:
+                          AppColors.copper.withValues(alpha: 0.22),
+                      backgroundColor: AppColors.card,
+                      labelStyle: TextStyle(
+                        color: _selected.contains(e.key)
+                            ? AppColors.softGold
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        side: BorderSide(
+                          color: _selected.contains(e.key)
+                              ? AppColors.copper.withValues(alpha: 0.55)
+                              : AppColors.borderHairline,
+                          width: 0.6,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.of(context).pop(
+                    _selected.toList(),
+                  ),
+                  icon: const Icon(Icons.check_rounded, size: 18),
+                  label: Text(
+                    'Onayla (${_selected.length})',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.copper,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

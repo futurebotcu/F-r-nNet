@@ -72,6 +72,7 @@ class PublicWorkerInfo {
     this.cities = const <String>[],
     this.cityCodes = const <String>[],
     this.skills = const <String>[],
+    this.skillCodes = const <String>[],
     this.shiftPreference,
     this.bio,
   });
@@ -89,7 +90,13 @@ class PublicWorkerInfo {
   /// üzerinden çevirir; yoksa [cities] (eski label) fallback.
   final List<String> cityCodes;
 
+  /// Türkçe label listesi (eski text, display fallback).
   final List<String> skills;
+
+  /// M7 — ASCII skill code listesi. UI önce code'lardan
+  /// `FirinnetTaxonomy` üzerinden çevirir; yoksa [skills] fallback.
+  final List<String> skillCodes;
+
   final String? shiftPreference;
   final String? bio;
 
@@ -100,6 +107,7 @@ class PublicWorkerInfo {
       cities.isEmpty &&
       cityCodes.isEmpty &&
       skills.isEmpty &&
+      skillCodes.isEmpty &&
       (shiftPreference == null || shiftPreference!.isEmpty) &&
       (bio == null || bio!.isEmpty);
 
@@ -112,6 +120,17 @@ class PublicWorkerInfo {
       ];
     }
     return cities;
+  }
+
+  /// M7 — skill display: önce skill_codes → taxonomy label, yoksa eski text.
+  List<String> get effectiveSkills {
+    if (skillCodes.isNotEmpty) {
+      return <String>[
+        for (final c in skillCodes)
+          FirinnetTaxonomy.workerSkillLabel(c) ?? c,
+      ];
+    }
+    return skills;
   }
 
   static PublicWorkerInfo fromJson(Map<String, dynamic> j) {
@@ -129,6 +148,7 @@ class PublicWorkerInfo {
       cities: asStringList(j['cities']),
       cityCodes: asStringList(j['city_codes']),
       skills: asStringList(j['skills']),
+      skillCodes: asStringList(j['skill_codes']),
       shiftPreference: j['shift_preference'] as String?,
       bio: j['bio'] as String?,
     );

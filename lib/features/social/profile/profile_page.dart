@@ -625,7 +625,7 @@ class _WorkerSnapshot extends StatelessWidget {
       children: [
         if (chips.isNotEmpty)
           Wrap(spacing: 6, runSpacing: 6, children: chips),
-        if (worker.skills.isNotEmpty) ...[
+        if (worker.effectiveSkills.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s),
           Text(
             AppStrings.profileWorkerSkillsLabel,
@@ -640,7 +640,8 @@ class _WorkerSnapshot extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final s in worker.skills) _MiniChip(label: s),
+              // M7 — code → label (effectiveSkills); yoksa eski text.
+              for (final s in worker.effectiveSkills) _MiniChip(label: s),
             ],
           ),
         ],

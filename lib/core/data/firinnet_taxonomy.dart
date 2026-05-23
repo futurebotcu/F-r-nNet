@@ -125,4 +125,59 @@ class FirinnetTaxonomy {
         return _wholesalerProfessionCodes;
     }
   }
+
+  // ───────────────────────────────────────────────────────────────
+  // Worker skills (M7) — multi-select chip taxonomy
+  // ───────────────────────────────────────────────────────────────
+
+  static const Map<String, String> workerSkills = <String, String>{
+    'ekmek': 'Ekmek',
+    'simit': 'Simit',
+    'pogaca': 'Poğaça',
+    'borek': 'Börek',
+    'baklava': 'Baklava',
+    'pasta': 'Pasta',
+    'eksi_maya': 'Ekşi maya',
+    'tas_firin': 'Taş fırın',
+    'gece_uretimi': 'Gece üretimi',
+    'hamur_yogurma': 'Hamur yoğurma',
+    'mayalama': 'Mayalama',
+    'pide': 'Pide',
+    'kurabiye': 'Kurabiye',
+    'other': 'Diğer',
+  };
+
+  /// Allowed skill code listesi (DB CHECK constraint ile uyumlu).
+  static List<String> get workerSkillCodes =>
+      workerSkills.keys.toList(growable: false);
+
+  /// UI iteration için entry listesi (insertion order korunur).
+  static Iterable<MapEntry<String, String>> get workerSkillEntries =>
+      workerSkills.entries;
+
+  /// Code → Türkçe label; bilinmeyen code için null.
+  static String? workerSkillLabel(String? code) {
+    if (code == null || code.isEmpty) return null;
+    return workerSkills[code];
+  }
+
+  /// Türkçe label → code; case-insensitive + trim toleranslı. Migration
+  /// backfill ve runtime fallback için aynı haritayı paylaşır.
+  static String? workerSkillCodeFromLabel(String? label) {
+    if (label == null) return null;
+    final norm = label.trim();
+    if (norm.isEmpty) return null;
+    for (final e in workerSkills.entries) {
+      if (e.value.toLowerCase() == norm.toLowerCase()) {
+        return e.key;
+      }
+    }
+    return null;
+  }
+
+  /// `true` ise CHECK / app-side guard geçer. null geçerlidir.
+  static bool isValidWorkerSkillCode(String? code) {
+    if (code == null || code.isEmpty) return true;
+    return workerSkills.containsKey(code);
+  }
 }
