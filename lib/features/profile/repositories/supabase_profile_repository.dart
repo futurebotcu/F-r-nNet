@@ -21,6 +21,10 @@ class SupabaseProfileRepository implements ProfileRepository {
     }
   }
 
+  static const String _selectColumns =
+      'id, display_name, account_type, profession_badge, '
+      'profession_badge_code, city, avatar_url, email';
+
   BakeryProfile _fromRow(Map<String, dynamic> row) {
     return BakeryProfile(
       displayName: (row['display_name'] as String?) ?? '',
@@ -29,6 +33,7 @@ class SupabaseProfileRepository implements ProfileRepository {
       roleBadge: (row['profession_badge'] as String?) ?? '',
       email: (row['email'] as String?) ?? '',
       avatarUrl: (row['avatar_url'] as String?),
+      roleBadgeCode: (row['profession_badge_code'] as String?),
     );
   }
 
@@ -36,8 +41,7 @@ class SupabaseProfileRepository implements ProfileRepository {
   Future<BakeryProfile?> fetchProfile(String userId) async {
     final row = await _client
         .from(_table)
-        .select(
-            'id, display_name, account_type, profession_badge, city, avatar_url, email')
+        .select(_selectColumns)
         .eq('id', userId)
         .maybeSingle();
     if (row == null) return null;
@@ -50,11 +54,16 @@ class SupabaseProfileRepository implements ProfileRepository {
     required BakeryProfile profile,
   }) async {
     // Email kasıtlı olarak yazılmıyor — auth.updateUser + trigger üzerinden.
+    // M5 — profession dual-write: code (yeni) + label (backward compat).
     final patch = <String, dynamic>{
       'display_name': profile.displayName,
       'account_type': profile.accountType.name,
       'profession_badge':
           profile.roleBadge.isEmpty ? null : profile.roleBadge,
+      'profession_badge_code':
+          (profile.roleBadgeCode == null || profile.roleBadgeCode!.isEmpty)
+              ? null
+              : profile.roleBadgeCode,
       'city': profile.city.isEmpty ? null : profile.city,
       'avatar_url':
           (profile.avatarUrl == null || profile.avatarUrl!.isEmpty)
@@ -65,8 +74,7 @@ class SupabaseProfileRepository implements ProfileRepository {
         .from(_table)
         .update(patch)
         .eq('id', userId)
-        .select(
-            'id, display_name, account_type, profession_badge, city, avatar_url, email')
+        .select(_selectColumns)
         .single();
     return _fromRow(updated);
   }

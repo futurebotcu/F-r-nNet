@@ -27,17 +27,27 @@ class BakeryProfile {
     required this.roleBadge,
     required this.email,
     this.avatarUrl,
+    this.roleBadgeCode,
   });
 
   final String displayName;
   final AccountType accountType;
   final String city;
+
+  /// Türkçe label (display fallback, backward compat).
+  /// Yeni kayıtlarda dual-write — [roleBadgeCode] de doldurulur.
   final String roleBadge;
+
   final String email;
 
   /// M3 Profile Self-Edit — Supabase storage `avatars/` bucket public URL.
   /// null veya boş ise ProfileHeader initial fallback gösterir.
   final String? avatarUrl;
+
+  /// M5 — ASCII profession code (`usta_firinci`, `mayaci`, ...). Yeni yazılan
+  /// kayıtlarda dual-write yapılır; UI önce code'u taxonomy ile çevirir,
+  /// yoksa [roleBadge] label'ına düşer.
+  final String? roleBadgeCode;
 
   /// V1.3 profile completeness sözleşmesi.
   ///
@@ -59,6 +69,7 @@ class BakeryProfile {
     String? roleBadge,
     String? email,
     Object? avatarUrl = _sentinel,
+    Object? roleBadgeCode = _sentinel,
   }) {
     return BakeryProfile(
       displayName: displayName ?? this.displayName,
@@ -69,6 +80,9 @@ class BakeryProfile {
       avatarUrl: identical(avatarUrl, _sentinel)
           ? this.avatarUrl
           : avatarUrl as String?,
+      roleBadgeCode: identical(roleBadgeCode, _sentinel)
+          ? this.roleBadgeCode
+          : roleBadgeCode as String?,
     );
   }
 

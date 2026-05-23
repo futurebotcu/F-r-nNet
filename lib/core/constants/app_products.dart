@@ -1,3 +1,13 @@
+// FırınNet — Hazır ürün isimleri + meslek rozeti adapter'ı.
+//
+// M5 Data Foundation — `RoleBadges` artık `FirinnetTaxonomy.professions`
+// üzerinden beslenir. UI label gösterir; save sırasında çağıran taraf
+// `FirinnetTaxonomy.professionCodeFromLabel(label)` ile code'a çevirir.
+// Eski Türkçe label-as-code arayüzü backward compat için korunur.
+
+import '../data/firinnet_taxonomy.dart';
+import '../../features/profile/models/bakery_profile.dart';
+
 /// Hazır ürün isimleri — chip seçimi için.
 class AppProducts {
   const AppProducts._();
@@ -13,51 +23,31 @@ class AppProducts {
 }
 
 /// Meslek rozeti seçenekleri.
+///
+/// M5: tek doğruluk kaynağı `FirinnetTaxonomy.professions`. Bu sınıf
+/// arayüzü Türkçe label listesi olarak korur (backward compat) ama
+/// listeler taxonomy'den derivasyonla üretilir.
 class RoleBadges {
   const RoleBadges._();
 
-  /// Eski API — backward compat (mevcut UI'lar bunu kullanıyor).
-  static const List<String> all = <String>[
-    'Usta Fırıncı',
-    'Fırın Sahibi',
-    'Uncu',
-    'Mayacı',
-    'Susamcı',
-    'Toptancı',
-    'Pastacı',
-    'Ekipman Satıcısı',
-    'Çalışan/Usta',
-    'Diğer',
-  ];
+  /// Tüm meslek label'ları (insertion order).
+  static List<String> get all => FirinnetTaxonomy.professions.values
+      .toList(growable: false);
 
-  /// Ticari rolü için meslek rozeti seçenekleri.
-  static const List<String> commercial = <String>[
-    'Usta Fırıncı',
-    'Fırın Sahibi',
-    'İşletmeci',
-    'Pastacı',
-    'Diğer',
-  ];
+  /// Ticari rolü için meslek label'ları.
+  static List<String> get commercial => _labelsFor(AccountType.commercial);
 
-  /// Bireysel rolü için meslek rozeti seçenekleri.
-  static const List<String> individual = <String>[
-    'Usta Fırıncı',
-    'Mayacı',
-    'Hamurcu',
-    'Simitçi',
-    'Poğaçacı',
-    'Pasta Ustası',
-    'Çırak',
-    'Kalfa',
-    'Diğer',
-  ];
+  /// Bireysel rolü için meslek label'ları.
+  static List<String> get individual => _labelsFor(AccountType.individual);
 
-  /// Toptancı rolü için meslek rozeti seçenekleri.
-  static const List<String> wholesaler = <String>[
-    'Toptancı',
-    'Uncu',
-    'Susamcı',
-    'Ekipman Satıcısı',
-    'Diğer',
-  ];
+  /// Toptancı rolü için meslek label'ları.
+  static List<String> get wholesaler => _labelsFor(AccountType.wholesaler);
+
+  static List<String> _labelsFor(AccountType type) {
+    final codes = FirinnetTaxonomy.professionCodesForAccountType(type);
+    return <String>[
+      for (final c in codes)
+        FirinnetTaxonomy.professions[c] ?? c,
+    ];
+  }
 }

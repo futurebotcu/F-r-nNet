@@ -1,9 +1,11 @@
 // FırınNet V1 Unified Profile M2 — public_profile_detail RPC modeli.
+// M5 — profession_badge_code alanı eklendi (taxonomy code-aware display).
 //
-// Migration: 20260520170000_unified_profile_public_rpc.sql
 // RPC `public_profile_detail(uuid) returns jsonb` whitelisted aggregate
 // veri döner. salary_expectation, email, phone gibi hassas alanlar
 // RPC tarafında dahi seçilmez. Bu model yalnız UI render için.
+
+import '../../../core/data/firinnet_taxonomy.dart';
 
 class PublicProfileHeader {
   const PublicProfileHeader({
@@ -12,6 +14,7 @@ class PublicProfileHeader {
     this.avatarUrl,
     this.accountType,
     this.professionBadge,
+    this.professionBadgeCode,
     this.city,
   });
 
@@ -22,9 +25,11 @@ class PublicProfileHeader {
   /// `commercial` | `individual` | `wholesaler` (profiles.account_type)
   final String? accountType;
 
-  /// V1: profiles.profession_badge fallback; worker varsa worker öncelikli.
-  /// `PublicProfileDetail.effectiveProfessionBadge` ile çözülür.
+  /// Türkçe label (display fallback, backward compat).
   final String? professionBadge;
+
+  /// M5 — ASCII code (`usta_firinci`, ...). Varsa taxonomy label öncelikli.
+  final String? professionBadgeCode;
 
   final String? city;
 
@@ -35,6 +40,7 @@ class PublicProfileHeader {
       avatarUrl: j['avatar_url'] as String?,
       accountType: j['account_type'] as String?,
       professionBadge: j['profession_badge'] as String?,
+      professionBadgeCode: j['profession_badge_code'] as String?,
       city: j['city'] as String?,
     );
   }
@@ -43,6 +49,7 @@ class PublicProfileHeader {
 class PublicWorkerInfo {
   const PublicWorkerInfo({
     this.professionBadge,
+    this.professionBadgeCode,
     this.experienceYears,
     this.cities = const <String>[],
     this.skills = const <String>[],
@@ -50,7 +57,12 @@ class PublicWorkerInfo {
     this.bio,
   });
 
+  /// Türkçe label (display fallback, backward compat).
   final String? professionBadge;
+
+  /// M5 — ASCII code; varsa taxonomy label öncelikli.
+  final String? professionBadgeCode;
+
   final int? experienceYears;
   final List<String> cities;
   final List<String> skills;
@@ -59,6 +71,7 @@ class PublicWorkerInfo {
 
   bool get isEmpty =>
       (professionBadge == null || professionBadge!.isEmpty) &&
+      (professionBadgeCode == null || professionBadgeCode!.isEmpty) &&
       experienceYears == null &&
       cities.isEmpty &&
       skills.isEmpty &&
@@ -75,6 +88,7 @@ class PublicWorkerInfo {
 
     return PublicWorkerInfo(
       professionBadge: j['profession_badge'] as String?,
+      professionBadgeCode: j['profession_badge_code'] as String?,
       experienceYears: (j['experience_years'] as num?)?.toInt(),
       cities: asStringList(j['cities']),
       skills: asStringList(j['skills']),
@@ -158,10 +172,24 @@ class PublicProfileDetail {
   final List<PublicWorkerExperience> experiences;
   final PublicBakeryInfo? bakery;
 
-  /// V1 fallback: worker.profession_badge öncelikli, yoksa profile fallback.
+  /// M5 öncelik sırası (code-aware):
+  ///   1. worker.professionBadgeCode → taxonomy label
+  ///   2. header.professionBadgeCode → taxonomy label
+  ///   3. worker.professionBadge (eski Türkçe label)
+  ///   4. header.professionBadge (eski Türkçe label)
   String? get effectiveProfessionBadge {
-    final w = worker?.professionBadge;
-    if (w != null && w.isNotEmpty) return w;
+    final wc = worker?.professionBadgeCode;
+    if (wc != null && wc.isNotEmpty) {
+      final lbl = FirinnetTaxonomy.professionLabel(wc);
+      if (lbl != null) return lbl;
+    }
+    final hc = header.professionBadgeCode;
+    if (hc != null && hc.isNotEmpty) {
+      final lbl = FirinnetTaxonomy.professionLabel(hc);
+      if (lbl != null) return lbl;
+    }
+    final wt = worker?.professionBadge;
+    if (wt != null && wt.isNotEmpty) return wt;
     return header.professionBadge;
   }
 

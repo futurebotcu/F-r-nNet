@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
@@ -24,24 +25,18 @@ class JobSeekPostFormScreen extends ConsumerStatefulWidget {
 }
 
 class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
-  static const List<String> _professions = [
-    'Usta Fırıncı',
-    'Mayacı',
-    'Hamurcu',
-    'Simitçi',
-    'Poğaçacı',
-    'Pasta Ustası',
-    'Çırak',
-    'Kalfa',
-    'Pideci',
-  ];
+  // M5 — meslek listesi ortak taxonomy'den.
+  static List<String> get _professionCodes =>
+      FirinnetTaxonomy.professionCodes;
 
   final _title = TextEditingController();
   final _city = TextEditingController();
   final _experience = TextEditingController();
   final _salary = TextEditingController();
   final _description = TextEditingController();
-  String? _profession;
+
+  /// M5 — taxonomy code.
+  String? _professionCode;
   bool _isActive = true;
 
   bool _loading = false;
@@ -75,7 +70,9 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
         ? p.salaryExpectation!.toStringAsFixed(0)
         : '';
     _description.text = p.description ?? '';
-    _profession = p.professionBadge;
+    // M5 — code öncelikli; yoksa legacy label'dan çevir.
+    _professionCode = p.professionBadgeCode ??
+        FirinnetTaxonomy.professionCodeFromLabel(p.professionBadge);
     _isActive = p.isActive;
     setState(() => _loading = false);
   }
@@ -103,11 +100,16 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     }
     setState(() => _saving = true);
     try {
+      // M5 — dual-write: code + label (backward compat).
+      final code = _professionCode;
+      final label =
+          code == null ? null : FirinnetTaxonomy.professionLabel(code);
       final draft = JobSeekPost(
         id: _existing?.id,
         ownerId: _existing?.ownerId,
         title: _title.text.trim(),
-        professionBadge: _profession,
+        professionBadge: label,
+        professionBadgeCode: code,
         city: _city.text.trim().isEmpty ? null : _city.text.trim(),
         experienceYears: _experience.text.trim().isEmpty
             ? null
@@ -140,9 +142,13 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
   }
 
   void _previewShare() {
+    final code = _professionCode;
+    final label =
+        code == null ? null : FirinnetTaxonomy.professionLabel(code);
     final p = JobSeekPost(
       title: _title.text.trim().isEmpty ? 'İş ilanı' : _title.text.trim(),
-      professionBadge: _profession,
+      professionBadge: label,
+      professionBadgeCode: code,
       city: _city.text.trim().isEmpty ? null : _city.text.trim(),
       experienceYears: _experience.text.trim().isEmpty
           ? null
@@ -204,16 +210,18 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final p in _professions)
+                for (final code in _professionCodes)
                   ChoiceChip(
-                    label: Text(p),
-                    selected: _profession == p,
+                    label: Text(
+                      FirinnetTaxonomy.professionLabel(code) ?? code,
+                    ),
+                    selected: _professionCode == code,
                     onSelected: (v) =>
-                        setState(() => _profession = v ? p : null),
+                        setState(() => _professionCode = v ? code : null),
                     selectedColor: AppColors.copper.withValues(alpha: 0.22),
                     backgroundColor: AppColors.card,
                     labelStyle: TextStyle(
-                      color: _profession == p
+                      color: _professionCode == code
                           ? AppColors.softGold
                           : AppColors.textSecondary,
                       fontWeight: FontWeight.w700,
@@ -222,7 +230,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                       side: BorderSide(
-                        color: _profession == p
+                        color: _professionCode == code
                             ? AppColors.copper.withValues(alpha: 0.55)
                             : AppColors.borderHairline,
                         width: 0.6,

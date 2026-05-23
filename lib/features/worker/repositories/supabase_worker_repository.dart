@@ -28,7 +28,8 @@ class SupabaseWorkerRepository implements WorkerRepository {
   // ───────────────────────────────── Profile
 
   static const String _profileColumns =
-      'id, owner_id, profession_badge, experience_years, cities, '
+      'id, owner_id, profession_badge, profession_badge_code, '
+      'experience_years, cities, '
       'shift_preference, salary_expectation, work_type, skills, bio, '
       'created_at, updated_at';
 
@@ -120,7 +121,8 @@ class SupabaseWorkerRepository implements WorkerRepository {
   // ───────────────────────────────── Job seek posts
 
   static const String _postColumns =
-      'id, owner_id, title, profession_badge, city, experience_years, '
+      'id, owner_id, title, profession_badge, profession_badge_code, '
+      'city, experience_years, '
       'salary_expectation, description, is_active, created_at, updated_at';
 
   @override

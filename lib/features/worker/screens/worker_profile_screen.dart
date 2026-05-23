@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
@@ -25,17 +26,10 @@ class WorkerProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
-  static const List<String> _professions = [
-    'Usta Fırıncı',
-    'Mayacı',
-    'Hamurcu',
-    'Simitçi',
-    'Poğaçacı',
-    'Pasta Ustası',
-    'Çırak',
-    'Kalfa',
-    'Pideci',
-  ];
+  // M5 Data Foundation — meslek listesi ortak taxonomy'den; hardcoded
+  // liste kaldırıldı. UI label gösterir, save'de code yazılır.
+  static List<String> get _professionCodes =>
+      FirinnetTaxonomy.professionCodes;
 
   static const List<String> _shifts = [
     'gunduz',
@@ -78,7 +72,8 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
     }
   }
 
-  String? _profession;
+  /// M5 — taxonomy code (`usta_firinci`, `mayaci`, ...). UI label render eder.
+  String? _professionCode;
   String? _shift;
   String? _workType;
 
@@ -104,7 +99,9 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
     if (!mounted) return;
     if (p != null) {
       _initial = p;
-      _profession = p.professionBadge;
+      // M5 — code öncelikli; yoksa eski label'dan code'a çevir (legacy hydrate).
+      _professionCode = p.professionBadgeCode ??
+          FirinnetTaxonomy.professionCodeFromLabel(p.professionBadge);
       _shift = p.shiftPreference;
       _workType = p.workType;
       _experience.text =
@@ -147,10 +144,15 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
           .map((s) => s.trim())
           .where((s) => s.isNotEmpty)
           .toList();
+      // M5 — dual-write: code (yeni) + label (backward compat).
+      final code = _professionCode;
+      final label =
+          code == null ? null : FirinnetTaxonomy.professionLabel(code);
       final draft = WorkerProfile(
         id: _initial?.id,
         ownerId: _initial?.ownerId,
-        professionBadge: _profession,
+        professionBadge: label,
+        professionBadgeCode: code,
         experienceYears: _experience.text.trim().isEmpty
             ? null
             : int.tryParse(_experience.text.trim()),
@@ -205,10 +207,12 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
             const SizedBox(height: AppSpacing.l),
             const _Section('MESLEK'),
             _ChipPicker(
-              options: _professions,
-              labelOf: (s) => s,
-              selected: _profession,
-              onChanged: (v) => setState(() => _profession = v),
+              // M5 — options = taxonomy code listesi; label çevirim helper'da.
+              options: _professionCodes,
+              labelOf: (code) =>
+                  FirinnetTaxonomy.professionLabel(code) ?? code,
+              selected: _professionCode,
+              onChanged: (v) => setState(() => _professionCode = v),
             ),
             const SizedBox(height: AppSpacing.l),
             const _Section('TECRÜBE & MAAŞ'),

@@ -8,6 +8,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_products.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/guest_mode_provider.dart';
@@ -265,6 +266,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     final password = _passwordCtrl.text;
     final auth = ref.read(authRepositoryProvider);
 
+    // M5 — dual-write: label (eski form) + code (yeni taxonomy).
+    final badgeCode = FirinnetTaxonomy.professionCodeFromLabel(_badge);
+
     // Supabase yok → local-only profile state.
     if (auth == null) {
       ref.read(profileControllerProvider.notifier).save(
@@ -273,6 +277,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               accountType: _accountType,
               city: city,
               roleBadge: _badge,
+              roleBadgeCode: badgeCode,
               email: email,
             ),
           );
@@ -296,6 +301,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                 accountType: _accountType,
                 city: city,
                 roleBadge: _badge,
+                roleBadgeCode: badgeCode,
                 email: email,
               ),
             );

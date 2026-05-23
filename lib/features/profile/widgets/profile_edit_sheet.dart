@@ -1,9 +1,10 @@
 // FırınNet Profile Self-Edit M3 — temel profil düzenleme bottom sheet.
+// M5 — meslek chip section eklendi (taxonomy-driven).
 //
 // Kullanıcı kendi profilinde "Profili düzenle" CTA'sına basınca açılır.
 // Düşük teknoloji kullanıcı için sade tek ekran: avatar değiştir + ad +
-// şehir + hesap tipi. Ustalık bilgileri için sheet altında ayrı satır
-// /worker/profile'a yönlendirir (mevcut zengin form).
+// şehir + meslek + hesap tipi. Ustalık bilgileri için sheet altında ayrı
+// satır /worker/profile'a yönlendirir (mevcut zengin form).
 //
 // Save flow:
 //   1) Guest guard → showAuthRequiredSheet
@@ -23,6 +24,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -56,6 +58,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   final _city = TextEditingController();
   AccountType _accountType = AccountType.individual;
 
+  /// M5 — meslek taxonomy code; UI label çevirimle render eder.
+  String? _professionCode;
+
   bool _loading = true;
   bool _saving = false;
   bool _uploading = false;
@@ -88,6 +93,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     _city.text = p.city;
     _accountType = p.accountType;
     _avatarUrl = p.avatarUrl;
+    // M5 — code öncelikli; yoksa legacy label'dan çevir.
+    _professionCode = p.roleBadgeCode ??
+        FirinnetTaxonomy.professionCodeFromLabel(p.roleBadge);
   }
 
   Future<void> _loadFromRepo() async {
@@ -165,6 +173,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     setState(() => _saving = true);
     final previousAvatarUrl = _initial?.avatarUrl;
     try {
+      // M5 — meslek dual-write: code (taxonomy) + label (backward compat).
+      final pCode = _professionCode;
+      final pLabel =
+          pCode == null ? null : FirinnetTaxonomy.professionLabel(pCode);
       final draft = (_initial ??
               const BakeryProfile(
                 displayName: '',
@@ -178,6 +190,8 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
         city: _city.text.trim(),
         accountType: _accountType,
         avatarUrl: _avatarUrl,
+        roleBadge: pLabel ?? '',
+        roleBadgeCode: pCode,
       );
       await ref.read(profileControllerProvider.notifier).save(draft);
       // M4 Polish — kaydet başarılı + yeni avatar gerçekten değiştiyse
@@ -285,6 +299,57 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                       decoration: const InputDecoration(
                         labelText: AppStrings.profileEditCityLabel,
                       ),
+                    ),
+                    const SizedBox(height: AppSpacing.l),
+                    const Text(
+                      AppStrings.profileEditProfessionLabel,
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.s),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final e
+                            in FirinnetTaxonomy.professionEntries)
+                          ChoiceChip(
+                            label: Text(e.value),
+                            selected: _professionCode == e.key,
+                            onSelected: _saving
+                                ? null
+                                : (v) {
+                                    setState(() {
+                                      _professionCode = v ? e.key : null;
+                                    });
+                                  },
+                            selectedColor:
+                                AppColors.copper.withValues(alpha: 0.22),
+                            backgroundColor: AppColors.card,
+                            labelStyle: TextStyle(
+                              color: _professionCode == e.key
+                                  ? AppColors.softGold
+                                  : AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.pill),
+                              side: BorderSide(
+                                color: _professionCode == e.key
+                                    ? AppColors.copper
+                                        .withValues(alpha: 0.55)
+                                    : AppColors.borderHairline,
+                                width: 0.6,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.l),
                     const Text(

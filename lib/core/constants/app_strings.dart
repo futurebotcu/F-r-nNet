@@ -706,6 +706,8 @@ class AppStrings {
   static const String profileEditNameLabel = 'Ad';
   static const String profileEditCityLabel = 'Şehir';
   static const String profileEditAccountTypeLabel = 'Hesap tipi';
+  // M5 Data Foundation — meslek chip section labeli.
+  static const String profileEditProfessionLabel = 'Meslek';
   static const String profileEditAvatarChange = 'Fotoğraf değiştir';
   static const String profileEditAvatarUploading = 'Yükleniyor…';
   static const String profileEditAvatarErrorPick =

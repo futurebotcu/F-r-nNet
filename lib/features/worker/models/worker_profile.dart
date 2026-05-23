@@ -8,6 +8,7 @@ class WorkerProfile {
     this.id,
     this.ownerId,
     this.professionBadge,
+    this.professionBadgeCode,
     this.experienceYears,
     this.cities = const <String>[],
     this.shiftPreference,
@@ -23,8 +24,13 @@ class WorkerProfile {
   final String? ownerId;
 
   /// Usta fırıncı, mayacı, hamurcu, simitçi, poğaçacı, pasta ustası, çırak,
-  /// kalfa vb.
+  /// kalfa vb. Türkçe label (display fallback, backward compat).
   final String? professionBadge;
+
+  /// M5 — ASCII code (`usta_firinci`, `mayaci`, vb.). Yeni yazılan kayıtlarda
+  /// dual-write yapılır. UI önce code'u tüketir, yoksa [professionBadge]
+  /// label'ına düşer.
+  final String? professionBadgeCode;
 
   final int? experienceYears;
   final List<String> cities;
@@ -56,6 +62,7 @@ class WorkerProfile {
     String? id,
     String? ownerId,
     String? professionBadge,
+    String? professionBadgeCode,
     int? experienceYears,
     List<String>? cities,
     String? shiftPreference,
@@ -70,6 +77,7 @@ class WorkerProfile {
       id: id ?? this.id,
       ownerId: ownerId ?? this.ownerId,
       professionBadge: professionBadge ?? this.professionBadge,
+      professionBadgeCode: professionBadgeCode ?? this.professionBadgeCode,
       experienceYears: experienceYears ?? this.experienceYears,
       cities: cities ?? this.cities,
       shiftPreference: shiftPreference ?? this.shiftPreference,
@@ -86,6 +94,8 @@ class WorkerProfile {
         'owner_id': ownerId,
         if (professionBadge != null && professionBadge!.isNotEmpty)
           'profession_badge': professionBadge,
+        if (professionBadgeCode != null && professionBadgeCode!.isNotEmpty)
+          'profession_badge_code': professionBadgeCode,
         if (experienceYears != null) 'experience_years': experienceYears,
         'cities': cities,
         if (shiftPreference != null && shiftPreference!.isNotEmpty)
@@ -101,6 +111,7 @@ class WorkerProfile {
       id: row['id'] as String?,
       ownerId: row['owner_id'] as String?,
       professionBadge: row['profession_badge'] as String?,
+      professionBadgeCode: row['profession_badge_code'] as String?,
       experienceYears: (row['experience_years'] as num?)?.toInt(),
       cities: (row['cities'] as List?)?.cast<String>() ?? const <String>[],
       shiftPreference: row['shift_preference'] as String?,

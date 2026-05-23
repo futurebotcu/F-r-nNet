@@ -8,6 +8,7 @@ class JobSeekPost {
     this.ownerId,
     required this.title,
     this.professionBadge,
+    this.professionBadgeCode,
     this.city,
     this.experienceYears,
     this.salaryExpectation,
@@ -20,7 +21,14 @@ class JobSeekPost {
   final String? id;
   final String? ownerId;
   final String title;
+
+  /// Türkçe label (display fallback, backward compat).
   final String? professionBadge;
+
+  /// M5 — ASCII code (`usta_firinci`, `mayaci`, ...). Yeni yazılan kayıtlarda
+  /// dual-write yapılır.
+  final String? professionBadgeCode;
+
   final String? city;
   final int? experienceYears;
   final double? salaryExpectation;
@@ -34,6 +42,7 @@ class JobSeekPost {
     String? ownerId,
     String? title,
     String? professionBadge,
+    String? professionBadgeCode,
     String? city,
     int? experienceYears,
     double? salaryExpectation,
@@ -47,6 +56,7 @@ class JobSeekPost {
       ownerId: ownerId ?? this.ownerId,
       title: title ?? this.title,
       professionBadge: professionBadge ?? this.professionBadge,
+      professionBadgeCode: professionBadgeCode ?? this.professionBadgeCode,
       city: city ?? this.city,
       experienceYears: experienceYears ?? this.experienceYears,
       salaryExpectation: salaryExpectation ?? this.salaryExpectation,
@@ -62,6 +72,8 @@ class JobSeekPost {
         'title': title,
         if (professionBadge != null && professionBadge!.isNotEmpty)
           'profession_badge': professionBadge,
+        if (professionBadgeCode != null && professionBadgeCode!.isNotEmpty)
+          'profession_badge_code': professionBadgeCode,
         if (city != null && city!.isNotEmpty) 'city': city,
         if (experienceYears != null) 'experience_years': experienceYears,
         if (salaryExpectation != null) 'salary_expectation': salaryExpectation,
@@ -77,6 +89,7 @@ class JobSeekPost {
       ownerId: row['owner_id'] as String?,
       title: (row['title'] as String?) ?? '',
       professionBadge: row['profession_badge'] as String?,
+      professionBadgeCode: row['profession_badge_code'] as String?,
       city: row['city'] as String?,
       experienceYears: (row['experience_years'] as num?)?.toInt(),
       salaryExpectation: (row['salary_expectation'] as num?)?.toDouble(),
