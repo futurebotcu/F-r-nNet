@@ -22,9 +22,10 @@ class SupabaseJobOfferRepository implements JobOfferRepository {
   }
 
   static const String _columns =
-      'id, owner_id, bakery_id, title, role_title, '
+      'id, owner_id, bakery_id, title, role_title, role_code, '
       'city, district, city_code, district_code, '
-      'description, salary_min, salary_max, shift_type, experience_required, '
+      'description, salary_min, salary_max, '
+      'shift_type, shift_code, experience_required, experience_code, '
       'is_active, contact_preference, contact_phone, '
       'author_name, author_role, created_at, updated_at';
 

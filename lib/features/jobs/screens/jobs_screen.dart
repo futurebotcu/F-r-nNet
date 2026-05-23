@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/widgets/listing_phone_cta.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/job_opportunity_card.dart';
@@ -343,9 +344,25 @@ class _JobOfferCard extends ConsumerWidget {
   }
 
   String _formatExperience() {
+    // M8 — code öncelikli (taxonomy label); yoksa eski text fallback.
+    final code = offer.experienceCode;
+    if (code != null) {
+      final lbl = FirinnetTaxonomy.experienceLabel(code);
+      if (lbl != null) return lbl;
+    }
     final e = offer.experienceRequired?.trim();
     if (e == null || e.isEmpty) return AppStrings.jobsCardExperienceUnset;
     return e;
+  }
+
+  /// M8 — vardiya görüntüsü: shift_code → taxonomy label; yoksa eski text.
+  String? _formatShift() {
+    final code = offer.shiftCode;
+    if (code != null) {
+      final lbl = FirinnetTaxonomy.shiftLabel(code);
+      if (lbl != null) return lbl;
+    }
+    return offer.shiftType;
   }
 
   String _formatBusiness() {
@@ -376,7 +393,7 @@ class _JobOfferCard extends ConsumerWidget {
       salary: _formatSalary(),
       experience: _formatExperience(),
       badge: AppStrings.jobsCardBadgeActive,
-      shift: offer.shiftType,
+      shift: _formatShift(),
       onApply: isOwn ? null : () => _onApply(context, ref),
       applyLabel: AppStrings.jobsApply,
       applyIcon: Icons.send_rounded,

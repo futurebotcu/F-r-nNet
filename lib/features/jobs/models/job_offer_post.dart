@@ -18,6 +18,9 @@ class JobOfferPost {
     this.salaryMax,
     this.shiftType,
     this.experienceRequired,
+    this.roleCode,
+    this.shiftCode,
+    this.experienceCode,
     this.isActive = true,
     this.contactPreference = 'in_app',
     this.contactPhone,
@@ -48,8 +51,21 @@ class JobOfferPost {
   final String? description;
   final double? salaryMin;
   final double? salaryMax;
+  /// Türkçe vardiya label (eski text, display fallback).
   final String? shiftType;
+
+  /// Türkçe deneyim metni (eski text, display fallback). "min 3 yıl" gibi.
   final String? experienceRequired;
+
+  /// M8 — ASCII profession code (M5 taxonomy ile birebir).
+  final String? roleCode;
+
+  /// M8 — ASCII shift code (`gunduz`/`gece`/`vardiyali`/`esnek`).
+  final String? shiftCode;
+
+  /// M8 — ASCII experience bracket (`none`/`0_2`/`3_5`/`5_plus`).
+  final String? experienceCode;
+
   final bool isActive;
   final String contactPreference;
 
@@ -74,6 +90,9 @@ class JobOfferPost {
     double? salaryMax,
     String? shiftType,
     String? experienceRequired,
+    String? roleCode,
+    String? shiftCode,
+    String? experienceCode,
     bool? isActive,
     String? contactPreference,
     String? contactPhone,
@@ -93,6 +112,9 @@ class JobOfferPost {
       salaryMax: salaryMax ?? this.salaryMax,
       shiftType: shiftType ?? this.shiftType,
       experienceRequired: experienceRequired ?? this.experienceRequired,
+      roleCode: roleCode ?? this.roleCode,
+      shiftCode: shiftCode ?? this.shiftCode,
+      experienceCode: experienceCode ?? this.experienceCode,
       isActive: isActive ?? this.isActive,
       contactPreference: contactPreference ?? this.contactPreference,
       contactPhone: contactPhone ?? this.contactPhone,
@@ -122,6 +144,10 @@ class JobOfferPost {
         'shift_type': shiftType,
       if (experienceRequired != null && experienceRequired!.trim().isNotEmpty)
         'experience_required': experienceRequired,
+      if (roleCode != null && roleCode!.isNotEmpty) 'role_code': roleCode,
+      if (shiftCode != null && shiftCode!.isNotEmpty) 'shift_code': shiftCode,
+      if (experienceCode != null && experienceCode!.isNotEmpty)
+        'experience_code': experienceCode,
       'is_active': isActive,
       'contact_preference': contactPreference,
       if (contactPhone != null && contactPhone!.trim().isNotEmpty)
@@ -146,6 +172,9 @@ class JobOfferPost {
       salaryMax: (row['salary_max'] as num?)?.toDouble(),
       shiftType: row['shift_type'] as String?,
       experienceRequired: row['experience_required'] as String?,
+      roleCode: row['role_code'] as String?,
+      shiftCode: row['shift_code'] as String?,
+      experienceCode: row['experience_code'] as String?,
       isActive: (row['is_active'] as bool?) ?? true,
       contactPreference:
           (row['contact_preference'] as String?) ?? 'in_app',

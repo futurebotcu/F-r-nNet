@@ -180,4 +180,56 @@ class FirinnetTaxonomy {
     if (code == null || code.isEmpty) return true;
     return workerSkills.containsKey(code);
   }
+
+  // ───────────────────────────────────────────────────────────────
+  // Shifts (M8) — single-select chip taxonomy
+  // worker_profiles.shift_preference + job_offer_posts.shift_code
+  // ───────────────────────────────────────────────────────────────
+
+  static const Map<String, String> shifts = <String, String>{
+    'gunduz': 'Gündüz',
+    'gece': 'Gece',
+    'vardiyali': 'Vardiyalı',
+    'esnek': 'Esnek',
+  };
+
+  static List<String> get shiftCodes => shifts.keys.toList(growable: false);
+  static Iterable<MapEntry<String, String>> get shiftEntries =>
+      shifts.entries;
+
+  static String? shiftLabel(String? code) {
+    if (code == null || code.isEmpty) return null;
+    return shifts[code];
+  }
+
+  static bool isValidShiftCode(String? code) {
+    if (code == null || code.isEmpty) return true;
+    return shifts.containsKey(code);
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // Experience brackets (M8) — job_offer_posts.experience_code
+  // ───────────────────────────────────────────────────────────────
+
+  static const Map<String, String> experienceBrackets = <String, String>{
+    'none': 'Şart değil',
+    '0_2': '0-2 yıl',
+    '3_5': '3-5 yıl',
+    '5_plus': '5+ yıl',
+  };
+
+  static List<String> get experienceCodes =>
+      experienceBrackets.keys.toList(growable: false);
+  static Iterable<MapEntry<String, String>> get experienceEntries =>
+      experienceBrackets.entries;
+
+  static String? experienceLabel(String? code) {
+    if (code == null || code.isEmpty) return null;
+    return experienceBrackets[code];
+  }
+
+  static bool isValidExperienceCode(String? code) {
+    if (code == null || code.isEmpty) return true;
+    return experienceBrackets.containsKey(code);
+  }
 }

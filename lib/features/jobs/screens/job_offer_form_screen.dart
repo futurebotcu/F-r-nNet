@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
@@ -29,12 +30,9 @@ class JobOfferFormScreen extends ConsumerStatefulWidget {
 class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
-  final _roleTitle = TextEditingController();
   final _description = TextEditingController();
   final _salaryMin = TextEditingController();
   final _salaryMax = TextEditingController();
-  final _shiftType = TextEditingController();
-  final _experience = TextEditingController();
   /// Listing Contact Phone Sprint — opsiyonel telefon (doğrulama yok).
   final _contactPhone = TextEditingController();
   bool _isActive = true;
@@ -44,6 +42,12 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   /// M6B — il + ilçe picker (eski city/district TextField'lar kaldırıldı).
   TurkeyProvince? _selectedProvince;
   TurkeyDistrict? _selectedDistrict;
+
+  /// M8 — taxonomy code seçimleri. Eski role_title/shift_type/
+  /// experience_required TextField'lar kaldırıldı.
+  String? _roleCode;
+  String? _shiftCode;
+  String? _experienceCode;
 
   @override
   void initState() {
@@ -63,7 +67,28 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
       return;
     }
     _title.text = p.title;
-    _roleTitle.text = p.roleTitle;
+    // M8 — role/shift/experience code öncelikli; yoksa legacy label'dan çevir.
+    _roleCode = p.roleCode ??
+        FirinnetTaxonomy.professionCodeFromLabel(p.roleTitle);
+    _shiftCode = p.shiftCode;
+    if (_shiftCode == null && p.shiftType != null) {
+      for (final e in FirinnetTaxonomy.shiftEntries) {
+        if (e.value.toLowerCase() == p.shiftType!.trim().toLowerCase()) {
+          _shiftCode = e.key;
+          break;
+        }
+      }
+    }
+    _experienceCode = p.experienceCode;
+    if (_experienceCode == null && p.experienceRequired != null) {
+      for (final e in FirinnetTaxonomy.experienceEntries) {
+        if (e.value.toLowerCase() ==
+            p.experienceRequired!.trim().toLowerCase()) {
+          _experienceCode = e.key;
+          break;
+        }
+      }
+    }
     // M6B — code öncelikli; yoksa legacy text label'dan çevir.
     _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
         TurkeyLocations.findProvinceByName(p.city);
@@ -76,8 +101,6 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     _description.text = p.description ?? '';
     _salaryMin.text = p.salaryMin?.toStringAsFixed(0) ?? '';
     _salaryMax.text = p.salaryMax?.toStringAsFixed(0) ?? '';
-    _shiftType.text = p.shiftType ?? '';
-    _experience.text = p.experienceRequired ?? '';
     _contactPhone.text = p.contactPhone ?? '';
     _isActive = p.isActive;
     setState(() => _loaded = true);
@@ -86,12 +109,9 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   @override
   void dispose() {
     _title.dispose();
-    _roleTitle.dispose();
     _description.dispose();
     _salaryMin.dispose();
     _salaryMax.dispose();
-    _shiftType.dispose();
-    _experience.dispose();
     _contactPhone.dispose();
     super.dispose();
   }
@@ -107,19 +127,31 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
 
   Future<void> _onSavePressed() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_roleCode == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aranan rolü seç.')),
+      );
+      return;
+    }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
       return;
     }
     setState(() => _saving = true);
     final repo = ref.read(jobOfferRepositoryProvider);
-    // M6B — dual-write: label + code.
+    // M6B — dual-write: label + code (location).
     final province = _selectedProvince;
     final district = _selectedDistrict;
+    // M8 — dual-write: label + code (role/shift/experience).
+    final roleLabel = FirinnetTaxonomy.professionLabel(_roleCode!) ?? '';
+    final shiftLabel = FirinnetTaxonomy.shiftLabel(_shiftCode);
+    final experienceLabel =
+        FirinnetTaxonomy.experienceLabel(_experienceCode);
     final post = JobOfferPost(
       id: widget.postId,
       title: _title.text.trim(),
-      roleTitle: _roleTitle.text.trim(),
+      roleTitle: roleLabel,
+      roleCode: _roleCode,
       city: province?.name,
       district: district?.name,
       cityCode: province?.code,
@@ -129,10 +161,10 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
           : _description.text.trim(),
       salaryMin: double.tryParse(_salaryMin.text.trim()),
       salaryMax: double.tryParse(_salaryMax.text.trim()),
-      shiftType:
-          _shiftType.text.trim().isEmpty ? null : _shiftType.text.trim(),
-      experienceRequired:
-          _experience.text.trim().isEmpty ? null : _experience.text.trim(),
+      shiftType: shiftLabel,
+      shiftCode: _shiftCode,
+      experienceRequired: experienceLabel,
+      experienceCode: _experienceCode,
       contactPhone: _normalizePhone(_contactPhone.text),
       isActive: _isActive,
     );
@@ -202,16 +234,13 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                               : null,
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    TextFormField(
-                      controller: _roleTitle,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.jobOfferFieldRole,
-                        hintText: AppStrings.jobOfferFieldRoleHint,
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? AppStrings.jobOfferFieldRoleRequired
-                              : null,
+                    _CodeChipPicker(
+                      label: AppStrings.jobOfferFieldRole,
+                      entries: FirinnetTaxonomy.professionEntries,
+                      selectedCode: _roleCode,
+                      onChanged: _saving
+                          ? null
+                          : (code) => setState(() => _roleCode = code),
                     ),
                     const SizedBox(height: AppSpacing.m),
                     Row(
@@ -294,20 +323,22 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    TextFormField(
-                      controller: _shiftType,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.jobOfferFieldShift,
-                        hintText: AppStrings.jobOfferFieldShiftHint,
-                      ),
+                    _CodeChipPicker(
+                      label: AppStrings.jobOfferFieldShift,
+                      entries: FirinnetTaxonomy.shiftEntries,
+                      selectedCode: _shiftCode,
+                      onChanged: _saving
+                          ? null
+                          : (code) => setState(() => _shiftCode = code),
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    TextFormField(
-                      controller: _experience,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.jobOfferFieldExperience,
-                        hintText: AppStrings.jobOfferFieldExperienceHint,
-                      ),
+                    _CodeChipPicker(
+                      label: AppStrings.jobOfferFieldExperience,
+                      entries: FirinnetTaxonomy.experienceEntries,
+                      selectedCode: _experienceCode,
+                      onChanged: _saving
+                          ? null
+                          : (code) => setState(() => _experienceCode = code),
                     ),
                     const SizedBox(height: AppSpacing.m),
                     TextFormField(
@@ -370,6 +401,74 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// M8 — taxonomy code single-select chip cluster. Label üstte, chip'ler
+/// altta. `onChanged(null)` toggle = seçimi kaldırır. Saving sırasında
+/// disabled.
+class _CodeChipPicker extends StatelessWidget {
+  const _CodeChipPicker({
+    required this.label,
+    required this.entries,
+    required this.selectedCode,
+    required this.onChanged,
+  });
+
+  final String label;
+  final Iterable<MapEntry<String, String>> entries;
+  final String? selectedCode;
+  final ValueChanged<String?>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final e in entries)
+              ChoiceChip(
+                label: Text(e.value),
+                selected: selectedCode == e.key,
+                onSelected: onChanged == null
+                    ? null
+                    : (v) => onChanged!(v ? e.key : null),
+                selectedColor: AppColors.copper.withValues(alpha: 0.22),
+                backgroundColor: AppColors.card,
+                labelStyle: TextStyle(
+                  color: selectedCode == e.key
+                      ? AppColors.softGold
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  side: BorderSide(
+                    color: selectedCode == e.key
+                        ? AppColors.copper.withValues(alpha: 0.55)
+                        : AppColors.borderHairline,
+                    width: 0.6,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
