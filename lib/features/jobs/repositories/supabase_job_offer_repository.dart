@@ -22,9 +22,11 @@ class SupabaseJobOfferRepository implements JobOfferRepository {
   }
 
   static const String _columns =
-      'id, owner_id, bakery_id, title, role_title, city, district, description, '
-      'salary_min, salary_max, shift_type, experience_required, is_active, '
-      'contact_preference, author_name, author_role, created_at, updated_at';
+      'id, owner_id, bakery_id, title, role_title, '
+      'city, district, city_code, district_code, '
+      'description, salary_min, salary_max, shift_type, experience_required, '
+      'is_active, contact_preference, author_name, author_role, '
+      'created_at, updated_at';
 
   @override
   Future<List<JobOfferPost>> listActiveOffers({int limit = 100}) async {

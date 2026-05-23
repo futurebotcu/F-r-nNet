@@ -86,7 +86,8 @@ class SupabaseDealerRepository implements DealerRepository {
   // ───────────────────────────────────────────────── Dealer mapping
 
   static const String _dealerColumns =
-      'id, name, contact_name, phone, district, city, working_type, '
+      'id, name, contact_name, phone, district, city, '
+      'city_code, district_code, working_type, '
       'customer_type, is_active, note, created_at';
 
   Dealer _dealerFromRow(Map<String, dynamic> row) {
@@ -96,7 +97,10 @@ class SupabaseDealerRepository implements DealerRepository {
       name: (row['name'] as String?) ?? '',
       contactName: (row['contact_name'] as String?) ?? '',
       phone: (row['phone'] as String?) ?? '',
-      area: (row['district'] as String?) ?? (row['city'] as String?) ?? '',
+      area: (row['district'] as String?) ?? '',
+      city: (row['city'] as String?) ?? '',
+      cityCode: row['city_code'] as String?,
+      districtCode: row['district_code'] as String?,
       workingType: wtKey != null
           ? DealerWorkingTypeLabel.fromPersistKey(wtKey)
           : DealerWorkingType.mixed,
@@ -146,6 +150,7 @@ class SupabaseDealerRepository implements DealerRepository {
   Future<void> upsertDealer(Dealer dealer) async {
     final ownerId = _requireUserId();
     final bakeryId = await _ensureDefaultBakeryId();
+    // M6B — dual-write: city/district label + city_code/district_code.
     final payload = <String, dynamic>{
       'owner_id': ownerId,
       'bakery_id': bakeryId,
@@ -153,6 +158,11 @@ class SupabaseDealerRepository implements DealerRepository {
       if (dealer.contactName.isNotEmpty) 'contact_name': dealer.contactName,
       if (dealer.phone.isNotEmpty) 'phone': dealer.phone,
       if (dealer.area.isNotEmpty) 'district': dealer.area,
+      if (dealer.city.isNotEmpty) 'city': dealer.city,
+      if (dealer.cityCode != null && dealer.cityCode!.isNotEmpty)
+        'city_code': dealer.cityCode,
+      if (dealer.districtCode != null && dealer.districtCode!.isNotEmpty)
+        'district_code': dealer.districtCode,
       'working_type': dealer.workingType.persistKey,
       'customer_type': dealer.customerType.persistKey,
       if (dealer.note.isNotEmpty) 'note': dealer.note,

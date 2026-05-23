@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -28,8 +30,6 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _roleTitle = TextEditingController();
-  final _city = TextEditingController();
-  final _district = TextEditingController();
   final _description = TextEditingController();
   final _salaryMin = TextEditingController();
   final _salaryMax = TextEditingController();
@@ -38,6 +38,10 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   bool _isActive = true;
   bool _saving = false;
   bool _loaded = false;
+
+  /// M6B — il + ilçe picker (eski city/district TextField'lar kaldırıldı).
+  TurkeyProvince? _selectedProvince;
+  TurkeyDistrict? _selectedDistrict;
 
   @override
   void initState() {
@@ -58,8 +62,15 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     }
     _title.text = p.title;
     _roleTitle.text = p.roleTitle;
-    _city.text = p.city ?? '';
-    _district.text = p.district ?? '';
+    // M6B — code öncelikli; yoksa legacy text label'dan çevir.
+    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+        TurkeyLocations.findProvinceByName(p.city);
+    if (_selectedProvince != null) {
+      _selectedDistrict = TurkeyLocations.findDistrict(
+        _selectedProvince!.code,
+        p.districtCode,
+      );
+    }
     _description.text = p.description ?? '';
     _salaryMin.text = p.salaryMin?.toStringAsFixed(0) ?? '';
     _salaryMax.text = p.salaryMax?.toStringAsFixed(0) ?? '';
@@ -73,8 +84,6 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   void dispose() {
     _title.dispose();
     _roleTitle.dispose();
-    _city.dispose();
-    _district.dispose();
     _description.dispose();
     _salaryMin.dispose();
     _salaryMax.dispose();
@@ -91,12 +100,17 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     }
     setState(() => _saving = true);
     final repo = ref.read(jobOfferRepositoryProvider);
+    // M6B — dual-write: label + code.
+    final province = _selectedProvince;
+    final district = _selectedDistrict;
     final post = JobOfferPost(
       id: widget.postId,
       title: _title.text.trim(),
       roleTitle: _roleTitle.text.trim(),
-      city: _city.text.trim().isEmpty ? null : _city.text.trim(),
-      district: _district.text.trim().isEmpty ? null : _district.text.trim(),
+      city: province?.name,
+      district: district?.name,
+      cityCode: province?.code,
+      districtCode: district?.code,
       description: _description.text.trim().isEmpty
           ? null
           : _description.text.trim(),
@@ -189,20 +203,54 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: TextFormField(
-                            controller: _city,
-                            decoration: const InputDecoration(
-                              labelText: AppStrings.jobOfferFieldCity,
-                            ),
+                          child: LocationPickerField(
+                            label: AppStrings.jobOfferFieldCity,
+                            value: _selectedProvince?.name,
+                            enabled: !_saving,
+                            onTap: () async {
+                              final picked =
+                                  await LocationPicker.showProvincePicker(
+                                context,
+                                initialCode: _selectedProvince?.code,
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _selectedProvince = picked;
+                                  _selectedDistrict = null;
+                                });
+                              }
+                            },
+                            onClear: _selectedProvince == null
+                                ? null
+                                : () => setState(() {
+                                      _selectedProvince = null;
+                                      _selectedDistrict = null;
+                                    }),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s),
                         Expanded(
-                          child: TextFormField(
-                            controller: _district,
-                            decoration: const InputDecoration(
-                              labelText: AppStrings.jobOfferFieldDistrict,
-                            ),
+                          child: LocationPickerField(
+                            label: AppStrings.jobOfferFieldDistrict,
+                            value: _selectedDistrict?.name,
+                            enabled: !_saving && _selectedProvince != null,
+                            onTap: () async {
+                              final province = _selectedProvince;
+                              if (province == null) return;
+                              final picked =
+                                  await LocationPicker.showDistrictPicker(
+                                context,
+                                province: province,
+                                initialCode: _selectedDistrict?.code,
+                              );
+                              if (picked != null) {
+                                setState(() => _selectedDistrict = picked);
+                              }
+                            },
+                            onClear: _selectedDistrict == null
+                                ? null
+                                : () => setState(
+                                    () => _selectedDistrict = null),
                           ),
                         ),
                       ],

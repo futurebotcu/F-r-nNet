@@ -90,6 +90,9 @@ class Dealer {
     this.contactName = '',
     this.phone = '',
     this.area = '',
+    this.city = '',
+    this.cityCode,
+    this.districtCode,
     this.workingType = DealerWorkingType.mixed,
     this.isActive = true,
     this.note = '',
@@ -101,7 +104,21 @@ class Dealer {
   final String name;
   final String contactName;
   final String phone;
+
+  /// Türkçe ilçe label (eski text, display fallback).
+  /// Eski adıyla "area" — dealers.district kolonuna yazılır.
   final String area;
+
+  /// M6B — Türkçe il label (display fallback).
+  final String city;
+
+  /// M6B — Türkiye plaka kodu (`34`, ...). Dual-write.
+  final String? cityCode;
+
+  /// M6B — İlçe ASCII slug (`kadikoy`, ...). cityCode varsa set edilir;
+  /// CHECK constraint district→city zorunlu kılar.
+  final String? districtCode;
+
   final DealerWorkingType workingType;
   final bool isActive;
   final String note;
@@ -113,6 +130,9 @@ class Dealer {
     String? contactName,
     String? phone,
     String? area,
+    String? city,
+    Object? cityCode = _sentinel,
+    Object? districtCode = _sentinel,
     DealerWorkingType? workingType,
     bool? isActive,
     String? note,
@@ -124,6 +144,13 @@ class Dealer {
       contactName: contactName ?? this.contactName,
       phone: phone ?? this.phone,
       area: area ?? this.area,
+      city: city ?? this.city,
+      cityCode: identical(cityCode, _sentinel)
+          ? this.cityCode
+          : cityCode as String?,
+      districtCode: identical(districtCode, _sentinel)
+          ? this.districtCode
+          : districtCode as String?,
       workingType: workingType ?? this.workingType,
       isActive: isActive ?? this.isActive,
       note: note ?? this.note,
@@ -131,4 +158,6 @@ class Dealer {
       createdAt: createdAt,
     );
   }
+
+  static const Object _sentinel = Object();
 }

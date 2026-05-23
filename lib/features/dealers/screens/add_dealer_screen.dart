@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
@@ -30,16 +32,18 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
   final _name = TextEditingController();
   final _contact = TextEditingController();
   final _phone = TextEditingController();
-  final _area = TextEditingController();
   final _note = TextEditingController();
   DealerWorkingType _wt = DealerWorkingType.mixed;
+
+  /// M6B — eski `_area` TextField yerine il + ilçe picker.
+  TurkeyProvince? _selectedProvince;
+  TurkeyDistrict? _selectedDistrict;
 
   @override
   void dispose() {
     _name.dispose();
     _contact.dispose();
     _phone.dispose();
-    _area.dispose();
     _note.dispose();
     super.dispose();
   }
@@ -52,6 +56,9 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
     }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
+    // M6B — dual-write: label + code.
+    final province = _selectedProvince;
+    final district = _selectedDistrict;
     try {
       await repo.upsertDealer(
         Dealer(
@@ -59,7 +66,10 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
           name: _name.text.trim(),
           contactName: _contact.text.trim(),
           phone: _phone.text.trim(),
-          area: _area.text.trim(),
+          area: district?.name ?? '',
+          city: province?.name ?? '',
+          cityCode: province?.code,
+          districtCode: district?.code,
           workingType: _wt,
           note: _note.text.trim(),
           customerType: widget.customerType,
@@ -146,11 +156,59 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
               const SizedBox(height: AppSpacing.l),
               const _Label(AppStrings.dealerFieldArea),
               const SizedBox(height: 6),
-              TextFormField(
-                controller: _area,
-                decoration: const InputDecoration(
-                  hintText: AppStrings.dealerFieldAreaHint,
-                ),
+              // M6B — il + ilçe picker (eski free-text `_area` kaldırıldı).
+              Row(
+                children: [
+                  Expanded(
+                    child: LocationPickerField(
+                      label: 'İl',
+                      value: _selectedProvince?.name,
+                      onTap: () async {
+                        final picked =
+                            await LocationPicker.showProvincePicker(
+                          context,
+                          initialCode: _selectedProvince?.code,
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _selectedProvince = picked;
+                            _selectedDistrict = null;
+                          });
+                        }
+                      },
+                      onClear: _selectedProvince == null
+                          ? null
+                          : () => setState(() {
+                                _selectedProvince = null;
+                                _selectedDistrict = null;
+                              }),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Expanded(
+                    child: LocationPickerField(
+                      label: 'İlçe',
+                      value: _selectedDistrict?.name,
+                      enabled: _selectedProvince != null,
+                      onTap: () async {
+                        final province = _selectedProvince;
+                        if (province == null) return;
+                        final picked =
+                            await LocationPicker.showDistrictPicker(
+                          context,
+                          province: province,
+                          initialCode: _selectedDistrict?.code,
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedDistrict = picked);
+                        }
+                      },
+                      onClear: _selectedDistrict == null
+                          ? null
+                          : () => setState(() => _selectedDistrict = null),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.l),
               const _Label(AppStrings.dealerFieldWorkingType),

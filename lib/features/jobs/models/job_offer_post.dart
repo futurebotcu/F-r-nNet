@@ -11,6 +11,8 @@ class JobOfferPost {
     required this.roleTitle,
     this.city,
     this.district,
+    this.cityCode,
+    this.districtCode,
     this.description,
     this.salaryMin,
     this.salaryMax,
@@ -29,8 +31,19 @@ class JobOfferPost {
   final String? bakeryId;
   final String title;
   final String roleTitle;
+
+  /// Türkçe il label (eski text, display fallback).
   final String? city;
+
+  /// Türkçe ilçe label (eski text, display fallback).
   final String? district;
+
+  /// M6B — Türkiye plaka kodu (`34`, ...). Dual-write.
+  final String? cityCode;
+
+  /// M6B — İlçe ASCII slug. cityCode varsa set edilebilir.
+  final String? districtCode;
+
   final String? description;
   final double? salaryMin;
   final double? salaryMax;
@@ -48,6 +61,8 @@ class JobOfferPost {
     String? roleTitle,
     String? city,
     String? district,
+    String? cityCode,
+    String? districtCode,
     String? description,
     double? salaryMin,
     double? salaryMax,
@@ -64,6 +79,8 @@ class JobOfferPost {
       roleTitle: roleTitle ?? this.roleTitle,
       city: city ?? this.city,
       district: district ?? this.district,
+      cityCode: cityCode ?? this.cityCode,
+      districtCode: districtCode ?? this.districtCode,
       description: description ?? this.description,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
@@ -86,6 +103,9 @@ class JobOfferPost {
       'role_title': roleTitle,
       if (city != null && city!.trim().isNotEmpty) 'city': city,
       if (district != null && district!.trim().isNotEmpty) 'district': district,
+      if (cityCode != null && cityCode!.isNotEmpty) 'city_code': cityCode,
+      if (districtCode != null && districtCode!.isNotEmpty)
+        'district_code': districtCode,
       if (description != null && description!.trim().isNotEmpty)
         'description': description,
       if (salaryMin != null) 'salary_min': salaryMin,
@@ -109,6 +129,8 @@ class JobOfferPost {
       roleTitle: (row['role_title'] as String?) ?? '',
       city: row['city'] as String?,
       district: row['district'] as String?,
+      cityCode: row['city_code'] as String?,
+      districtCode: row['district_code'] as String?,
       description: row['description'] as String?,
       salaryMin: (row['salary_min'] as num?)?.toDouble(),
       salaryMax: (row['salary_max'] as num?)?.toDouble(),
