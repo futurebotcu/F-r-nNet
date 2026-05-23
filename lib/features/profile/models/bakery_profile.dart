@@ -29,6 +29,7 @@ class BakeryProfile {
     this.avatarUrl,
     this.roleBadgeCode,
     this.cityCode,
+    this.firinnetId,
   });
 
   final String displayName;
@@ -54,6 +55,17 @@ class BakeryProfile {
   /// `TurkeyLocations` label çevirir, yoksa [city] (eski text) fallback.
   final String? cityCode;
 
+  /// FırınNet ID — benzersiz, kalıcı, okunabilir kullanıcı numarası.
+  /// Format: `FN-YYYY-NNNNNN` (örn. `FN-2026-000001`).
+  ///
+  /// GİZLİLİK: yalnız sahibinin kendi hesap ekranında gösterilir.
+  /// Public profile, feed, comment, follow list, ilan kartı vb. asla
+  /// göstermez. RPC whitelist'lerinde de yer almaz; profiles RLS
+  /// owner-only zaten başkasına sızdırmaz.
+  ///
+  /// Bu ID resmi kimlik değildir (KYC / TC / vergi no / login factor değil).
+  final String? firinnetId;
+
   /// V1.3 profile completeness sözleşmesi.
   ///
   /// Zorunlu: `displayName`, `accountType` (enum daima dolu), `city`,
@@ -76,6 +88,7 @@ class BakeryProfile {
     Object? avatarUrl = _sentinel,
     Object? roleBadgeCode = _sentinel,
     Object? cityCode = _sentinel,
+    Object? firinnetId = _sentinel,
   }) {
     return BakeryProfile(
       displayName: displayName ?? this.displayName,
@@ -92,6 +105,9 @@ class BakeryProfile {
       cityCode: identical(cityCode, _sentinel)
           ? this.cityCode
           : cityCode as String?,
+      firinnetId: identical(firinnetId, _sentinel)
+          ? this.firinnetId
+          : firinnetId as String?,
     );
   }
 

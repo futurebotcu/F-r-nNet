@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +11,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/services/auth_actions.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../widgets/settings_tile.dart';
 
 /// V1.4 — Sade ve gerçek Settings ekranı.
@@ -22,6 +24,10 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // FırınNet ID — yalnız sahibine gösterilir; profile null veya
+    // firinnetId boş ise tile gizlenir.
+    final profile = ref.watch(profileControllerProvider);
+    final firinnetId = profile?.firinnetId;
     return PremiumScaffold(
       appBar: AppBar(title: const Text(AppStrings.settingsTitle)),
       body: SafeArea(
@@ -39,6 +45,33 @@ class SettingsScreen extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
+                    if (firinnetId != null && firinnetId.isNotEmpty) ...[
+                      SettingsTile(
+                        icon: Icons.badge_outlined,
+                        title: AppStrings.settingsFirinnetIdTitle,
+                        subtitle: firinnetId,
+                        trailing: const Icon(
+                          Icons.copy_rounded,
+                          color: AppColors.textMuted,
+                          size: 18,
+                        ),
+                        onTap: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: firinnetId),
+                          );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  AppStrings.settingsFirinnetIdCopied,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      const _TileDivider(),
+                    ],
                     SettingsTile(
                       icon: Icons.edit_outlined,
                       title: AppStrings.settingsEditProfile,

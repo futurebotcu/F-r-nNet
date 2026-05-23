@@ -586,6 +586,10 @@ class AppStrings {
   static const String settingsSectionApp = 'Uygulama';
 
   // Tile etiketleri
+  // FırınNet ID — sadece sahibine gösterilir; public alanlarda yok.
+  static const String settingsFirinnetIdTitle = 'FırınNet ID';
+  static const String settingsFirinnetIdCopied =
+      'FırınNet ID kopyalandı.';
   static const String settingsEditProfile = 'Profilimi düzenle';
   static const String settingsEditProfileSubtitle =
       'Ad, hesap türü, şehir ve meslek rozetini güncelle.';

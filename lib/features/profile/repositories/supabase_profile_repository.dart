@@ -21,9 +21,13 @@ class SupabaseProfileRepository implements ProfileRepository {
     }
   }
 
+  // Owner-only fetch — RLS `id = auth.uid()` zaten başka satırı görmez.
+  // firinnet_id buraya dahil; UPDATE patch'ine ASLA dahil değil (client
+  // değiştiremez, server-side trigger atadı).
   static const String _selectColumns =
       'id, display_name, account_type, profession_badge, '
-      'profession_badge_code, city, city_code, avatar_url, email';
+      'profession_badge_code, city, city_code, avatar_url, email, '
+      'firinnet_id';
 
   BakeryProfile _fromRow(Map<String, dynamic> row) {
     return BakeryProfile(
@@ -35,6 +39,7 @@ class SupabaseProfileRepository implements ProfileRepository {
       avatarUrl: (row['avatar_url'] as String?),
       roleBadgeCode: (row['profession_badge_code'] as String?),
       cityCode: (row['city_code'] as String?),
+      firinnetId: (row['firinnet_id'] as String?),
     );
   }
 
