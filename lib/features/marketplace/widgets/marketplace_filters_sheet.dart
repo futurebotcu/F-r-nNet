@@ -14,7 +14,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../data/marketplace_taxonomy.dart';
 import '../models/market_filters.dart';
-import 'location_picker.dart';
+import '../../../core/widgets/location_picker.dart';
 
 class MarketplaceFiltersSheet extends StatefulWidget {
   const MarketplaceFiltersSheet({

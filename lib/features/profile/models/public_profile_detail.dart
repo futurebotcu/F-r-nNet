@@ -6,6 +6,7 @@
 // RPC tarafında dahi seçilmez. Bu model yalnız UI render için.
 
 import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/data/turkey_locations.dart';
 
 class PublicProfileHeader {
   const PublicProfileHeader({
@@ -16,6 +17,7 @@ class PublicProfileHeader {
     this.professionBadge,
     this.professionBadgeCode,
     this.city,
+    this.cityCode,
   });
 
   final String id;
@@ -31,7 +33,22 @@ class PublicProfileHeader {
   /// M5 — ASCII code (`usta_firinci`, ...). Varsa taxonomy label öncelikli.
   final String? professionBadgeCode;
 
+  /// Türkçe il adı (eski text, display fallback).
   final String? city;
+
+  /// M6A — Türkiye plaka kodu (`34`, `42`, ...). Varsa
+  /// `TurkeyLocations` label öncelikli.
+  final String? cityCode;
+
+  /// M6A öncelik sırası: code → taxonomy label → eski text fallback.
+  String? get effectiveCity {
+    final c = cityCode;
+    if (c != null && c.isNotEmpty) {
+      final prov = TurkeyLocations.findProvinceByCode(c);
+      if (prov != null) return prov.name;
+    }
+    return city;
+  }
 
   static PublicProfileHeader fromJson(Map<String, dynamic> j) {
     return PublicProfileHeader(
@@ -42,6 +59,7 @@ class PublicProfileHeader {
       professionBadge: j['profession_badge'] as String?,
       professionBadgeCode: j['profession_badge_code'] as String?,
       city: j['city'] as String?,
+      cityCode: j['city_code'] as String?,
     );
   }
 }
@@ -52,6 +70,7 @@ class PublicWorkerInfo {
     this.professionBadgeCode,
     this.experienceYears,
     this.cities = const <String>[],
+    this.cityCodes = const <String>[],
     this.skills = const <String>[],
     this.shiftPreference,
     this.bio,
@@ -65,6 +84,11 @@ class PublicWorkerInfo {
 
   final int? experienceYears;
   final List<String> cities;
+
+  /// M6A — Türkiye plaka kodları. UI önce code'ları `TurkeyLocations`
+  /// üzerinden çevirir; yoksa [cities] (eski label) fallback.
+  final List<String> cityCodes;
+
   final List<String> skills;
   final String? shiftPreference;
   final String? bio;
@@ -74,9 +98,21 @@ class PublicWorkerInfo {
       (professionBadgeCode == null || professionBadgeCode!.isEmpty) &&
       experienceYears == null &&
       cities.isEmpty &&
+      cityCodes.isEmpty &&
       skills.isEmpty &&
       (shiftPreference == null || shiftPreference!.isEmpty) &&
       (bio == null || bio!.isEmpty);
+
+  /// M6A — display için: önce code'ları label'a çevir, yoksa eski text.
+  List<String> get effectiveCities {
+    if (cityCodes.isNotEmpty) {
+      return <String>[
+        for (final c in cityCodes)
+          TurkeyLocations.findProvinceByCode(c)?.name ?? c,
+      ];
+    }
+    return cities;
+  }
 
   static PublicWorkerInfo fromJson(Map<String, dynamic> j) {
     List<String> asStringList(dynamic v) {
@@ -91,6 +127,7 @@ class PublicWorkerInfo {
       professionBadgeCode: j['profession_badge_code'] as String?,
       experienceYears: (j['experience_years'] as num?)?.toInt(),
       cities: asStringList(j['cities']),
+      cityCodes: asStringList(j['city_codes']),
       skills: asStringList(j['skills']),
       shiftPreference: j['shift_preference'] as String?,
       bio: j['bio'] as String?,
@@ -103,6 +140,7 @@ class PublicWorkerExperience {
     required this.id,
     required this.title,
     this.city,
+    this.cityCode,
     this.startDate,
     this.endDate,
     this.description,
@@ -111,11 +149,25 @@ class PublicWorkerExperience {
   final String id;
   final String title;
   final String? city;
+
+  /// M6A — plaka kodu. UI önce code'dan label çevirir.
+  final String? cityCode;
+
   final DateTime? startDate;
   final DateTime? endDate;
   final String? description;
 
   bool get isCurrent => endDate == null && startDate != null;
+
+  /// M6A — display: code → label, yoksa eski text.
+  String? get effectiveCity {
+    final c = cityCode;
+    if (c != null && c.isNotEmpty) {
+      final prov = TurkeyLocations.findProvinceByCode(c);
+      if (prov != null) return prov.name;
+    }
+    return city;
+  }
 
   static PublicWorkerExperience fromJson(Map<String, dynamic> j) {
     DateTime? parse(String? s) =>
@@ -124,6 +176,7 @@ class PublicWorkerExperience {
       id: j['id'] as String,
       title: (j['title'] as String?) ?? '',
       city: j['city'] as String?,
+      cityCode: j['city_code'] as String?,
       startDate: parse(j['start_date'] as String?),
       endDate: parse(j['end_date'] as String?),
       description: j['description'] as String?,

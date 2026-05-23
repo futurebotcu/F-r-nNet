@@ -644,7 +644,7 @@ class _WorkerSnapshot extends StatelessWidget {
             ],
           ),
         ],
-        if (worker.cities.isNotEmpty) ...[
+        if (worker.effectiveCities.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s),
           Text(
             AppStrings.profileWorkerCitiesLabel,
@@ -659,7 +659,8 @@ class _WorkerSnapshot extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final c in worker.cities) _MiniChip(label: c),
+              // M6A — code → label çevirim (effectiveCities); yoksa eski text.
+              for (final c in worker.effectiveCities) _MiniChip(label: c),
             ],
           ),
         ],

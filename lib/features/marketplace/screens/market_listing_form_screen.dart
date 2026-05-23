@@ -31,7 +31,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
-import '../widgets/location_picker.dart';
+import '../../../core/widgets/location_picker.dart';
 
 class _PickedPhoto {
   _PickedPhoto({required this.bytes, required this.ext});

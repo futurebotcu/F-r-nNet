@@ -48,7 +48,9 @@ class ProfileHeader extends StatelessWidget {
           final detail = detailAsync?.asData?.value;
           final avatarUrl = detail?.header.avatarUrl;
           final role = detail?.effectiveProfessionBadge ?? p.professionBadge;
-          final city = p.city;
+          // M6A — code → label çevirimi (effectiveCity) öncelikli; snapshot
+          // RPC eski text fallback.
+          final city = detail?.header.effectiveCity ?? p.city;
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

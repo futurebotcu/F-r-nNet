@@ -28,6 +28,7 @@ class BakeryProfile {
     required this.email,
     this.avatarUrl,
     this.roleBadgeCode,
+    this.cityCode,
   });
 
   final String displayName;
@@ -48,6 +49,10 @@ class BakeryProfile {
   /// kayıtlarda dual-write yapılır; UI önce code'u taxonomy ile çevirir,
   /// yoksa [roleBadge] label'ına düşer.
   final String? roleBadgeCode;
+
+  /// M6A — Türkiye plaka kodu (`34`, `42`, ...). UI önce code'dan
+  /// `TurkeyLocations` label çevirir, yoksa [city] (eski text) fallback.
+  final String? cityCode;
 
   /// V1.3 profile completeness sözleşmesi.
   ///
@@ -70,6 +75,7 @@ class BakeryProfile {
     String? email,
     Object? avatarUrl = _sentinel,
     Object? roleBadgeCode = _sentinel,
+    Object? cityCode = _sentinel,
   }) {
     return BakeryProfile(
       displayName: displayName ?? this.displayName,
@@ -83,6 +89,9 @@ class BakeryProfile {
       roleBadgeCode: identical(roleBadgeCode, _sentinel)
           ? this.roleBadgeCode
           : roleBadgeCode as String?,
+      cityCode: identical(cityCode, _sentinel)
+          ? this.cityCode
+          : cityCode as String?,
     );
   }
 

@@ -5,9 +5,11 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/data/turkey_locations.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -30,13 +32,16 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
       FirinnetTaxonomy.professionCodes;
 
   final _title = TextEditingController();
-  final _city = TextEditingController();
   final _experience = TextEditingController();
   final _salary = TextEditingController();
   final _description = TextEditingController();
 
   /// M5 — taxonomy code.
   String? _professionCode;
+
+  /// M6A — il seçimi (controlled).
+  TurkeyProvince? _selectedProvince;
+
   bool _isActive = true;
 
   bool _loading = false;
@@ -63,7 +68,9 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     }
     _existing = p;
     _title.text = p.title;
-    _city.text = p.city ?? '';
+    // M6A — city_code öncelikli; yoksa legacy text label'dan çevir.
+    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+        TurkeyLocations.findProvinceByName(p.city);
     _experience.text =
         p.experienceYears != null ? '${p.experienceYears}' : '';
     _salary.text = p.salaryExpectation != null
@@ -80,7 +87,6 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
   @override
   void dispose() {
     _title.dispose();
-    _city.dispose();
     _experience.dispose();
     _salary.dispose();
     _description.dispose();
@@ -104,13 +110,16 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
       final code = _professionCode;
       final label =
           code == null ? null : FirinnetTaxonomy.professionLabel(code);
+      // M6A — şehir dual-write.
+      final province = _selectedProvince;
       final draft = JobSeekPost(
         id: _existing?.id,
         ownerId: _existing?.ownerId,
         title: _title.text.trim(),
         professionBadge: label,
         professionBadgeCode: code,
-        city: _city.text.trim().isEmpty ? null : _city.text.trim(),
+        city: province?.name,
+        cityCode: province?.code,
         experienceYears: _experience.text.trim().isEmpty
             ? null
             : int.tryParse(_experience.text.trim()),
@@ -145,11 +154,13 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     final code = _professionCode;
     final label =
         code == null ? null : FirinnetTaxonomy.professionLabel(code);
+    final province = _selectedProvince;
     final p = JobSeekPost(
       title: _title.text.trim().isEmpty ? 'İş ilanı' : _title.text.trim(),
       professionBadge: label,
       professionBadgeCode: code,
-      city: _city.text.trim().isEmpty ? null : _city.text.trim(),
+      city: province?.name,
+      cityCode: province?.code,
       experienceYears: _experience.text.trim().isEmpty
           ? null
           : int.tryParse(_experience.text.trim()),
@@ -240,12 +251,23 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.l),
-            TextField(
-              controller: _city,
-              decoration: const InputDecoration(
-                labelText: 'Şehir / bölge',
-                hintText: 'Manisa · Şehzadeler',
-              ),
+            LocationPickerField(
+              label: 'Şehir',
+              value: _selectedProvince?.name,
+              hint: 'İl seç',
+              enabled: !_saving,
+              onTap: () async {
+                final picked = await LocationPicker.showProvincePicker(
+                  context,
+                  initialCode: _selectedProvince?.code,
+                );
+                if (picked != null) {
+                  setState(() => _selectedProvince = picked);
+                }
+              },
+              onClear: _selectedProvince == null
+                  ? null
+                  : () => setState(() => _selectedProvince = null),
             ),
             const SizedBox(height: AppSpacing.s),
             Row(

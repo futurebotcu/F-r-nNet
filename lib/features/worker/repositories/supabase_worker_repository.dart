@@ -29,7 +29,7 @@ class SupabaseWorkerRepository implements WorkerRepository {
 
   static const String _profileColumns =
       'id, owner_id, profession_badge, profession_badge_code, '
-      'experience_years, cities, '
+      'experience_years, cities, city_codes, '
       'shift_preference, salary_expectation, work_type, skills, bio, '
       'created_at, updated_at';
 
@@ -78,8 +78,8 @@ class SupabaseWorkerRepository implements WorkerRepository {
   // ───────────────────────────────── Experiences
 
   static const String _experienceColumns =
-      'id, owner_id, title, workplace, city, start_date, end_date, '
-      'description, created_at';
+      'id, owner_id, title, workplace, city, city_code, '
+      'start_date, end_date, description, created_at';
 
   @override
   Future<List<WorkerExperience>> listMyExperiences() async {
@@ -122,7 +122,7 @@ class SupabaseWorkerRepository implements WorkerRepository {
 
   static const String _postColumns =
       'id, owner_id, title, profession_badge, profession_badge_code, '
-      'city, experience_years, '
+      'city, city_code, experience_years, '
       'salary_expectation, description, is_active, created_at, updated_at';
 
   @override

@@ -25,7 +25,9 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/location_picker.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/bakery_profile.dart';
@@ -55,11 +57,13 @@ class ProfileEditSheet extends ConsumerStatefulWidget {
 
 class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   final _name = TextEditingController();
-  final _city = TextEditingController();
   AccountType _accountType = AccountType.individual;
 
   /// M5 — meslek taxonomy code; UI label çevirimle render eder.
   String? _professionCode;
+
+  /// M6A — şehir plaka kodu; UI label `TurkeyLocations`'tan gelir.
+  TurkeyProvince? _selectedProvince;
 
   bool _loading = true;
   bool _saving = false;
@@ -83,19 +87,20 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   @override
   void dispose() {
     _name.dispose();
-    _city.dispose();
     super.dispose();
   }
 
   void _hydrate(BakeryProfile p) {
     _initial = p;
     _name.text = p.displayName;
-    _city.text = p.city;
     _accountType = p.accountType;
     _avatarUrl = p.avatarUrl;
     // M5 — code öncelikli; yoksa legacy label'dan çevir.
     _professionCode = p.roleBadgeCode ??
         FirinnetTaxonomy.professionCodeFromLabel(p.roleBadge);
+    // M6A — city code öncelikli; yoksa legacy label'dan plaka çıkarmayı dene.
+    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+        TurkeyLocations.findProvinceByName(p.city);
   }
 
   Future<void> _loadFromRepo() async {
@@ -177,6 +182,8 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       final pCode = _professionCode;
       final pLabel =
           pCode == null ? null : FirinnetTaxonomy.professionLabel(pCode);
+      // M6A — şehir dual-write: city_code (taxonomy) + city (eski text).
+      final province = _selectedProvince;
       final draft = (_initial ??
               const BakeryProfile(
                 displayName: '',
@@ -187,7 +194,8 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
               ))
           .copyWith(
         displayName: name,
-        city: _city.text.trim(),
+        city: province?.name ?? '',
+        cityCode: province?.code,
         accountType: _accountType,
         avatarUrl: _avatarUrl,
         roleBadge: pLabel ?? '',
@@ -293,12 +301,22 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: AppSpacing.s),
-                    TextField(
-                      controller: _city,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.profileEditCityLabel,
-                      ),
+                    LocationPickerField(
+                      label: AppStrings.profileEditCityLabel,
+                      value: _selectedProvince?.name,
+                      enabled: !_saving,
+                      onTap: () async {
+                        final picked = await LocationPicker.showProvincePicker(
+                          context,
+                          initialCode: _selectedProvince?.code,
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedProvince = picked);
+                        }
+                      },
+                      onClear: _selectedProvince == null
+                          ? null
+                          : () => setState(() => _selectedProvince = null),
                     ),
                     const SizedBox(height: AppSpacing.l),
                     const Text(

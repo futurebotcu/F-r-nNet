@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -257,17 +259,18 @@ class _AddExperienceSheet extends ConsumerStatefulWidget {
 class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
   final _title = TextEditingController();
   final _workplace = TextEditingController();
-  final _city = TextEditingController();
   final _description = TextEditingController();
   DateTime? _start;
   DateTime? _end;
   bool _saving = false;
 
+  /// M6A — il seçimi (controlled).
+  TurkeyProvince? _selectedProvince;
+
   @override
   void dispose() {
     _title.dispose();
     _workplace.dispose();
-    _city.dispose();
     _description.dispose();
     super.dispose();
   }
@@ -304,12 +307,15 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
     }
     setState(() => _saving = true);
     try {
+      // M6A — şehir dual-write: city_code (taxonomy) + city (label fallback).
+      final province = _selectedProvince;
       await ref.read(workerRepositoryProvider).addExperience(WorkerExperience(
             title: _title.text.trim(),
             workplace: _workplace.text.trim().isEmpty
                 ? null
                 : _workplace.text.trim(),
-            city: _city.text.trim().isEmpty ? null : _city.text.trim(),
+            city: province?.name,
+            cityCode: province?.code,
             startDate: _start,
             endDate: _end,
             description: _description.text.trim().isEmpty
@@ -382,12 +388,23 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
                 ),
               ),
               const SizedBox(height: AppSpacing.s),
-              TextField(
-                controller: _city,
-                decoration: const InputDecoration(
-                  labelText: 'Şehir',
-                  hintText: 'İstanbul · Kadıköy',
-                ),
+              LocationPickerField(
+                label: 'Şehir',
+                value: _selectedProvince?.name,
+                hint: 'İl seç',
+                enabled: !_saving,
+                onTap: () async {
+                  final picked = await LocationPicker.showProvincePicker(
+                    context,
+                    initialCode: _selectedProvince?.code,
+                  );
+                  if (picked != null) {
+                    setState(() => _selectedProvince = picked);
+                  }
+                },
+                onClear: _selectedProvince == null
+                    ? null
+                    : () => setState(() => _selectedProvince = null),
               ),
               const SizedBox(height: AppSpacing.s),
               Row(

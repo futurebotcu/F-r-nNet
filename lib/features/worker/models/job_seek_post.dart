@@ -10,6 +10,7 @@ class JobSeekPost {
     this.professionBadge,
     this.professionBadgeCode,
     this.city,
+    this.cityCode,
     this.experienceYears,
     this.salaryExpectation,
     this.description,
@@ -29,7 +30,12 @@ class JobSeekPost {
   /// dual-write yapılır.
   final String? professionBadgeCode;
 
+  /// Türkçe il adı (eski text, display fallback).
   final String? city;
+
+  /// M6A — Türkiye plaka kodu (`34`, ...). Dual-write.
+  final String? cityCode;
+
   final int? experienceYears;
   final double? salaryExpectation;
   final String? description;
@@ -44,6 +50,7 @@ class JobSeekPost {
     String? professionBadge,
     String? professionBadgeCode,
     String? city,
+    String? cityCode,
     int? experienceYears,
     double? salaryExpectation,
     String? description,
@@ -58,6 +65,7 @@ class JobSeekPost {
       professionBadge: professionBadge ?? this.professionBadge,
       professionBadgeCode: professionBadgeCode ?? this.professionBadgeCode,
       city: city ?? this.city,
+      cityCode: cityCode ?? this.cityCode,
       experienceYears: experienceYears ?? this.experienceYears,
       salaryExpectation: salaryExpectation ?? this.salaryExpectation,
       description: description ?? this.description,
@@ -75,6 +83,7 @@ class JobSeekPost {
         if (professionBadgeCode != null && professionBadgeCode!.isNotEmpty)
           'profession_badge_code': professionBadgeCode,
         if (city != null && city!.isNotEmpty) 'city': city,
+        if (cityCode != null && cityCode!.isNotEmpty) 'city_code': cityCode,
         if (experienceYears != null) 'experience_years': experienceYears,
         if (salaryExpectation != null) 'salary_expectation': salaryExpectation,
         if (description != null && description!.isNotEmpty)
@@ -91,6 +100,7 @@ class JobSeekPost {
       professionBadge: row['profession_badge'] as String?,
       professionBadgeCode: row['profession_badge_code'] as String?,
       city: row['city'] as String?,
+      cityCode: row['city_code'] as String?,
       experienceYears: (row['experience_years'] as num?)?.toInt(),
       salaryExpectation: (row['salary_expectation'] as num?)?.toDouble(),
       description: row['description'] as String?,

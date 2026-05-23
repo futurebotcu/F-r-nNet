@@ -11,6 +11,7 @@ class WorkerProfile {
     this.professionBadgeCode,
     this.experienceYears,
     this.cities = const <String>[],
+    this.cityCodes = const <String>[],
     this.shiftPreference,
     this.salaryExpectation,
     this.workType,
@@ -33,7 +34,14 @@ class WorkerProfile {
   final String? professionBadgeCode;
 
   final int? experienceYears;
+
+  /// Türkçe il adları (eski text, display fallback). Yeni kayıtlarda
+  /// dual-write — [cityCodes] da doldurulur.
   final List<String> cities;
+
+  /// M6A — Türkiye plaka kodları (`34`, `42`, ...). UI önce code'lardan
+  /// `TurkeyLocations` label çevirir; yoksa [cities] fallback.
+  final List<String> cityCodes;
 
   /// gunduz / gece / vardiyali / esnek
   final String? shiftPreference;
@@ -52,6 +60,7 @@ class WorkerProfile {
       (professionBadge == null || professionBadge!.isEmpty) &&
       experienceYears == null &&
       cities.isEmpty &&
+      cityCodes.isEmpty &&
       (shiftPreference == null || shiftPreference!.isEmpty) &&
       salaryExpectation == null &&
       (workType == null || workType!.isEmpty) &&
@@ -65,6 +74,7 @@ class WorkerProfile {
     String? professionBadgeCode,
     int? experienceYears,
     List<String>? cities,
+    List<String>? cityCodes,
     String? shiftPreference,
     double? salaryExpectation,
     String? workType,
@@ -80,6 +90,7 @@ class WorkerProfile {
       professionBadgeCode: professionBadgeCode ?? this.professionBadgeCode,
       experienceYears: experienceYears ?? this.experienceYears,
       cities: cities ?? this.cities,
+      cityCodes: cityCodes ?? this.cityCodes,
       shiftPreference: shiftPreference ?? this.shiftPreference,
       salaryExpectation: salaryExpectation ?? this.salaryExpectation,
       workType: workType ?? this.workType,
@@ -98,6 +109,7 @@ class WorkerProfile {
           'profession_badge_code': professionBadgeCode,
         if (experienceYears != null) 'experience_years': experienceYears,
         'cities': cities,
+        if (cityCodes.isNotEmpty) 'city_codes': cityCodes,
         if (shiftPreference != null && shiftPreference!.isNotEmpty)
           'shift_preference': shiftPreference,
         if (salaryExpectation != null) 'salary_expectation': salaryExpectation,
@@ -114,6 +126,8 @@ class WorkerProfile {
       professionBadgeCode: row['profession_badge_code'] as String?,
       experienceYears: (row['experience_years'] as num?)?.toInt(),
       cities: (row['cities'] as List?)?.cast<String>() ?? const <String>[],
+      cityCodes:
+          (row['city_codes'] as List?)?.cast<String>() ?? const <String>[],
       shiftPreference: row['shift_preference'] as String?,
       salaryExpectation: (row['salary_expectation'] as num?)?.toDouble(),
       workType: row['work_type'] as String?,
@@ -136,6 +150,7 @@ class WorkerExperience {
     required this.title,
     this.workplace,
     this.city,
+    this.cityCode,
     this.startDate,
     this.endDate,
     this.description,
@@ -146,7 +161,13 @@ class WorkerExperience {
   final String? ownerId;
   final String title;
   final String? workplace;
+
+  /// Türkçe il adı (eski text, display fallback).
   final String? city;
+
+  /// M6A — Türkiye plaka kodu (`34`, `42`, ...). Dual-write.
+  final String? cityCode;
+
   final DateTime? startDate;
   final DateTime? endDate;
   final String? description;
@@ -158,6 +179,7 @@ class WorkerExperience {
     String? title,
     String? workplace,
     String? city,
+    String? cityCode,
     DateTime? startDate,
     DateTime? endDate,
     String? description,
@@ -169,6 +191,7 @@ class WorkerExperience {
       title: title ?? this.title,
       workplace: workplace ?? this.workplace,
       city: city ?? this.city,
+      cityCode: cityCode ?? this.cityCode,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       description: description ?? this.description,
@@ -189,6 +212,7 @@ class WorkerExperience {
       'title': title,
       if (workplace != null && workplace!.isNotEmpty) 'workplace': workplace,
       if (city != null && city!.isNotEmpty) 'city': city,
+      if (cityCode != null && cityCode!.isNotEmpty) 'city_code': cityCode,
       if (startDate != null) 'start_date': d(startDate),
       if (endDate != null) 'end_date': d(endDate),
       if (description != null && description!.isNotEmpty)
@@ -204,6 +228,7 @@ class WorkerExperience {
       title: (row['title'] as String?) ?? '',
       workplace: row['workplace'] as String?,
       city: row['city'] as String?,
+      cityCode: row['city_code'] as String?,
       startDate: p(row['start_date'] as String?),
       endDate: p(row['end_date'] as String?),
       description: row['description'] as String?,

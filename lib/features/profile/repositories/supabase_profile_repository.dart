@@ -23,7 +23,7 @@ class SupabaseProfileRepository implements ProfileRepository {
 
   static const String _selectColumns =
       'id, display_name, account_type, profession_badge, '
-      'profession_badge_code, city, avatar_url, email';
+      'profession_badge_code, city, city_code, avatar_url, email';
 
   BakeryProfile _fromRow(Map<String, dynamic> row) {
     return BakeryProfile(
@@ -34,6 +34,7 @@ class SupabaseProfileRepository implements ProfileRepository {
       email: (row['email'] as String?) ?? '',
       avatarUrl: (row['avatar_url'] as String?),
       roleBadgeCode: (row['profession_badge_code'] as String?),
+      cityCode: (row['city_code'] as String?),
     );
   }
 
@@ -65,6 +66,10 @@ class SupabaseProfileRepository implements ProfileRepository {
               ? null
               : profile.roleBadgeCode,
       'city': profile.city.isEmpty ? null : profile.city,
+      'city_code':
+          (profile.cityCode == null || profile.cityCode!.isEmpty)
+              ? null
+              : profile.cityCode,
       'avatar_url':
           (profile.avatarUrl == null || profile.avatarUrl!.isEmpty)
               ? null

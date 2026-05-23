@@ -1,6 +1,10 @@
-// FırınNet Market V1 M2 — controlled-data location picker.
+// FırınNet — controlled-data location picker (core/widgets).
 //
 // İl + ilçe seçimi searchable modal bottom sheet üzerinden yapılır.
+// V1 Market M2'de marketplace tarafı için tanıtıldı; M6A'da core'a taşındı
+// — profile, worker, job_seek + sonraki sprintlerde dealer/job_offer/bakery
+// aynı widget'ı tüketir.
+//
 // Davranış:
 //   * showProvincePicker → 81 il listesi (arama destekli) → seçilen
 //     `TurkeyProvince` döner.
@@ -12,9 +16,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_tokens.dart';
-import '../../../core/data/turkey_locations.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_tokens.dart';
+import '../data/turkey_locations.dart';
 
 class LocationPicker {
   const LocationPicker._();

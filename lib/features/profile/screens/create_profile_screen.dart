@@ -9,6 +9,8 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_products.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/guest_mode_provider.dart';
@@ -53,12 +55,15 @@ class CreateProfileScreen extends ConsumerStatefulWidget {
 class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
-  final _cityCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
 
   late AccountType _accountType;
   String _badge = RoleBadges.commercial.first;
+
+  /// M6A — il seçimi (controlled). Eski şehir TextField controller'ı
+  /// kaldırıldı; LocationPickerField üzerinden TurkeyProvince seçilir.
+  TurkeyProvince? _selectedProvince;
   bool _submitting = false;
   bool _isCompletion = false;
   // V1.3.5 — Yasal kabul checkbox.
@@ -95,7 +100,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       _profileHydrated = true;
       _accountType = existing.accountType;
       _nameCtrl.text = existing.displayName;
-      _cityCtrl.text = existing.city;
+      _selectedProvince =
+          TurkeyLocations.findProvinceByCode(existing.cityCode) ??
+              TurkeyLocations.findProvinceByName(existing.city);
       _emailCtrl.text = existing.email;
       final preset = _badgesForRole(_accountType);
       _badge = preset.contains(existing.roleBadge) && existing.roleBadge.isNotEmpty
@@ -116,7 +123,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     if (_profileHydrated) return;
     _profileHydrated = true;
     if (_nameCtrl.text.isEmpty) _nameCtrl.text = profile.displayName;
-    if (_cityCtrl.text.isEmpty) _cityCtrl.text = profile.city;
+    _selectedProvince ??=
+        TurkeyLocations.findProvinceByCode(profile.cityCode) ??
+            TurkeyLocations.findProvinceByName(profile.city);
     if (_emailCtrl.text.isEmpty) _emailCtrl.text = profile.email;
     _accountType = profile.accountType;
     final preset = _badgesForRole(_accountType);
@@ -140,7 +149,6 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _cityCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
@@ -182,7 +190,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
   Future<void> _continueAsGuest() async {
     final dirty = _hasDirtyInput(
       name: _nameCtrl.text,
-      city: _cityCtrl.text,
+      city: _selectedProvince?.name ?? '',
       email: _emailCtrl.text,
       password: _passwordCtrl.text,
     );
@@ -261,7 +269,16 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     }
 
     final displayName = _nameCtrl.text.trim();
-    final city = _cityCtrl.text.trim();
+    // M6A — il seçimi zorunlu (controlled).
+    final province = _selectedProvince;
+    if (province == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Şehir seçilmedi.')),
+      );
+      return;
+    }
+    final city = province.name;
+    final cityCode = province.code;
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
     final auth = ref.read(authRepositoryProvider);
@@ -276,6 +293,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               displayName: displayName,
               accountType: _accountType,
               city: city,
+              cityCode: cityCode,
               roleBadge: _badge,
               roleBadgeCode: badgeCode,
               email: email,
@@ -300,6 +318,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                 displayName: displayName,
                 accountType: _accountType,
                 city: city,
+                cityCode: cityCode,
                 roleBadge: _badge,
                 roleBadgeCode: badgeCode,
                 email: email,
@@ -321,7 +340,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
           'display_name': displayName,
           'account_type': _accountType.name,
           'profession_badge': _badge,
+          if (badgeCode != null) 'profession_badge_code': badgeCode,
           'city': city,
+          'city_code': cityCode,
         },
       );
       // Signup başarılıysa guest flag temizlenir (her iki durumda da).
@@ -424,13 +445,22 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               validator: (v) => _validateRequired(v, 'Profil adı gerekli'),
             ),
             const SizedBox(height: 14),
-            TextFormField(
-              controller: _cityCtrl,
-              decoration: const InputDecoration(
-                labelText: AppStrings.city,
-                hintText: 'Örn. Konya',
-              ),
-              validator: (v) => _validateRequired(v, 'Şehir gerekli'),
+            LocationPickerField(
+              label: AppStrings.city,
+              value: _selectedProvince?.name,
+              hint: 'İl seç',
+              onTap: () async {
+                final picked = await LocationPicker.showProvincePicker(
+                  context,
+                  initialCode: _selectedProvince?.code,
+                );
+                if (picked != null) {
+                  setState(() => _selectedProvince = picked);
+                }
+              },
+              onClear: _selectedProvince == null
+                  ? null
+                  : () => setState(() => _selectedProvince = null),
             ),
             const SizedBox(height: 14),
             TextFormField(

@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/data/turkey_locations.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -79,9 +81,12 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
 
   final _experience = TextEditingController();
   final _salary = TextEditingController();
-  final _cities = TextEditingController();
   final _skills = TextEditingController();
   final _bio = TextEditingController();
+
+  /// M6A — çalışmak istediği iller (multi-select). Önce city_codes,
+  /// yoksa eski cities[] label'lardan çevirim.
+  final List<TurkeyProvince> _selectedProvinces = <TurkeyProvince>[];
 
   bool _loading = true;
   bool _saving = false;
@@ -109,7 +114,21 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
       _salary.text = p.salaryExpectation != null
           ? p.salaryExpectation!.toStringAsFixed(0)
           : '';
-      _cities.text = p.cities.join(', ');
+      // M6A — city_codes öncelikli, yoksa cities (label) → code çevirim.
+      _selectedProvinces.clear();
+      final seen = <String>{};
+      for (final c in p.cityCodes) {
+        final prov = TurkeyLocations.findProvinceByCode(c);
+        if (prov != null && seen.add(prov.code)) {
+          _selectedProvinces.add(prov);
+        }
+      }
+      for (final name in p.cities) {
+        final prov = TurkeyLocations.findProvinceByName(name);
+        if (prov != null && seen.add(prov.code)) {
+          _selectedProvinces.add(prov);
+        }
+      }
       _skills.text = p.skills.join(', ');
       _bio.text = p.bio ?? '';
     }
@@ -120,10 +139,20 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
   void dispose() {
     _experience.dispose();
     _salary.dispose();
-    _cities.dispose();
     _skills.dispose();
     _bio.dispose();
     super.dispose();
+  }
+
+  Future<void> _addProvince() async {
+    final picked = await LocationPicker.showProvincePicker(context);
+    if (picked == null) return;
+    if (_selectedProvinces.any((p) => p.code == picked.code)) return;
+    setState(() => _selectedProvinces.add(picked));
+  }
+
+  void _removeProvince(TurkeyProvince p) {
+    setState(() => _selectedProvinces.removeWhere((x) => x.code == p.code));
   }
 
   Future<void> _save() async {
@@ -134,11 +163,13 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
     setState(() => _saving = true);
     try {
       final repo = ref.read(workerRepositoryProvider);
-      final cities = _cities.text
-          .split(',')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .toList();
+      // M6A — dual-write: city_codes (taxonomy) + cities (label fallback).
+      final cityCodes = <String>[
+        for (final p in _selectedProvinces) p.code,
+      ];
+      final cities = <String>[
+        for (final p in _selectedProvinces) p.name,
+      ];
       final skills = _skills.text
           .split(',')
           .map((s) => s.trim())
@@ -157,6 +188,7 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
             ? null
             : int.tryParse(_experience.text.trim()),
         cities: cities,
+        cityCodes: cityCodes,
         shiftPreference: _shift,
         salaryExpectation: _salary.text.trim().isEmpty
             ? null
@@ -254,12 +286,10 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
             ),
             const SizedBox(height: AppSpacing.l),
             const _Section('ŞEHİRLER'),
-            TextField(
-              controller: _cities,
-              decoration: const InputDecoration(
-                labelText: 'Çalışabileceğin şehirler (virgülle ayır)',
-                hintText: 'Konya, Manisa, İzmir',
-              ),
+            _CitiesPicker(
+              selected: _selectedProvinces,
+              onAdd: _saving ? null : _addProvince,
+              onRemove: _saving ? null : _removeProvince,
             ),
             const SizedBox(height: AppSpacing.l),
             const _Section('BECERİLER'),
@@ -382,6 +412,78 @@ class _ChipPicker extends StatelessWidget {
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// M6A — çoklu il seçimi: chip cluster + "İl ekle" CTA. Her chip'in
+/// üstüne tıklayınca o il kaldırılır (X icon). Boş listede sadece CTA.
+class _CitiesPicker extends StatelessWidget {
+  const _CitiesPicker({
+    required this.selected,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final List<TurkeyProvince> selected;
+  final VoidCallback? onAdd;
+  final void Function(TurkeyProvince)? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (final p in selected)
+          InputChip(
+            label: Text(p.name),
+            backgroundColor: AppColors.card,
+            labelStyle: const TextStyle(
+              color: AppColors.softGold,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+            deleteIcon: const Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: AppColors.textMuted,
+            ),
+            onDeleted: onRemove == null ? null : () => onRemove!(p),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              side: BorderSide(
+                color: AppColors.copper.withValues(alpha: 0.55),
+                width: 0.6,
+              ),
+            ),
+          ),
+        ActionChip(
+          avatar: const Icon(
+            Icons.add_rounded,
+            size: 16,
+            color: AppColors.softGold,
+          ),
+          label: const Text(
+            'İl ekle',
+            style: TextStyle(
+              color: AppColors.softGold,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+          ),
+          onPressed: onAdd,
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            side: const BorderSide(
+              color: AppColors.borderHairline,
+              width: 0.6,
+            ),
+          ),
+        ),
       ],
     );
   }
