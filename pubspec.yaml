@@ -58,6 +58,11 @@ dependencies:
   video_player: ^2.9.2
   chewie: ^1.8.5
 
+  # Profile M4 Polish — SocialPostVideo ekran dışı kayınca pause.
+  # google.dev/google/flutter packages tarafından bakım; saf Dart, native
+  # plugin yok; flutter widget tree'de visibleFraction event'i sağlar.
+  visibility_detector: ^0.4.0+2
+
   # V1 Market V2 Commit M2 — contact panel için tel: / wa.me / https:// açma.
   # Flutter resmî paket.
   url_launcher: ^6.3.1

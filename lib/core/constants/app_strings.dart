@@ -721,6 +721,9 @@ class AppStrings {
   static const String profileEditNameRequired = 'Adın boş olamaz.';
   static const String profileEditWorkerLink = 'Ustalık bilgilerini düzenle';
 
+  // Profile M4 Polish — paged posts.
+  static const String profilePostsLoadMore = 'Daha fazla göster';
+
   // V1 Messaging M1.2 — generic chat labels.
   static const String messagingDefaultTitle = 'Mesaj';
   static const String messagesUnknownUser = 'FırınNet kullanıcısı';

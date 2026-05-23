@@ -30,6 +30,16 @@ abstract class FeedRepository {
   /// public feed select için zaten yetkilendiriyor.
   Future<List<FeedPost>> listPostsByOwner(String ownerId);
 
+  /// M4 Polish — owner-scoped paged list. Profile sayfası için lazy load:
+  /// ilk yükleme `offset=0,limit=20`, "Daha fazla göster" → `offset+=limit`.
+  /// `listPostsByOwner` ile aynı filtre (is_deleted=false, owner_id=ownerId,
+  /// created_at desc); media/liked/saved mapping aynı yol.
+  Future<List<FeedPost>> listPostsByOwnerPage({
+    required String ownerId,
+    int offset = 0,
+    int limit = 20,
+  });
+
   /// V2 Social Core — donor `posts_repository.updatePost(id, caption)`
   /// muadili. Owner-only edit: caption + tags güncellenir. Supabase impl
   /// `.select('id').eq('owner_id', userId)` ile 0-row update durumunda

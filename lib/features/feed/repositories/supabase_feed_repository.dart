@@ -207,6 +207,38 @@ class SupabaseFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<List<FeedPost>> listPostsByOwnerPage({
+    required String ownerId,
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    // M4 Polish — profile lazy paging. is_deleted=false + owner_id filter
+    // korunur; range(offset, offset+limit-1) ile RPC-friendly sayfalama.
+    final from = offset;
+    final to = offset + limit - 1;
+    final rows = await _client
+        .from('feed_posts')
+        .select(_postColumns)
+        .eq('is_deleted', false)
+        .eq('owner_id', ownerId)
+        .order('created_at', ascending: false)
+        .range(from, to);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final ids = list.map((r) => r['id'] as String).toList(growable: false);
+    final liked = await _fetchLikedSet(ids);
+    final saved = await _fetchSavedSet(ids);
+    final media = await _fetchMediaByPostIds(ids);
+    return list
+        .map((row) => _fromRow(
+              row,
+              likedPostIds: liked,
+              savedPostIds: saved,
+              mediaByPostId: media,
+            ))
+        .toList(growable: false);
+  }
+
+  @override
   Future<List<FeedPost>> listPostsPage({
     int offset = 0,
     int limit = 20,

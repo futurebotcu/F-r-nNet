@@ -11,6 +11,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
@@ -35,10 +36,27 @@ class _SocialPostVideoState extends State<SocialPostVideo> {
   ChewieController? _chewie;
   bool _initFailed = false;
 
+  // M4 Polish — visibility-based pause. autoplay yok; sadece kullanıcı
+  // play'lediği videoyu ekran dışına kayınca duraklat.
+  static const double _visibleThreshold = 0.5;
+  late final Key _visibilityKey =
+      ValueKey<String>('social_post_video_${widget.url}_$hashCode');
+
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  void _onVisibilityChanged(VisibilityInfo info) {
+    final c = _controller;
+    if (c == null || !c.value.isInitialized) return;
+    if (info.visibleFraction < _visibleThreshold) {
+      if (c.value.isPlaying) {
+        c.pause();
+      }
+    }
+    // Tekrar görünür olduğunda otomatik play YOK — kullanıcı tap'lemeli.
   }
 
   Future<void> _init() async {
@@ -123,9 +141,13 @@ class _SocialPostVideoState extends State<SocialPostVideo> {
         ),
       );
     }
-    return AspectRatio(
-      aspectRatio: chewie.aspectRatio ?? widget.aspectRatio,
-      child: Chewie(controller: chewie),
+    return VisibilityDetector(
+      key: _visibilityKey,
+      onVisibilityChanged: _onVisibilityChanged,
+      child: AspectRatio(
+        aspectRatio: chewie.aspectRatio ?? widget.aspectRatio,
+        child: Chewie(controller: chewie),
+      ),
     );
   }
 }

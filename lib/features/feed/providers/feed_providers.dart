@@ -182,6 +182,72 @@ final feedPagedNotifierProvider =
   FeedPagedNotifier.new,
 );
 
+/// M4 Polish — profile-scoped paged posts.
+///
+/// `userPostsProvider` (100-cap, tek shot) profilde çok-postlu kullanıcılarda
+/// ilk açılışı şişirir. Bu notifier `listPostsByOwnerPage(offset, limit)`
+/// üzerinden lazy yükler; UI altta "Daha fazla göster" CTA'sı ile sayfa
+/// ister. Family by ownerId.
+class UserPostsPagedNotifier
+    extends FamilyAsyncNotifier<FeedPagedState, String> {
+  static const int _pageSize = 20;
+
+  @override
+  Future<FeedPagedState> build(String ownerId) async {
+    ref.watch(feedChangesProvider);
+    final repo = ref.watch(feedRepositoryProvider);
+    final first = await repo.listPostsByOwnerPage(
+      ownerId: ownerId,
+      offset: 0,
+      limit: _pageSize,
+    );
+    return FeedPagedState(
+      posts: first,
+      isLoadingMore: false,
+      hasMore: first.length == _pageSize,
+      error: null,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (current.isLoadingMore || !current.hasMore) return;
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    try {
+      final repo = ref.read(feedRepositoryProvider);
+      final next = await repo.listPostsByOwnerPage(
+        ownerId: arg,
+        offset: current.posts.length,
+        limit: _pageSize,
+      );
+      // Dedupe defansif — id çakışması append'lenmesin.
+      final existingIds = <String>{for (final p in current.posts) p.id};
+      final filtered = <FeedPost>[
+        for (final p in next)
+          if (!existingIds.contains(p.id)) p,
+      ];
+      state = AsyncData(
+        FeedPagedState(
+          posts: <FeedPost>[...current.posts, ...filtered],
+          isLoadingMore: false,
+          hasMore: next.length == _pageSize,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      state = AsyncData(
+        current.copyWith(isLoadingMore: false, error: e),
+      );
+    }
+  }
+}
+
+final userPostsPagedNotifierProvider = AsyncNotifierProvider.family<
+    UserPostsPagedNotifier, FeedPagedState, String>(
+  UserPostsPagedNotifier.new,
+);
+
 /// V1 P0 — Twitter-style yorum sayfası üstündeki post context header için
 /// tek post lookup. V1: ana feed liste içinden first-where; küçük feed
 /// performans uygun. Bulunamazsa null (yeni paylaşılmış post + cache miss

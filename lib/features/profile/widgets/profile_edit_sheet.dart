@@ -163,6 +163,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       return;
     }
     setState(() => _saving = true);
+    final previousAvatarUrl = _initial?.avatarUrl;
     try {
       final draft = (_initial ??
               const BakeryProfile(
@@ -179,8 +180,21 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
         avatarUrl: _avatarUrl,
       );
       await ref.read(profileControllerProvider.notifier).save(draft);
-      // Public profile detay + snapshot cache'leri yenilensin.
+      // M4 Polish — kaydet başarılı + yeni avatar gerçekten değiştiyse
+      // eski avatar dosyasını best-effort sil. Save fail olursa cleanup
+      // çalışmaz (eski URL hâlâ profilin canlı avatarı).
       final user = ref.read(currentAuthUserProvider);
+      if (user != null &&
+          previousAvatarUrl != null &&
+          previousAvatarUrl.isNotEmpty &&
+          previousAvatarUrl != _avatarUrl) {
+        final service = ref.read(avatarUploadServiceProvider);
+        await service?.deleteIfOwned(
+          userId: user.id,
+          oldUrl: previousAvatarUrl,
+        );
+      }
+      // Public profile detay + snapshot cache'leri yenilensin.
       if (user != null) {
         ref.invalidate(publicProfileDetailProvider(user.id));
       }

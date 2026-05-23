@@ -51,7 +51,9 @@ class SocialProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(socialProfileProvider(userId));
     final detailAsync = ref.watch(publicProfileDetailProvider(userId));
-    final postsAsync = ref.watch(userPostsProvider(userId));
+    // M4 Polish — profile postları paged. Yüksek-post kullanıcıda ilk
+    // açılış 20'lik sayfa; "Daha fazla göster" CTA ile loadMore.
+    final pagedAsync = ref.watch(userPostsPagedNotifierProvider(userId));
     final countsAsync = ref.watch(followCountsProvider(userId));
     final postCountAsync = ref.watch(socialProfilePostCountProvider(userId));
     final recipesAsync = ref.watch(publicRecipesByOwnerProvider(userId));
@@ -80,6 +82,7 @@ class SocialProfilePage extends ConsumerWidget {
             ref.invalidate(socialProfileProvider(userId));
             ref.invalidate(publicProfileDetailProvider(userId));
             ref.invalidate(userPostsProvider(userId));
+            ref.invalidate(userPostsPagedNotifierProvider(userId));
             ref.invalidate(followCountsProvider(userId));
             ref.invalidate(socialProfilePostCountProvider(userId));
             ref.invalidate(publicRecipesByOwnerProvider(userId));
@@ -169,7 +172,7 @@ class SocialProfilePage extends ConsumerWidget {
 
               // ── Gönderiler ──
               _SectionHeader(label: AppStrings.profileSectionPosts),
-              postsAsync.when(
+              pagedAsync.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                   child: Center(child: CircularProgressIndicator()),
@@ -186,8 +189,8 @@ class SocialProfilePage extends ConsumerWidget {
                     ),
                   ),
                 ),
-                data: (posts) {
-                  if (posts.isEmpty) {
+                data: (paged) {
+                  if (paged.posts.isEmpty) {
                     return const Padding(
                       padding: EdgeInsets.all(AppSpacing.l),
                       child: Center(
@@ -203,8 +206,16 @@ class SocialProfilePage extends ConsumerWidget {
                   }
                   return Column(
                     children: [
-                      for (final p in posts)
+                      for (final p in paged.posts)
                         SocialPostCard(key: ValueKey(p.id), post: p),
+                      if (paged.hasMore)
+                        _LoadMoreCta(
+                          isLoading: paged.isLoadingMore,
+                          onTap: () => ref
+                              .read(userPostsPagedNotifierProvider(userId)
+                                  .notifier)
+                              .loadMore(),
+                        ),
                     ],
                   );
                 },
@@ -830,6 +841,54 @@ class _SectionEmptyHint extends StatelessWidget {
         style: const TextStyle(
           color: AppColors.textMuted,
           fontSize: 12.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// M4 Polish — profile posts paged "Daha fazla göster" CTA.
+class _LoadMoreCta extends StatelessWidget {
+  const _LoadMoreCta({required this.isLoading, required this.onTap});
+  final bool isLoading;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.s,
+        AppSpacing.pageH,
+        AppSpacing.l,
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 44,
+        child: OutlinedButton(
+          onPressed: isLoading ? null : onTap,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textPrimary,
+            side: const BorderSide(
+              color: AppColors.borderHairline,
+              width: 0.8,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+            ),
+          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 1.8),
+                )
+              : const Text(
+                  AppStrings.profilePostsLoadMore,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                  ),
+                ),
         ),
       ),
     );

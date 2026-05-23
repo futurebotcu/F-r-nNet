@@ -8,6 +8,7 @@
 // `getPublicUrl(path)` URL'i imzasız çalışır; ProfileHeader bu URL'i
 // CachedNetworkImage ile render eder.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -61,6 +62,55 @@ class AvatarUploadService {
 
     final publicUrl = _client.storage.from(bucket).getPublicUrl(path);
     return AvatarUploadResult(path: path, publicUrl: publicUrl);
+  }
+
+  /// M4 Polish — eski avatar URL'inden bucket-içi göreceli path çıkarır.
+  /// Yalnız bizim `avatars/` bucket'ının public URL pattern'ini tanır;
+  /// yabancı URL'ler için null döner. Owner-prefix kontrolü çağıran
+  /// tarafa bırakılır (path'in ilk segmenti userId ile karşılaştırılır).
+  ///
+  /// Örnek URL:
+  ///   https://<host>/storage/v1/object/public/avatars/<userId>/avatar_<ts>.jpg
+  ///   → '<userId>/avatar_<ts>.jpg'
+  static String? extractStoragePath(String? url) {
+    if (url == null || url.isEmpty) return null;
+    const marker = '/storage/v1/object/public/$bucket/';
+    final i = url.indexOf(marker);
+    if (i < 0) return null;
+    final tail = url.substring(i + marker.length);
+    if (tail.isEmpty) return null;
+    // Path traversal koruması — `..` veya leading `/` reddedilir.
+    if (tail.startsWith('/') || tail.contains('..')) return null;
+    return tail;
+  }
+
+  /// M4 Polish — eski avatar dosyasını best-effort sil.
+  ///
+  /// Owner-prefix guard: path'in ilk klasör segmenti [userId] ile aynı
+  /// olmalı. Aksi halde no-op (yabancı kullanıcının dosyasını silmeyiz —
+  /// RLS zaten engellerdi, defansif).
+  ///
+  /// Başarısızlık (network/RLS) sessizce yutulur. Kullanıcı UX bozulmaz;
+  /// orphan dosya gelecek cleanup job'una bırakılır.
+  Future<void> deleteIfOwned({
+    required String userId,
+    required String? oldUrl,
+  }) async {
+    final path = extractStoragePath(oldUrl);
+    if (path == null) return;
+    final firstSegment = path.split('/').first;
+    if (firstSegment != userId) {
+      debugPrint(
+        '[FirinNet][AvatarUpload] skip cleanup: path owner mismatch '
+        '($firstSegment != $userId)',
+      );
+      return;
+    }
+    try {
+      await _client.storage.from(bucket).remove(<String>[path]);
+    } catch (e) {
+      debugPrint('[FirinNet][AvatarUpload] cleanup failed: $e');
+    }
   }
 
   static String _extensionOf(XFile file) {

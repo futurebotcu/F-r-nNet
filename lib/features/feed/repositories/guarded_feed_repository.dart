@@ -43,6 +43,18 @@ class GuardedFeedRepository implements FeedRepository {
       inner.listPostsByOwner(ownerId);
 
   @override
+  Future<List<FeedPost>> listPostsByOwnerPage({
+    required String ownerId,
+    int offset = 0,
+    int limit = 20,
+  }) =>
+      inner.listPostsByOwnerPage(
+        ownerId: ownerId,
+        offset: offset,
+        limit: limit,
+      );
+
+  @override
   Future<List<FeedInsight>> listInsights() => inner.listInsights();
 
   @override
