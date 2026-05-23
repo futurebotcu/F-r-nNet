@@ -1,429 +1,63 @@
+// FırınNet V1 Unified Profile M2 — /profile route redirector.
+//
+// Eski ProfileScreen public-benzeri görünüm (header + açık reçeteler +
+// settings) Unified Profile M2 ile **kaldırıldı**. Dışarıdan görülen tek
+// public profil `/u/:userId` → SocialProfilePage.
+//
+// `/profile` route geriye dönük uyumluluk için açık tutuldu; bu ekran
+// kendi user id'mize otomatik yönlendirir. Guest ise /auth'a düşer.
+//
+// Profil ayarları / hesap silme / yasal metinler → /settings.
+// Bireysel (usta) bilgi formu → /worker/profile.
+// Bakery / Üretim panelleri → /panel/bakery (commercial dashboard).
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_tokens.dart';
-import '../../../core/constants/app_strings.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/premium/firinnet_header.dart';
-import '../../../core/widgets/premium/metric_pill.dart';
-import '../../../core/widgets/premium/premium_card.dart';
-import '../../../core/widgets/premium/premium_scaffold.dart';
-import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/providers/auth_providers.dart';
-import '../../bakery_panel/models/recipe_record.dart';
-import '../../bakery_panel/providers/bakery_providers.dart';
-import '../../bakery_panel/screens/recipe_visibility_badge.dart';
-import '../../notifications/widgets/notifications_header_action.dart';
-import '../models/bakery_profile.dart';
-import '../providers/profile_provider.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileControllerProvider);
-
-    return PremiumScaffold(
-      body: SafeArea(
-        bottom: false,
-        child: profile == null
-            ? EmptyState(
-                title: 'Profil yok',
-                subtitle:
-                    'Onboarding üzerinden profil oluştur veya misafir olarak devam et.',
-                icon: Icons.person_outline_rounded,
-                actionLabel: 'Profil oluştur',
-                onAction: () => context.push(AppRoutes.createProfile),
-              )
-            : ListView(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-                children: [
-                  FirinNetHeader(
-                    title: 'Profil',
-                    showLogo: false,
-                    actions: [
-                      // V1 P1-D — Bildirimler + unread badge (shared).
-                      const NotificationsHeaderAction(),
-                      const SizedBox(width: 8),
-                      HeaderActionButton(
-                        icon: Icons.settings_outlined,
-                        tooltip: AppStrings.settingsTooltip,
-                        onTap: () => context.push(AppRoutes.settings),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pageH,
-                    ),
-                    child: _ProfileHero(profile: profile),
-                  ),
-                  const SectionLabel(title: 'İstatistikler'),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pageH,
-                    ),
-                    child: const _Stats(),
-                  ),
-                  SectionLabel(
-                    title: 'Açık Reçeteler',
-                    trailingLabel: 'Tüm reçetelerim',
-                    onTrailingTap: () => context.push(AppRoutes.recipes),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pageH,
-                    ),
-                    child: _PublicRecipesSection(),
-                  ),
-                  // V1 P1-A: önceki "Hesap" SectionLabel + _AccountList'i
-                  // (5 NO-OP tile: İşletme Bilgileri, Ürünlerim, Raporlarım,
-                  // E-posta, Ayarlar) kullanıcıyı kandırıyordu — tıklanıyor
-                  // ama hiçbir şey yapmıyordu. Bu satırlara ulaşılacak gerçek
-                  // route'lar zaten panel/recipes/report'tan açık. Section
-                  // tamamen kaldırıldı; profile ekranı sadece kim olduğunu
-                  // gösterir + tehlikeli alanı sunar.
-                  const SizedBox(height: AppSpacing.l),
-
-                  // V1.4 — Profile ekranındaki "Profilden Çık" ve "Tehlikeli
-                  // alan" Settings ekranına (`/settings`) taşındı. Hesap
-                  // aksiyonları artık tek yerden (auth_actions.dart) yönetilir.
-                  // Profile ekranı sadeleşti: hero + stats + açık reçeteler.
-                  // Settings'e erişim header sağ üstündeki gear ikonundan.
-                  const SizedBox(height: AppSpacing.l),
-                ],
-              ),
-      ),
-    );
-  }
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileHero extends StatelessWidget {
-  const _ProfileHero({required this.profile});
-  final BakeryProfile profile;
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool _redirected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _redirectIfReady());
+  }
+
+  void _redirectIfReady() {
+    if (_redirected) return;
+    final user = ref.read(currentAuthUserProvider);
+    if (!mounted) return;
+    if (user == null) {
+      _redirected = true;
+      context.go(AppRoutes.authEntry);
+      return;
+    }
+    _redirected = true;
+    context.go('${AppRoutes.userPublicProfile}/${user.id}');
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final accountLabel = profile.accountType.label;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.l),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.heroFrom, AppColors.heroTo],
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.18),
-          width: 0.8,
-        ),
-        boxShadow: AppShadow.heroGlow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.softGold, AppColors.copperMuted],
-                  ),
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.copper.withValues(alpha: 0.3),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  profile.displayName.isNotEmpty
-                      ? profile.displayName[0].toUpperCase()
-                      : 'F',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 24,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.m),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.displayName,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 21,
-                        letterSpacing: -0.3,
-                        height: 1.1,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      profile.roleBadge,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softGold,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.5,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.l),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              MetricPill(
-                label: 'Hesap',
-                value: accountLabel,
-              ),
-              if (profile.city.isNotEmpty)
-                MetricPill(
-                  label: 'Şehir',
-                  value: profile.city,
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Stats extends StatelessWidget {
-  const _Stats();
-
-  @override
-  Widget build(BuildContext context) {
-    return PremiumCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.l,
-        vertical: AppSpacing.l,
-      ),
-      child: Row(
-        children: const [
-          _StatCol(value: '12', label: 'Paylaşım'),
-          _Divider(),
-          _StatCol(value: '186', label: 'Bağlantı'),
-          _Divider(),
-          _StatCol(value: '4', label: 'Yıl'),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCol extends StatelessWidget {
-  const _StatCol({required this.value, required this.label});
-  final String value;
-  final String label;
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  const _Divider();
-  @override
-  Widget build(BuildContext context) =>
-      Container(width: 1, height: 32, color: AppColors.surfaceLine);
-}
-
-/// Profilde "Açık Reçeteler" bölümü — yalnız `is_public = true` reçeteler.
-///
-/// Sahip kendi profilini görüyor; başka kullanıcının profili ekranı şu an
-/// uygulamada yok. Bu yüzden listelenen ownerId daima current user.
-class _PublicRecipesSection extends ConsumerWidget {
-  const _PublicRecipesSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentAuthUserProvider);
-    final ownerKey = user?.id ?? 'local';
-    final async = ref.watch(publicRecipesByOwnerProvider(ownerKey));
-
-    return async.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
-        child: Center(child: CircularProgressIndicator(strokeWidth: 1.4)),
-      ),
-      error: (e, _) => PremiumCard(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        child: Text(
-          'Açık reçeteler okunamadı: $e',
-          style: const TextStyle(color: AppColors.danger, fontSize: 13),
-        ),
-      ),
-      data: (items) {
-        if (items.isEmpty) {
-          return PremiumCard(
-            padding: const EdgeInsets.all(AppSpacing.l),
-            onTap: () => context.push(AppRoutes.recipes),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppRadius.s),
-                  ),
-                  child: const Icon(
-                    Icons.public_off_outlined,
-                    color: AppColors.softGold,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.m),
-                const Expanded(
-                  child: Text(
-                    'Henüz profilinde açık reçete yok. '
-                    'Bir reçeteyi düzenleyip "Profilimde görünsün" seç.',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
-                  size: 18,
-                ),
-              ],
-            ),
-          );
-        }
-        return PremiumCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              for (var i = 0; i < items.length; i++) ...[
-                _PublicRecipeRow(recipe: items[i]),
-                if (i != items.length - 1)
-                  const Divider(
-                    height: 0,
-                    indent: AppSpacing.l,
-                    endIndent: AppSpacing.l,
-                  ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PublicRecipeRow extends StatelessWidget {
-  const _PublicRecipeRow({required this.recipe});
-  final Recipe recipe;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.l, vertical: 4),
-      onTap: () => context.push('${AppRoutes.recipes}/${recipe.id}'),
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.copper.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(AppRadius.s),
-        ),
-        child: const Icon(
-          Icons.menu_book_rounded,
-          color: AppColors.softGold,
-          size: 18,
-        ),
-      ),
-      title: Text(
-        recipe.displayTitle,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 15,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Row(
-          children: [
-            const VisibilityBadge(visibility: RecipeVisibility.public),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                '${recipe.quantities.flourKg.toStringAsFixed(0)} kg un · '
-                '${recipe.result.estimatedPieces} adet',
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: AppColors.textMuted,
-      ),
+    // Auth state stream'i geç gelebilir; user resolve olunca
+    // post-frame'de redirect tetiklenecek.
+    ref.listen<dynamic>(currentAuthUserProvider, (_, __) {
+      _redirectIfReady();
+    });
+    return const Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }

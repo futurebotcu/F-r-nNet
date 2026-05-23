@@ -41,13 +41,16 @@ void main() {
   });
 
   group('Profile gear icon — V1.4', () {
+    // Unified Profile M2: ProfileScreen redirector'a dönüştü. Public
+    // profile artık SocialProfilePage; self görüntülemede AppBar
+    // actions içinde settings gear (V1.4 entry point korundu).
     late String src;
     setUpAll(() {
-      src = File('lib/features/profile/screens/profile_screen.dart')
+      src = File('lib/features/social/profile/profile_page.dart')
           .readAsStringSync();
     });
 
-    test('FirinNetHeader actions içinde settings gear icon var', () {
+    test('AppBar actions içinde (isSelf) settings gear icon var', () {
       expect(src.contains('Icons.settings_outlined'), isTrue);
       expect(src.contains('AppStrings.settingsTooltip'), isTrue);
       expect(src.contains('AppRoutes.settings'), isTrue);

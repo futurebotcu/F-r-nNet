@@ -677,6 +677,30 @@ class AppStrings {
   static const String marketListingEmptyGuest =
       'Henüz aktif ürün/hizmet ilanı yok. Üye olunca yayınlayabilirsin.';
 
+  // V1 Unified Profile M2 — section labels + empty states.
+  static const String profileSectionAbout = 'Hakkında';
+  static const String profileSectionBakery = 'İşletme';
+  static const String profileSectionProfessional = 'Ustalık Bilgisi';
+  static const String profileSectionPublicRecipes = 'Açık Reçeteler';
+  static const String profileSectionPosts = 'Gönderiler';
+  static const String profileEditCta = 'Profili düzenle';
+  static const String profileEmptyProfessional =
+      'Henüz mesleki bilgi eklenmemiş.';
+  static const String profileEmptyBakery = 'Henüz işletme bilgisi yok.';
+  static const String profileEmptyRecipes = 'Açık reçete yok.';
+  // Profile Social Sprint — preview limiti aşıldığında "+N reçete daha".
+  static const String profileRecipesMoreSuffix = 'reçete daha';
+  static const String profileExperienceCurrent = 'Şu an';
+  static const String profileExperienceYearsLabel = 'yıl deneyim';
+  static const String profileWorkerSkillsLabel = 'Beceriler';
+  static const String profileWorkerCitiesLabel = 'Tercih edilen şehirler';
+  static const String profileWorkerShiftLabel = 'Vardiya tercihi';
+  static const Map<String, String> profileAccountTypeLabels = <String, String>{
+    'commercial': 'Ticari',
+    'individual': 'Bireysel',
+    'wholesaler': 'Toptancı',
+  };
+
   // V1 Messaging M1.2 — generic chat labels.
   static const String messagingDefaultTitle = 'Mesaj';
   static const String messagesUnknownUser = 'FırınNet kullanıcısı';

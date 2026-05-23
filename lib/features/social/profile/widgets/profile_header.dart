@@ -1,21 +1,29 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../profile/models/public_profile_detail.dart';
 import '../../models/social_profile.dart';
 
 /// Donor (itsezlife) `user_profile_header.dart` pattern — avatar + name +
 /// role badge + city + (kendi profilinde "Bu senin profilin" rozet).
+///
+/// V1 Profile Social Sprint — opsiyonel `detailAsync` ile avatar_url ve
+/// worker fallback'li `effectiveProfessionBadge` desteklenir. Eski snapshot
+/// hâlâ displayName + initial için authoritative.
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({
     super.key,
     required this.profileAsync,
     required this.isSelf,
+    this.detailAsync,
   });
 
   final AsyncValue<SocialProfile> profileAsync;
+  final AsyncValue<PublicProfileDetail?>? detailAsync;
   final bool isSelf;
 
   @override
@@ -37,30 +45,14 @@ class ProfileHeader extends StatelessWidget {
           style: TextStyle(color: AppColors.textSecondary),
         ),
         data: (p) {
-          final role = p.professionBadge;
+          final detail = detailAsync?.asData?.value;
+          final avatarUrl = detail?.header.avatarUrl;
+          final role = detail?.effectiveProfessionBadge ?? p.professionBadge;
           final city = p.city;
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.softGold, AppColors.copperMuted],
-                  ),
-                  borderRadius: BorderRadius.circular(AppRadius.l),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  p.initial,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 32,
-                  ),
-                ),
-              ),
+              _Avatar(avatarUrl: avatarUrl, initial: p.initial),
               const SizedBox(width: AppSpacing.l),
               Expanded(
                 child: Column(
@@ -149,6 +141,51 @@ class ProfileHeader extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.avatarUrl, required this.initial});
+
+  final String? avatarUrl;
+  final String initial;
+
+  @override
+  Widget build(BuildContext context) {
+    const double size = 72;
+    final borderRadius = BorderRadius.circular(AppRadius.l);
+    final hasUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
+    final fallback = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.softGold, AppColors.copperMuted],
+        ),
+        borderRadius: borderRadius,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w800,
+          fontSize: 32,
+        ),
+      ),
+    );
+    if (!hasUrl) return fallback;
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: CachedNetworkImage(
+        imageUrl: avatarUrl!,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => fallback,
+        errorWidget: (_, __, ___) => fallback,
       ),
     );
   }

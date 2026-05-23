@@ -129,14 +129,21 @@ void main() {
       'Profile header eski private _NotificationsHeaderAction kaldırıldı, '
       'shared widget kullanılıyor',
       () {
-        final src = File(
+        // Unified Profile M2: ProfileScreen redirector'a dönüştü; public
+        // görünüm SocialProfilePage'e taşındı. Bildirim entry point feed
+        // header'da NotificationsHeaderAction olarak yaşar.
+        final feedSrc = File(
+          'lib/features/social/feed/social_feed_page.dart',
+        ).readAsStringSync();
+        expect(feedSrc.contains('NotificationsHeaderAction'), isTrue,
+            reason: 'Feed header bildirim shared widget içermeli');
+        // ProfileScreen redirector — eski private widget reintro
+        // engelleme invariant'ı korunur.
+        final profileSrc = File(
           'lib/features/profile/screens/profile_screen.dart',
         ).readAsStringSync();
-        expect(src.contains('NotificationsHeaderAction'), isTrue);
-        // Underscore'lu private widget tamamen kaldırılmış olmalı —
-        // copy/paste reintro engelleme.
-        expect(src.contains('_NotificationsHeaderAction'), isFalse,
-            reason: 'Private kopya kaldırılmalı, shared widget kullanılmalı');
+        expect(profileSrc.contains('_NotificationsHeaderAction'), isFalse,
+            reason: 'Private kopya reintro edilmemiş olmalı');
       },
     );
   });

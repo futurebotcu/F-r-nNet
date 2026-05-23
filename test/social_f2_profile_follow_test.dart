@@ -128,8 +128,14 @@ void main() {
     });
 
     test('Kendi profilinde follow button gizli', () {
+      // Unified Profile M2: ternary syntax (isSelf ?  ... : ...) ile
+      // self için _SelfEditCta, non-self için Row(Follow+Mesaj) render
+      // edilir. Multi-line düzen nedeniyle invariant'ı whitespace-tolerant
+      // bir regex ile kontrol ediyoruz.
+      final hasGuard = src.contains('if (!isSelf)') ||
+          RegExp(r'isSelf\s*\?\s*_SelfEditCta').hasMatch(src);
       expect(
-        src.contains('if (!isSelf)'),
+        hasGuard,
         isTrue,
         reason: 'isSelf true ise FollowButton render edilmemeli',
       );
