@@ -659,7 +659,12 @@ class AppStrings {
   static const String jobOfferFieldTitleRequired = 'Başlık gerekli';
   static const String jobOfferFieldRole = 'Rol / Pozisyon';
   static const String jobOfferFieldRoleHint = 'Örn. Ekmek Ustası';
-  static const String jobOfferFieldRoleRequired = 'Rol gerekli';
+  static const String jobOfferFieldRoleRequired = 'Aranan rolü seç.';
+  // M8 Cleanup — bireysel role guard + salary validation messages.
+  static const String jobOfferCommercialOnly =
+      'Usta Arıyor ilanı vermek için ticari veya toptancı hesap gerekir.';
+  static const String jobOfferSalaryNegative = 'Maaş negatif olamaz.';
+  static const String jobOfferSalaryMinGtMax = 'Asgari maaş azamiyi aşamaz.';
   static const String jobOfferFieldCity = 'Şehir';
   static const String jobOfferFieldDistrict = 'İlçe';
   static const String jobOfferFieldSalaryMin = 'Ücret min (₺)';
