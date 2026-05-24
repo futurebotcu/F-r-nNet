@@ -534,6 +534,12 @@ class _ActionsRow extends StatelessWidget {
               context.push('${AppRoutes.dealers}/$dealerId/adjustment'),
         ),
         _ActionChip(
+          icon: Icons.analytics_outlined,
+          label: AppStrings.dealerActionReport,
+          accent: AppColors.info,
+          onTap: () => context.push(AppRoutes.dealerReport(dealerId)),
+        ),
+        _ActionChip(
           icon: Icons.ios_share_rounded,
           label: AppStrings.dealerActionShare,
           accent: AppColors.copper,

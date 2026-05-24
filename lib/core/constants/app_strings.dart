@@ -1110,6 +1110,18 @@ class AppStrings {
   static const String dealerActionShare = 'Hesap Paylaş';
   static const String dealerActionAdjustment = 'Düzeltme';
   static const String dealerActionAddPrice = 'Fiyat ekle';
+  static const String dealerActionReport = 'Rapor';
+
+  // Aralık Raporu (Sprint 3 — date-range metrics)
+  static const String dealerReportTitle = 'Aralık Raporu';
+  static const String dealerReportPeriodLast30 = 'Son 30 gün';
+  static const String dealerReportPeriodPrevWeek = 'Geçen hafta';
+  static const String dealerReportPeriodPrevMonth = 'Geçen ay';
+  static const String dealerReportMetricNet = 'Net Değişim';
+  static const String dealerReportMetricTxCount = 'İşlem Sayısı';
+  static const String dealerReportEmptyTitle = 'Bu aralıkta hareket yok';
+  static const String dealerReportEmptyBody =
+      'Farklı bir aralık seçerek bayinin geçmiş hareketlerini gör.';
 
   // Prices empty
   static const String dealerPricesEmpty =
