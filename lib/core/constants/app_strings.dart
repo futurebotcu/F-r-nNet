@@ -1143,6 +1143,19 @@ class AppStrings {
   static const String dealerOverviewEmptyActivity = 'Henüz hareket yok';
   static const String dealerOverviewSeeAll = 'Tümünü Gör';
 
+  // Bayi Defteri Nabız (Sprint 3.5 — donor concept-lift EMA pattern)
+  static const String dealerPulseTitle = 'NABIZ';
+  static const String dealerPulseSubtitle =
+      'Bugünün hareketi son 20 günlük ortalamayla karşılaştırılır';
+  static const String dealerPulseMetricDelivery = 'Teslimat';
+  static const String dealerPulseMetricPayment = 'Tahsilat';
+  static const String dealerPulseMetricNetChange = 'Net Değişim';
+  static const String dealerPulseBaselineSuffix = 'baseline';
+  static const String dealerPulseInsufficientTitle = 'Pulse hesaplanamıyor';
+  static const String dealerPulseInsufficientBody =
+      'En az 3 günlük geçmiş hareket olduğunda nabız bilgisi gelir.';
+  static const String dealerPulseFlat = 'normalde';
+
   // Bayi seçici sheet (Sprint 6B)
   static const String dealerPickerTitle = 'Bayi Seç';
   static const String dealerPickerFilterAll = 'Tümü';

@@ -15,6 +15,7 @@ import '../models/dealer.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../widgets/dealer_picker_sheet.dart';
+import '../widgets/dealer_pulse_card.dart';
 import '../widgets/quick_payment_sheet.dart';
 
 /// Bayi Defteri Genel Bakış ekranı (Sprint 6B).
@@ -55,6 +56,9 @@ class DealerOverviewScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.m),
                 _KpiGrid(overview: o),
+                const SizedBox(height: AppSpacing.l),
+                // Sprint 3.5: Donor concept-lift EMA pulse card.
+                const DealerPulseCard(),
                 const SizedBox(height: AppSpacing.l),
                 const _RecentActivitySection(),
                 const SizedBox(height: AppSpacing.l),

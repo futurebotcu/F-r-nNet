@@ -8,6 +8,7 @@ import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
+import '../models/dealer_pulse_snapshot.dart';
 import '../models/dealer_range_metrics.dart';
 import '../models/dealer_transaction.dart';
 import '../repositories/dealer_repository.dart';
@@ -17,6 +18,7 @@ import '../repositories/supabase_dealer_repository.dart';
 import '../services/dealer_balance_service.dart';
 import '../services/dealer_pdf_builder.dart';
 import '../services/dealer_period.dart';
+import '../services/dealer_pulse_service.dart';
 import '../services/dealer_share_builder.dart';
 
 /// Bayi Defteri mini-app shell aktif tab indeksi (Sprint 6B).
@@ -44,6 +46,21 @@ final allTransactionsProvider =
   ref.watch(dealerChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.listAllTransactions();
+});
+
+/// Bayi Defteri Nabız servisi (Sprint 3.5, donor concept-lift EMA pattern).
+final dealerPulseServiceProvider = Provider<DealerPulseService>((ref) {
+  return const DealerPulseService();
+});
+
+/// Bayi Defteri "Nabız" snapshot (Sprint 3.5). Bugünün delivery/payment/
+/// netChange'i + son 20 non-empty gün EMA baseline'ı. Mevcut
+/// `allTransactionsProvider` cache'ini paylaşır — backend dokunulmaz.
+final dealerPulseProvider =
+    FutureProvider.autoDispose<DealerPulseSnapshot>((ref) async {
+  final txs = await ref.watch(allTransactionsProvider.future);
+  final svc = ref.watch(dealerPulseServiceProvider);
+  return svc.compute(transactions: txs);
 });
 
 /// V1.3.3 — Guarded wrapper ile sarılı dealer repository.

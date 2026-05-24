@@ -17,6 +17,7 @@ ilgili kaynak dosyada per-file header ile belirtilir.
 | FırınNet hedef yolu | Donor kaynak yolu | Sprint |
 |---|---|---|
 | `lib/features/dealers/widgets/cash_tendered_calculator.dart` | `lib/ui/order/checkout/checkout_cashier_calculator.dart` | 6C |
+| `lib/core/util/ema_calculator.dart` | `lib/helpers/analysis/ema_calculator.dart` | 3.5 |
 
 ### Yapılan değişiklikler (cash_tendered_calculator.dart)
 
@@ -35,6 +36,19 @@ ilgili kaynak dosyada per-file header ile belirtilir.
   (`isOperating`), `_calc` operatör helper'ı ve internal sınıflar
   (`_CalculatorAction`, `_CalculatorPostfixAction`, `_SingleField`)
   **donor'dan birebir korundu**
+
+### Yapılan değişiklikler (ema_calculator.dart, Sprint 3.5)
+
+- **Lift-as-is**: 14 satırlık donor sınıfı `EMACalculator` birebir
+  kopyalandı; davranış aynı (`weightFactor = 2/(length+1)`, `calculate`,
+  `feed`)
+- Sınıf adı, alan adları ve metodlar **donor'dan birebir korundu**
+- Yorum satırları İngilizce'den Türkçe'ye çevrildi (semantik değişiklik
+  yok); satır sayısı korundu
+- Donor'un `GoalsCardView` widget'ı **kopyalanmadı**: FırınNet'te
+  `DealerPulseCard` widget'ı bu helper'ı kullanarak sıfırdan yazıldı
+  (concept-lift); EMA-over-20-non-empty-days baseline pattern adapte
+  edildi, ancak donor'un OrderSummary/Seller/Cache bağı alınmadı
 
 ### Apache License 2.0 (tam metin)
 
