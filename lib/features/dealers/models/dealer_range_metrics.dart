@@ -51,3 +51,59 @@ class DealerRangeMetrics {
     );
   }
 }
+
+/// Çok-bayi (toplu) aralık metrikleri (Sprint Raporlar).
+///
+/// `DealerRangeMetrics`'in **aktif bayiler** üzerinden toplanmış agregat
+/// versiyonu. Per-dealer dağılımı ayrıca [perDealerNet] olarak tutar —
+/// Raporlar tab "Bayi Bazlı Rapor" listesi tek pass'te dealer adına ek
+/// olarak bu periyottaki net değişimi de gösterebilsin diye.
+///
+/// `activeDealerCount` toplam aktif bayi sayısı (per-dealer metric boş
+/// olsa bile dealer sayılır — özet başlığı için).
+class DealerAggregateRangeMetrics {
+  const DealerAggregateRangeMetrics({
+    required this.start,
+    required this.end,
+    required this.totalDelivery,
+    required this.totalReturn,
+    required this.totalPayment,
+    required this.totalAdjustment,
+    required this.netChange,
+    required this.txCount,
+    required this.activeDealerCount,
+    required this.perDealerNet,
+  });
+
+  final DateTime start;
+  final DateTime end;
+  final double totalDelivery;
+  final double totalReturn;
+  final double totalPayment;
+  final double totalAdjustment;
+  final double netChange;
+  final int txCount;
+  final int activeDealerCount;
+
+  /// `dealerId -> netChange` map. UI tarafı dealer listesi sıralarken /
+  /// chip gösterirken kullanır.
+  final Map<String, double> perDealerNet;
+
+  factory DealerAggregateRangeMetrics.empty({
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return DealerAggregateRangeMetrics(
+      start: start,
+      end: end,
+      totalDelivery: 0,
+      totalReturn: 0,
+      totalPayment: 0,
+      totalAdjustment: 0,
+      netChange: 0,
+      txCount: 0,
+      activeDealerCount: 0,
+      perDealerNet: const {},
+    );
+  }
+}

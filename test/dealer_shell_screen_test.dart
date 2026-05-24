@@ -188,14 +188,16 @@ void main() {
       );
     });
 
-    testWidgets('Raporlar tab → placeholder', (tester) async {
+    testWidgets('Raporlar tab → DealerReportsTabScreen içerik', (tester) async {
       await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
       await _tapNavTab(tester, AppStrings.dealerShellTabReports);
 
+      // Periyot segmenti + Genel Toplam başlığı görünür (artık placeholder yok).
+      expect(find.text(AppStrings.dealerReportsPeriodLast30), findsOneWidget);
       expect(
-        find.text(AppStrings.dealerShellPlaceholderReportsBody),
+        find.text(AppStrings.dealerReportsSummaryTitle.toUpperCase()),
         findsOneWidget,
       );
     });

@@ -1188,11 +1188,24 @@ class AppStrings {
   static const String dealerShellTabReports = 'Raporlar';
   static const String dealerShellTabEndOfDay = 'Gün Sonu';
   static const String dealerShellPlaceholderTitle = 'Yakında';
-  static const String dealerShellPlaceholderReportsBody =
-      'Bir bayiye gir, Rapor sekmesinden aralık raporu açabilirsin. '
-      'Toplu rapor yakında.';
   static const String dealerShellPlaceholderEndOfDayBody =
       'Bayi başına gün sonu mutabakatı yakında.';
+
+  // Raporlar tab (mini-app — toplu + bayi bazlı)
+  static const String dealerReportsPeriodLast7 = 'Son 7 gün';
+  static const String dealerReportsPeriodLast30 = 'Son 30 gün';
+  static const String dealerReportsPeriodThisMonth = 'Bu ay';
+  static const String dealerReportsSummaryTitle = 'Genel Toplam';
+  static const String dealerReportsByDealerTitle = 'Bayi Bazlı Rapor';
+  static const String dealerReportsActiveDealersLabel = 'aktif bayi';
+  static const String dealerReportsEmpty = 'Bu aralıkta hareket yok';
+  static const String dealerReportsNoActiveDealers =
+      'Henüz aktif bayi yok. Bayiler sekmesinden bayi ekle.';
+  static const String dealerReportsKpiDelivery = 'Teslimat';
+  static const String dealerReportsKpiReturn = 'İade';
+  static const String dealerReportsKpiPayment = 'Tahsilat';
+  static const String dealerReportsKpiNetChange = 'Net Değişim';
+  static const String dealerReportsKpiTxCount = 'İşlem Sayısı';
 
   // Aralık Raporu (Sprint 3 — date-range metrics)
   static const String dealerReportTitle = 'Aralık Raporu';

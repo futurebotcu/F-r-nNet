@@ -14,6 +14,7 @@ import '../providers/dealer_providers.dart';
 import 'dealer_activity_screen.dart';
 import 'dealer_list_screen.dart';
 import 'dealer_overview_screen.dart';
+import 'dealer_reports_tab_screen.dart';
 
 /// Bayi Defteri mini-app shell (Sprint 6A).
 ///
@@ -65,7 +66,8 @@ class DealerShellScreen extends ConsumerWidget {
           DealerListScreen(),
           // Sprint Activity: placeholder yerine cross-dealer hareket listesi.
           DealerActivityScreen(),
-          _ReportsPlaceholderTab(),
+          // Sprint Raporlar: toplu + bayi bazlı rapor.
+          DealerReportsTabScreen(),
           _EndOfDayPlaceholderTab(),
         ],
       ),
@@ -101,21 +103,6 @@ class DealerShellScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Genel Bakış tab — Sprint 6A placeholder.
-///
-/// Raporlar tab placeholder — toplu rapor için ileride.
-class _ReportsPlaceholderTab extends StatelessWidget {
-  const _ReportsPlaceholderTab();
-  @override
-  Widget build(BuildContext context) {
-    return _PlaceholderScaffold(
-      title: AppStrings.dealerShellTabReports,
-      icon: Icons.analytics_rounded,
-      body: AppStrings.dealerShellPlaceholderReportsBody,
     );
   }
 }
