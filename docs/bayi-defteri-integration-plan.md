@@ -454,3 +454,268 @@ Bağımsız user-facing gap'ler, 3 ayrı PR:
 - `supabase/migrations/20260524200150_dealer_ledger_created_by_guards.sql` (C2, untracked)
 - `supabase/migrations/20260524200200_dealer_ledger_rls_staff.sql` (C2, untracked)
 - `scripts/admin/dealer_staff_v1_smoke.sql` (C2, untracked)
+
+---
+
+## 11. v2 Patch — Lift-Agresif + Mini-App Shell (2026-05-24)
+
+### Neden bu patch
+Phase 1 ve Sprint 3'te **fazla muhafazakar davrandık.** İlk kural "donor
+kodu kopyalama, sıfırdan yaz" idi ve birebir uyguladık. Ama bu kural
+**her durumda doğru değildi** — küçük donor parçaları için (50–200
+satır, lisans-temiz, yapısal olarak FırınNet ile 1:1) sıfırdan yazmak
+zaman + hesap doğruluğu + UX olgunluğu kaybıdır.
+
+Ayrıca asıl ürün vizyonu **"Bayi Defteri = FırınNet içinde bir mini-app"**
+yeterince yansıtılmadı. Mevcut feature klasör yapısı doğru ama
+**iç navigasyon, iç dashboard, hızlı eylemler ve onboarding yok.**
+
+### Yön değişikliği — 6 madde
+
+1. **Mini-app shell hedefi açık:** Bayi Defteri'ne giren kullanıcı
+   (bireysel veya ticari) ayrı bir iş uygulamasına girmiş gibi
+   hissedecek. Kendi ana sayfası (Genel Bakış), kendi iç navigasyonu
+   (Bayiler / Hareketler / Raporlar / Gün Sonu / Şoförler / Hızlı İşlem)
+   ve kendi onboarding'i olacak.
+
+2. **Lift-agresif strateji benimsendi:** Donor `flutter-pos-system`'in
+   uygun, lisans-temiz (Apache-2.0), yapısal olarak 1:1 eşleşen
+   parçaları **doğrudan kod olarak alınacak.** Concept-only yaklaşımı
+   yalnız implementasyon yolu fundamentally divergent olduğunda
+   (örn. SQL aggregate vs in-memory) kullanılır.
+
+3. **Doğrudan lift edilecek donor dosyaları kilit listesi:**
+
+   | Donor dosya | Sprint | Backend? | Lift tipi |
+   |---|---|---|---|
+   | `lib/ui/order/checkout/checkout_cashier_calculator.dart` | **6 (ilk)** | Hayır | Pure widget, callback'li |
+   | `lib/models/repository/stashed_orders.dart` | 2 | Evet (yeni tablo) | 50 satır, 4-metod schema |
+   | `lib/ui/cashier/surplus_page.dart` | 4 | Evet (yeni tablo) | 4-kolon DataTable + dialog |
+   | `lib/models/repository/cart.dart` Cart pattern | 5C | Evet (Postgres function) | Multi-item state + price calc |
+   | `lib/ui/analysis/widgets/goals_card_view.dart` EMA mantığı | 3.5 (sonra) | Hayır | EMA-over-20-days baseline |
+   | `lib/models/repository/seller.dart` `getMetricsInPeriod` SQL pattern | Sprint 11 (yeni) | Evet (RPC) | DB-side aggregate, perf upgrade |
+
+4. **"Sadece UI helper yeterli değil" kararı:** Donor'dan alınacak
+   parçalar **işlevsel/hesaplama mantığı** taşıyan dosyalar olacak —
+   yalnız generic widget değil. Cart price calculation, cashier change
+   finding, stashed serialization, period bucket SQL, EMA baseline:
+   bunlar **çalışan iş mantığı**. Sadece kartlar/butonlar yetmez.
+
+5. **Bayi Defteri içindeki gap'ler plana eklendi:**
+   - İç dashboard (Genel Bakış) yok — eklenecek
+   - İç navigasyon (tab/bottom nav) yok — eklenecek
+   - Onboarding (yeni kullanıcı rehberi) yok — eklenecek
+   - Hızlı eylem (FAB / speed dial) yok — eklenecek
+   - Bayi düzenleme + pasifleştirme UI yok — Sprint 5'te zaten
+
+6. **Yeni sprint: Sprint 6 — Bayi Defteri Mini-App Shell + Donor Lift.**
+   Sıradaki gerçek iş. Sprint 3.5 (DealerPulseCard EMA) sonraya
+   atıldı çünkü öncelikle shell + ilk lift'in production'da
+   yerleştiğini görmek gerek.
+
+### Sprint roadmap güncelleme
+
+Madde 9'daki orijinal 5-sprint sırası **revize edildi:**
+
+| Sıra | Sprint | Backend gerektirir? | Notu |
+|---|---|---|---|
+| **Yeni 1** | **Sprint 6: Mini-app shell + ilk lift** | Hayır | **Sıradaki iş** |
+| 2 | Sprint 1: Staff Dart bağlantısı | EVET (C2 apply, izole env şart) | Gizli teknik borç |
+| 3 | Sprint 2: Draft tx (`stashed_orders` lift) | EVET (yeni tablo) | Sprint 1'in tamamlayıcısı |
+| 4 | Sprint 3.5: DealerPulseCard EMA (`GoalsCardView` lift) | Hayır | Pulse card; shell + range UI'a oturur |
+| 5 | Sprint 4: Settlement (`surplus_page` lift) | EVET (yeni tablo) | Gün sonu mutabakat |
+| 6 | Sprint 5: Edit/Delete + multi-item (`Cart` lift) | EVET (Postgres function) | UX gap'leri |
+| 7 | Sprint 11: DB-side aggregate (`getMetrics` SQL) | EVET (Supabase view/RPC) | Perf upgrade, scaling sprint |
+
+Sprint 3 (Range UI) ✅ tamamlandı — main'de (`8c112cb`).
+
+### v2 patch karar geçmişi entry'si
+
+- **2026-05-24 (v2 patch)** Lift-agresif yön benimsendi; mini-app shell
+  hedefi açıkça yazıldı; Sprint 6 yeni sprint olarak tanımlandı; Sprint
+  3.5 sonraya alındı; 6 donor dosyası direct-lift için listelendi.
+  Kullanıcı eleştirisi: "fazla muhafazakar davrandık" — kabul edildi.
+
+---
+
+## 12. Sprint 6 Plan — Bayi Defteri Mini-App Shell + Donor Lift
+
+### Hedef
+
+Bayi Defteri'ni FırınNet içinde **ayrı bir iş uygulaması gibi** çalışan
+mini-app'e dönüştürmek + ilk donor code lift'ini yapmak. **Backend
+dokunulmaz** (izole env şart değil). Ürün hissi + ilk Apache-2.0 NOTICE
+disiplinini kurar.
+
+### 10 sub-soru — cevapları
+
+#### S1. Mevcut `/dealers` root nasıl mini-app ana sayfaya dönüşecek?
+`/dealers` route'u `DealerListScreen` yerine **yeni `DealerShellScreen`**
+açar. Shell, içinde `IndexedStack` ile tab'lı yapı sunar; ilk tab
+**Genel Bakış (DealerOverviewScreen, yeni)**. Eski `DealerListScreen`
+ikinci tab (Bayiler) olur. Mevcut alt-route'lar (`/dealers/:id`,
+`/dealers/:id/delivery`, vs.) **dokunulmaz** — shell'in dışından push
+edilirler. Backward compatibility tam.
+
+#### S2. Bayi listesi nereye taşınacak?
+`DealerListScreen` **olduğu gibi** kalır. Shell'in "Bayiler" tab'ında
+embedlenir. Sadece `Scaffold` wrapper'ı küçük: zaten `PremiumScaffold`
+kullanıyor, shell'in içine sığar. Mevcut AppBar action'ları (Bayi ekle)
+shell-level AppBar'a taşınabilir.
+
+#### S3. Genel Bakış ekranı (`DealerOverviewScreen`) nasıl olacak?
+**Mevcut `dealersOverviewProvider` zaten KPI üretiyor**
+(totalDealers / activeDealers / openBalance / todayDelivered /
+todayCollected). Yeni ekran:
+- Üstte 5 KPI tile (mevcut sprint 3 `_MetricTile` paterni)
+- Ortada "Bugünün hareketleri" mini-listesi (son 5 tx tüm bayilerden)
+- Altta "Hızlı eylem" CTA satırı (Hızlı Teslimat / Hızlı Tahsilat)
+- Sağ üst köşe: arama (tüm bayilerde) — opsiyonel
+
+#### S4. Hızlı işlem butonları nasıl olacak?
+**Speed dial FAB** shell'de. 3 aksiyon:
+1. **Hızlı Teslimat** — modal bottom sheet: bayi seç (search) + ürün +
+   miktar + birim fiyat → mevcut `addTransaction(delivery)`
+2. **Hızlı Tahsilat** — modal: bayi seç + tutar +
+   **donor `cashier_calculator.dart` widget'ı** (Sprint 6'nın ilk lift'i)
+3. **Hızlı İade** — modal: bayi seç + ürün + miktar → addTransaction
+   (returned)
+
+Modal'lar mevcut form ekranlarını dahil etmez; basitleştirilmiş bottom
+sheet ile bayi seçimi ekler. Detaylı düzenleme detail screen'de.
+
+#### S5. İç navigasyon nasıl olacak?
+**Bottom NavigationBar** shell scaffold'unda. 5 visible tab:
+- 🏠 Genel Bakış
+- 📋 Bayiler
+- 📊 Raporlar (placeholder Sprint 3.5 / 4 doldurana kadar)
+- 🌗 Gün Sonu (placeholder Sprint 4 doldurana kadar)
+- ⋯ Daha (Şoförler / Ayarlar — Sprint 1+ doldurur)
+
+`IndexedStack` state'i korur — tab arası geçişte scroll konum + selection
+korunur. Detail screen'lerden geri dönüldüğünde son tab açık kalır.
+
+#### S6. Donor'dan ilk hangi kod dosyası doğrudan alınacak?
+**`lib/ui/order/checkout/checkout_cashier_calculator.dart`** (Apache-2.0).
+Sebep:
+- Pure widget (sadece UI + callback) — backend bağı yok
+- Provider/sqflite bağı yok — `ValueNotifier<num>` ile state
+- 100-150 satır — küçük yüzey
+- "Hızlı Tahsilat" modal'ında doğrudan kullanılır
+- Para üstü hesabı (donor `findPossibleChange` mantığı widget içinde
+  veya çağıran kodda)
+
+Hedef yol: `lib/features/dealers/widgets/cash_tendered_calculator.dart`.
+Class adı `CashTenderedCalculator`. Constructor: `({required num price,
+required ValueChanged<num> onPaidChanged})`. İçeri inputs + numeric
+keypad + change-display.
+
+#### S7. Apache-2.0 attribution / `THIRD_PARTY_LICENSES` nasıl eklenecek?
+
+**Sprint 6 ilk lift = ilk attribution disiplini kurulumu.**
+
+1. **Repo root'a `THIRD_PARTY_LICENSES.md` ekle.** İçeriği:
+   - Başlık + amaç (FırınNet kullandığı OSS lift'leri listeler)
+   - "flutter-pos-system" section: repo URL + commit SHA + lisans tipi
+     (Apache-2.0) + lift edilen dosyaların listesi + LICENSE tam metni
+     (veya link)
+2. **Lift edilen her dosyanın üstüne Apache header:**
+   ```
+   // Adapted from evan361425/flutter-pos-system <commit-SHA>,
+   // Apache-2.0. See THIRD_PARTY_LICENSES.md.
+   ```
+3. **README.md'ye "Third-Party" bölümü** (3-4 satır) + LICENSES dosyasına
+   link.
+4. **Görsel: NOTICE dosyası gerekli mi?** Apache-2.0 §4: değiştirilmiş
+   eserlerde NOTICE varsa preserve edilmeli. Donor repo'da `NOTICE`
+   dosyası yok (sadece `LICENSE`) → NOTICE biz yaratmıyoruz. Yeterli.
+
+#### S8. Hangi parçalar backend gerektirmeden yapılabilir?
+**Sprint 6'nın TAMAMI backend-free.** Çünkü:
+- Shell route + tab nav → UI
+- Genel Bakış → mevcut `dealersOverviewProvider` (mevcut tx üzerinden)
+- Hızlı eylem modal'ları → mevcut `addTransaction` repo metodlarını
+  çağırır (shema değişmedi)
+- `cashier_calculator` lift → pure widget
+- Şoförler tab → placeholder ("Yakında: Sprint 1")
+- Raporlar tab → Sprint 3 ekranını embedler
+- Gün Sonu tab → placeholder ("Yakında: Sprint 4")
+
+#### S9. Hangi parçalar C2/izole Supabase gerektirir?
+**Sprint 6'da hiçbiri.** Tüm gereksinimler Sprint 1 ve sonrasında:
+- Şoförler tab gerçek içerik → Sprint 1 (`dealer_staff` RPC + UI)
+- Draft tx inbox tab → Sprint 2 (yeni tablo)
+- Gün Sonu mutabakat → Sprint 4 (yeni tablo)
+- Multi-item teslimat → Sprint 5 (Postgres function)
+
+Sprint 6 sona erdiğinde shell hazır + placeholderlar doldurmaya hazır.
+
+#### S10. Uygulama boyutu / performance etkisi?
+
+**Boyut:**
+- Yeni dosya satırı: ~600-800 (shell + overview + 3 modal + calculator lift)
+- Yeni dep: **0** (Apache lift dosyası içinde standalone)
+- APK büyüme: negligible (<50 KB)
+
+**Performance:**
+- `dealersOverviewProvider` zaten panel hero'da çağrılıyor; shell default
+  tab'da da çağrılır — **aynı yük, çift fetch yok** (Riverpod cache)
+- Tab geçişleri `IndexedStack` ile lazy değil; ilk açılışta tüm tab'lar
+  build edilir → `ConsumerWidget`'ları autoDispose family ise yalnız
+  aktif olunca data fetch eder → real impact düşük
+- Speed dial FAB: çok hafif Material widget
+- `dealer_changes_provider` zaten her yazmadan invalidate ediyor → tab'lar
+  otomatik refresh, manuel hooks gerekmez
+
+**Risk:**
+- `dealersOverviewProvider`'ın bilinen scaling sorunu (50+ bayi × 50k tx)
+  Sprint 6'da değişmez; Sprint 11 (DB-side aggregate) çözer
+
+### Önerilen 3 sub-phase
+
+Sprint 6'yı tek branch + tek PR yerine 3 sub-phase olarak yapabiliriz:
+
+| Phase | İçerik | Efor | Yan etki |
+|---|---|---|---|
+| **6A** | Shell skeleton: route restructure + IndexedStack + 5 tab placeholder + Bayiler tab içine mevcut DealerListScreen embed | M (~2-3 gün) | Mevcut /dealers UX aynı kalır; sadece "Genel Bakış" varsayılan açılır |
+| **6B** | Genel Bakış ekranı: 5 KPI tile + recent tx + hızlı eylem CTA + speed dial FAB | M (~2-3 gün) | Sprint 6A tamamlandıktan sonra anlamlı |
+| **6C** | İlk donor lift: `cashier_calculator.dart` → CashTenderedCalculator widget + Hızlı Tahsilat modal'a entegre + THIRD_PARTY_LICENSES.md kurulumu | S (~1-2 gün) | İlk Apache attribution disiplini |
+
+**Toplam Sprint 6 efor: ~5-8 gün full-time tek dev.** Sub-phase'ler ayrı
+PR'lar olabilir veya tek PR'da toplanabilir — kullanıcı tercihine bağlı.
+
+### Risk / kararsızlık noktaları
+
+| Risk | Şiddet | Mitigasyon |
+|---|---|---|
+| Shell'e geçince mevcut `/dealers` deep-link'leri bozulur mu? | DÜŞÜK | Toptancı redirect ve detail/form alt-route'ları dokunulmadan kalır; smoke matrix'i her sub-phase'de |
+| `IndexedStack` ile tüm tab'lar build edilir → ilk açılış yavaşlar mı? | DÜŞÜK | Tab content'lerinin çoğu placeholder veya autoDispose; ölç + lazy IndexedStack'e geç |
+| Speed dial FAB bottom nav ile çakışır mı? | DÜŞÜK | Standart Material pattern; navigationBar üzerinde FAB pozisyonu |
+| Hızlı Teslimat/Tahsilat modal'ı detail screen'in formlarıyla davranış olarak farklı olursa user kafası karışır mı? | ORTA | İki sürüm tutarlı olsun: validate kuralları aynı, mesajlar aynı |
+| Apache attribution ilk kez ekleniyor — yanlış yapma riski? | DÜŞÜK | Plan §11 madde 3 + S7'de net format; reviewer kontrol eder |
+
+### Sprint 6 sonu doğrulama (acceptance kriteri taslağı)
+
+- `flutter analyze` temiz
+- Yeni testler pass + mevcut 1012 test intakt
+- Emulator smoke (guest mode + seed):
+  - `/dealers` açıldığında Genel Bakış default açılır
+  - 5 tab arasında geçiş çalışır
+  - Bayiler tab eski liste UX'i ile aynı davranır
+  - Speed dial FAB 3 aksiyon gösterir
+  - Hızlı Tahsilat modal'ında `cashier_calculator` widget'ı çalışır
+  - `THIRD_PARTY_LICENSES.md` repo root'unda mevcut + içeriği doğru
+- Bireysel + ticari + toptancı 3 rolde smoke (toptancı eski redirect korunur)
+
+---
+
+## 13. Hatırlatma — v2 patch sonrası kurallar
+
+- **Sprint 6 başlatılabilir kararı:** kullanıcının onayı + branch açımıyla
+- **C2 untracked dosyalar:** Sprint 6'da dokunulmuyor — Sprint 1 başlayana
+  kadar bekler
+- **Production DB:** Sprint 6'da dokunulmuyor
+- **Migration:** Sprint 6'da yok
+- **İlk Apache lift:** yalnız Sprint 6C'de — kullanıcı onayıyla
+- **PR yaklaşımı:** her sub-phase ayrı PR önerilir; küçük + fokuslu
+  review
