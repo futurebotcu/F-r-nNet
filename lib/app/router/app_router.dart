@@ -16,11 +16,11 @@ import '../../features/dealers/screens/add_dealer_screen.dart';
 import '../../features/dealers/screens/dealer_adjustment_form_screen.dart';
 import '../../features/dealers/screens/dealer_delivery_form_screen.dart';
 import '../../features/dealers/screens/dealer_detail_screen.dart';
-import '../../features/dealers/screens/dealer_list_screen.dart';
 import '../../features/dealers/screens/dealer_payment_form_screen.dart';
 import '../../features/dealers/screens/dealer_range_report_screen.dart';
 import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
+import '../../features/dealers/screens/dealer_shell_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
 import '../../features/auth/screens/auth_entry_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
@@ -387,10 +387,12 @@ GoRouter createRouter() {
         builder: (_, __) => const ReportScreen(),
       ),
 
-      // Bayi Yönetimi (PASS Dealer V1).
+      // Bayi Defteri mini-app shell (Sprint 6A). Eski DealerListScreen
+      // shell'in "Bayiler" tab'ına embedlenir; tüm alt-route'lar
+      // (`/dealers/:id`, `/dealers/:id/delivery` vs.) dokunulmadan kalır.
       GoRoute(
         path: AppRoutes.dealers,
-        builder: (_, __) => const DealerListScreen(),
+        builder: (_, __) => const DealerShellScreen(),
       ),
       GoRoute(
         path: AppRoutes.dealerNew,

@@ -1112,6 +1112,33 @@ class AppStrings {
   static const String dealerActionAddPrice = 'Fiyat ekle';
   static const String dealerActionReport = 'Rapor';
 
+  // Bayi Defteri Mini-App Shell (Sprint 6A)
+  static const String dealerShellTitle = 'Bayi Defteri';
+  static const String dealerShellTabOverview = 'Genel Bakış';
+  static const String dealerShellTabDealers = 'Bayiler';
+  static const String dealerShellTabActivity = 'Hareketler';
+  static const String dealerShellTabReports = 'Raporlar';
+  static const String dealerShellTabEndOfDay = 'Gün Sonu';
+  static const String dealerShellOverviewWelcomeBody =
+      'Bayilerinin teslimat, iade ve tahsilatlarını buradan tek yerden '
+      'yöneteceksin. Genel özet, hızlı eylem ve günlük rakamlar yakında.';
+  static const String dealerShellOverviewUpcomingTitle = 'Yakında geliyor';
+  static const String dealerShellOverviewUpcomingSummary = 'Günlük özet';
+  static const String dealerShellOverviewUpcomingQuickActions =
+      'Hızlı eylemler';
+  static const String dealerShellOverviewUpcomingRecentActivity =
+      'Son hareketler';
+  static const String dealerShellOverviewUpcomingOpenBalance =
+      'Açık alacaklar';
+  static const String dealerShellPlaceholderTitle = 'Yakında';
+  static const String dealerShellPlaceholderActivityBody =
+      'Tüm bayilerinin işlem akışını birlikte göreceksin.';
+  static const String dealerShellPlaceholderReportsBody =
+      'Bir bayiye gir, Rapor sekmesinden aralık raporu açabilirsin. '
+      'Toplu rapor yakında.';
+  static const String dealerShellPlaceholderEndOfDayBody =
+      'Bayi başına gün sonu mutabakatı yakında.';
+
   // Aralık Raporu (Sprint 3 — date-range metrics)
   static const String dealerReportTitle = 'Aralık Raporu';
   static const String dealerReportPeriodLast30 = 'Son 30 gün';
