@@ -18,6 +18,7 @@ import '../../features/dealers/screens/dealer_delivery_form_screen.dart';
 import '../../features/dealers/screens/dealer_detail_screen.dart';
 import '../../features/dealers/screens/dealer_list_screen.dart';
 import '../../features/dealers/screens/dealer_payment_form_screen.dart';
+import '../../features/dealers/screens/dealer_range_report_screen.dart';
 import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
@@ -110,6 +111,8 @@ class AppRoutes {
   // Bayi Yönetimi sub-routes
   static const String dealers = '/dealers';
   static const String dealerNew = '/dealers/new';
+  // Sprint 3 — Date-range metrics report screen.
+  static String dealerReport(String id) => '/dealers/$id/report';
 
   // V1.2: standalone Hesaplama Makinesi (ticari + bireysel ortak araç)
   static const String calculator = '/calculator';
@@ -425,6 +428,12 @@ GoRouter createRouter() {
       GoRoute(
         path: '${AppRoutes.dealers}/:id/adjustment',
         builder: (_, state) => DealerAdjustmentFormScreen(
+          dealerId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '${AppRoutes.dealers}/:id/report',
+        builder: (_, state) => DealerRangeReportScreen(
           dealerId: state.pathParameters['id']!,
         ),
       ),

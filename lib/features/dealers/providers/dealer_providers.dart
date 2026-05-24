@@ -8,6 +8,7 @@ import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
+import '../models/dealer_range_metrics.dart';
 import '../models/dealer_transaction.dart';
 import '../repositories/dealer_repository.dart';
 import '../repositories/guarded_dealer_repository.dart';
@@ -109,6 +110,22 @@ final balanceSummaryProvider = FutureProvider.autoDispose
   final svc = ref.watch(dealerBalanceServiceProvider);
   final txs = await repo.listTransactions(id);
   return svc.summarize(dealerId: id, transactions: txs);
+});
+
+/// Bayi için verilen `[start, end)` aralığında metrik hesaplar.
+/// `transactionsByDealerProvider` cache'ini paylaşır — aynı dealer için
+/// detail ekranı zaten tx listesini çekmişse ekstra round-trip yok.
+final dealerRangeMetricsProvider = FutureProvider.autoDispose
+    .family<DealerRangeMetrics, ({String dealerId, DateTime start, DateTime end})>(
+        (ref, q) async {
+  final txs = await ref.watch(transactionsByDealerProvider(q.dealerId).future);
+  final svc = ref.watch(dealerBalanceServiceProvider);
+  return svc.summarizeRange(
+    dealerId: q.dealerId,
+    transactions: txs,
+    start: q.start,
+    end: q.end,
+  );
 });
 
 /// Panel hero için global bayi yönetimi metrikleri.
