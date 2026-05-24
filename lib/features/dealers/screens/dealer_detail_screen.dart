@@ -23,6 +23,7 @@ import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
+import '../widgets/quick_payment_sheet.dart';
 
 class DealerDetailScreen extends ConsumerWidget {
   const DealerDetailScreen({super.key, required this.dealerId});
@@ -496,12 +497,29 @@ class _SectionHeaderWithCta extends StatelessWidget {
 
 // ─────────────────────────────────────── Actions
 
-class _ActionsRow extends StatelessWidget {
+class _ActionsRow extends ConsumerWidget {
   const _ActionsRow({required this.dealerId});
   final String dealerId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Hızlı Tahsilat chip yalnız borçlu bayide görünür (Sprint 6C kural #1).
+    // currentBalance <= 0 ise chip hiç render edilmez — disabled chip yok.
+    final balanceAsync = ref.watch(balanceSummaryProvider(dealerId));
+    final dealerAsync = ref.watch(dealerByIdProvider(dealerId));
+    final hasDebt = balanceAsync.maybeWhen(
+      data: (s) => s.currentBalance > 0,
+      orElse: () => false,
+    );
+    final dealerName = dealerAsync.maybeWhen(
+      data: (d) => d?.name ?? '',
+      orElse: () => '',
+    );
+    final currentBalance = balanceAsync.maybeWhen(
+      data: (s) => s.currentBalance,
+      orElse: () => 0.0,
+    );
+
     return Wrap(
       spacing: AppSpacing.s,
       runSpacing: AppSpacing.s,
@@ -526,6 +544,18 @@ class _ActionsRow extends StatelessWidget {
           onTap: () =>
               context.push('${AppRoutes.dealers}/$dealerId/payment'),
         ),
+        if (hasDebt)
+          _ActionChip(
+            icon: Icons.flash_on_rounded,
+            label: AppStrings.dealerActionQuickPayment,
+            accent: AppColors.success,
+            onTap: () => QuickPaymentSheet.show(
+              context: context,
+              dealerId: dealerId,
+              dealerName: dealerName,
+              currentBalance: currentBalance,
+            ),
+          ),
         _ActionChip(
           icon: Icons.tune_rounded,
           label: AppStrings.dealerActionAdjustment,
