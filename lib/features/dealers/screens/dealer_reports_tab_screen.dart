@@ -13,6 +13,8 @@ import '../models/dealer.dart';
 import '../models/dealer_range_metrics.dart';
 import '../providers/dealer_providers.dart';
 import '../services/dealer_period.dart';
+import '../widgets/dealer_avatar.dart';
+import '../widgets/dealer_kpi_tile.dart';
 
 /// Bayi Defteri mini-app Raporlar tab (toplu + bayi bazlı rapor).
 ///
@@ -89,6 +91,7 @@ class _DealerReportsTabScreenState
                     data: (m) => m.perDealerNet,
                     orElse: () => const <String, double>{},
                   ),
+                  activePeriod: _period,
                 ),
               ),
             ],
@@ -238,22 +241,22 @@ class _KpiBlock extends StatelessWidget {
           crossAxisSpacing: AppSpacing.s,
           childAspectRatio: 1.5,
           children: [
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerReportsKpiDelivery,
               value: NumberFormatter.currency(metrics.totalDelivery),
               accent: AppColors.softGold,
             ),
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerReportsKpiReturn,
               value: NumberFormatter.currency(metrics.totalReturn),
               accent: AppColors.textSecondary,
             ),
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerReportsKpiPayment,
               value: NumberFormatter.currency(metrics.totalPayment),
               accent: AppColors.success,
             ),
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerReportsKpiTxCount,
               value: NumberFormatter.integer(metrics.txCount),
               accent: AppColors.textSecondary,
@@ -262,7 +265,7 @@ class _KpiBlock extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.s),
-        _KpiTile(
+        DealerKpiTile(
           label: AppStrings.dealerReportsKpiNetChange,
           value: NumberFormatter.currency(metrics.netChange),
           accent: _netColor(metrics.netChange),
@@ -279,69 +282,19 @@ Color _netColor(double net) {
   return net > 0 ? AppColors.copper : AppColors.success;
 }
 
-class _KpiTile extends StatelessWidget {
-  const _KpiTile({
-    required this.label,
-    required this.value,
-    required this.accent,
-    this.emphasized = false,
-    this.isCount = false,
-    this.fullWidth = false,
-  });
-
-  final String label;
-  final String value;
-  final Color accent;
-  final bool emphasized;
-  final bool isCount;
-  final bool fullWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return PremiumCard(
-      warm: emphasized,
-      padding: const EdgeInsets.all(AppSpacing.m),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        mainAxisSize: fullWidth ? MainAxisSize.min : MainAxisSize.max,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            value,
-            style: (emphasized
-                    ? theme.textTheme.headlineSmall
-                    : theme.textTheme.titleLarge)
-                ?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w800,
-              fontFeatures:
-                  isCount ? null : const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ByDealerSection extends StatelessWidget {
   const _ByDealerSection({
     required this.dealers,
     required this.perDealerNet,
+    required this.activePeriod,
   });
 
   final List<Dealer> dealers;
   final Map<String, double> perDealerNet;
+
+  /// Quality Patch v2: bayi satır tap'ında range-report ekranına seçili
+  /// periyot transfer edilir (eşleşen periyotlar için).
+  final _ReportsPeriod activePeriod;
 
   @override
   Widget build(BuildContext context) {
@@ -390,6 +343,7 @@ class _ByDealerSection extends StatelessWidget {
                   _DealerRow(
                     dealer: dealers[i],
                     net: perDealerNet[dealers[i].id] ?? 0,
+                    activePeriod: activePeriod,
                   ),
                 ],
               ],
@@ -401,18 +355,37 @@ class _ByDealerSection extends StatelessWidget {
 }
 
 class _DealerRow extends StatelessWidget {
-  const _DealerRow({required this.dealer, required this.net});
+  const _DealerRow({
+    required this.dealer,
+    required this.net,
+    required this.activePeriod,
+  });
 
   final Dealer dealer;
   final double net;
+  final _ReportsPeriod activePeriod;
+
+  /// Quality Patch v2: Reports periyot'larından sadece RangeReport'ta
+  /// karşılığı olanlar transfer edilir; `last7Days` RangeReport'ta
+  /// yok → null döner (default `last30Days`'e düşer).
+  String? get _transferPeriodKey {
+    switch (activePeriod) {
+      case _ReportsPeriod.last7Days:
+        return null;
+      case _ReportsPeriod.last30Days:
+        return 'last30Days';
+      case _ReportsPeriod.thisMonth:
+        return 'thisMonth';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final initial =
-        dealer.name.isEmpty ? '?' : dealer.name[0].toUpperCase();
     return InkWell(
-      onTap: () => context.push(AppRoutes.dealerReport(dealer.id)),
+      onTap: () => context.push(
+        AppRoutes.dealerReport(dealer.id, period: _transferPeriodKey),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.m,
@@ -420,25 +393,12 @@ class _DealerRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.copper.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.copper.withValues(alpha: 0.25),
-                  width: 0.6,
-                ),
-              ),
-              child: Text(
-                initial,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: AppColors.copper,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+            DealerAvatar(
+              dealer: dealer,
+              size: 36,
+              shape: DealerAvatarShape.circle,
+              palette: DealerAvatarPalette.copper,
+              fallbackChar: '?',
             ),
             const SizedBox(width: AppSpacing.m),
             Expanded(

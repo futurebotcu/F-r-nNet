@@ -17,6 +17,7 @@ import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
+import '../widgets/dealer_avatar.dart';
 
 class DealerListScreen extends ConsumerStatefulWidget {
   const DealerListScreen({super.key});
@@ -167,15 +168,13 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                   onChanged: (f) => setState(() => _filter = f),
                 ),
                 if (filtered.isEmpty)
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-                    child: PremiumCard(
-                      padding: const EdgeInsets.all(AppSpacing.l),
-                      child: Text(
-                        AppStrings.dealerListNoMatch,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
+                    child: EmptyState(
+                      title: AppStrings.dealerListNoMatch,
+                      subtitle: AppStrings.dealerListNoMatchHint,
+                      icon: Icons.search_off_rounded,
+                      compact: true,
                     ),
                   )
                 else
@@ -317,28 +316,10 @@ class _DealerCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: dealer.isActive
-                        ? AppColors.softGold.withValues(alpha: 0.14)
-                        : AppColors.surfaceLine.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(AppRadius.s),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    dealer.name.isNotEmpty
-                        ? dealer.name[0].toUpperCase()
-                        : 'B',
-                    style: TextStyle(
-                      color: dealer.isActive
-                          ? AppColors.softGold
-                          : AppColors.textMuted,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
-                    ),
-                  ),
+                DealerAvatar(
+                  dealer: dealer,
+                  size: 42,
+                  palette: DealerAvatarPalette.autoActivity,
                 ),
                 const SizedBox(width: AppSpacing.m),
                 Expanded(

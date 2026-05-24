@@ -112,7 +112,14 @@ class AppRoutes {
   static const String dealers = '/dealers';
   static const String dealerNew = '/dealers/new';
   // Sprint 3 — Date-range metrics report screen.
-  static String dealerReport(String id) => '/dealers/$id/report';
+  // Quality Patch v2: opsiyonel `period` query param — Raporlar tab'ından
+  // gelirken seçili periyodu transfer eder (`last30Days` / `thisMonth`).
+  // Eşleşmeyen veya boş değerlerde DealerRangeReportScreen kendi default'ına
+  // (`last30Days`) düşer.
+  static String dealerReport(String id, {String? period}) {
+    if (period == null || period.isEmpty) return '/dealers/$id/report';
+    return '/dealers/$id/report?period=$period';
+  }
 
   // V1.2: standalone Hesaplama Makinesi (ticari + bireysel ortak araç)
   static const String calculator = '/calculator';
@@ -437,6 +444,7 @@ GoRouter createRouter() {
         path: '${AppRoutes.dealers}/:id/report',
         builder: (_, state) => DealerRangeReportScreen(
           dealerId: state.pathParameters['id']!,
+          initialPeriodKey: state.uri.queryParameters['period'],
         ),
       ),
 

@@ -1055,6 +1055,8 @@ class AppStrings {
   static const String dealerFilterDebtOnly = 'Borçlu';
   static const String dealerListSection = 'Bayiler';
   static const String dealerListNoMatch = 'Bu kriterlerle eşleşen bayi yok.';
+  static const String dealerListNoMatchHint =
+      'Aramayı temizle veya filtreyi değiştirerek tekrar dene.';
   static const String dealerListEmptyTitle = 'Henüz bayi yok';
   static const String dealerListEmptySub =
       'Bayilerini ekledikçe teslimat, iade ve tahsilatları '

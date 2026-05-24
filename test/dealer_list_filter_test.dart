@@ -222,6 +222,24 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets(
+        'Arama 0 sonuç → EmptyState (no-match title + hint) görünür '
+        '(Quality Patch v2)', (tester) async {
+      final repo = await _seededRepo();
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'zzzzz-not-found');
+      await tester.pumpAndSettle();
+
+      // EmptyState widget'ı title + subtitle ile render edilir.
+      expect(find.text(AppStrings.dealerListNoMatch), findsOneWidget);
+      expect(find.text(AppStrings.dealerListNoMatchHint), findsOneWidget);
+      // Hiçbir bayi kartı listede değil.
+      expect(find.text('Hamdi Bakkal'), findsNothing);
+      expect(find.text('Mehmet Market'), findsNothing);
+    });
   });
 
   group('DealerListScreen — prefilter consume', () {
