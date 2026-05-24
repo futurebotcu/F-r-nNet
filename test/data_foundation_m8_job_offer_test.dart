@@ -14,9 +14,22 @@
 
 import 'dart:io';
 
+import 'package:firin_defter/app/router/app_router.dart';
+import 'package:firin_defter/core/config/app_config.dart';
+import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/core/data/firinnet_taxonomy.dart';
+import 'package:firin_defter/features/auth/providers/auth_providers.dart';
 import 'package:firin_defter/features/jobs/models/job_offer_post.dart';
+import 'package:firin_defter/features/jobs/providers/job_offer_providers.dart';
+import 'package:firin_defter/features/jobs/repositories/local_job_offer_repository.dart';
+import 'package:firin_defter/features/jobs/screens/job_offer_form_screen.dart';
+import 'package:firin_defter/features/jobs/screens/jobs_screen.dart';
+import 'package:firin_defter/features/profile/models/bakery_profile.dart';
+import 'package:firin_defter/features/profile/providers/profile_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   group('M8 — Taxonomy shifts', () {
@@ -210,4 +223,371 @@ void main() {
       expect(src.contains('shift: _formatShift()'), isTrue);
     });
   });
+
+  // ────────────────────────────────────────────────────────────────────
+  // M8 Cleanup — bireysel role guard + salary validation + role AppStrings
+  // ────────────────────────────────────────────────────────────────────
+
+  group('M8 Cleanup — AppStrings', () {
+    test('jobOfferFieldRoleRequired = "Aranan rolü seç."', () {
+      expect(AppStrings.jobOfferFieldRoleRequired, 'Aranan rolü seç.');
+    });
+
+    test('jobOfferCommercialOnly mesajı tanımlı', () {
+      expect(
+        AppStrings.jobOfferCommercialOnly,
+        contains('ticari veya toptancı hesap'),
+      );
+    });
+
+    test('jobOfferSalaryNegative + jobOfferSalaryMinGtMax tanımlı', () {
+      expect(AppStrings.jobOfferSalaryNegative, 'Maaş negatif olamaz.');
+      expect(
+        AppStrings.jobOfferSalaryMinGtMax,
+        'Asgari maaş azamiyi aşamaz.',
+      );
+    });
+  });
+
+  group('M8 Cleanup — source-level guardrails', () {
+    test('JobOfferFormScreen literal "Aranan rolü seç." yok; '
+        'AppStrings.jobOfferFieldRoleRequired kullanıyor', () {
+      final src = File(
+        'lib/features/jobs/screens/job_offer_form_screen.dart',
+      ).readAsStringSync();
+      // Literal Text('Aranan rolü seç.') artık form'da yok.
+      final literalPattern = RegExp(r"Text\('Aranan rolü seç\.'\)");
+      expect(literalPattern.hasMatch(src), isFalse,
+          reason: 'Role required snackbar AppStrings.jobOfferFieldRoleRequired '
+              'üzerinden çağrılmalı');
+      // AppStrings reference var
+      expect(
+        src.contains('AppStrings.jobOfferFieldRoleRequired'),
+        isTrue,
+      );
+    });
+
+    test('JobsScreen _onAddPressed bireysel guard kodu içerir', () {
+      final src = File(
+        'lib/features/jobs/screens/jobs_screen.dart',
+      ).readAsStringSync();
+      expect(
+        src.contains('AppStrings.jobOfferCommercialOnly'),
+        isTrue,
+        reason: 'JobsScreen._onAddPressed bireysel kullanıcı için snackbar '
+            'göstermeli',
+      );
+    });
+
+    test('JobOfferFormScreen initState defansif route guard içerir', () {
+      final src = File(
+        'lib/features/jobs/screens/job_offer_form_screen.dart',
+      ).readAsStringSync();
+      // Post-frame callback ile bireysel pop
+      expect(src.contains('addPostFrameCallback'), isTrue);
+      expect(src.contains('AppStrings.jobOfferCommercialOnly'), isTrue);
+    });
+
+    test('JobOfferFormScreen _onSavePressed salary validation içerir', () {
+      final src = File(
+        'lib/features/jobs/screens/job_offer_form_screen.dart',
+      ).readAsStringSync();
+      expect(src.contains('AppStrings.jobOfferSalaryNegative'), isTrue);
+      expect(src.contains('AppStrings.jobOfferSalaryMinGtMax'), isTrue);
+    });
+  });
+
+  group('M8 Cleanup — JobsScreen role guard widget', () {
+    testWidgets(
+        'Bireysel + segment 0 (Hiring) + "+" tap → snackbar + route push yok',
+        (tester) async {
+      final router = _testRouter(initialLocation: '/jobs');
+      await tester.pumpWidget(
+        _wrap(
+          router: router,
+          profile: _individualProfile,
+          fakeAuth: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Bireysel + boş liste: empty-state CTA `canPostOffer=false` ile gizli;
+      // sadece header "+" görünür. "+" tap.
+      final addBtn = find.byIcon(Icons.add_rounded);
+      expect(addBtn, findsOneWidget);
+      await tester.tap(addBtn);
+      await tester.pumpAndSettle();
+
+      // Snackbar görünür, form route'a push EDİLMEDİ → form header yok.
+      expect(
+        find.text(AppStrings.jobOfferCommercialOnly),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.jobOfferFormTitleNew), findsNothing);
+    });
+
+    testWidgets('Ticari + segment 0 + "+" tap → form açılır (route push)',
+        (tester) async {
+      final router = _testRouter(initialLocation: '/jobs');
+      await tester.pumpWidget(
+        _wrap(
+          router: router,
+          profile: _commercialProfile,
+          fakeAuth: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Ticari + boş liste → 2 add_rounded ikonu olur (header CTA +
+      // empty-state "Usta Arıyorum İlanı Ver"). Header ilk gelen.
+      await tester.tap(find.byIcon(Icons.add_rounded).first);
+      await tester.pumpAndSettle();
+
+      // Form route'una push edildi → form header görünür, snackbar yok.
+      expect(find.text(AppStrings.jobOfferFormTitleNew), findsOneWidget);
+      expect(
+        find.text(AppStrings.jobOfferCommercialOnly),
+        findsNothing,
+      );
+    });
+  });
+
+  group('M8 Cleanup — JobOfferFormScreen deep-link guard widget', () {
+    testWidgets(
+        'Bireysel deep-link → form render edilmez (snackbar + post-frame pop)',
+        (tester) async {
+      // Form'a direkt push (parent /jobs üzerinden) — canPop true olur.
+      final router = _testRouter(initialLocation: '/jobs');
+      await tester.pumpWidget(
+        _wrap(
+          router: router,
+          profile: _individualProfile,
+          fakeAuth: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Programatik push (kullanıcı CTA katmanını atlamış gibi)
+      router.push(AppRoutes.jobOfferNew);
+      await tester.pumpAndSettle();
+
+      // Snackbar görünür + form header görünmez (pop sonrası /jobs'a döndük)
+      expect(
+        find.text(AppStrings.jobOfferCommercialOnly),
+        findsOneWidget,
+      );
+      expect(
+        find.text(AppStrings.jobOfferFormTitleNew),
+        findsNothing,
+      );
+    });
+
+    testWidgets(
+        'Ticari deep-link → form normal render (header + role chip cluster)',
+        (tester) async {
+      final router = _testRouter(initialLocation: '/jobs');
+      await tester.pumpWidget(
+        _wrap(
+          router: router,
+          profile: _commercialProfile,
+          fakeAuth: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      router.push(AppRoutes.jobOfferNew);
+      await tester.pumpAndSettle();
+
+      // Form header görünür, snackbar yok
+      expect(
+        find.text(AppStrings.jobOfferFormTitleNew),
+        findsOneWidget,
+      );
+      expect(
+        find.text(AppStrings.jobOfferCommercialOnly),
+        findsNothing,
+      );
+    });
+  });
+
+  group('M8 Cleanup — JobOfferFormScreen salary validation widget', () {
+    Future<void> _openForm(WidgetTester tester) async {
+      final router = _testRouter(initialLocation: '/jobs');
+      await tester.pumpWidget(
+        _wrap(
+          router: router,
+          profile: _commercialProfile,
+          fakeAuth: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      router.push(AppRoutes.jobOfferNew);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> _fillBaseFields(WidgetTester tester) async {
+      // Title gerekli
+      await tester.enterText(
+        find.widgetWithText(TextFormField, AppStrings.jobOfferFieldTitle),
+        'Ekmek Ustası Aranıyor',
+      );
+      // Role chip (taxonomy ilk profession)
+      final firstProfLabel =
+          FirinnetTaxonomy.professions.values.first;
+      await tester.ensureVisible(find.text(firstProfLabel));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(firstProfLabel));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> _tapSave(WidgetTester tester) async {
+      final saveBtn = find.text(AppStrings.jobOfferFormSaveCta);
+      await tester.ensureVisible(saveBtn);
+      await tester.pumpAndSettle();
+      await tester.tap(saveBtn);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('salaryMin negatif → negatif snackbar', (tester) async {
+      await _openForm(tester);
+      await _fillBaseFields(tester);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMin),
+        '-100',
+      );
+      await _tapSave(tester);
+
+      expect(
+        find.text(AppStrings.jobOfferSalaryNegative),
+        findsOneWidget,
+      );
+      // Save success snack çıkmamış olmalı
+      expect(find.text(AppStrings.jobOfferSavedSnack), findsNothing);
+    });
+
+    testWidgets('salaryMax negatif → negatif snackbar', (tester) async {
+      await _openForm(tester);
+      await _fillBaseFields(tester);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMax),
+        '-50',
+      );
+      await _tapSave(tester);
+
+      expect(
+        find.text(AppStrings.jobOfferSalaryNegative),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('salaryMin > salaryMax → min>max snackbar', (tester) async {
+      await _openForm(tester);
+      await _fillBaseFields(tester);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMin),
+        '10000',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMax),
+        '5000',
+      );
+      await _tapSave(tester);
+
+      expect(
+        find.text(AppStrings.jobOfferSalaryMinGtMax),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.jobOfferSavedSnack), findsNothing);
+    });
+
+    testWidgets('Boş salary alanları validation error üretmez (save geçer)',
+        (tester) async {
+      await _openForm(tester);
+      await _fillBaseFields(tester);
+      // Salary alanları dokunulmaz (boş)
+      await _tapSave(tester);
+
+      // Salary snackbar'ları görünmez
+      expect(find.text(AppStrings.jobOfferSalaryNegative), findsNothing);
+      expect(find.text(AppStrings.jobOfferSalaryMinGtMax), findsNothing);
+      // Save success snack görünür (Local repo flush sonrası)
+      expect(find.text(AppStrings.jobOfferSavedSnack), findsOneWidget);
+    });
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────
+// M8 Cleanup widget test helpers
+// ────────────────────────────────────────────────────────────────────
+
+const BakeryProfile _commercialProfile = BakeryProfile(
+  displayName: 'Hasan Usta',
+  accountType: AccountType.commercial,
+  city: 'Konya',
+  roleBadge: 'Fırıncı',
+  email: 'hasan@example.com',
+);
+
+const BakeryProfile _individualProfile = BakeryProfile(
+  displayName: 'Ali Usta',
+  accountType: AccountType.individual,
+  city: 'Konya',
+  roleBadge: 'Usta Fırıncı',
+  email: 'ali@example.com',
+);
+
+class _SeededProfileController extends ProfileController {
+  _SeededProfileController(super.ref, BakeryProfile initial) {
+    state = initial;
+  }
+}
+
+GoRouter _testRouter({required String initialLocation}) {
+  return GoRouter(
+    initialLocation: initialLocation,
+    routes: [
+      GoRoute(
+        path: '/jobs',
+        builder: (_, __) => const JobsScreen(),
+      ),
+      GoRoute(
+        path: '/jobs/offers/new',
+        builder: (_, __) => const JobOfferFormScreen(),
+      ),
+      // Stub: gerçek route'da test'in başka feature'ları tetiklenmesin.
+      GoRoute(
+        path: '/jobs/offers/new-stub',
+        builder: (_, __) => const Scaffold(
+          body: Center(child: Text('OFFER-NEW-STUB')),
+        ),
+      ),
+      GoRoute(
+        path: '/worker/job-seek/new',
+        builder: (_, __) => const Scaffold(
+          body: Center(child: Text('SEEK-NEW-STUB')),
+        ),
+      ),
+    ],
+  );
+}
+
+/// Test wrapper — profile + repo override + AppConfig kapalı (Local repo).
+Widget _wrap({
+  required GoRouter router,
+  required BakeryProfile profile,
+  bool fakeAuth = true,
+}) {
+  return ProviderScope(
+    overrides: [
+      profileControllerProvider.overrideWith(
+        (ref) => _SeededProfileController(ref, profile),
+      ),
+      // Guest guard'ı bypass etmek için authenticated user simülasyonu yok;
+      // bunun yerine local repo doğrudan override + AppConfig.supabaseEnabled
+      // false ile guard sarmasız Local repo döner.
+      currentAuthUserProvider.overrideWith((_) => null),
+      jobOfferRepositoryProvider.overrideWith(
+        (ref) => LocalJobOfferRepository(),
+      ),
+    ],
+    child: MaterialApp.router(routerConfig: router),
+  );
 }

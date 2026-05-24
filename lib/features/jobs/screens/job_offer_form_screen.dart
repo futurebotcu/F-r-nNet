@@ -11,6 +11,8 @@ import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../profile/models/bakery_profile.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../models/job_offer_post.dart';
 import '../providers/job_offer_providers.dart';
 
@@ -52,6 +54,23 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   @override
   void initState() {
     super.initState();
+    // M8 Cleanup P1-1: deep-link defansı — bireysel kullanıcı bu form'a
+    // direkt route ile gelmiş olabilir (CTA katmanı atlanmış). Profile
+    // bireyselse snackbar + post-frame pop; form hiç render edilmesin.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final profile = ref.read(profileControllerProvider);
+      if (profile != null &&
+          profile.accountType != AccountType.commercial &&
+          profile.accountType != AccountType.wholesaler) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.jobOfferCommercialOnly)),
+        );
+        if (context.canPop()) {
+          context.pop();
+        }
+      }
+    });
     if (widget.postId != null) {
       _loadExisting();
     } else {
@@ -129,7 +148,24 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_roleCode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aranan rolü seç.')),
+        const SnackBar(content: Text(AppStrings.jobOfferFieldRoleRequired)),
+      );
+      return;
+    }
+    // M8 Cleanup P1-2: salary cross-field + negatif validation. Boş
+    // bırakmak serbest; sadece girilmiş değerler kontrol edilir.
+    final minSalary = double.tryParse(_salaryMin.text.trim());
+    final maxSalary = double.tryParse(_salaryMax.text.trim());
+    if ((minSalary != null && minSalary < 0) ||
+        (maxSalary != null && maxSalary < 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.jobOfferSalaryNegative)),
+      );
+      return;
+    }
+    if (minSalary != null && maxSalary != null && minSalary > maxSalary) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.jobOfferSalaryMinGtMax)),
       );
       return;
     }

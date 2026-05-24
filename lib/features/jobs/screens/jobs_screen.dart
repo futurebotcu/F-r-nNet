@@ -49,6 +49,20 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
+    // M8 Cleanup P1-1: bireysel kullanıcı "Usta Arıyor" ilanı veremez —
+    // bu segment yalnız ticari ve toptancı içindir. Snackbar + early return.
+    if (_segmentIndex == 0) {
+      final profile = ref.read(profileControllerProvider);
+      final isCommercial =
+          profile?.accountType == AccountType.commercial ||
+              profile?.accountType == AccountType.wholesaler;
+      if (!isCommercial) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.jobOfferCommercialOnly)),
+        );
+        return;
+      }
+    }
     final route = _segmentIndex == 0
         ? AppRoutes.jobOfferNew
         : AppRoutes.jobSeekNew;
