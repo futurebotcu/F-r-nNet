@@ -14,6 +14,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
+import '../widgets/dealer_kpi_tile.dart';
 import '../widgets/dealer_picker_sheet.dart';
 import '../widgets/dealer_pulse_card.dart';
 import '../widgets/quick_payment_sheet.dart';
@@ -138,22 +139,22 @@ class _KpiGrid extends StatelessWidget {
           crossAxisSpacing: AppSpacing.s,
           childAspectRatio: 1.5,
           children: [
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerOverviewKpiOpenBalance,
               value: NumberFormatter.currency(overview.openBalance),
               accent: AppColors.copper,
             ),
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerOverviewKpiTodayDelivery,
               value: NumberFormatter.currency(overview.todayDelivered),
               accent: AppColors.softGold,
             ),
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerOverviewKpiTodayPayment,
               value: NumberFormatter.currency(overview.todayCollected),
               accent: AppColors.success,
             ),
-            _KpiTile(
+            DealerKpiTile(
               label: AppStrings.dealerOverviewKpiMonthTxCount,
               value: NumberFormatter.integer(overview.monthTxCount),
               accent: AppColors.textSecondary,
@@ -163,7 +164,7 @@ class _KpiGrid extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.s),
         // Bu Ay Net Değişim full-width emphasized tile
-        _KpiTile(
+        DealerKpiTile(
           label: AppStrings.dealerOverviewKpiMonthNetChange,
           value: NumberFormatter.currency(overview.monthNetChange),
           accent: overview.monthNetChange == 0
@@ -175,61 +176,6 @@ class _KpiGrid extends StatelessWidget {
           fullWidth: true,
         ),
       ],
-    );
-  }
-}
-
-class _KpiTile extends StatelessWidget {
-  const _KpiTile({
-    required this.label,
-    required this.value,
-    required this.accent,
-    this.emphasized = false,
-    this.isCount = false,
-    this.fullWidth = false,
-  });
-
-  final String label;
-  final String value;
-  final Color accent;
-  final bool emphasized;
-  final bool isCount;
-  final bool fullWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return PremiumCard(
-      warm: emphasized,
-      padding: const EdgeInsets.all(AppSpacing.m),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        mainAxisSize: fullWidth ? MainAxisSize.min : MainAxisSize.max,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            value,
-            style: (emphasized
-                    ? theme.textTheme.headlineSmall
-                    : theme.textTheme.titleLarge)
-                ?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w800,
-              fontFeatures:
-                  isCount ? null : const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

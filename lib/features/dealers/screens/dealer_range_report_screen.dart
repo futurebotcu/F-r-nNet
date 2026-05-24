@@ -25,10 +25,16 @@ class DealerRangeReportScreen extends ConsumerStatefulWidget {
   const DealerRangeReportScreen({
     super.key,
     required this.dealerId,
+    this.initialPeriodKey,
     @visibleForTesting this.now,
   });
 
   final String dealerId;
+
+  /// Quality Patch v2: Raporlar tab'ından gelen periyot anahtarı.
+  /// Bilinen değerler: `last30Days`, `thisMonth`. Bilinmeyen/null →
+  /// default `last30Days` davranışı korunur.
+  final String? initialPeriodKey;
 
   /// Test deterministik için reference time injection. Production'da null.
   final DateTime? now;
@@ -40,7 +46,32 @@ class DealerRangeReportScreen extends ConsumerStatefulWidget {
 
 class _DealerRangeReportScreenState
     extends ConsumerState<DealerRangeReportScreen> {
-  _ReportPeriod _period = _ReportPeriod.last30Days;
+  late _ReportPeriod _period;
+
+  @override
+  void initState() {
+    super.initState();
+    _period = _parseInitialPeriod(widget.initialPeriodKey);
+  }
+
+  static _ReportPeriod _parseInitialPeriod(String? key) {
+    switch (key) {
+      case 'last30Days':
+        return _ReportPeriod.last30Days;
+      case 'thisMonth':
+        return _ReportPeriod.thisMonth;
+      case 'thisWeek':
+        return _ReportPeriod.thisWeek;
+      case 'today':
+        return _ReportPeriod.today;
+      case 'previousWeek':
+        return _ReportPeriod.previousWeek;
+      case 'previousMonth':
+        return _ReportPeriod.previousMonth;
+      default:
+        return _ReportPeriod.last30Days;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
