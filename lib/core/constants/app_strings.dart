@@ -1111,6 +1111,20 @@ class AppStrings {
   static const String dealerActionAdjustment = 'Düzeltme';
   static const String dealerActionAddPrice = 'Fiyat ekle';
   static const String dealerActionReport = 'Rapor';
+  static const String dealerActionQuickPayment = 'Hızlı Tahsilat';
+
+  // Cash tendered calculator (Sprint 6C donor lift)
+  static const String cashCalcLabelPaid = 'Verilen';
+  static const String cashCalcLabelChange = 'Para üstü';
+  static const String cashCalcInsufficient = 'Eksik tahsilat';
+
+  // Hızlı Tahsilat modal (Sprint 6C)
+  static const String quickPaymentTitle = 'Hızlı Tahsilat';
+  static const String quickPaymentDebtLabel = 'BORÇ';
+  static const String quickPaymentPartialHint =
+      'Kısmi tahsilat için Ödeme Al formunu kullan.';
+  static const String quickPaymentSuccess = 'Tahsilat kaydedildi';
+  static const String quickPaymentChangeReturn = 'Para üstü:';
 
   // Bayi Defteri Mini-App Shell (Sprint 6A)
   static const String dealerShellTitle = 'Bayi Defteri';
