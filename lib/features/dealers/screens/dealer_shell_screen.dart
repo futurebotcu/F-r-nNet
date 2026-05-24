@@ -7,11 +7,12 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_bottom_nav.dart';
-import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../providers/dealer_providers.dart';
 import 'dealer_list_screen.dart';
+import 'dealer_overview_screen.dart';
 
 /// Bayi Defteri mini-app shell (Sprint 6A).
 ///
@@ -27,19 +28,11 @@ import 'dealer_list_screen.dart';
 /// Sprint 6A kapsamı: shell skeleton + tab placeholder'lar. Genel
 /// Bakış içeriği (KPI tile + hızlı eylem + son hareketler) Sprint 6B,
 /// ilk donor lift (cashier_calculator) Sprint 6C.
-class DealerShellScreen extends ConsumerStatefulWidget {
+class DealerShellScreen extends ConsumerWidget {
   const DealerShellScreen({super.key});
 
   @override
-  ConsumerState<DealerShellScreen> createState() => _DealerShellScreenState();
-}
-
-class _DealerShellScreenState extends ConsumerState<DealerShellScreen> {
-  /// Default tab = Genel Bakış (mini-app ana sayfası hissi).
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
 
     // Toptancı: mini-app'e hiç girmez. Mevcut DealerListScreen'in defansif
@@ -47,19 +40,25 @@ class _DealerShellScreenState extends ConsumerState<DealerShellScreen> {
     // bookmark senaryosu için.
     if (profile?.accountType == AccountType.wholesaler) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go(AppRoutes.wholesaleCustomers);
+        if (context.mounted) context.go(AppRoutes.wholesaleCustomers);
       });
       return const PremiumScaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    // Sprint 6B: tab indeksi `dealerShellTabIndexProvider`'dan okunur.
+    // Genel Bakış CTA'ları başka tab'a programatik geçiş için aynı
+    // provider'ı set eder. Default 0 (Genel Bakış).
+    final index = ref.watch(dealerShellTabIndexProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
-        index: _index,
+        index: index,
         children: const [
-          _OverviewTab(),
+          // Sprint 6B: placeholder yerine gerçek Genel Bakış ekranı.
+          DealerOverviewScreen(),
           // Mevcut DealerListScreen olduğu gibi — kendi PremiumScaffold +
           // AppBar'ı + arama + filtre chip + ekle butonu intakt.
           DealerListScreen(),
@@ -69,8 +68,9 @@ class _DealerShellScreenState extends ConsumerState<DealerShellScreen> {
         ],
       ),
       bottomNavigationBar: PremiumBottomNav(
-        selectedIndex: _index,
-        onSelect: (i) => setState(() => _index = i),
+        selectedIndex: index,
+        onSelect: (i) =>
+            ref.read(dealerShellTabIndexProvider.notifier).state = i,
         items: const [
           PremiumNavItem(
             icon: Icons.dashboard_outlined,
@@ -105,141 +105,6 @@ class _DealerShellScreenState extends ConsumerState<DealerShellScreen> {
 
 /// Genel Bakış tab — Sprint 6A placeholder.
 ///
-/// Gerçek içerik (KPI tile + hızlı eylem + son hareketler) Sprint 6B.
-/// Bu sürüm "mini-app ana sayfası" hissi vermek için intentional bir
-/// karşılama kartı + planlanmış özellikler listesi gösterir.
-class _OverviewTab extends StatelessWidget {
-  const _OverviewTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return PremiumScaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.dealerShellTabOverview),
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.pageH),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              PremiumCard(
-                warm: true,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.dealerShellTitle,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.s),
-                    Text(
-                      AppStrings.dealerShellOverviewWelcomeBody,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                        height: 1.45,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.l),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.s,
-                ),
-                child: Text(
-                  AppStrings.dealerShellOverviewUpcomingTitle.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.s),
-              const _UpcomingItem(
-                icon: Icons.summarize_outlined,
-                label: AppStrings.dealerShellOverviewUpcomingSummary,
-              ),
-              const _UpcomingItem(
-                icon: Icons.bolt_outlined,
-                label: AppStrings.dealerShellOverviewUpcomingQuickActions,
-              ),
-              const _UpcomingItem(
-                icon: Icons.history_outlined,
-                label: AppStrings.dealerShellOverviewUpcomingRecentActivity,
-              ),
-              const _UpcomingItem(
-                icon: Icons.account_balance_wallet_outlined,
-                label: AppStrings.dealerShellOverviewUpcomingOpenBalance,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _UpcomingItem extends StatelessWidget {
-  const _UpcomingItem({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: PremiumCard(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.l,
-          vertical: AppSpacing.m,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.softGold, size: 22),
-            const SizedBox(width: AppSpacing.m),
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.s,
-                vertical: 2,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.softGold.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-              ),
-              child: Text(
-                AppStrings.dealerShellPlaceholderTitle.toLowerCase(),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.softGold,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.4,
-                    ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Hareketler tab placeholder — cross-dealer tx feed yakında.
 class _ActivityPlaceholderTab extends StatelessWidget {
   const _ActivityPlaceholderTab();
