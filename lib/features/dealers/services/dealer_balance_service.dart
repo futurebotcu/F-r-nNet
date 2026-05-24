@@ -1,4 +1,5 @@
 import '../models/dealer_balance_summary.dart';
+import '../models/dealer_range_metrics.dart';
 import '../models/dealer_transaction.dart';
 
 /// Bayi cari bakiyesini transactions üzerinden hesaplar.
@@ -81,6 +82,65 @@ class DealerBalanceService {
       monthDebt: monthDebt,
       lastPayment: lastPayment,
       lastTransactionAt: lastTransactionAt,
+    );
+  }
+
+  /// Verilen `[start, end)` aralığında bayinin gross toplamlarını ve net
+  /// değişimini hesaplar. `summarize` ile aynı imzalı katkı konvansiyonunu
+  /// kullanır; range dışındaki ve farklı dealer'a ait hareketler atlanır.
+  ///
+  /// Concept inspired by evan361425/flutter-pos-system Seller.getMetrics
+  /// (Apache-2.0); written from scratch for FırınNet, no code copied.
+  DealerRangeMetrics summarizeRange({
+    required String dealerId,
+    required List<DealerTransaction> transactions,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    double totalDelivery = 0;
+    double totalReturn = 0;
+    double totalPayment = 0;
+    double totalAdjustment = 0;
+    double netChange = 0;
+    int txCount = 0;
+
+    for (final t in transactions) {
+      if (t.dealerId != dealerId) continue;
+      // [start, end) — start dahil, end hariç.
+      if (t.createdAt.isBefore(start)) continue;
+      if (!t.createdAt.isBefore(end)) continue;
+
+      switch (t.type) {
+        case DealerTransactionType.delivery:
+          totalDelivery += t.amount;
+          netChange += t.amount;
+          break;
+        case DealerTransactionType.returned:
+          totalReturn += t.amount;
+          netChange -= t.amount;
+          break;
+        case DealerTransactionType.payment:
+          totalPayment += t.amount;
+          netChange -= t.amount;
+          break;
+        case DealerTransactionType.adjustment:
+          totalAdjustment += t.amount;
+          netChange += t.amount;
+          break;
+      }
+      txCount++;
+    }
+
+    return DealerRangeMetrics(
+      dealerId: dealerId,
+      start: start,
+      end: end,
+      totalDelivery: totalDelivery,
+      totalReturn: totalReturn,
+      totalPayment: totalPayment,
+      totalAdjustment: totalAdjustment,
+      netChange: netChange,
+      txCount: txCount,
     );
   }
 }
