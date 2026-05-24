@@ -85,15 +85,23 @@ class DealerBalanceService {
     );
   }
 
-  /// Verilen `[start, end)` aralığında bayinin gross toplamlarını ve net
-  /// değişimini hesaplar. `summarize` ile aynı imzalı katkı konvansiyonunu
-  /// kullanır; range dışındaki ve farklı dealer'a ait hareketler atlanır.
+  /// Verilen `[start, end)` aralığında **cross-dealer** gross toplamları
+  /// ve net değişimi hesaplar (dealerId filtresi YOK). Per-dealer için
+  /// [summarizeRange]; tüm bayiler birleşik için [dealersOverviewProvider]
+  /// gibi cross-dealer akışları bu helper'ı paylaşır — `tx.type → katkı`
+  /// kuralı tek yerde tanımlı kalır.
   ///
-  /// Concept inspired by evan361425/flutter-pos-system Seller.getMetrics
-  /// (Apache-2.0); written from scratch for FırınNet, no code copied.
-  DealerRangeMetrics summarizeRange({
-    required String dealerId,
-    required List<DealerTransaction> transactions,
+  /// `summarize` ile aynı imzalı katkı konvansiyonu:
+  /// delivery/adjustment → +amount, return/payment → −amount.
+  ({
+    double totalDelivery,
+    double totalReturn,
+    double totalPayment,
+    double totalAdjustment,
+    double netChange,
+    int txCount,
+  }) aggregateRange({
+    required Iterable<DealerTransaction> transactions,
     required DateTime start,
     required DateTime end,
   }) {
@@ -105,7 +113,6 @@ class DealerBalanceService {
     int txCount = 0;
 
     for (final t in transactions) {
-      if (t.dealerId != dealerId) continue;
       // [start, end) — start dahil, end hariç.
       if (t.createdAt.isBefore(start)) continue;
       if (!t.createdAt.isBefore(end)) continue;
@@ -131,16 +138,43 @@ class DealerBalanceService {
       txCount++;
     }
 
-    return DealerRangeMetrics(
-      dealerId: dealerId,
-      start: start,
-      end: end,
+    return (
       totalDelivery: totalDelivery,
       totalReturn: totalReturn,
       totalPayment: totalPayment,
       totalAdjustment: totalAdjustment,
       netChange: netChange,
       txCount: txCount,
+    );
+  }
+
+  /// Verilen `[start, end)` aralığında bayinin gross toplamlarını ve net
+  /// değişimini hesaplar. Per-dealer filter sonrası [aggregateRange]'a
+  /// delege eder — tx-type → katkı kuralı tek yerde yaşar.
+  ///
+  /// Concept inspired by evan361425/flutter-pos-system Seller.getMetrics
+  /// (Apache-2.0); written from scratch for FırınNet, no code copied.
+  DealerRangeMetrics summarizeRange({
+    required String dealerId,
+    required Iterable<DealerTransaction> transactions,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    final agg = aggregateRange(
+      transactions: transactions.where((t) => t.dealerId == dealerId),
+      start: start,
+      end: end,
+    );
+    return DealerRangeMetrics(
+      dealerId: dealerId,
+      start: start,
+      end: end,
+      totalDelivery: agg.totalDelivery,
+      totalReturn: agg.totalReturn,
+      totalPayment: agg.totalPayment,
+      totalAdjustment: agg.totalAdjustment,
+      netChange: agg.netChange,
+      txCount: agg.txCount,
     );
   }
 }
