@@ -11,6 +11,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../profile/models/bakery_profile.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_transaction.dart';
@@ -29,6 +31,42 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = ref.watch(profileControllerProvider);
+
+    // Toptancı kullanıcı "Bayi Defteri" dilini görmez — kendi tarafı
+    // "Müşteriler" diliyle ayrı yaşar. Nav kartında bu route'a giden link
+    // yok; yalnız deep-link / legacy bookmark senaryosu için defansif
+    // redirect.
+    if (profile?.accountType == AccountType.wholesaler) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go(AppRoutes.wholesaleCustomers);
+      });
+      return const PremiumScaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Bireysel kullanıcı kendi adına bayi defteri açmaz; yalnız bir ticari
+    // işletme tarafından FırınNet ID ile yetkilendirildiğinde o işletmenin
+    // defterini görür. Staff modeli (dealer_staff) henüz aktif olmadığı
+    // için bireyselin sonucu daima EmptyAuthorizedState'tir. C2'de
+    // dealer_staff geldiğinde DealerAccessResolver ile değiştirilecek.
+    if (profile?.accountType == AccountType.individual) {
+      return PremiumScaffold(
+        appBar: AppBar(
+          title: const Text(AppStrings.dealerListTitle),
+        ),
+        body: const SafeArea(
+          top: false,
+          child: EmptyState(
+            title: AppStrings.dealerEmptyAuthorizedTitle,
+            subtitle: AppStrings.dealerEmptyAuthorizedBody,
+            icon: Icons.business_outlined,
+          ),
+        ),
+      );
+    }
+
     final dealersAsync = ref.watch(dealersListProvider);
 
     return PremiumScaffold(

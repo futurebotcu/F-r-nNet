@@ -103,6 +103,17 @@ class RolePanelCards {
             icon: Icons.history_edu_outlined,
             route: AppRoutes.workerExperiences,
           ),
+          // Bayi Paneli — bireysel kullanıcı kendi adına defter açmaz;
+          // yalnız bir ticari işletme tarafından FırınNet ID ile
+          // yetkilendirildiğinde o işletmenin defterini görür. Yetki yoksa
+          // ekran "Henüz yetkili olduğun bir işletme yok" bilgilendirmesi
+          // gösterir (Access Foundation C1).
+          PanelCard(
+            label: AppStrings.cardDealerPanel,
+            subtitle: AppStrings.cardDealerPanelStaffSub,
+            icon: Icons.storefront_rounded,
+            route: AppRoutes.dealers,
+          ),
           // Araçlar
           PanelCard(
             label: AppStrings.cardCalculator,
