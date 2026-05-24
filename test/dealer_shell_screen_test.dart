@@ -202,14 +202,20 @@ void main() {
       );
     });
 
-    testWidgets('Gün Sonu tab → placeholder', (tester) async {
+    testWidgets('Gün Sonu tab → DealerEndOfDayTabScreen içerik',
+        (tester) async {
       await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
       await _tapNavTab(tester, AppStrings.dealerShellTabEndOfDay);
 
+      // Header (Bugün uppercase) ve Share CTA görünür; artık placeholder yok.
       expect(
-        find.text(AppStrings.dealerShellPlaceholderEndOfDayBody),
+        find.text(AppStrings.dealerEndOfDayHeaderToday.toUpperCase()),
+        findsOneWidget,
+      );
+      expect(
+        find.text(AppStrings.dealerEndOfDayShareCta),
         findsOneWidget,
       );
     });

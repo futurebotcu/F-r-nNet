@@ -1189,9 +1189,22 @@ class AppStrings {
   static const String dealerShellTabActivity = 'Hareketler';
   static const String dealerShellTabReports = 'Raporlar';
   static const String dealerShellTabEndOfDay = 'Gün Sonu';
-  static const String dealerShellPlaceholderTitle = 'Yakında';
-  static const String dealerShellPlaceholderEndOfDayBody =
-      'Bayi başına gün sonu mutabakatı yakında.';
+  // Gün Sonu V1 — pasif günlük rapor + plain text share
+  static const String dealerEndOfDayHeaderToday = 'Bugün';
+  static const String dealerEndOfDaySummaryTitle = 'Bugün Özeti';
+  static const String dealerEndOfDayByDealerTitle = 'Bayi Bazlı Bugün';
+  static const String dealerEndOfDayRecentTitle = 'Bugünün Hareketleri';
+  static const String dealerEndOfDaySeeAll = 'Tümünü Gör';
+  static const String dealerEndOfDayEmptyTitle = 'Bugün henüz hareket yok';
+  static const String dealerEndOfDayEmptyBody =
+      'Bayilere teslimat ver veya tahsilat al; gün sonu özeti burada görünecek.';
+  static const String dealerEndOfDayShareCta = 'WhatsApp/SMS Paylaş';
+  static const String dealerEndOfDayShareTooltip = 'Bugünü paylaş';
+  static const String dealerEndOfDayPlainTextHeader =
+      'FırınNet — Gün Sonu Özeti';
+  static const String dealerEndOfDayTxCountSuffix = 'işlem';
+  static const String dealerEndOfDayShareEmptyLine =
+      'Bugün henüz hareket yok.';
 
   // Raporlar tab (mini-app — toplu + bayi bazlı)
   static const String dealerReportsPeriodLast7 = 'Son 7 gün';

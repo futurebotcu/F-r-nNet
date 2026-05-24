@@ -12,6 +12,7 @@ import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/dealer_providers.dart';
 import 'dealer_activity_screen.dart';
+import 'dealer_end_of_day_tab_screen.dart';
 import 'dealer_list_screen.dart';
 import 'dealer_overview_screen.dart';
 import 'dealer_reports_tab_screen.dart';
@@ -68,7 +69,8 @@ class DealerShellScreen extends ConsumerWidget {
           DealerActivityScreen(),
           // Sprint Raporlar: toplu + bayi bazlı rapor.
           DealerReportsTabScreen(),
-          _EndOfDayPlaceholderTab(),
+          // Sprint Gün Sonu V1: pasif günlük rapor + plain text share.
+          DealerEndOfDayTabScreen(),
         ],
       ),
       bottomNavigationBar: PremiumBottomNav(
@@ -107,83 +109,3 @@ class DealerShellScreen extends ConsumerWidget {
   }
 }
 
-/// Gün Sonu tab placeholder — Sprint 4 (settlement) içerik dolduracak.
-class _EndOfDayPlaceholderTab extends StatelessWidget {
-  const _EndOfDayPlaceholderTab();
-  @override
-  Widget build(BuildContext context) {
-    return _PlaceholderScaffold(
-      title: AppStrings.dealerShellTabEndOfDay,
-      icon: Icons.event_available_rounded,
-      body: AppStrings.dealerShellPlaceholderEndOfDayBody,
-    );
-  }
-}
-
-/// Ortak placeholder şablonu — AppBar + merkezi "Yakında" kart.
-class _PlaceholderScaffold extends StatelessWidget {
-  const _PlaceholderScaffold({
-    required this.title,
-    required this.icon,
-    required this.body,
-  });
-
-  final String title;
-  final IconData icon;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return PremiumScaffold(
-      appBar: AppBar(title: Text(title)),
-      body: SafeArea(
-        top: false,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                    border: Border.all(
-                      color: AppColors.borderHairline,
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Icon(icon, size: 36, color: AppColors.softGold),
-                ),
-                const SizedBox(height: AppSpacing.l),
-                Text(
-                  AppStrings.dealerShellPlaceholderTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.s),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  child: Text(
-                    body,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

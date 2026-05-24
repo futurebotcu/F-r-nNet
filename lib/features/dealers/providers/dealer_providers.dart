@@ -205,6 +205,7 @@ final allDealersRangeMetricsProvider = FutureProvider.autoDispose
 
   final active = all.where((d) => d.isActive).toList();
   final perDealerNet = <String, double>{};
+  final perDealerTxCount = <String, int>{};
   double totalDelivery = 0;
   double totalReturn = 0;
   double totalPayment = 0;
@@ -221,6 +222,7 @@ final allDealersRangeMetricsProvider = FutureProvider.autoDispose
       end: q.end,
     );
     perDealerNet[d.id] = m.netChange;
+    perDealerTxCount[d.id] = m.txCount;
     totalDelivery += m.totalDelivery;
     totalReturn += m.totalReturn;
     totalPayment += m.totalPayment;
@@ -240,6 +242,7 @@ final allDealersRangeMetricsProvider = FutureProvider.autoDispose
     txCount: txCount,
     activeDealerCount: active.length,
     perDealerNet: perDealerNet,
+    perDealerTxCount: perDealerTxCount,
   );
 });
 
