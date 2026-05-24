@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/dealer_providers.dart';
+import 'dealer_activity_screen.dart';
 import 'dealer_list_screen.dart';
 import 'dealer_overview_screen.dart';
 
@@ -62,7 +63,8 @@ class DealerShellScreen extends ConsumerWidget {
           // Mevcut DealerListScreen olduğu gibi — kendi PremiumScaffold +
           // AppBar'ı + arama + filtre chip + ekle butonu intakt.
           DealerListScreen(),
-          _ActivityPlaceholderTab(),
+          // Sprint Activity: placeholder yerine cross-dealer hareket listesi.
+          DealerActivityScreen(),
           _ReportsPlaceholderTab(),
           _EndOfDayPlaceholderTab(),
         ],
@@ -105,19 +107,6 @@ class DealerShellScreen extends ConsumerWidget {
 
 /// Genel Bakış tab — Sprint 6A placeholder.
 ///
-/// Hareketler tab placeholder — cross-dealer tx feed yakında.
-class _ActivityPlaceholderTab extends StatelessWidget {
-  const _ActivityPlaceholderTab();
-  @override
-  Widget build(BuildContext context) {
-    return _PlaceholderScaffold(
-      title: AppStrings.dealerShellTabActivity,
-      icon: Icons.swap_vert_rounded,
-      body: AppStrings.dealerShellPlaceholderActivityBody,
-    );
-  }
-}
-
 /// Raporlar tab placeholder — toplu rapor için ileride.
 class _ReportsPlaceholderTab extends StatelessWidget {
   const _ReportsPlaceholderTab();

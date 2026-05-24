@@ -3,6 +3,7 @@
 // Mini-app shell: default tab Genel Bakış, 5 tab, Bayiler tab mevcut
 // DealerListScreen'i embedler, toptancı /wholesale/customers'a redirect.
 
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/core/widgets/premium/premium_bottom_nav.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
@@ -85,6 +86,12 @@ Future<void> _tapNavTab(WidgetTester tester, String label) async {
 }
 
 void main() {
+  setUpAll(() async {
+    // IndexedStack tüm tab'ları build eder; DealerActivityScreen
+    // DateFormat('d MMM', 'tr_TR') kullandığı için locale init şart.
+    await initializeDateFormatting('tr_TR', null);
+  });
+
   group('DealerShellScreen — render & default tab', () {
     testWidgets('Bireysel: shell render, default tab Genel Bakış',
         (tester) async {
@@ -162,15 +169,21 @@ void main() {
       expect(find.text(AppStrings.dealerListTitle), findsOneWidget);
     });
 
-    testWidgets('Hareketler tab → placeholder', (tester) async {
+    testWidgets('Hareketler tab → activity screen (Sprint Activity)',
+        (tester) async {
       await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
       await _tapNavTab(tester, AppStrings.dealerShellTabActivity);
 
-      // AppBar başlığı + placeholder body
+      // Sprint Activity: placeholder yerine gerçek DealerActivityScreen.
+      // AppBar başlığı + search hint + filter chip "Tümü" görünür.
       expect(
-        find.text(AppStrings.dealerShellPlaceholderActivityBody),
+        find.text(AppStrings.dealerActivityTitle),
+        findsAtLeastNWidgets(1),
+      );
+      expect(
+        find.text(AppStrings.dealerActivitySearchHint),
         findsOneWidget,
       );
     });

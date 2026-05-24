@@ -1156,6 +1156,21 @@ class AppStrings {
       'En az 3 günlük geçmiş hareket olduğunda nabız bilgisi gelir.';
   static const String dealerPulseFlat = 'normalde';
 
+  // Bayi Defteri Hareketler tab (Sprint Activity)
+  static const String dealerActivityTitle = 'Hareketler';
+  static const String dealerActivitySearchHint = 'Bayi ara…';
+  static const String dealerActivityEmptyTitle = 'Henüz hareket yok';
+  static const String dealerActivityEmptyBody =
+      'Bir bayiye teslimat, iade veya tahsilat ekleyince hareketler '
+      'burada listelenir.';
+  static const String dealerActivityNoMatchTitle = 'Eşleşen hareket yok';
+  static const String dealerActivityNoMatchBody =
+      'Farklı filtre veya arama dene.';
+  static const String dealerActivityGroupToday = 'Bugün';
+  static const String dealerActivityGroupYesterday = 'Dün';
+  static const String dealerActivityGroupThisWeek = 'Bu hafta';
+  static const String dealerActivityGroupOlder = 'Daha eski';
+
   // Bayi seçici sheet (Sprint 6B)
   static const String dealerPickerTitle = 'Bayi Seç';
   static const String dealerPickerFilterAll = 'Tümü';
@@ -1172,8 +1187,6 @@ class AppStrings {
   static const String dealerShellTabReports = 'Raporlar';
   static const String dealerShellTabEndOfDay = 'Gün Sonu';
   static const String dealerShellPlaceholderTitle = 'Yakında';
-  static const String dealerShellPlaceholderActivityBody =
-      'Tüm bayilerinin işlem akışını birlikte göreceksin.';
   static const String dealerShellPlaceholderReportsBody =
       'Bir bayiye gir, Rapor sekmesinden aralık raporu açabilirsin. '
       'Toplu rapor yakında.';
