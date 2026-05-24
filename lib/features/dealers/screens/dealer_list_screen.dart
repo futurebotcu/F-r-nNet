@@ -98,15 +98,26 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
               );
             }
 
-            // Balance map (debtOnly filter + chip count için). allTx async
-            // henüz gelmezse boş map ile ilerle — "Borçlu" filter o anda
-            // boş gösterir, sonra tx geldiğinde rebuild olur.
+            // Quality Patch v1 P0-3: balance/lastTx tek pass'te parent'ta
+            // hesaplanıp _DealerCard'a prop olarak geçirilir. Eskiden her
+            // kart `balanceSummaryProvider` + `transactionsByDealerProvider`
+            // ile ikinci kez hesaplıyordu (N round-trip + double summarize).
+            // allTx async henüz gelmezse boş map ile ilerle — "Borçlu" filter
+            // o anda boş gösterir, sonra tx geldiğinde rebuild olur.
             final txs = txsAsync.value ?? const <DealerTransaction>[];
-            final balanceById = <String, double>{
+            final summaryById = <String, DealerBalanceSummary>{
               for (final d in all)
-                d.id:
-                    svc.summarize(dealerId: d.id, transactions: txs)
-                        .currentBalance,
+                d.id: svc.summarize(dealerId: d.id, transactions: txs),
+            };
+            // listAllTransactions desc sıralı döner — putIfAbsent ile her
+            // bayinin ilk match'i (en yeni) tutulur.
+            final lastTxById = <String, DealerTransaction>{};
+            for (final t in txs) {
+              lastTxById.putIfAbsent(t.dealerId, () => t);
+            }
+            final balanceById = {
+              for (final e in summaryById.entries)
+                e.key: e.value.currentBalance,
             };
             final debtorCount = all
                 .where((d) =>
@@ -181,7 +192,11 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                       AppSpacing.pageH,
                       AppSpacing.s,
                     ),
-                    child: _DealerCard(dealer: d),
+                    child: _DealerCard(
+                      dealer: d,
+                      summary: summaryById[d.id]!,
+                      lastTx: lastTxById[d.id],
+                    ),
                   ),
               ],
             );
@@ -276,15 +291,23 @@ class _FilterRow extends StatelessWidget {
   }
 }
 
-class _DealerCard extends ConsumerWidget {
-  const _DealerCard({required this.dealer});
+/// Quality Patch v1 P0-3: artık `ConsumerWidget` değil — balance ve last
+/// tx parent'tan prop olarak gelir (tek pass'te hesaplanır). Eski
+/// `balanceSummaryProvider` + `transactionsByDealerProvider` watch'ları
+/// kaldırıldı: N kart × 2 provider çağrısı → 1 toplu hesap.
+class _DealerCard extends StatelessWidget {
+  const _DealerCard({
+    required this.dealer,
+    required this.summary,
+    required this.lastTx,
+  });
+
   final Dealer dealer;
+  final DealerBalanceSummary summary;
+  final DealerTransaction? lastTx;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final balance = ref.watch(balanceSummaryProvider(dealer.id));
-    final txs = ref.watch(transactionsByDealerProvider(dealer.id));
-
+  Widget build(BuildContext context) {
     return PremiumCard(
       onTap: () => context.push('${AppRoutes.dealers}/${dealer.id}'),
       padding: const EdgeInsets.all(AppSpacing.l),
@@ -369,32 +392,7 @@ class _DealerCard extends ConsumerWidget {
               color: AppColors.borderHairline,
             ),
             const SizedBox(height: AppSpacing.m),
-            balance.when(
-              loading: () => const SizedBox(
-                height: 36,
-                child: Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 1.6),
-                  ),
-                ),
-              ),
-              error: (e, _) => Text(
-                'Bakiye okunamadı: $e',
-                style: const TextStyle(
-                  color: AppColors.danger,
-                  fontSize: 12,
-                ),
-              ),
-              data: (s) => _BalanceFooter(
-                summary: s,
-                lastTx: txs.maybeWhen(
-                  data: (list) => list.isEmpty ? null : list.first,
-                  orElse: () => null,
-                ),
-              ),
-            ),
+            _BalanceFooter(summary: summary, lastTx: lastTx),
           ],
         ),
     );
@@ -409,11 +407,12 @@ class _BalanceFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final balance = summary.currentBalance;
+    // Quality Patch v1 P0-1: 0 bakiye rengi diğer 3 ekranla aynı (textMuted).
     final color = balance > 0
         ? AppColors.copper
         : balance < 0
             ? AppColors.success
-            : AppColors.textSecondary;
+            : AppColors.textMuted;
 
     final label = balance > 0
         ? AppStrings.dealerCardBalanceLabel

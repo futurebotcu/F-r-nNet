@@ -193,6 +193,16 @@ final allDealersRangeMetricsProvider = FutureProvider.autoDispose
   final allTx = await ref.watch(allTransactionsProvider.future);
   final svc = ref.watch(dealerBalanceServiceProvider);
 
+  // Quality Patch v1 P0-4: allTx'i bir kez dealerId'ye göre groupBy yap;
+  // eskiden her bayi için `allTx.where(...)` ile O(N×M) taranırdı.
+  // Aktif bayilerin id'leri filter set'i — pasif bayilerin tx'i atlanır.
+  final activeIds = {for (final d in all) if (d.isActive) d.id};
+  final byDealer = <String, List<DealerTransaction>>{};
+  for (final t in allTx) {
+    if (!activeIds.contains(t.dealerId)) continue;
+    (byDealer[t.dealerId] ??= <DealerTransaction>[]).add(t);
+  }
+
   final active = all.where((d) => d.isActive).toList();
   final perDealerNet = <String, double>{};
   double totalDelivery = 0;
@@ -203,7 +213,7 @@ final allDealersRangeMetricsProvider = FutureProvider.autoDispose
   int txCount = 0;
 
   for (final d in active) {
-    final txs = allTx.where((t) => t.dealerId == d.id).toList();
+    final txs = byDealer[d.id] ?? const <DealerTransaction>[];
     final m = svc.summarizeRange(
       dealerId: d.id,
       transactions: txs,
@@ -282,46 +292,33 @@ final dealersOverviewProvider =
     if (s.currentBalance > 0) openBalance += s.currentBalance;
   }
 
+  // Quality Patch v1 P0-2: bu ay net change + tx count + bugün gross
+  // delivery/payment hesabı artık manuel switch loop'u DEĞİL,
+  // DealerBalanceService.aggregateRange üzerinden — tx-type → katkı
+  // kuralı [summarizeRange] ile tek kaynak.
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
+  final tomorrow = today.add(const Duration(days: 1));
   final monthRange = DealerPeriod.thisMonth(now: now);
-  double delivered = 0;
-  double collected = 0;
-  double monthNet = 0;
-  int monthCount = 0;
-  for (final t in allTx) {
-    // Bu ay: signed katkı + tx count
-    if (!t.createdAt.isBefore(monthRange.start) &&
-        t.createdAt.isBefore(monthRange.end)) {
-      monthCount++;
-      switch (t.type) {
-        case DealerTransactionType.delivery:
-          monthNet += t.amount;
-          break;
-        case DealerTransactionType.returned:
-          monthNet -= t.amount;
-          break;
-        case DealerTransactionType.payment:
-          monthNet -= t.amount;
-          break;
-        case DealerTransactionType.adjustment:
-          monthNet += t.amount;
-          break;
-      }
-    }
-    // Bugün: gross delivery + gross payment
-    if (t.createdAt.isBefore(today)) continue;
-    if (t.type == DealerTransactionType.delivery) delivered += t.amount;
-    if (t.type == DealerTransactionType.payment) collected += t.amount;
-  }
+
+  final monthAgg = svc.aggregateRange(
+    transactions: allTx,
+    start: monthRange.start,
+    end: monthRange.end,
+  );
+  final todayAgg = svc.aggregateRange(
+    transactions: allTx,
+    start: today,
+    end: tomorrow,
+  );
 
   return DealerOverview(
     totalDealers: all.length,
     activeDealers: activeCount,
     openBalance: openBalance,
-    todayDelivered: delivered,
-    todayCollected: collected,
-    monthNetChange: monthNet,
-    monthTxCount: monthCount,
+    todayDelivered: todayAgg.totalDelivery,
+    todayCollected: todayAgg.totalPayment,
+    monthNetChange: monthAgg.netChange,
+    monthTxCount: monthAgg.txCount,
   );
 });
