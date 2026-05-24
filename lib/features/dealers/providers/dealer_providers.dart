@@ -29,6 +29,14 @@ import '../services/dealer_share_builder.dart';
 /// için indeks Riverpod provider'a taşındı. Default 0 (Genel Bakış).
 final dealerShellTabIndexProvider = StateProvider<int>((_) => 0);
 
+/// "Borçlu Bayiler" Genel Bakış CTA için one-shot prefilter (Sprint 6B.x).
+/// CTA bu provider'ı `true`'ya set eder ve [dealerShellTabIndexProvider]'ı
+/// 1 yapar (Bayiler tab). [DealerListScreen] ilk build'inde değeri okur;
+/// true ise filtre `_ActiveFilter.debtOnly`'a alınır ve provider false'a
+/// sıfırlanır (one-shot). Kullanıcı manuel filtre değişikliği yaparsa
+/// normal davranış sürer; provider tetiklenmediği sürece etkisizdir.
+final dealerShellPrefilterDebtOnlyProvider = StateProvider<bool>((_) => false);
+
 /// Genel Bakış "Son Hareketler" listesi (Sprint 6B). Tüm bayilerin son
 /// N tx'ini desc sıralı döner. `listAllTransactions` zaten repo
 /// tarafında sıralı; burada yalnız üstten kesilir.

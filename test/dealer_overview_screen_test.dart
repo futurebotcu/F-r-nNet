@@ -165,11 +165,10 @@ void main() {
   });
 
   group('DealerOverviewScreen — Hızlı İşlem CTA tab switch', () {
-    testWidgets('"Borçlu Bayiler" CTA → tab provider = 1', (tester) async {
+    testWidgets(
+        '"Borçlu Bayiler" CTA → tab provider = 1 + prefilter set true (Sprint 6B.x)',
+        (tester) async {
       final repo = await _seededRepo();
-      // ProviderContainer ile state'i de okuyalım — direkt provider override yerine
-      // bir container kullanmamız gerekirse... aslında ProviderScope içinde overrideler
-      // var. Test'te tab provider'ı doğrudan oku.
       final container = ProviderContainer(overrides: [
         dealerRepositoryProvider.overrideWithValue(repo),
       ]);
@@ -183,17 +182,21 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Default tab index = 0
+      // Default tab index = 0; prefilter = false
       expect(container.read(dealerShellTabIndexProvider), 0);
+      expect(container.read(dealerShellPrefilterDebtOnlyProvider), isFalse);
 
-      // CTA Wrap'i altta — viewport dışına çıkmış olabilir, önce visible'a getir.
       final cta = find.text(AppStrings.dealerOverviewQuickDebtDealers);
       await tester.ensureVisible(cta);
       await tester.pumpAndSettle();
       await tester.tap(cta);
       await tester.pumpAndSettle();
 
+      // Tab Bayiler'e geçer + prefilter true set olur (DealerListScreen
+      // tüketmeden önce). One-shot semantic'i list_filter_test'te
+      // ayrıca doğrulanır.
       expect(container.read(dealerShellTabIndexProvider), 1);
+      expect(container.read(dealerShellPrefilterDebtOnlyProvider), isTrue);
     });
 
     testWidgets('"Raporlar" CTA → tab provider = 3', (tester) async {
