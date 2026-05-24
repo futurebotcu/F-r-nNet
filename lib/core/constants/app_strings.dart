@@ -1126,6 +1126,31 @@ class AppStrings {
   static const String quickPaymentSuccess = 'Tahsilat kaydedildi';
   static const String quickPaymentChangeReturn = 'Para üstü:';
 
+  // Bayi Defteri Genel Bakış (Sprint 6B)
+  static const String dealerOverviewActiveDealersLabel = 'AKTİF BAYİ';
+  static const String dealerOverviewKpiOpenBalance = 'Açık Alacaklar';
+  static const String dealerOverviewKpiTodayDelivery = 'Bugün Teslimat';
+  static const String dealerOverviewKpiTodayPayment = 'Bugün Tahsilat';
+  static const String dealerOverviewKpiMonthTxCount = 'Bu Ay İşlem';
+  static const String dealerOverviewKpiMonthNetChange = 'Bu Ay Net Değişim';
+  static const String dealerOverviewRecentActivityTitle = 'Son Hareketler';
+  static const String dealerOverviewQuickActionsTitle = 'Hızlı İşlem';
+  static const String dealerOverviewQuickAddDealer = 'Bayi Ekle';
+  static const String dealerOverviewQuickDebtDealers = 'Borçlu Bayiler';
+  static const String dealerOverviewQuickReports = 'Raporlar';
+  static const String dealerOverviewQuickDelivery = 'Teslimat Gir';
+  static const String dealerOverviewQuickPayment = 'Ödeme Al';
+  static const String dealerOverviewEmptyActivity = 'Henüz hareket yok';
+  static const String dealerOverviewSeeAll = 'Tümünü Gör';
+
+  // Bayi seçici sheet (Sprint 6B)
+  static const String dealerPickerTitle = 'Bayi Seç';
+  static const String dealerPickerFilterAll = 'Tümü';
+  static const String dealerPickerFilterDebtOnly = 'Borçlu';
+  static const String dealerPickerSearchHint = 'Bayi ara…';
+  static const String dealerPickerNoDealers = 'Bayi bulunamadı';
+  static const String dealerPickerNoDebtors = 'Borçlu bayi yok';
+
   // Bayi Defteri Mini-App Shell (Sprint 6A)
   static const String dealerShellTitle = 'Bayi Defteri';
   static const String dealerShellTabOverview = 'Genel Bakış';
@@ -1133,17 +1158,6 @@ class AppStrings {
   static const String dealerShellTabActivity = 'Hareketler';
   static const String dealerShellTabReports = 'Raporlar';
   static const String dealerShellTabEndOfDay = 'Gün Sonu';
-  static const String dealerShellOverviewWelcomeBody =
-      'Bayilerinin teslimat, iade ve tahsilatlarını buradan tek yerden '
-      'yöneteceksin. Genel özet, hızlı eylem ve günlük rakamlar yakında.';
-  static const String dealerShellOverviewUpcomingTitle = 'Yakında geliyor';
-  static const String dealerShellOverviewUpcomingSummary = 'Günlük özet';
-  static const String dealerShellOverviewUpcomingQuickActions =
-      'Hızlı eylemler';
-  static const String dealerShellOverviewUpcomingRecentActivity =
-      'Son hareketler';
-  static const String dealerShellOverviewUpcomingOpenBalance =
-      'Açık alacaklar';
   static const String dealerShellPlaceholderTitle = 'Yakında';
   static const String dealerShellPlaceholderActivityBody =
       'Tüm bayilerinin işlem akışını birlikte göreceksin.';

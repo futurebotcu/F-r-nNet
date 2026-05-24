@@ -108,12 +108,16 @@ void main() {
         findsOneWidget,
       );
 
-      // Default tab Genel Bakış — karşılama metni görünür
+      // Default tab Genel Bakış — Sprint 6B'den sonra DealerOverviewScreen
+      // render edilir; AKTİF BAYİ chip ve KPI label'ları görünür.
       expect(
-        find.text(AppStrings.dealerShellOverviewWelcomeBody),
+        find.text(AppStrings.dealerOverviewActiveDealersLabel),
         findsOneWidget,
       );
-      expect(find.text(AppStrings.dealerShellTitle), findsOneWidget);
+      expect(
+        find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Ticari: shell render, default tab Genel Bakış', (tester) async {
@@ -122,7 +126,7 @@ void main() {
 
       expect(find.byType(PremiumBottomNav), findsOneWidget);
       expect(
-        find.text(AppStrings.dealerShellOverviewWelcomeBody),
+        find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
         findsOneWidget,
       );
     });
@@ -195,26 +199,27 @@ void main() {
       );
     });
 
-    testWidgets('Genel Bakış tab içeriği — 4 upcoming item', (tester) async {
+    testWidgets('Genel Bakış tab içeriği — KPI labels (Sprint 6B)',
+        (tester) async {
       await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
-      // 4 planlanan özellik chip'i: Günlük özet / Hızlı eylemler /
-      // Son hareketler / Açık alacaklar
+      // Sprint 6B: 5 KPI tile label'ı görünür (placeholder upcoming items
+      // kaldırıldı, gerçek DealerOverviewScreen render edilir)
       expect(
-        find.text(AppStrings.dealerShellOverviewUpcomingSummary),
+        find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerShellOverviewUpcomingQuickActions),
+        find.text(AppStrings.dealerOverviewKpiTodayDelivery.toUpperCase()),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerShellOverviewUpcomingRecentActivity),
+        find.text(AppStrings.dealerOverviewKpiTodayPayment.toUpperCase()),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerShellOverviewUpcomingOpenBalance),
+        find.text(AppStrings.dealerOverviewKpiMonthNetChange.toUpperCase()),
         findsOneWidget,
       );
     });

@@ -16,7 +16,35 @@ import '../repositories/local_dealer_repository.dart';
 import '../repositories/supabase_dealer_repository.dart';
 import '../services/dealer_balance_service.dart';
 import '../services/dealer_pdf_builder.dart';
+import '../services/dealer_period.dart';
 import '../services/dealer_share_builder.dart';
+
+/// Bayi Defteri mini-app shell aktif tab indeksi (Sprint 6B).
+///
+/// Önceki Sprint 6A'da [DealerShellScreen] kendi lokal state'ini
+/// `setState` ile yönetiyordu; 6B'de Genel Bakış ekranındaki "Borçlu
+/// Bayiler" / "Raporlar" CTA'ları başka tab'a programatik geçiş yapacağı
+/// için indeks Riverpod provider'a taşındı. Default 0 (Genel Bakış).
+final dealerShellTabIndexProvider = StateProvider<int>((_) => 0);
+
+/// Genel Bakış "Son Hareketler" listesi (Sprint 6B). Tüm bayilerin son
+/// N tx'ini desc sıralı döner. `listAllTransactions` zaten repo
+/// tarafında sıralı; burada yalnız üstten kesilir.
+final recentActivityProvider =
+    FutureProvider.autoDispose<List<DealerTransaction>>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  final all = await repo.listAllTransactions();
+  return all.take(5).toList();
+});
+
+/// Tüm tx listesi (Sprint 6B picker per-dealer balance hesabı için).
+final allTransactionsProvider =
+    FutureProvider.autoDispose<List<DealerTransaction>>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.listAllTransactions();
+});
 
 /// V1.3.3 — Guarded wrapper ile sarılı dealer repository.
 final dealerRepositoryProvider = Provider<DealerRepository>((ref) {
@@ -136,6 +164,8 @@ class DealerOverview {
     required this.openBalance,
     required this.todayDelivered,
     required this.todayCollected,
+    required this.monthNetChange,
+    required this.monthTxCount,
   });
 
   final int totalDealers;
@@ -149,6 +179,14 @@ class DealerOverview {
 
   /// Bugün alınan ödeme toplamı (TL).
   final double todayCollected;
+
+  /// Bu ay (1'i 00:00 — gelecek ayın 1'i 00:00) net değişim.
+  /// `delivery + adjustment − return − payment` formülü;
+  /// `DealerBalanceService.summarize` ile aynı imzalı katkı kuralı.
+  final double monthNetChange;
+
+  /// Bu ay aralığındaki tx sayısı (tüm bayiler birleşik).
+  final int monthTxCount;
 }
 
 final dealersOverviewProvider =
@@ -169,9 +207,32 @@ final dealersOverviewProvider =
 
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
+  final monthRange = DealerPeriod.thisMonth(now: now);
   double delivered = 0;
   double collected = 0;
+  double monthNet = 0;
+  int monthCount = 0;
   for (final t in allTx) {
+    // Bu ay: signed katkı + tx count
+    if (!t.createdAt.isBefore(monthRange.start) &&
+        t.createdAt.isBefore(monthRange.end)) {
+      monthCount++;
+      switch (t.type) {
+        case DealerTransactionType.delivery:
+          monthNet += t.amount;
+          break;
+        case DealerTransactionType.returned:
+          monthNet -= t.amount;
+          break;
+        case DealerTransactionType.payment:
+          monthNet -= t.amount;
+          break;
+        case DealerTransactionType.adjustment:
+          monthNet += t.amount;
+          break;
+      }
+    }
+    // Bugün: gross delivery + gross payment
     if (t.createdAt.isBefore(today)) continue;
     if (t.type == DealerTransactionType.delivery) delivered += t.amount;
     if (t.type == DealerTransactionType.payment) collected += t.amount;
@@ -183,5 +244,7 @@ final dealersOverviewProvider =
     openBalance: openBalance,
     todayDelivered: delivered,
     todayCollected: collected,
+    monthNetChange: monthNet,
+    monthTxCount: monthCount,
   );
 });
