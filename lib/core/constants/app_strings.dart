@@ -951,11 +951,6 @@ class AppStrings {
   static const String cardBakeryPanelSub = 'Üretim, fire, gün sonu';
   static const String cardDealerPanel = 'Bayi Paneli';
   static const String cardDealerPanelSub = 'Teslimat, tahsilat, hesap';
-  // Bireysel rolde aynı kart farklı altyazıyla görünür: kullanıcı kendi
-  // ücretsiz defterini açmaz, yalnız yetkilendirildiği işletmenin
-  // defterine girer. Yetki yoksa EmptyAuthorizedState gösterilir.
-  static const String cardDealerPanelStaffSub =
-      'Yetkili olduğun işletmenin defteri';
   static const String cardMyListings = 'İlanlarım';
   static const String cardMyListingsSub = 'Yayında olan iş ilanların';
   static const String cardMessages = 'Mesajlar';
@@ -1064,17 +1059,6 @@ class AppStrings {
       'Bayilerini ekledikçe teslimat, iade ve tahsilatları '
       'tek yerden yöneteceksin.';
   static const String dealerListEmptyCta = 'İlk bayiyi ekle';
-
-  // Bireysel rolde Bayi Paneli açıldığında — kullanıcı kendi adına
-  // ücretsiz defter açamaz; yalnız bir ticari işletme tarafından
-  // FırınNet ID ile yetkilendirildiğinde o işletmenin defterini görür.
-  // Yetkili işletme yoksa bu boş durum gösterilir.
-  static const String dealerEmptyAuthorizedTitle =
-      'Henüz yetkili olduğun bir işletme yok';
-  static const String dealerEmptyAuthorizedBody =
-      'Bir fırın işletmesi seni FırınNet ID ile yetkilendirdiğinde '
-      'burada işletme defterini görebilirsin.';
-
   static const String dealerCardBalanceLabel = 'Bakiye';
   static const String dealerCardCreditLabel = 'Alacak';
   static const String dealerCardClosedLabel = 'Kapalı';

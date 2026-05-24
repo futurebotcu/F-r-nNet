@@ -46,27 +46,6 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
       );
     }
 
-    // Bireysel kullanıcı kendi adına bayi defteri açmaz; yalnız bir ticari
-    // işletme tarafından FırınNet ID ile yetkilendirildiğinde o işletmenin
-    // defterini görür. Staff modeli (dealer_staff) henüz aktif olmadığı
-    // için bireyselin sonucu daima EmptyAuthorizedState'tir. C2'de
-    // dealer_staff geldiğinde DealerAccessResolver ile değiştirilecek.
-    if (profile?.accountType == AccountType.individual) {
-      return PremiumScaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.dealerListTitle),
-        ),
-        body: const SafeArea(
-          top: false,
-          child: EmptyState(
-            title: AppStrings.dealerEmptyAuthorizedTitle,
-            subtitle: AppStrings.dealerEmptyAuthorizedBody,
-            icon: Icons.business_outlined,
-          ),
-        ),
-      );
-    }
-
     final dealersAsync = ref.watch(dealersListProvider);
 
     return PremiumScaffold(
