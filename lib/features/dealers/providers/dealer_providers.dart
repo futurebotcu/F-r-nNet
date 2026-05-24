@@ -181,6 +181,58 @@ final dealerRangeMetricsProvider = FutureProvider.autoDispose
   );
 });
 
+/// Tüm **aktif** bayiler üzerinden `[start, end)` toplu agregat
+/// metrikleri (Sprint Raporlar). Per-dealer dağılım [perDealerNet]
+/// içinde döner — UI listede her bayi için bu periyottaki net'i
+/// göstermek için kullanır. `allTransactionsProvider` cache'ini
+/// paylaşır — Genel Bakış zaten yüklemişse ekstra round-trip yok.
+final allDealersRangeMetricsProvider = FutureProvider.autoDispose
+    .family<DealerAggregateRangeMetrics, ({DateTime start, DateTime end})>(
+        (ref, q) async {
+  final all = await ref.watch(dealersListProvider.future);
+  final allTx = await ref.watch(allTransactionsProvider.future);
+  final svc = ref.watch(dealerBalanceServiceProvider);
+
+  final active = all.where((d) => d.isActive).toList();
+  final perDealerNet = <String, double>{};
+  double totalDelivery = 0;
+  double totalReturn = 0;
+  double totalPayment = 0;
+  double totalAdjustment = 0;
+  double netChange = 0;
+  int txCount = 0;
+
+  for (final d in active) {
+    final txs = allTx.where((t) => t.dealerId == d.id).toList();
+    final m = svc.summarizeRange(
+      dealerId: d.id,
+      transactions: txs,
+      start: q.start,
+      end: q.end,
+    );
+    perDealerNet[d.id] = m.netChange;
+    totalDelivery += m.totalDelivery;
+    totalReturn += m.totalReturn;
+    totalPayment += m.totalPayment;
+    totalAdjustment += m.totalAdjustment;
+    netChange += m.netChange;
+    txCount += m.txCount;
+  }
+
+  return DealerAggregateRangeMetrics(
+    start: q.start,
+    end: q.end,
+    totalDelivery: totalDelivery,
+    totalReturn: totalReturn,
+    totalPayment: totalPayment,
+    totalAdjustment: totalAdjustment,
+    netChange: netChange,
+    txCount: txCount,
+    activeDealerCount: active.length,
+    perDealerNet: perDealerNet,
+  );
+});
+
 /// Panel hero için global bayi yönetimi metrikleri.
 class DealerOverview {
   const DealerOverview({
