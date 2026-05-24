@@ -73,6 +73,7 @@ class DealerAggregateRangeMetrics {
     required this.txCount,
     required this.activeDealerCount,
     required this.perDealerNet,
+    required this.perDealerTxCount,
   });
 
   final DateTime start;
@@ -89,6 +90,11 @@ class DealerAggregateRangeMetrics {
   /// chip gösterirken kullanır.
   final Map<String, double> perDealerNet;
 
+  /// `dealerId -> txCount` map (Gün Sonu V1). "Bugün hareketi var mı?"
+  /// sorusunu net=0 senaryosunda da doğru cevaplar (delivery + payment
+  /// eşitliği netChange'i sıfırlar ama tx vardır).
+  final Map<String, int> perDealerTxCount;
+
   factory DealerAggregateRangeMetrics.empty({
     required DateTime start,
     required DateTime end,
@@ -104,6 +110,7 @@ class DealerAggregateRangeMetrics {
       txCount: 0,
       activeDealerCount: 0,
       perDealerNet: const {},
+      perDealerTxCount: const {},
     );
   }
 }
