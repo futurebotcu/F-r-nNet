@@ -497,11 +497,15 @@ class _QuickActionsSection extends ConsumerWidget {
               icon: Icons.warning_amber_rounded,
               label: AppStrings.dealerOverviewQuickDebtDealers,
               accent: AppColors.copper,
-              // Sprint 6B kontrollü kapsam: Bayiler tab'a switch yeterli;
-              // kart'lardaki BAKIYE pill'i borçlu bayileri zaten vurgular.
-              // True "debt-only" filter chip ileride 6B.x'te.
-              onTap: () =>
-                  ref.read(dealerShellTabIndexProvider.notifier).state = 1,
+              // Sprint 6B.x: Bayiler tab'a switch + debtOnly filter
+              // chip'i bir kez preset et. DealerListScreen initState'te
+              // prefilter'ı tüketir ve false'a reset eder (one-shot).
+              onTap: () {
+                ref
+                    .read(dealerShellPrefilterDebtOnlyProvider.notifier)
+                    .state = true;
+                ref.read(dealerShellTabIndexProvider.notifier).state = 1;
+              },
             ),
             _QuickActionChip(
               icon: Icons.analytics_outlined,

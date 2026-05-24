@@ -30,6 +30,24 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
   _ActiveFilter _filter = _ActiveFilter.all;
 
   @override
+  void initState() {
+    super.initState();
+    // Sprint 6B.x: Genel Bakış "Borçlu Bayiler" CTA prefilter set ederse
+    // bu ekran ilk açılışta debtOnly filtre'ye alınır. Provider one-shot;
+    // tüketildikten sonra false'a reset edilir. Kullanıcı manuel
+    // filtre değiştirirse normal akış sürer.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final prefilter = ref.read(dealerShellPrefilterDebtOnlyProvider);
+      if (prefilter) {
+        setState(() => _filter = _ActiveFilter.debtOnly);
+        ref.read(dealerShellPrefilterDebtOnlyProvider.notifier).state =
+            false;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final profile = ref.watch(profileControllerProvider);
 
@@ -47,6 +65,10 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
     }
 
     final dealersAsync = ref.watch(dealersListProvider);
+    // Sprint 6B.x: Borçlu filtre + chip count'lar için per-dealer balance
+    // map'i. allTxs zaten Sprint 6B'de sağlanan provider'dan.
+    final txsAsync = ref.watch(allTransactionsProvider);
+    final svc = ref.watch(dealerBalanceServiceProvider);
 
     return PremiumScaffold(
       appBar: AppBar(
@@ -76,7 +98,22 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
               );
             }
 
-            final filtered = _applyFilters(all);
+            // Balance map (debtOnly filter + chip count için). allTx async
+            // henüz gelmezse boş map ile ilerle — "Borçlu" filter o anda
+            // boş gösterir, sonra tx geldiğinde rebuild olur.
+            final txs = txsAsync.value ?? const <DealerTransaction>[];
+            final balanceById = <String, double>{
+              for (final d in all)
+                d.id:
+                    svc.summarize(dealerId: d.id, transactions: txs)
+                        .currentBalance,
+            };
+            final debtorCount = all
+                .where((d) =>
+                    d.isActive && (balanceById[d.id] ?? 0) > 0)
+                .length;
+
+            final filtered = _applyFilters(all, balanceById);
 
             return ListView(
               physics: const BouncingScrollPhysics(
@@ -115,6 +152,7 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                   filter: _filter,
                   total: all.length,
                   active: all.where((d) => d.isActive).length,
+                  debtor: debtorCount,
                   onChanged: (f) => setState(() => _filter = f),
                 ),
                 if (filtered.isEmpty)
@@ -153,7 +191,10 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
     );
   }
 
-  List<Dealer> _applyFilters(List<Dealer> src) {
+  List<Dealer> _applyFilters(
+    List<Dealer> src,
+    Map<String, double> balanceById,
+  ) {
     Iterable<Dealer> r = src;
     switch (_filter) {
       case _ActiveFilter.all:
@@ -163,6 +204,13 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
         break;
       case _ActiveFilter.passive:
         r = r.where((d) => !d.isActive);
+        break;
+      case _ActiveFilter.debtOnly:
+        // Sprint 6B.x: aktif + currentBalance > 0. Pasif borçlular
+        // bilinçli olarak hariç (kullanıcı "ödenmedi ama bayi de
+        // gitti" durumunu zaten pasif filtresinden görür).
+        r = r.where((d) =>
+            d.isActive && (balanceById[d.id] ?? 0) > 0);
         break;
     }
     if (_query.isNotEmpty) {
@@ -176,19 +224,21 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
   }
 }
 
-enum _ActiveFilter { all, active, passive }
+enum _ActiveFilter { all, active, passive, debtOnly }
 
 class _FilterRow extends StatelessWidget {
   const _FilterRow({
     required this.filter,
     required this.total,
     required this.active,
+    required this.debtor,
     required this.onChanged,
   });
 
   final _ActiveFilter filter;
   final int total;
   final int active;
+  final int debtor;
   final ValueChanged<_ActiveFilter> onChanged;
 
   @override
@@ -209,6 +259,9 @@ class _FilterRow extends StatelessWidget {
           const SizedBox(width: 8),
           _chip(context, '${AppStrings.dealerFilterPassive} ($passive)',
               _ActiveFilter.passive),
+          const SizedBox(width: 8),
+          _chip(context, '${AppStrings.dealerFilterDebtOnly} ($debtor)',
+              _ActiveFilter.debtOnly),
         ],
       ),
     );

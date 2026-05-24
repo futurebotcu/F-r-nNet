@@ -1052,6 +1052,7 @@ class AppStrings {
   static const String dealerFilterAll = 'Tümü';
   static const String dealerFilterActive = 'Aktif';
   static const String dealerFilterPassive = 'Pasif';
+  static const String dealerFilterDebtOnly = 'Borçlu';
   static const String dealerListSection = 'Bayiler';
   static const String dealerListNoMatch = 'Bu kriterlerle eşleşen bayi yok.';
   static const String dealerListEmptyTitle = 'Henüz bayi yok';
