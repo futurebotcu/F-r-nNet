@@ -49,7 +49,9 @@ extension PostTypeMeta on PostType {
     }
   }
 
-  /// Rozet ve vurgu rengi.
+  /// Rozet ve vurgu rengi (Social UI Polish Sprint 1 sonrası).
+  /// supply → copper (tedarik), equipment → textSecondary (muted),
+  /// job → success. Diğerleri sabit.
   Color get accent {
     switch (this) {
       case PostType.production:
@@ -57,11 +59,11 @@ extension PostTypeMeta on PostType {
       case PostType.question:
         return AppColors.info;
       case PostType.supply:
-        return AppColors.success;
-      case PostType.equipment:
         return AppColors.copper;
+      case PostType.equipment:
+        return AppColors.textSecondary;
       case PostType.job:
-        return AppColors.softGold;
+        return AppColors.success;
       case PostType.groupHighlight:
         return AppColors.copper;
     }

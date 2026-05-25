@@ -191,6 +191,12 @@ class AppStrings {
   static const String feedEmpty =
       'Henüz paylaşım yok. İlk gönderiyi sen at — ağ buradan büyür.';
   static const String feedComposerNewPostCta = 'Paylaş';
+  // Social UI Polish Sprint 1 — inline composer card.
+  static const String feedComposerInlinePlaceholder =
+      'Ne paylaşmak istersin?';
+  static const String feedComposerInlineCtaPhoto = 'Fotoğraf';
+  static const String feedComposerInlineCtaQuestion = 'Soru';
+  static const String feedComposerInlineCtaProduction = 'Üretim';
   static const String retry = 'Yeniden dene';
   static const String storiesMyStoryLabel = 'Hikayem';
   static const String storiesEmptyHint = 'Hikaye akışı yakında.';
