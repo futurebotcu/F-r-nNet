@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
+import '../../profile/providers/follow_providers.dart';
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_post.dart';
@@ -180,6 +181,116 @@ class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
 final feedPagedNotifierProvider =
     AsyncNotifierProvider<FeedPagedNotifier, FeedPagedState>(
   FeedPagedNotifier.new,
+);
+
+/// Social UI Polish Sprint 2A — Şu anki kullanıcının takip ettiği user
+/// id'lerinin set'i. Guest / oturum yoksa boş set döner.
+/// `followChangesProvider` tick'iyle invalidate olur (follow toggle
+/// sonrası feed segmenti taze listeyle çalışır).
+final currentFollowingIdsProvider =
+    FutureProvider.autoDispose<Set<String>>((ref) async {
+  ref.watch(followChangesProvider);
+  final user = ref.watch(currentAuthUserProvider);
+  if (user == null) return const <String>{};
+  final repo = ref.watch(followRepositoryProvider);
+  final ids = await repo.listFollowingIds(user.id);
+  return ids.toSet();
+});
+
+/// Social UI Polish Sprint 2A — "Takip Edilenler" segmenti paged feed.
+///
+/// `feedPagedNotifierProvider` ile aynı şekil; tek fark `owner_id in
+/// (followingIds)` server-side filter. `currentFollowingIdsProvider` boş
+/// set döndürürse provider erken empty state üretir (Supabase'e gitmez).
+class FeedFollowingPagedNotifier extends AsyncNotifier<FeedPagedState> {
+  static const int _pageSize = 20;
+
+  @override
+  Future<FeedPagedState> build() async {
+    ref.watch(feedChangesProvider);
+    final ids = await ref.watch(currentFollowingIdsProvider.future);
+    if (ids.isEmpty) {
+      return const FeedPagedState(
+        posts: <FeedPost>[],
+        isLoadingMore: false,
+        hasMore: false,
+        error: null,
+      );
+    }
+    final repo = ref.watch(feedRepositoryProvider);
+    final first = await repo.listPostsPageForFollowing(
+      followingIds: ids,
+      offset: 0,
+      limit: _pageSize,
+    );
+    return FeedPagedState(
+      posts: first,
+      isLoadingMore: false,
+      hasMore: first.length == _pageSize,
+      error: null,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (current.isLoadingMore || !current.hasMore) return;
+    final ids = await ref.read(currentFollowingIdsProvider.future);
+    if (ids.isEmpty) return;
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    try {
+      final repo = ref.read(feedRepositoryProvider);
+      final next = await repo.listPostsPageForFollowing(
+        followingIds: ids,
+        offset: current.posts.length,
+        limit: _pageSize,
+      );
+      state = AsyncData(
+        FeedPagedState(
+          posts: <FeedPost>[...current.posts, ...next],
+          isLoadingMore: false,
+          hasMore: next.length == _pageSize,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      state = AsyncData(
+        current.copyWith(isLoadingMore: false, error: e),
+      );
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final ids = await ref.read(currentFollowingIdsProvider.future);
+      if (ids.isEmpty) {
+        return const FeedPagedState(
+          posts: <FeedPost>[],
+          isLoadingMore: false,
+          hasMore: false,
+          error: null,
+        );
+      }
+      final repo = ref.read(feedRepositoryProvider);
+      final first = await repo.listPostsPageForFollowing(
+        followingIds: ids,
+        offset: 0,
+        limit: _pageSize,
+      );
+      return FeedPagedState(
+        posts: first,
+        isLoadingMore: false,
+        hasMore: first.length == _pageSize,
+        error: null,
+      );
+    });
+  }
+}
+
+final feedFollowingPagedNotifierProvider =
+    AsyncNotifierProvider<FeedFollowingPagedNotifier, FeedPagedState>(
+  FeedFollowingPagedNotifier.new,
 );
 
 /// M4 Polish — profile-scoped paged posts.

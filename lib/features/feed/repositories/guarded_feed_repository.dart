@@ -55,6 +55,18 @@ class GuardedFeedRepository implements FeedRepository {
       );
 
   @override
+  Future<List<FeedPost>> listPostsPageForFollowing({
+    required Set<String> followingIds,
+    int offset = 0,
+    int limit = 20,
+  }) =>
+      inner.listPostsPageForFollowing(
+        followingIds: followingIds,
+        offset: offset,
+        limit: limit,
+      );
+
+  @override
   Future<List<FeedInsight>> listInsights() => inner.listInsights();
 
   @override

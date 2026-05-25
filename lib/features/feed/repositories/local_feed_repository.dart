@@ -80,6 +80,21 @@ class LocalFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<List<FeedPost>> listPostsPageForFollowing({
+    required Set<String> followingIds,
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    if (followingIds.isEmpty) return const <FeedPost>[];
+    final src =
+        _posts.where((p) => followingIds.contains(p.ownerId)).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (offset >= src.length) return const <FeedPost>[];
+    final end = (offset + limit).clamp(0, src.length);
+    return List.unmodifiable(src.sublist(offset, end));
+  }
+
+  @override
   Future<FeedPost> addPost({
     required PostType type,
     required String author,

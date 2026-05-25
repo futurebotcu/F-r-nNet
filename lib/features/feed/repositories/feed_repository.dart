@@ -40,6 +40,19 @@ abstract class FeedRepository {
     int limit = 20,
   });
 
+  /// Social UI Polish Sprint 2A — "Takip Edilenler" segmenti.
+  ///
+  /// `followingIds` boşsa boş liste döner (no-op, Supabase'e gitmez).
+  /// Server-side `.in_('owner_id', ids)` filter ile pagination doğru
+  /// çalışır; `listPostsByOwnerPage`'in çoklu-owner varyantı gibi düşün.
+  /// Migration / RPC YOK — `feed_posts` RLS `to authenticated` zaten
+  /// any-author select'e izin veriyor.
+  Future<List<FeedPost>> listPostsPageForFollowing({
+    required Set<String> followingIds,
+    int offset = 0,
+    int limit = 20,
+  });
+
   /// V2 Social Core — donor `posts_repository.updatePost(id, caption)`
   /// muadili. Owner-only edit: caption + tags güncellenir. Supabase impl
   /// `.select('id').eq('owner_id', userId)` ile 0-row update durumunda

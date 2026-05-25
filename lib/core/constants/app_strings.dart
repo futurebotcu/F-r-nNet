@@ -197,6 +197,18 @@ class AppStrings {
   static const String feedComposerInlineCtaPhoto = 'Fotoğraf';
   static const String feedComposerInlineCtaQuestion = 'Soru';
   static const String feedComposerInlineCtaProduction = 'Üretim';
+  // Social UI Polish Sprint 2A — Feed segmentation (Genel Akış / Takip Edilenler)
+  static const String feedSegmentAll = 'Genel Akış';
+  static const String feedSegmentFollowing = 'Takip Edilenler';
+  static const String feedFollowingEmptyNoFollows =
+      'Henüz kimseyi takip etmiyorsun.';
+  static const String feedFollowingEmptyNoFollowsHint =
+      'Beğendiğin paylaşımların sahibi profillere git ve Takip Et.';
+  static const String feedFollowingEmptyNoPosts =
+      'Takip ettiklerinden henüz paylaşım yok.';
+  static const String feedFollowingEmptyGuest =
+      'Takip Edilenler akışını görmek için giriş yap.';
+  static const String feedFollowingBackToAll = 'Tüm akışa dön';
   static const String retry = 'Yeniden dene';
   static const String storiesMyStoryLabel = 'Hikayem';
   static const String storiesEmptyHint = 'Hikaye akışı yakında.';

@@ -32,9 +32,12 @@ import '../../feed/models/feed_post.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../notifications/widgets/notifications_header_action.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../dealers/widgets/dealer_filter_chip.dart';
 import '../composer/inline_composer_card.dart';
 import '../post/social_post_card.dart';
 import '../stories/social_stories_carousel.dart';
+import 'feed_segment_provider.dart';
 
 /// FırınNet'in ana sosyal feed sayfası — donor-first.
 ///
@@ -78,18 +81,33 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
     final atBottomZone = pos.pixels >= pos.maxScrollExtent - 300;
     if (atBottomZone) {
       // No-op if already loading or hasMore=false (notifier guard).
-      ref.read(feedPagedNotifierProvider.notifier).loadMore();
+      // Sprint 2A: segment'e göre doğru notifier'a loadMore.
+      final segment = ref.read(feedSegmentProvider);
+      if (segment == 0) {
+        ref.read(feedPagedNotifierProvider.notifier).loadMore();
+      } else {
+        ref.read(feedFollowingPagedNotifierProvider.notifier).loadMore();
+      }
     }
   }
 
   Future<void> _onRefresh() async {
-    await ref.read(feedPagedNotifierProvider.notifier).refresh();
+    // Sprint 2A: segment'e göre doğru notifier'a refresh.
+    final segment = ref.read(feedSegmentProvider);
+    if (segment == 0) {
+      await ref.read(feedPagedNotifierProvider.notifier).refresh();
+    } else {
+      await ref.read(feedFollowingPagedNotifierProvider.notifier).refresh();
+    }
     ref.invalidate(feedInsightsProvider);
   }
 
   @override
   Widget build(BuildContext context) {
-    final pagedAsync = ref.watch(feedPagedNotifierProvider);
+    final segment = ref.watch(feedSegmentProvider);
+    final pagedAsync = segment == 0
+        ? ref.watch(feedPagedNotifierProvider)
+        : ref.watch(feedFollowingPagedNotifierProvider);
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -109,6 +127,7 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
                     isLoadingMore: state.isLoadingMore,
                     hasMore: state.hasMore,
                     scrollController: _scrollController,
+                    segment: segment,
                   ),
                 ),
               ),
@@ -219,6 +238,7 @@ class _FeedList extends ConsumerWidget {
     required this.isLoadingMore,
     required this.hasMore,
     required this.scrollController,
+    required this.segment,
   });
 
   final List<FeedPost> posts;
@@ -226,14 +246,19 @@ class _FeedList extends ConsumerWidget {
   final bool hasMore;
   final ScrollController scrollController;
 
-  /// Social UI Polish Sprint 1 — feed header sequence:
-  /// stories carousel (opsiyonel) + InlineComposerCard. Composer kartı
-  /// her zaman görünür (kullanıcıyı paylaşıma teşvik).
+  /// Social UI Polish Sprint 2A — `0` = Genel Akış, `1` = Takip Edilenler.
+  /// Empty state davranışı segment'e göre değişir.
+  final int segment;
+
+  /// Sosyal feed header sequence (Polish v1 + v2A birleşik):
+  /// stories + segment chip row + InlineComposerCard.
   static List<Widget> _headers() {
     return <Widget>[
       if (_kShowStories) const SocialStoriesCarousel(),
       if (_kShowStories)
         const Divider(height: 1, color: AppColors.borderHairline),
+      const _FeedSegment(),
+      const Divider(height: 1, color: AppColors.borderHairline),
       const InlineComposerCard(),
       const Divider(height: 1, color: AppColors.borderHairline),
     ];
@@ -250,7 +275,10 @@ class _FeedList extends ConsumerWidget {
         ),
         children: [
           ...headers,
-          const _FeedEmpty(),
+          if (segment == 1)
+            const _FollowingEmpty()
+          else
+            const _FeedEmpty(),
         ],
       );
     }
@@ -404,6 +432,100 @@ class _FeedEmpty extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Social UI Polish Sprint 2A — feed segment chip row.
+/// "Genel Akış" / "Takip Edilenler" arasında geçiş.
+class _FeedSegment extends ConsumerWidget {
+  const _FeedSegment();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final segment = ref.watch(feedSegmentProvider);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.s,
+        AppSpacing.pageH,
+        AppSpacing.s,
+      ),
+      child: Row(
+        children: [
+          DealerFilterChip(
+            label: AppStrings.feedSegmentAll,
+            selected: segment == 0,
+            onSelected: (_) =>
+                ref.read(feedSegmentProvider.notifier).state = 0,
+          ),
+          const SizedBox(width: AppSpacing.s),
+          DealerFilterChip(
+            label: AppStrings.feedSegmentFollowing,
+            selected: segment == 1,
+            onSelected: (_) =>
+                ref.read(feedSegmentProvider.notifier).state = 1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Social UI Polish Sprint 2A — "Takip Edilenler" segmenti boş durumu.
+/// 3 alt-durum: guest / auth ama 0 follow / follow var ama post yok.
+class _FollowingEmpty extends ConsumerWidget {
+  const _FollowingEmpty();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentAuthUserProvider);
+    final idsAsync = ref.watch(currentFollowingIdsProvider);
+
+    if (user == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+        child: EmptyState(
+          title: AppStrings.feedFollowingEmptyGuest,
+          icon: Icons.lock_outline_rounded,
+          actionLabel: AppStrings.feedFollowingBackToAll,
+          onAction: () =>
+              ref.read(feedSegmentProvider.notifier).state = 0,
+          compact: true,
+        ),
+      );
+    }
+
+    // Auth ama follow set'i boş — sadece data gelmişse karar veriyoruz.
+    // idsAsync hâlâ loading ise boş post listesini empty state'le karşılama;
+    // _FeedList build'i sadece posts.isEmpty olduğunda bizi çağırıyor.
+    final ids = idsAsync.asData?.value ?? const <String>{};
+    if (ids.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+        child: EmptyState(
+          title: AppStrings.feedFollowingEmptyNoFollows,
+          subtitle: AppStrings.feedFollowingEmptyNoFollowsHint,
+          icon: Icons.person_add_alt_1_outlined,
+          actionLabel: AppStrings.feedFollowingBackToAll,
+          onAction: () =>
+              ref.read(feedSegmentProvider.notifier).state = 0,
+          compact: true,
+        ),
+      );
+    }
+
+    // Follow var ama post yok.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: EmptyState(
+        title: AppStrings.feedFollowingEmptyNoPosts,
+        icon: Icons.feed_outlined,
+        actionLabel: AppStrings.feedFollowingBackToAll,
+        onAction: () =>
+            ref.read(feedSegmentProvider.notifier).state = 0,
+        compact: true,
       ),
     );
   }
