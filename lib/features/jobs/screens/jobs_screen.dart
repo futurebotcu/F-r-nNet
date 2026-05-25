@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/listing_phone_cta.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/job_opportunity_card.dart';
@@ -126,16 +127,18 @@ class _LookingList extends ConsumerWidget {
             padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (_, __) => const _JobsMessage(
+          error: (_, __) => const EmptyState(
+            compact: true,
             icon: Icons.cloud_off_outlined,
-            message: AppStrings.jobsErrorGeneric,
+            title: AppStrings.jobsErrorGeneric,
           ),
           data: (posts) {
             if (posts.isEmpty) {
               final user = ref.watch(currentAuthUserProvider);
-              return _JobsMessage(
+              return EmptyState(
+                compact: true,
                 icon: Icons.inbox_outlined,
-                message: user == null
+                title: user == null
                     ? AppStrings.jobsLookingEmptyGuest
                     : AppStrings.jobsLookingEmpty,
               );
@@ -267,18 +270,20 @@ class _HiringList extends ConsumerWidget {
             padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (_, __) => const _JobsMessage(
+          error: (_, __) => const EmptyState(
+            compact: true,
             icon: Icons.cloud_off_outlined,
-            message: AppStrings.jobOfferErrorGeneric,
+            title: AppStrings.jobOfferErrorGeneric,
           ),
           data: (offers) {
             if (offers.isEmpty) {
               final user = ref.watch(currentAuthUserProvider);
               return Column(
                 children: [
-                  _JobsMessage(
+                  EmptyState(
+                    compact: true,
                     icon: Icons.inbox_outlined,
-                    message: user == null
+                    title: user == null
                         ? AppStrings.jobOfferEmptyGuest
                         : AppStrings.jobOfferEmpty,
                   ),
@@ -430,51 +435,6 @@ class _JobOfferCard extends ConsumerWidget {
           child: ListingPhoneCta(phone: offer.contactPhone, compact: true),
         ),
       ],
-    );
-  }
-}
-
-class _JobsMessage extends StatelessWidget {
-  const _JobsMessage({required this.icon, required this.message});
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageH,
-        AppSpacing.l,
-        AppSpacing.pageH,
-        AppSpacing.l,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.l),
-          border: Border.all(
-            color: AppColors.borderHairline,
-            width: 0.6,
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: AppColors.softGold, size: 20),
-            const SizedBox(width: AppSpacing.m),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.5,
-                      color: AppColors.textSecondary,
-                    ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

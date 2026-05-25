@@ -13,6 +13,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
+import '../widgets/dealer_filter_chip.dart';
 
 /// Bayi Defteri Hareketler tab içeriği (Sprint Activity).
 ///
@@ -48,7 +49,8 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
         top: false,
         child: txsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (e, _) =>
+              const Center(child: Text(AppStrings.dealersErrorLoad)),
           data: (txs) {
             final dealerNameById = dealersAsync.maybeWhen(
               data: (list) => {for (final d in list) d.id: d.name},
@@ -309,8 +311,8 @@ class _FilterChipRow extends StatelessWidget {
   }
 
   Widget _chip(String label, _TxFilter f) {
-    return ChoiceChip(
-      label: Text(label),
+    return DealerFilterChip(
+      label: label,
       selected: filter == f,
       onSelected: (_) => onChanged(f),
     );

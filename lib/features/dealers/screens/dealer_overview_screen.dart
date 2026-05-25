@@ -40,7 +40,8 @@ class DealerOverviewScreen extends ConsumerWidget {
         top: false,
         child: overviewAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (e, _) =>
+              const Center(child: Text(AppStrings.dealersErrorLoad)),
           data: (o) => SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pageH,
@@ -229,9 +230,9 @@ class _RecentActivitySection extends ConsumerWidget {
             padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (e, _) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.l),
-            child: Center(child: Text('Hata: $e')),
+          error: (e, _) => const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
+            child: Center(child: Text(AppStrings.dealersErrorLoad)),
           ),
           data: (txs) {
             if (txs.isEmpty) {
