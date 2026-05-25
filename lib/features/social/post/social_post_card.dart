@@ -256,7 +256,9 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
         12,
       ),
       decoration: BoxDecoration(
-        color: AppColors.elevatedCard,
+        // Color Foundation Sprint — post kartı sıcak beyaz (AppColors.card)
+        // çizgisinde kalır; soft wheat ana feed yüzeyi değil.
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.l),
         border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),

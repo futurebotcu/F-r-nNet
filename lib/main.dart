@@ -24,7 +24,8 @@ Future<void> main() async {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFFFFF8ED),
+      // Color Foundation Sprint — AppColors.background ile sync (#FAF3EA).
+      systemNavigationBarColor: Color(0xFFFAF3EA),
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );

@@ -43,7 +43,7 @@ class AppShadow {
   /// Sıcak kahve tonu, çok düşük alpha — krem zeminde belli belirsiz.
   static const List<BoxShadow> card = <BoxShadow>[
     BoxShadow(
-      color: Color(0x0F2B1D14),
+      color: Color(0x0F221A13),
       blurRadius: 12,
       offset: Offset(0, 4),
     ),
@@ -52,7 +52,7 @@ class AppShadow {
   /// Yumuşak — modal/sheet için biraz daha derin.
   static const List<BoxShadow> soft = <BoxShadow>[
     BoxShadow(
-      color: Color(0x182B1D14),
+      color: Color(0x18221A13),
       blurRadius: 18,
       offset: Offset(0, 8),
     ),
@@ -61,7 +61,7 @@ class AppShadow {
   /// Sade — neredeyse görünmez, küçük tile için.
   static const List<BoxShadow> subtle = <BoxShadow>[
     BoxShadow(
-      color: Color(0x0A2B1D14),
+      color: Color(0x0A221A13),
       blurRadius: 6,
       offset: Offset(0, 2),
     ),
@@ -70,7 +70,7 @@ class AppShadow {
   /// Yüksek katman / floating panel için.
   static const List<BoxShadow> floating = <BoxShadow>[
     BoxShadow(
-      color: Color(0x1A2B1D14),
+      color: Color(0x1A221A13),
       blurRadius: 20,
       offset: Offset(0, 10),
     ),
@@ -89,7 +89,7 @@ class AppShadow {
   /// Hero kartlarda yumuşak sıcaklık — parlamasız, doğal.
   static List<BoxShadow> heroGlow = const [
     BoxShadow(
-      color: Color(0x142B1D14),
+      color: Color(0x14221A13),
       blurRadius: 14,
       offset: Offset(0, 8),
     ),
