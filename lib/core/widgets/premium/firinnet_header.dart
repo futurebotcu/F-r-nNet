@@ -23,28 +23,40 @@ class FirinNetHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
+      // FirinNetHeader polish sprint — bottom padding m (12) → l (16):
+      // header content + caller divider/strip arası daha nefesli.
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
         AppSpacing.l,
         AppSpacing.pageH,
-        AppSpacing.m,
+        AppSpacing.l,
       ),
       child: Row(
         children: [
           if (showLogo) ...[
             Container(
-              width: 38,
-              height: 38,
+              // FirinNetHeader polish sprint — brand mark:
+              //  • boyut 38 → 40 (subtle brand presence bump)
+              //  • radius s (12) → m (16) (referans tasarımdaki yumuşaklık)
+              //  • softGold inner border 0.32α 0.6px (sıcak bakır halo)
+              //  • shadow alpha 0.25 → 0.28 (biraz daha belirgin)
+              //  • icon 20 → 22 (logo içinde nefes)
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [AppColors.copper, AppColors.copperMuted],
                 ),
-                borderRadius: BorderRadius.circular(AppRadius.s),
+                borderRadius: BorderRadius.circular(AppRadius.m),
+                border: Border.all(
+                  color: AppColors.softGold.withValues(alpha: 0.32),
+                  width: 0.6,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.copper.withValues(alpha: 0.25),
+                    color: AppColors.copper.withValues(alpha: 0.28),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -53,7 +65,7 @@ class FirinNetHeader extends StatelessWidget {
               child: const Icon(
                 Icons.local_fire_department_rounded,
                 color: AppColors.textPrimary,
-                size: 20,
+                size: 22,
               ),
             ),
             const SizedBox(width: AppSpacing.m),
@@ -65,10 +77,15 @@ class FirinNetHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
+                  // FirinNetHeader polish sprint — wordmark:
+                  // 22 → 23 + letterSpacing -0.4 → -0.5 (premium sıkılık).
+                  // maxLines:1 + ellipsis: küçük ekranda taşma guard'ı.
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    fontSize: 22,
+                    fontSize: 23,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
+                    letterSpacing: -0.5,
                     height: 1.1,
                   ),
                 ),
@@ -76,9 +93,17 @@ class FirinNetHeader extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     subtitle!,
+                    // FirinNetHeader polish sprint — subtitle:
+                    // fontSize 12.5 → 13 + letterSpacing 0.1 → 0.15 +
+                    // w500 → w600 (daha okunabilir). maxLines:1 + ellipsis
+                    // guard.
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
-                      letterSpacing: 0.1,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.15,
                     ),
                   ),
                 ],
