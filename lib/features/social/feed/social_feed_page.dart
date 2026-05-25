@@ -32,6 +32,7 @@ import '../../feed/models/feed_post.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../notifications/widgets/notifications_header_action.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../composer/inline_composer_card.dart';
 import '../post/social_post_card.dart';
 import '../stories/social_stories_carousel.dart';
 
@@ -225,24 +226,35 @@ class _FeedList extends ConsumerWidget {
   final bool hasMore;
   final ScrollController scrollController;
 
+  /// Social UI Polish Sprint 1 — feed header sequence:
+  /// stories carousel (opsiyonel) + InlineComposerCard. Composer kartı
+  /// her zaman görünür (kullanıcıyı paylaşıma teşvik).
+  static List<Widget> _headers() {
+    return <Widget>[
+      if (_kShowStories) const SocialStoriesCarousel(),
+      if (_kShowStories)
+        const Divider(height: 1, color: AppColors.borderHairline),
+      const InlineComposerCard(),
+      const Divider(height: 1, color: AppColors.borderHairline),
+    ];
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final headers = _headers();
     if (posts.isEmpty) {
       return ListView(
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        children: const [
-          if (_kShowStories) ...[
-            SocialStoriesCarousel(),
-            Divider(height: 1, color: AppColors.borderHairline),
-          ],
-          _FeedEmpty(),
+        children: [
+          ...headers,
+          const _FeedEmpty(),
         ],
       );
     }
-    final int headerCount = _kShowStories ? 2 : 0;
+    final int headerCount = headers.length;
     final int footerCount = isLoadingMore || !hasMore ? 1 : 0;
     return ListView.builder(
       controller: scrollController,
@@ -255,15 +267,7 @@ class _FeedList extends ConsumerWidget {
       ),
       itemCount: posts.length + headerCount + footerCount,
       itemBuilder: (_, i) {
-        if (_kShowStories) {
-          if (i == 0) return const SocialStoriesCarousel();
-          if (i == 1) {
-            return const Divider(
-              height: 1,
-              color: AppColors.borderHairline,
-            );
-          }
-        }
+        if (i < headerCount) return headers[i];
         final postIndex = i - headerCount;
         if (postIndex < posts.length) {
           final post = posts[postIndex];
