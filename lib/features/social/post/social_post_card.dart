@@ -29,6 +29,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/tag_chip.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/feed_post.dart';
@@ -248,9 +249,11 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
     return Container(
       margin: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
-        6, // V1 P0 — kartlar arası 12 px nefes (önceki 8)
+        // Visual North Star Sprint 1A — kartlar arası 12 px nefes
+        // (önceki 6); referans tasarıma yaklaşma, görsel ayrışma.
+        12,
         AppSpacing.pageH,
-        6,
+        12,
       ),
       decoration: BoxDecoration(
         color: AppColors.elevatedCard,
@@ -744,6 +747,9 @@ class _TagsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Visual North Star Sprint 1A — TagChip ortak widget'a geçti.
+    // softGold pill bg + label (AppTypography.labelLarge), `#` prefix
+    // TagChip içinde otomatik.
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.l,
@@ -754,32 +760,7 @@ class _TagsRow extends StatelessWidget {
       child: Wrap(
         spacing: 6,
         runSpacing: 6,
-        children: tags
-            .map(
-              (t) => Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.borderHairline,
-                    width: 0.6,
-                  ),
-                ),
-                child: Text(
-                  '#$t',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            )
-            .toList(),
+        children: [for (final t in tags) TagChip(label: t)],
       ),
     );
   }
