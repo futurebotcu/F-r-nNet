@@ -75,8 +75,19 @@ class QuickActionTile extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: featured ? 0.20 : 0.12),
+                      // Premium card trio sprint — icon halo:
+                      //  • featured: alpha 0.20 → 0.22 + ince softGold
+                      //    inner border (sıcak bakır vurgu)
+                      //  • default:  alpha 0.12 → 0.14 (subtle warmth)
+                      color: accent.withValues(alpha: featured ? 0.22 : 0.14),
                       borderRadius: BorderRadius.circular(AppRadius.s),
+                      border: featured
+                          ? Border.all(
+                              color:
+                                  AppColors.softGold.withValues(alpha: 0.32),
+                              width: 0.6,
+                            )
+                          : null,
                     ),
                     child: Icon(
                       icon,
@@ -176,11 +187,18 @@ class QuickActionMini extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 38,
-                    height: 38,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.12),
+                      // Premium card trio sprint — Mini icon halo:
+                      // 38px → 40px + alpha 0.12 → 0.14 + ince softGold
+                      // border (0.20). Featured tile ile aynı warmth ailesi.
+                      color: accent.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(AppRadius.s),
+                      border: Border.all(
+                        color: AppColors.softGold.withValues(alpha: 0.20),
+                        width: 0.6,
+                      ),
                     ),
                     child: Icon(icon, color: accent, size: 19),
                   ),

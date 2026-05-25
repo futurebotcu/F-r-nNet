@@ -84,7 +84,11 @@ class PremiumCard extends StatelessWidget {
     if (_compactCleared) return null;
     switch (_effectiveTier) {
       case CardTier.hero:
-        return AppShadow.heroGlow;
+        // Premium card trio sprint — hero kart için warm copper halo
+        // (eski heroGlow mat espresso idi; FırınNet referansındaki sıcak
+        // bakır kart hissi için copper alpha 0.16 kullanılır). Aynı
+        // offset/blur ölçeği; sadece renk ailesi sıcaklığa kayar.
+        return AppShadow.copper;
       case CardTier.standard:
       case CardTier.compact:
         return AppShadow.card;

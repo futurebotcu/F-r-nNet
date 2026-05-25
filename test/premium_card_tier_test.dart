@@ -45,14 +45,17 @@ void main() {
 
   group('PremiumCard — tier=hero', () {
     testWidgets(
-        'tier=hero → elevatedCard bg + heroGlow shadow + radius xl (28)',
+        'tier=hero → elevatedCard bg + warm copper shadow + radius xl (28)',
         (tester) async {
+      // Premium card trio sprint — hero tier shadow heroGlow (mat
+      // espresso) yerine AppShadow.copper (warm bakır halo) kullanır;
+      // FırınNet referansındaki sıcak premium kart hissi için.
       await tester.pumpWidget(_wrap(
         const PremiumCard(tier: CardTier.hero, child: Text('x')),
       ));
       final deco = _decorationOf(tester);
       expect(deco.color, AppColors.elevatedCard);
-      expect(deco.boxShadow, AppShadow.heroGlow);
+      expect(deco.boxShadow, AppShadow.copper);
       final radius = (deco.borderRadius as BorderRadius?)?.topLeft.x;
       expect(radius, AppRadius.xl);
     });
@@ -65,7 +68,7 @@ void main() {
       ));
       final deco = _decorationOf(tester);
       expect(deco.color, AppColors.elevatedCard);
-      expect(deco.boxShadow, AppShadow.heroGlow);
+      expect(deco.boxShadow, AppShadow.copper);
     });
   });
 
