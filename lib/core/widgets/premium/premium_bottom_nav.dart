@@ -86,15 +86,15 @@ class _NavTile extends StatelessWidget {
             AnimatedOpacity(
               duration: AppDuration.fast,
               opacity: selected ? 1 : 0,
-              // Sade tek-renk mat bakır çizgi — eski parlak gradient/glow
-              // kaldırıldı, operasyonel his.
+              // Sade tek-renk mat bakır çizgi — operasyonel his için
+              // gradient/glow yok.
               child: Container(
                 margin: const EdgeInsets.only(top: 0),
-                height: 2.5,
-                width: 32,
+                height: 3,
+                width: 28,
                 decoration: BoxDecoration(
                   color: AppColors.copper,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(1.5),
                 ),
               ),
             ),
@@ -119,10 +119,10 @@ class _NavTile extends StatelessWidget {
                     item.label,
                     style: TextStyle(
                       color: color,
-                      fontSize: 11,
+                      fontSize: 11.5,
                       fontWeight:
                           selected ? FontWeight.w700 : FontWeight.w500,
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.35,
                     ),
                   ),
                 ],
