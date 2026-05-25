@@ -272,6 +272,39 @@ class SupabaseFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<List<FeedPost>> listPostsPageForFollowing({
+    required Set<String> followingIds,
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    // Social UI Polish Sprint 2A — Takip Edilenler segmenti.
+    // Server-side `.in_('owner_id', ids)` filter; pagination doğru
+    // çalışır. Migration / RPC YOK; mevcut RLS (to authenticated select)
+    // any-author postu görmeye izin verir.
+    if (followingIds.isEmpty) return const <FeedPost>[];
+    final rows = await _client
+        .from('feed_posts')
+        .select(_postColumns)
+        .eq('is_deleted', false)
+        .inFilter('owner_id', followingIds.toList(growable: false))
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final ids = list.map((r) => r['id'] as String).toList(growable: false);
+    final liked = await _fetchLikedSet(ids);
+    final saved = await _fetchSavedSet(ids);
+    final media = await _fetchMediaByPostIds(ids);
+    return list
+        .map((row) => _fromRow(
+              row,
+              likedPostIds: liked,
+              savedPostIds: saved,
+              mediaByPostId: media,
+            ))
+        .toList(growable: false);
+  }
+
+  @override
   Future<FeedPost> updatePost({
     required String postId,
     required String text,
