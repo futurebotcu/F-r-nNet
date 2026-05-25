@@ -13,6 +13,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../dealers/widgets/dealer_filter_chip.dart';
 import '../models/job_offer_post.dart';
 import '../providers/job_offer_providers.dart';
 
@@ -477,30 +478,12 @@ class _CodeChipPicker extends StatelessWidget {
           runSpacing: 6,
           children: [
             for (final e in entries)
-              ChoiceChip(
-                label: Text(e.value),
+              DealerFilterChip(
+                label: e.value,
                 selected: selectedCode == e.key,
                 onSelected: onChanged == null
                     ? null
                     : (v) => onChanged!(v ? e.key : null),
-                selectedColor: AppColors.copper.withValues(alpha: 0.22),
-                backgroundColor: AppColors.card,
-                labelStyle: TextStyle(
-                  color: selectedCode == e.key
-                      ? AppColors.softGold
-                      : AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  side: BorderSide(
-                    color: selectedCode == e.key
-                        ? AppColors.copper.withValues(alpha: 0.55)
-                        : AppColors.borderHairline,
-                    width: 0.6,
-                  ),
-                ),
               ),
           ],
         ),

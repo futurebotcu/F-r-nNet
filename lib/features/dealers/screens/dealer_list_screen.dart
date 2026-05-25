@@ -18,6 +18,7 @@ import '../models/dealer_balance_summary.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../widgets/dealer_avatar.dart';
+import '../widgets/dealer_filter_chip.dart';
 
 class DealerListScreen extends ConsumerStatefulWidget {
   const DealerListScreen({super.key});
@@ -87,7 +88,8 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
         child: dealersAsync.when(
           loading: () =>
               const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (e, _) =>
+              const Center(child: Text(AppStrings.dealersErrorLoad)),
           data: (all) {
             if (all.isEmpty) {
               return EmptyState(
@@ -282,8 +284,8 @@ class _FilterRow extends StatelessWidget {
   }
 
   Widget _chip(BuildContext context, String label, _ActiveFilter f) {
-    return ChoiceChip(
-      label: Text(label),
+    return DealerFilterChip(
+      label: label,
       selected: filter == f,
       onSelected: (_) => onChanged(f),
     );

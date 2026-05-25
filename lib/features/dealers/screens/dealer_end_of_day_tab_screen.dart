@@ -74,9 +74,9 @@ class DealerEndOfDayTabScreen extends ConsumerWidget {
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.l),
-                  child: Text('Hata: $e'),
+                error: (e, _) => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
+                  child: Text(AppStrings.dealersErrorLoad),
                 ),
                 data: (metrics) => _Body(
                   metrics: metrics,

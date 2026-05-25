@@ -665,6 +665,10 @@ class AppStrings {
       'Usta Arıyor ilanı vermek için ticari veya toptancı hesap gerekir.';
   static const String jobOfferSalaryNegative = 'Maaş negatif olamaz.';
   static const String jobOfferSalaryMinGtMax = 'Asgari maaş azamiyi aşamaz.';
+  // Polish Sprint 1 — generic load error messages (exception detayı UI'da YOK)
+  static const String dealersErrorLoad =
+      'Bayi verileri yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+  static const String dealerBalanceErrorLoad = 'Bakiye okunamadı.';
   static const String jobOfferFieldCity = 'Şehir';
   static const String jobOfferFieldDistrict = 'İlçe';
   static const String jobOfferFieldSalaryMin = 'Ücret min (₺)';

@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer.dart';
@@ -14,6 +15,7 @@ import '../models/dealer_range_metrics.dart';
 import '../providers/dealer_providers.dart';
 import '../services/dealer_period.dart';
 import '../widgets/dealer_avatar.dart';
+import '../widgets/dealer_filter_chip.dart';
 import '../widgets/dealer_kpi_tile.dart';
 
 /// Bayi Defteri mini-app Raporlar tab (toplu + bayi bazlı rapor).
@@ -75,16 +77,16 @@ class _DealerReportsTabScreenState
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.l),
-                  child: Text('Hata: $e'),
+                error: (e, _) => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
+                  child: Text(AppStrings.dealersErrorLoad),
                 ),
                 data: (m) => _SummarySection(metrics: m),
               ),
               const SizedBox(height: AppSpacing.l),
               dealersAsync.when(
                 loading: () => const SizedBox.shrink(),
-                error: (e, _) => Text('Hata: $e'),
+                error: (e, _) => const Text(AppStrings.dealersErrorLoad),
                 data: (dealers) => _ByDealerSection(
                   dealers: dealers,
                   perDealerNet: metricsAsync.maybeWhen(
@@ -145,24 +147,12 @@ class _PeriodSegment extends StatelessWidget {
       runSpacing: AppSpacing.s,
       children: [
         for (final p in _ReportsPeriod.values)
-          ChoiceChip(
-            label: Text(p.label),
+          DealerFilterChip(
+            label: p.label,
             selected: value == p,
             onSelected: (s) {
               if (s) onChanged(p);
             },
-            selectedColor: AppColors.copper.withValues(alpha: 0.18),
-            backgroundColor: AppColors.card,
-            side: BorderSide(
-              color: value == p
-                  ? AppColors.copper
-                  : AppColors.borderHairline,
-              width: value == p ? 1.2 : 0.6,
-            ),
-            labelStyle: TextStyle(
-              color: value == p ? AppColors.copper : AppColors.textSecondary,
-              fontWeight: value == p ? FontWeight.w800 : FontWeight.w600,
-            ),
           ),
       ],
     );
@@ -207,16 +197,10 @@ class _SummarySection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.s),
         if (!hasAnyActivity)
-          PremiumCard(
-            padding: const EdgeInsets.all(AppSpacing.l),
-            child: Center(
-              child: Text(
-                AppStrings.dealerReportsEmpty,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
+          const EmptyState(
+            title: AppStrings.dealerReportsEmpty,
+            icon: Icons.history_outlined,
+            compact: true,
           )
         else
           _KpiBlock(metrics: metrics),
@@ -316,17 +300,10 @@ class _ByDealerSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.s),
         if (dealers.isEmpty)
-          PremiumCard(
-            padding: const EdgeInsets.all(AppSpacing.l),
-            child: Center(
-              child: Text(
-                AppStrings.dealerReportsNoActiveDealers,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
+          const EmptyState(
+            title: AppStrings.dealerReportsNoActiveDealers,
+            icon: Icons.storefront_outlined,
+            compact: true,
           )
         else
           PremiumCard(
