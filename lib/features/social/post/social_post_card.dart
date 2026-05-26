@@ -514,10 +514,10 @@ class _TypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: type.accent.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
           color: type.accent.withValues(alpha: 0.32),
           width: 0.6,
@@ -527,13 +527,14 @@ class _TypeBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(type.icon, size: 14, color: type.accent),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Text(
             type.label,
             style: TextStyle(
               color: type.accent,
-              fontSize: 12,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
             ),
           ),
         ],
@@ -729,14 +730,14 @@ class _Caption extends StatelessWidget {
         AppSpacing.l,
         AppSpacing.s,
       ),
-      // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik, 17 px
-      // h:1.4. Önceki 13.5 px Instagram caption hissi veriyordu.
+      // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik, 17 px.
+      // Post card polish — height 1.4 → 1.5 (daha rahat satır aralığı).
       child: Text(
         text,
         style: const TextStyle(
           color: AppColors.textPrimary,
           fontSize: 17,
-          height: 1.4,
+          height: 1.5,
         ),
       ),
     );
