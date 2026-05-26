@@ -107,12 +107,23 @@ CI badge yukarıdaki rozet üzerinden GitHub Actions'a bağlıdır.
 - Release signing ayrı manuel adımdır — detaylar repo kökündeki
   `ANDROID_SIGNING_RUNBOOK.md` dosyasında.
 
-## Üçüncü parti lisanslar
+## Lisans
+
+**Proprietary / All rights reserved.** FırınNet kaynak kodu, içeriği ve
+varlıkları telif hakkı sahibinin (Fatih Kartal / futurebotcu) izni
+olmadan kopyalanamaz, yeniden dağıtılamaz, türev çalışma yapılamaz veya
+ticari olarak kullanılamaz. Repo public olsa bile bu kısıtlamalar
+geçerlidir.
+
+Tam metin: [`LICENSE`](LICENSE).
 
 FırınNet, açık kaynak projelerden adapte edilen kod parçaları içerir.
-Tüm donor referansları, commit hash'leri ve adapte edilen dosya listesi
+Üçüncü parti bileşenler kendi lisanslarına tabidir; donor referansları,
+commit hash'leri ve adapte edilen dosya listesi
 [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) ve
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) dosyalarında takip edilir.
+
+Güvenlik açığı bildirimi için bkz. [`SECURITY.md`](SECURITY.md).
 
 ## Durum
 

@@ -1,0 +1,58 @@
+name: Feature request
+description: Yeni bir özellik veya iyileştirme öner.
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Hangi kullanıcı problemini çözüyor? Hangi senaryoda eksik kalıyor?
+      placeholder: "Bayi Defteri'nde geçmiş gün sonu raporlarına geri dönüp bakamıyorum."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: Senin önerin nedir? UI/akış/data tarafını kabaca anlat.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user-role
+    attributes:
+      label: User role
+      description: Bu özellik hangi kullanıcı rolüne hizmet ediyor?
+      multiple: true
+      options:
+        - Ticari (fırın işletmesi)
+        - Bireysel (usta)
+        - Toptancı
+        - Guest (oturum açmamış)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 — release blocker
+        - P1 — kalite / güven artırıcı
+        - P2 — iyi olur
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope-notes
+    attributes:
+      label: Scope notes
+      description: Açıkça kapsam DIŞI bırakılmasını istediğin şeyler? Bağlı olduğu başka modüller?
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Donor proje / ekran görüntüsü / önceki audit raporu / sprint planı.

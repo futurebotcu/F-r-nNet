@@ -1,0 +1,69 @@
+name: Release blocker
+description: V1 / Play Store release'i engelleyen bir blocker bildir.
+title: "[blocker] "
+labels: ["release-blocker", "P0"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bu şablon **release'i durduran** sorunlar içindir. Eğer release'i
+        durdurmuyor sadece kalite kırıyorsa `feature_request` veya
+        `bug_report` şablonunu kullan.
+
+  - type: dropdown
+    id: blocker-type
+    attributes:
+      label: Blocker type
+      options:
+        - CI / GitHub Actions
+        - Auth / Session
+        - Supabase (RLS, migration, function)
+        - Android signing / keystore
+        - Store listing (Play Store / App Store metadata)
+        - Legal (KVKK, privacy, terms)
+        - Data loss / corruption
+        - Crash / startup failure
+        - Performance / regression
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - S0 — hiçbir kullanıcı uygulamayı kullanamıyor
+        - S1 — büyük bir kullanıcı grubu etkileniyor
+        - S2 — tek modül / edge case
+        - S3 — release'i durdurur ama tek bir akış
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Log, ekran görüntüsü, GitHub Actions run URL, test çıktısı, Crashlytics issue ID, vb.
+    validations:
+      required: true
+
+  - type: textarea
+    id: required-fix
+    attributes:
+      label: Required fix before release
+      description: Bu blocker release çıkmadan önce ne yapılarak kapatılmalı?
+    validations:
+      required: true
+
+  - type: input
+    id: target-release
+    attributes:
+      label: Target release
+      placeholder: "v0.1.0 / V1 Play Store / TestFlight"
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Geçici çözüm var mı? (Varsa release'i geçici olarak çıkartmak mümkün olabilir.)

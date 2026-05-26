@@ -1,0 +1,40 @@
+FırınNet — Proprietary License
+
+Copyright (c) 2026 Fatih Kartal / futurebotcu.
+All rights reserved.
+
+This repository may be public for transparency and portfolio purposes,
+but the source code, assets, and documentation contained within are
+proprietary. No license, express or implied, is granted to any person
+or entity beyond viewing the source for reference purposes.
+
+The following actions are PROHIBITED without prior written permission
+from the copyright holder:
+
+  1. Copying any portion of the source code into another project,
+     whether for personal, educational, commercial, or any other use.
+  2. Redistributing the source code, in original or modified form,
+     in whole or in part.
+  3. Creating derivative works based on this source code, including
+     forks intended for independent development or release.
+  4. Using this source code, in whole or in part, in any commercial
+     product, service, or offering.
+  5. Sublicensing, selling, or otherwise transferring any rights to
+     this source code.
+  6. Using the FırınNet name, logo, or branding in any way that
+     suggests endorsement or affiliation.
+
+Third-party open-source components incorporated into this project
+remain governed by their own respective licenses. A full attribution
+list, with donor commit references and per-file adaptation notes, is
+maintained in `THIRD_PARTY_LICENSES.md` and `THIRD_PARTY_NOTICES.md`.
+
+For licensing inquiries, partnership requests, or any other use beyond
+reading this repository, contact: fatihkartal75@gmail.com.
+
+THE SOURCE CODE IS PROVIDED "AS IS" FOR INSPECTION ONLY, WITHOUT
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE
+FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN
+CONNECTION WITH THE SOURCE CODE OR ITS USE.

@@ -1,0 +1,89 @@
+name: Bug report
+description: Bir özelliğin beklenmedik davranışını bildir.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **Güvenlik açıkları için bu şablonu KULLANMA.**
+        Bunun yerine `SECURITY.md` dosyasındaki bildirim yolunu kullan.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Karşılaştığın davranışı net şekilde anlat.
+      placeholder: "Feed segmentini Takip Edilenler'e geçirince sonsuz loading dönüyor."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Adım adım nasıl tekrar üretilebilir?
+      placeholder: |
+        1. Uygulamayı aç (Supabase backend aktif).
+        2. Feed sekmesine git.
+        3. "Takip Edilenler" sekmesini seç.
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: Ne olmasını bekliyordun?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots-logs
+    attributes:
+      label: Screenshots / logs
+      description: Ekran görüntüsü, log çıktısı, varsa stack trace ekle. Hassas bilgi (token, e-posta) sansürle.
+
+  - type: input
+    id: device-os
+    attributes:
+      label: Device / OS
+      placeholder: "Pixel 7 / Android 14, iPhone 14 / iOS 17, emulator vb."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: app-area
+    attributes:
+      label: App area
+      options:
+        - Feed
+        - Groups
+        - Market
+        - Jobs
+        - Panel (Fırın paneli)
+        - Dealers (Bayi Defteri)
+        - Auth / Onboarding
+        - Profile / Follow
+        - Stories
+        - Messaging
+        - Notifications
+        - Recipes / Calculator
+        - Settings / Legal
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version / commit
+      description: pubspec.yaml versiyonu veya HEAD SHA (varsa).
+      placeholder: "0.1.0+1 / dc6bc23"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Tahmin ettiğin root cause, ilgili PR/commit, vb.

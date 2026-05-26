@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Güvenlik açığı bildirimi
+    url: https://github.com/futurebotcu/F-r-nNet/security/advisories/new
+    about: Güvenlik açıkları için PUBLIC issue açma. GitHub Security Advisories veya SECURITY.md'deki e-posta yolunu kullan.
+  - name: 📄 Gizlilik politikası
+    url: https://futurebotcu.github.io/F-r-nNet/privacy/
+    about: KVKK / gizlilik politikası ile ilgili sorular için yayınlanmış politika sayfasını oku.
