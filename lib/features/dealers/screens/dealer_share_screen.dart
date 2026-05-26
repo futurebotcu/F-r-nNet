@@ -90,7 +90,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                         onPressed: () async {
                           await Clipboard.setData(
                               ClipboardData(text: text));
-                          if (!mounted) return;
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(AppStrings.dealerShareCopiedSnack),

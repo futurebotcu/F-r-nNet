@@ -21,7 +21,7 @@ class DealerPickerSheet extends ConsumerStatefulWidget {
 
   final bool initialDebtOnly;
 
-  /// Convenience launcher. Future<Dealer?> — dismiss edilirse null.
+  /// Convenience launcher. `Future<Dealer?>` — dismiss edilirse null.
   static Future<Dealer?> show({
     required BuildContext context,
     bool debtOnly = false,

@@ -41,6 +41,7 @@ class MarketplaceContactPanel extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
+      if (!context.mounted) return;
       _copyAndToast(context, phone);
     }
   }
@@ -53,6 +54,7 @@ class MarketplaceContactPanel extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
+      if (!context.mounted) return;
       _copyAndToast(context, wa);
     }
   }

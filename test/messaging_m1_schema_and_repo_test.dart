@@ -97,7 +97,7 @@ void main() {
       // market_listing context owner doğrulaması
       expect(sql.contains('market_listing context invalid'), isTrue);
       expect(
-        sql.contains("ml.owner_id = p_other_user"),
+        sql.contains('ml.owner_id = p_other_user'),
         isTrue,
         reason: 'p_other_user market_listing owner olmalı',
       );
@@ -288,7 +288,6 @@ void main() {
 
     test('unread + markAsRead semantiği', () async {
       final me = LocalMessagingRepository(meId: 'me');
-      final them = LocalMessagingRepository(meId: 'them');
       // İki repo aynı in-memory paylaşmıyor — bu testte sadece self
       // unread mantığı doğrulanır.
       final cid = await me.findOrCreateDirectConversation(otherUserId: 'them');

@@ -8,8 +8,6 @@
 //   * 24h expiry bilgisi açıkça gösterilir.
 //   * Auth guard: guest → giriş CTA.
 
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

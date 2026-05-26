@@ -66,7 +66,7 @@ void main() {
 
     test('avatars bucket public=true insert', () {
       expect(
-        sql.contains("insert into storage.buckets (id, name, public)"),
+        sql.contains('insert into storage.buckets (id, name, public)'),
         isTrue,
       );
       expect(sql.contains("'avatars', 'avatars', true"), isTrue);
@@ -83,7 +83,7 @@ void main() {
       expect(sql.contains('for select to public'), isTrue);
       expect(sql.contains('for insert to authenticated'), isTrue);
       expect(
-        sql.contains("(storage.foldername(name))[1] = auth.uid()::text"),
+        sql.contains('(storage.foldername(name))[1] = auth.uid()::text'),
         isTrue,
       );
     });

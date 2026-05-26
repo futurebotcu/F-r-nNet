@@ -5,7 +5,6 @@
 // hesaplanır. Boş günler atlanır (donor pattern); bugün baseline'a
 // dahil edilmez.
 
-import 'package:firin_defter/features/dealers/models/dealer_pulse_snapshot.dart';
 import 'package:firin_defter/features/dealers/models/dealer_transaction.dart';
 import 'package:firin_defter/features/dealers/services/dealer_pulse_service.dart';
 import 'package:flutter_test/flutter_test.dart';

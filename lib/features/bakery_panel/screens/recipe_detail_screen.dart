@@ -110,6 +110,7 @@ class RecipeDetailScreen extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
+    if (!context.mounted) return;
     // V1.3.2 — Sil owner-only kalıcı işlem; guest engellenir.
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);

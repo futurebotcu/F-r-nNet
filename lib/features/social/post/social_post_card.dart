@@ -18,7 +18,6 @@
 //   * Owner-only ⋮ menü (Sil + Grupta gör).
 //   * Donor `UserStoriesAvatar` yerine basit FırınNet avatar (V5'te story).
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

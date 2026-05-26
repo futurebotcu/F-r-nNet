@@ -215,6 +215,7 @@ class JobSeekPostCard extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
+    if (!context.mounted) return;
     await runGuardedMutation(
       context,
       ref,

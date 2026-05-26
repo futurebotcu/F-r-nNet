@@ -13,8 +13,6 @@
 //   * Sticky bottom Publish CTA (Scaffold.bottomNavigationBar).
 //   * Photos post-create upload (storage rollback repository tarafında).
 
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -670,7 +668,7 @@ class _MarketListingFormScreenState
                       title: const Text(
                         AppStrings.marketListingFieldNegotiable,
                       ),
-                      activeColor: AppColors.copper,
+                      activeThumbColor: AppColors.copper,
                       contentPadding: EdgeInsets.zero,
                     ),
                     const SizedBox(height: AppSpacing.m),

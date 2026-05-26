@@ -399,7 +399,7 @@ void main() {
       ).readAsStringSync();
     });
 
-    test("city/district serbest .eq kaldırıldı", () {
+    test('city/district serbest .eq kaldırıldı', () {
       // Eski: q.eq('city', filters.city!) — yeni: q.eq('city_code', ...).
       expect(src.contains("eq('city', filters.city"), isFalse,
           reason: 'Serbest city .eq kaldırıldı');

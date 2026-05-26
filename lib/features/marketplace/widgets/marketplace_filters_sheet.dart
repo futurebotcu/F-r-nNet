@@ -336,7 +336,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                       onChanged: (v) =>
                           setState(() => _f = _f.copyWith(negotiableOnly: v)),
                       title: const Text(AppStrings.marketFilterNegotiable),
-                      activeColor: AppColors.copper,
+                      activeThumbColor: AppColors.copper,
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                   ],

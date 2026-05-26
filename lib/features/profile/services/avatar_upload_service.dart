@@ -70,8 +70,8 @@ class AvatarUploadService {
   /// tarafa bırakılır (path'in ilk segmenti userId ile karşılaştırılır).
   ///
   /// Örnek URL:
-  ///   https://<host>/storage/v1/object/public/avatars/<userId>/avatar_<ts>.jpg
-  ///   → '<userId>/avatar_<ts>.jpg'
+  ///   `https://<host>/storage/v1/object/public/avatars/<userId>/avatar_<ts>.jpg`
+  ///   → `<userId>/avatar_<ts>.jpg`
   static String? extractStoragePath(String? url) {
     if (url == null || url.isEmpty) return null;
     const marker = '/storage/v1/object/public/$bucket/';

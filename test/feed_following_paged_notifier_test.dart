@@ -14,22 +14,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _meId = 'test_user';
 
-ProviderContainer _make({
-  required LocalFeedRepository feedRepo,
-  required LocalFollowRepository followRepo,
-}) {
-  final container = ProviderContainer(
-    overrides: [
-      feedRepositoryProvider.overrideWith((_) => feedRepo as FeedRepository),
-      followRepositoryProvider
-          .overrideWith((_) => followRepo as FollowRepository),
-      // currentAuthUserProvider override edilemiyor direkt (StreamProvider);
-      // bunun yerine currentFollowingIdsProvider'ı direkt override ediyoruz.
-    ],
-  );
-  return container;
-}
-
 void main() {
   group('FeedFollowingPagedNotifier — build', () {
     test('Follow yoksa empty state (posts boş, hasMore false)', () async {

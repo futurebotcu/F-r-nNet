@@ -4,7 +4,6 @@
 // + bugün son hareketleri + Share CTA. Bugün hareketi yoksa EmptyState
 // (KPI/liste gizli).
 
-import 'package:firin_defter/app/router/app_router.dart';
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/dealers/models/dealer.dart';
 import 'package:firin_defter/features/dealers/models/dealer_transaction.dart';

@@ -404,7 +404,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                       onChanged: (v) => setState(() => _isActive = v),
                       title: const Text(AppStrings.jobOfferFieldIsActive),
                       subtitle: const Text(AppStrings.jobOfferFieldIsActiveHint),
-                      activeColor: AppColors.copper,
+                      activeThumbColor: AppColors.copper,
                       contentPadding: EdgeInsets.zero,
                     ),
                     const SizedBox(height: AppSpacing.l),

@@ -33,29 +33,6 @@ import 'package:firin_defter/features/social_groups/repositories/local_social_gr
 import 'package:firin_defter/features/social_groups/repositories/social_group_repository.dart';
 import 'package:firin_defter/features/social_groups/screens/group_detail_screen.dart';
 
-SocialGroup _mkGroup({
-  required String id,
-  required String ownerId,
-  bool isPrivate = false,
-  int currentMemberCount = 4,
-}) {
-  return SocialGroup(
-    id: id,
-    name: 'Turgutlu Fırıncıları',
-    description: 'Test grup',
-    category: GroupCategory.bakers,
-    ownerName: 'Owner',
-    ownerId: ownerId,
-    city: '',
-    isPrivate: isPrivate,
-    maxMembers: 100,
-    currentMemberCount: currentMemberCount,
-    createdAt: DateTime(2026, 5, 19),
-    tags: const [],
-    visualSeed: 0,
-  );
-}
-
 Widget _wrap({
   required SocialGroupRepository groupRepo,
   AuthUser? authUser,

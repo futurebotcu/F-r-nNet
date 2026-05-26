@@ -11,8 +11,6 @@
 //   - Guest guard / runGuardedMutation davranışı bozulmaz
 //   - State temiz kalır (sheet açık kalır / confirm dialog akışı)
 
-import 'dart:async';
-
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/dealers/models/dealer_note.dart';
 import 'package:firin_defter/features/dealers/models/dealer_price.dart';
@@ -22,7 +20,6 @@ import 'package:firin_defter/features/dealers/screens/dealer_detail_screen.dart'
 import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/providers/profile_provider.dart';
 import 'package:firin_defter/features/worker/models/job_seek_post.dart';
-import 'package:firin_defter/features/worker/models/worker_profile.dart';
 import 'package:firin_defter/features/worker/providers/worker_providers.dart';
 import 'package:firin_defter/features/worker/repositories/local_worker_repository.dart';
 import 'package:firin_defter/features/worker/screens/job_seek_posts_screen.dart';
@@ -45,8 +42,6 @@ class _ThrowingDealerRepository extends LocalDealerRepository {
   }
 
   // Note: addNote'a dokunulmadı; LocalDealerRepository default davranışı korunur.
-  @override
-  Future<void> addNote(DealerNote note) => super.addNote(note);
 }
 
 class _ThrowingWorkerRepository extends LocalWorkerRepository {

@@ -44,7 +44,7 @@ void main() {
       // 'product'/'service'/'equipment' (jenerik tipler) yok.
       // (Rationale 'comment on column' içinde tarihi referans olabilir.)
       final addConstraintBlocks = RegExp(
-        r"add constraint market_listings_listing_type_check\s*\n?\s*check[^;]+;",
+        r'add constraint market_listings_listing_type_check\s*\n?\s*check[^;]+;',
         multiLine: true,
       ).allMatches(src);
       for (final m in addConstraintBlocks) {
@@ -85,7 +85,7 @@ void main() {
       expect(
         src.contains(
           "(status = 'active' and is_deleted = false)\n"
-          "    or owner_id = auth.uid()",
+          '    or owner_id = auth.uid()',
         ),
         isTrue,
       );

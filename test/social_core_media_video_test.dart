@@ -170,7 +170,7 @@ void main() {
       );
       expect(
         src.contains(
-          "static const Duration _maxVideoDuration = Duration(seconds: 60)",
+          'static const Duration _maxVideoDuration = Duration(seconds: 60)',
         ),
         isTrue,
       );

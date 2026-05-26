@@ -83,7 +83,7 @@ void main() {
 
     test('_canShare disabled/enabled durumu (metin VEYA medya)', () {
       expect(src.contains('bool get _canShare'), isTrue);
-      expect(src.contains("onPressed: _canShare ? _submit : null"), isTrue);
+      expect(src.contains('onPressed: _canShare ? _submit : null'), isTrue);
       // TextField onChanged → setState
       expect(
         src.contains('onChanged: (_) => setState(() {})'),

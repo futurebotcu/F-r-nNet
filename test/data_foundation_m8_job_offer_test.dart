@@ -15,7 +15,6 @@
 import 'dart:io';
 
 import 'package:firin_defter/app/router/app_router.dart';
-import 'package:firin_defter/core/config/app_config.dart';
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/core/data/firinnet_taxonomy.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
@@ -409,7 +408,7 @@ void main() {
   });
 
   group('M8 Cleanup — JobOfferFormScreen salary validation widget', () {
-    Future<void> _openForm(WidgetTester tester) async {
+    Future<void> openForm(WidgetTester tester) async {
       final router = _testRouter(initialLocation: '/jobs');
       await tester.pumpWidget(
         _wrap(
@@ -423,7 +422,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Future<void> _fillBaseFields(WidgetTester tester) async {
+    Future<void> fillBaseFields(WidgetTester tester) async {
       // Title gerekli
       await tester.enterText(
         find.widgetWithText(TextFormField, AppStrings.jobOfferFieldTitle),
@@ -438,7 +437,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Future<void> _tapSave(WidgetTester tester) async {
+    Future<void> tapSave(WidgetTester tester) async {
       final saveBtn = find.text(AppStrings.jobOfferFormSaveCta);
       await tester.ensureVisible(saveBtn);
       await tester.pumpAndSettle();
@@ -447,13 +446,13 @@ void main() {
     }
 
     testWidgets('salaryMin negatif → negatif snackbar', (tester) async {
-      await _openForm(tester);
-      await _fillBaseFields(tester);
+      await openForm(tester);
+      await fillBaseFields(tester);
       await tester.enterText(
         find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMin),
         '-100',
       );
-      await _tapSave(tester);
+      await tapSave(tester);
 
       expect(
         find.text(AppStrings.jobOfferSalaryNegative),
@@ -464,13 +463,13 @@ void main() {
     });
 
     testWidgets('salaryMax negatif → negatif snackbar', (tester) async {
-      await _openForm(tester);
-      await _fillBaseFields(tester);
+      await openForm(tester);
+      await fillBaseFields(tester);
       await tester.enterText(
         find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMax),
         '-50',
       );
-      await _tapSave(tester);
+      await tapSave(tester);
 
       expect(
         find.text(AppStrings.jobOfferSalaryNegative),
@@ -479,8 +478,8 @@ void main() {
     });
 
     testWidgets('salaryMin > salaryMax → min>max snackbar', (tester) async {
-      await _openForm(tester);
-      await _fillBaseFields(tester);
+      await openForm(tester);
+      await fillBaseFields(tester);
       await tester.enterText(
         find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMin),
         '10000',
@@ -489,7 +488,7 @@ void main() {
         find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMax),
         '5000',
       );
-      await _tapSave(tester);
+      await tapSave(tester);
 
       expect(
         find.text(AppStrings.jobOfferSalaryMinGtMax),
@@ -500,10 +499,10 @@ void main() {
 
     testWidgets('Boş salary alanları validation error üretmez (save geçer)',
         (tester) async {
-      await _openForm(tester);
-      await _fillBaseFields(tester);
+      await openForm(tester);
+      await fillBaseFields(tester);
       // Salary alanları dokunulmaz (boş)
-      await _tapSave(tester);
+      await tapSave(tester);
 
       // Salary snackbar'ları görünmez
       expect(find.text(AppStrings.jobOfferSalaryNegative), findsNothing);

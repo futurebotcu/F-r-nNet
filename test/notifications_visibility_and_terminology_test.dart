@@ -180,7 +180,7 @@ void main() {
       final src = File('lib/core/constants/app_strings.dart').readAsStringSync();
       // groupBadgePrivate sabiti artık kaynakta tanımlı olmamalı.
       expect(
-        RegExp(r"\bgroupBadgePrivate\b\s*=").hasMatch(src),
+        RegExp(r'\bgroupBadgePrivate\b\s*=').hasMatch(src),
         isFalse,
         reason: 'groupBadgePrivate kaldırılmalı (G.N5 tek terim)',
       );

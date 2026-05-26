@@ -153,7 +153,7 @@ void main() {
       // kaldırıldı; sadece getter\'lar kaldı.
       expect(
           src.contains(
-              "static const List<String> commercial = <String>["),
+              'static const List<String> commercial = <String>['),
           isFalse,
           reason: 'commercial getter olmalı, const list değil');
       expect(src.contains('FirinnetTaxonomy.professions'), isTrue);
@@ -166,7 +166,7 @@ void main() {
         'lib/features/worker/screens/worker_profile_screen.dart',
       ).readAsStringSync();
       expect(
-          src.contains("static const List<String> _professions ="),
+          src.contains('static const List<String> _professions ='),
           isFalse);
       expect(src.contains('FirinnetTaxonomy.professionCodes'), isTrue);
       // Save'de dual-write (code + label).
@@ -178,7 +178,7 @@ void main() {
         'lib/features/worker/screens/job_seek_post_form_screen.dart',
       ).readAsStringSync();
       expect(
-          src.contains("static const List<String> _professions ="),
+          src.contains('static const List<String> _professions ='),
           isFalse);
       expect(src.contains('FirinnetTaxonomy.professionCodes'), isTrue);
       expect(src.contains('professionBadgeCode: code'), isTrue);

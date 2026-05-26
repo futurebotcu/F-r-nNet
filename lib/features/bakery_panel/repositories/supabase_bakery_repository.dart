@@ -65,11 +65,6 @@ class SupabaseBakeryRepository implements BakeryRepository {
     return _cachedBakeryId = created['id'] as String;
   }
 
-  String _todayDate() {
-    final now = DateTime.now().toUtc();
-    return _date(now);
-  }
-
   String _date(DateTime d) {
     final dd = d.toUtc();
     final mm = dd.month.toString().padLeft(2, '0');

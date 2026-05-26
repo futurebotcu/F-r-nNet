@@ -71,7 +71,7 @@ void main() {
         isTrue,
       );
       expect(
-        src.contains("return;"),
+        src.contains('return;'),
         isTrue,
       );
     });

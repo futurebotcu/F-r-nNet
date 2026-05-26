@@ -15,7 +15,6 @@
 
 import 'dart:io';
 
-import 'package:firin_defter/core/data/turkey_locations.dart';
 import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/models/public_profile_detail.dart';
 import 'package:firin_defter/features/worker/models/worker_profile.dart';

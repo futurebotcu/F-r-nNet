@@ -12,14 +12,12 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart' as fcc;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart' as fcu;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/conversation.dart' as our;

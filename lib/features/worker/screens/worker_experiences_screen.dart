@@ -171,6 +171,7 @@ class _ExperienceCard extends ConsumerWidget {
       ),
     );
     if (ok != true || experience.id == null) return;
+    if (!context.mounted) return;
     await runGuardedMutation(
       context,
       ref,

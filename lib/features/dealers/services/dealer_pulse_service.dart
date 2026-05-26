@@ -93,19 +93,13 @@ class DealerPulseService {
 /// Gün başına aggregate scratch (sadece service iç hesaplama; UI'a
 /// sızmaz).
 class _DayAgg {
-  _DayAgg({
-    this.delivery = 0,
-    this.returned = 0,
-    this.payment = 0,
-    this.adjustment = 0,
-    this.netChange = 0,
-  });
+  _DayAgg();
 
   factory _DayAgg.zero() => _DayAgg();
 
-  double delivery;
-  double returned;
-  double payment;
-  double adjustment;
-  double netChange;
+  double delivery = 0;
+  double returned = 0;
+  double payment = 0;
+  double adjustment = 0;
+  double netChange = 0;
 }
