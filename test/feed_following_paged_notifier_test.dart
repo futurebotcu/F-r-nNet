@@ -4,10 +4,8 @@
 // loadMore + refresh standart paged notifier davranışı.
 
 import 'package:firin_defter/features/feed/providers/feed_providers.dart';
-import 'package:firin_defter/features/feed/repositories/feed_repository.dart';
 import 'package:firin_defter/features/feed/repositories/local_feed_repository.dart';
 import 'package:firin_defter/features/profile/providers/follow_providers.dart';
-import 'package:firin_defter/features/profile/repositories/follow_repository.dart';
 import 'package:firin_defter/features/profile/repositories/local_follow_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

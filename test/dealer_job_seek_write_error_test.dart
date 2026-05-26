@@ -12,7 +12,6 @@
 //   - State temiz kalır (sheet açık kalır / confirm dialog akışı)
 
 import 'package:firin_defter/core/constants/app_strings.dart';
-import 'package:firin_defter/features/dealers/models/dealer_note.dart';
 import 'package:firin_defter/features/dealers/models/dealer_price.dart';
 import 'package:firin_defter/features/dealers/providers/dealer_providers.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
