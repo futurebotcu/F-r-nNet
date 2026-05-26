@@ -100,3 +100,11 @@ MCP_*.txt
 /BUTTON_ACTION_REALITY_MATRIX.md
 /DEALER_ADD_FAILURE_AUDIT.md
 
+# GitHub Hygiene Sprint 1 — kazara commit önleme.
+# .archive/  → park edilmiş patch/notlar (örn. dealer_staff_v1).
+# .smoke-shots/  → emulator ekran görüntüleri ve UI dump'ları.
+# *.patch  → reddedilen/arşivlenen patch dosyaları (örn. REALITY_CLEANUP_REJECTED.patch).
+.archive/
+.smoke-shots/
+*.patch
+
