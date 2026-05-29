@@ -55,3 +55,18 @@ final activeJobSeekPostsProvider =
   ref.watch(workerChangesProvider);
   return ref.watch(workerRepositoryProvider).listActiveJobSeekPosts();
 });
+
+/// Professional Profile Center Sprint 1 — belirli bir kullanıcının aktif
+/// "iş arıyorum" ilanı (varsa). Profil vitrininde "İş Arıyor" kartı için.
+///
+/// Yeni fetch/repo metodu eklemeden `activeJobSeekPostsProvider` (RLS:
+/// is_active=true authenticated read açık) üzerinden owner filtrelenir.
+/// İlk (en yeni) aktif ilan döner; yoksa null.
+final activeJobSeekOfProvider = FutureProvider.autoDispose
+    .family<JobSeekPost?, String>((ref, ownerId) async {
+  final all = await ref.watch(activeJobSeekPostsProvider.future);
+  for (final p in all) {
+    if (p.ownerId == ownerId) return p;
+  }
+  return null;
+});

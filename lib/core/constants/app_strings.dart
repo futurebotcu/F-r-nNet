@@ -732,6 +732,18 @@ class AppStrings {
     'wholesaler': 'Toptancı',
   };
 
+  // Professional Profile Center Sprint 1 — çalışma geçmişi + iş arama + durum.
+  static const String profileSectionExperience = 'Çalışma Geçmişi';
+  static const String profileEmptyExperience =
+      'Henüz çalışma geçmişi eklenmemiş.';
+  static const String profileExperienceAddCta = 'Çalışma geçmişi ekle';
+  static const String profileJobSeekTitle = 'İş Arıyor';
+  static const String profileJobSeekViewCta = 'İlanı görüntüle';
+  static const String profileStatusSeeking = 'İş arıyor';
+  static const String profileStatusBakery = 'Fırın işletmesi';
+  static const String profileStatusWholesaler = 'Toptancı';
+  static const String profileStatusWorking = 'Çalışıyor';
+
   // Profile Self-Edit M3 — temel bilgiler sheet.
   static const String profileEditSheetTitle = 'Temel bilgiler';
   static const String profileEditNameLabel = 'Ad';

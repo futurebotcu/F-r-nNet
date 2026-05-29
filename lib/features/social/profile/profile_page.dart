@@ -24,7 +24,11 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../worker/models/job_seek_post.dart';
+import '../../worker/providers/worker_providers.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../bakery_panel/models/recipe_record.dart';
@@ -58,6 +62,9 @@ class SocialProfilePage extends ConsumerWidget {
     final recipesAsync = ref.watch(publicRecipesByOwnerProvider(userId));
     final me = ref.watch(currentAuthUserProvider);
     final isSelf = me != null && me.id == userId;
+    // Professional Profile Center Sprint 1 — aktif "iş arıyorum" ilanı
+    // (varsa) profil vitrininde durum + kart için.
+    final jobSeekAsync = ref.watch(activeJobSeekOfProvider(userId));
 
     return PremiumScaffold(
       appBar: AppBar(
@@ -103,6 +110,14 @@ class SocialProfilePage extends ConsumerWidget {
 
               // Account type rozet (Ticari/Bireysel/Toptancı)
               _AccountTypeBadge(detailAsync: detailAsync),
+
+              // Son mesleki durum (türetilmiş: iş arıyor / işletme / toptancı /
+              // çalışıyor). Dedicated current_status alanı yok — mevcut veriden
+              // türetilir (bkz. sprint raporu, migration adayı).
+              _StatusChip(
+                detailAsync: detailAsync,
+                jobSeekAsync: jobSeekAsync,
+              ),
 
               const SizedBox(height: AppSpacing.s),
               ProfileStatistics(
@@ -154,6 +169,22 @@ class SocialProfilePage extends ConsumerWidget {
                 detailAsync: detailAsync,
                 isSelf: isSelf,
                 onEdit: () => context.push(AppRoutes.workerProfile),
+              ),
+
+              // ── Çalışma Geçmişi ──
+              // Audit P1 fix: worker_experiences RPC'den geliyordu ama render
+              // edilmiyordu; artık timeline olarak gösteriliyor.
+              _ExperienceSection(
+                detailAsync: detailAsync,
+                isSelf: isSelf,
+                onAdd: () => context.push(AppRoutes.workerExperiences),
+              ),
+
+              // ── İş Arıyor kartı ──
+              // Audit P1 fix: aktif job_seek_posts artık profille bağlı.
+              _JobSeekCard(
+                jobSeekAsync: jobSeekAsync,
+                onView: () => context.push(AppRoutes.jobs),
               ),
 
               // ── Açık Reçeteler ──
@@ -364,6 +395,350 @@ class _AccountTypeBadge extends StatelessWidget {
 }
 
 // ── Section header ────────────────────────────────────────────────
+
+// ── Son mesleki durum (türetilmiş) ────────────────────────────────
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.detailAsync, required this.jobSeekAsync});
+  final AsyncValue<PublicProfileDetail?> detailAsync;
+  final AsyncValue<JobSeekPost?> jobSeekAsync;
+
+  /// Dedicated `current_status` alanı yok — mevcut veriden türetilir:
+  /// aktif iş arama → "İş arıyor"; ticari → "Fırın işletmesi"; toptancı →
+  /// "Toptancı"; worker profili dolu → "Çalışıyor". Yoksa gizli.
+  String? _status() {
+    if (jobSeekAsync.asData?.value != null) {
+      return AppStrings.profileStatusSeeking;
+    }
+    final d = detailAsync.asData?.value;
+    final acct = d?.header.accountType;
+    if (acct == 'commercial') return AppStrings.profileStatusBakery;
+    if (acct == 'wholesaler') return AppStrings.profileStatusWholesaler;
+    if (d != null && d.hasWorkerInfo) return AppStrings.profileStatusWorking;
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final status = _status();
+    if (status == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.xs,
+        AppSpacing.pageH,
+        0,
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          key: const ValueKey('profile_status_chip'),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppColors.copper.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: AppColors.copper.withValues(alpha: 0.34),
+              width: 0.6,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.circle, size: 8, color: AppColors.copper),
+              const SizedBox(width: 6),
+              Text(
+                status,
+                style: const TextStyle(
+                  color: AppColors.copper,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Çalışma Geçmişi ───────────────────────────────────────────────
+
+class _ExperienceSection extends StatelessWidget {
+  const _ExperienceSection({
+    required this.detailAsync,
+    required this.isSelf,
+    required this.onAdd,
+  });
+  final AsyncValue<PublicProfileDetail?> detailAsync;
+  final bool isSelf;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return detailAsync.maybeWhen(
+      data: (d) {
+        if (d == null) return const SizedBox.shrink();
+        final items = d.experiences;
+        final hasContent = items.isNotEmpty;
+        // Başkası bakıyor + boş → bölümü gizle.
+        if (!hasContent && !isSelf) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _SectionHeader(
+              label: AppStrings.profileSectionExperience,
+              trailing: isSelf
+                  ? TextButton.icon(
+                      onPressed: onAdd,
+                      icon: const Icon(Icons.add, size: 14),
+                      label: const Text(
+                        AppStrings.profileExperienceAddCta,
+                        style: TextStyle(
+                          color: AppColors.softGold,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.softGold,
+                        minimumSize: const Size(0, 32),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    )
+                  : null,
+            ),
+            if (!hasContent)
+              const _SectionEmptyHint(
+                message: AppStrings.profileEmptyExperience,
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                  vertical: AppSpacing.s,
+                ),
+                child: Column(
+                  children: [
+                    for (final e in items)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.s),
+                        child: _ExperienceRow(exp: e),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _ExperienceRow extends StatelessWidget {
+  const _ExperienceRow({required this.exp});
+  final PublicWorkerExperience exp;
+
+  String _dateRange() {
+    final s = exp.startDate?.year.toString();
+    final e = exp.isCurrent
+        ? AppStrings.profileExperienceCurrent
+        : exp.endDate?.year.toString();
+    return <String>[
+      if (s != null) s,
+      if (e != null) e,
+    ].join(' – ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final city = exp.effectiveCity;
+    final range = _dateRange();
+    final meta = <String>[
+      if (city != null && city.isNotEmpty) city,
+      if (range.isNotEmpty) range,
+    ].join(' · ');
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            exp.title,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 14.5,
+            ),
+          ),
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              meta,
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if ((exp.description ?? '').isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              exp.description!,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13.5,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── İş Arıyor kartı ───────────────────────────────────────────────
+
+class _JobSeekCard extends StatelessWidget {
+  const _JobSeekCard({required this.jobSeekAsync, required this.onView});
+  final AsyncValue<JobSeekPost?> jobSeekAsync;
+  final VoidCallback onView;
+
+  static String? _professionLabel(JobSeekPost p) {
+    final code = p.professionBadgeCode;
+    if (code != null && code.isNotEmpty) {
+      final lbl = FirinnetTaxonomy.professionLabel(code);
+      if (lbl != null) return lbl;
+    }
+    return p.professionBadge;
+  }
+
+  static String? _cityLabel(JobSeekPost p) {
+    final code = p.cityCode;
+    if (code != null && code.isNotEmpty) {
+      final prov = TurkeyLocations.findProvinceByCode(code);
+      if (prov != null) return prov.name;
+    }
+    return p.city;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final post = jobSeekAsync.asData?.value;
+    if (post == null) return const SizedBox.shrink();
+    final prof = _professionLabel(post);
+    final city = _cityLabel(post);
+    final meta = <String>[
+      if (prof != null && prof.isNotEmpty) prof,
+      if (city != null && city.isNotEmpty) city,
+      if (post.experienceYears != null)
+        '${post.experienceYears} ${AppStrings.profileExperienceYearsLabel}',
+    ].join(' · ');
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.pageH,
+        vertical: AppSpacing.s,
+      ),
+      child: Container(
+        key: const ValueKey('profile_job_seek_card'),
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          border: Border.all(
+            color: AppColors.softGold.withValues(alpha: 0.4),
+            width: 0.8,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.campaign_outlined,
+                  size: 16,
+                  color: AppColors.softGold,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  AppStrings.profileJobSeekTitle,
+                  style: const TextStyle(
+                    color: AppColors.softGold,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              post.title,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 14.5,
+              ),
+            ),
+            if (meta.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                meta,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            if ((post.description ?? '').isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                post.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.s),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: onView,
+                icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                label: const Text(
+                  AppStrings.profileJobSeekViewCta,
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.softGold,
+                  minimumSize: const Size(0, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.label, this.trailing});
