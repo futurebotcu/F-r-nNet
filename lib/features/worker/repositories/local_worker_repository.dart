@@ -60,6 +60,15 @@ class LocalWorkerRepository implements WorkerRepository {
   }
 
   @override
+  Future<void> setExperienceVisibility(String id, bool isPublic) async {
+    final idx = _experiences.indexWhere((e) => e.id == id);
+    if (idx >= 0) {
+      _experiences[idx] = _experiences[idx].copyWith(isPublic: isPublic);
+      _notify();
+    }
+  }
+
+  @override
   Future<List<JobSeekPost>> listMyJobSeekPosts() async {
     final out = List<JobSeekPost>.from(_posts);
     out.sort((a, b) {

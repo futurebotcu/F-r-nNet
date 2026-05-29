@@ -59,6 +59,12 @@ class GuardedWorkerRepository implements WorkerRepository {
   }
 
   @override
+  Future<void> setExperienceVisibility(String id, bool isPublic) {
+    _requireWrite('CV kaydı görünürlüğünü değiştirmek');
+    return inner.setExperienceVisibility(id, isPublic);
+  }
+
+  @override
   Future<JobSeekPost> upsertJobSeekPost(JobSeekPost post) {
     _requireWrite('iş arıyorum ilanı kaydetmek');
     return inner.upsertJobSeekPost(post);

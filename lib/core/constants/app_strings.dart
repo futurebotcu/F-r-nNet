@@ -740,6 +740,37 @@ class AppStrings {
   static const String profileJobSeekTitle = 'İş Arıyor';
   static const String profileJobSeekViewCta = 'İlanı görüntüle';
   static const String profileJobSeekManageCta = 'İş arama durumunu güncelle';
+
+  // Unified Professional CV Center — profil vitrini + /profile/cv merkezi.
+  static const String profileSectionCv = 'Mesleki CV';
+  static const String profileCvSectionSubtitle =
+      'Kısa tanıtımın, son mesleki durumun ve çalışma geçmişin profilinde görünür.';
+  static const String profileCvEditCta = 'Mesleki CV\'ni düzenle';
+  static const String profileCvEmptySelf =
+      'Mesleki CV bilgilerini ekle — meslek, çalışma geçmişi ve iş arama durumu.';
+  static const String cvCenterTitle = 'Mesleki CV';
+  static const String cvCenterIntro =
+      'Tek yerden yönet: kısa tanıtım, son durum, çalışma geçmişi ve iş arama.';
+  static const String cvBioLabel = 'Kısa tanıtım';
+  static const String cvBioHint =
+      '20 yıldır ekşi mayalı ekmek ve simit üretiyorum.';
+  static const String cvBioSaveCta = 'Tanıtımı kaydet';
+  static const String cvBioSaved = 'Tanıtım kaydedildi.';
+  static const String cvStatusLabel = 'Son mesleki durum';
+  static const String cvRecordsLabel = 'CV / Çalışma Geçmişi';
+  static const String cvAddRecordCta = 'CV kaydı ekle';
+  static const String cvEmptyRecords = 'Henüz CV kaydı yok. İlk kaydını ekle.';
+  static const String cvVisibilityPublic = 'Profilde görünür';
+  static const String cvVisibilityHidden = 'Gizli';
+  static const String cvEntryTypeLabel = 'Kayıt türü';
+  static const String cvOpenJobSeekCta = 'CV\'den İş Arıyorum ilanı aç';
+  static const String cvUpdateJobSeekCta = 'Aktif iş ilanını düzenle';
+  static const Map<String, String> cvEntryTypeLabels = <String, String>{
+    'individual': 'Bireysel / Usta',
+    'commercial': 'Ticari / İşletme',
+    'wholesaler': 'Toptancı',
+    'other': 'Diğer',
+  };
   static const String profileStatusSeeking = 'İş arıyor';
   static const String profileStatusBakery = 'Fırın işletmesi';
   static const String profileStatusWholesaler = 'Toptancı';

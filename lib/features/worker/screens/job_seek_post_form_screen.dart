@@ -17,10 +17,32 @@ import '../../auth/services/auth_required_guard.dart';
 import '../models/job_seek_post.dart';
 import '../providers/worker_providers.dart';
 
+/// Unified Professional CV Center — profil → "İş Arıyorum ilanı aç" için
+/// mesleki CV verilerinden prefill paketi. Sadece kolaylık/prefill amaçlı;
+/// menüden manuel ilan açma akışını DEĞİŞTİRMEZ (prefill null → boş form).
+class JobSeekPrefill {
+  const JobSeekPrefill({
+    this.professionCode,
+    this.cityCode,
+    this.cityName,
+    this.experienceYears,
+    this.description,
+  });
+
+  final String? professionCode;
+  final String? cityCode;
+  final String? cityName;
+  final int? experienceYears;
+  final String? description;
+}
+
 /// İş Arıyorum İlanı oluştur/düzenle ekranı.
 class JobSeekPostFormScreen extends ConsumerStatefulWidget {
-  const JobSeekPostFormScreen({super.key, this.postId});
+  const JobSeekPostFormScreen({super.key, this.postId, this.prefill});
   final String? postId;
+
+  /// CV Center prefill (yalnız yeni ilanda, postId null iken uygulanır).
+  final JobSeekPrefill? prefill;
 
   @override
   ConsumerState<JobSeekPostFormScreen> createState() =>
@@ -54,7 +76,37 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.postId != null) _load();
+    if (widget.postId != null) {
+      _load();
+    } else if (widget.prefill != null) {
+      _applyPrefill(widget.prefill!);
+    }
+  }
+
+  /// CV Center'dan gelen prefill — yalnız yeni ilan açılışında. İlana özel
+  /// alanlar (maaş, iletişim, yayın durumu) kullanıcıya bırakılır.
+  void _applyPrefill(JobSeekPrefill p) {
+    _professionCode = p.professionCode ?? _professionCode;
+    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+        TurkeyLocations.findProvinceByName(p.cityName);
+    if (p.experienceYears != null) {
+      _experience.text = '${p.experienceYears}';
+    }
+    if ((p.description ?? '').isNotEmpty) {
+      _description.text = p.description!;
+    }
+    // Başlık boşsa meslek+şehirden makul bir öneri üret (kullanıcı düzenler).
+    if (_title.text.trim().isEmpty) {
+      final prof = p.professionCode == null
+          ? null
+          : FirinnetTaxonomy.professionLabel(p.professionCode!);
+      final city = _selectedProvince?.name;
+      final parts = <String>[
+        if (city != null && city.isNotEmpty) city,
+        if (prof != null && prof.isNotEmpty) prof,
+      ];
+      if (parts.isNotEmpty) _title.text = '${parts.join(' ')} arıyor';
+    }
   }
 
   Future<void> _load() async {

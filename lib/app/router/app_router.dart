@@ -55,6 +55,7 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/profile/screens/professional_cv_screen.dart';
 import '../../features/social/profile/profile_page.dart';
 import '../../features/social/profile/user_list_page.dart';
 import '../../features/settings/screens/about_screen.dart';
@@ -90,6 +91,10 @@ class AppRoutes {
   static const String panel = '/panel';
   static const String jobs = '/jobs';
   static const String profile = '/profile';
+
+  /// Unified Professional CV Center — profil içinde tek mesleki CV düzenleme
+  /// merkezi (bio + son durum + CV kayıtları + görünürlük + CV'den ilan).
+  static const String professionalCv = '/profile/cv';
 
   // Fırın Paneli — Ticari rol için "/panel" altına nested giriş.
   // Eski "/panel" Fırın Paneli'ydi; rol bazlı dashboard'a taşındı,
@@ -469,12 +474,25 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: AppRoutes.jobSeekNew,
-        builder: (_, __) => const JobSeekPostFormScreen(),
+        builder: (_, state) => JobSeekPostFormScreen(
+          // CV Center → "İş Arıyorum ilanı aç": meslek/şehir/deneyim/bio
+          // prefill state.extra ile geçer. Menüden manuel açılışta extra
+          // null → form normal/boş çalışır (mevcut akış korunur).
+          prefill: state.extra is JobSeekPrefill
+              ? state.extra as JobSeekPrefill
+              : null,
+        ),
       ),
       GoRoute(
         path: '${AppRoutes.jobSeek}/:id/edit',
         builder: (_, state) =>
             JobSeekPostFormScreen(postId: state.pathParameters['id']!),
+      ),
+
+      // Unified Professional CV Center — tek mesleki CV düzenleme merkezi.
+      GoRoute(
+        path: AppRoutes.professionalCv,
+        builder: (_, __) => const ProfessionalCvScreen(),
       ),
 
       // V1.2 — Toptancı müşteri yönetimi (dealers altyapısı paylaşılır)

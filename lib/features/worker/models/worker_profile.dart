@@ -167,6 +167,8 @@ class WorkerExperience {
     this.startDate,
     this.endDate,
     this.description,
+    this.entryType = 'individual',
+    this.isPublic = true,
     this.createdAt,
   });
 
@@ -184,6 +186,15 @@ class WorkerExperience {
   final DateTime? startDate;
   final DateTime? endDate;
   final String? description;
+
+  /// CV Center — kayıt türü: `individual` / `commercial` / `wholesaler` /
+  /// `other`. account_type'ı DEĞİŞTİRMEZ; yalnız bu CV kaydının türüdür.
+  final String entryType;
+
+  /// CV Center — profilde görünürlük. `false` ise yalnız sahibi görür
+  /// (public_profile_detail RPC is_public filtreler).
+  final bool isPublic;
+
   final DateTime? createdAt;
 
   WorkerExperience copyWith({
@@ -196,6 +207,8 @@ class WorkerExperience {
     DateTime? startDate,
     DateTime? endDate,
     String? description,
+    String? entryType,
+    bool? isPublic,
     DateTime? createdAt,
   }) {
     return WorkerExperience(
@@ -208,6 +221,8 @@ class WorkerExperience {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       description: description ?? this.description,
+      entryType: entryType ?? this.entryType,
+      isPublic: isPublic ?? this.isPublic,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -230,6 +245,8 @@ class WorkerExperience {
       if (endDate != null) 'end_date': d(endDate),
       if (description != null && description!.isNotEmpty)
         'description': description,
+      'entry_type': entryType,
+      'is_public': isPublic,
     };
   }
 
@@ -245,6 +262,8 @@ class WorkerExperience {
       startDate: p(row['start_date'] as String?),
       endDate: p(row['end_date'] as String?),
       description: row['description'] as String?,
+      entryType: (row['entry_type'] as String?) ?? 'individual',
+      isPublic: (row['is_public'] as bool?) ?? true,
       createdAt: p(row['created_at'] as String?),
     );
   }

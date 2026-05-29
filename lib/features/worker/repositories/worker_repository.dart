@@ -16,6 +16,10 @@ abstract class WorkerRepository {
   Future<WorkerExperience> addExperience(WorkerExperience experience);
   Future<void> deleteExperience(String id);
 
+  /// CV Center — bir CV kaydının profilde görünürlüğünü değiştirir
+  /// (owner-only; RLS owner write korunur).
+  Future<void> setExperienceVisibility(String id, bool isPublic);
+
   Future<List<JobSeekPost>> listMyJobSeekPosts();
 
   /// Sektörde aktif olan iş arayan ilanları (is_active=true). Sosyal akış için

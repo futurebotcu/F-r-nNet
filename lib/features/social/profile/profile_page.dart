@@ -164,11 +164,22 @@ class SocialProfilePage extends ConsumerWidget {
                 isSelf: isSelf,
               ),
 
-              // ── Mesleki Profil ve Deneyim ──
+              // ── Mesleki CV (çatı başlık) ──
+              // Unified CV Center: Mesleki bilgi + çalışma geçmişi + iş arama
+              // tek "Mesleki CV" çatısı altında; self düzenleme tek merkeze
+              // (/profile/cv) yönlenir.
+              _CvHeader(
+                detailAsync: detailAsync,
+                jobSeekAsync: jobSeekAsync,
+                isSelf: isSelf,
+                onEdit: () => context.push(AppRoutes.professionalCv),
+              ),
+
+              // ── Mesleki Profil ──
               _ProfessionalSection(
                 detailAsync: detailAsync,
                 isSelf: isSelf,
-                onEdit: () => context.push(AppRoutes.workerProfile),
+                onEdit: () => context.push(AppRoutes.professionalCv),
               ),
 
               // ── Çalışma Geçmişi ──
@@ -177,19 +188,17 @@ class SocialProfilePage extends ConsumerWidget {
               _ExperienceSection(
                 detailAsync: detailAsync,
                 isSelf: isSelf,
-                onAdd: () => context.push(AppRoutes.workerExperiences),
+                onAdd: () => context.push(AppRoutes.professionalCv),
               ),
 
               // ── İş Arıyor kartı / iş arama durumu ──
               // Audit P1 fix: aktif job_seek_posts artık profille bağlı.
-              // Self'te aktif ilan yoksa da "iş arama durumunu güncelle"
-              // CTA'sı ile /worker/job-seek'e erişilir (panel sadeleşmesi
-              // sonrası tek yönetim girişi profil vitrini).
+              // Self yönetim CV merkezine (/profile/cv) yönlenir.
               _JobSeekCard(
                 jobSeekAsync: jobSeekAsync,
                 isSelf: isSelf,
                 onView: () => context.push(AppRoutes.jobs),
-                onManage: () => context.push(AppRoutes.jobSeek),
+                onManage: () => context.push(AppRoutes.professionalCv),
               ),
 
               // ── Açık Reçeteler ──
@@ -400,6 +409,83 @@ class _AccountTypeBadge extends StatelessWidget {
 }
 
 // ── Section header ────────────────────────────────────────────────
+
+// ── Mesleki CV çatı başlığı ───────────────────────────────────────
+
+class _CvHeader extends StatelessWidget {
+  const _CvHeader({
+    required this.detailAsync,
+    required this.jobSeekAsync,
+    required this.isSelf,
+    required this.onEdit,
+  });
+  final AsyncValue<PublicProfileDetail?> detailAsync;
+  final AsyncValue<JobSeekPost?> jobSeekAsync;
+  final bool isSelf;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = detailAsync.asData?.value;
+    final hasContent =
+        (d != null && (d.hasWorkerInfo || d.hasExperiences)) ||
+            (jobSeekAsync.asData?.value != null);
+    // Başkası bakıyor + hiç CV içeriği yok → çatı başlığını gizle.
+    if (!isSelf && !hasContent) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionHeader(
+          label: AppStrings.profileSectionCv,
+          trailing: isSelf
+              ? TextButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  label: const Text(
+                    AppStrings.profileCvEditCta,
+                    style: TextStyle(
+                      color: AppColors.softGold,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.softGold,
+                    minimumSize: const Size(0, 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )
+              : null,
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(AppSpacing.pageH, 0, AppSpacing.pageH, 0),
+          child: Text(
+            AppStrings.profileCvSectionSubtitle,
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
+          ),
+        ),
+        if (isSelf && !hasContent)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.pageH,
+              AppSpacing.s,
+              AppSpacing.pageH,
+              0,
+            ),
+            child: Text(
+              AppStrings.profileCvEmptySelf,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 // ── Son mesleki durum (türetilmiş) ────────────────────────────────
 

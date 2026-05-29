@@ -80,7 +80,7 @@ class SupabaseWorkerRepository implements WorkerRepository {
 
   static const String _experienceColumns =
       'id, owner_id, title, workplace, city, city_code, '
-      'start_date, end_date, description, created_at';
+      'start_date, end_date, description, entry_type, is_public, created_at';
 
   @override
   Future<List<WorkerExperience>> listMyExperiences() async {
@@ -114,6 +114,17 @@ class SupabaseWorkerRepository implements WorkerRepository {
     await _client
         .from('worker_experiences')
         .delete()
+        .eq('id', id)
+        .eq('owner_id', ownerId);
+    _notify();
+  }
+
+  @override
+  Future<void> setExperienceVisibility(String id, bool isPublic) async {
+    final ownerId = _requireUserId();
+    await _client
+        .from('worker_experiences')
+        .update(<String, dynamic>{'is_public': isPublic})
         .eq('id', id)
         .eq('owner_id', ownerId);
     _notify();

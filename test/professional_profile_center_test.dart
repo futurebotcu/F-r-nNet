@@ -108,18 +108,19 @@ void main() {
     });
   });
 
-  group('Profile Routing — vitrinden 3 mesleki düzenleme yolu erişilir', () {
+  group('Unified CV Center — vitrin self düzenleme tek merkeze yönlenir', () {
     late String src;
     setUpAll(() {
       src = File('lib/features/social/profile/profile_page.dart')
           .readAsStringSync();
     });
 
-    test('Mesleki bilgiler + çalışma geçmişi + iş arama route\'ları self CTA', () {
-      expect(src.contains('AppRoutes.workerProfile'), isTrue);
-      expect(src.contains('AppRoutes.workerExperiences'), isTrue);
-      expect(src.contains('AppRoutes.jobSeek'), isTrue,
-          reason: 'iş arama durumu self CTA ile /worker/job-seek\'e gider');
+    test('self CV düzenleme CTA\'ları /profile/cv merkezine yönlenir', () {
+      expect(src.contains('AppRoutes.professionalCv'), isTrue,
+          reason: 'mesleki bilgi + çalışma geçmişi + iş arama tek CV merkezine');
+      expect(src.contains('_CvHeader'), isTrue,
+          reason: 'tek "Mesleki CV" çatı başlığı eklendi');
+      expect(src.contains('AppStrings.profileSectionCv'), isTrue);
     });
 
     test('hesap ayarları (settings) AppBar\'dan erişilebilir kalır', () {

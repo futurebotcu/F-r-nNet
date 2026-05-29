@@ -159,15 +159,22 @@ class PublicWorkerExperience {
   const PublicWorkerExperience({
     required this.id,
     required this.title,
+    this.workplace,
     this.city,
     this.cityCode,
     this.startDate,
     this.endDate,
     this.description,
+    this.entryType = 'individual',
+    this.isPublic = true,
   });
 
   final String id;
   final String title;
+
+  /// CV Center — kurum / işletme / işyeri (RPC artık döndürüyor).
+  final String? workplace;
+
   final String? city;
 
   /// M6A — plaka kodu. UI önce code'dan label çevirir.
@@ -176,6 +183,13 @@ class PublicWorkerExperience {
   final DateTime? startDate;
   final DateTime? endDate;
   final String? description;
+
+  /// CV Center — kayıt türü (individual/commercial/wholesaler/other).
+  final String entryType;
+
+  /// CV Center — görünürlük. RPC başkasına yalnız is_public=true döndürür;
+  /// owner kendi tüm kayıtlarını görür (gizli olanlar UI'da işaretlenir).
+  final bool isPublic;
 
   bool get isCurrent => endDate == null && startDate != null;
 
@@ -195,11 +209,14 @@ class PublicWorkerExperience {
     return PublicWorkerExperience(
       id: j['id'] as String,
       title: (j['title'] as String?) ?? '',
+      workplace: j['workplace'] as String?,
       city: j['city'] as String?,
       cityCode: j['city_code'] as String?,
       startDate: parse(j['start_date'] as String?),
       endDate: parse(j['end_date'] as String?),
       description: j['description'] as String?,
+      entryType: (j['entry_type'] as String?) ?? 'individual',
+      isPublic: (j['is_public'] as bool?) ?? true,
     );
   }
 }
