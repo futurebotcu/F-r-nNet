@@ -106,6 +106,9 @@ class SocialProfilePage extends ConsumerWidget {
                 profileAsync: profileAsync,
                 detailAsync: detailAsync,
                 isSelf: isSelf,
+                // PR-A — self + bio boş ise header'dan CV merkezine yönlendir.
+                onAddBio:
+                    isSelf ? () => context.push(AppRoutes.professionalCv) : null,
               ),
 
               // Account type rozet (Ticari/Bireysel/Toptancı)

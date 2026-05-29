@@ -20,11 +20,16 @@ class ProfileHeader extends StatelessWidget {
     required this.profileAsync,
     required this.isSelf,
     this.detailAsync,
+    this.onAddBio,
   });
 
   final AsyncValue<SocialProfile> profileAsync;
   final AsyncValue<PublicProfileDetail?>? detailAsync;
   final bool isSelf;
+
+  /// PR-A — self profilde bio boşsa gösterilen hafif "tanıtım ekle" CTA.
+  /// `/profile/cv`'ye gider. Başkasının profilinde / bio doluysa kullanılmaz.
+  final VoidCallback? onAddBio;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +56,9 @@ class ProfileHeader extends StatelessWidget {
           // M6A — code → label çevirimi (effectiveCity) öncelikli; snapshot
           // RPC eski text fallback.
           final city = detail?.header.effectiveCity ?? p.city;
+          // PR-A — kısa bio (worker_profiles.bio) header'da görünür.
+          final bio = detail?.worker?.bio;
+          final hasBio = bio != null && bio.trim().isNotEmpty;
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -109,6 +117,52 @@ class ProfileHeader extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                    ],
+                    // PR-A — kısa bio veya (self + boş) tanıtım ekle CTA.
+                    if (hasBio) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        bio!.trim(),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          height: 1.35,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ] else if (isSelf && onAddBio != null) ...[
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: onAddBio,
+                        borderRadius: BorderRadius.circular(AppRadius.s),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.add_rounded,
+                                size: 14,
+                                color: AppColors.softGold,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  AppStrings.profileHeaderAddBioCta,
+                                  style: const TextStyle(
+                                    color: AppColors.softGold,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                     if (isSelf) ...[

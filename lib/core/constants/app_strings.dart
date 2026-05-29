@@ -742,6 +742,8 @@ class AppStrings {
   static const String profileJobSeekManageCta = 'İş arama durumunu güncelle';
 
   // Unified Professional CV Center — profil vitrini + /profile/cv merkezi.
+  static const String profileHeaderAddBioCta =
+      'Mesleki CV\'ne kısa tanıtım ekle';
   static const String profileSectionCv = 'Mesleki CV';
   static const String profileCvSectionSubtitle =
       'Kısa tanıtımın, son mesleki durumun ve çalışma geçmişin profilinde görünür.';
