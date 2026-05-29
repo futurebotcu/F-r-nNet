@@ -42,16 +42,26 @@ import '../../profile/widgets/follow_button.dart';
 import '../../profile/widgets/profile_edit_sheet.dart';
 import '../post/social_post_card.dart';
 import '../providers/social_providers.dart';
+import 'widgets/profile_category_tabs.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_statistics.dart';
 
-class SocialProfilePage extends ConsumerWidget {
+class SocialProfilePage extends ConsumerStatefulWidget {
   const SocialProfilePage({super.key, required this.userId});
 
   final String userId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SocialProfilePage> createState() => _SocialProfilePageState();
+}
+
+class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
+  // Yan yana yatay kategori: 0 Gönderiler, 1 Reçeteler, 2 Mesleki Bilgi.
+  int _tab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = widget.userId;
     final profileAsync = ref.watch(socialProfileProvider(userId));
     final detailAsync = ref.watch(publicProfileDetailProvider(userId));
     // M4 Polish — profile postları paged. Yüksek-post kullanıcıda ilk
@@ -99,9 +109,8 @@ class SocialProfilePage extends ConsumerWidget {
             ),
             padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
             children: [
-              // Header (avatar + name + effective profession_badge + city).
-              // detailAsync sayesinde avatar_url ve worker fallback'li badge
-              // header'a tek kaynaktan akar — `effectiveProfessionBadge`.
+              // ── ÜST PROFİL ALANI (vitrin) ──
+              // Header (avatar + name + effective profession_badge + city + bio).
               ProfileHeader(
                 profileAsync: profileAsync,
                 detailAsync: detailAsync,
@@ -110,18 +119,8 @@ class SocialProfilePage extends ConsumerWidget {
                 onAddBio:
                     isSelf ? () => context.push(AppRoutes.professionalCv) : null,
               ),
-
-              // Account type rozet (Ticari/Bireysel/Toptancı)
               _AccountTypeBadge(detailAsync: detailAsync),
-
-              // Son mesleki durum (türetilmiş: iş arıyor / işletme / toptancı /
-              // çalışıyor). Dedicated current_status alanı yok — mevcut veriden
-              // türetilir (bkz. sprint raporu, migration adayı).
-              _StatusChip(
-                detailAsync: detailAsync,
-                jobSeekAsync: jobSeekAsync,
-              ),
-
+              _StatusChip(detailAsync: detailAsync, jobSeekAsync: jobSeekAsync),
               const SizedBox(height: AppSpacing.s),
               ProfileStatistics(
                 userId: userId,
@@ -134,8 +133,6 @@ class SocialProfilePage extends ConsumerWidget {
                   '${AppRoutes.userPublicProfile}/$userId/following',
                 ),
               ),
-
-              // CTA: non-self → Follow + Mesaj; self → Düzenle
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.pageH,
@@ -144,9 +141,7 @@ class SocialProfilePage extends ConsumerWidget {
                   0,
                 ),
                 child: isSelf
-                    ? _SelfEditCta(
-                        onTap: () => ProfileEditSheet.show(context),
-                      )
+                    ? _SelfEditCta(onTap: () => ProfileEditSheet.show(context))
                     : Row(
                         children: [
                           Expanded(child: FollowButton(userId: userId)),
@@ -161,116 +156,122 @@ class SocialProfilePage extends ConsumerWidget {
                       ),
               ),
 
-              // ── Hakkında / İşletme ──
-              _AboutBakerySection(
-                detailAsync: detailAsync,
-                isSelf: isSelf,
+              // ── YAN YANA YATAY KATEGORİLER ──
+              // Gönderiler | Reçeteler | Mesleki Bilgi (tek satır, alt alta DEĞİL).
+              ProfileCategoryTabs(
+                index: _tab,
+                onChanged: (i) => setState(() => _tab = i),
               ),
 
-              // ── Mesleki CV (çatı başlık) ──
-              // Unified CV Center: Mesleki bilgi + çalışma geçmişi + iş arama
-              // tek "Mesleki CV" çatısı altında; self düzenleme tek merkeze
-              // (/profile/cv) yönlenir.
-              _CvHeader(
+              // ── SEÇİLİ TAB İÇERİĞİ ──
+              ..._tabContent(
+                context: context,
+                userId: userId,
+                isSelf: isSelf,
                 detailAsync: detailAsync,
                 jobSeekAsync: jobSeekAsync,
-                isSelf: isSelf,
-                onEdit: () => context.push(AppRoutes.professionalCv),
-              ),
-
-              // ── Mesleki Profil ──
-              _ProfessionalSection(
-                detailAsync: detailAsync,
-                isSelf: isSelf,
-                onEdit: () => context.push(AppRoutes.professionalCv),
-              ),
-
-              // ── Çalışma Geçmişi ──
-              // Audit P1 fix: worker_experiences RPC'den geliyordu ama render
-              // edilmiyordu; artık timeline olarak gösteriliyor.
-              _ExperienceSection(
-                detailAsync: detailAsync,
-                isSelf: isSelf,
-                onAdd: () => context.push(AppRoutes.professionalCv),
-              ),
-
-              // ── İş Arıyor kartı / iş arama durumu ──
-              // Audit P1 fix: aktif job_seek_posts artık profille bağlı.
-              // Self yönetim CV merkezine (/profile/cv) yönlenir.
-              _JobSeekCard(
-                jobSeekAsync: jobSeekAsync,
-                isSelf: isSelf,
-                onView: () => context.push(AppRoutes.jobs),
-                onManage: () => context.push(AppRoutes.professionalCv),
-              ),
-
-              // ── Açık Reçeteler ──
-              _PublicRecipesSection(
-                async: recipesAsync,
-                isSelf: isSelf,
-              ),
-
-              const SizedBox(height: AppSpacing.m),
-              const Divider(
-                height: 0,
-                thickness: 0.6,
-                color: AppColors.borderHairline,
-              ),
-
-              // ── Gönderiler ──
-              _SectionHeader(label: AppStrings.profileSectionPosts),
-              pagedAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (_, __) => const Padding(
-                  padding: EdgeInsets.all(AppSpacing.l),
-                  child: Center(
-                    child: Text(
-                      AppStrings.publicProfileLoadError,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-                data: (paged) {
-                  if (paged.posts.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(AppSpacing.l),
-                      child: Center(
-                        child: Text(
-                          AppStrings.publicProfilePostsEmpty,
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  return Column(
-                    children: [
-                      for (final p in paged.posts)
-                        SocialPostCard(key: ValueKey(p.id), post: p),
-                      if (paged.hasMore)
-                        _LoadMoreCta(
-                          isLoading: paged.isLoadingMore,
-                          onTap: () => ref
-                              .read(userPostsPagedNotifierProvider(userId)
-                                  .notifier)
-                              .loadMore(),
-                        ),
-                    ],
-                  );
-                },
+                recipesAsync: recipesAsync,
+                pagedAsync: pagedAsync,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// Seçili kategorinin içeriği (tek ListView içinde; pagination korunur).
+  List<Widget> _tabContent({
+    required BuildContext context,
+    required String userId,
+    required bool isSelf,
+    required AsyncValue<PublicProfileDetail?> detailAsync,
+    required AsyncValue<JobSeekPost?> jobSeekAsync,
+    required AsyncValue<List<Recipe>> recipesAsync,
+    required AsyncValue<FeedPagedState> pagedAsync,
+  }) {
+    switch (_tab) {
+      case 1:
+        return [
+          _PublicRecipesSection(
+            async: recipesAsync,
+            isSelf: isSelf,
+            full: true,
+          ),
+        ];
+      case 2:
+        return [
+          _AboutBakerySection(detailAsync: detailAsync, isSelf: isSelf),
+          _CvHeader(
+            detailAsync: detailAsync,
+            jobSeekAsync: jobSeekAsync,
+            isSelf: isSelf,
+            onEdit: () => context.push(AppRoutes.professionalCv),
+          ),
+          _ProfessionalSection(
+            detailAsync: detailAsync,
+            isSelf: isSelf,
+            onEdit: () => context.push(AppRoutes.professionalCv),
+          ),
+          _ExperienceSection(
+            detailAsync: detailAsync,
+            isSelf: isSelf,
+            onAdd: () => context.push(AppRoutes.professionalCv),
+          ),
+          _JobSeekCard(
+            jobSeekAsync: jobSeekAsync,
+            isSelf: isSelf,
+            onView: () => context.push(AppRoutes.jobs),
+            onManage: () => context.push(AppRoutes.professionalCv),
+          ),
+        ];
+      case 0:
+      default:
+        return [_postsTab(userId, pagedAsync)];
+    }
+  }
+
+  Widget _postsTab(String userId, AsyncValue<FeedPagedState> pagedAsync) {
+    return pagedAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const Padding(
+        padding: EdgeInsets.all(AppSpacing.l),
+        child: Center(
+          child: Text(
+            AppStrings.publicProfileLoadError,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+        ),
+      ),
+      data: (paged) {
+        if (paged.posts.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(AppSpacing.l),
+            child: Center(
+              child: Text(
+                AppStrings.publicProfilePostsEmpty,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+            ),
+          );
+        }
+        return Column(
+          children: [
+            for (final p in paged.posts)
+              SocialPostCard(key: ValueKey(p.id), post: p),
+            if (paged.hasMore)
+              _LoadMoreCta(
+                isLoading: paged.isLoadingMore,
+                onTap: () => ref
+                    .read(userPostsPagedNotifierProvider(userId).notifier)
+                    .loadMore(),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -1194,9 +1195,13 @@ class _PublicRecipesSection extends StatelessWidget {
   const _PublicRecipesSection({
     required this.async,
     required this.isSelf,
+    this.full = false,
   });
   final AsyncValue<List<Recipe>> async;
   final bool isSelf;
+
+  /// Reçeteler tab'ında tam liste; vitrin preview'inde ilk 4.
+  final bool full;
 
   static const int _previewLimit = 4;
 
@@ -1205,8 +1210,9 @@ class _PublicRecipesSection extends StatelessWidget {
     return async.maybeWhen(
       data: (list) {
         if (list.isEmpty && !isSelf) return const SizedBox.shrink();
-        final preview = list.take(_previewLimit).toList(growable: false);
-        final overflow = list.length - preview.length;
+        final preview =
+            full ? list : list.take(_previewLimit).toList(growable: false);
+        final overflow = full ? 0 : list.length - preview.length;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

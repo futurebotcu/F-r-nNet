@@ -216,12 +216,16 @@ void main() {
       expect(src.contains('publicProfileDetailProvider(userId)'), isTrue);
     });
 
-    test('5 yeni section + 1 mevcut posts section', () {
+    test('İçerik blokları korunur + yan yana kategori tabları', () {
       expect(src.contains('_AccountTypeBadge'), isTrue);
       expect(src.contains('_AboutBakerySection'), isTrue);
       expect(src.contains('_ProfessionalSection'), isTrue);
       expect(src.contains('_PublicRecipesSection'), isTrue);
-      expect(src.contains('profileSectionPosts'), isTrue);
+      // Profile Visual Placement — Gönderiler/Reçeteler/Mesleki Bilgi artık
+      // yan yana yatay tab (ProfileCategoryTabs) ile kategorize; postlar
+      // _postsTab içinde SocialPostCard olarak render edilir.
+      expect(src.contains('ProfileCategoryTabs'), isTrue);
+      expect(src.contains('SocialPostCard'), isTrue);
     });
 
     test('Self → "Profili düzenle" CTA; non-self → Follow + Mesaj', () {
