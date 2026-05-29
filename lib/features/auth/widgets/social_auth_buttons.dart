@@ -15,6 +15,20 @@ import '../providers/auth_providers.dart';
 /// hazır olduğunda `false` çevrilir.
 const bool kAppleSignInComingSoon = true;
 
+/// App Store Prep Sprint 1 — iOS'ta sosyal login gizleme.
+///
+/// `true` iken iOS'ta TÜM sosyal login (Google + Apple) gizlenir; yalnız
+/// email/şifre + "Kayıtsız devam et" görünür kalır. Gerekçe (App Store
+/// Review Guideline 4.8 + 2.1/4.2):
+///   * Üçüncü-taraf social login (Google) sunup Apple Sign-In sunmamak 4.8
+///     reddine yol açar.
+///   * `kAppleSignInComingSoon` ile gösterilen işlevsiz "Yakında" Apple
+///     butonu, incomplete-feature (2.1/4.2) reddi riski taşır.
+/// Apple Developer Service ID + Sign in with Apple capability (Mac/Xcode)
+/// hazır olup `kAppleSignInComingSoon=false` çevrildiğinde bu flag de `false`
+/// yapılır ve iOS'ta Google + Apple yeniden gösterilir. Android etkilenmez.
+const bool kHideSocialLoginOnIos = true;
+
 /// V1.4 — Google + Apple ile devam et grubu.
 ///
 /// AuthEntryScreen ve LoginScreen'in üst kısmında ortak kullanılır.
@@ -81,6 +95,13 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
 
   @override
   Widget build(BuildContext context) {
+    // App Store Prep Sprint 1 — iOS'ta sosyal login tümüyle gizli (4.8 +
+    // incomplete-feature riski). Email/şifre + guest mode caller ekranda
+    // ayrıca render edilir; bu widget iOS'ta hiçbir şey çizmez.
+    if (_isIos(context) && kHideSocialLoginOnIos) {
+      return const SizedBox.shrink();
+    }
+
     final repo = ref.watch(authRepositoryProvider);
     final enabled = repo != null && !_busy;
     final showApple = _isIos(context);

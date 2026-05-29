@@ -63,5 +63,14 @@
 			</array>
 		</dict>
 	</array>
+	<!-- App Store Prep Sprint 1 — image_picker (galeri/kamera) için zorunlu
+	     iOS izin açıklamaları. Eksik olursa iOS'ta foto/kamera erişiminde
+	     crash + App Store privacy reddi olur. video_player ek string istemez. -->
+	<key>NSCameraUsageDescription</key>
+	<string>FırınNet uses the camera to let you add photos to posts, stories, marketplace listings, and your profile.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FırınNet uses your photo library so you can choose images for posts, stories, marketplace listings, and your profile.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>FırınNet may save images to your photo library when you choose to do so.</string>
 </dict>
 </plist>

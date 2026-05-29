@@ -79,16 +79,34 @@ Widget _wrap({
 }
 
 void main() {
-  group('V1.4 — SocialAuthButtons', () {
-    testWidgets('iOS: Google ve Apple butonu birlikte görünür',
+  group('App Store Prep Sprint 1 — SocialAuthButtons iOS gizleme', () {
+    testWidgets(
+        'iOS: kHideSocialLoginOnIos → Google ve Apple tümüyle gizli',
         (tester) async {
       await tester.pumpWidget(
         _wrap(repo: _StubRepo(), platform: TargetPlatform.iOS),
       );
-      expect(find.text(AppStrings.authContinueWithGoogle), findsOneWidget);
-      expect(find.text(AppStrings.authContinueWithApple), findsOneWidget);
+      // Guideline 4.8 + incomplete-feature riski: iOS'ta hiçbir sosyal login
+      // butonu render edilmez (yalnız email/şifre + guest caller'da kalır).
+      expect(find.text(AppStrings.authContinueWithGoogle), findsNothing);
+      expect(find.text(AppStrings.authContinueWithApple), findsNothing);
+      expect(find.byKey(const ValueKey('social_btn_google')), findsNothing);
+      expect(find.byKey(const ValueKey('social_btn_apple')), findsNothing);
+      expect(find.text(AppStrings.authAppleComingSoonBadge), findsNothing);
+      expect(find.text(AppStrings.authSocialDivider), findsNothing);
+      // Hiç FilledButton çizilmez → widget SizedBox.shrink döner.
+      expect(find.byType(FilledButton), findsNothing);
     });
 
+    testWidgets('iOS: kHideSocialLoginOnIos flag açık (regresyon kilidi)',
+        (tester) async {
+      expect(kHideSocialLoginOnIos, isTrue,
+          reason:
+              'Apple Sign-In aktive edilene kadar iOS sosyal login gizli kalmalı.');
+    });
+  });
+
+  group('SocialAuthButtons — Android davranışı korunur', () {
     testWidgets('Android: yalnız Google görünür, Apple gizli', (tester) async {
       await tester.pumpWidget(
         _wrap(repo: _StubRepo(), platform: TargetPlatform.android),
@@ -97,7 +115,7 @@ void main() {
       expect(find.text(AppStrings.authContinueWithApple), findsNothing);
     });
 
-    testWidgets('Supabase off (repo null) → Google butonu disabled',
+    testWidgets('Supabase off (repo null, Android) → Google butonu disabled',
         (tester) async {
       await tester.pumpWidget(
         _wrap(repo: null, platform: TargetPlatform.android),
@@ -109,35 +127,12 @@ void main() {
           reason: 'authRepositoryProvider null iken sosyal butonlar tıklanmaz.');
     });
 
-    testWidgets('iOS + Supabase aktif → Google ve Apple butonu enabled',
+    testWidgets('Android: Compact=false → "veya" ayraç metni görünür',
         (tester) async {
-      await tester.pumpWidget(
-        _wrap(repo: _StubRepo(), platform: TargetPlatform.iOS),
-      );
-      final google = tester.widget<FilledButton>(
-        find.byKey(const ValueKey('social_btn_google')),
-      );
-      final apple = tester.widget<FilledButton>(
-        find.byKey(const ValueKey('social_btn_apple')),
-      );
-      expect(google.onPressed, isNotNull);
-      expect(apple.onPressed, isNotNull);
-    });
-
-    testWidgets('Compact=false → "veya" ayraç metni görünür', (tester) async {
       await tester.pumpWidget(
         _wrap(repo: _StubRepo(), platform: TargetPlatform.android),
       );
       expect(find.text(AppStrings.authSocialDivider), findsOneWidget);
-    });
-
-    testWidgets('iOS: Apple butonu altında "Yakında" badge görünür',
-        (tester) async {
-      await tester.pumpWidget(
-        _wrap(repo: _StubRepo(), platform: TargetPlatform.iOS),
-      );
-      expect(find.text(AppStrings.authAppleComingSoonBadge), findsOneWidget,
-          reason: 'kAppleSignInComingSoon true iken "Yakında" badge gösterilir.');
     });
 
     testWidgets('Android: "Yakında" badge görünmez (Apple zaten gizli)',
@@ -146,27 +141,6 @@ void main() {
         _wrap(repo: _StubRepo(), platform: TargetPlatform.android),
       );
       expect(find.text(AppStrings.authAppleComingSoonBadge), findsNothing);
-    });
-
-    testWidgets(
-        'iOS: Apple butonu tıklanır → snackbar gösterilir, signInWithApple ÇAĞRILMAZ',
-        (tester) async {
-      final repo = _StubRepo();
-      await tester.pumpWidget(
-        _wrap(repo: repo, platform: TargetPlatform.iOS),
-      );
-      // pre-tap kanıt
-      expect(repo.appleCalls, 0);
-
-      await tester.tap(find.byKey(const ValueKey('social_btn_apple')));
-      await tester.pump(); // snackbar enqueue
-      await tester.pump(const Duration(milliseconds: 50));
-
-      expect(repo.appleCalls, 0,
-          reason:
-              'kAppleSignInComingSoon true iken Apple tıklaması OAuth tetiklemez.');
-      expect(find.text(AppStrings.authAppleComingSoonSnack), findsOneWidget,
-          reason: 'Türkçe "Apple ile giriş yakında..." snackbar gösterilir.');
     });
 
     testWidgets(
