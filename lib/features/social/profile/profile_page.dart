@@ -207,6 +207,32 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
           ),
         ];
       case 2:
+        // Visitor + hiç public mesleki içerik yok → sade empty state.
+        if (!isSelf) {
+          final d = detailAsync.asData?.value;
+          final hasAny = (d != null &&
+                  (d.hasWorkerInfo || d.hasExperiences || d.hasBakery)) ||
+              jobSeekAsync.asData?.value != null;
+          if (!hasAny) {
+            return const [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.pageH,
+                  AppSpacing.l,
+                  AppSpacing.pageH,
+                  AppSpacing.l,
+                ),
+                child: Text(
+                  AppStrings.profileCvVisitorEmpty,
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ];
+          }
+        }
         return [
           _AboutBakerySection(detailAsync: detailAsync, isSelf: isSelf),
           _CvHeader(
@@ -447,7 +473,8 @@ class _CvHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SectionHeader(
-          label: AppStrings.profileSectionCv,
+          // Visitor: sade okunur başlık "Mesleki Bilgi"; self: yönetim "Mesleki CV".
+          label: isSelf ? AppStrings.profileSectionCv : AppStrings.profileTabCv,
           trailing: isSelf
               ? TextButton.icon(
                   onPressed: onEdit,
@@ -469,17 +496,20 @@ class _CvHeader extends StatelessWidget {
                 )
               : null,
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.pageH, 0, AppSpacing.pageH, 0),
-          child: Text(
-            AppStrings.profileCvSectionSubtitle,
-            style: TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 12.5,
-              height: 1.35,
+        // Owner'a hitap eden açıklama yalnız self'te — visitor'da gösterilmez.
+        if (isSelf)
+          const Padding(
+            padding:
+                EdgeInsets.fromLTRB(AppSpacing.pageH, 0, AppSpacing.pageH, 0),
+            child: Text(
+              AppStrings.profileCvSectionSubtitle,
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12.5,
+                height: 1.35,
+              ),
             ),
           ),
-        ),
         if (isSelf && !hasContent)
           const Padding(
             padding: EdgeInsets.fromLTRB(
@@ -742,6 +772,14 @@ class _JobSeekCard extends StatelessWidget {
     return p.city;
   }
 
+  /// Görsel temizlik — kullanıcı metninin ilk harfini büyüt (örn.
+  /// "manisa civarı" → "Manisa civarı"). Geri kalanı olduğu gibi bırakır.
+  static String _capitalizeFirst(String s) {
+    final t = s.trim();
+    if (t.isEmpty) return t;
+    return t[0].toUpperCase() + t.substring(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = jobSeekAsync.asData?.value;
@@ -823,7 +861,7 @@ class _JobSeekCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              post.title,
+              _capitalizeFirst(post.title),
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w800,
@@ -1098,19 +1136,8 @@ class _ProfessionalSection extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (w != null && (w.bio ?? '').isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              bottom: AppSpacing.s),
-                          child: Text(
-                            w.bio!,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 14,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
+                      // Bio artık ayrı "Hakkımda" bölümünde (ProfileAboutSection)
+                      // — burada tekrarlanmaz.
                       // Uzmanlık özeti — tek alan: yıl + skills + cities + shift.
                       // Profile Social Sprint: ayrı "Deneyimler" timeline'ı
                       // kaldırıldı; tek sade card profili Twitter/Facebook

@@ -133,6 +133,37 @@ void main() {
     });
   });
 
+  group('Professional Visitor View — Mesleki Bilgi tab self/visitor ayrımı', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/social/profile/profile_page.dart')
+          .readAsStringSync();
+    });
+
+    test('visitor başlığı "Mesleki Bilgi", self "Mesleki CV"', () {
+      expect(
+        src.contains(
+            'isSelf ? AppStrings.profileSectionCv : AppStrings.profileTabCv'),
+        isTrue,
+      );
+    });
+
+    test('owner-dili alt açıklama yalnız self (visitor\'da gizli)', () {
+      expect(src.contains('AppStrings.profileCvSectionSubtitle'), isTrue);
+      expect(src.contains('// Owner\'a hitap eden açıklama yalnız self'),
+          isTrue, reason: 'subtitle if (isSelf) ile koşullu');
+    });
+
+    test('visitor + public mesleki içerik yoksa sade empty state', () {
+      expect(src.contains('AppStrings.profileCvVisitorEmpty'), isTrue);
+      expect(src.contains('if (!isSelf)'), isTrue);
+    });
+
+    test('iş arıyor kart başlığı ilk harf büyütülür', () {
+      expect(src.contains('_capitalizeFirst(post.title)'), isTrue);
+    });
+  });
+
   group('Professional Profile Center — yeni string\'ler', () {
     test('profil string\'leri boş değil', () {
       expect(AppStrings.profileSectionExperience, isNotEmpty);

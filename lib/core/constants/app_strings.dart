@@ -744,6 +744,8 @@ class AppStrings {
   // Unified Professional CV Center — profil vitrini + /profile/cv merkezi.
   static const String profileHeaderAddBioCta =
       'Mesleki CV\'ne kısa tanıtım ekle';
+  static const String profileCvVisitorEmpty =
+      'Henüz mesleki bilgi paylaşılmamış.';
   // Profile About Section — bio header yerine ayrı "Hakkımda" bölümünde.
   static const String profileAboutTitleSelf = 'Hakkımda';
   static const String profileAboutAddCta = 'Kısa tanıtım ekle';
