@@ -739,6 +739,7 @@ class AppStrings {
   static const String profileExperienceAddCta = 'Çalışma geçmişi ekle';
   static const String profileJobSeekTitle = 'İş Arıyor';
   static const String profileJobSeekViewCta = 'İlanı görüntüle';
+  static const String profileJobSeekManageCta = 'İş arama durumunu güncelle';
   static const String profileStatusSeeking = 'İş arıyor';
   static const String profileStatusBakery = 'Fırın işletmesi';
   static const String profileStatusWholesaler = 'Toptancı';
@@ -1002,6 +1003,14 @@ class AppStrings {
   static const String cardPostJobSeekerSub = 'Kendini sektöre tanıt';
   static const String cardMyProfile = 'Profilim';
   static const String cardMyProfileSub = 'Bilgi, rozet, şehir';
+  // Profile Routing + Panel Consolidation Sprint — paneldeki dağınık mesleki
+  // kartları (Ustalık/Çalışma Geçmişi/İş Arıyorum) tek "Profil ve CV"
+  // girişine indirir; düzenleme profil vitrinindeki CTA'lardan yapılır.
+  static const String cardProfileCv = 'Profil ve CV';
+  static const String cardProfileCvSubIndividual =
+      'Mesleğin, çalışma geçmişin ve iş arama durumun profilinde görünür';
+  static const String cardProfileCvSubCommercial =
+      'Fırın bilgilerin ve ilanların profilinde görünür';
   static const String cardMyRecipes = 'Reçetelerim';
   static const String cardMyRecipesSub = 'Hamur hesabı, malzeme, yapılış';
 

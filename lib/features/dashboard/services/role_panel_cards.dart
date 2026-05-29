@@ -27,13 +27,15 @@ class PanelCard {
 /// Her rol için panel kart hiyerarşisi (V1.2 final).
 ///
 /// Ticari: Fırın Paneli + Bayi Paneli ana modüller, sonra Hesaplama Makinesi
-/// ve Reçetelerim araçlar, sonra destek (İlanlar, Mesajlar).
+/// ve Reçetelerim araçlar, Profil ve CV, sonra destek (İlanlar, Mesajlar).
 ///
-/// Bireysel: İş Arıyorum + Ustalık Bilgilerim + Çalışma Geçmişim ana iş;
-/// Hesaplama + Reçeteler araçlar; sonra İş İlanları (genel), Mesajlar
-/// (yakında), Profilim.
+/// Bireysel: Profil ve CV (mesleki kimlik merkezi — Ustalık/Çalışma Geçmişi/
+/// İş Arama profil vitrininden yönetilir) + Bayi Paneli; Hesaplama + Reçeteler
+/// araçlar; sonra İş İlanları (genel), Mesajlar.
+/// (Profile Routing + Panel Consolidation Sprint — dağınık Ustalık/Çalışma
+/// Geçmişim/İş Arıyorum kartları tek "Profil ve CV" girişine indirildi.)
 ///
-/// Toptancı: Müşteriler/Bayiler + ürün ilanı; profil + mesajlar.
+/// Toptancı: Müşteriler/Bayiler + ürün ilanı; firma profili + mesajlar.
 class RolePanelCards {
   const RolePanelCards._();
 
@@ -67,6 +69,13 @@ class RolePanelCards {
             icon: Icons.menu_book_outlined,
             route: AppRoutes.recipes,
           ),
+          // Profil/CV — işletme bilgileri + ilanlar profilde görünür.
+          PanelCard(
+            label: AppStrings.cardProfileCv,
+            subtitle: AppStrings.cardProfileCvSubCommercial,
+            icon: Icons.badge_outlined,
+            route: AppRoutes.profile,
+          ),
           // Destek
           PanelCard(
             label: AppStrings.cardMyListings,
@@ -84,24 +93,15 @@ class RolePanelCards {
 
       case AccountType.individual:
         return const [
-          // Ana iş — usta kendini tanıtır + iş ilanı verir
+          // Mesleki kimlik merkezi — Ustalık + Çalışma Geçmişi + İş Arama
+          // artık tek "Profil ve CV" girişinde toplanır; düzenleme profil
+          // vitrinindeki CTA'lardan (worker/profile, /experiences, /job-seek)
+          // yapılır. Panel iş araçları yeri olarak sadeleşir.
           PanelCard(
-            label: AppStrings.cardPostJobSeeker,
-            subtitle: AppStrings.cardPostJobSeekerSub,
-            icon: Icons.campaign_outlined,
-            route: AppRoutes.jobSeek,
-          ),
-          PanelCard(
-            label: AppStrings.cardWorkerProfile,
-            subtitle: AppStrings.cardWorkerProfileSub,
+            label: AppStrings.cardProfileCv,
+            subtitle: AppStrings.cardProfileCvSubIndividual,
             icon: Icons.badge_outlined,
-            route: AppRoutes.workerProfile,
-          ),
-          PanelCard(
-            label: AppStrings.cardWorkerExperiences,
-            subtitle: AppStrings.cardWorkerExperiencesSub,
-            icon: Icons.history_edu_outlined,
-            route: AppRoutes.workerExperiences,
+            route: AppRoutes.profile,
           ),
           PanelCard(
             label: AppStrings.cardDealerPanel,
@@ -134,12 +134,6 @@ class RolePanelCards {
             subtitle: AppStrings.cardMessagesSub,
             icon: Icons.chat_bubble_outline_rounded,
             route: AppRoutes.messages,
-          ),
-          PanelCard(
-            label: AppStrings.cardMyProfile,
-            subtitle: AppStrings.cardMyProfileSub,
-            icon: Icons.person_outline_rounded,
-            route: AppRoutes.profile,
           ),
         ];
 

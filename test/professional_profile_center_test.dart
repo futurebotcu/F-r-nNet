@@ -87,6 +87,51 @@ void main() {
     });
   });
 
+  group('Profile Routing + Panel Consolidation — /profile redirect', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/profile/screens/profile_screen.dart')
+          .readAsStringSync();
+    });
+
+    test('authenticated → /u/:id vitrin profiline yönlenir', () {
+      expect(
+        src.contains("context.go('\${AppRoutes.userPublicProfile}/\${user.id}')"),
+        isTrue,
+        reason: '/profile kendi vitrin profiline (SocialProfilePage) yönlenir',
+      );
+    });
+
+    test('guest → authEntry (crash yok, auth guard)', () {
+      expect(src.contains('AppRoutes.authEntry'), isTrue);
+      expect(src.contains('user == null'), isTrue);
+    });
+  });
+
+  group('Profile Routing — vitrinden 3 mesleki düzenleme yolu erişilir', () {
+    late String src;
+    setUpAll(() {
+      src = File('lib/features/social/profile/profile_page.dart')
+          .readAsStringSync();
+    });
+
+    test('Mesleki bilgiler + çalışma geçmişi + iş arama route\'ları self CTA', () {
+      expect(src.contains('AppRoutes.workerProfile'), isTrue);
+      expect(src.contains('AppRoutes.workerExperiences'), isTrue);
+      expect(src.contains('AppRoutes.jobSeek'), isTrue,
+          reason: 'iş arama durumu self CTA ile /worker/job-seek\'e gider');
+    });
+
+    test('hesap ayarları (settings) AppBar\'dan erişilebilir kalır', () {
+      expect(src.contains('AppRoutes.settings'), isTrue);
+    });
+
+    test('job-seek self manage CTA mevcut', () {
+      expect(src.contains('profile_job_seek_manage_cta'), isTrue);
+      expect(src.contains('AppStrings.profileJobSeekManageCta'), isTrue);
+    });
+  });
+
   group('Professional Profile Center — yeni string\'ler', () {
     test('profil string\'leri boş değil', () {
       expect(AppStrings.profileSectionExperience, isNotEmpty);
@@ -98,6 +143,10 @@ void main() {
       expect(AppStrings.profileStatusBakery, isNotEmpty);
       expect(AppStrings.profileStatusWholesaler, isNotEmpty);
       expect(AppStrings.profileStatusWorking, isNotEmpty);
+      expect(AppStrings.profileJobSeekManageCta, isNotEmpty);
+      expect(AppStrings.cardProfileCv, isNotEmpty);
+      expect(AppStrings.cardProfileCvSubIndividual, isNotEmpty);
+      expect(AppStrings.cardProfileCvSubCommercial, isNotEmpty);
     });
   });
 }

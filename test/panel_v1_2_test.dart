@@ -1,4 +1,5 @@
 import 'package:firin_defter/app/router/app_router.dart';
+import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/dashboard/services/role_panel_cards.dart';
 import 'package:firin_defter/features/dealers/models/dealer.dart';
 import 'package:firin_defter/features/dealers/models/dealer_note.dart';
@@ -13,7 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('V1.2 — Role panel cards hiyerarşisi', () {
-    test('Ticari panelde Fırın Paneli + Bayi Paneli + Hesaplama + Reçeteler', () {
+    test('Ticari panelde Fırın Paneli + Bayi Paneli + Hesaplama + Reçeteler + Profil',
+        () {
       final cards = RolePanelCards.forAccount(AccountType.commercial);
       final routes = cards.map((c) => c.route).toList();
 
@@ -28,19 +30,31 @@ void main() {
 
       // İlanlarım (jobs) destekte
       expect(routes, contains(AppRoutes.jobs));
+
+      // Sprint: ticari de "Profil ve CV" ile vitrin profiline erişir.
+      expect(routes, contains(AppRoutes.profile));
     });
 
-    test('Bireysel panelde İş Arıyorum + Ustalık + Tecrübe + Hesaplama + Reçete',
-        () {
+    test('Bireysel panel sadeleşti: Profil ve CV öne çıkar, dağınık worker '
+        'kartları panelden kalktı', () {
       final cards = RolePanelCards.forAccount(AccountType.individual);
       final routes = cards.map((c) => c.route).whereType<String>().toList();
 
-      expect(routes, contains(AppRoutes.jobSeek));
-      expect(routes, contains(AppRoutes.workerProfile));
-      expect(routes, contains(AppRoutes.workerExperiences));
+      // Mesleki kimlik merkezi: "Profil ve CV" featured (ilk) kart, /profile.
+      expect(cards.first.route, AppRoutes.profile);
+      expect(cards.first.label, AppStrings.cardProfileCv);
+
+      // İş araçları korunur.
       expect(routes, contains(AppRoutes.calculator));
       expect(routes, contains(AppRoutes.recipes));
-      expect(routes, contains(AppRoutes.profile));
+      expect(routes, contains(AppRoutes.dealers));
+      expect(routes, contains(AppRoutes.jobs));
+
+      // Dağınık mesleki kartlar artık panelde ayrı kart değil — profil
+      // vitrininden yönetilir.
+      expect(routes, isNot(contains(AppRoutes.jobSeek)));
+      expect(routes, isNot(contains(AppRoutes.workerProfile)));
+      expect(routes, isNot(contains(AppRoutes.workerExperiences)));
     });
 
     test('Toptancı panelde Müşteriler kartı /wholesale/customers route\'una gider',

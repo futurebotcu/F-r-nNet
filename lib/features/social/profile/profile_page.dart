@@ -180,11 +180,16 @@ class SocialProfilePage extends ConsumerWidget {
                 onAdd: () => context.push(AppRoutes.workerExperiences),
               ),
 
-              // ── İş Arıyor kartı ──
+              // ── İş Arıyor kartı / iş arama durumu ──
               // Audit P1 fix: aktif job_seek_posts artık profille bağlı.
+              // Self'te aktif ilan yoksa da "iş arama durumunu güncelle"
+              // CTA'sı ile /worker/job-seek'e erişilir (panel sadeleşmesi
+              // sonrası tek yönetim girişi profil vitrini).
               _JobSeekCard(
                 jobSeekAsync: jobSeekAsync,
+                isSelf: isSelf,
                 onView: () => context.push(AppRoutes.jobs),
+                onManage: () => context.push(AppRoutes.jobSeek),
               ),
 
               // ── Açık Reçeteler ──
@@ -611,9 +616,16 @@ class _ExperienceRow extends StatelessWidget {
 // ── İş Arıyor kartı ───────────────────────────────────────────────
 
 class _JobSeekCard extends StatelessWidget {
-  const _JobSeekCard({required this.jobSeekAsync, required this.onView});
+  const _JobSeekCard({
+    required this.jobSeekAsync,
+    required this.isSelf,
+    required this.onView,
+    required this.onManage,
+  });
   final AsyncValue<JobSeekPost?> jobSeekAsync;
+  final bool isSelf;
   final VoidCallback onView;
+  final VoidCallback onManage;
 
   static String? _professionLabel(JobSeekPost p) {
     final code = p.professionBadgeCode;
@@ -636,7 +648,37 @@ class _JobSeekCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final post = jobSeekAsync.asData?.value;
-    if (post == null) return const SizedBox.shrink();
+    if (post == null) {
+      // Aktif ilan yok. Self'te yine de iş arama durumunu yönetme girişi
+      // sun (panel sadeleşmesi sonrası tek giriş profil vitrini).
+      if (!isSelf) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pageH,
+          AppSpacing.s,
+          AppSpacing.pageH,
+          0,
+        ),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const ValueKey('profile_job_seek_manage_cta'),
+            onPressed: onManage,
+            icon: const Icon(Icons.campaign_outlined, size: 16),
+            label: const Text(
+              AppStrings.profileJobSeekManageCta,
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.softGold,
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+      );
+    }
     final prof = _professionLabel(post);
     final city = _cityLabel(post);
     final meta = <String>[
@@ -719,11 +761,21 @@ class _JobSeekCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: onView,
-                icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                label: const Text(
-                  AppStrings.profileJobSeekViewCta,
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                onPressed: isSelf ? onManage : onView,
+                icon: Icon(
+                  isSelf
+                      ? Icons.campaign_outlined
+                      : Icons.open_in_new_rounded,
+                  size: 16,
+                ),
+                label: Text(
+                  isSelf
+                      ? AppStrings.profileJobSeekManageCta
+                      : AppStrings.profileJobSeekViewCta,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
                 ),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.softGold,
