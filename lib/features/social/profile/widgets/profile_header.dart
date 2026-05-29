@@ -57,8 +57,8 @@ class ProfileHeader extends StatelessWidget {
           // RPC eski text fallback.
           final city = detail?.header.effectiveCity ?? p.city;
           // PR-A — kısa bio (worker_profiles.bio) header'da görünür.
-          final bio = detail?.worker?.bio;
-          final hasBio = bio != null && bio.trim().isNotEmpty;
+          final bioText = (detail?.worker?.bio ?? '').trim();
+          final hasBio = bioText.isNotEmpty;
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -123,7 +123,7 @@ class ProfileHeader extends StatelessWidget {
                     if (hasBio) ...[
                       const SizedBox(height: 6),
                       Text(
-                        bio!.trim(),
+                        bioText,
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
