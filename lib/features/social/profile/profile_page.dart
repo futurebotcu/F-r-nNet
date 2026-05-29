@@ -42,6 +42,7 @@ import '../../profile/widgets/follow_button.dart';
 import '../../profile/widgets/profile_edit_sheet.dart';
 import '../post/social_post_card.dart';
 import '../providers/social_providers.dart';
+import 'widgets/profile_about_section.dart';
 import 'widgets/profile_category_tabs.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_statistics.dart';
@@ -115,9 +116,6 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                 profileAsync: profileAsync,
                 detailAsync: detailAsync,
                 isSelf: isSelf,
-                // PR-A — self + bio boş ise header'dan CV merkezine yönlendir.
-                onAddBio:
-                    isSelf ? () => context.push(AppRoutes.professionalCv) : null,
               ),
               _AccountTypeBadge(detailAsync: detailAsync),
               _StatusChip(detailAsync: detailAsync, jobSeekAsync: jobSeekAsync),
@@ -154,6 +152,15 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                           ),
                         ],
                       ),
+              ),
+
+              // ── HAKKIMDA ──
+              // Bio header'dan ayrıldı; şehir/meslek header'da kalır, burada
+              // tekrarlanmaz. Boş + başkası → gizli; boş + self → hafif CTA.
+              ProfileAboutSection(
+                bio: detailAsync.asData?.value?.worker?.bio,
+                isSelf: isSelf,
+                onAddBio: () => context.push(AppRoutes.professionalCv),
               ),
 
               // ── YAN YANA YATAY KATEGORİLER ──

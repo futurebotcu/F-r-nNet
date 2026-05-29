@@ -744,6 +744,9 @@ class AppStrings {
   // Unified Professional CV Center — profil vitrini + /profile/cv merkezi.
   static const String profileHeaderAddBioCta =
       'Mesleki CV\'ne kısa tanıtım ekle';
+  // Profile About Section — bio header yerine ayrı "Hakkımda" bölümünde.
+  static const String profileAboutTitleSelf = 'Hakkımda';
+  static const String profileAboutAddCta = 'Kısa tanıtım ekle';
   // Profile Visual Placement — yan yana yatay kategori tabları.
   static const String profileTabPosts = 'Gönderiler';
   static const String profileTabRecipes = 'Reçeteler';
