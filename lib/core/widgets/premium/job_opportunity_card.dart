@@ -51,10 +51,11 @@ class JobOpportunityCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: featured ? AppColors.elevatedCard : AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.l),
+        // İş İlanları Polish V1 — daha yumuşak/rafine hairline (P0 dili).
         border: Border.all(
           color: featured
               ? AppColors.copper.withValues(alpha: 0.32)
-              : AppColors.borderHairline,
+              : AppColors.borderHairline.withValues(alpha: 0.7),
           width: featured ? 0.8 : 0.6,
         ),
         boxShadow: featured ? AppShadow.copper : AppShadow.card,
@@ -175,8 +176,9 @@ class JobOpportunityCard extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
                   foregroundColor: Colors.white,
+                  // İş İlanları Polish V1 — global buton radius standardı (m).
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.s),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.w800,

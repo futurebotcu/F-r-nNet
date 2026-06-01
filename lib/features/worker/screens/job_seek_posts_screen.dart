@@ -9,6 +9,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -36,10 +37,14 @@ class JobSeekPostsScreen extends ConsumerWidget {
         child: async.when(
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
-          error: (e, _) => Padding(
-            padding: const EdgeInsets.all(AppSpacing.l),
-            child: Text('Okunamadı: $e',
-                style: const TextStyle(color: AppColors.danger)),
+          // İş İlanları Polish V1 — ham exception gösterme; kaliteli hata
+          // durumu + UI-level retry (provider yeniden tetiklenir).
+          error: (_, __) => EmptyState(
+            icon: Icons.cloud_off_rounded,
+            title: 'İlanların yüklenemedi',
+            subtitle: 'Bağlantını kontrol edip tekrar dener misin?',
+            actionLabel: AppStrings.retry,
+            onAction: () => ref.invalidate(myJobSeekPostsProvider),
           ),
           data: (items) {
             if (items.isEmpty) return const _EmptyState();

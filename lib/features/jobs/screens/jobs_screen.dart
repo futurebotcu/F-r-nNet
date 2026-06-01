@@ -447,11 +447,14 @@ class _Segment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // İş İlanları Polish V1 — feed'deki premium segmented control diliyle
+    // hizalı: surface track + pill, seçili = card pill + yumuşak gölge +
+    // softGold label. Davranış aynı (index/onChange).
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.m),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
       child: Row(
@@ -491,27 +494,20 @@ class _SegmentTab extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: AppDuration.fast,
+          curve: Curves.easeOut,
           alignment: Alignment.center,
-          height: 44,
+          height: 40,
           decoration: BoxDecoration(
-            color: selected ? AppColors.elevatedCard : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.s),
+            color: selected ? AppColors.card : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
             boxShadow: selected ? AppShadow.subtle : null,
-            border: selected
-                ? Border.all(
-                    color: AppColors.copper.withValues(alpha: 0.22),
-                    width: 0.8,
-                  )
-                : null,
           ),
           child: Text(
             label,
             style: TextStyle(
-              color: selected
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-              fontSize: 13.5,
+              color: selected ? AppColors.softGold : AppColors.textMuted,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+              fontSize: 13,
               letterSpacing: -0.1,
             ),
           ),
