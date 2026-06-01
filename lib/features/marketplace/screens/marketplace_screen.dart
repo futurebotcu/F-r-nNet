@@ -21,6 +21,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../dealers/widgets/dealer_filter_chip.dart';
 import '../models/market_filters.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
@@ -113,6 +114,15 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                 ],
               ),
             ),
+            // Görsel kalite — header ile içerik arası çok hafif ayraç.
+            const SliverToBoxAdapter(
+              child: Divider(
+                height: 1,
+                thickness: 0.6,
+                color: AppColors.borderHairline,
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.s)),
             SliverToBoxAdapter(
               child: _ListingTypeChipRow(
                 selected: _filters.listingType,
@@ -149,10 +159,15 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                   child: Center(child: CircularProgressIndicator()),
                 ),
               ),
-              error: (_, __) => const SliverToBoxAdapter(
+              error: (_, __) => SliverToBoxAdapter(
                 child: _MarketMessage(
                   icon: Icons.cloud_off_outlined,
                   message: AppStrings.marketListingErrorGeneric,
+                  // UI-level retry — mevcut provider'ı yeniden tetikler
+                  // (backend/provider logic değişmez).
+                  onRetry: () => ref.invalidate(
+                    filteredMarketListingsProvider(_filters),
+                  ),
                 ),
               ),
               data: (items) {
@@ -214,18 +229,21 @@ class _ListingTypeChipRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Market UI Polish V1 — kanonik chip standardı (DealerFilterChip):
+    // seçili copper border + copper@0.18 bg + softGold w800; pasif card bg +
+    // hairline + textSecondary. Filtre işlevi (onSelect/listingType) aynı.
     return SizedBox(
-      height: 44,
+      height: 40,
       child: ListView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
         children: [
           _typeChip(label: 'Tümü', value: null),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.s),
           for (final e in AppStrings.marketListingTypeLabels.entries) ...[
             _typeChip(label: e.value, value: e.key),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.s),
           ],
         ],
       ),
@@ -234,19 +252,9 @@ class _ListingTypeChipRow extends StatelessWidget {
 
   Widget _typeChip({required String label, required String? value}) {
     final isSelected = selected == value;
-    return ChoiceChip(
-      label: Text(label),
+    return DealerFilterChip(
+      label: label,
       selected: isSelected,
-      selectedColor: AppColors.softGold.withValues(alpha: 0.18),
-      backgroundColor: AppColors.surface,
-      side: BorderSide(
-        color: isSelected ? AppColors.softGold : AppColors.borderHairline,
-        width: isSelected ? 1.0 : 0.6,
-      ),
-      labelStyle: TextStyle(
-        color: isSelected ? AppColors.softGold : AppColors.textPrimary,
-        fontWeight: FontWeight.w700,
-      ),
       onSelected: (_) => onSelect(value),
     );
   }
@@ -359,13 +367,15 @@ class _RemovableChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Aktif filtre rozeti — kanonik "seçili" chip dili (copper soft bg +
+    // copper hairline + softGold label) + kibar kapatma ikonu.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.fromLTRB(12, 5, 6, 5),
       decoration: BoxDecoration(
-        color: AppColors.softGold.withValues(alpha: 0.14),
+        color: AppColors.copper.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.4),
+          color: AppColors.copper.withValues(alpha: 0.34),
           width: 0.6,
         ),
       ),
@@ -377,18 +387,18 @@ class _RemovableChip extends StatelessWidget {
             style: const TextStyle(
               color: AppColors.softGold,
               fontWeight: FontWeight.w700,
-              fontSize: 12,
+              fontSize: 12.5,
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
           InkWell(
             onTap: onRemove,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
             child: const Padding(
               padding: EdgeInsets.all(2),
               child: Icon(
                 Icons.close_rounded,
-                size: 14,
+                size: 13,
                 color: AppColors.softGold,
               ),
             ),
@@ -400,9 +410,16 @@ class _RemovableChip extends StatelessWidget {
 }
 
 class _MarketMessage extends StatelessWidget {
-  const _MarketMessage({required this.icon, required this.message});
+  const _MarketMessage({
+    required this.icon,
+    required this.message,
+    this.onRetry,
+  });
   final IconData icon;
   final String message;
+
+  /// Opsiyonel UI-level retry; `null` ise buton gösterilmez.
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -424,6 +441,34 @@ class _MarketMessage extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            if (onRetry != null) ...[
+              const SizedBox(height: AppSpacing.m),
+              OutlinedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text(
+                  AppStrings.retry,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.softGold,
+                  side: BorderSide(
+                    color: AppColors.copper.withValues(alpha: 0.5),
+                    width: 0.8,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.l,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

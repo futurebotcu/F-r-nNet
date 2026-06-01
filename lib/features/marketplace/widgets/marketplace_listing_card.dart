@@ -72,7 +72,11 @@ class MarketplaceListingCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(AppRadius.l),
-            border: Border.all(color: AppColors.borderHairline, width: 0.6),
+            // P0 token — daha yumuşak/rafine hairline; premium gölge aynı.
+            border: Border.all(
+              color: AppColors.borderHairline.withValues(alpha: 0.7),
+              width: 0.6,
+            ),
             boxShadow: AppShadow.card,
           ),
           clipBehavior: Clip.antiAlias,
@@ -116,7 +120,8 @@ class MarketplaceListingCard extends StatelessWidget {
                         right: 6,
                         top: 6,
                         child: Material(
-                          color: Colors.black.withValues(alpha: 0.35),
+                          // P0 token — hardcoded siyah yerine medya scrim.
+                          color: AppColors.imageScrimSoft,
                           shape: const CircleBorder(),
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
@@ -218,7 +223,8 @@ class _TypeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
+        // P0 token — görsel üstü okunabilirlik scrim'i (hardcoded siyah değil).
+        color: AppColors.imageScrimDark,
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
@@ -265,13 +271,34 @@ class _PlaceholderArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Görselsiz ilan — düz yüzey yerine sıcak buğday/krem gradient + softGold
+    // ikon (sahte görsel değil; FırınNet premium placeholder dili).
     return Container(
-      color: AppColors.surface,
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.storefront_outlined,
-        size: 48,
-        color: AppColors.softGold,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.heroFrom, AppColors.heroTo],
+        ),
+      ),
+      child: Container(
+        width: 60,
+        height: 60,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.card.withValues(alpha: 0.7),
+          border: Border.all(
+            color: AppColors.copper.withValues(alpha: 0.22),
+            width: 0.8,
+          ),
+        ),
+        child: const Icon(
+          Icons.storefront_outlined,
+          size: 30,
+          color: AppColors.softGold,
+        ),
       ),
     );
   }
