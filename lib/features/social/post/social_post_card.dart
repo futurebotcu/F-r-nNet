@@ -259,7 +259,13 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
         // çizgisinde kalır; soft wheat ana feed yüzeyi değil.
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.l),
-        border: Border.all(color: AppColors.borderHairline, width: 0.6),
+        // Feed Premium Sprint — ağır border yerine yumuşak gölge + çok ince
+        // hairline. Kart krem zeminden nazikçe yükselir (ERP çizgi yok).
+        boxShadow: AppShadow.card,
+        border: Border.all(
+          color: AppColors.borderHairline.withValues(alpha: 0.6),
+          width: 0.6,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -284,11 +290,23 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             _PostMedia(imageUrl: imageUrl)
           else if (videoUrl != null)
             SocialPostVideo(url: videoUrl),
+          // Feed Premium Sprint — etkileşim özeti: action row'dan ÖNCE,
+          // sayılar burada (ince/şık), action row sade kalır. Hiç etkileşim
+          // yoksa satır tamamen gizli.
+          if (_displayLikeCount > 0 || post.commentCount > 0)
+            _PostEngagementSummary(
+              likeCount: _displayLikeCount,
+              commentCount: post.commentCount,
+              onTapComments: () {
+                debugPrint(
+                  '[FirinNet][PostCard] summary comments tap postId=${post.id}',
+                );
+                SocialCommentsPage.show(context, post.id);
+              },
+            ),
           _ActionRow(
             isLiked: _displayLiked,
             isSaved: _displaySaved,
-            likeCount: _displayLikeCount,
-            commentCount: post.commentCount,
             likeBusy: _likeBusy,
             saveBusy: _saveBusy,
             shareBusy: _shareBusy,
@@ -302,16 +320,6 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             onShare: _shareBusy ? null : _onShareTap,
             onSave: _saveBusy ? null : () => _onSaveTap(repo),
           ),
-          if (post.commentCount > 0)
-            _CommentsPreview(
-              count: post.commentCount,
-              onTap: () {
-                debugPrint(
-                  '[FirinNet][PostCard] preview tap postId=${post.id}',
-                );
-                SocialCommentsPage.show(context, post.id);
-              },
-            ),
           const SizedBox(height: AppSpacing.s),
         ],
       ),
@@ -408,23 +416,35 @@ class _Header extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Row(
                   children: [
-                    Text(
-                      post.role,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12.5,
+                    // Feed Premium Sprint — rol rozeti: sade soft wheat pill.
+                    if (post.role.isNotEmpty) ...[
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.softGold.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Text(
+                            post.role,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    const Text(
-                      '  •  ',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12.5,
-                      ),
-                    ),
+                      const SizedBox(width: 8),
+                    ],
                     Text(
                       timeAgo,
                       style: const TextStyle(
@@ -571,16 +591,14 @@ class _PostMedia extends StatelessWidget {
   }
 }
 
-/// FırınNet action row — 4 eşit dağılmış buton: beğen / yorum / kaydet /
-/// paylaş. Instagram'ın 3 sol + 1 sağ paterni yerine FırınNet kullanıcısı
-/// (fırıncı/usta/bayi) için **eşit dağılmış**, **sayılarla**, **etiket
-/// görünür** layout.
+/// FırınNet action row — 4 eşit dağılmış sade buton: beğen / yorum / kaydet /
+/// paylaş. Feed Premium Sprint: sayılar action row'dan çıkıp etkileşim özeti
+/// satırına taşındı; burada yalnız ikon + etiket kalır (kompakt, içerikle
+/// yarışmaz).
 class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.isLiked,
     required this.isSaved,
-    required this.likeCount,
-    required this.commentCount,
     required this.likeBusy,
     required this.saveBusy,
     required this.shareBusy,
@@ -592,8 +610,6 @@ class _ActionRow extends StatelessWidget {
 
   final bool isLiked;
   final bool isSaved;
-  final int likeCount;
-  final int commentCount;
   final bool likeBusy;
   final bool saveBusy;
   final bool shareBusy;
@@ -626,7 +642,6 @@ class _ActionRow extends StatelessWidget {
                   : Icons.thumb_up_alt_outlined,
               color: isLiked ? AppColors.softGold : AppColors.textPrimary,
               label: AppStrings.feedActionLike,
-              count: likeCount,
               onTap: onLike,
             ),
           ),
@@ -635,7 +650,6 @@ class _ActionRow extends StatelessWidget {
               icon: Icons.mode_comment_outlined,
               color: AppColors.textPrimary,
               label: AppStrings.feedActionComment,
-              count: commentCount,
               onTap: onComment,
             ),
           ),
@@ -646,7 +660,6 @@ class _ActionRow extends StatelessWidget {
                   : Icons.bookmark_border_rounded,
               color: isSaved ? AppColors.softGold : AppColors.textPrimary,
               label: AppStrings.feedActionSave,
-              count: 0,
               onTap: onSave,
             ),
           ),
@@ -655,7 +668,6 @@ class _ActionRow extends StatelessWidget {
               icon: Icons.ios_share_rounded,
               color: AppColors.textPrimary,
               label: AppStrings.feedActionShare,
-              count: 0,
               onTap: onShare,
             ),
           ),
@@ -670,43 +682,43 @@ class _ActionButton extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.label,
-    required this.count,
     required this.onTap,
   });
 
   final IconData icon;
   final Color color;
   final String label;
-
-  /// Sayı varsa label sonuna " · N" eklenir; 0 ise sadece label.
-  final int count;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final display = count > 0 ? '$label · $count' : label;
+    // Kompakt yatay sosyal aksiyon: ikon (18) + yan yana sade etiket (12).
+    // Sayı YOK (etkileşim özeti satırında); satır ~36 px, içerikle yarışmaz.
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.s,
+          vertical: 9,
           horizontal: 4,
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 4),
-            Text(
-              display,
-              style: TextStyle(
-                color: onTap == null ? AppColors.textMuted : color,
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: onTap == null ? AppColors.textMuted : color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -768,48 +780,125 @@ class _TagsRow extends StatelessWidget {
   }
 }
 
-/// "Tüm yorumları gör →" — net link görünümü. Daha önce muted/küçük
-/// satırdı, kullanıcı "kart tıklanınca yanlış akış" hissi yaşıyordu;
-/// chevron + softGold renk ile tap-edilebilir olduğu net.
-class _CommentsPreview extends StatelessWidget {
-  const _CommentsPreview({required this.count, required this.onTap});
-  final int count;
-  final VoidCallback onTap;
+/// Kibar Türkçe etkileşim sayısı formatı (İngilizce K/M değil B/Mn).
+///   < 1.000      → 142
+///   < 1.000.000  → 1,2 B  /  12,4 B
+///   ≥ 1.000.000  → 1,1 Mn
+String _formatCount(int value) {
+  if (value < 1000) return '$value';
+  if (value < 1000000) return '${_shortDecimal(value / 1000)} B';
+  return '${_shortDecimal(value / 1000000)} Mn';
+}
+
+/// Tek ondalık, virgül ayraç; ",0" kuyruğunu kırpar (1,0 → 1).
+String _shortDecimal(double d) {
+  final s = d.toStringAsFixed(1);
+  final dot = s.indexOf('.');
+  final intPart = s.substring(0, dot);
+  final dec = s.substring(dot + 1);
+  return dec == '0' ? intPart : '$intPart,$dec';
+}
+
+/// Feed Premium Sprint — etkileşim özeti satırı (action row'dan ÖNCE).
+/// Sol: 👍 N beğeni · Sağ: N yorum · Tüm yorumları gör ›
+/// Kart/pill değil; ince, doğal sosyal medya summary satırı. Sıfır değerler
+/// gizlenir (build tarafı en az biri > 0 iken render eder). Dar ekranda
+/// taşma yok: sol Expanded + sağ Flexible, her iki tarafta ellipsis.
+class _PostEngagementSummary extends StatelessWidget {
+  const _PostEngagementSummary({
+    required this.likeCount,
+    required this.commentCount,
+    required this.onTapComments,
+  });
+
+  final int likeCount;
+  final int commentCount;
+  final VoidCallback onTapComments;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.l,
-            AppSpacing.s,
-            AppSpacing.l,
-            AppSpacing.s,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 6, AppSpacing.l, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: likeCount > 0
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.thumb_up_alt_rounded,
+                        size: 14,
+                        color: AppColors.copper,
+                      ),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          '${_formatCount(likeCount)} '
+                          '${AppStrings.postLikesShortLabel}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$count ${AppStrings.postCommentsCountLabel}  —  '
-                '${AppStrings.postViewAllComments}',
-                style: const TextStyle(
-                  color: AppColors.softGold,
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
+          if (commentCount > 0) ...[
+            const SizedBox(width: AppSpacing.s),
+            Flexible(
+              child: InkWell(
+                onTap: onTapComments,
+                borderRadius: BorderRadius.circular(AppRadius.s),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${_formatCount(commentCount)} '
+                                    '${AppStrings.postCommentsCountLabel} · ',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const TextSpan(
+                                text: AppStrings.postViewAllComments,
+                                style: TextStyle(
+                                  color: AppColors.softGold,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.softGold,
+                        size: 16,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.softGold,
-                size: 18,
-              ),
-            ],
-          ),
-        ),
+            ),
+          ],
+        ],
       ),
     );
   }

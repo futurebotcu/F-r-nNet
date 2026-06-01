@@ -1,7 +1,9 @@
-// Social UI Polish Sprint 1 — InlineComposerCard widget testleri.
+// Feed Premium Sprint — InlineComposerCard widget testleri.
 //
-// Feed'in üstünde "Ne paylaşmak istersin?" inline composer kartı.
-// Tap → mevcut composer route'una push (preselect type Sprint 2'ye).
+// Twitter/FB tarzı inline composer: üstte avatar + "Bugün ne ürettin?"
+// placeholder, altta Medya / Soru / Tarif / Duyuru aksiyonları + Paylaş.
+// Medya → modal action sheet (Foto çek / galeriden seç / video çek/seç).
+// Soru/Tarif/Duyuru composer'a tür ön-seçimiyle push eder.
 
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
@@ -43,8 +45,6 @@ GoRouter _testRouter() => GoRouter(
             body: Center(child: Text('COMPOSER-STUB')),
           ),
         ),
-        // Auth required sheet'in pop sonrası ekrana dönüş için bir dummy
-        // route.
       ],
     );
 
@@ -72,7 +72,8 @@ Widget _wrap({
 
 void main() {
   group('InlineComposerCard — render', () {
-    testWidgets('Placeholder + 3 hızlı ikon görünür', (tester) async {
+    testWidgets('Placeholder + Medya/Soru/Tarif/Duyuru + Paylaş görünür',
+        (tester) async {
       await tester.pumpWidget(_wrap(
         router: _testRouter(),
         profile: _individualProfile,
@@ -81,19 +82,22 @@ void main() {
 
       // Placeholder
       expect(
-        find.text(AppStrings.feedComposerInlinePlaceholder),
+        find.text(AppStrings.feedComposerPanelPlaceholder),
         findsOneWidget,
       );
-      // 3 hızlı ikon label
-      expect(find.text(AppStrings.feedComposerInlineCtaPhoto), findsOneWidget);
+      // Tek "Medya" aksiyonu — 4 ayrı foto/video butonu DEĞİL.
+      expect(find.text(AppStrings.feedComposerActionMedia), findsOneWidget);
+      expect(find.text(AppStrings.feedComposerActionQuestion), findsOneWidget);
+      expect(find.text(AppStrings.feedComposerActionRecipe), findsOneWidget);
       expect(
-        find.text(AppStrings.feedComposerInlineCtaQuestion),
+        find.text(AppStrings.feedComposerActionAnnouncement),
         findsOneWidget,
       );
-      expect(
-        find.text(AppStrings.feedComposerInlineCtaProduction),
-        findsOneWidget,
-      );
+      expect(find.text(AppStrings.feedComposerActionShare), findsOneWidget);
+
+      // Medya alt seçenekleri ana ekranda görünmemeli (sheet'e taşındı).
+      expect(find.text(AppStrings.mediaSheetCapturePhoto), findsNothing);
+      expect(find.text(AppStrings.mediaSheetPickVideo), findsNothing);
     });
 
     testWidgets('Avatar — kullanıcı initial display name ilk harfi',
@@ -118,7 +122,7 @@ void main() {
 
   group('InlineComposerCard — interaction', () {
     testWidgets(
-        'Kart tap → /social/composer route push (canWrite=true)',
+        'Placeholder tap → /social/composer route push (canWrite=true)',
         (tester) async {
       await tester.pumpWidget(_wrap(
         router: _testRouter(),
@@ -127,14 +131,14 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(AppStrings.feedComposerInlinePlaceholder));
+      await tester.tap(find.text(AppStrings.feedComposerPanelPlaceholder));
       await tester.pumpAndSettle();
 
       expect(find.text('COMPOSER-STUB'), findsOneWidget);
     });
 
     testWidgets(
-        'Fotoğraf hızlı ikon tap → /social/composer route push',
+        'Soru aksiyonu tap → /social/composer route push',
         (tester) async {
       await tester.pumpWidget(_wrap(
         router: _testRouter(),
@@ -142,10 +146,33 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(AppStrings.feedComposerInlineCtaPhoto));
+      await tester.tap(find.text(AppStrings.feedComposerActionQuestion));
       await tester.pumpAndSettle();
 
       expect(find.text('COMPOSER-STUB'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Medya tap → modal action sheet 4 seçenekle açılır (canWrite=true)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        router: _testRouter(),
+        profile: _individualProfile,
+        isGuest: false,
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AppStrings.feedComposerActionMedia));
+      await tester.pumpAndSettle();
+
+      // Action sheet açıldı: 4 mevcut işlev seçeneği görünür.
+      expect(find.text(AppStrings.mediaSheetTitle), findsOneWidget);
+      expect(find.text(AppStrings.mediaSheetCapturePhoto), findsOneWidget);
+      expect(find.text(AppStrings.mediaSheetPickPhoto), findsOneWidget);
+      expect(find.text(AppStrings.mediaSheetCaptureVideo), findsOneWidget);
+      expect(find.text(AppStrings.mediaSheetPickVideo), findsOneWidget);
+      // Composer'a henüz gidilmedi (seçenek seçilince gidilir).
+      expect(find.text('COMPOSER-STUB'), findsNothing);
     });
 
     testWidgets(
@@ -158,7 +185,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(AppStrings.feedComposerInlinePlaceholder));
+      await tester.tap(find.text(AppStrings.feedComposerPanelPlaceholder));
       await tester.pumpAndSettle();
 
       // Auth required sheet açılır; composer stub'a yönlenmez.

@@ -31,8 +31,54 @@ import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
 
+/// Feed Premium Sprint — composer'a feed panelinden hangi medya aksiyonuyla
+/// girildiğini taşır. `null` = klasik manuel akış (picker otomatik açılmaz).
+enum ComposerMediaIntent {
+  capturePhoto,
+  pickPhoto,
+  captureVideo,
+  pickVideo;
+
+  /// Router query param (`?media=`) → intent. Bilinmeyen değer `null`.
+  static ComposerMediaIntent? fromQuery(String? value) {
+    switch (value) {
+      case 'photoCapture':
+        return ComposerMediaIntent.capturePhoto;
+      case 'photoPick':
+        return ComposerMediaIntent.pickPhoto;
+      case 'videoCapture':
+        return ComposerMediaIntent.captureVideo;
+      case 'videoPick':
+        return ComposerMediaIntent.pickVideo;
+      default:
+        return null;
+    }
+  }
+
+  String get queryValue {
+    switch (this) {
+      case ComposerMediaIntent.capturePhoto:
+        return 'photoCapture';
+      case ComposerMediaIntent.pickPhoto:
+        return 'photoPick';
+      case ComposerMediaIntent.captureVideo:
+        return 'videoCapture';
+      case ComposerMediaIntent.pickVideo:
+        return 'videoPick';
+    }
+  }
+}
+
 class SocialComposerPage extends ConsumerStatefulWidget {
-  const SocialComposerPage({super.key});
+  const SocialComposerPage({super.key, this.initialMedia, this.initialType});
+
+  /// Feed inline panelinden gelen otomatik medya aksiyonu. `null` ise
+  /// composer her zamanki gibi sadece metin odağıyla açılır.
+  final ComposerMediaIntent? initialMedia;
+
+  /// Feed inline panelinden gelen ön-seçili gönderi türü (Soru/Tarif/Duyuru).
+  /// `null` ise varsayılan (Üretim) seçili gelir; kullanıcı yine değiştirebilir.
+  final PostType? initialType;
 
   @override
   ConsumerState<SocialComposerPage> createState() =>
@@ -72,9 +118,30 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   @override
   void initState() {
     super.initState();
+    // Feed Premium Sprint — panelden tür ön-seçimi geldiyse uygula.
+    final t = widget.initialType;
+    if (t != null && _types.contains(t)) _type = t;
     Future.microtask(() {
-      if (mounted) _focus.requestFocus();
+      if (!mounted) return;
+      _focus.requestFocus();
+      // Feed Premium Sprint — panelden bir medya aksiyonuyla gelindiyse
+      // ilgili picker'ı bir kez otomatik aç. Manuel akışta (null) no-op.
+      final intent = widget.initialMedia;
+      if (intent != null) _runMediaIntent(intent);
     });
+  }
+
+  void _runMediaIntent(ComposerMediaIntent intent) {
+    switch (intent) {
+      case ComposerMediaIntent.capturePhoto:
+        _capturePhoto();
+      case ComposerMediaIntent.pickPhoto:
+        _pickImage();
+      case ComposerMediaIntent.captureVideo:
+        _captureVideo();
+      case ComposerMediaIntent.pickVideo:
+        _pickVideo();
+    }
   }
 
   @override

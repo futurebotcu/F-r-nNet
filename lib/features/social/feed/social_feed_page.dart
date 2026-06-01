@@ -33,7 +33,6 @@ import '../../feed/providers/feed_providers.dart';
 import '../../notifications/widgets/notifications_header_action.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../dealers/widgets/dealer_filter_chip.dart';
 import '../composer/inline_composer_card.dart';
 import '../post/social_post_card.dart';
 import '../stories/social_stories_carousel.dart';
@@ -214,15 +213,16 @@ class _ProfileAvatarAction extends ConsumerWidget {
 class _ComposerFab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FloatingActionButton.extended(
+    // Feed Premium Sprint — inline composer paneli zaten var; FAB minimal
+    // (küçük, ikon-only) tutuldu. Aşağı kaydırınca kalıcı erişim sağlar ama
+    // içeriğe binmez. Aksiyon/route korunur.
+    return FloatingActionButton.small(
       onPressed: () => context.push(AppRoutes.socialComposer),
       backgroundColor: AppColors.copper,
       foregroundColor: Colors.white,
-      icon: const Icon(Icons.edit_rounded, size: 18),
-      label: const Text(
-        AppStrings.feedComposerNewPostCta,
-        style: TextStyle(fontWeight: FontWeight.w800),
-      ),
+      elevation: 2,
+      tooltip: AppStrings.feedComposerNewPostCta,
+      child: const Icon(Icons.edit_rounded, size: 18),
     );
   }
 }
@@ -253,14 +253,17 @@ class _FeedList extends ConsumerWidget {
   /// Sosyal feed header sequence (Polish v1 + v2A birleşik):
   /// stories + segment chip row + InlineComposerCard.
   static List<Widget> _headers() {
+    // Feed Premium Sprint — çizgi yoğunluğu azaltıldı: bölümler arası
+    // ayrım artık boşluk + kart gölgesiyle yapılıyor (ERP çizgi hissi yok).
+    // Stories altında tek ince ayraç kalır; segment ve composer kendi
+    // kapsül/gölge kimlikleriyle nefes alır.
     return <Widget>[
       if (_kShowStories) const SocialStoriesCarousel(),
       if (_kShowStories)
         const Divider(height: 1, color: AppColors.borderHairline),
       const _FeedSegment(),
-      const Divider(height: 1, color: AppColors.borderHairline),
       const InlineComposerCard(),
-      const Divider(height: 1, color: AppColors.borderHairline),
+      const SizedBox(height: AppSpacing.s),
     ];
   }
 
@@ -437,8 +440,10 @@ class _FeedEmpty extends StatelessWidget {
   }
 }
 
-/// Social UI Polish Sprint 2A — feed segment chip row.
-/// "Genel Akış" / "Takip Edilenler" arasında geçiş.
+/// Feed Premium Sprint — modern segmented control.
+/// "Genel Akış" / "Takip Edilenler" arasında geçiş; seçili segment
+/// sıcak beyaz kapsül + copper metin, kayan indicator hissi.
+/// State kaynağı korunur: `feedSegmentProvider` (0 = Genel, 1 = Takip).
 class _FeedSegment extends ConsumerWidget {
   const _FeedSegment();
 
@@ -448,26 +453,91 @@ class _FeedSegment extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
-        AppSpacing.s,
+        AppSpacing.m,
         AppSpacing.pageH,
         AppSpacing.s,
       ),
-      child: Row(
-        children: [
-          DealerFilterChip(
-            label: AppStrings.feedSegmentAll,
-            selected: segment == 0,
-            onSelected: (_) =>
-                ref.read(feedSegmentProvider.notifier).state = 0,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: AppColors.borderHairline,
+            width: 0.6,
           ),
-          const SizedBox(width: AppSpacing.s),
-          DealerFilterChip(
-            label: AppStrings.feedSegmentFollowing,
-            selected: segment == 1,
-            onSelected: (_) =>
-                ref.read(feedSegmentProvider.notifier).state = 1,
+        ),
+        child: Row(
+          children: [
+            _SegmentTab(
+              label: AppStrings.feedSegmentAll,
+              icon: Icons.dynamic_feed_rounded,
+              selected: segment == 0,
+              onTap: () => ref.read(feedSegmentProvider.notifier).state = 0,
+            ),
+            _SegmentTab(
+              label: AppStrings.feedSegmentFollowing,
+              icon: Icons.people_alt_rounded,
+              selected: segment == 1,
+              onTap: () => ref.read(feedSegmentProvider.notifier).state = 1,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SegmentTab extends StatelessWidget {
+  const _SegmentTab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: AppDuration.fast,
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.card : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            boxShadow: selected ? AppShadow.subtle : null,
           ),
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? AppColors.copper : AppColors.textMuted,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? AppColors.softGold : AppColors.textMuted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.1,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

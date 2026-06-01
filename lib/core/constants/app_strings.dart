@@ -197,6 +197,23 @@ class AppStrings {
   static const String feedComposerInlineCtaPhoto = 'Fotoğraf';
   static const String feedComposerInlineCtaQuestion = 'Soru';
   static const String feedComposerInlineCtaProduction = 'Üretim';
+  // Feed Premium Sprint — Twitter/FB tarzı inline composer.
+  static const String feedComposerPanelPlaceholder =
+      'Bugün ne paylaşmak istersin?';
+  static const String feedComposerPanelSubtitle =
+      'Üretimini, tarifini, sorunu veya duyurunu paylaş.';
+  static const String feedComposerActionMedia = 'Medya';
+  static const String feedComposerActionQuestion = 'Soru';
+  static const String feedComposerActionRecipe = 'Tarif';
+  static const String feedComposerActionAnnouncement = 'Duyuru';
+  static const String feedComposerActionShare = 'Paylaş';
+  // Medya aksiyonu → modal action sheet (4 mevcut işlev).
+  static const String mediaSheetTitle = 'Medya ekle';
+  static const String mediaSheetCapturePhoto = 'Fotoğraf çek';
+  static const String mediaSheetPickPhoto = 'Galeriden fotoğraf seç';
+  static const String mediaSheetCaptureVideo = 'Video çek';
+  static const String mediaSheetPickVideo = 'Galeriden video seç';
+  static const String mediaSheetCancel = 'Vazgeç';
   // Social UI Polish Sprint 2A — Feed segmentation (Genel Akış / Takip Edilenler)
   static const String feedSegmentAll = 'Genel Akış';
   static const String feedSegmentFollowing = 'Takip Edilenler';
@@ -210,7 +227,7 @@ class AppStrings {
       'Takip Edilenler akışını görmek için giriş yap.';
   static const String feedFollowingBackToAll = 'Tüm akışa dön';
   static const String retry = 'Yeniden dene';
-  static const String storiesMyStoryLabel = 'Hikayem';
+  static const String storiesMyStoryLabel = 'Senin Hikayen';
   static const String storiesEmptyHint = 'Hikaye akışı yakında.';
 
   // V2 Social Core Commit 2 — stories

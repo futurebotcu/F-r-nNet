@@ -34,6 +34,7 @@ import '../../features/worker/screens/job_seek_posts_screen.dart';
 import '../../features/worker/screens/worker_experiences_screen.dart';
 import '../../features/worker/screens/worker_profile_screen.dart';
 import '../../features/dealers/models/dealer.dart' as dealer_models;
+import '../../features/feed/models/post_type.dart';
 import '../../features/social/composer/social_composer_page.dart';
 import '../../features/social/feed/social_feed_page.dart';
 import '../../features/social/post/social_post_edit_page.dart';
@@ -304,7 +305,20 @@ GoRouter createRouter() {
       // (V2 Commit 4 cleanup — eski FeedComposer tamamen silindi.)
       GoRoute(
         path: AppRoutes.socialComposer,
-        builder: (_, __) => const SocialComposerPage(),
+        // Feed Premium Sprint — inline panelden gelen `?media=` ve `?type=`
+        // query param'ları composer'a iletilir; medya picker otomatik açılır,
+        // tür ön-seçili gelir (her ikisi de null = klasik manuel akış).
+        builder: (_, state) {
+          final typeParam = state.uri.queryParameters['type'];
+          return SocialComposerPage(
+            initialMedia: ComposerMediaIntent.fromQuery(
+              state.uri.queryParameters['media'],
+            ),
+            initialType: typeParam == null
+                ? null
+                : PostTypeMeta.fromPersistKey(typeParam),
+          );
+        },
       ),
 
       // V2 Social Core — Post edit ekranı (donor `AppRoutes.postEdit`).

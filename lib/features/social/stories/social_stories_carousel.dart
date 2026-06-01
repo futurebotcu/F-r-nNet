@@ -28,7 +28,7 @@ import 'models/social_story.dart';
 class SocialStoriesCarousel extends ConsumerWidget {
   const SocialStoriesCarousel({super.key});
 
-  static const double _height = 96;
+  static const double _height = 104;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,7 +66,7 @@ class SocialStoriesCarousel extends ConsumerWidget {
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.m),
         itemBuilder: (_, i) {
           if (user != null && i == 0) {
-            // V1 P0 — Hikayem slot: create page'e push.
+            // V1 P0 — Senin Hikayen slot: create page'e push.
             return _MyStorySlot(
               onTap: () {
                 if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -113,8 +113,8 @@ class _MyStorySlot extends ConsumerWidget {
           Stack(
             children: [
               Container(
-                width: 60,
-                height: 60,
+                width: 62,
+                height: 62,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -123,6 +123,7 @@ class _MyStorySlot extends ConsumerWidget {
                     color: AppColors.softGold.withValues(alpha: 0.32),
                     width: 0.8,
                   ),
+                  boxShadow: AppShadow.subtle,
                 ),
                 child: Text(
                   initial,
@@ -192,25 +193,38 @@ class _OwnerStorySlot extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Sade FırınNet halka: ince copper border, gradient yok.
+            // FırınNet bakery halkası — sıcak bakır→buğday gradient ring
+            // (Instagram gökkuşağı değil). Dış gradient + iç krem boşluk.
             Container(
-              width: 60,
-              height: 60,
-              alignment: Alignment.center,
+              width: 62,
+              height: 62,
+              padding: const EdgeInsets.all(2.4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.softGold.withValues(alpha: 0.14),
-                border: Border.all(
-                  color: AppColors.copper,
-                  width: 1.6,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.copper, AppColors.copperMuted],
                 ),
+                boxShadow: AppShadow.subtle,
               ),
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  color: AppColors.softGold,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 22,
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.softGold.withValues(alpha: 0.14),
+                  border: Border.all(
+                    color: AppColors.card,
+                    width: 1.6,
+                  ),
+                ),
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: AppColors.softGold,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                  ),
                 ),
               ),
             ),

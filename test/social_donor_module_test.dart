@@ -50,7 +50,7 @@ void main() {
       expect(AppStrings.feedLoadError.isNotEmpty, isTrue);
       expect(AppStrings.feedEmpty.isNotEmpty, isTrue);
       expect(AppStrings.retry, 'Yeniden dene');
-      expect(AppStrings.storiesMyStoryLabel, 'Hikayem');
+      expect(AppStrings.storiesMyStoryLabel, 'Senin Hikayen');
       expect(AppStrings.feedComposerNewPostCta, 'Paylaş');
     });
   });
@@ -89,7 +89,9 @@ void main() {
         src.contains("static const String socialComposer = '/social/composer'"),
         isTrue,
       );
-      expect(src.contains('SocialComposerPage()'), isTrue);
+      // Feed Premium Sprint — composer artık `?media=`/`?type=` query
+      // param'larıyla argümanlı kurulduğu için `SocialComposerPage(` yeterli.
+      expect(src.contains('SocialComposerPage('), isTrue);
     });
   });
 
@@ -119,7 +121,9 @@ void main() {
 
     test('FloatingActionButton SocialComposer route\'a push eder', () {
       expect(src.contains('AppRoutes.socialComposer'), isTrue);
-      expect(src.contains('FloatingActionButton.extended'), isTrue);
+      // Feed Premium Sprint — inline composer paneli varken FAB minimal
+      // (küçük, ikon-only) tutuldu; route/aksiyon korunur.
+      expect(src.contains('FloatingActionButton.small'), isTrue);
     });
 
     test('SocialStoriesCarousel ve SocialPostCard kullanılıyor', () {
@@ -195,23 +199,32 @@ void main() {
       );
     });
 
-    test('P0 — Action label format "Beğen · N"', () {
-      // _ActionButton count > 0 ise "$label · $count" string'i üretir.
-      // Hem feedActionLike + 'Beğen' hem de '· \$count' pattern'i bekleniyor.
-      expect(src.contains("'\$label · \$count'"), isTrue);
+    test('Feed Premium Sprint — sade action label + etkileşim özeti', () {
+      // Sayılar action row'dan çıktı (artık "$label · $count" yok); etkileşim
+      // özeti satırına taşındı (_PostEngagementSummary + _formatCount).
+      expect(src.contains("'\$label · \$count'"), isFalse,
+          reason: 'Action row artık sayı göstermiyor');
+      expect(src.contains('_PostEngagementSummary'), isTrue);
+      expect(src.contains('_formatCount'), isTrue);
+      // Etkileşim özeti string'leri.
+      expect(src.contains('AppStrings.postLikesShortLabel'), isTrue);
+      expect(src.contains('AppStrings.postCommentsCountLabel'), isTrue);
+      expect(src.contains('AppStrings.postViewAllComments'), isTrue);
+      // Action row sade label'lar korunur.
       expect(src.contains('AppStrings.feedActionLike'), isTrue);
       expect(src.contains('AppStrings.feedActionComment'), isTrue);
       expect(src.contains('AppStrings.feedActionSave'), isTrue);
       expect(src.contains('AppStrings.feedActionShare'), isTrue);
     });
 
-    test('P0 — Caption font 17 / author 15.5 / kart margin 6', () {
+    test('P0 — Caption font 17 / author 15.5 / action label 12', () {
       expect(src.contains('fontSize: 17'), isTrue,
           reason: 'Caption 17 px (Twitter okunabilirlik)');
       expect(src.contains('fontSize: 15.5'), isTrue,
           reason: 'Author 15.5 px w800');
-      expect(src.contains('fontSize: 13.5'), isTrue,
-          reason: 'Action label 13.5 px');
+      // Feed Premium Sprint — kompakt yatay sosyal aksiyon: label 12 px.
+      expect(src.contains('fontSize: 12'), isTrue,
+          reason: 'Action label 12 px (kompakt social row)');
     });
   });
 
