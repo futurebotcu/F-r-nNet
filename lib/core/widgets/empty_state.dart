@@ -76,7 +76,8 @@ class EmptyState extends StatelessWidget {
               label: Text(actionLabel!),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.copper,
-                foregroundColor: AppColors.textPrimary,
+                // P0 Design Tokens — copper primary aksiyon yazısı beyaz.
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.xl,
                   vertical: 14,

@@ -149,8 +149,9 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          // Dark coffee text on soft amber — bakery honey buton hissi.
-          foregroundColor: AppColors.textPrimary,
+          // P0 Design Tokens — FırınNet primary copper button standardı:
+          // yazı her yerde BEYAZ (referans + ekranların çoğu zaten beyaz).
+          foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.copper.withValues(alpha: 0.35),
           disabledForegroundColor: AppColors.textMuted,
           minimumSize: const Size.fromHeight(56),
@@ -167,7 +168,8 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: AppColors.textPrimary,
+          // P0 Design Tokens — copper primary button yazısı beyaz (standart).
+          foregroundColor: Colors.white,
           elevation: 0,
           minimumSize: const Size.fromHeight(56),
           padding:
@@ -236,22 +238,30 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.softGold, width: 1.4),
         ),
       ),
+      // P0 Design Tokens — FırınNet chip standardı.
+      // Kanonik filter/segment chip widget'ı: `DealerFilterChip`
+      // (core ölçü: seçili = copper border 1.2 + copper@0.18 bg + softGold
+      // w800; pasif = card bg + hairline 0.6 + textSecondary w600; radius
+      // pill; font 12.5; ikon 16). ChipThemeData `side`'ı seçime göre
+      // değiştiremediği için ekranlar bu kanonik widget'ı kullanmalı; tema
+      // default'u o standarda yaklaşacak şekilde hizalandı (raw ChoiceChip
+      // için en yakın görünüm).
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surface,
-        selectedColor: AppColors.copper,
+        backgroundColor: AppColors.card,
+        selectedColor: AppColors.copper.withValues(alpha: 0.18),
         side: const BorderSide(color: AppColors.borderHairline, width: 0.6),
         labelStyle: const TextStyle(
-          color: AppColors.textPrimary,
+          color: AppColors.textSecondary,
           fontWeight: FontWeight.w600,
-          fontSize: 13.5,
+          fontSize: 12.5,
         ),
-        // Seçili chip yumuşak amber + dark coffee text → samimi rozet.
+        // Seçili chip: softGold (deep amber) w800 — kanonik standartla aynı.
         secondaryLabelStyle: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 13.5,
+          color: AppColors.softGold,
+          fontWeight: FontWeight.w800,
+          fontSize: 12.5,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),

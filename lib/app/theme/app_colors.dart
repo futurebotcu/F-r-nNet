@@ -133,4 +133,16 @@ class AppColors {
 
   /// İpucu / bilgi — mat çelik.
   static const Color info = Color(0xFF6E7F8A);
+
+  // ─────────────────────────────────────────────────────────────
+  // Medya scrim — görsel/foto üstünde metin/ikon okunabilirliği
+  // ─────────────────────────────────────────────────────────────
+
+  /// P0 Design Tokens — kart/medya görseli üstündeki badge & ikonlar için
+  /// koyu yarı saydam scrim (~%55 siyah). Hardcoded `Colors.black` yerine
+  /// semantic alias; kademeli olarak medya kartlarına uygulanabilir.
+  static const Color imageScrimDark = Color(0x8C000000);
+
+  /// Daha hafif scrim (~%35 siyah) — küçük yuvarlak aksiyon arkalığı için.
+  static const Color imageScrimSoft = Color(0x59000000);
 }
