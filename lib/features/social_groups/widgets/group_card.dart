@@ -68,8 +68,9 @@ class GroupCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(AppRadius.l),
+          // Görsel kalite — daha ince/rafine hairline + premium yumuşak gölge.
           border: Border.all(
-            color: AppColors.borderHairline,
+            color: AppColors.borderHairline.withValues(alpha: 0.7),
             width: 0.6,
           ),
           boxShadow: AppShadow.card,
@@ -318,7 +319,8 @@ class _PrimaryCta extends StatelessWidget {
     if (isJoined) {
       label = AppStrings.groupActionOpen;
       bg = AppColors.copper;
-      fg = AppColors.textPrimary;
+      // Görsel kalite — bakır dolu CTA üstünde beyaz metin (premium kontrast).
+      fg = Colors.white;
       enabled = true;
     } else if (group.isFull) {
       label = AppStrings.groupActionFull;
@@ -332,18 +334,20 @@ class _PrimaryCta extends StatelessWidget {
       // (requestJoinGroup RPC).
       label = AppStrings.groupJoinRequestSend;
       bg = AppColors.copper;
-      fg = AppColors.textPrimary;
+      // Görsel kalite — bakır dolu CTA üstünde beyaz metin (premium kontrast).
+      fg = Colors.white;
       enabled = true;
     } else {
       label = AppStrings.groupActionJoin;
       bg = AppColors.copper;
-      fg = AppColors.textPrimary;
+      // Görsel kalite — bakır dolu CTA üstünde beyaz metin (premium kontrast).
+      fg = Colors.white;
       enabled = true;
     }
 
     return SizedBox(
       width: double.infinity,
-      height: 40,
+      height: 42,
       child: FilledButton(
         onPressed: enabled ? onPressed : null,
         style: FilledButton.styleFrom(
@@ -352,7 +356,7 @@ class _PrimaryCta extends StatelessWidget {
           disabledBackgroundColor: bg,
           disabledForegroundColor: fg,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.s),
+            borderRadius: BorderRadius.circular(AppRadius.m),
           ),
           textStyle: const TextStyle(
             fontWeight: FontWeight.w800,

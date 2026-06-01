@@ -81,7 +81,13 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                // Görsel kalite — header ile içerik arası çok hafif ayraç.
+                const Divider(
+                  height: 1,
+                  thickness: 0.6,
+                  color: AppColors.borderHairline,
+                ),
+                const SizedBox(height: AppSpacing.s),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pageH,
@@ -89,6 +95,8 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                     AppSpacing.pageH,
                     AppSpacing.s,
                   ),
+                  // Görsel kalite — premium filled input: krem dolgu, ince
+                  // hairline border, focus'ta bakır vurgu. İşlev değişmedi.
                   child: TextField(
                     onChanged: (v) => setState(() => _query = v.trim()),
                     style: const TextStyle(
@@ -96,15 +104,38 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                       fontWeight: FontWeight.w500,
                       color: AppColors.textPrimary,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: AppStrings.groupsSearchHint,
-                      prefixIcon: Icon(
+                      hintStyle: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      prefixIcon: const Icon(
                         Icons.search_rounded,
                         color: AppColors.softGold,
+                        size: 20,
                       ),
-                      contentPadding: EdgeInsets.symmetric(
+                      filled: true,
+                      fillColor: AppColors.card,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.l,
                         vertical: 14,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderHairline,
+                          width: 0.8,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                        borderSide: const BorderSide(
+                          color: AppColors.copper,
+                          width: 1.2,
+                        ),
                       ),
                     ),
                   ),
@@ -208,28 +239,80 @@ class _CategoryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final all = GroupCategory.values;
+    // Görsel kalite — default ChoiceChip yerine rafine bakır/krem pill.
+    // Seçim mantığı (onChange/selected) ve kategori filtre işleyişi aynı.
     return SizedBox(
-      height: 44,
+      height: 40,
       child: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
         scrollDirection: Axis.horizontal,
         children: [
-          ChoiceChip(
-            label: const Text(AppStrings.groupsCategoryAll),
+          _CatChip(
+            label: AppStrings.groupsCategoryAll,
             selected: selected == null,
-            onSelected: (_) => onChange(null),
+            onTap: () => onChange(null),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.s),
           for (final c in all) ...[
-            ChoiceChip(
-              label: Text(c.label),
+            _CatChip(
+              label: c.label,
               selected: selected == c,
-              onSelected: (_) => onChange(c),
+              onTap: () => onChange(c),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppSpacing.s),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Rafine kategori pill'i — seçili: bakır dolu + beyaz; pasif: krem + ince
+/// hairline + sıcak kahve metin. Yalnız görsel; logic `onTap`'te.
+class _CatChip extends StatelessWidget {
+  const _CatChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: AnimatedContainer(
+          duration: AppDuration.fast,
+          curve: Curves.easeOut,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.copper : AppColors.card,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: selected
+                  ? AppColors.copper
+                  : AppColors.borderHairline,
+              width: 0.8,
+            ),
+            boxShadow: selected ? AppShadow.subtle : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : AppColors.textSecondary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ),
       ),
     );
   }
