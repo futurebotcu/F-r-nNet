@@ -20,16 +20,16 @@ class AppColors {
   // Yüzey hiyerarşisi — açık, sıcak, krem dominant
   // ─────────────────────────────────────────────────────────────
 
-  /// Ana sayfa zemini — sıcak krem, referans paletten App background.
-  /// Color Polish Sprint: #FAF3EA → #F7EEDF — biraz daha sıcak/doygun krem;
-  /// griye kaçan cansız his giderildi, kartlardan daha net ayrışır (zemin
-  /// belirgin krem, kartlar warm-white). Aşırı sarı değil, yumuşak wheat.
-  static const Color background = Color(0xFFF7EEDF);
+  /// Ana sayfa zemini — sıcak ama ferah ivory krem.
+  /// Color Tune Sprint: #F7EEDF → #FAF5ED — referansa göre fazla bej/sarı
+  /// yoğun duran zemin açıldı; daha açık, ferah ivory. Hâlâ sıcak (mavi-gri
+  /// değil) ama "ağır bej blok" hissi gitti, kartlarla ayrım temiz kaldı.
+  static const Color background = Color(0xFFFAF5ED);
 
-  /// İkincil yüzey — bottom nav, input fill, header'ın altındaki strip.
-  /// Zemin ile kart arasında ara ton (stat şeridi, segment track de bunu
-  /// kullanır). Color Polish Sprint: #FCF7F1 → #FBF4EA.
-  static const Color surface = Color(0xFFFBF4EA);
+  /// İkincil yüzey — bottom nav, input fill, header'ın altındaki strip,
+  /// stat şeridi, segment track. Zemin ile kart arasında temiz ara ton.
+  /// Color Tune Sprint: #FBF4EA → #FCF7F0 (biraz daha açık/temiz ara ton).
+  static const Color surface = Color(0xFFFCF7F0);
 
   /// Standart kart + post card → sıcak beyaz.
   /// Referans tasarımdaki ana kart hissini buradan alıyor. Zemin ısındığı
@@ -39,26 +39,29 @@ class AppColors {
   static const Color card = Color(0xFFFFFCF7);
 
   /// Vurgu kartı — hero/featured tile (PremiumCard hero tier) için; ana feed
-  /// post kartında kullanılmaz. Artık card'tan ayrışan yumuşak wheat lift:
-  /// "öne çıkan" hissi verir ama kaba bej blok değil.
-  /// Color Polish Sprint: #FCF7F1 → #FBF3E7.
-  static const Color elevatedCard = Color(0xFFFBF3E7);
+  /// post kartında kullanılmaz. card'tan ayrışan yumuşak wheat lift: "öne
+  /// çıkan" hissi verir ama kaba bej blok değil. Zemin açıldığı için bu da
+  /// çok sarılaşmadan hafifçe açıldı (yine surface'ten sıcak/derin → distinct).
+  /// Color Tune Sprint: #FBF3E7 → #FBF4E9.
+  static const Color elevatedCard = Color(0xFFFBF4E9);
 
   /// Cream zemin üstündeki ince divider — warm, görünür ama bağırmaz.
-  /// Color Polish Sprint: #E3D2BF → #E8D6BE.
-  static const Color surfaceLine = Color(0xFFE8D6BE);
+  /// Color Tune Sprint: #E8D6BE → #ECDEC8 — açılan zeminde ağırlaşmasın diye
+  /// hafifçe açıldı; sıcak kaldı, sert/koyu çizgi hissi yok.
+  static const Color surfaceLine = Color(0xFFECDEC8);
 
   /// Dialog / bottom sheet / snackbar zemini — ana kartlardan ayrı,
   /// soft wheat halo hissi. Color Polish Sprint: #F8EDD8 → #F6E9D2.
   static const Color overlay = Color(0xFFF6E9D2);
 
   /// Açık kart/zemin üzerinde ince hairline border — warm, soğuk-gri değil;
-  /// kart kenarı görünür ama zarif. Color Polish Sprint: #E3D2BF → #E6D4BC.
-  static const Color borderHairline = Color(0xFFE6D4BC);
+  /// kart kenarı görünür ama zarif. Color Tune Sprint: #E6D4BC → #EBDCC4 —
+  /// açılan zeminde ekranı ağırlaştırmasın diye hafifletildi (sıcak kalır).
+  static const Color borderHairline = Color(0xFFEBDCC4);
 
   /// Geriye dönük uyum için alias — borderHairline ile aynı.
   /// (Bir önceki temadan kalan referansları kırmamak için.)
-  static const Color borderLight = Color(0xFFE6D4BC);
+  static const Color borderLight = Color(0xFFEBDCC4);
 
   // ─────────────────────────────────────────────────────────────
   // Hero gradient — soft wheat ramp; dekoratif/halo (ana yüzey değil)
