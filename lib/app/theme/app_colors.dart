@@ -21,51 +21,54 @@ class AppColors {
   // ─────────────────────────────────────────────────────────────
 
   /// Ana sayfa zemini — sıcak krem, referans paletten App background.
-  /// Color Foundation Sprint: #FFF8ED → #FAF3EA.
-  static const Color background = Color(0xFFFAF3EA);
+  /// Color Polish Sprint: #FAF3EA → #F7EEDF — biraz daha sıcak/doygun krem;
+  /// griye kaçan cansız his giderildi, kartlardan daha net ayrışır (zemin
+  /// belirgin krem, kartlar warm-white). Aşırı sarı değil, yumuşak wheat.
+  static const Color background = Color(0xFFF7EEDF);
 
   /// İkincil yüzey — bottom nav, input fill, header'ın altındaki strip.
-  /// Background'tan hafif daha açık, hiyerarşi için (warm white altı).
-  /// Color Foundation Sprint: #F6EFE3 → #FCF7F1.
-  static const Color surface = Color(0xFFFCF7F1);
+  /// Zemin ile kart arasında ara ton (stat şeridi, segment track de bunu
+  /// kullanır). Color Polish Sprint: #FCF7F1 → #FBF4EA.
+  static const Color surface = Color(0xFFFBF4EA);
 
   /// Standart kart + post card → sıcak beyaz.
-  /// Referans tasarımdaki ana kart hissini buradan alıyor.
-  /// Color Foundation Sprint: #FAF2E6 → #FEFAF4.
-  static const Color card = Color(0xFFFEFAF4);
+  /// Referans tasarımdaki ana kart hissini buradan alıyor. Zemin ısındığı
+  /// için kart, ayrışmayı koruyacak şekilde temiz warm-white'a çekildi
+  /// (stark beyaz değil; hafif sıcaklık taşır).
+  /// Color Polish Sprint: #FEFAF4 → #FFFCF7.
+  static const Color card = Color(0xFFFFFCF7);
 
-  /// Vurgu kartı — hero/featured tile için; ana feed post kartında
-  /// kullanılmaz (user kararı: post kartları sıcak beyaz kalmalı).
-  /// Color Foundation Sprint: #F3E6D3 → #FCF7F1 (surface ile aynı ton,
-  /// card'tan bir adım daha doygun ama "kum/bej blok" değil).
-  static const Color elevatedCard = Color(0xFFFCF7F1);
+  /// Vurgu kartı — hero/featured tile (PremiumCard hero tier) için; ana feed
+  /// post kartında kullanılmaz. Artık card'tan ayrışan yumuşak wheat lift:
+  /// "öne çıkan" hissi verir ama kaba bej blok değil.
+  /// Color Polish Sprint: #FCF7F1 → #FBF3E7.
+  static const Color elevatedCard = Color(0xFFFBF3E7);
 
-  /// Cream zemin üstündeki ince divider.
-  /// Color Foundation Sprint: #E6D5BA → #E3D2BF (warm border).
-  static const Color surfaceLine = Color(0xFFE3D2BF);
+  /// Cream zemin üstündeki ince divider — warm, görünür ama bağırmaz.
+  /// Color Polish Sprint: #E3D2BF → #E8D6BE.
+  static const Color surfaceLine = Color(0xFFE8D6BE);
 
   /// Dialog / bottom sheet / snackbar zemini — ana kartlardan ayrı,
-  /// soft wheat halo hissi.
-  /// Color Foundation Sprint: #EFE0C8 → #F8EDD8.
-  static const Color overlay = Color(0xFFF8EDD8);
+  /// soft wheat halo hissi. Color Polish Sprint: #F8EDD8 → #F6E9D2.
+  static const Color overlay = Color(0xFFF6E9D2);
 
-  /// Açık kart/zemin üzerinde ince hairline border — warm border.
-  /// Color Foundation Sprint: #DFC9A8 → #E3D2BF.
-  static const Color borderHairline = Color(0xFFE3D2BF);
+  /// Açık kart/zemin üzerinde ince hairline border — warm, soğuk-gri değil;
+  /// kart kenarı görünür ama zarif. Color Polish Sprint: #E3D2BF → #E6D4BC.
+  static const Color borderHairline = Color(0xFFE6D4BC);
 
   /// Geriye dönük uyum için alias — borderHairline ile aynı.
   /// (Bir önceki temadan kalan referansları kırmamak için.)
-  static const Color borderLight = Color(0xFFE3D2BF);
+  static const Color borderLight = Color(0xFFE6D4BC);
 
   // ─────────────────────────────────────────────────────────────
   // Hero gradient — soft wheat ramp; dekoratif/halo (ana yüzey değil)
   // ─────────────────────────────────────────────────────────────
 
-  /// Color Foundation Sprint: hero gradient artık soft wheat (#F2DFC8)
-  /// → overlay (#F8EDD8) çizgisinde. Soft wheat sadece bu dekoratif
-  /// alanlarda yaşar; ana feed post kartı değil.
+  /// Hero gradient soft wheat (#F2DFC8) → overlay çizgisinde. Soft wheat
+  /// sadece bu dekoratif alanlarda yaşar; ana feed post kartı değil.
+  /// Color Polish Sprint: heroTo overlay ile hizalandı (#F8EDD8 → #F6E9D2).
   static const Color heroFrom = Color(0xFFF2DFC8);
-  static const Color heroTo = Color(0xFFF8EDD8);
+  static const Color heroTo = Color(0xFFF6E9D2);
 
   // ─────────────────────────────────────────────────────────────
   // Vurgular — yumuşak amber paleti
@@ -74,19 +77,24 @@ class AppColors {
   //   copperMuted → light amber (yumuşak halo, decoration)
   // ─────────────────────────────────────────────────────────────
 
-  /// Ana vurgu — copper accent. Buton zemini, aktif indicator, focused
-  /// border. Color Foundation Sprint: #D6A13A → #C08F63.
-  static const Color copper = Color(0xFFC08F63);
+  /// Ana vurgu — copper accent. Primary CTA zemini, aktif indicator, seçili
+  /// segment dolgusu, focused border, FAB. Eski #C08F63 soluk/sütlü tan idi
+  /// (beyaz yazı kontrastı ~2.8:1, referansa göre cansız). Color Polish
+  /// Sprint: zengin, motive edici warm copper'a derinleştirildi → beyaz yazı
+  /// kontrastı ~4.7:1 (WCAG AA normal text). Çiğ/neon turuncu değil; referans
+  /// görseldeki bakır CTA çizgisinde.
+  /// Color Polish Sprint: #C08F63 → #A8632C.
+  static const Color copper = Color(0xFFA8632C);
 
-  /// Brand brown — vurgu metin/ikon. Light kart üstünde yüksek kontrast.
-  /// "softGold" ismi widget'lar arasında 100+ yerde — değeri değişti
-  /// ama semantik "vurgu" rolü korunuyor (rename ileride).
-  /// Color Foundation Sprint: #B98224 → #724522.
+  /// Brand brown — vurgu metin/ikon, seçili chip etiketi, section emphasis.
+  /// Light kart üstünde çok yüksek kontrast (deep espresso-amber). copper
+  /// ailesinin en koyu ucu; "highlight text" rolü. Değer korundu.
   static const Color softGold = Color(0xFF724522);
 
   /// Light copper — sıcak halo, gradient companion, decoration only.
-  /// Color Foundation Sprint: #E8BF63 → #D6B08C (copper'ın açık varyantı).
-  static const Color copperMuted = Color(0xFFD6B08C);
+  /// Zenginleşen copper'a eşlik edecek şekilde hafif doygunlaştırıldı.
+  /// Color Polish Sprint: #D6B08C → #D7AC83.
+  static const Color copperMuted = Color(0xFFD7AC83);
 
   /// Çok seyrek kullanım — koyu kahve aksent (badge bg, dolu ikon vurgusu).
   static const Color darkAccent = Color(0xFF3A2618);
@@ -106,9 +114,10 @@ class AppColors {
   /// doğal ara ton. Color Foundation Sprint: #7A6857 → #5C4838.
   static const Color textSecondary = Color(0xFF5C4838);
 
-  /// Muted etiket / placeholder.
-  /// Color Foundation Sprint: #9C8973 → #8E7864.
-  static const Color textMuted = Color(0xFF8E7864);
+  /// Muted etiket / placeholder / meta. Krem zemin üstünde fazla silik
+  /// kalmaması için bir tık güçlendirildi (yine de zarif, baskın değil).
+  /// Color Polish Sprint: #8E7864 → #8A7058.
+  static const Color textMuted = Color(0xFF8A7058);
 
   /// Alias — `onBackgroundPrimary/Secondary/Muted` semantiği iki-bağlamlı
   /// önceki tema için tutuluyordu; tek bağlam (light) olunca aynı değer.
@@ -138,11 +147,13 @@ class AppColors {
   // Medya scrim — görsel/foto üstünde metin/ikon okunabilirliği
   // ─────────────────────────────────────────────────────────────
 
-  /// P0 Design Tokens — kart/medya görseli üstündeki badge & ikonlar için
-  /// koyu yarı saydam scrim (~%55 siyah). Hardcoded `Colors.black` yerine
-  /// semantic alias; kademeli olarak medya kartlarına uygulanabilir.
-  static const Color imageScrimDark = Color(0x8C000000);
+  /// Kart/medya görseli üstündeki badge & ikonlar için koyu yarı saydam
+  /// scrim (~%55). Color Polish Sprint: saf siyah yerine sıcak espresso
+  /// tonlu (#221A13) — soğuk/çiğ siyah overlay yerine premium, palette
+  /// uyumlu karartma. Okunabilirlik korunur.
+  static const Color imageScrimDark = Color(0x8C221A13);
 
-  /// Daha hafif scrim (~%35 siyah) — küçük yuvarlak aksiyon arkalığı için.
-  static const Color imageScrimSoft = Color(0x59000000);
+  /// Daha hafif scrim (~%35) — küçük yuvarlak aksiyon arkalığı için.
+  /// Aynı sıcak espresso tonu, düşük alpha.
+  static const Color imageScrimSoft = Color(0x59221A13);
 }

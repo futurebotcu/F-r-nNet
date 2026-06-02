@@ -4,12 +4,13 @@ import 'package:flutter/services.dart';
 import 'app_colors.dart';
 import 'app_tokens.dart';
 
-/// Tema: açık krem zemin + açık kartlar + yumuşak amber vurgu.
+/// Tema: açık krem zemin + açık kartlar + zengin bakır vurgu.
 /// %75 krem, %20 sıcak destek, %5 koyu kahve vurgu.
 ///
-/// Tüm yüzeyler "açık" — bu yüzden buton zemini amber olduğunda
-/// foreground olarak `Colors.white` DEĞİL `textPrimary` (dark coffee)
-/// kullanılıyor (WCAG kontrast).
+/// Color Polish Sprint: copper derinleştirildi (#A8632C, beyaz yazı ~4.7:1
+/// WCAG AA), bu yüzden primary üstündeki yazı artık BEYAZ (onPrimary) —
+/// buton temaları ile sistem genel uyumu. Light kart üstündeki vurgu metni
+/// hâlâ softGold (deep brown).
 class AppTheme {
   const AppTheme._();
 
@@ -26,7 +27,9 @@ class AppTheme {
   static ThemeData _bakeryTheme() {
     const colorScheme = ColorScheme.light(
       primary: AppColors.copper,
-      onPrimary: AppColors.textPrimary,
+      // Color Polish Sprint: zengin copper üstünde beyaz (FAB, segmented vb.
+      // primary yüzeyleri buton standardıyla aynı dile bağlanır).
+      onPrimary: Colors.white,
       primaryContainer: AppColors.copperMuted,
       onPrimaryContainer: AppColors.textPrimary,
       secondary: AppColors.softGold,
