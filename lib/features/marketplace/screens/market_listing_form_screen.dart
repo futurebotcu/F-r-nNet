@@ -932,7 +932,8 @@ class _PhotoThumb extends StatelessWidget {
           right: 2,
           top: 2,
           child: Material(
-            color: Colors.black.withValues(alpha: 0.55),
+            // P0 hijyen — hardcoded siyah yerine palet scrim token'ı.
+            color: AppColors.imageScrimDark,
             shape: const CircleBorder(),
             clipBehavior: Clip.antiAlias,
             child: InkWell(

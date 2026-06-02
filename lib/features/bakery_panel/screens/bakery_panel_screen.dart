@@ -476,7 +476,9 @@ class _DealerSummaryCard extends ConsumerWidget {
                       label: const Text('Bayi Yönetimine Git'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.copper,
-                        foregroundColor: AppColors.textPrimary,
+                        // P0 hijyen — copper zemin üstünde beyaz yazı (standart);
+                        // koyu textPrimary kontrastı ~1.5:1 idi, okunmuyordu.
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppRadius.m),

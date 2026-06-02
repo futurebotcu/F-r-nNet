@@ -622,7 +622,7 @@ class _LegalAcceptCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = showError
-        ? Colors.red.withValues(alpha: 0.55)
+        ? AppColors.danger.withValues(alpha: 0.55)
         : AppColors.borderHairline;
 
     return Column(
@@ -699,8 +699,8 @@ class _LegalAcceptCheckbox extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8, left: AppSpacing.s),
             child: Text(
               AppStrings.legalAcceptRequired,
-              style: TextStyle(
-                color: Colors.red.shade700,
+              style: const TextStyle(
+                color: AppColors.danger,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 height: 1.35,

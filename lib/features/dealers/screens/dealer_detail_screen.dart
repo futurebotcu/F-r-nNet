@@ -1354,7 +1354,9 @@ class _NotesCardState extends ConsumerState<NotesCard> {
                 onPressed: _saving ? null : _add,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
-                  foregroundColor: AppColors.textPrimary,
+                  // P0 hijyen — copper zemin üstünde beyaz ikon (standart);
+                  // koyu textPrimary kontrastı düşüktü.
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
