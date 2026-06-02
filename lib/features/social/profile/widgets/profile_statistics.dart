@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/app_strings.dart';
 
 /// Donor (itsezlife) `user_profile_statistics.dart` pattern — 3 sayım
@@ -37,31 +38,55 @@ class ProfileStatistics extends StatelessWidget {
     );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatTile(
-              value: postCount,
-              label: AppStrings.profileStatPosts,
-              onTap: null, // V1: post sayısı tap inert
+      child: Container(
+        // Hafif surface zemin + hairline — kaba "büyük kart" değil, sakin
+        // bir sosyal istatistik şeridi.
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          border: Border.all(color: AppColors.borderHairline, width: 0.6),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Row(
+          children: [
+            Expanded(
+              child: _StatTile(
+                value: postCount,
+                label: AppStrings.profileStatPosts,
+                onTap: null, // V1: post sayısı tap inert
+              ),
             ),
-          ),
-          Expanded(
-            child: _StatTile(
-              value: followers,
-              label: AppStrings.profileStatFollowers,
-              onTap: onTapFollowers,
+            const _StatDivider(),
+            Expanded(
+              child: _StatTile(
+                value: followers,
+                label: AppStrings.profileStatFollowers,
+                onTap: onTapFollowers,
+              ),
             ),
-          ),
-          Expanded(
-            child: _StatTile(
-              value: following,
-              label: AppStrings.profileStatFollowing,
-              onTap: onTapFollowing,
+            const _StatDivider(),
+            Expanded(
+              child: _StatTile(
+                value: following,
+                label: AppStrings.profileStatFollowing,
+                onTap: onTapFollowing,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  const _StatDivider();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 0.6,
+      height: 26,
+      color: AppColors.borderHairline,
     );
   }
 }
@@ -86,21 +111,12 @@ class _StatTile extends StatelessWidget {
         children: [
           Text(
             '$value',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-              letterSpacing: -0.2,
-            ),
+            style: AppTypography.titleLarge,
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
+            style: AppTypography.meta,
           ),
         ],
       ),
@@ -108,7 +124,7 @@ class _StatTile extends StatelessWidget {
     if (onTap == null) return content;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.s),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       child: content,
     );
   }

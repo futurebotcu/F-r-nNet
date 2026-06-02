@@ -40,7 +40,8 @@ class ProfileCategoryTabs extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          // Track: hafif surface zemin; seçili segment üstte yumuşak yükselir.
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           border: Border.all(color: AppColors.borderHairline, width: 0.6),
         ),
@@ -79,12 +80,15 @@ class _Segment extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: AppDuration.fast,
+        curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(vertical: 9),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppColors.copper : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.pill),
+          // Seçili segment hafif bakır halo ile zarifçe yükselir; pasifler düz.
+          boxShadow: selected ? AppShadow.subtle : null,
         ),
         child: Text(
           label,
@@ -93,7 +97,7 @@ class _Segment extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: selected ? Colors.white : AppColors.textSecondary,
-            fontWeight: FontWeight.w800,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
             fontSize: 13,
             letterSpacing: -0.1,
           ),

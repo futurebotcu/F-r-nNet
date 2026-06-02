@@ -57,7 +57,8 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
   Widget build(BuildContext context) {
     final async = ref.watch(isFollowingProvider(widget.userId));
     return SizedBox(
-      height: 36,
+      // Profil aksiyon satırında _ProfileMessageCta (44) ile eşit yükseklik.
+      height: 44,
       child: async.when(
         loading: () => const _FollowButtonShell(
           label: AppStrings.followCtaFollow,
@@ -115,10 +116,10 @@ class _FollowButtonShell extends StatelessWidget {
           foregroundColor: AppColors.textPrimary,
           side: const BorderSide(
             color: AppColors.borderHairline,
-            width: 0.6,
+            width: 0.8,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.s),
+            borderRadius: BorderRadius.circular(AppRadius.m),
           ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
           textStyle: const TextStyle(
@@ -145,7 +146,7 @@ class _FollowButtonShell extends StatelessWidget {
         backgroundColor: AppColors.copper,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderRadius: BorderRadius.circular(AppRadius.m),
         ),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
         textStyle: const TextStyle(

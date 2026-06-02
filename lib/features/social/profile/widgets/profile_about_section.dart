@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/app_strings.dart';
 
 class ProfileAboutSection extends StatelessWidget {
@@ -50,22 +51,13 @@ class ProfileAboutSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
-              letterSpacing: -0.1,
-            ),
+            style: AppTypography.sectionTitle,
           ),
           const SizedBox(height: 6),
           if (hasBio)
             Text(
               text,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.4,
-              ),
+              style: AppTypography.body.copyWith(height: 1.45),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             )

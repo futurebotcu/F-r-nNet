@@ -23,9 +23,12 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../worker/models/job_seek_post.dart';
 import '../../worker/providers/worker_providers.dart';
@@ -215,20 +218,10 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
               jobSeekAsync.asData?.value != null;
           if (!hasAny) {
             return const [
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.pageH,
-                  AppSpacing.l,
-                  AppSpacing.pageH,
-                  AppSpacing.l,
-                ),
-                child: Text(
-                  AppStrings.profileCvVisitorEmpty,
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 13,
-                  ),
-                ),
+              EmptyState(
+                compact: true,
+                icon: Icons.badge_outlined,
+                title: AppStrings.profileCvVisitorEmpty,
               ),
             ];
           }
@@ -267,7 +260,7 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
   Widget _postsTab(String userId, AsyncValue<FeedPagedState> pagedAsync) {
     return pagedAsync.when(
       loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => const Padding(
@@ -281,14 +274,10 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
       ),
       data: (paged) {
         if (paged.posts.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(AppSpacing.l),
-            child: Center(
-              child: Text(
-                AppStrings.publicProfilePostsEmpty,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-              ),
-            ),
+          return const EmptyState(
+            compact: true,
+            icon: Icons.article_outlined,
+            title: AppStrings.publicProfilePostsEmpty,
           );
         }
         return Column(
@@ -653,6 +642,9 @@ class _ExperienceSection extends StatelessWidget {
                   vertical: AppSpacing.s,
                 ),
                 child: Column(
+                  // _ExperienceRow PremiumCard'ı (width:infinity yok) tam
+                  // genişlikte kalsın diye satırları stretch'le.
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (final e in items)
                       Padding(
@@ -693,24 +685,14 @@ class _ExperienceRow extends StatelessWidget {
       if (city != null && city.isNotEmpty) city,
       if (range.isNotEmpty) range,
     ].join(' · ');
-    return Container(
-      width: double.infinity,
+    return PremiumCard(
       padding: const EdgeInsets.all(AppSpacing.m),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(color: AppColors.borderHairline, width: 0.6),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             exp.title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 14.5,
-            ),
+            style: AppTypography.cardTitle,
           ),
           if (meta.isNotEmpty) ...[
             const SizedBox(height: 2),
@@ -832,11 +814,14 @@ class _JobSeekCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.m),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(AppRadius.m),
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          // Aktif ilan vurgusu — softGold accent border korunur; üzerine
+          // sakin kart gölgesi ile premium yükseliş.
           border: Border.all(
             color: AppColors.softGold.withValues(alpha: 0.4),
             width: 0.8,
           ),
+          boxShadow: AppShadow.card,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -945,12 +930,7 @@ class _SectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 15.5,
-                letterSpacing: -0.1,
-              ),
+              style: AppTypography.sectionTitle,
             ),
           ),
           if (trailing != null) trailing!,
@@ -994,26 +974,14 @@ class _AboutBakerySection extends StatelessWidget {
                   horizontal: AppSpacing.pageH,
                   vertical: AppSpacing.s,
                 ),
-                child: Container(
+                child: PremiumCard(
                   padding: const EdgeInsets.all(AppSpacing.m),
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                    border: Border.all(
-                      color: AppColors.borderHairline,
-                      width: 0.6,
-                    ),
-                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         bakery.name,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15.5,
-                        ),
+                        style: AppTypography.sectionTitle,
                       ),
                       if ((bakery.city ?? '').isNotEmpty ||
                           (bakery.district ?? '').isNotEmpty) ...[
@@ -1123,16 +1091,8 @@ class _ProfessionalSection extends StatelessWidget {
                   horizontal: AppSpacing.pageH,
                   vertical: AppSpacing.s,
                 ),
-                child: Container(
+                child: PremiumCard(
                   padding: const EdgeInsets.all(AppSpacing.m),
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                    border: Border.all(
-                      color: AppColors.borderHairline,
-                      width: 0.6,
-                    ),
-                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1302,53 +1262,34 @@ class _PublicRecipeRow extends StatelessWidget {
   final Recipe recipe;
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(AppRadius.m);
-    return Material(
-      color: AppColors.card,
-      borderRadius: radius,
-      child: InkWell(
-        borderRadius: radius,
-        onTap: () => context.push('${AppRoutes.recipes}/${recipe.id}'),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.m,
-            vertical: AppSpacing.s,
+    return PremiumCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.m,
+        vertical: AppSpacing.m,
+      ),
+      onTap: () => context.push('${AppRoutes.recipes}/${recipe.id}'),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.menu_book_outlined,
+            size: 18,
+            color: AppColors.softGold,
           ),
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
+          const SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: Text(
+              recipe.displayTitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.titleMedium,
             ),
           ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.menu_book_outlined,
-                size: 18,
-                color: AppColors.softGold,
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Expanded(
-                child: Text(
-                  recipe.displayTitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: AppColors.textMuted,
-              ),
-            ],
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: 18,
+            color: AppColors.textMuted,
           ),
-        ),
+        ],
       ),
     );
   }

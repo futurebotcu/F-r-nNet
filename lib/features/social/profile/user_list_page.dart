@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/social_profile.dart';
@@ -135,17 +136,24 @@ class _UserTile extends StatelessWidget {
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
       leading: Container(
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: AppColors.softGold.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(AppRadius.s),
+          // Profil header avatar diliyle uyumlu: copper → softGold ramp +
+          // beyaz initial + ince hairline çerçeve.
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.copper, AppColors.softGold],
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          border: Border.all(color: AppColors.borderHairline, width: 0.8),
         ),
         alignment: Alignment.center,
         child: Text(
           profile.initial,
           style: const TextStyle(
-            color: AppColors.softGold,
+            color: Colors.white,
             fontWeight: FontWeight.w800,
             fontSize: 16,
           ),
@@ -153,11 +161,7 @@ class _UserTile extends StatelessWidget {
       ),
       title: Text(
         profile.displayNameOrFallback,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 14.5,
-        ),
+        style: AppTypography.cardTitle,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -178,10 +182,7 @@ class _UserTile extends StatelessWidget {
     if (parts.isEmpty) return null;
     return Text(
       parts.join(' · '),
-      style: const TextStyle(
-        color: AppColors.textMuted,
-        fontSize: 12,
-      ),
+      style: AppTypography.meta,
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../profile/models/public_profile_detail.dart';
 import '../../models/social_profile.dart';
@@ -63,12 +64,7 @@ class ProfileHeader extends StatelessWidget {
                   children: [
                     Text(
                       p.displayNameOrFallback,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 19,
-                        letterSpacing: -0.3,
-                      ),
+                      style: AppTypography.titleLarge,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -165,8 +161,11 @@ class _Avatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
+        // copper → softGold sıcak ramp; beyaz initial ile yüksek kontrast.
         gradient: const LinearGradient(
-          colors: [AppColors.softGold, AppColors.copperMuted],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.copper, AppColors.softGold],
         ),
         borderRadius: borderRadius,
       ),
@@ -174,23 +173,35 @@ class _Avatar extends StatelessWidget {
       child: Text(
         initial,
         style: const TextStyle(
-          color: AppColors.textPrimary,
+          color: Colors.white,
           fontWeight: FontWeight.w800,
           fontSize: 32,
         ),
       ),
     );
-    if (!hasUrl) return fallback;
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: CachedNetworkImage(
-        imageUrl: avatarUrl!,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => fallback,
-        errorWidget: (_, __, ___) => fallback,
+    final inner = hasUrl
+        ? ClipRRect(
+            borderRadius: borderRadius,
+            child: CachedNetworkImage(
+              imageUrl: avatarUrl!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => fallback,
+              errorWidget: (_, __, ___) => fallback,
+            ),
+          )
+        : fallback;
+    // İnce hairline çerçeve + çok yumuşak gölge ile premium yükseliş.
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        border: Border.all(color: AppColors.borderHairline, width: 0.8),
+        boxShadow: AppShadow.subtle,
       ),
+      child: inner,
     );
   }
 }
