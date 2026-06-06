@@ -1,0 +1,48 @@
+appId: com.firinnet.firin_defter
+name: FirinNet app smoke
+---
+- launchApp:
+    clearState: true
+
+- assertVisible: "FırınNet"
+- extendedWaitUntil:
+    visible: "Kayıtsız devam et"
+    timeout: 10000
+- tapOn: "Kayıtsız devam et"
+
+- extendedWaitUntil:
+    visible: "Feed"
+    timeout: 15000
+
+- assertVisible: "FırınNet"
+- assertVisible: "Feed"
+- assertVisible: "Gruplar"
+- assertVisible: "Market"
+- assertVisible: "İlanlar"
+- assertVisible: "Panel"
+
+- tapOn: "Gruplar"
+- extendedWaitUntil:
+    visible: "Sektör Grupları"
+    timeout: 10000
+
+- tapOn: "Market"
+- extendedWaitUntil:
+    visible: "Market"
+    timeout: 10000
+
+- tapOn: "İlanlar"
+- extendedWaitUntil:
+    visible: "İş İlanları"
+    timeout: 10000
+
+- tapOn: "Panel"
+- extendedWaitUntil:
+    visible: "Panel|Merhaba.*"
+    timeout: 10000
+
+- tapOn: "Feed"
+- extendedWaitUntil:
+    visible: "FırınNet"
+    timeout: 10000
+- assertVisible: "Bugün ne paylaşmak istersin?"
