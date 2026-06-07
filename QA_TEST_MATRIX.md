@@ -24,11 +24,11 @@ Oncelik tanimlari:
 | JOBS-001 | İş İlanları | P0 | Smoke | Ana shell acik | İlanlar tabina dokun | `İş İlanları` ekrani gorunur | Patrol; Maestro advisory | Otomatik |
 | PANEL-001 | Panel | P0 | Smoke | Ana shell acik | Panel tabina dokun | `Panel` veya `Merhaba` basligi gorunur | Patrol; Maestro advisory | Otomatik |
 | NAV-002 | Bottom navigation | P0 | Smoke | Panel acik | Feed tabina dokun | Feed yeniden acilir ve `FırınNet` gorunur | Patrol; Maestro advisory | Otomatik |
-| COMPOSER-001 | Inline composer | P0 | Smoke | Feed acik | Feed ust icerigini kontrol et | `Bugün ne paylaşmak istersin?` inline composer metni gorunur | Patrol; Maestro advisory | Otomatik |
-| MARKET-002 | Empty states | P0 | Regression | Market verisi bos | Market tabini ac | Empty state ve `İlk ilanı oluştur` CTA gorunur | Flutter widget/manual | Kosullu |
-| JOBS-002 | Empty states | P0 | Regression | Is ilani verisi bos | İlanlar tabini ac | Uygun bos durum mesaji gorunur; ekran crash etmez | Flutter widget/manual | Kosullu |
-| GUARD-001 | Guest guard | P0 | Regression | Guest mod; yazma aksiyonu mevcut | Market veya ilan ekleme aksiyonuna dokun | Login/guest guard acilir; yazma ekranina izinsiz gecilmez | Flutter test | Otomatik |
-| PROFILE-001 | Profile/avatar | P0 | Smoke | Feed acik | Header avatarina dokun; geri don | Profil veya guest profil akisi crash olmadan acilir | Manuel | Bekliyor |
+| COMPOSER-001 | Inline composer | P0 | Smoke | Feed acik | Feed ust icerigini kontrol et | `Bugün ne paylaşmak istersin?` inline composer metni gorunur | Patrol 01 + 02; Maestro advisory | Otomatik |
+| MARKET-002 | Empty states | P0 | Regression | Local guest mod; Market verisi bos | Market tabini ac | Empty state ve `İlk ilanı oluştur` CTA gorunur | Patrol 02 | Otomatik |
+| JOBS-002 | Empty states | P0 | Regression | Local guest mod; is ilani verisi bos | İlanlar tabini ac; iki segmenti kontrol et | Her iki segmentin empty state mesaji gorunur; ekran crash etmez | Patrol 02 | Otomatik |
+| GUARD-001 | Guest guard | P0 | Regression | Guest mod; Feed acik | Inline composer `Paylaş` aksiyonuna dokun | Login/guest guard acilir; composer route'una izinsiz gecilmez | Patrol 02 + Flutter test | Otomatik |
+| PROFILE-001 | Profile/avatar | P0 | Smoke | Guest mod; Feed acik | Header avatarina dokun; guest fallback'i kontrol et; Feed'e don | Profil fallback akisi crash olmadan auth entry'ye gider ve Feed'e donulebilir | Patrol 02 | Otomatik |
 | NAV-003 | Regression smoke | P0 | Soak smoke | Guest mod | Feed > Gruplar > Market > İlanlar > Panel > Feed gecislerini yap | Temel navigasyonda exception, donma veya crash olmaz | Patrol; Maestro advisory | Otomatik |
 | FEED-002 | Feed | P1 | Regression | Feed acik | Pull-to-refresh yap | Loading tamamlanir; feed kullanilabilir kalir | Manuel | Bekliyor |
 | FEED-003 | Feed | P1 | Regression | Feed verisi bos | Feed ac | Feed empty state anlamli metinle gorunur | Flutter widget/manual | Kosullu |
@@ -37,7 +37,7 @@ Oncelik tanimlari:
 | MARKET-003 | Market | P1 | Regression | Market acik | Filtreleri ac; bir filtre sec; temizle | Filtre durumu ve liste tutarli kalir | Flutter test/manual | Kismi |
 | JOBS-003 | İş İlanları | P1 | Regression | İlanlar acik | Usta Arıyor ve İş Arıyor segmentleri arasinda gec | Her iki segment acilir; ekran crash etmez | Flutter test/manual | Kismi |
 | PANEL-002 | Panel | P1 | Smoke | Guest mod | Panel tabini ac; ilk kullanilabilir karta dokun | Kart dogru ekrana gider veya kontrollu bilgi verir | Manuel | Bekliyor |
-| COMPOSER-002 | Inline composer | P1 | Regression | Guest mod; Feed acik | Inline composer ana alanina dokun | Guest guard gorunur; composer'a izinsiz gecilmez | Flutter test | Otomatik |
+| COMPOSER-002 | Inline composer | P1 | Regression | Guest mod; Feed acik | Inline composer yazma aksiyonuna dokun | Guest guard gorunur; composer'a izinsiz gecilmez | Patrol 02 + Flutter test | Otomatik |
 | PROFILE-002 | Profile/avatar | P1 | Regression | Auth kullanici | Avatar aksiyonuna dokun | Kullanicinin public profil rotasi acilir | Flutter test/manual | Kismi |
 | LEGAL-001 | Settings/legal | P1 | Smoke | Ayarlar ekranina erisim | Kosullar ve Gizlilik ekranlarini ac | Metinler gorunur; geri navigasyon calisir | Manuel | Bekliyor |
 | REG-001 | Regression smoke | P1 | Static | Repo hazir | `flutter analyze` calistir | Analyzer issue raporlamaz | PowerShell | Otomatik |

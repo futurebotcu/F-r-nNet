@@ -66,6 +66,7 @@ if ($null -eq $patrol) {
     Write-Host "  dart pub global activate patrol_cli"
     Write-Host "Then start an emulator and run:"
     Write-Host "  patrol test -t patrol_test/app_smoke_test.dart --no-uninstall"
+    Write-Host "  patrol test -t patrol_test/guest_guard_empty_profile_smoke_test.dart --no-uninstall"
     Write-Host "Flutter quality steps remain successful; Patrol was skipped."
 } else {
     Write-Host ""
@@ -73,6 +74,9 @@ if ($null -eq $patrol) {
     Write-Host "API 37 preview / 16 KB page-size images are not supported by this quality gate."
     Invoke-AdvisoryStep -Name "Patrol app smoke (stabilization)" -Command {
         patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
+    }
+    Invoke-AdvisoryStep -Name "Patrol guest/empty/profile smoke (stabilization)" -Command {
+        patrol test -t patrol_test/guest_guard_empty_profile_smoke_test.dart --no-uninstall
     }
 }
 
