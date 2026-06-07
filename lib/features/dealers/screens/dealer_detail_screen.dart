@@ -45,6 +45,40 @@ class DealerDetailScreen extends ConsumerWidget {
           orElse: () => const Text(AppStrings.dealerDetailFallbackTitle),
         ),
         actions: [
+          dealerAsync.maybeWhen(
+            data: (d) => d == null
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: AppStrings.dealerDetailEditTooltip,
+                    onPressed: () => context.push(AppRoutes.dealerEdit(d.id)),
+                    icon: const Icon(Icons.edit_rounded),
+                  ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+          dealerAsync.maybeWhen(
+            data: (d) => d == null
+                ? const SizedBox.shrink()
+                : PopupMenuButton<_DealerDetailMenuAction>(
+                    tooltip: AppStrings.dealerDetailStatusTooltip,
+                    onSelected: (action) {
+                      switch (action) {
+                        case _DealerDetailMenuAction.toggleActive:
+                          _confirmSetActive(context, ref, d);
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem<_DealerDetailMenuAction>(
+                        value: _DealerDetailMenuAction.toggleActive,
+                        child: Text(
+                          d.isActive
+                              ? AppStrings.dealerDetailSetPassive
+                              : AppStrings.dealerDetailSetActive,
+                        ),
+                      ),
+                    ],
+                  ),
+            orElse: () => const SizedBox.shrink(),
+          ),
           IconButton(
             tooltip: AppStrings.dealerDetailShareTooltip,
             onPressed: () =>
@@ -57,12 +91,12 @@ class DealerDetailScreen extends ConsumerWidget {
         top: false,
         child: dealerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (e, _) => _DealerDetailLoadError(
+            onRetry: () => ref.invalidate(dealerByIdProvider(dealerId)),
+          ),
           data: (d) {
             if (d == null) {
-              return const Center(
-                child: Text(AppStrings.dealerDetailNotFound),
-              );
+              return const Center(child: Text(AppStrings.dealerDetailNotFound));
             }
             return ListView(
               physics: const BouncingScrollPhysics(
@@ -70,6 +104,16 @@ class DealerDetailScreen extends ConsumerWidget {
               ),
               padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
               children: [
+                if (!d.isActive)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.pageH,
+                      AppSpacing.s,
+                      AppSpacing.pageH,
+                      0,
+                    ),
+                    child: _PassiveDealerNotice(),
+                  ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pageH,
@@ -80,11 +124,14 @@ class DealerDetailScreen extends ConsumerWidget {
                   child: balanceAsync.when(
                     loading: () => const _HeroLoading(),
                     error: (e, _) => Text('Bakiye: $e'),
-                    data: (s) =>
-                        FadeSlideIn(child: _BalanceHero(dealer: d, summary: s)),
+                    data: (s) => FadeSlideIn(
+                      child: _BalanceHero(dealer: d, summary: s),
+                    ),
                   ),
                 ),
-                const SectionLabel(title: AppStrings.dealerDetailSectionActions),
+                const SectionLabel(
+                  title: AppStrings.dealerDetailSectionActions,
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageH,
@@ -125,8 +172,7 @@ class DealerDetailScreen extends ConsumerWidget {
                   child: notesAsync.when(
                     loading: () => const _MiniLoading(),
                     error: (e, _) => Text('Not: $e'),
-                    data: (notes) =>
-                        NotesCard(dealerId: d.id, notes: notes),
+                    data: (notes) => NotesCard(dealerId: d.id, notes: notes),
                   ),
                 ),
               ],
@@ -137,8 +183,72 @@ class DealerDetailScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _confirmSetActive(
+    BuildContext context,
+    WidgetRef ref,
+    Dealer dealer,
+  ) async {
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+
+    final nextActive = !dealer.isActive;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          nextActive
+              ? AppStrings.dealerStatusActiveTitle
+              : AppStrings.dealerStatusPassiveTitle,
+        ),
+        content: Text(
+          nextActive
+              ? AppStrings.dealerStatusActiveBody
+              : AppStrings.dealerStatusPassiveBody,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              nextActive
+                  ? AppStrings.dealerStatusActiveConfirm
+                  : AppStrings.dealerStatusPassiveConfirm,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(dealerRepositoryProvider)
+          .setActive(dealer.id, active: nextActive);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.dealerStatusUpdated)),
+      );
+    } on GuestActionRequiredException {
+      if (!context.mounted) return;
+      await showAuthRequiredSheet(context, ref);
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.dealerStatusUpdateError)),
+      );
+    }
+  }
+
   Future<void> _openPriceSheet(
-      BuildContext context, WidgetRef ref, String dealerId) {
+    BuildContext context,
+    WidgetRef ref,
+    String dealerId,
+  ) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -147,6 +257,65 @@ class DealerDetailScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (ctx) => DealerPriceSheet(dealerId: dealerId),
+    );
+  }
+}
+
+enum _DealerDetailMenuAction { toggleActive }
+
+class _PassiveDealerNotice extends StatelessWidget {
+  const _PassiveDealerNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return PremiumCard(
+      warm: true,
+      padding: const EdgeInsets.all(AppSpacing.l),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.pause_circle_outline_rounded,
+            color: AppColors.textMuted,
+            size: 20,
+          ),
+          SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: Text(
+              AppStrings.dealerDetailPassiveInfo,
+              style: TextStyle(color: AppColors.textSecondary, height: 1.35),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DealerDetailLoadError extends StatelessWidget {
+  const _DealerDetailLoadError({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.pageH),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              AppStrings.dealerDetailLoadError,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.m),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text(AppStrings.dealerRetry),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -165,13 +334,13 @@ class _BalanceHero extends StatelessWidget {
     final balanceColor = balance > 0
         ? AppColors.copper
         : balance < 0
-            ? AppColors.success
-            : AppColors.softGold;
+        ? AppColors.success
+        : AppColors.softGold;
     final tag = balance > 0
         ? AppStrings.dealerDetailHeroDebt
         : balance < 0
-            ? AppStrings.dealerDetailHeroCredit
-            : AppStrings.dealerDetailHeroClosed;
+        ? AppStrings.dealerDetailHeroCredit
+        : AppStrings.dealerDetailHeroClosed;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -301,8 +470,10 @@ class _BalanceHero extends StatelessWidget {
               if (summary.lastPayment != null)
                 _ChipMini(
                   label: AppStrings.dealerDetailChipLastPayment,
-                  value: DateFormat('d MMM', 'tr_TR')
-                      .format(summary.lastPayment!),
+                  value: DateFormat(
+                    'd MMM',
+                    'tr_TR',
+                  ).format(summary.lastPayment!),
                 ),
             ],
           ),
@@ -417,15 +588,15 @@ class _MiniLoading extends StatelessWidget {
   const _MiniLoading();
   @override
   Widget build(BuildContext context) => const SizedBox(
-        height: 64,
-        child: Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 1.6),
-          ),
-        ),
-      );
+    height: 64,
+    child: Center(
+      child: SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 1.6),
+      ),
+    ),
+  );
 }
 
 // ─────────────────────────────────────── Section header w/ CTA
@@ -527,22 +698,19 @@ class _ActionsRow extends ConsumerWidget {
         _ActionChip(
           icon: Icons.bakery_dining_rounded,
           label: AppStrings.dealerActionDelivery,
-          onTap: () =>
-              context.push('${AppRoutes.dealers}/$dealerId/delivery'),
+          onTap: () => context.push('${AppRoutes.dealers}/$dealerId/delivery'),
         ),
         _ActionChip(
           icon: Icons.assignment_returned_rounded,
           label: AppStrings.dealerActionReturn,
           accent: AppColors.info,
-          onTap: () =>
-              context.push('${AppRoutes.dealers}/$dealerId/return'),
+          onTap: () => context.push('${AppRoutes.dealers}/$dealerId/return'),
         ),
         _ActionChip(
           icon: Icons.payments_rounded,
           label: AppStrings.dealerActionPayment,
           accent: AppColors.success,
-          onTap: () =>
-              context.push('${AppRoutes.dealers}/$dealerId/payment'),
+          onTap: () => context.push('${AppRoutes.dealers}/$dealerId/payment'),
         ),
         if (hasDebt)
           _ActionChip(
@@ -573,8 +741,7 @@ class _ActionsRow extends ConsumerWidget {
           icon: Icons.ios_share_rounded,
           label: AppStrings.dealerActionShare,
           accent: AppColors.copper,
-          onTap: () =>
-              context.push('${AppRoutes.dealers}/$dealerId/share'),
+          onTap: () => context.push('${AppRoutes.dealers}/$dealerId/share'),
         ),
       ],
     );
@@ -603,16 +770,10 @@ class _ActionChip extends StatelessWidget {
         onTap: onTap,
         splashColor: accent.withValues(alpha: 0.06),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 11,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            border: Border.all(color: AppColors.borderHairline, width: 0.6),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -781,8 +942,10 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${AppStrings.dealerPriceSheetSaved}'
-              '$productName · ${NumberFormatter.currency(price)}'),
+          content: Text(
+            '${AppStrings.dealerPriceSheetSaved}'
+            '$productName · ${NumberFormatter.currency(price)}',
+          ),
         ),
       );
     } on GuestActionRequiredException {
@@ -914,11 +1077,7 @@ class _TxListState extends State<_TxList> {
         padding: const EdgeInsets.all(AppSpacing.l),
         child: const Row(
           children: [
-            Icon(
-              Icons.history_rounded,
-              color: AppColors.textMuted,
-              size: 18,
-            ),
+            Icon(Icons.history_rounded, color: AppColors.textMuted, size: 18),
             SizedBox(width: AppSpacing.s),
             Expanded(
               child: Text(
@@ -1048,7 +1207,9 @@ class _TypeFilterRow extends StatelessWidget {
           _chip(AppStrings.dealerTxFilterTypePayment, _TxTypeFilter.payment),
           const SizedBox(width: 6),
           _chip(
-              AppStrings.dealerTxFilterTypeAdjustment, _TxTypeFilter.adjustment),
+            AppStrings.dealerTxFilterTypeAdjustment,
+            _TxTypeFilter.adjustment,
+          ),
         ],
       ),
     );
@@ -1108,9 +1269,9 @@ class _TxRow extends StatelessWidget {
     final amount = tx.type == DealerTransactionType.delivery
         ? '+${NumberFormatter.currency(tx.amount)}'
         : tx.type == DealerTransactionType.adjustment
-            ? '${tx.amount >= 0 ? '+' : '−'}'
-                '${NumberFormatter.currency(tx.amount.abs())}'
-            : '−${NumberFormatter.currency(tx.amount)}';
+        ? '${tx.amount >= 0 ? '+' : '−'}'
+              '${NumberFormatter.currency(tx.amount.abs())}'
+        : '−${NumberFormatter.currency(tx.amount)}';
 
     return Padding(
       padding: const EdgeInsets.symmetric(

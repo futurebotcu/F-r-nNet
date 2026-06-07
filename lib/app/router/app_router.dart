@@ -117,6 +117,7 @@ class AppRoutes {
   // Bayi Yönetimi sub-routes
   static const String dealers = '/dealers';
   static const String dealerNew = '/dealers/new';
+  static String dealerEdit(String id) => '/dealers/$id/edit';
   // Sprint 3 — Date-range metrics report screen.
   // Quality Patch v2: opsiyonel `period` query param — Raporlar tab'ından
   // gelirken seçili periyodu transfer eder (`last30Days` / `thisMonth`).
@@ -423,6 +424,11 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.dealerNew,
         builder: (_, __) => const AddDealerScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.dealers}/:id/edit',
+        builder: (_, state) =>
+            AddDealerScreen(dealerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id',

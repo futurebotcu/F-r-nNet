@@ -7,6 +7,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
+import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
@@ -16,11 +17,13 @@ class AddDealerScreen extends ConsumerStatefulWidget {
   const AddDealerScreen({
     super.key,
     this.customerType = DealerCustomerType.bakeryDealer,
+    this.dealerId,
   });
 
-  /// Bayi mi (ticari) yoksa toptan müşteri mi (toptancı). UI etiketleri ve
-  /// kaydedilen `customer_type` sütunu bu değerden türetilir.
+  /// Bayi mi (ticari) yoksa toptan mÃ¼ÅŸteri mi (toptancÄ±). UI etiketleri ve
+  /// kaydedilen `customer_type` sÃ¼tunu bu deÄŸerden tÃ¼retilir.
   final DealerCustomerType customerType;
+  final String? dealerId;
 
   @override
   ConsumerState<AddDealerScreen> createState() => _AddDealerScreenState();
@@ -33,8 +36,10 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
   final _phone = TextEditingController();
   final _note = TextEditingController();
   DealerWorkingType _wt = DealerWorkingType.mixed;
+  Dealer? _editingDealer;
+  String? _hydratedDealerId;
 
-  /// M6B — eski `_area` TextField yerine il + ilçe picker.
+  /// M6B â€” eski `_area` TextField yerine il + ilÃ§e picker.
   TurkeyProvince? _selectedProvince;
   TurkeyDistrict? _selectedDistrict;
 
@@ -54,14 +59,16 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
       return;
     }
     final repo = ref.read(dealerRepositoryProvider);
+    final editing = _editingDealer;
+    final isEditing = editing != null;
     final now = DateTime.now();
-    // M6B — dual-write: label + code.
+    // M6B â€” dual-write: label + code.
     final province = _selectedProvince;
     final district = _selectedDistrict;
     try {
       await repo.upsertDealer(
         Dealer(
-          id: 'd_${now.microsecondsSinceEpoch}',
+          id: editing?.id ?? 'd_${now.microsecondsSinceEpoch}',
           name: _name.text.trim(),
           contactName: _contact.text.trim(),
           phone: _phone.text.trim(),
@@ -70,37 +77,117 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
           cityCode: province?.code,
           districtCode: district?.code,
           workingType: _wt,
+          isActive: editing?.isActive ?? true,
           note: _note.text.trim(),
-          customerType: widget.customerType,
-          createdAt: now,
+          customerType: editing?.customerType ?? widget.customerType,
+          createdAt: editing?.createdAt ?? now,
         ),
       );
     } catch (e) {
-      // V1.3.5 — Supabase/network/validator hatasını kullanıcıya göster.
-      // (Önceden unhandled exception düşüyor, kullanıcı boşta kalıyordu.)
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bayi kaydedilemedi. Lütfen tekrar deneyin.'),
+        SnackBar(
+          content: Text(
+            isEditing
+                ? AppStrings.dealerUpdateError
+                : AppStrings.dealerSaveError,
+          ),
         ),
       );
       return;
     }
     if (!mounted) return;
     Navigator.of(context).pop();
-    final what = widget.customerType == DealerCustomerType.wholesaleCustomer
-        ? 'Müşteri eklendi: '
+    final what = isEditing
+        ? AppStrings.dealerUpdateSnack
+        : widget.customerType == DealerCustomerType.wholesaleCustomer
+        ? 'MÃ¼ÅŸteri eklendi: '
         : AppStrings.dealerSaveSnack;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$what${_name.text.trim()}')),
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$what${_name.text.trim()}')));
+  }
+
+  String? _validatePhone(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return null;
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 10) return AppStrings.dealerFieldPhoneInvalid;
+    return null;
+  }
+
+  void _hydrateFromDealer(Dealer dealer) {
+    if (_hydratedDealerId == dealer.id) return;
+    _hydratedDealerId = dealer.id;
+    _editingDealer = dealer;
+    _name.text = dealer.name;
+    _contact.text = dealer.contactName;
+    _phone.text = dealer.phone;
+    _note.text = dealer.note;
+    _wt = dealer.workingType;
+    _selectedProvince =
+        TurkeyLocations.findProvinceByCode(dealer.cityCode) ??
+        TurkeyLocations.findProvinceByName(dealer.city);
+    _selectedDistrict = TurkeyLocations.findDistrict(
+      _selectedProvince?.code,
+      dealer.districtCode,
     );
+    if (_selectedDistrict == null && dealer.area.isNotEmpty) {
+      for (final district
+          in _selectedProvince?.districts ?? const <TurkeyDistrict>[]) {
+        if (district.name == dealer.area) {
+          _selectedDistrict = district;
+          break;
+        }
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.customerType == DealerCustomerType.wholesaleCustomer
-        ? 'Müşteri Ekle'
+    final isEditing = widget.dealerId != null;
+    final title = isEditing
+        ? AppStrings.dealerEditTitle
+        : widget.customerType == DealerCustomerType.wholesaleCustomer
+        ? 'MÃ¼ÅŸteri Ekle'
         : AppStrings.dealerAddTitle;
+    final dealerId = widget.dealerId;
+    if (dealerId != null) {
+      final dealerAsync = ref.watch(dealerByIdProvider(dealerId));
+      return dealerAsync.when(
+        loading: () => PremiumScaffold(
+          appBar: AppBar(title: Text(title)),
+          body: const Center(child: CircularProgressIndicator()),
+        ),
+        error: (e, _) => PremiumScaffold(
+          appBar: AppBar(title: Text(title)),
+          body: Center(
+            child: _LoadError(
+              onRetry: () => ref.invalidate(dealerByIdProvider(dealerId)),
+            ),
+          ),
+        ),
+        data: (dealer) {
+          if (dealer == null) {
+            return PremiumScaffold(
+              appBar: AppBar(title: Text(title)),
+              body: const Center(child: Text(AppStrings.dealerDetailNotFound)),
+            );
+          }
+          _hydrateFromDealer(dealer);
+          return _buildForm(context, title: title, isEditing: true);
+        },
+      );
+    }
+
+    return _buildForm(context, title: title, isEditing: false);
+  }
+
+  Widget _buildForm(
+    BuildContext context, {
+    required String title,
+    required bool isEditing,
+  }) {
     return PremiumScaffold(
       appBar: AppBar(title: Text(title)),
       body: SafeArea(
@@ -114,6 +201,17 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
               AppSpacing.xxl,
             ),
             children: [
+              PremiumCard(
+                padding: const EdgeInsets.all(AppSpacing.l),
+                child: const Text(
+                  AppStrings.dealerFormIntro,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.l),
               const _Label(AppStrings.dealerFieldName),
               const SizedBox(height: 6),
               TextFormField(
@@ -128,6 +226,8 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
               ),
               const SizedBox(height: AppSpacing.l),
               const _Label(AppStrings.dealerFieldContact),
+              const SizedBox(height: 2),
+              const _Helper(AppStrings.dealerFieldContactHelper),
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -147,24 +247,27 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                       keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(
                         hintText: AppStrings.dealerFieldPhone,
+                        helperText: AppStrings.dealerFieldPhoneHelper,
                       ),
+                      validator: _validatePhone,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.l),
               const _Label(AppStrings.dealerFieldArea),
+              const SizedBox(height: 2),
+              const _Helper(AppStrings.dealerFieldAreaHelper),
               const SizedBox(height: 6),
-              // M6B — il + ilçe picker (eski free-text `_area` kaldırıldı).
+              // M6B â€” il + ilÃ§e picker (eski free-text `_area` kaldÄ±rÄ±ldÄ±).
               Row(
                 children: [
                   Expanded(
                     child: LocationPickerField(
-                      label: 'İl',
+                      label: 'Ä°l',
                       value: _selectedProvince?.name,
                       onTap: () async {
-                        final picked =
-                            await LocationPicker.showProvincePicker(
+                        final picked = await LocationPicker.showProvincePicker(
                           context,
                           initialCode: _selectedProvince?.code,
                         );
@@ -178,22 +281,21 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                       onClear: _selectedProvince == null
                           ? null
                           : () => setState(() {
-                                _selectedProvince = null;
-                                _selectedDistrict = null;
-                              }),
+                              _selectedProvince = null;
+                              _selectedDistrict = null;
+                            }),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.s),
                   Expanded(
                     child: LocationPickerField(
-                      label: 'İlçe',
+                      label: 'Ä°lÃ§e',
                       value: _selectedDistrict?.name,
                       enabled: _selectedProvince != null,
                       onTap: () async {
                         final province = _selectedProvince;
                         if (province == null) return;
-                        final picked =
-                            await LocationPicker.showDistrictPicker(
+                        final picked = await LocationPicker.showDistrictPicker(
                           context,
                           province: province,
                           initialCode: _selectedDistrict?.code,
@@ -211,6 +313,8 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
               ),
               const SizedBox(height: AppSpacing.l),
               const _Label(AppStrings.dealerFieldWorkingType),
+              const SizedBox(height: 2),
+              const _Helper(AppStrings.dealerFieldWorkingTypeHelper),
               const SizedBox(height: 8),
               SegmentedButton<DealerWorkingType>(
                 segments: const [
@@ -245,13 +349,58 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               AppPrimaryButton(
-                label: AppStrings.dealerSaveButton,
+                label: isEditing
+                    ? AppStrings.dealerUpdateButton
+                    : AppStrings.dealerSaveButton,
                 icon: Icons.check_rounded,
                 onPressed: _save,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Helper extends StatelessWidget {
+  const _Helper(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        color: AppColors.textMuted,
+        height: 1.3,
+      ),
+    );
+  }
+}
+
+class _LoadError extends StatelessWidget {
+  const _LoadError({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.pageH),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            AppStrings.dealerDetailLoadError,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.m),
+          OutlinedButton(
+            onPressed: onRetry,
+            child: const Text(AppStrings.dealerRetry),
+          ),
+        ],
       ),
     );
   }

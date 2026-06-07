@@ -1152,6 +1152,7 @@ class AppStrings {
   static const String dealerSectionTitle = 'Bayi Yönetimi';
   static const String dealerListTitle = 'Bayi Yönetimi';
   static const String dealerAddTitle = 'Bayi Ekle';
+  static const String dealerEditTitle = 'Bayiyi Düzenle';
   static const String dealerAddTooltip = 'Bayi ekle';
 
   // List
@@ -1179,25 +1180,62 @@ class AppStrings {
   static const String dealerFieldName = 'Bayi adı';
   static const String dealerFieldNameHint = 'Örn. Hamdi Bakkal';
   static const String dealerFieldNameRequired = 'Bayi adı gerekli';
-  static const String dealerFieldContact = 'İletişim';
+  static const String dealerFieldContact = 'İletişim (opsiyonel)';
   static const String dealerFieldContactPerson = 'Yetkili kişi';
+  static const String dealerFieldContactHelper =
+      'Boş bırakabilirsin; teslimatta hızlı arama için önerilir.';
   static const String dealerFieldPhone = 'Telefon';
+  static const String dealerFieldPhoneHelper =
+      'Örn. 05xx xxx xx xx. En az 10 rakam gir.';
+  static const String dealerFieldPhoneInvalid =
+      'Telefon için en az 10 rakam gir veya boş bırak.';
   static const String dealerFieldArea = 'Bölge / adres';
   static const String dealerFieldAreaHint = 'Örn. Konya · Selçuklu';
+  static const String dealerFieldAreaHelper =
+      'İl/ilçe opsiyonel; bayi listesinde bölge takibi için kullanılır.';
   static const String dealerFieldWorkingType = 'Çalışma tipi';
+  static const String dealerFieldWorkingTypeHelper =
+      'Bayiyle peşin, vadeli veya karma çalışmanı not eder.';
   static const String dealerWorkingCash = 'Peşin';
   static const String dealerWorkingTerm = 'Vadeli';
   static const String dealerWorkingMixed = 'Karma';
   static const String dealerFieldNote = 'Not (opsiyonel)';
   static const String dealerFieldNoteHint =
       'Sabah erken teslim, Cuma tahsilatı vb.';
-  static const String dealerSaveButton = 'Bayiyi Kaydet';
+  static const String dealerSaveButton = 'Bayi Ekle';
+  static const String dealerUpdateButton = 'Değişiklikleri Kaydet';
   static const String dealerSaveSnack = 'Bayi eklendi: ';
+  static const String dealerUpdateSnack = 'Bayi güncellendi: ';
+  static const String dealerSaveError =
+      'Bayi kaydedilemedi. Lütfen bilgileri kontrol edip tekrar dene.';
+  static const String dealerUpdateError =
+      'Bayi güncellenemedi. Lütfen tekrar dene.';
 
   // Detail
   static const String dealerDetailFallbackTitle = 'Bayi';
   static const String dealerDetailNotFound = 'Bayi bulunamadı';
   static const String dealerDetailShareTooltip = 'Hesap özeti & PDF';
+  static const String dealerDetailEditTooltip = 'Bayiyi düzenle';
+  static const String dealerDetailStatusTooltip = 'Bayi durumu';
+  static const String dealerDetailSetPassive = 'Pasifleştir';
+  static const String dealerDetailSetActive = 'Aktifleştir';
+  static const String dealerDetailPassiveInfo =
+      'Pasif bayi listede ayrı görünür; geçmiş teslimat, tahsilat ve bakiye kayıtları silinmez.';
+  static const String dealerStatusPassiveTitle = 'Bayi pasifleştirilsin mi?';
+  static const String dealerStatusPassiveBody =
+      'Bayi aktif iş listenden çıkar. Geçmiş hareketler, bakiye ve raporlar korunur.';
+  static const String dealerStatusActiveTitle =
+      'Bayi tekrar aktifleştirilsin mi?';
+  static const String dealerStatusActiveBody =
+      'Bayi yeniden aktif listede görünür.';
+  static const String dealerStatusPassiveConfirm = 'Pasifleştir';
+  static const String dealerStatusActiveConfirm = 'Aktifleştir';
+  static const String dealerStatusUpdated = 'Bayi durumu güncellendi.';
+  static const String dealerStatusUpdateError =
+      'Bayi durumu güncellenemedi. Lütfen tekrar dene.';
+  static const String dealerDetailLoadError =
+      'Bayi bilgileri yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+  static const String dealerRetry = 'Tekrar dene';
   static const String dealerDetailHeroLabel = 'Cari bakiye';
   static const String dealerDetailHeroDebt = 'BORÇ';
   static const String dealerDetailHeroCredit = 'ALACAK';
