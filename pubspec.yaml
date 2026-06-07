@@ -78,6 +78,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  patrol: ^4.6.1
+
+patrol:
+  app_name: FırınNet
+  android:
+    package_name: com.firinnet.firin_defter
+  ios:
+    bundle_id: com.firinnet.firinDefter
 
 flutter:
   uses-material-design: true

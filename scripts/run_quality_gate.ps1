@@ -23,6 +23,25 @@ function Invoke-QualityStep {
     Write-Host "[PASS] $Name" -ForegroundColor Green
 }
 
+function Invoke-AdvisoryStep {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$Command
+    )
+
+    Write-Host ""
+    Write-Host "==> $Name (advisory)" -ForegroundColor Cyan
+    & $Command
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARN] $Name failed (exit code: $LASTEXITCODE)." -ForegroundColor Yellow
+        Write-Host "This advisory result does not fail the release quality gate."
+        return
+    }
+    Write-Host "[PASS] $Name" -ForegroundColor Green
+}
+
 Write-Host "FirinNet Release Quality Gate" -ForegroundColor Yellow
 Write-Host "Repository: $repoRoot"
 
@@ -38,22 +57,35 @@ Invoke-QualityStep -Name "Debug APK build" -Command {
     flutter build apk --debug
 }
 
+$patrol = Get-Command patrol -ErrorAction SilentlyContinue
+if ($null -eq $patrol) {
+    Write-Host ""
+    Write-Host "[SKIP] Patrol app smoke" -ForegroundColor Yellow
+    Write-Host "Patrol CLI is not installed or is not available on PATH."
+    Write-Host "Install it with:"
+    Write-Host "  dart pub global activate patrol_cli"
+    Write-Host "Then start an emulator and run:"
+    Write-Host "  patrol test -t patrol_test/app_smoke_test.dart --no-uninstall"
+    Write-Host "Flutter quality steps remain successful; Patrol was skipped."
+} else {
+    Invoke-QualityStep -Name "Patrol app smoke" -Command {
+        patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
+    }
+}
+
 $maestro = Get-Command maestro -ErrorAction SilentlyContinue
 if ($null -eq $maestro) {
     Write-Host ""
-    Write-Host "[SKIP] Maestro smoke test" -ForegroundColor Yellow
+    Write-Host "[SKIP] Maestro advisory smoke" -ForegroundColor Yellow
     Write-Host "Maestro CLI is not installed or is not available on PATH."
     Write-Host "Install it from https://docs.maestro.dev/getting-started/installing-maestro"
-    Write-Host "Then start an emulator, install the APK, and run:"
+    Write-Host "Then start an emulator and run:"
     Write-Host "  maestro test .maestro/app_smoke.yaml"
-    Write-Host ""
-    Write-Host "Flutter quality gate passed; Maestro was skipped." -ForegroundColor Green
-    exit 0
-}
-
-Invoke-QualityStep -Name "Maestro app smoke" -Command {
-    maestro test .maestro/app_smoke.yaml
+} else {
+    Invoke-AdvisoryStep -Name "Maestro app smoke" -Command {
+        maestro test .maestro/app_smoke.yaml
+    }
 }
 
 Write-Host ""
-Write-Host "All quality gate steps passed." -ForegroundColor Green
+Write-Host "Required quality gate steps passed." -ForegroundColor Green

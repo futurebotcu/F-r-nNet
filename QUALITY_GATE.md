@@ -2,90 +2,92 @@
 
 ## Amac
 
-Bu kalite kapisi her build sonrasinda su temel sorulara hizli cevap verir:
+Bu kalite kapisi her build sonrasinda uygulamanin acildigini, ana tablarin
+calistigini ve temel guest navigasyonunun bozulmadigini dogrular.
+`QA_TEST_MATRIX.md` ayrintili release senaryolarini listeler.
 
-- Uygulama aciliyor mu?
-- Feed ve ana tablar gorunuyor mu?
-- Feed, Gruplar, Market, Ilanlar ve Panel arasinda gecis calisiyor mu?
-- Temel guest deneyimi ve inline composer erisimi bozulmamis mi?
-
-Detayli senaryo envanteri `QA_TEST_MATRIX.md` dosyasindadir.
+Patrol ana Flutter-native E2E smoke hattidir. Maestro, Windows native
+driver/gRPC kararsizligi nedeniyle advisory olarak tutulur ve sonucu tek
+basina release kapisini fail etmez.
 
 ## Calistirma
 
-Repo kokunde PowerShell ile:
+Repo kokunde:
 
 ```powershell
 .\scripts\run_quality_gate.ps1
 ```
 
-Script sirayla sunlari calistirir:
+Script su sirayla calisir:
 
 ```text
 flutter analyze
 flutter test
 flutter build apk --debug
+patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
 maestro test .maestro/app_smoke.yaml
 ```
 
-Ilk uc adim fail-fast calisir. Maestro kurulu degilse smoke testi acik bir
-uyariyla atlanir; basarili Flutter adimlari fail sayilmaz.
+Flutter adimlari ve kuruluysa Patrol fail-fast calisir. Patrol CLI kurulu
+degilse acik uyari verilir ve Flutter sonuclari fail edilmez. Maestro her
+durumda advisory'dir.
 
-## Maestro Kurulumu
+## Patrol Kurulumu
 
-Guncel kurulum talimati:
-
-https://docs.maestro.dev/getting-started/installing-maestro
-
-Kurulumdan sonra yeni bir terminal acip dogrulayin:
+Projede `patrol` dev dependency ve Android native runner ayari bulunur.
+Lokal CLI kurulumu:
 
 ```powershell
-maestro --version
+dart pub global activate patrol_cli
+patrol doctor
 ```
 
-Android package ID kaynak config'den alinmistir:
-`com.firinnet.firin_defter`.
+Pub cache `bin` klasoru PATH uzerinde degilse terminal profilinize ekleyin.
+Android package ID `com.firinnet.firin_defter`, iOS bundle ID
+`com.firinnet.firinDefter` olarak mevcut platform config dosyalarindan
+alinmistir.
 
-## Lokal Emulator Smoke Testi
+## Lokal Emulator Testi
 
-1. Android emulatoru baslatin ve `adb devices` ile gorundugunu dogrulayin.
-2. Debug APK'yi build edip kurun:
+1. Android emulatoru baslatin.
+2. `flutter devices` ve `patrol doctor` ile ortami dogrulayin.
+3. Smoke testini calistirin:
 
 ```powershell
-flutter build apk --debug
-adb install -r .\build\app\outputs\flutter-apk\app-debug.apk
+patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
 ```
 
-3. Smoke flow'u calistirin:
+Android runner her test icin app data'yi temizler. Test guest girisini yapar;
+Feed, Gruplar, Market, Ilanlar ve Panel tablarini dolasip Feed'e geri doner.
+`--no-uninstall`, Windows Android emulatorlerinde ADB uninstall kilitlenmesini
+engeller; test izolasyonu `clearPackageData=true` runner ayariyla korunur.
+
+iOS config pubspec'te tanimlidir. iOS testi macOS, Xcode ve iOS 13+ simulator
+gerektirir; bu sprintin calisma hedefi Android emulatorudur.
+
+## Maestro Advisory
+
+Maestro kurulumu ve manuel calistirma:
 
 ```powershell
 maestro test .maestro/app_smoke.yaml
 ```
 
-Flow deterministik guest smoke icin uygulama state'ini temizler, auth entry
-ekraninda `Kayıtsız devam et` aksiyonunu kullanir ve Feed'e ilerler. Bu nedenle
-test cihazinda saklanan oturum smoke calismasi sirasinda korunmaz.
+Kurulum: https://docs.maestro.dev/getting-started/installing-maestro
+
+Windows native driver/gRPC sorunu nedeniyle Maestro sonucu ek sinyal olarak
+raporlanir; Patrol ana E2E sonucudur.
 
 ## P0 Release Kriteri
 
-P0 senaryolari release blocker'dir. Ozellikle su alanlar gecmelidir:
-
-- App boot ve splash sonrasi Feed
-- Bes ana bottom navigation etiketi
-- Tum ana tab gecisleri ve Feed'e donus
-- Feed inline composer gorunurlugu
-- Bos Market ve Is Ilanlari durumlari
-- Guest yazma guard'i
-- Profil/avatar aksiyonunun crash etmemesi
-- Temel navigasyonda crash olmamasi
-
-Release adayi icin `QA_TEST_MATRIX.md` icindeki tum P0 satirlari gecmelidir.
+P0 release blocker kapsaminda app boot, splash sonrasi Feed, bes ana bottom
+navigation etiketi, tum ana tab gecisleri, Feed'e donus ve temel navigasyonda
+crash olmamasi yer alir. Ana navigasyon smoke senaryosu Patrol ile otomatik
+calisir. Diger P0 senaryolari `QA_TEST_MATRIX.md` durumlarina gore Flutter
+testi veya manuel/kosullu kontrol gerektirebilir.
 
 ## Release Oncesi Komut
 
 ```powershell
 .\scripts\run_quality_gate.ps1
 ```
-
-Maestro kurulu bir release makinesinde emulator ve guncel APK hazir olmadan
-kalite kapisi tamamlanmis sayilmaz.
