@@ -57,6 +57,10 @@ Invoke-QualityStep -Name "Debug APK build" -Command {
     flutter build apk --debug
 }
 
+Invoke-QualityStep -Name "Golden visual regression" -Command {
+    flutter test test/golden
+}
+
 $patrol = Get-Command patrol -ErrorAction SilentlyContinue
 if ($null -eq $patrol) {
     Write-Host ""

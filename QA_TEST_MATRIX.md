@@ -30,6 +30,11 @@ Oncelik tanimlari:
 | GUARD-001 | Guest guard | P0 | Regression | Guest mod; Feed acik | Inline composer `Paylaş` aksiyonuna dokun | Login/guest guard acilir; composer route'una izinsiz gecilmez | Patrol 02 + Flutter test | Otomatik |
 | PROFILE-001 | Profile/avatar | P0 | Smoke | Guest mod; Feed acik | Header avatarina dokun; guest fallback'i kontrol et; Feed'e don | Profil fallback akisi crash olmadan auth entry'ye gider ve Feed'e donulebilir | Patrol 02 | Otomatik |
 | NAV-003 | Regression smoke | P0 | Soak smoke | Guest mod | Feed > Gruplar > Market > İlanlar > Panel > Feed gecislerini yap | Temel navigasyonda exception, donma veya crash olmaz | Patrol; Maestro advisory | Otomatik |
+| GOLDEN-001 | Feed | P1 | Visual regression | Pinned Flutter/Windows golden ortami | Feed baseline ile render sonucunu karsilastir | Header, segment, inline composer, post karti ve bottom nav degismez | Flutter golden | Otomatik |
+| GOLDEN-002 | Gruplar | P1 | Visual regression | Pinned Flutter/Windows golden ortami | Gruplar baseline ile render sonucunu karsilastir | Header, arama, filtre chipleri, grup kartlari ve bottom nav degismez | Flutter golden | Otomatik |
+| GOLDEN-003 | Market | P1 | Visual regression | Guest/local bos Market | Market empty baseline ile render sonucunu karsilastir | Baslik, kategori chipleri, empty state, CTA ve bottom nav degismez | Flutter golden | Otomatik |
+| GOLDEN-004 | İş İlanları | P1 | Visual regression | Guest/local bos ilan verisi | Is Ilanlari empty baseline ile render sonucunu karsilastir | Baslik, segmentler, empty state ve bottom nav degismez | Flutter golden | Otomatik |
+| GOLDEN-005 | Panel | P1 | Visual regression | Guest profil | Panel baseline ile render sonucunu karsilastir | Misafir header, rol alani, sektor kartlari ve bottom nav degismez | Flutter golden | Otomatik |
 | FEED-002 | Feed | P1 | Regression | Feed acik | Pull-to-refresh yap | Loading tamamlanir; feed kullanilabilir kalir | Manuel | Bekliyor |
 | FEED-003 | Feed | P1 | Regression | Feed verisi bos | Feed ac | Feed empty state anlamli metinle gorunur | Flutter widget/manual | Kosullu |
 | GROUP-002 | Gruplar | P1 | Regression | Guest mod | Grup olusturma aksiyonuna dokun | Guest guard gorunur | Flutter test/manual | Kismi |
