@@ -20,8 +20,8 @@ class AddDealerScreen extends ConsumerStatefulWidget {
     this.dealerId,
   });
 
-  /// Bayi mi (ticari) yoksa toptan mÃ¼ÅŸteri mi (toptancÄ±). UI etiketleri ve
-  /// kaydedilen `customer_type` sÃ¼tunu bu deÄŸerden tÃ¼retilir.
+  /// Bayi mi (ticari) yoksa toptan müşteri mi (toptancı). UI etiketleri ve
+  /// kaydedilen `customer_type` sütunu bu değerden türetilir.
   final DealerCustomerType customerType;
   final String? dealerId;
 
@@ -39,7 +39,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
   Dealer? _editingDealer;
   String? _hydratedDealerId;
 
-  /// M6B â€” eski `_area` TextField yerine il + ilÃ§e picker.
+  /// M6B — eski `_area` TextField yerine il + ilçe picker.
   TurkeyProvince? _selectedProvince;
   TurkeyDistrict? _selectedDistrict;
 
@@ -62,7 +62,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
     final editing = _editingDealer;
     final isEditing = editing != null;
     final now = DateTime.now();
-    // M6B â€” dual-write: label + code.
+    // M6B — dual-write: label + code.
     final province = _selectedProvince;
     final district = _selectedDistrict;
     try {
@@ -101,7 +101,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
     final what = isEditing
         ? AppStrings.dealerUpdateSnack
         : widget.customerType == DealerCustomerType.wholesaleCustomer
-        ? 'MÃ¼ÅŸteri eklendi: '
+        ? 'Müşteri eklendi: '
         : AppStrings.dealerSaveSnack;
     ScaffoldMessenger.of(
       context,
@@ -149,7 +149,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
     final title = isEditing
         ? AppStrings.dealerEditTitle
         : widget.customerType == DealerCustomerType.wholesaleCustomer
-        ? 'MÃ¼ÅŸteri Ekle'
+        ? 'Müşteri Ekle'
         : AppStrings.dealerAddTitle;
     final dealerId = widget.dealerId;
     if (dealerId != null) {
@@ -259,12 +259,12 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
               const SizedBox(height: 2),
               const _Helper(AppStrings.dealerFieldAreaHelper),
               const SizedBox(height: 6),
-              // M6B â€” il + ilÃ§e picker (eski free-text `_area` kaldÄ±rÄ±ldÄ±).
+              // M6B — il + ilçe picker (eski free-text `_area` kaldırıldı).
               Row(
                 children: [
                   Expanded(
                     child: LocationPickerField(
-                      label: 'Ä°l',
+                      label: 'İl',
                       value: _selectedProvince?.name,
                       onTap: () async {
                         final picked = await LocationPicker.showProvincePicker(
@@ -289,7 +289,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                   const SizedBox(width: AppSpacing.s),
                   Expanded(
                     child: LocationPickerField(
-                      label: 'Ä°lÃ§e',
+                      label: 'İlçe',
                       value: _selectedDistrict?.name,
                       enabled: _selectedProvince != null,
                       onTap: () async {

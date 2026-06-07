@@ -1177,6 +1177,8 @@ class AppStrings {
   static const String dealerCardPassiveBadge = 'Pasif';
 
   // Add dealer form
+  static const String dealerFormIntro =
+      'Bayi bilgilerini sade tut; teslimat, tahsilat ve hesap takibi bu kayıt üzerinden yürür.';
   static const String dealerFieldName = 'Bayi adı';
   static const String dealerFieldNameHint = 'Örn. Hamdi Bakkal';
   static const String dealerFieldNameRequired = 'Bayi adı gerekli';
