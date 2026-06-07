@@ -10,6 +10,10 @@ Flutter native golden testleri ana ekranlarin renk, spacing, header, kart,
 empty state ve bottom navigation gorunumlerini sabit baseline PNG'lerle
 karsilastirir. Yeni golden dependency eklenmemistir.
 
+Performance baseline, mevcut build/test/startup/runtime durumunu sadece
+olcume dayali raporlar. Bu asamada optimization hedefi degildir ve release
+blocker sayilmaz; ayrintilar `PERFORMANCE_BASELINE.md` dosyasindadir.
+
 Patrol ana Flutter-native E2E smoke hattidir. Patrol runner ortami stabil hale
 gelene kadar scriptte advisory olarak raporlanir. Maestro, Windows native
 driver/gRPC kararsizligi nedeniyle advisory olarak tutulur.
@@ -39,6 +43,19 @@ Flutter analyze, tum testler, debug build ve golden visual regression adimlari
 fail-fast calisir. Patrol ve Maestro sonuclari ayri raporlanan advisory
 adimlardir; bu asamada ikisi de tek basina release kapisini fail etmez. Patrol
 CLI kurulu degilse acik uyari verilir.
+
+## Performance Baseline
+
+Bu sprintin performans katmani measure-only'dir.
+
+- Ne ölçülür: build/test sureleri, debug APK boyutu, cold start, ana tab
+  geçişleri, feed scroll gözlemi, medya/repository riskleri.
+- Nasıl çalıştırılır: `PERFORMANCE_BASELINE.md` içindeki ölçümlere bakılır;
+  kalite scripti performansı fail-fast yapmaz.
+- Rapor dosyası: [PERFORMANCE_BASELINE.md](C:/dev/firinnet/PERFORMANCE_BASELINE.md)
+- Release blocker mı: hayır, bu sprintte advisory baseline'dir.
+- Bir sonraki aşama: profile/release ortamında yeniden ölçüm ve ardından
+  optimize edilecek tekil darboğazlar.
 
 ## Golden Visual Regression
 

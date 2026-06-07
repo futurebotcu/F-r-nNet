@@ -61,6 +61,9 @@ Invoke-QualityStep -Name "Golden visual regression" -Command {
     flutter test test/golden
 }
 
+Write-Host ""
+Write-Host "[INFO] Performance baseline is advisory only. See PERFORMANCE_BASELINE.md for measured runtime data." -ForegroundColor Yellow
+
 $patrol = Get-Command patrol -ErrorAction SilentlyContinue
 if ($null -eq $patrol) {
     Write-Host ""
