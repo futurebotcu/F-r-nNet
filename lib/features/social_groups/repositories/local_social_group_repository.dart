@@ -450,7 +450,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: 'Konya',
         isPrivate: false,
         maxMembers: 250,
-        currentMemberCount: 187,
+        currentMemberCount: 6,
         createdAt: ago(const Duration(days: 240)),
         tags: const ['konya', 'un', 'bölgesel'],
         visualSeed: 0,
@@ -467,7 +467,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: '',
         isPrivate: false,
         maxMembers: 100,
-        currentMemberCount: 84,
+        currentMemberCount: 4,
         createdAt: ago(const Duration(days: 95)),
         tags: const ['ekşimaya', 'fermantasyon', 'reçete'],
         visualSeed: 1,
@@ -483,8 +483,8 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         ownerId: 'u_mehmet',
         city: 'Gaziantep',
         isPrivate: false,
-        maxMembers: 100,
-        currentMemberCount: 100,
+        maxMembers: 5,
+        currentMemberCount: 5,
         createdAt: ago(const Duration(days: 380)),
         tags: const ['taşfırın', 'usta', 'gaziantep'],
         visualSeed: 2,
@@ -501,7 +501,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: '',
         isPrivate: false,
         maxMembers: null, // sınırsız
-        currentMemberCount: 412,
+        currentMemberCount: 8,
         createdAt: ago(const Duration(days: 520)),
         tags: const ['ekipman', 'mikser', 'fırın'],
         visualSeed: 3,
@@ -518,7 +518,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: 'Konya',
         isPrivate: false,
         maxMembers: 250,
-        currentMemberCount: 156,
+        currentMemberCount: 7,
         createdAt: ago(const Duration(days: 180)),
         tags: const ['un', 'hammadde', 'tip550'],
         visualSeed: 4,
@@ -535,7 +535,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: '',
         isPrivate: false,
         maxMembers: 100,
-        currentMemberCount: 67,
+        currentMemberCount: 3,
         createdAt: ago(const Duration(days: 60)),
         tags: const ['bayi', 'dağıtım'],
         visualSeed: 5,
@@ -552,7 +552,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: '',
         isPrivate: false,
         maxMembers: 250,
-        currentMemberCount: 143,
+        currentMemberCount: 5,
         createdAt: ago(const Duration(days: 30)),
         tags: const ['usta', 'iş', 'vardiya'],
         visualSeed: 6,
@@ -569,7 +569,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: 'Şanlıurfa',
         isPrivate: false,
         maxMembers: 50,
-        currentMemberCount: 38,
+        currentMemberCount: 2,
         createdAt: ago(const Duration(days: 12)),
         tags: const ['susam', 'maya', 'yağ', 'toptan'],
         visualSeed: 7,
@@ -586,7 +586,7 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
         city: 'İstanbul',
         isPrivate: true,
         maxMembers: 50,
-        currentMemberCount: 28,
+        currentMemberCount: 3,
         createdAt: ago(const Duration(days: 45)),
         tags: const ['istanbul', 'pastane'],
         visualSeed: 0,
@@ -594,63 +594,5 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
     ];
     _groups.addAll(seedGroups);
 
-    // Mevcut kullanıcı 2 gruba zaten üye gibi — ilk açılışta dolu görünür.
-    _joined.addAll(['g_eksi_maya', 'g_un_tip550']);
-
-    // Mock mesajlar (3 grup için)
-    _messages.addAll([
-      GroupMessage(
-        id: 'm1',
-        groupId: 'g_eksi_maya',
-        authorName: 'Hasan Kara',
-        authorRole: 'Usta Fırıncı · Konya',
-        text: 'Bugün Tip 550 un kullanan var mı? Yeni hasattan numune '
-            'aldım, protein 13.2 — ekşi mayada nasıl davranıyor?',
-        createdAt: ago(const Duration(hours: 2)),
-        isPinned: true,
-        reactionCount: 12,
-      ),
-      GroupMessage(
-        id: 'm2',
-        groupId: 'g_eksi_maya',
-        authorName: 'Selin Ateş',
-        authorRole: 'Pastacı · İstanbul',
-        text: 'Simitte yaz mayası oranını düşüren oldu mu? %0.8\'e '
-            'çekince fermantasyon süresini uzattım, sonuç çok güzel.',
-        createdAt: ago(const Duration(hours: 5)),
-        reactionCount: 8,
-      ),
-      GroupMessage(
-        id: 'm3',
-        groupId: 'g_un_tip550',
-        authorName: 'Konya Değirmen',
-        authorRole: 'Uncu · Toptan',
-        text: 'Yeni hasat ekstra unu çıktı, 25 kg paket toplu alımda '
-            'avantajlı. Protein 13.2, glüten W 290.',
-        createdAt: ago(const Duration(hours: 8)),
-        isPinned: true,
-        reactionCount: 21,
-      ),
-      GroupMessage(
-        id: 'm4',
-        groupId: 'g_konya_unciler',
-        authorName: 'Mehmet Taş Fırın',
-        authorRole: 'Fırın Sahibi · Gaziantep',
-        text: 'Konya\'dan uygun susam tedarikçisi arıyorum. Kg fiyatı '
-            've minimum sipariş bilgisi olan?',
-        createdAt: ago(const Duration(hours: 18)),
-        reactionCount: 6,
-      ),
-      GroupMessage(
-        id: 'm5',
-        groupId: 'g_ekipman_alımsatım',
-        authorName: 'Kara Endüstri',
-        authorRole: 'Ekipman · İstanbul',
-        text: 'Spiral mikser için ikinci el önerisi olan var mı? 80 L, '
-            'paslanmaz, 3 hız tercihim.',
-        createdAt: ago(const Duration(hours: 22)),
-        reactionCount: 4,
-      ),
-    ]);
   }
 }

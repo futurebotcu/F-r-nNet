@@ -662,31 +662,9 @@ class SupabaseFeedRepository implements FeedRepository {
 
   @override
   Future<List<FeedInsight>> listInsights() async {
-    // V1: Insight kartları statik kalır — gerçek metric backend'i ileride.
-    // LocalFeedRepository ile aynı içerik (UX'in tutarlılığı için).
-    return const <FeedInsight>[
-      FeedInsight(
-        kind: FeedInsightKind.trending,
-        headline: 'Bugün ekşi maya konuşuluyor',
-        body:
-            'Ekşi Maya Atölyesi grubunda yaz mayası tartışması son 24 saatte '
-            '37 yorum aldı. Konya / İstanbul ustaları aktif.',
-      ),
-      FeedInsight(
-        kind: FeedInsightKind.topConversation,
-        headline: 'Tip 550 yeni hasat',
-        body:
-            'Bu hafta en çok konuşulan: protein 13.2 / W 290 yeni hasat un. '
-            '4 farklı değirmen, 12 farklı şehirden geri bildirim.',
-      ),
-      FeedInsight(
-        kind: FeedInsightKind.newGroups,
-        headline: '3 yeni bölgesel grup',
-        body:
-            'Son 7 günde Bursa, İzmir Karşıyaka ve Antep\'te yeni fırıncı '
-            'grupları açıldı. Yakındaki ustaları takip et.',
-      ),
-    ];
+    // Gerçek bir aggregate metric kaynağı bağlanana kadar aktivite iddiası
+    // göstermeyiz.
+    return const <FeedInsight>[];
   }
 
   // ─────────────────────────────────────── Comments (V1 P1-B)

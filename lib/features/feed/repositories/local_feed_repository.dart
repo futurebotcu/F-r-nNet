@@ -268,29 +268,7 @@ class LocalFeedRepository implements FeedRepository {
 
   @override
   Future<List<FeedInsight>> listInsights() async {
-    return const <FeedInsight>[
-      FeedInsight(
-        kind: FeedInsightKind.trending,
-        headline: 'Bugün ekşi maya konuşuluyor',
-        body:
-            'Ekşi Maya Atölyesi grubunda yaz mayası tartışması son 24 saatte '
-            '37 yorum aldı. Konya / İstanbul ustaları aktif.',
-      ),
-      FeedInsight(
-        kind: FeedInsightKind.topConversation,
-        headline: 'Tip 550 yeni hasat',
-        body:
-            'Bu hafta en çok konuşulan: protein 13.2 / W 290 yeni hasat un. '
-            '4 farklı değirmen, 12 farklı şehirden geri bildirim.',
-      ),
-      FeedInsight(
-        kind: FeedInsightKind.newGroups,
-        headline: '3 yeni bölgesel grup',
-        body:
-            'Son 7 günde Bursa, İzmir Karşıyaka ve Antep\'te yeni fırıncı '
-            'grupları açıldı. Yakındaki ustaları takip et.',
-      ),
-    ];
+    return const <FeedInsight>[];
   }
 
   // ─────────────────────────────────────── Comments (V1 P1-B)
@@ -392,7 +370,7 @@ class LocalFeedRepository implements FeedRepository {
         id: 'fp_seed_1',
         ownerId: 'seed_owner_1',
         type: PostType.production,
-        author: 'Hasan Kara',
+        author: 'Örnek · Hasan Kara',
         role: 'Usta Fırıncı · Konya',
         text:
             'Tam buğday simit denemeleri 90 dakika fermantasyonla çok daha güzel '
@@ -401,14 +379,14 @@ class LocalFeedRepository implements FeedRepository {
         createdAt: ago(const Duration(hours: 2)),
         tags: const ['ekşimaya', 'simit', 'taşfırın'],
         gradient: _gradients[0],
-        likeCount: 142,
-        commentCount: 23,
+        likeCount: 2,
+        commentCount: 1,
       ),
       FeedPost(
         id: 'fp_seed_2',
         ownerId: 'seed_owner_2',
         type: PostType.supply,
-        author: 'Konya Değirmen',
+        author: 'Örnek · Konya Değirmen',
         role: 'Uncu · Toptan tedarik',
         text:
             'Yeni hasat ekstra unumuz analiz raporlarıyla birlikte çıktı. '
@@ -417,14 +395,14 @@ class LocalFeedRepository implements FeedRepository {
         createdAt: ago(const Duration(hours: 5)),
         tags: const ['un', 'tip550', 'tedarik'],
         gradient: _gradients[1],
-        likeCount: 89,
-        commentCount: 12,
+        likeCount: 1,
+        commentCount: 0,
       ),
       FeedPost(
         id: 'fp_seed_3',
         ownerId: 'seed_owner_3',
         type: PostType.question,
-        author: 'Selin Ateş',
+        author: 'Örnek · Selin Ateş',
         role: 'Pastacı · İstanbul Kadıköy',
         text:
             'Tepsi börek için tahin–pekmez sosu dengesi nasıl ayarlanmalı? '
@@ -433,14 +411,14 @@ class LocalFeedRepository implements FeedRepository {
         createdAt: ago(const Duration(hours: 8)),
         tags: const ['börek', 'tarif', 'tahin'],
         gradient: _gradients[2],
-        likeCount: 64,
-        commentCount: 18,
+        likeCount: 2,
+        commentCount: 1,
       ),
       FeedPost(
         id: 'fp_seed_4',
         ownerId: 'seed_owner_4',
         type: PostType.equipment,
-        author: 'Kara Endüstri',
+        author: 'Örnek · Kara Endüstri',
         role: 'Ekipman · İstanbul Bayrampaşa',
         text:
             'Spiral mikser 80 L paslanmaz, 3 hız — 2022 model, az kullanılmış. '
@@ -449,14 +427,14 @@ class LocalFeedRepository implements FeedRepository {
         createdAt: ago(const Duration(hours: 14)),
         tags: const ['ekipman', 'mikser', 'ikinciel'],
         gradient: _gradients[3],
-        likeCount: 47,
-        commentCount: 9,
+        likeCount: 1,
+        commentCount: 0,
       ),
       FeedPost(
         id: 'fp_seed_5',
         ownerId: 'seed_owner_5',
         type: PostType.job,
-        author: 'Konak Fırını',
+        author: 'Örnek · Konak Fırını',
         role: 'Fırın · İstanbul Kadıköy',
         text:
             'Taş fırın ustası arıyoruz. 5+ yıl deneyim, gece vardiyası, '
@@ -464,14 +442,14 @@ class LocalFeedRepository implements FeedRepository {
         createdAt: ago(const Duration(hours: 20)),
         tags: const ['usta', 'taşfırın', 'iş'],
         gradient: _gradients[4],
-        likeCount: 32,
-        commentCount: 6,
+        likeCount: 0,
+        commentCount: 0,
       ),
       FeedPost(
         id: 'fp_seed_6',
         ownerId: 'seed_owner_6',
         type: PostType.production,
-        author: 'Mehmet Taş Fırın',
+        author: 'Örnek · Mehmet Taş Fırın',
         role: 'Fırın Sahibi · Gaziantep',
         text:
             'Gece üretiminde taş fırın 320° → 280° iniş eğrisini test ediyoruz. '
@@ -480,8 +458,8 @@ class LocalFeedRepository implements FeedRepository {
         createdAt: ago(const Duration(days: 1)),
         tags: const ['taşfırın', 'geceüretimi', 'ekmek'],
         gradient: _gradients[5],
-        likeCount: 304,
-        commentCount: 56,
+        likeCount: 3,
+        commentCount: 1,
       ),
       // Seed'de 1 group highlight örneği — gerçek injection provider tarafında
       // popüler gruplardan dinamik üretilir.
@@ -489,7 +467,7 @@ class LocalFeedRepository implements FeedRepository {
         id: 'fp_seed_g1',
         ownerId: 'seed_owner_g1',
         type: PostType.groupHighlight,
-        author: 'Konya Değirmen',
+        author: 'Örnek · Konya Değirmen',
         role: 'Uncu · Toptan',
         text:
             'Yeni hasat ekstra unu çıktı, 25 kg paket toplu alımda avantajlı. '
@@ -497,8 +475,8 @@ class LocalFeedRepository implements FeedRepository {
         createdAt: ago(const Duration(hours: 3)),
         tags: const ['un', 'tip550'],
         gradient: _gradients[6],
-        likeCount: 21,
-        commentCount: 5,
+        likeCount: 1,
+        commentCount: 0,
         groupId: 'g_un_tip550',
         groupName: 'Un & Hammadde Pazarı',
       ),

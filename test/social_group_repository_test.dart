@@ -32,7 +32,7 @@ void main() {
   group('LocalSocialGroupRepository', () {
     test('limit dolduysa join engellenir (full)', () async {
       final repo = LocalSocialGroupRepository(seed: true);
-      // Seed'de g_taşfırın 100/100 dolu.
+      // Düşük yoğunluklu örnek grupta limit dolu.
       final g = await repo.getGroup('g_taşfırın');
       expect(g!.isFull, isTrue);
 
@@ -40,41 +40,43 @@ void main() {
       expect(result, GroupJoinResult.full);
 
       final after = await repo.getGroup('g_taşfırın');
-      expect(after!.currentMemberCount, 100); // değişmedi
+      expect(after!.currentMemberCount, 5); // değişmedi
     });
 
     test('limit dolmadıysa join currentMemberCount\'u artırır', () async {
       final repo = LocalSocialGroupRepository(seed: true);
-      // Seed'de g_bayi_dagitim 67/100.
+      // Seed'de g_bayi_dagitim 3/100.
       final before = await repo.getGroup('g_bayi_dagitim');
-      expect(before!.currentMemberCount, 67);
+      expect(before!.currentMemberCount, 3);
 
       final r = await repo.joinGroup('g_bayi_dagitim');
       expect(r, GroupJoinResult.success);
 
       final after = await repo.getGroup('g_bayi_dagitim');
-      expect(after!.currentMemberCount, 68);
+      expect(after!.currentMemberCount, 4);
       expect(repo.isJoined('g_bayi_dagitim'), isTrue);
     });
 
     test('zaten üye olan tekrar joinleyemez', () async {
       final repo = LocalSocialGroupRepository(seed: true);
-      // Seed'de _joined zaten g_eksi_maya barındırıyor.
+      final first = await repo.joinGroup('g_eksi_maya');
+      expect(first, GroupJoinResult.success);
+
       final r = await repo.joinGroup('g_eksi_maya');
       expect(r, GroupJoinResult.alreadyJoined);
     });
 
     test('leave currentMemberCount\'u azaltır ve üyelikten çıkarır', () async {
       final repo = LocalSocialGroupRepository(seed: true);
-      // g_eksi_maya 84/100, kullanıcı zaten üye.
+      await repo.joinGroup('g_eksi_maya');
       final before = await repo.getGroup('g_eksi_maya');
-      expect(before!.currentMemberCount, 84);
+      expect(before!.currentMemberCount, 5);
       expect(repo.isJoined('g_eksi_maya'), isTrue);
 
       await repo.leaveGroup('g_eksi_maya');
 
       final after = await repo.getGroup('g_eksi_maya');
-      expect(after!.currentMemberCount, 83);
+      expect(after!.currentMemberCount, 4);
       expect(repo.isJoined('g_eksi_maya'), isFalse);
     });
 
@@ -106,23 +108,17 @@ void main() {
 
     test('joined groups doğru listelenir', () async {
       final repo = LocalSocialGroupRepository(seed: true);
-      // Seed: g_eksi_maya + g_un_tip550
       var joined = await repo.listJoined();
-      expect(joined.length, 2);
-      expect(joined.map((g) => g.id).toSet(),
-          {'g_eksi_maya', 'g_un_tip550'});
+      expect(joined, isEmpty);
 
-      // Yeni gruba katıl + tekrar listele
       await repo.joinGroup('g_bayi_dagitim');
       joined = await repo.listJoined();
-      expect(joined.length, 3);
+      expect(joined.length, 1);
       expect(joined.any((g) => g.id == 'g_bayi_dagitim'), isTrue);
 
-      // Ayrılınca listeden düşmeli
-      await repo.leaveGroup('g_eksi_maya');
+      await repo.leaveGroup('g_bayi_dagitim');
       joined = await repo.listJoined();
-      expect(joined.length, 2);
-      expect(joined.any((g) => g.id == 'g_eksi_maya'), isFalse);
+      expect(joined, isEmpty);
     });
 
     test('createGroup yeni grubu listeye ekler ve owner\'ı joined yapar',

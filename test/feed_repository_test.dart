@@ -55,15 +55,15 @@ void main() {
       final posts = await repo.listPosts();
       final p = posts.firstWhere((x) => x.id == 'fp_seed_1');
       expect(p.isLiked, isFalse);
-      expect(p.likeCount, 142);
+      expect(p.likeCount, 2);
 
       final liked = await repo.toggleLike('fp_seed_1');
       expect(liked.isLiked, isTrue);
-      expect(liked.likeCount, 143);
+      expect(liked.likeCount, 3);
 
       final unliked = await repo.toggleLike('fp_seed_1');
       expect(unliked.isLiked, isFalse);
-      expect(unliked.likeCount, 142);
+      expect(unliked.likeCount, 2);
     });
 
     test('toggleSave — sadece flag değişir, count değişmez', () async {
@@ -114,13 +114,10 @@ void main() {
       }
     });
 
-    test('listInsights 3 sosyal büyüme rozet kartı döner', () async {
+    test('listInsights gerçek metrik kaynağı yokken boş döner', () async {
       final repo = LocalFeedRepository(seed: true);
       final insights = await repo.listInsights();
-      expect(insights.length, 3);
-      // Her kart tipinin tek bir kartı olmalı.
-      final kinds = insights.map((i) => i.kind).toSet();
-      expect(kinds.length, 3);
+      expect(insights, isEmpty);
     });
   });
 
