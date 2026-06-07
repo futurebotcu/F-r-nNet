@@ -26,6 +26,7 @@ flutter test
 flutter build apk --debug
 patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
 patrol test -t patrol_test/guest_guard_empty_profile_smoke_test.dart --no-uninstall
+patrol test -t patrol_test/cta_guard_settings_legal_smoke_test.dart --no-uninstall
 maestro test .maestro/app_smoke.yaml
 ```
 
@@ -63,6 +64,7 @@ alinmistir.
 - App navigation smoke: 1/1 pass
 - Stability verification: 3/3 ardisik app navigation smoke pass
 - Guest/empty/profile smoke: 1/1 pass, 21/21 adim
+- CTA/settings/legal smoke: 1/1 pass, 33/33 adim
 - Status: verified release gate candidate
 
 Patrol kapsam katmanlari:
@@ -71,6 +73,9 @@ Patrol kapsam katmanlari:
   ana navigasyon smoke.
 - Patrol 02: inline composer, guest write guard, Market empty state + CTA,
   Is Ilanlari iki segment empty state ve guest profile/avatar fallback smoke.
+- Patrol 03: group join, Market create ve Is Ilanlari create CTA guest guard;
+  guest profile fallback; Kullanim Sartlari ve Gizlilik Politikasi navigasyonu;
+  Feed'e guvenli donus smoke.
 
 API 37 / Android 17 pre-release 16 KB page-size image'da Android Test
 Orchestrator instrumentation'i test selectorlerine ulasmadan erken kapandi.
@@ -100,10 +105,19 @@ patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
 patrol test -t patrol_test/guest_guard_empty_profile_smoke_test.dart --no-uninstall
 ```
 
+6. CTA/settings/legal smoke testini calistirin:
+
+```powershell
+patrol test -t patrol_test/cta_guard_settings_legal_smoke_test.dart --no-uninstall
+```
+
 Android runner her test icin app data'yi temizler. Test guest girisini yapar;
 Feed, Gruplar, Market, Ilanlar ve Panel tablarini dolasip Feed'e geri doner.
 Patrol 02 gercek login veya write yapmaz; guest guard'i, local bos veri
 durumlarini ve guest avatar fallback'ini dogrular.
+Patrol 03 gercek join, ilan olusturma veya login yapmaz; uc CTA'nin guest
+guard'ini ve guest profil fallback'indeki iki legal sayfanin acilip geri
+donulebildigini dogrular.
 `--no-uninstall`, Windows Android emulatorlerinde ADB uninstall kilitlenmesini
 engeller; test izolasyonu `clearPackageData=true` runner ayariyla korunur.
 

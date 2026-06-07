@@ -34,12 +34,16 @@ Oncelik tanimlari:
 | FEED-003 | Feed | P1 | Regression | Feed verisi bos | Feed ac | Feed empty state anlamli metinle gorunur | Flutter widget/manual | Kosullu |
 | GROUP-002 | Gruplar | P1 | Regression | Guest mod | Grup olusturma aksiyonuna dokun | Guest guard gorunur | Flutter test/manual | Kismi |
 | GROUP-003 | Gruplar | P1 | Smoke | Gruplar acik | Arama alanina metin gir; temizle | Liste filtrelenir ve ekran crash etmez | Manuel | Bekliyor |
+| GROUP-004 | Gruplar | P1 | Regression | Guest mod; Gruplar acik | Bir public grup kartinda `Katıl` aksiyonuna dokun | Guest guard gorunur; gercek uyelik olusmaz | Patrol 03 | Otomatik |
 | MARKET-003 | Market | P1 | Regression | Market acik | Filtreleri ac; bir filtre sec; temizle | Filtre durumu ve liste tutarli kalir | Flutter test/manual | Kismi |
+| MARKET-004 | Market | P1 | Regression | Guest mod; Market bos | `İlk ilanı oluştur` CTA'sina dokun | Guest guard gorunur; ilan formuna izinsiz gecilmez | Patrol 03 | Otomatik |
 | JOBS-003 | İş İlanları | P1 | Regression | İlanlar acik | Usta Arıyor ve İş Arıyor segmentleri arasinda gec | Her iki segment acilir; ekran crash etmez | Flutter test/manual | Kismi |
+| JOBS-004 | İş İlanları | P1 | Regression | Guest mod; İlanlar acik | Header create aksiyonuna dokun | Guest guard gorunur; ilan formuna izinsiz gecilmez | Patrol 03 | Otomatik |
 | PANEL-002 | Panel | P1 | Smoke | Guest mod | Panel tabini ac; ilk kullanilabilir karta dokun | Kart dogru ekrana gider veya kontrollu bilgi verir | Manuel | Bekliyor |
 | COMPOSER-002 | Inline composer | P1 | Regression | Guest mod; Feed acik | Inline composer yazma aksiyonuna dokun | Guest guard gorunur; composer'a izinsiz gecilmez | Patrol 02 + Flutter test | Otomatik |
 | PROFILE-002 | Profile/avatar | P1 | Regression | Auth kullanici | Avatar aksiyonuna dokun | Kullanicinin public profil rotasi acilir | Flutter test/manual | Kismi |
-| LEGAL-001 | Settings/legal | P1 | Smoke | Ayarlar ekranina erisim | Kosullar ve Gizlilik ekranlarini ac | Metinler gorunur; geri navigasyon calisir | Manuel | Bekliyor |
+| SETTINGS-001 | Profile/settings | P1 | Smoke | Guest mod; Feed acik | Avatar aksiyonuna dokun | Guest profile/settings fallback auth entry'yi crash olmadan acar | Patrol 03 | Otomatik |
+| LEGAL-001 | Settings/legal | P1 | Smoke | Guest profile fallback acik | Kullanim Sartlari ve Gizlilik Politikasi ekranlarini ac; geri don | Iki legal ekran acilir; geri navigasyon calisir | Patrol 03 | Otomatik |
 | REG-001 | Regression smoke | P1 | Static | Repo hazir | `flutter analyze` calistir | Analyzer issue raporlamaz | PowerShell | Otomatik |
 | REG-002 | Regression smoke | P1 | Automated | Repo hazir | `flutter test` calistir | Tum Flutter testleri gecer | PowerShell | Otomatik |
 | REG-003 | Regression smoke | P2 | Build | Android toolchain hazir | Debug APK build et | APK basariyla uretilir | PowerShell | Otomatik |

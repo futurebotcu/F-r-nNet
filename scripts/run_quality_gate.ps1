@@ -67,6 +67,7 @@ if ($null -eq $patrol) {
     Write-Host "Then start an emulator and run:"
     Write-Host "  patrol test -t patrol_test/app_smoke_test.dart --no-uninstall"
     Write-Host "  patrol test -t patrol_test/guest_guard_empty_profile_smoke_test.dart --no-uninstall"
+    Write-Host "  patrol test -t patrol_test/cta_guard_settings_legal_smoke_test.dart --no-uninstall"
     Write-Host "Flutter quality steps remain successful; Patrol was skipped."
 } else {
     Write-Host ""
@@ -77,6 +78,9 @@ if ($null -eq $patrol) {
     }
     Invoke-AdvisoryStep -Name "Patrol guest/empty/profile smoke (stabilization)" -Command {
         patrol test -t patrol_test/guest_guard_empty_profile_smoke_test.dart --no-uninstall
+    }
+    Invoke-AdvisoryStep -Name "Patrol CTA/settings/legal smoke (stabilization)" -Command {
+        patrol test -t patrol_test/cta_guard_settings_legal_smoke_test.dart --no-uninstall
     }
 }
 
