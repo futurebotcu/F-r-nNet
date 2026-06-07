@@ -1433,14 +1433,14 @@ class AppStrings {
       'Düzeltme kaydedilemedi. Lütfen tekrar dene.';
 
   // Price sheet (V1.1)
-  static const String dealerPriceSheetTitle = 'Fiyat ekle / güncelle';
+  static const String dealerPriceSheetTitle = 'Geçerli fiyat ekle';
   static const String dealerPriceSheetProduct = 'Ürün';
   static const String dealerPriceSheetUnitPrice = 'Birim fiyat';
   static const String dealerPriceSheetValidFrom = 'Geçerlilik';
-  static const String dealerPriceSheetSave = 'Fiyatı kaydet';
+  static const String dealerPriceSheetSave = 'Kaydet';
   static const String dealerPriceSheetSaved = 'Fiyat kaydedildi: ';
   static const String dealerPriceSheetNoteHint =
-      'Eski fiyat geçmişte kalır, yeni fiyat aktif olur.';
+      'Eski fiyat geçmişte kalır; bu kayıt yalnızca sonraki işlemlerde geçerli olur.';
   // V1.4 P1.22 — addPrice exception olursa ham hata sızmasın; sheet açık
   // kalır, kullanıcı tekrar deneyebilir.
   static const String dealerPriceSaveError =
