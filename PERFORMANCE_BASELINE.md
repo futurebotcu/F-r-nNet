@@ -8,9 +8,10 @@
 - Device: `emulator-5554`
 - Emulator model: `sdk_gphone64_x86_64`
 - API level: `36`
-- Build mode baseline: `debug`
+- Build mode baseline: `debug`, `profile`
 - Test date: `2026-06-07 15:14 +03:00`
-- Commit hash: `a6302de`
+- Report commit: `86ffcac`
+- App code baseline measured: `a6302de`
 
 ## Build/Test Baseline
 
@@ -22,6 +23,8 @@ These are baseline observations, not optimization targets.
 | `flutter analyze` | PASS | ~1.2s reported by Flutter |
 | `flutter test` | PASS, `1.233` tests | ~30.3s |
 | `flutter build apk --debug` | PASS | ~11.0s |
+| `flutter build apk --profile` | PASS | ~79.2s |
+| `flutter build apk --release` | FAIL, signing not ready | ~5.9s |
 | `flutter test test/golden` | PASS | ~5.1s |
 | `patrol test -t patrol_test/app_smoke_test.dart -d emulator-5554` | PASS, `13/13` | ~34.6s |
 | `patrol test -t patrol_test/guest_guard_empty_profile_smoke_test.dart -d emulator-5554` | PASS, `21/21` | ~33.9s |
@@ -33,6 +36,32 @@ These are baseline observations, not optimization targets.
 - Approximate size: `222.4 MiB`
 - Split artifacts: none observed for this debug build; only `app-debug.apk` and checksum file were present
 - Note: this is a debug APK baseline, not a release size baseline
+- `build/app/outputs/flutter-apk/app-profile.apk`: `99,109,415` bytes
+- Approximate size: `94.5 MiB`
+- Split artifacts: none observed for the profile build; only `app-profile.apk` and checksum file were present
+- Release artifact: not available yet because release signing is not configured
+
+## Profile/Release Measurement
+
+This sprint adds a profile-pass measurement to narrow the gap between debug
+and user-facing runtime.
+
+Observed comparison:
+
+- Debug APK size: `233,210,760` bytes
+- Profile APK size: `99,109,415` bytes
+- Debug cold start: `10,779` ms
+- Profile cold start: `1,646` ms
+- Release build: not available; `android/key.properties` is missing
+
+Interpretation:
+
+- Profile APK is materially smaller than debug and starts much faster on the
+  pinned emulator.
+- Release signing must be configured before a true release APK/AAB baseline can
+  be collected.
+- No code changes were made for performance; this remains a measure-only
+  baseline.
 
 ## App Startup
 
@@ -50,10 +79,25 @@ Observed result:
 - `Activity`: `com.firinnet.firin_defter/.MainActivity`
 - `Complete`: yes
 
+Profile cold-start measurement on the same emulator:
+
+```powershell
+adb -s emulator-5554 shell am start -W -S -n com.firinnet.firin_defter/.MainActivity
+```
+
+Observed result:
+
+- `LaunchState`: `COLD`
+- `TotalTime`: `1641` ms
+- `WaitTime`: `1646` ms
+- `Complete`: yes
+
 Interpretation:
 
 - Debug cold start is slow enough to notice, but this baseline is still
   measure-only.
+- Profile cold start is much closer to the user-facing runtime picture and is
+  the baseline to compare against future optimization work.
 - The Patrol boot smoke confirmed the app reaches Feed and the main tabs on the
   same emulator without crash.
 
@@ -70,6 +114,8 @@ Qualitative observation:
 
 - No visible crash or obvious freeze during tab switching in the smoke runs.
 - Tab transitions felt acceptable in debug on the pinned emulator.
+- Profile navigation sampling also reached Gruplar, Market, İlanlar, Panel and
+  back to Feed through the live UI hierarchy without visible freeze.
 - No profiler trace was collected in this sprint.
 
 ## Feed Runtime
@@ -168,5 +214,7 @@ sprint.
 
 - Release blocker today: no, not from this baseline alone.
 - Advisory note: debug cold start is slow, but that is not a release verdict.
+- Release signing is not ready yet, so a true release APK/AAB baseline was not
+  collected.
 - Next performance sprint should use profile/release measurements before any
   code changes.

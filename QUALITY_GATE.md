@@ -12,7 +12,9 @@ karsilastirir. Yeni golden dependency eklenmemistir.
 
 Performance baseline, mevcut build/test/startup/runtime durumunu sadece
 olcume dayali raporlar. Bu asamada optimization hedefi degildir ve release
-blocker sayilmaz; ayrintilar `PERFORMANCE_BASELINE.md` dosyasindadir.
+blocker sayilmaz; ayrintilar `PERFORMANCE_BASELINE.md` dosyasindadir. Profile
+APK ölçümü eklendi; release signing hazır değilse bunun nedeni de aynı raporda
+yer alır.
 
 Patrol ana Flutter-native E2E smoke hattidir. Patrol runner ortami stabil hale
 gelene kadar scriptte advisory olarak raporlanir. Maestro, Windows native
