@@ -6,9 +6,9 @@ Bu kalite kapisi her build sonrasinda uygulamanin acildigini, ana tablarin
 calistigini ve temel guest navigasyonunun bozulmadigini dogrular.
 `QA_TEST_MATRIX.md` ayrintili release senaryolarini listeler.
 
-Patrol ana Flutter-native E2E smoke hattidir. Maestro, Windows native
-driver/gRPC kararsizligi nedeniyle advisory olarak tutulur ve sonucu tek
-basina release kapisini fail etmez.
+Patrol ana Flutter-native E2E smoke hattidir. Patrol runner ortami stabil hale
+gelene kadar scriptte advisory olarak raporlanir. Maestro, Windows native
+driver/gRPC kararsizligi nedeniyle advisory olarak tutulur.
 
 ## Calistirma
 
@@ -28,9 +28,9 @@ patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
 maestro test .maestro/app_smoke.yaml
 ```
 
-Flutter adimlari ve kuruluysa Patrol fail-fast calisir. Patrol CLI kurulu
-degilse acik uyari verilir ve Flutter sonuclari fail edilmez. Maestro her
-durumda advisory'dir.
+Flutter adimlari fail-fast calisir. Patrol ve Maestro sonuclari ayri raporlanan
+advisory adimlardir; bu asamada ikisi de tek basina release kapisini fail etmez.
+Patrol CLI kurulu degilse acik uyari verilir.
 
 ## Patrol Kurulumu
 
@@ -47,11 +47,37 @@ Android package ID `com.firinnet.firin_defter`, iOS bundle ID
 `com.firinnet.firinDefter` olarak mevcut platform config dosyalarindan
 alinmistir.
 
+## Dogrulanan Patrol Ortami
+
+7 Haziran 2026 lokal dogrulama sonucu:
+
+- Patrol package: `4.6.1`
+- Patrol CLI: `4.4.0`
+- Flutter: `3.35.4`
+- Dart: `3.9.2`
+- Windows 11 25H2
+- Android SDK: `36.1.0-rc1`
+- Basarili AVD: Pixel 7 hardware profile, Android 16 / API 36, x86_64
+- Dummy boot: 1/1 pass
+- App navigation smoke: 1/1 pass
+
+API 37 / Android 17 pre-release 16 KB page-size image'da Android Test
+Orchestrator instrumentation'i test selectorlerine ulasmadan erken kapandi.
+Bu app davranisi veya selector hatasi degildir. Release smoke icin API 35
+onerilir; API 36 bu makinede clean pass ile dogrulanmistir. API 37 preview
+image kullanilmaz.
+
 ## Lokal Emulator Testi
 
-1. Android emulatoru baslatin.
+1. Pixel 6/7 sinifi API 35 veya API 36 x86_64 emulatoru cold boot ile baslatin.
 2. `flutter devices` ve `patrol doctor` ile ortami dogrulayin.
-3. Smoke testini calistirin:
+3. Runner sagligini dummy test ile dogrulayin:
+
+```powershell
+patrol test -t patrol_test/dummy_boot_test.dart --no-uninstall
+```
+
+4. Ana smoke testini calistirin:
 
 ```powershell
 patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
@@ -61,6 +87,9 @@ Android runner her test icin app data'yi temizler. Test guest girisini yapar;
 Feed, Gruplar, Market, Ilanlar ve Panel tablarini dolasip Feed'e geri doner.
 `--no-uninstall`, Windows Android emulatorlerinde ADB uninstall kilitlenmesini
 engeller; test izolasyonu `clearPackageData=true` runner ayariyla korunur.
+
+Snapshot/cache kaynakli sorunlarda AVD'yi cold boot edin. Package manager
+yanit vermiyorsa emulator data'sini wipe edip yeniden baslatin.
 
 iOS config pubspec'te tanimlidir. iOS testi macOS, Xcode ve iOS 13+ simulator
 gerektirir; bu sprintin calisma hedefi Android emulatorudur.
@@ -83,8 +112,12 @@ raporlanir; Patrol ana E2E sonucudur.
 P0 release blocker kapsaminda app boot, splash sonrasi Feed, bes ana bottom
 navigation etiketi, tum ana tab gecisleri, Feed'e donus ve temel navigasyonda
 crash olmamasi yer alir. Ana navigasyon smoke senaryosu Patrol ile otomatik
-calisir. Diger P0 senaryolari `QA_TEST_MATRIX.md` durumlarina gore Flutter
-testi veya manuel/kosullu kontrol gerektirebilir.
+calisir ve API 36'da clean pass almistir.
+
+Patrol scriptte stabilization donemi boyunca advisory'dir. Onerilen API 35/36
+emulator matrisi CI'da sabitlenip ardisik clean pass alindiktan sonra tekrar
+release-blocking yapilmalidir. Diger P0 senaryolari `QA_TEST_MATRIX.md`
+durumlarina gore Flutter testi veya manuel/kosullu kontrol gerektirebilir.
 
 ## Release Oncesi Komut
 

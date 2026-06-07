@@ -68,7 +68,10 @@ if ($null -eq $patrol) {
     Write-Host "  patrol test -t patrol_test/app_smoke_test.dart --no-uninstall"
     Write-Host "Flutter quality steps remain successful; Patrol was skipped."
 } else {
-    Invoke-QualityStep -Name "Patrol app smoke" -Command {
+    Write-Host ""
+    Write-Host "Patrol environment note: use a cold-booted API 35 or API 36 emulator." -ForegroundColor Yellow
+    Write-Host "API 37 preview / 16 KB page-size images are not supported by this quality gate."
+    Invoke-AdvisoryStep -Name "Patrol app smoke (stabilization)" -Command {
         patrol test -t patrol_test/app_smoke_test.dart --no-uninstall
     }
 }
