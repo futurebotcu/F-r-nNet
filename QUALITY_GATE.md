@@ -60,6 +60,8 @@ alinmistir.
 - Basarili AVD: Pixel 7 hardware profile, Android 16 / API 36, x86_64
 - Dummy boot: 1/1 pass
 - App navigation smoke: 1/1 pass
+- Stability verification: 3/3 ardisik app navigation smoke pass
+- Status: verified release gate candidate
 
 API 37 / Android 17 pre-release 16 KB page-size image'da Android Test
 Orchestrator instrumentation'i test selectorlerine ulasmadan erken kapandi.
@@ -114,10 +116,11 @@ navigation etiketi, tum ana tab gecisleri, Feed'e donus ve temel navigasyonda
 crash olmamasi yer alir. Ana navigasyon smoke senaryosu Patrol ile otomatik
 calisir ve API 36'da clean pass almistir.
 
-Patrol scriptte stabilization donemi boyunca advisory'dir. Onerilen API 35/36
-emulator matrisi CI'da sabitlenip ardisik clean pass alindiktan sonra tekrar
-release-blocking yapilmalidir. Diger P0 senaryolari `QA_TEST_MATRIX.md`
-durumlarina gore Flutter testi veya manuel/kosullu kontrol gerektirebilir.
+Patrol, Pixel 7 / API 36 ortaminda 3/3 ardisik clean pass ile verified release
+gate candidate durumundadir. Scriptte stabilization boyunca advisory kalir;
+ayni emulator matrisi CI'da sabitlenince release-blocking yapilabilir. Diger P0
+senaryolari `QA_TEST_MATRIX.md` durumlarina gore Flutter testi veya
+manuel/kosullu kontrol gerektirebilir.
 
 ## Release Oncesi Komut
 
