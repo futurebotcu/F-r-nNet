@@ -51,13 +51,12 @@ class AvatarUploadService {
     final path = '$userId/avatar_$ts.$ext';
     final mime = _mimeForExt(ext);
 
-    await _client.storage.from(bucket).uploadBinary(
+    await _client.storage
+        .from(bucket)
+        .uploadBinary(
           path,
           bytes,
-          fileOptions: sb.FileOptions(
-            contentType: mime,
-            upsert: false,
-          ),
+          fileOptions: sb.FileOptions(contentType: mime, upsert: false),
         );
 
     final publicUrl = _client.storage.from(bucket).getPublicUrl(path);

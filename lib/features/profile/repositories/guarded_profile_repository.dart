@@ -4,10 +4,7 @@ import 'profile_repository.dart';
 
 /// V1.3.3 — guest write korumalı [ProfileRepository] dekoratörü.
 class GuardedProfileRepository implements ProfileRepository {
-  GuardedProfileRepository({
-    required this.inner,
-    required this.canWriteCheck,
-  });
+  GuardedProfileRepository({required this.inner, required this.canWriteCheck});
 
   final ProfileRepository inner;
   final bool Function() canWriteCheck;

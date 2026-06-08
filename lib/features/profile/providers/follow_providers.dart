@@ -20,9 +20,7 @@ final followRepositoryProvider = Provider<FollowRepository>((ref) {
   if (AppConfig.supabaseEnabled && user != null) {
     inner = SupabaseFollowRepository(sb.Supabase.instance.client);
   } else {
-    inner = LocalFollowRepository(
-      currentUserId: user?.id ?? 'me_misafir',
-    );
+    inner = LocalFollowRepository(currentUserId: user?.id ?? 'me_misafir');
   }
   final canWrite = ref.watch(canWriteCheckProvider);
   return GuardedFollowRepository(inner: inner, canWriteCheck: canWrite);
@@ -37,8 +35,10 @@ final followChangesProvider = StreamProvider<void>((ref) {
 /// V1 Social S2 — Şu anki kullanıcı `userId`'yi takip ediyor mu?
 ///
 /// Self-id geçilirse her zaman false döner (kendini takip yok).
-final isFollowingProvider = FutureProvider.autoDispose
-    .family<bool, String>((ref, userId) async {
+final isFollowingProvider = FutureProvider.autoDispose.family<bool, String>((
+  ref,
+  userId,
+) async {
   ref.watch(followChangesProvider);
   final repo = ref.watch(followRepositoryProvider);
   return repo.isFollowing(userId);
@@ -47,7 +47,7 @@ final isFollowingProvider = FutureProvider.autoDispose
 /// V1 Social S2 — `(followers, following)` count tuple.
 final followCountsProvider = FutureProvider.autoDispose
     .family<({int followers, int following}), String>((ref, userId) async {
-  ref.watch(followChangesProvider);
-  final repo = ref.watch(followRepositoryProvider);
-  return repo.getFollowCounts(userId);
-});
+      ref.watch(followChangesProvider);
+      final repo = ref.watch(followRepositoryProvider);
+      return repo.getFollowCounts(userId);
+    });

@@ -93,10 +93,7 @@ class SupabaseFollowRepository implements FollowRepository {
     return (followers: results[0], following: results[1]);
   }
 
-  Future<int> _countOf({
-    required String column,
-    required String value,
-  }) async {
+  Future<int> _countOf({required String column, required String value}) async {
     try {
       final res = await _client
           .from('profile_follows')

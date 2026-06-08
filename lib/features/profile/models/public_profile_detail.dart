@@ -126,8 +126,7 @@ class PublicWorkerInfo {
   List<String> get effectiveSkills {
     if (skillCodes.isNotEmpty) {
       return <String>[
-        for (final c in skillCodes)
-          FirinnetTaxonomy.workerSkillLabel(c) ?? c,
+        for (final c in skillCodes) FirinnetTaxonomy.workerSkillLabel(c) ?? c,
       ];
     }
     return skills;
@@ -204,8 +203,7 @@ class PublicWorkerExperience {
   }
 
   static PublicWorkerExperience fromJson(Map<String, dynamic> j) {
-    DateTime? parse(String? s) =>
-        s == null ? null : DateTime.tryParse(s);
+    DateTime? parse(String? s) => s == null ? null : DateTime.tryParse(s);
     return PublicWorkerExperience(
       id: j['id'] as String,
       title: (j['title'] as String?) ?? '',
@@ -306,9 +304,9 @@ class PublicProfileDetail {
     if (m['experiences'] is List) {
       for (final e in (m['experiences'] as List)) {
         if (e is Map) {
-          experiences.add(PublicWorkerExperience.fromJson(
-            Map<String, dynamic>.from(e),
-          ));
+          experiences.add(
+            PublicWorkerExperience.fromJson(Map<String, dynamic>.from(e)),
+          );
         }
       }
     }

@@ -7,10 +7,7 @@ import 'follow_repository.dart';
 /// dönerse [GuestActionRequiredException] atar — UI tarafı bunu yakalayıp
 /// AuthRequiredSheet'i gösterir.
 class GuardedFollowRepository implements FollowRepository {
-  GuardedFollowRepository({
-    required this.inner,
-    required this.canWriteCheck,
-  });
+  GuardedFollowRepository({required this.inner, required this.canWriteCheck});
 
   final FollowRepository inner;
   final bool Function() canWriteCheck;

@@ -64,21 +64,18 @@ class SupabaseProfileRepository implements ProfileRepository {
     final patch = <String, dynamic>{
       'display_name': profile.displayName,
       'account_type': profile.accountType.name,
-      'profession_badge':
-          profile.roleBadge.isEmpty ? null : profile.roleBadge,
+      'profession_badge': profile.roleBadge.isEmpty ? null : profile.roleBadge,
       'profession_badge_code':
           (profile.roleBadgeCode == null || profile.roleBadgeCode!.isEmpty)
-              ? null
-              : profile.roleBadgeCode,
+          ? null
+          : profile.roleBadgeCode,
       'city': profile.city.isEmpty ? null : profile.city,
-      'city_code':
-          (profile.cityCode == null || profile.cityCode!.isEmpty)
-              ? null
-              : profile.cityCode,
-      'avatar_url':
-          (profile.avatarUrl == null || profile.avatarUrl!.isEmpty)
-              ? null
-              : profile.avatarUrl,
+      'city_code': (profile.cityCode == null || profile.cityCode!.isEmpty)
+          ? null
+          : profile.cityCode,
+      'avatar_url': (profile.avatarUrl == null || profile.avatarUrl!.isEmpty)
+          ? null
+          : profile.avatarUrl,
     };
     final updated = await _client
         .from(_table)

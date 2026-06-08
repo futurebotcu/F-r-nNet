@@ -16,8 +16,9 @@ import '../repositories/supabase_profile_repository.dart';
 /// (local-only / guest-only flow korunur).
 final profileRepositoryProvider = Provider<ProfileRepository?>((ref) {
   if (!AppConfig.supabaseEnabled) return null;
-  final ProfileRepository inner =
-      SupabaseProfileRepository(sb.Supabase.instance.client);
+  final ProfileRepository inner = SupabaseProfileRepository(
+    sb.Supabase.instance.client,
+  );
   final canWrite = ref.watch(canWriteCheckProvider);
   return GuardedProfileRepository(inner: inner, canWriteCheck: canWrite);
 });
@@ -92,8 +93,8 @@ class ProfileController extends StateNotifier<BakeryProfile?> {
 
 final profileControllerProvider =
     StateNotifierProvider<ProfileController, BakeryProfile?>((ref) {
-  return ProfileController(ref);
-});
+      return ProfileController(ref);
+    });
 
 // ═══════════════════════════════════════════════════════════════════════
 // V1 Social S1 — Public profile by id
@@ -123,34 +124,34 @@ class PublicProfile {
 
   String get displayNameOrFallback =>
       (displayName == null || displayName!.trim().isEmpty)
-          ? fallbackName
-          : displayName!;
+      ? fallbackName
+      : displayName!;
 }
 
 /// V1 Social S1 — Public profile by user id.
 ///
 /// Supabase aktif değilse veya RPC boş dönerse `null` döner; UI fallback
 /// state'i gösterir.
-final publicProfileProvider =
-    FutureProvider.autoDispose.family<PublicProfile?, String>((ref, userId) async {
-  if (!AppConfig.supabaseEnabled) return null;
-  final client = sb.Supabase.instance.client;
-  try {
-    final rows = await client.rpc(
-      'public_profile_snapshot',
-      params: <String, dynamic>{
-        'p_user_ids': <String>[userId],
-      },
-    );
-    if (rows is! List || rows.isEmpty) return null;
-    final row = (rows.first as Map).cast<String, dynamic>();
-    return PublicProfile(
-      id: row['id'] as String,
-      displayName: row['display_name'] as String?,
-      professionBadge: row['profession_badge'] as String?,
-      city: row['city'] as String?,
-    );
-  } catch (_) {
-    return null;
-  }
-});
+final publicProfileProvider = FutureProvider.autoDispose
+    .family<PublicProfile?, String>((ref, userId) async {
+      if (!AppConfig.supabaseEnabled) return null;
+      final client = sb.Supabase.instance.client;
+      try {
+        final rows = await client.rpc(
+          'public_profile_snapshot',
+          params: <String, dynamic>{
+            'p_user_ids': <String>[userId],
+          },
+        );
+        if (rows is! List || rows.isEmpty) return null;
+        final row = (rows.first as Map).cast<String, dynamic>();
+        return PublicProfile(
+          id: row['id'] as String,
+          displayName: row['display_name'] as String?,
+          professionBadge: row['profession_badge'] as String?,
+          city: row['city'] as String?,
+        );
+      } catch (_) {
+        return null;
+      }
+    });
