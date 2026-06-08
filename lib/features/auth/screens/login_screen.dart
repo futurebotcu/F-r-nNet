@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../models/auth_user.dart';
 import '../providers/auth_providers.dart';
 import '../providers/guest_mode_provider.dart';
@@ -20,7 +21,7 @@ import '../widgets/social_auth_buttons.dart';
 ///   profili kontrol edip `/panel` veya `/profile/create`'e götürür.
 /// - **Hesabın yok mu? Üye ol** → `/auth/role-select`.
 ///
-/// "Kayıtsız Devam Et" buradan kaldırıldı — boot landing'inde (AuthEntry).
+/// "Kayıtsız Devam Et" buradan kaldırıldı — boot landing'de (AuthEntry).
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -33,12 +34,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _submitting = false;
+  bool _backendBannerQueued = false;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  void _queueBackendBanner(bool supabaseOn) {
+    if (supabaseOn || _backendBannerQueued) return;
+    _backendBannerQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      PremiumTopBannerController.show(
+        context,
+        message:
+            'Sunucu bağlantısı kapalı. Bu sürümde yalnızca misafir deneyimi çalışır.',
+        tone: PremiumTopBannerTone.warning,
+      );
+    });
   }
 
   String? _validateEmail(String? v) {
@@ -74,8 +90,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go(AppRoutes.splash);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      PremiumTopBannerController.show(
+        context,
+        message: e.toString().replaceFirst('Exception: ', ''),
+        tone: PremiumTopBannerTone.danger,
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -86,6 +104,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final supabaseOn = ref.watch(authRepositoryProvider) != null;
+
+    _queueBackendBanner(supabaseOn);
 
     // V1.4 — Social login callback ile session geldiğinde Splash'a yönlendir.
     ref.listen<AuthUser?>(currentAuthUserProvider, (prev, next) {
@@ -119,42 +139,60 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               AppSpacing.xl,
             ),
             children: [
-              Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.l),
-                    border: Border.all(
-                      color: AppColors.borderHairline,
-                      width: 0.6,
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: 1),
+                duration: AppDuration.normal,
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - value) * 8),
+                      child: child,
                     ),
-                    boxShadow: AppShadow.card,
-                  ),
-                  child: const Icon(
-                    Icons.local_fire_department_rounded,
-                    color: AppColors.primary,
-                    size: 32,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.l),
-              Text(
-                AppStrings.authLoginTitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.6,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                AppStrings.appPitch,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  );
+                },
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.l),
+                          border: Border.all(
+                            color: AppColors.borderHairline,
+                            width: 0.6,
+                          ),
+                          boxShadow: AppShadow.card,
+                        ),
+                        child: const Icon(
+                          Icons.local_fire_department_rounded,
+                          color: AppColors.primary,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.l),
+                    Text(
+                      AppStrings.authLoginTitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.6,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Hesabına gir, sektör akışını ve araçlarını kaldığın yerden sürdür.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -162,32 +200,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SocialAuthButtons(),
               const SizedBox(height: AppSpacing.l),
               if (!supabaseOn)
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.m),
-                  margin: const EdgeInsets.only(bottom: AppSpacing.l),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                    border: Border.all(color: const Color(0xFFFDE68A)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.info_outline,
-                        color: Color(0xFFB45309),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          AppStrings.authBackendDisabled,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Color(0xFFB45309),
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.l),
+                  child: Text(
+                    'Sunucu bağlantısı kapalı olduğu için e-posta girişi devre dışı.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               TextFormField(
@@ -259,7 +278,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     foregroundColor: AppColors.primary,
                   ),
                   child: const Text(
-                    AppStrings.authLoginNoAccountQ,
+                    'Hesap oluştur',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.0,

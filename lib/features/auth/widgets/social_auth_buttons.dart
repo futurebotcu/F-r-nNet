@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../providers/auth_providers.dart';
 
 /// V1.4 — Apple "Yakında" modu.
@@ -70,8 +71,11 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
       await action();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      final message = e.toString().replaceFirst('Exception: ', '');
+      PremiumTopBannerController.show(
+        context,
+        message: message.isEmpty ? fallbackError : message,
+        tone: PremiumTopBannerTone.danger,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -80,12 +84,11 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
 
   /// Apple "Yakında" davranışı — OAuth çağrılmaz, sadece bilgi snackbar'ı.
   void _showAppleComingSoon() {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      const SnackBar(
-        content: Text(AppStrings.authAppleComingSoonSnack),
-        duration: Duration(seconds: 4),
-      ),
+    PremiumTopBannerController.show(
+      context,
+      message: AppStrings.authAppleComingSoonSnack,
+      tone: PremiumTopBannerTone.info,
+      duration: const Duration(seconds: 4),
     );
   }
 

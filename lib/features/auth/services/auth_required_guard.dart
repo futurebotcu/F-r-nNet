@@ -235,7 +235,7 @@ class _AuthRequiredSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.m),
             Text(
-              AppStrings.authRequiredBody,
+              'Bu işlemi kaydetmek için FırınNet hesabı gerekir. Hesap oluşturduğunda paylaşımlar, gruplar, ilanlar ve kayıtlar sana özel saklanır.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.5,

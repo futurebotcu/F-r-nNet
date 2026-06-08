@@ -25,80 +25,94 @@ class OnboardingScreen extends ConsumerWidget {
             AppSpacing.xl,
             AppSpacing.xl,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              Container(
-                width: 76,
-                height: 76,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.l),
-                  border: Border.all(
-                    color: AppColors.borderHairline,
-                    width: 0.6,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: AppDuration.normal,
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, (1 - value) * 10),
+                  child: child,
+                ),
+              );
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Spacer(),
+                Container(
+                  width: 76,
+                  height: 76,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.l),
+                    border: Border.all(
+                      color: AppColors.borderHairline,
+                      width: 0.6,
+                    ),
+                    boxShadow: AppShadow.card,
                   ),
-                  boxShadow: AppShadow.card,
-                ),
-                child: const Icon(
-                  Icons.local_fire_department_rounded,
-                  color: AppColors.primary,
-                  size: 38,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Text(
-                AppStrings.onboardingTitle,
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontSize: 36,
-                  fontWeight: FontWeight.w800,
-                  height: 1.05,
-                  letterSpacing: -1.0,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.m),
-              Text(
-                AppStrings.onboardingSubtitle,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.55,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.l),
-              const _OnboardingHighlights(),
-              const Spacer(flex: 2),
-              AppPrimaryButton(
-                label: AppStrings.createProfile,
-                icon: Icons.person_add_alt_1_rounded,
-                onPressed: () => context.push(AppRoutes.createProfile),
-              ),
-              const SizedBox(height: AppSpacing.s),
-              SizedBox(
-                height: 54,
-                child: TextButton(
-                  onPressed: () {
-                    ref.read(profileControllerProvider.notifier).useGuest();
-                    context.go(AppRoutes.feed);
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
+                  child: const Icon(
+                    Icons.local_fire_department_rounded,
+                    color: AppColors.primary,
+                    size: 38,
                   ),
-                  child: const Text(AppStrings.continueAsGuest),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.s),
-              Text(
-                AppStrings.onboardingFooter,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 11.5,
-                  height: 1.4,
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Hoş geldin\nFırınNet\'e',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                    height: 1.05,
+                    letterSpacing: -1.0,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.m),
+                Text(
+                  'Sektör akışı, gruplar, ilanlar ve bayi takibi tek yerde.',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.55,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.l),
+                const _OnboardingHighlights(),
+                const Spacer(flex: 2),
+                AppPrimaryButton(
+                  label: AppStrings.createProfile,
+                  icon: Icons.person_add_alt_1_rounded,
+                  onPressed: () => context.push(AppRoutes.createProfile),
+                ),
+                const SizedBox(height: AppSpacing.s),
+                SizedBox(
+                  height: 54,
+                  child: TextButton(
+                    onPressed: () {
+                      ref.read(profileControllerProvider.notifier).useGuest();
+                      context.go(AppRoutes.feed);
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                    ),
+                    child: const Text(AppStrings.continueAsGuest),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.s),
+                Text(
+                  'Kayıtsız keşfedebilir, hesabını sonra oluşturabilirsin.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11.5,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -111,16 +125,20 @@ class _OnboardingHighlights extends StatelessWidget {
 
   static const _items = <_HighlightItem>[
     _HighlightItem(
-      icon: Icons.bakery_dining_rounded,
-      label: 'Atölyenden anlık paylaş',
+      icon: Icons.dynamic_feed_rounded,
+      label: 'Fırıncılar, ustalar ve tedarikçilerle aynı akışta buluş.',
+    ),
+    _HighlightItem(
+      icon: Icons.groups_rounded,
+      label: 'Bölgen, ürün tipin veya ihtiyacın için gruplara katıl.',
     ),
     _HighlightItem(
       icon: Icons.storefront_rounded,
-      label: 'Tedarikçi ve ekipman ağı',
+      label: 'Ürün, tedarik, iş ve fırsatları tek yerde takip et.',
     ),
     _HighlightItem(
-      icon: Icons.summarize_rounded,
-      label: 'Gün sonu cebinde, tek tap',
+      icon: Icons.receipt_long_rounded,
+      label: 'Bayi, tahsilat, hareket ve gün sonunu düzenli tut.',
     ),
   ];
 
@@ -167,6 +185,7 @@ class _OnboardingHighlights extends StatelessWidget {
 
 class _HighlightItem {
   const _HighlightItem({required this.icon, required this.label});
+
   final IconData icon;
   final String label;
 }
