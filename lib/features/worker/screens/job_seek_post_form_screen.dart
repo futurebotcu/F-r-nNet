@@ -51,13 +51,13 @@ class JobSeekPostFormScreen extends ConsumerStatefulWidget {
 
 class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
   // M5 — meslek listesi ortak taxonomy'den.
-  static List<String> get _professionCodes =>
-      FirinnetTaxonomy.professionCodes;
+  static List<String> get _professionCodes => FirinnetTaxonomy.professionCodes;
 
   final _title = TextEditingController();
   final _experience = TextEditingController();
   final _salary = TextEditingController();
   final _description = TextEditingController();
+
   /// Listing Contact Phone Sprint — opsiyonel.
   final _contactPhone = TextEditingController();
 
@@ -87,7 +87,8 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
   /// alanlar (maaş, iletişim, yayın durumu) kullanıcıya bırakılır.
   void _applyPrefill(JobSeekPrefill p) {
     _professionCode = p.professionCode ?? _professionCode;
-    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+    _selectedProvince =
+        TurkeyLocations.findProvinceByCode(p.cityCode) ??
         TurkeyLocations.findProvinceByName(p.cityName);
     if (p.experienceYears != null) {
       _experience.text = '${p.experienceYears}';
@@ -115,26 +116,27 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     final p = await repo.getJobSeekPost(widget.postId!);
     if (!mounted) return;
     if (p == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('İlan bulunamadı.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('İlan bulunamadı.')));
       Navigator.of(context).pop();
       return;
     }
     _existing = p;
     _title.text = p.title;
     // M6A — city_code öncelikli; yoksa legacy text label'dan çevir.
-    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+    _selectedProvince =
+        TurkeyLocations.findProvinceByCode(p.cityCode) ??
         TurkeyLocations.findProvinceByName(p.city);
-    _experience.text =
-        p.experienceYears != null ? '${p.experienceYears}' : '';
+    _experience.text = p.experienceYears != null ? '${p.experienceYears}' : '';
     _salary.text = p.salaryExpectation != null
         ? p.salaryExpectation!.toStringAsFixed(0)
         : '';
     _description.text = p.description ?? '';
     _contactPhone.text = p.contactPhone ?? '';
     // M5 — code öncelikli; yoksa legacy label'dan çevir.
-    _professionCode = p.professionBadgeCode ??
+    _professionCode =
+        p.professionBadgeCode ??
         FirinnetTaxonomy.professionCodeFromLabel(p.professionBadge);
     _isActive = p.isActive;
     setState(() => _loading = false);
@@ -152,17 +154,16 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
 
   /// Telefon normalize — boşluk/tire/parantez temizle. Boş → null.
   static String? _normalizePhone(String raw) {
-    final cleaned =
-        raw.trim().replaceAll(RegExp(r'[\s\-()]+'), '');
+    final cleaned = raw.trim().replaceAll(RegExp(r'[\s\-()]+'), '');
     if (cleaned.isEmpty) return null;
     return cleaned;
   }
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Başlık boş olamaz.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Başlık boş olamaz.')));
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -173,8 +174,9 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     try {
       // M5 — dual-write: code + label (backward compat).
       final code = _professionCode;
-      final label =
-          code == null ? null : FirinnetTaxonomy.professionLabel(code);
+      final label = code == null
+          ? null
+          : FirinnetTaxonomy.professionLabel(code);
       // M6A — şehir dual-write.
       final province = _selectedProvince;
       final draft = JobSeekPost(
@@ -202,15 +204,16 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              _existing == null ? 'İlan yayınlandı.' : 'İlan güncellendi.'),
+            _existing == null ? 'İlan yayınlandı.' : 'İlan güncellendi.',
+          ),
         ),
       );
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kaydedilemedi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -218,8 +221,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
 
   void _previewShare() {
     final code = _professionCode;
-    final label =
-        code == null ? null : FirinnetTaxonomy.professionLabel(code);
+    final label = code == null ? null : FirinnetTaxonomy.professionLabel(code);
     final province = _selectedProvince;
     final p = JobSeekPost(
       title: _title.text.trim().isEmpty ? 'İş ilanı' : _title.text.trim(),
@@ -233,8 +235,9 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
       salaryExpectation: _salary.text.trim().isEmpty
           ? null
           : NumberFormatter.parseLoose(_salary.text),
-      description:
-          _description.text.trim().isEmpty ? null : _description.text.trim(),
+      description: _description.text.trim().isEmpty
+          ? null
+          : _description.text.trim(),
       isActive: _isActive,
     );
     Share.share(p.toShareText(), subject: 'FırınNet — İş Arıyorum');
@@ -289,14 +292,14 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
               children: [
                 for (final code in _professionCodes)
                   ChoiceChip(
-                    label: Text(
-                      FirinnetTaxonomy.professionLabel(code) ?? code,
-                    ),
+                    label: Text(FirinnetTaxonomy.professionLabel(code) ?? code),
                     selected: _professionCode == code,
                     onSelected: (v) =>
                         setState(() => _professionCode = v ? code : null),
-                    selectedColor: AppColors.copper.withValues(alpha: 0.22),
-                    backgroundColor: AppColors.card,
+                    selectedColor: AppColors.copperMuted.withValues(
+                      alpha: 0.28,
+                    ),
+                    backgroundColor: Colors.transparent,
                     labelStyle: TextStyle(
                       color: _professionCode == code
                           ? AppColors.softGold
@@ -308,9 +311,9 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                       side: BorderSide(
                         color: _professionCode == code
-                            ? AppColors.copper.withValues(alpha: 0.55)
-                            : AppColors.borderHairline,
-                        width: 0.6,
+                            ? AppColors.copperMuted
+                            : AppColors.surfaceVariant,
+                        width: 1,
                       ),
                     ),
                   ),
@@ -385,13 +388,18 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: (_isActive ? AppColors.success : AppColors.textMuted)
-                          .withValues(alpha: 0.14),
+                      color:
+                          (_isActive ? AppColors.success : AppColors.textMuted)
+                              .withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(AppRadius.s),
                     ),
                     child: Icon(
-                      _isActive ? Icons.public_rounded : Icons.lock_outline_rounded,
-                      color: _isActive ? AppColors.success : AppColors.textMuted,
+                      _isActive
+                          ? Icons.public_rounded
+                          : Icons.lock_outline_rounded,
+                      color: _isActive
+                          ? AppColors.success
+                          : AppColors.textMuted,
                       size: 20,
                     ),
                   ),
@@ -454,8 +462,11 @@ class _Hint extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.m),
       child: Row(
         children: [
-          const Icon(Icons.tips_and_updates_outlined,
-              color: AppColors.softGold, size: 18),
+          const Icon(
+            Icons.tips_and_updates_outlined,
+            color: AppColors.softGold,
+            size: 18,
+          ),
           const SizedBox(width: AppSpacing.s),
           Expanded(
             child: Text(

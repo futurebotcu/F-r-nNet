@@ -133,23 +133,34 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               SliverToBoxAdapter(
                 child: _ActiveFilterChipRow(
                   filters: _filters,
-                  onClear: () => setState(() => _filters = const MarketFilters()),
-                  onRemoveType: () =>
-                      setState(() => _filters = _filters.copyWith(clearListingType: true)),
-                  onRemoveEquipment: () =>
-                      setState(() => _filters = _filters.copyWith(clearEquipmentCategory: true)),
-                  onRemoveCity: () =>
-                      setState(() => _filters = _filters.copyWith(clearCity: true)),
+                  onClear: () =>
+                      setState(() => _filters = const MarketFilters()),
+                  onRemoveType: () => setState(
+                    () => _filters = _filters.copyWith(clearListingType: true),
+                  ),
+                  onRemoveEquipment: () => setState(
+                    () => _filters = _filters.copyWith(
+                      clearEquipmentCategory: true,
+                    ),
+                  ),
+                  onRemoveCity: () => setState(
+                    () => _filters = _filters.copyWith(clearCity: true),
+                  ),
                   onRemoveDistrict: () => setState(
-                      () => _filters = _filters.copyWith(clearDistrict: true)),
-                  onRemovePrice: () => setState(() => _filters = _filters.copyWith(
-                        clearMinPrice: true,
-                        clearMaxPrice: true,
-                      )),
-                  onRemoveCondition: () =>
-                      setState(() => _filters = _filters.copyWith(clearCondition: true)),
+                    () => _filters = _filters.copyWith(clearDistrict: true),
+                  ),
+                  onRemovePrice: () => setState(
+                    () => _filters = _filters.copyWith(
+                      clearMinPrice: true,
+                      clearMaxPrice: true,
+                    ),
+                  ),
+                  onRemoveCondition: () => setState(
+                    () => _filters = _filters.copyWith(clearCondition: true),
+                  ),
                   onRemoveNegotiable: () => setState(
-                      () => _filters = _filters.copyWith(negotiableOnly: false)),
+                    () => _filters = _filters.copyWith(negotiableOnly: false),
+                  ),
                 ),
               ),
             async.when(
@@ -165,9 +176,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                   message: AppStrings.marketListingErrorGeneric,
                   // UI-level retry — mevcut provider'ı yeniden tetikler
                   // (backend/provider logic değişmez).
-                  onRetry: () => ref.invalidate(
-                    filteredMarketListingsProvider(_filters),
-                  ),
+                  onRetry: () =>
+                      ref.invalidate(filteredMarketListingsProvider(_filters)),
                 ),
               ),
               data: (items) {
@@ -179,9 +189,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                     child: _MarketEmptyState(
                       filterActive: filterActive,
                       onAddPressed: _onAddPressed,
-                      onClearFilters: () => setState(
-                        () => _filters = const MarketFilters(),
-                      ),
+                      onClearFilters: () =>
+                          setState(() => _filters = const MarketFilters()),
                     ),
                   );
                 }
@@ -200,11 +209,10 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                       final l = items[i];
                       return MarketplaceListingCard(
                         listing: l,
-                        onTap: () => context.push(
-                          '/market/listings/${l.id}',
-                        ),
-                        onToggleSave:
-                            l.id == null ? null : () => _toggleSave(l),
+                        onTap: () => context.push('/market/listings/${l.id}'),
+                        onToggleSave: l.id == null
+                            ? null
+                            : () => _toggleSave(l),
                       );
                     },
                   ),
@@ -219,19 +227,15 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
 }
 
 class _ListingTypeChipRow extends StatelessWidget {
-  const _ListingTypeChipRow({
-    required this.selected,
-    required this.onSelect,
-  });
+  const _ListingTypeChipRow({required this.selected, required this.onSelect});
 
   final String? selected;
   final void Function(String? type) onSelect;
 
   @override
   Widget build(BuildContext context) {
-    // Market UI Polish V1 — kanonik chip standardı (DealerFilterChip):
-    // seçili copper border + copper@0.18 bg + softGold w800; pasif card bg +
-    // hairline + textSecondary. Filtre işlevi (onSelect/listingType) aynı.
+    // Market UI Polish V1 - kanonik chip standardi:
+    // secili lemon border + pale bg; pasif card bg + hairline.
     return SizedBox(
       height: 40,
       child: ListView(
@@ -298,14 +302,16 @@ class _ActiveFilterChipRow extends StatelessWidget {
         children: [
           if (filters.listingType != null)
             _RemovableChip(
-              label: AppStrings.marketListingTypeLabels[filters.listingType!] ??
+              label:
+                  AppStrings.marketListingTypeLabels[filters.listingType!] ??
                   filters.listingType!,
               onRemove: onRemoveType,
             ),
           if (filters.equipmentCategory != null)
             _RemovableChip(
-              label: AppStrings.marketEquipmentCategoryLabels[
-                      filters.equipmentCategory!] ??
+              label:
+                  AppStrings.marketEquipmentCategoryLabels[filters
+                      .equipmentCategory!] ??
                   filters.equipmentCategory!,
               onRemove: onRemoveEquipment,
             ),
@@ -323,7 +329,8 @@ class _ActiveFilterChipRow extends StatelessWidget {
             ),
           if (filters.condition != null)
             _RemovableChip(
-              label: AppStrings.marketConditionLabels[filters.condition!] ??
+              label:
+                  AppStrings.marketConditionLabels[filters.condition!] ??
                   filters.condition!,
               onRemove: onRemoveCondition,
             ),
@@ -341,6 +348,10 @@ class _ActiveFilterChipRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               minimumSize: const Size(0, 36),
               visualDensity: VisualDensity.compact,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
         ],
@@ -367,8 +378,7 @@ class _RemovableChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Aktif filtre rozeti — kanonik "seçili" chip dili (copper soft bg +
-    // copper hairline + softGold label) + kibar kapatma ikonu.
+    // Aktif filtre rozeti - lemon pale bg + hairline + koyu label.
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 5, 6, 5),
       decoration: BoxDecoration(
@@ -448,10 +458,7 @@ class _MarketMessage extends StatelessWidget {
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text(
                   AppStrings.retry,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.softGold,
@@ -465,6 +472,10 @@ class _MarketMessage extends StatelessWidget {
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ),
@@ -513,8 +524,8 @@ class _MarketEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 50,
+              height: 50,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: AppColors.softGold.withValues(alpha: 0.12),
@@ -524,9 +535,9 @@ class _MarketEmptyState extends StatelessWidget {
                   width: 0.8,
                 ),
               ),
-              child: Icon(icon, size: 32, color: AppColors.softGold),
+              child: Icon(icon, size: 22, color: AppColors.softGold),
             ),
-            const SizedBox(height: AppSpacing.m),
+            const SizedBox(height: AppSpacing.s),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -547,20 +558,17 @@ class _MarketEmptyState extends StatelessWidget {
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: AppSpacing.l),
+            const SizedBox(height: AppSpacing.m),
             if (filterActive)
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 42,
                 child: OutlinedButton.icon(
                   onPressed: onClearFilters,
-                  icon: const Icon(Icons.clear_all_rounded, size: 18),
+                  icon: const Icon(Icons.clear_all_rounded, size: 16),
                   label: const Text(
                     AppStrings.marketEmptyClearFiltersCta,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
@@ -571,28 +579,33 @@ class _MarketEmptyState extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
               )
             else
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 42,
                 child: FilledButton.icon(
                   onPressed: onAddPressed,
-                  icon: const Icon(Icons.add_rounded, size: 18),
+                  icon: const Icon(Icons.add_rounded, size: 16),
                   label: const Text(
                     AppStrings.marketEmptyCta,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),

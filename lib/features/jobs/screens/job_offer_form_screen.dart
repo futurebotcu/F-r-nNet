@@ -36,6 +36,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   final _description = TextEditingController();
   final _salaryMin = TextEditingController();
   final _salaryMax = TextEditingController();
+
   /// Listing Contact Phone Sprint — opsiyonel telefon (doğrulama yok).
   final _contactPhone = TextEditingController();
   bool _isActive = true;
@@ -88,8 +89,8 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     }
     _title.text = p.title;
     // M8 — role/shift/experience code öncelikli; yoksa legacy label'dan çevir.
-    _roleCode = p.roleCode ??
-        FirinnetTaxonomy.professionCodeFromLabel(p.roleTitle);
+    _roleCode =
+        p.roleCode ?? FirinnetTaxonomy.professionCodeFromLabel(p.roleTitle);
     _shiftCode = p.shiftCode;
     if (_shiftCode == null && p.shiftType != null) {
       for (final e in FirinnetTaxonomy.shiftEntries) {
@@ -110,7 +111,8 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
       }
     }
     // M6B — code öncelikli; yoksa legacy text label'dan çevir.
-    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+    _selectedProvince =
+        TurkeyLocations.findProvinceByCode(p.cityCode) ??
         TurkeyLocations.findProvinceByName(p.city);
     if (_selectedProvince != null) {
       _selectedDistrict = TurkeyLocations.findDistrict(
@@ -139,8 +141,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   /// Telefon normalize: sadece boşlukları/tireleri temizle; aşırı validasyon
   /// yok. Boş string → null.
   static String? _normalizePhone(String raw) {
-    final cleaned =
-        raw.trim().replaceAll(RegExp(r'[\s\-()]+'), '');
+    final cleaned = raw.trim().replaceAll(RegExp(r'[\s\-()]+'), '');
     if (cleaned.isEmpty) return null;
     return cleaned;
   }
@@ -182,8 +183,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
     // M8 — dual-write: label + code (role/shift/experience).
     final roleLabel = FirinnetTaxonomy.professionLabel(_roleCode!) ?? '';
     final shiftLabel = FirinnetTaxonomy.shiftLabel(_shiftCode);
-    final experienceLabel =
-        FirinnetTaxonomy.experienceLabel(_experienceCode);
+    final experienceLabel = FirinnetTaxonomy.experienceLabel(_experienceCode);
     final post = JobOfferPost(
       id: widget.postId,
       title: _title.text.trim(),
@@ -265,10 +265,9 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                         labelText: AppStrings.jobOfferFieldTitle,
                         hintText: AppStrings.jobOfferFieldTitleHint,
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? AppStrings.jobOfferFieldTitleRequired
-                              : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? AppStrings.jobOfferFieldTitleRequired
+                          : null,
                     ),
                     const SizedBox(height: AppSpacing.m),
                     _CodeChipPicker(
@@ -290,9 +289,9 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                             onTap: () async {
                               final picked =
                                   await LocationPicker.showProvincePicker(
-                                context,
-                                initialCode: _selectedProvince?.code,
-                              );
+                                    context,
+                                    initialCode: _selectedProvince?.code,
+                                  );
                               if (picked != null) {
                                 setState(() {
                                   _selectedProvince = picked;
@@ -303,9 +302,9 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                             onClear: _selectedProvince == null
                                 ? null
                                 : () => setState(() {
-                                      _selectedProvince = null;
-                                      _selectedDistrict = null;
-                                    }),
+                                    _selectedProvince = null;
+                                    _selectedDistrict = null;
+                                  }),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s),
@@ -319,18 +318,18 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                               if (province == null) return;
                               final picked =
                                   await LocationPicker.showDistrictPicker(
-                                context,
-                                province: province,
-                                initialCode: _selectedDistrict?.code,
-                              );
+                                    context,
+                                    province: province,
+                                    initialCode: _selectedDistrict?.code,
+                                  );
                               if (picked != null) {
                                 setState(() => _selectedDistrict = picked);
                               }
                             },
                             onClear: _selectedDistrict == null
                                 ? null
-                                : () => setState(
-                                    () => _selectedDistrict = null),
+                                : () =>
+                                      setState(() => _selectedDistrict = null),
                           ),
                         ),
                       ],
@@ -403,7 +402,9 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                       value: _isActive,
                       onChanged: (v) => setState(() => _isActive = v),
                       title: const Text(AppStrings.jobOfferFieldIsActive),
-                      subtitle: const Text(AppStrings.jobOfferFieldIsActiveHint),
+                      subtitle: const Text(
+                        AppStrings.jobOfferFieldIsActiveHint,
+                      ),
                       activeThumbColor: AppColors.copper,
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -417,14 +418,17 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 1.8,
-                                    valueColor: AlwaysStoppedAnimation(
-                                        Colors.white)))
+                                  strokeWidth: 1.8,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    AppColors.surface,
+                                  ),
+                                ),
+                              )
                             : const Icon(Icons.send_rounded, size: 18),
                         label: const Text(AppStrings.jobOfferFormSaveCta),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.copper,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.brandInk,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.m),
                           ),

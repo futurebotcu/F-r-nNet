@@ -69,8 +69,7 @@ class _MarketListingFormScreenState
   String _listingType = MarketplaceTaxonomy.defaultListingType;
   String? _condition;
   String? _equipmentCategory;
-  String _contactPreference =
-      MarketplaceTaxonomy.defaultContactPreference;
+  String _contactPreference = MarketplaceTaxonomy.defaultContactPreference;
   String _currency = MarketplaceTaxonomy.defaultCurrency;
   bool _negotiable = false;
   bool? _equipmentIncluded;
@@ -131,7 +130,8 @@ class _MarketListingFormScreenState
     _hasLicense = m.hasLicense;
     _status = m.status;
     // Lokasyon hydrate — code → controlled-vocabulary lookup.
-    _selectedProvince = TurkeyLocations.findProvinceByCode(m.cityCode) ??
+    _selectedProvince =
+        TurkeyLocations.findProvinceByCode(m.cityCode) ??
         TurkeyLocations.findProvinceByName(m.city);
     if (_selectedProvince != null) {
       _selectedDistrict = TurkeyLocations.findDistrict(
@@ -191,11 +191,12 @@ class _MarketListingFormScreenState
     String fromCandidate(String c) {
       final dot = c.lastIndexOf('.');
       if (dot <= 0 || dot >= c.length - 1) return '';
-      return c.substring(dot + 1).toLowerCase().replaceAll(
-            RegExp(r'[^a-z0-9]'),
-            '',
-          );
+      return c
+          .substring(dot + 1)
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]'), '');
     }
+
     final fromName = fromCandidate(name);
     if (known.contains(fromName)) return fromName;
     final fromPath = fromCandidate(path);
@@ -239,9 +240,7 @@ class _MarketListingFormScreenState
       district: _selectedDistrict?.name,
       currency: _currency,
       price: isEquip ? double.tryParse(_price.text.trim()) : null,
-      unit: isEquip && _unit.text.trim().isNotEmpty
-          ? _unit.text.trim()
-          : null,
+      unit: isEquip && _unit.text.trim().isNotEmpty ? _unit.text.trim() : null,
       contactPreference: _contactPreference,
       status: _status,
       equipmentCategory: isEquip ? _equipmentCategory : null,
@@ -253,10 +252,10 @@ class _MarketListingFormScreenState
           ? _model.text.trim()
           : null,
       year: isEquip ? int.tryParse(_year.text.trim()) : null,
-      rentPrice:
-          isTransfer ? double.tryParse(_rentPrice.text.trim()) : null,
-      transferPrice:
-          isTransfer ? double.tryParse(_transferPrice.text.trim()) : null,
+      rentPrice: isTransfer ? double.tryParse(_rentPrice.text.trim()) : null,
+      transferPrice: isTransfer
+          ? double.tryParse(_transferPrice.text.trim())
+          : null,
       equipmentIncluded: isTransfer ? _equipmentIncluded : null,
       hasLicense: isTransfer ? _hasLicense : null,
       areaM2: isTransfer ? int.tryParse(_areaM2.text.trim()) : null,
@@ -397,18 +396,19 @@ class _MarketListingFormScreenState
                     DropdownButtonFormField<String>(
                       initialValue: _listingType,
                       decoration: const InputDecoration(
-                        labelText:
-                            AppStrings.marketListingFieldListingType,
+                        labelText: AppStrings.marketListingFieldListingType,
                       ),
                       items: MarketplaceTaxonomy.listingTypes.entries
-                          .map((e) => DropdownMenuItem(
-                                value: e.key,
-                                child: Text(e.value),
-                              ))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(
-                        () => _listingType = v ??
-                            MarketplaceTaxonomy.defaultListingType,
+                        () => _listingType =
+                            v ?? MarketplaceTaxonomy.defaultListingType,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),
@@ -433,10 +433,12 @@ class _MarketListingFormScreenState
                         labelText: AppStrings.marketListingFieldCategory,
                       ),
                       items: AppStrings.marketCategoryLabels.entries
-                          .map((e) => DropdownMenuItem(
-                                value: e.key,
-                                child: Text(e.value),
-                              ))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) =>
                           setState(() => _category = v ?? 'diger'),
@@ -448,19 +450,21 @@ class _MarketListingFormScreenState
                       DropdownButtonFormField<String?>(
                         initialValue: _equipmentCategory,
                         decoration: const InputDecoration(
-                          labelText: AppStrings
-                              .marketListingFieldEquipmentCategory,
+                          labelText:
+                              AppStrings.marketListingFieldEquipmentCategory,
                         ),
                         items: [
                           const DropdownMenuItem<String?>(
-                              value: null, child: Text('—')),
+                            value: null,
+                            child: Text('—'),
+                          ),
                           ...MarketplaceTaxonomy.equipmentCategories.entries
                               .map(
-                            (e) => DropdownMenuItem<String?>(
-                              value: e.key,
-                              child: Text(e.value),
-                            ),
-                          ),
+                                (e) => DropdownMenuItem<String?>(
+                                  value: e.key,
+                                  child: Text(e.value),
+                                ),
+                              ),
                         ],
                         onChanged: (v) =>
                             setState(() => _equipmentCategory = v),
@@ -469,12 +473,13 @@ class _MarketListingFormScreenState
                       DropdownButtonFormField<String?>(
                         initialValue: _condition,
                         decoration: const InputDecoration(
-                          labelText:
-                              AppStrings.marketListingFieldCondition,
+                          labelText: AppStrings.marketListingFieldCondition,
                         ),
                         items: [
                           const DropdownMenuItem<String?>(
-                              value: null, child: Text('—')),
+                            value: null,
+                            child: Text('—'),
+                          ),
                           ...MarketplaceTaxonomy.conditions.entries.map(
                             (e) => DropdownMenuItem<String?>(
                               value: e.key,
@@ -491,8 +496,7 @@ class _MarketListingFormScreenState
                             child: TextFormField(
                               controller: _brand,
                               decoration: const InputDecoration(
-                                labelText:
-                                    AppStrings.marketListingFieldBrand,
+                                labelText: AppStrings.marketListingFieldBrand,
                               ),
                             ),
                           ),
@@ -501,8 +505,7 @@ class _MarketListingFormScreenState
                             child: TextFormField(
                               controller: _model,
                               decoration: const InputDecoration(
-                                labelText:
-                                    AppStrings.marketListingFieldModel,
+                                labelText: AppStrings.marketListingFieldModel,
                               ),
                             ),
                           ),
@@ -532,8 +535,7 @@ class _MarketListingFormScreenState
                               controller: _price,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                labelText:
-                                    AppStrings.marketListingFieldPrice,
+                                labelText: AppStrings.marketListingFieldPrice,
                               ),
                             ),
                           ),
@@ -542,10 +544,8 @@ class _MarketListingFormScreenState
                             child: TextFormField(
                               controller: _unit,
                               decoration: const InputDecoration(
-                                labelText:
-                                    AppStrings.marketListingFieldUnit,
-                                hintText:
-                                    AppStrings.marketListingFieldUnitHint,
+                                labelText: AppStrings.marketListingFieldUnit,
+                                hintText: AppStrings.marketListingFieldUnitHint,
                               ),
                             ),
                           ),
@@ -563,8 +563,8 @@ class _MarketListingFormScreenState
                               controller: _transferPrice,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                labelText: AppStrings
-                                    .marketListingFieldTransferPrice,
+                                labelText:
+                                    AppStrings.marketListingFieldTransferPrice,
                               ),
                             ),
                           ),
@@ -574,8 +574,8 @@ class _MarketListingFormScreenState
                               controller: _rentPrice,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                labelText: AppStrings
-                                    .marketListingFieldRentPrice,
+                                labelText:
+                                    AppStrings.marketListingFieldRentPrice,
                               ),
                             ),
                           ),
@@ -599,8 +599,7 @@ class _MarketListingFormScreenState
                       ),
                       const SizedBox(height: AppSpacing.m),
                       _TriSwitch(
-                        title: AppStrings
-                            .marketListingFieldEquipmentIncluded,
+                        title: AppStrings.marketListingFieldEquipmentIncluded,
                         value: _equipmentIncluded,
                         onChanged: (v) =>
                             setState(() => _equipmentIncluded = v),
@@ -653,10 +652,8 @@ class _MarketListingFormScreenState
                       minLines: 3,
                       maxLines: 6,
                       decoration: const InputDecoration(
-                        labelText:
-                            AppStrings.marketListingFieldDescription,
-                        hintText: AppStrings
-                            .marketListingFieldDescriptionHint,
+                        labelText: AppStrings.marketListingFieldDescription,
+                        hintText: AppStrings.marketListingFieldDescriptionHint,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),
@@ -680,10 +677,12 @@ class _MarketListingFormScreenState
                         labelText: 'Para birimi',
                       ),
                       items: MarketplaceTaxonomy.currencies.entries
-                          .map((e) => DropdownMenuItem(
-                                value: e.key,
-                                child: Text(e.value),
-                              ))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(
                         () => _currency =
@@ -700,25 +699,27 @@ class _MarketListingFormScreenState
                         labelText: 'Tercih edilen iletişim',
                       ),
                       items: MarketplaceTaxonomy.contactPreferences.entries
-                          .map((e) => DropdownMenuItem(
-                                value: e.key,
-                                child: Text(e.value),
-                              ))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(
-                        () => _contactPreference = v ??
-                            MarketplaceTaxonomy.defaultContactPreference,
+                        () => _contactPreference =
+                            v ?? MarketplaceTaxonomy.defaultContactPreference,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),
                     TextFormField(
                       controller: _contactPhone,
                       keyboardType: TextInputType.phone,
-                      enabled: _contactPreference !=
+                      enabled:
+                          _contactPreference !=
                           MarketplaceTaxonomy.contactPreferenceInApp,
                       decoration: const InputDecoration(
-                        labelText:
-                            AppStrings.marketListingFieldContactPhone,
+                        labelText: AppStrings.marketListingFieldContactPhone,
                         hintText: '+90 …',
                       ),
                     ),
@@ -726,11 +727,11 @@ class _MarketListingFormScreenState
                     TextFormField(
                       controller: _contactWhatsapp,
                       keyboardType: TextInputType.phone,
-                      enabled: _contactPreference !=
+                      enabled:
+                          _contactPreference !=
                           MarketplaceTaxonomy.contactPreferenceInApp,
                       decoration: const InputDecoration(
-                        labelText:
-                            AppStrings.marketListingFieldContactWhatsapp,
+                        labelText: AppStrings.marketListingFieldContactWhatsapp,
                         hintText: '+90 …',
                       ),
                     ),
@@ -740,9 +741,7 @@ class _MarketListingFormScreenState
                       const SizedBox(height: AppSpacing.m),
                       DropdownButtonFormField<String>(
                         initialValue: _status,
-                        decoration: const InputDecoration(
-                          labelText: 'Durum',
-                        ),
+                        decoration: const InputDecoration(labelText: 'Durum'),
                         items: const [
                           DropdownMenuItem(
                             value: 'active',
@@ -798,8 +797,7 @@ class _MarketListingFormScreenState
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.8,
-                        valueColor:
-                            AlwaysStoppedAnimation(Colors.white),
+                        valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
                       ),
                     )
                   : const Icon(Icons.send_rounded, size: 18),
@@ -814,7 +812,7 @@ class _MarketListingFormScreenState
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.copper,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.brandInk,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
@@ -833,10 +831,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: AppSpacing.m,
-        bottom: AppSpacing.s,
-      ),
+      padding: const EdgeInsets.only(top: AppSpacing.m, bottom: AppSpacing.s),
       child: Text(
         label,
         style: const TextStyle(
@@ -901,10 +896,7 @@ class _PhotosRow extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           AppStrings.marketListingPhotoMaxHint,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 11.5,
-          ),
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
         ),
       ],
     );
@@ -921,12 +913,7 @@ class _PhotoThumb extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.s),
-          child: Image.memory(
-            bytes,
-            width: 88,
-            height: 88,
-            fit: BoxFit.cover,
-          ),
+          child: Image.memory(bytes, width: 88, height: 88, fit: BoxFit.cover),
         ),
         Positioned(
           right: 2,
@@ -943,7 +930,7 @@ class _PhotoThumb extends StatelessWidget {
                 padding: EdgeInsets.all(3),
                 child: Icon(
                   Icons.close_rounded,
-                  color: Colors.white,
+                  color: AppColors.surface,
                   size: 14,
                 ),
               ),
@@ -968,17 +955,14 @@ class _PhotoAddButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.s),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       child: Container(
         width: 96,
         height: 88,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           color: AppColors.surface,
-          border: Border.all(
-            color: AppColors.borderHairline,
-            width: 0.6,
-          ),
+          border: Border.all(color: AppColors.borderHairline, width: 0.6),
         ),
         alignment: Alignment.center,
         child: Column(
@@ -1033,9 +1017,7 @@ class _TriSwitch extends StatelessWidget {
             ButtonSegment(value: 1, label: Text('Evet')),
             ButtonSegment(value: 0, label: Text('Hayır')),
           ],
-          selected: {
-            value == null ? -1 : (value! ? 1 : 0),
-          },
+          selected: {value == null ? -1 : (value! ? 1 : 0)},
           onSelectionChanged: (s) {
             final v = s.first;
             onChanged(v == -1 ? null : (v == 1));

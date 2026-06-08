@@ -31,7 +31,7 @@ class JobSeekPostsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni ilan'),
         backgroundColor: AppColors.copper,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.surface,
       ),
       body: SafeArea(
         child: async.when(
@@ -56,8 +56,7 @@ class JobSeekPostsScreen extends ConsumerWidget {
                 AppSpacing.xxl + 40,
               ),
               itemCount: items.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSpacing.s),
+              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.s),
               itemBuilder: (_, i) => JobSeekPostCard(post: items[i]),
             );
           },
@@ -79,8 +78,7 @@ class JobSeekPostCard extends ConsumerWidget {
     final df = DateFormat('d MMM yyyy', 'tr_TR');
     return PremiumCard(
       padding: const EdgeInsets.all(AppSpacing.l),
-      onTap: () =>
-          context.push('${AppRoutes.jobSeek}/${post.id}/edit'),
+      onTap: () => context.push('${AppRoutes.jobSeek}/${post.id}/edit'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -132,9 +130,7 @@ class JobSeekPostCard extends ConsumerWidget {
           Row(
             children: [
               Text(
-                post.createdAt != null
-                    ? df.format(post.createdAt!)
-                    : '—',
+                post.createdAt != null ? df.format(post.createdAt!) : '—',
                 style: const TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 11.5,
@@ -146,8 +142,11 @@ class JobSeekPostCard extends ConsumerWidget {
                 tooltip: 'Paylaş',
                 onPressed: () =>
                     Share.share(post.toShareText(), subject: 'FırınNet — İş'),
-                icon: const Icon(Icons.ios_share_rounded,
-                    color: AppColors.softGold, size: 18),
+                icon: const Icon(
+                  Icons.ios_share_rounded,
+                  color: AppColors.softGold,
+                  size: 18,
+                ),
               ),
               IconButton(
                 tooltip: post.isActive ? 'Yayını kapat' : 'Yayına aç',
@@ -156,15 +155,20 @@ class JobSeekPostCard extends ConsumerWidget {
                   post.isActive
                       ? Icons.toggle_on_rounded
                       : Icons.toggle_off_outlined,
-                  color: post.isActive ? AppColors.success : AppColors.textMuted,
+                  color: post.isActive
+                      ? AppColors.success
+                      : AppColors.textMuted,
                   size: 22,
                 ),
               ),
               IconButton(
                 tooltip: 'Sil',
                 onPressed: () => _delete(context, ref),
-                icon: const Icon(Icons.delete_outline,
-                    color: AppColors.textMuted, size: 18),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.textMuted,
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -191,9 +195,7 @@ class JobSeekPostCard extends ConsumerWidget {
         } catch (_) {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppStrings.jobSeekPostToggleError),
-            ),
+            const SnackBar(content: Text(AppStrings.jobSeekPostToggleError)),
           );
         }
       },
@@ -206,11 +208,14 @@ class JobSeekPostCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('İlanı sil'),
-        content: const Text('Bu ilan kalıcı olarak silinecek. Devam edilsin mi?'),
+        content: const Text(
+          'Bu ilan kalıcı olarak silinecek. Devam edilsin mi?',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Vazgeç')),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Vazgeç'),
+          ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
@@ -235,9 +240,7 @@ class JobSeekPostCard extends ConsumerWidget {
         } catch (_) {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppStrings.jobSeekPostDeleteError),
-            ),
+            const SnackBar(content: Text(AppStrings.jobSeekPostDeleteError)),
           );
         }
       },
@@ -298,8 +301,11 @@ class _EmptyState extends StatelessWidget {
                     color: AppColors.softGold.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.s),
                   ),
-                  child: const Icon(Icons.campaign_outlined,
-                      color: AppColors.softGold, size: 22),
+                  child: const Icon(
+                    Icons.campaign_outlined,
+                    color: AppColors.softGold,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.m),
                 const Text(
@@ -327,7 +333,8 @@ class _EmptyState extends StatelessWidget {
           AppPrimaryButton(
             label: 'İlk iş ilanını ver',
             icon: Icons.add_rounded,
-            onPressed: () => Navigator.of(context).pushNamed(AppRoutes.jobSeekNew),
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.jobSeekNew),
           ),
         ],
       ),

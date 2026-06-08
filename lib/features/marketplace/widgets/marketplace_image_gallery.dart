@@ -26,8 +26,7 @@ class MarketplaceImageGallery extends StatefulWidget {
       _MarketplaceImageGalleryState();
 }
 
-class _MarketplaceImageGalleryState
-    extends State<MarketplaceImageGallery> {
+class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
   late final PageController _controller;
   int _index = 0;
 
@@ -106,7 +105,9 @@ class _MarketplaceImageGalleryState
                   width: selected ? 18 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: selected ? AppColors.copper : AppColors.borderHairline,
+                    color: selected
+                        ? AppColors.copper
+                        : AppColors.borderHairline,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 );
@@ -120,11 +121,9 @@ class _MarketplaceImageGalleryState
   void _openFullscreen(String url) {
     showDialog<void>(
       context: context,
-      barrierColor: Colors.black,
-      builder: (_) => _FullscreenViewer(
-        imageUrls: widget.imageUrls,
-        initialIndex: _index,
-      ),
+      barrierColor: AppColors.imageScrimDark,
+      builder: (_) =>
+          _FullscreenViewer(imageUrls: widget.imageUrls, initialIndex: _index),
     );
   }
 }
@@ -161,7 +160,7 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.imageScrimDark,
       body: SafeArea(
         child: Stack(
           children: [
@@ -178,11 +177,13 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
                       imageUrl: widget.imageUrls[i],
                       fit: BoxFit.contain,
                       placeholder: (_, __) => const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
+                        child: CircularProgressIndicator(
+                          color: AppColors.surface,
+                        ),
                       ),
                       errorWidget: (_, __, ___) => const Icon(
                         Icons.broken_image_outlined,
-                        color: Colors.white54,
+                        color: AppColors.surface54,
                         size: 64,
                       ),
                     ),
@@ -194,7 +195,7 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
               top: 8,
               right: 8,
               child: IconButton(
-                icon: const Icon(Icons.close_rounded, color: Colors.white),
+                icon: const Icon(Icons.close_rounded, color: AppColors.surface),
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
             ),
@@ -207,7 +208,7 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
                   child: Text(
                     '${_index + 1} / ${widget.imageUrls.length}',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

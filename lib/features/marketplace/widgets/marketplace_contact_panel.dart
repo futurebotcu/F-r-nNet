@@ -61,9 +61,9 @@ class MarketplaceContactPanel extends StatelessWidget {
 
   void _copyAndToast(BuildContext context, String value) {
     Clipboard.setData(ClipboardData(text: value));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Kopyalandı: $value')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Kopyalandı: $value')));
   }
 
   @override
@@ -79,10 +79,8 @@ class MarketplaceContactPanel extends StatelessWidget {
         AppSpacing.m,
       ),
       decoration: const BoxDecoration(
-        color: AppColors.elevatedCard,
-        border: Border(
-          top: BorderSide(color: AppColors.borderHairline, width: 0.6),
-        ),
+        color: AppColors.surface,
+        boxShadow: AppShadow.card,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -114,7 +112,14 @@ class MarketplaceContactPanel extends StatelessWidget {
                       color: AppColors.borderHairline,
                       width: 0.8,
                     ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 10),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
               ),
@@ -133,7 +138,14 @@ class MarketplaceContactPanel extends StatelessWidget {
                       color: AppColors.borderHairline,
                       width: 0.8,
                     ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 10),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
               ),
@@ -150,7 +162,12 @@ class MarketplaceContactPanel extends StatelessWidget {
           if (_hasSecondaryCta(wantsInApp, hasPhone, hasWhatsapp)) ...[
             const SizedBox(height: AppSpacing.s),
             Row(
-              children: _secondaryCtas(context, wantsInApp, hasPhone, hasWhatsapp),
+              children: _secondaryCtas(
+                context,
+                wantsInApp,
+                hasPhone,
+                hasWhatsapp,
+              ),
             ),
           ],
         ],
@@ -174,9 +191,13 @@ class MarketplaceContactPanel extends StatelessWidget {
         ),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.brandInk,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
           ),
         ),
       );
@@ -191,9 +212,13 @@ class MarketplaceContactPanel extends StatelessWidget {
         ),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.brandInk,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
           ),
         ),
       );
@@ -208,9 +233,13 @@ class MarketplaceContactPanel extends StatelessWidget {
         ),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.brandInk,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
           ),
         ),
       );
@@ -224,9 +253,13 @@ class MarketplaceContactPanel extends StatelessWidget {
       ),
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.copper,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.brandInk,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
         ),
       ),
     );
@@ -260,14 +293,22 @@ class MarketplaceContactPanel extends StatelessWidget {
                 color: AppColors.borderHairline,
                 width: 0.8,
               ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
               padding: const EdgeInsets.symmetric(vertical: 10),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
         ),
       );
     }
     if ((wantsInApp || hasWhatsapp) && hasPhone) {
-      if (children.isNotEmpty) children.add(const SizedBox(width: AppSpacing.s));
+      if (children.isNotEmpty)
+        children.add(const SizedBox(width: AppSpacing.s));
       children.add(
         Expanded(
           child: OutlinedButton.icon(
@@ -280,7 +321,14 @@ class MarketplaceContactPanel extends StatelessWidget {
                 color: AppColors.borderHairline,
                 width: 0.8,
               ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
               padding: const EdgeInsets.symmetric(vertical: 10),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
         ),
@@ -294,8 +342,7 @@ class MarketplaceContactPanel extends StatelessWidget {
     final buf = StringBuffer()
       ..writeln('FırınNet Market — ${listing.title}')
       ..writeln();
-    final type =
-        AppStrings.marketListingTypeLabels[listing.listingType] ?? '';
+    final type = AppStrings.marketListingTypeLabels[listing.listingType] ?? '';
     if (type.isNotEmpty) buf.writeln(type);
     if (listing.price != null) {
       buf.writeln('₺ ${listing.price!.toStringAsFixed(0)}');

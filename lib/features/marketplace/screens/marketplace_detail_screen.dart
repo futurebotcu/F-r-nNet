@@ -57,7 +57,7 @@ class MarketplaceDetailScreen extends ConsumerWidget {
     final me = ref.watch(currentAuthUserProvider);
     return PremiumScaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.elevatedCard,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -90,15 +90,18 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                   Icons.more_horiz_rounded,
                   color: AppColors.textPrimary,
                 ),
-                color: AppColors.elevatedCard,
+                color: AppColors.surface,
                 onSelected: (v) => _ownerAction(context, ref, l, v),
                 itemBuilder: (_) => const [
                   PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
-                        Icon(Icons.edit_outlined, size: 18,
-                            color: AppColors.textPrimary),
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 18,
+                          color: AppColors.textPrimary,
+                        ),
                         SizedBox(width: 8),
                         Text('Düzenle'),
                       ],
@@ -108,8 +111,11 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                     value: 'pause',
                     child: Row(
                       children: [
-                        Icon(Icons.pause_circle_outline, size: 18,
-                            color: AppColors.textPrimary),
+                        Icon(
+                          Icons.pause_circle_outline,
+                          size: 18,
+                          color: AppColors.textPrimary,
+                        ),
                         SizedBox(width: 8),
                         Text('İlanı duraklat'),
                       ],
@@ -119,8 +125,11 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                     value: 'sold',
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle_outline, size: 18,
-                            color: AppColors.success),
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 18,
+                          color: AppColors.success,
+                        ),
                         SizedBox(width: 8),
                         Text('Satıldı/Devredildi olarak işaretle'),
                       ],
@@ -130,8 +139,11 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline_rounded, size: 18,
-                            color: AppColors.danger),
+                        Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                          color: AppColors.danger,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'İlanı sil',
@@ -268,7 +280,7 @@ class MarketplaceDetailScreen extends ConsumerWidget {
           final ok = await showDialog<bool>(
             context: context,
             builder: (_) => AlertDialog(
-              backgroundColor: AppColors.elevatedCard,
+              backgroundColor: AppColors.surface,
               content: const Text('Bu ilanı silmek istiyor musun?'),
               actions: [
                 TextButton(
@@ -279,6 +291,9 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                   onPressed: () => Navigator.of(context).pop(true),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.danger,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
                   ),
                   child: const Text('Sil'),
                 ),
@@ -288,9 +303,9 @@ class MarketplaceDetailScreen extends ConsumerWidget {
           if (ok != true || !context.mounted) return;
           await repo.softDeleteListing(l.id!);
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('İlan silindi.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('İlan silindi.')));
           ref.invalidate(activeMarketListingsProvider(null));
           ref.invalidate(myMarketListingsProvider);
           context.pop();
@@ -299,9 +314,9 @@ class MarketplaceDetailScreen extends ConsumerWidget {
       ref.invalidate(marketListingByIdProvider(l.id!));
       ref.invalidate(activeMarketListingsProvider(null));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('İlan güncellendi.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('İlan güncellendi.')));
       }
     } catch (e) {
       debugPrint('[FirinNet][MarketDetail] owner action error: $e');
@@ -320,8 +335,9 @@ class _DetailBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final imageUrls =
-        listing.mediaList.map((m) => m.publicUrl).toList(growable: false);
+    final imageUrls = listing.mediaList
+        .map((m) => m.publicUrl)
+        .toList(growable: false);
     return ListView(
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
@@ -333,7 +349,10 @@ class _DetailBody extends ConsumerWidget {
         _InfoSection(listing: listing),
         if ((listing.description ?? '').trim().isNotEmpty) ...[
           const Divider(
-              height: 1, thickness: 0.6, color: AppColors.borderHairline),
+            height: 1,
+            thickness: 0.6,
+            color: AppColors.borderHairline,
+          ),
           _SectionLabel(label: AppStrings.marketDetailDescription),
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -353,11 +372,17 @@ class _DetailBody extends ConsumerWidget {
           ),
         ],
         const Divider(
-            height: 1, thickness: 0.6, color: AppColors.borderHairline),
+          height: 1,
+          thickness: 0.6,
+          color: AppColors.borderHairline,
+        ),
         _SectionLabel(label: AppStrings.marketDetailAttributes),
         _AttributesGrid(listing: listing),
         const Divider(
-            height: 1, thickness: 0.6, color: AppColors.borderHairline),
+          height: 1,
+          thickness: 0.6,
+          color: AppColors.borderHairline,
+        ),
         _OwnerSection(listing: listing),
         const SizedBox(height: AppSpacing.xxl),
       ],
@@ -385,17 +410,17 @@ class _InfoSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.softGold.withValues(alpha: 0.14),
+              color: AppColors.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(AppRadius.pill),
               border: Border.all(
-                color: AppColors.softGold.withValues(alpha: 0.32),
-                width: 0.6,
+                color: AppColors.primary.withValues(alpha: 0.18),
+                width: 0.8,
               ),
             ),
             child: Text(
               AppStrings.marketListingTypeLabels[listing.listingType] ?? '',
               style: const TextStyle(
-                color: AppColors.softGold,
+                color: AppColors.primary,
                 fontWeight: FontWeight.w800,
                 fontSize: 11.5,
               ),
@@ -470,7 +495,7 @@ class _PriceBlock extends StatelessWidget {
     return Text(
       '₺ ${listing.price!.toStringAsFixed(0)}$unit',
       style: const TextStyle(
-        color: AppColors.softGold,
+        color: AppColors.primary,
         fontWeight: FontWeight.w800,
         fontSize: 22,
       ),
@@ -487,12 +512,9 @@ class _PriceLine extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.softGold.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(AppRadius.s),
-        border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.32),
-          width: 0.6,
-        ),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        boxShadow: AppShadow.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,7 +530,7 @@ class _PriceLine extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.primary,
               fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
@@ -550,17 +572,22 @@ class _AttributesGrid extends StatelessWidget {
 
   List<MapEntry<String, String>> _entries() {
     final out = <MapEntry<String, String>>[];
-    out.add(MapEntry(
-      AppStrings.marketAttrCategory,
-      AppStrings.marketCategoryLabels[listing.category] ?? listing.category,
-    ));
+    out.add(
+      MapEntry(
+        AppStrings.marketAttrCategory,
+        AppStrings.marketCategoryLabels[listing.category] ?? listing.category,
+      ),
+    );
     if (listing.isEquipmentSale) {
       if (listing.equipmentCategory != null) {
-        out.add(MapEntry(
-          AppStrings.marketAttrEquipmentCategory,
-          AppStrings.marketEquipmentCategoryLabels[listing.equipmentCategory] ??
-              listing.equipmentCategory!,
-        ));
+        out.add(
+          MapEntry(
+            AppStrings.marketAttrEquipmentCategory,
+            AppStrings.marketEquipmentCategoryLabels[listing
+                    .equipmentCategory] ??
+                listing.equipmentCategory!,
+          ),
+        );
       }
       if (listing.brand != null && listing.brand!.isNotEmpty) {
         out.add(MapEntry(AppStrings.marketAttrBrand, listing.brand!));
@@ -572,11 +599,13 @@ class _AttributesGrid extends StatelessWidget {
         out.add(MapEntry(AppStrings.marketAttrYear, '${listing.year}'));
       }
       if (listing.condition != null) {
-        out.add(MapEntry(
-          AppStrings.marketAttrCondition,
-          AppStrings.marketConditionLabels[listing.condition!] ??
-              listing.condition!,
-        ));
+        out.add(
+          MapEntry(
+            AppStrings.marketAttrCondition,
+            AppStrings.marketConditionLabels[listing.condition!] ??
+                listing.condition!,
+          ),
+        );
       }
     }
     if (listing.isBakeryTransfer) {
@@ -584,25 +613,30 @@ class _AttributesGrid extends StatelessWidget {
         out.add(MapEntry(AppStrings.marketAttrAreaM2, '${listing.areaM2} m²'));
       }
       if (listing.equipmentIncluded != null) {
-        out.add(MapEntry(
-          AppStrings.marketAttrEquipmentIncluded,
-          listing.equipmentIncluded!
-              ? AppStrings.marketAttrYes
-              : AppStrings.marketAttrNo,
-        ));
+        out.add(
+          MapEntry(
+            AppStrings.marketAttrEquipmentIncluded,
+            listing.equipmentIncluded!
+                ? AppStrings.marketAttrYes
+                : AppStrings.marketAttrNo,
+          ),
+        );
       }
       if (listing.hasLicense != null) {
-        out.add(MapEntry(
-          AppStrings.marketAttrHasLicense,
-          listing.hasLicense!
-              ? AppStrings.marketAttrYes
-              : AppStrings.marketAttrNo,
-        ));
+        out.add(
+          MapEntry(
+            AppStrings.marketAttrHasLicense,
+            listing.hasLicense!
+                ? AppStrings.marketAttrYes
+                : AppStrings.marketAttrNo,
+          ),
+        );
       }
     }
     if (listing.negotiable) {
-      out.add(MapEntry(AppStrings.marketAttrNegotiable,
-          AppStrings.marketAttrYes));
+      out.add(
+        MapEntry(AppStrings.marketAttrNegotiable, AppStrings.marketAttrYes),
+      );
     }
     // M3 polish: controlled-data taxonomy label vurgusu.
     final contactLabel = MarketplaceTaxonomy.contactPreferenceLabel(
@@ -613,8 +647,7 @@ class _AttributesGrid extends StatelessWidget {
     }
     if (listing.currency.isNotEmpty &&
         listing.currency != MarketplaceTaxonomy.defaultCurrency) {
-      final cur =
-          MarketplaceTaxonomy.currencyLabel(listing.currency);
+      final cur = MarketplaceTaxonomy.currencyLabel(listing.currency);
       if (cur.isNotEmpty) {
         out.add(MapEntry(AppStrings.marketAttrCurrency, cur));
       }
@@ -647,7 +680,9 @@ class _AttributesGrid extends StatelessWidget {
         AppSpacing.l,
       ),
       child: Column(
-        children: entries.map((e) => _AttrRow(label: e.key, value: e.value)).toList(),
+        children: entries
+            .map((e) => _AttrRow(label: e.key, value: e.value))
+            .toList(),
       ),
     );
   }
@@ -712,19 +747,15 @@ class _OwnerSection extends StatelessWidget {
         AppSpacing.l,
       ),
       child: InkWell(
-        onTap: () => context.push(
-          '${AppRoutes.userPublicProfile}/${listing.ownerId}',
-        ),
+        onTap: () =>
+            context.push('${AppRoutes.userPublicProfile}/${listing.ownerId}'),
         borderRadius: BorderRadius.circular(AppRadius.m),
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.m),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadius.m),
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            boxShadow: AppShadow.card,
           ),
           child: Row(
             children: [
@@ -734,16 +765,12 @@ class _OwnerSection extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.softGold.withValues(alpha: 0.18),
-                  border: Border.all(
-                    color: AppColors.softGold.withValues(alpha: 0.32),
-                    width: 0.8,
-                  ),
+                  color: AppColors.primary.withValues(alpha: 0.10),
                 ),
                 child: Text(
                   initial,
                   style: const TextStyle(
-                    color: AppColors.softGold,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w800,
                     fontSize: 17,
                   ),
@@ -768,7 +795,7 @@ class _OwnerSection extends StatelessWidget {
                       Text(
                         listing.authorRole!,
                         style: const TextStyle(
-                          color: AppColors.softGold,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w700,
                           fontSize: 12.5,
                         ),
@@ -800,26 +827,22 @@ class _LocationChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.softGold.withValues(alpha: 0.12),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.32),
-          width: 0.6,
+          color: AppColors.primary.withValues(alpha: 0.16),
+          width: 0.8,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.place_outlined,
-            size: 13,
-            color: AppColors.softGold,
-          ),
+          const Icon(Icons.place_outlined, size: 13, color: AppColors.primary),
           const SizedBox(width: 4),
           Text(
             label,
             style: const TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.primary,
               fontWeight: FontWeight.w800,
               fontSize: 12,
             ),

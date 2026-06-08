@@ -12,15 +12,13 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/interactions.dart';
 import '../data/marketplace_taxonomy.dart';
 import '../models/market_filters.dart';
 import '../../../core/widgets/location_picker.dart';
 
 class MarketplaceFiltersSheet extends StatefulWidget {
-  const MarketplaceFiltersSheet({
-    super.key,
-    required this.initial,
-  });
+  const MarketplaceFiltersSheet({super.key, required this.initial});
 
   final MarketFilters initial;
 
@@ -31,7 +29,7 @@ class MarketplaceFiltersSheet extends StatefulWidget {
     return showModalBottomSheet<MarketFilters>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.elevatedCard,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
       ),
@@ -179,7 +177,10 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                 ),
               ),
               const Divider(
-                  height: 1, thickness: 0.6, color: AppColors.borderHairline),
+                height: 1,
+                thickness: 0.6,
+                color: AppColors.borderHairline,
+              ),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(
@@ -196,14 +197,17 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                           label: 'Tümü',
                           selected: _f.listingType == null,
                           onTap: () => setState(
-                              () => _f = _f.copyWith(clearListingType: true)),
+                            () => _f = _f.copyWith(clearListingType: true),
+                          ),
                         ),
-                        for (final e in MarketplaceTaxonomy.listingTypes.entries)
+                        for (final e
+                            in MarketplaceTaxonomy.listingTypes.entries)
                           _Chip(
                             label: e.value,
                             selected: _f.listingType == e.key,
                             onTap: () => setState(
-                                () => _f = _f.copyWith(listingType: e.key)),
+                              () => _f = _f.copyWith(listingType: e.key),
+                            ),
                           ),
                       ],
                     ),
@@ -221,17 +225,21 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                             label: 'Tümü',
                             selected: _f.equipmentCategory == null,
                             onTap: () => setState(
-                              () => _f =
-                                  _f.copyWith(clearEquipmentCategory: true),
+                              () => _f = _f.copyWith(
+                                clearEquipmentCategory: true,
+                              ),
                             ),
                           ),
-                          for (final e in MarketplaceTaxonomy.equipmentCategories.entries)
+                          for (final e
+                              in MarketplaceTaxonomy
+                                  .equipmentCategories
+                                  .entries)
                             _Chip(
                               label: e.value,
                               selected: _f.equipmentCategory == e.key,
                               onTap: () => setState(
-                                () => _f =
-                                    _f.copyWith(equipmentCategory: e.key),
+                                () =>
+                                    _f = _f.copyWith(equipmentCategory: e.key),
                               ),
                             ),
                         ],
@@ -250,9 +258,9 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                             onClear: _province == null
                                 ? null
                                 : () => setState(() {
-                                      _province = null;
-                                      _district = null;
-                                    }),
+                                    _province = null;
+                                    _district = null;
+                                  }),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s),
@@ -317,15 +325,16 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                           label: 'Tümü',
                           selected: _f.condition == null,
                           onTap: () => setState(
-                              () => _f = _f.copyWith(clearCondition: true)),
+                            () => _f = _f.copyWith(clearCondition: true),
+                          ),
                         ),
-                        for (final e
-                            in MarketplaceTaxonomy.conditions.entries)
+                        for (final e in MarketplaceTaxonomy.conditions.entries)
                           _Chip(
                             label: e.value,
                             selected: _f.condition == e.key,
                             onTap: () => setState(
-                                () => _f = _f.copyWith(condition: e.key)),
+                              () => _f = _f.copyWith(condition: e.key),
+                            ),
                           ),
                       ],
                     ),
@@ -343,7 +352,10 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                 ),
               ),
               const Divider(
-                  height: 1, thickness: 0.6, color: AppColors.borderHairline),
+                height: 1,
+                thickness: 0.6,
+                color: AppColors.borderHairline,
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.l,
@@ -358,9 +370,13 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                     onPressed: _apply,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.copper,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.brandInk,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.m),
+                      ),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
                     ),
                     child: Text(
@@ -413,32 +429,32 @@ class _Chip extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected
-          ? AppColors.softGold.withValues(alpha: 0.18)
-          : AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadius.s),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.s),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.s),
-            border: Border.all(
-              color: selected
-                  ? AppColors.softGold
-                  : AppColors.borderHairline,
-              width: selected ? 1.0 : 0.6,
+    return PressScale(
+      onTap: null,
+      child: Material(
+        color: selected
+            ? AppColors.softGold.withValues(alpha: 0.18)
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(
+                color: selected ? AppColors.softGold : AppColors.borderHairline,
+                width: selected ? 1.0 : 0.6,
+              ),
             ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color:
-                  selected ? AppColors.softGold : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? AppColors.softGold : AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
             ),
           ),
         ),

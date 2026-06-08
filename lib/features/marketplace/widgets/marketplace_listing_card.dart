@@ -99,9 +99,7 @@ class MarketplaceListingCard extends StatelessWidget {
                           child: const SizedBox(
                             width: 22,
                             height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.6,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 1.6),
                           ),
                         ),
                         errorWidget: (_, __, ___) => const _PlaceholderArt(),
@@ -134,8 +132,8 @@ class MarketplaceListingCard extends StatelessWidget {
                                     ? Icons.bookmark_rounded
                                     : Icons.bookmark_border_rounded,
                                 color: listing.isSavedByMe
-                                    ? AppColors.softGold
-                                    : Colors.white,
+                                    ? AppColors.brandLemonPressed
+                                    : AppColors.surface,
                                 size: 20,
                               ),
                             ),
@@ -171,7 +169,7 @@ class MarketplaceListingCard extends StatelessWidget {
                     Text(
                       _priceLabel(),
                       style: const TextStyle(
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                         fontWeight: FontWeight.w800,
                         fontSize: 15.5,
                       ),
@@ -230,7 +228,7 @@ class _TypeBadge extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.surface,
           fontSize: 11.5,
           fontWeight: FontWeight.w800,
         ),
@@ -247,17 +245,14 @@ class _NegotiableChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(AppRadius.s),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.4),
-          width: 0.6,
-        ),
+        color: AppColors.brandLemonPale,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.brandLemonSoft, width: 0.6),
       ),
       child: const Text(
         'Pazarlık',
         style: TextStyle(
-          color: AppColors.copper,
+          color: AppColors.brandLemonPressed,
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
         ),
@@ -271,7 +266,7 @@ class _PlaceholderArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Görselsiz ilan — düz yüzey yerine sıcak buğday/krem gradient + softGold
+    // Gorselsiz ilan - white-first yuzey + lemon accent detay.
     // ikon (sahte görsel değil; FırınNet premium placeholder dili).
     return Container(
       alignment: Alignment.center,
@@ -289,15 +284,12 @@ class _PlaceholderArt extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: AppColors.card.withValues(alpha: 0.7),
-          border: Border.all(
-            color: AppColors.copper.withValues(alpha: 0.22),
-            width: 0.8,
-          ),
+          border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
         ),
         child: const Icon(
           Icons.storefront_outlined,
           size: 30,
-          color: AppColors.softGold,
+          color: AppColors.brandLemonPressed,
         ),
       ),
     );

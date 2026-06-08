@@ -28,7 +28,7 @@ class WorkerExperiencesScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Tecrübe ekle'),
         backgroundColor: AppColors.copper,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.surface,
       ),
       body: SafeArea(
         child: async.when(
@@ -36,8 +36,10 @@ class WorkerExperiencesScreen extends ConsumerWidget {
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
           error: (e, _) => Padding(
             padding: const EdgeInsets.all(AppSpacing.l),
-            child: Text('Okunamadı: $e',
-                style: const TextStyle(color: AppColors.danger)),
+            child: Text(
+              'Okunamadı: $e',
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
           data: (items) {
             if (items.isEmpty) {
@@ -51,10 +53,8 @@ class WorkerExperiencesScreen extends ConsumerWidget {
                 AppSpacing.xxl + 40,
               ),
               itemCount: items.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSpacing.s),
-              itemBuilder: (_, i) =>
-                  _ExperienceCard(experience: items[i]),
+              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.s),
+              itemBuilder: (_, i) => _ExperienceCard(experience: items[i]),
             );
           },
         ),
@@ -84,7 +84,10 @@ class _ExperienceCard extends ConsumerWidget {
     final df = DateFormat('MMM yyyy', 'tr_TR');
     final range = [
       if (experience.startDate != null) df.format(experience.startDate!),
-      if (experience.endDate != null) df.format(experience.endDate!) else if (experience.startDate != null) 'devam',
+      if (experience.endDate != null)
+        df.format(experience.endDate!)
+      else if (experience.startDate != null)
+        'devam',
     ].join(' — ');
 
     return PremiumCard(
@@ -107,8 +110,11 @@ class _ExperienceCard extends ConsumerWidget {
               IconButton(
                 tooltip: 'Kaldır',
                 onPressed: () => _confirmDelete(context, ref),
-                icon: const Icon(Icons.delete_outline,
-                    color: AppColors.textMuted, size: 18),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.textMuted,
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -118,16 +124,18 @@ class _ExperienceCard extends ConsumerWidget {
               child: Text(
                 experience.workplace!,
                 style: const TextStyle(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5),
+                  color: AppColors.softGold,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                ),
               ),
             ),
           const SizedBox(height: 4),
           Text(
-            [if (range.isNotEmpty) range, if (experience.city != null) experience.city!]
-                .where((s) => s.isNotEmpty)
-                .join(' · '),
+            [
+              if (range.isNotEmpty) range,
+              if (experience.city != null) experience.city!,
+            ].where((s) => s.isNotEmpty).join(' · '),
             style: const TextStyle(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w600,
@@ -254,7 +262,8 @@ class _AddExperienceSheet extends ConsumerStatefulWidget {
   const _AddExperienceSheet();
 
   @override
-  ConsumerState<_AddExperienceSheet> createState() => _AddExperienceSheetState();
+  ConsumerState<_AddExperienceSheet> createState() =>
+      _AddExperienceSheetState();
 }
 
 class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
@@ -297,9 +306,9 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pozisyon adı boş olamaz.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Pozisyon adı boş olamaz.')));
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -310,26 +319,30 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
     try {
       // M6A — şehir dual-write: city_code (taxonomy) + city (label fallback).
       final province = _selectedProvince;
-      await ref.read(workerRepositoryProvider).addExperience(WorkerExperience(
-            title: _title.text.trim(),
-            workplace: _workplace.text.trim().isEmpty
-                ? null
-                : _workplace.text.trim(),
-            city: province?.name,
-            cityCode: province?.code,
-            startDate: _start,
-            endDate: _end,
-            description: _description.text.trim().isEmpty
-                ? null
-                : _description.text.trim(),
-          ));
+      await ref
+          .read(workerRepositoryProvider)
+          .addExperience(
+            WorkerExperience(
+              title: _title.text.trim(),
+              workplace: _workplace.text.trim().isEmpty
+                  ? null
+                  : _workplace.text.trim(),
+              city: province?.name,
+              cityCode: province?.code,
+              startDate: _start,
+              endDate: _end,
+              description: _description.text.trim().isEmpty
+                  ? null
+                  : _description.text.trim(),
+            ),
+          );
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kaydedilemedi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -414,16 +427,19 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
                     child: OutlinedButton(
                       onPressed: () => _pickDate(start: true),
                       child: Text(
-                          _start == null ? 'Başlangıç' : df.format(_start!)),
+                        _start == null ? 'Başlangıç' : df.format(_start!),
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.s),
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => _pickDate(start: false),
-                      child: Text(_end == null
-                          ? 'Bitiş (boşsa: devam)'
-                          : df.format(_end!)),
+                      child: Text(
+                        _end == null
+                            ? 'Bitiş (boşsa: devam)'
+                            : df.format(_end!),
+                      ),
                     ),
                   ),
                 ],

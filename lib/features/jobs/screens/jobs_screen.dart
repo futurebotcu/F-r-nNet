@@ -56,7 +56,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
       final profile = ref.read(profileControllerProvider);
       final isCommercial =
           profile?.accountType == AccountType.commercial ||
-              profile?.accountType == AccountType.wholesaler;
+          profile?.accountType == AccountType.wholesaler;
       if (!isCommercial) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(AppStrings.jobOfferCommercialOnly)),
@@ -93,9 +93,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
             ),
             const SizedBox(height: AppSpacing.xs),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: _Segment(
                 index: _segmentIndex,
                 onChange: (i) => setState(() => _segmentIndex = i),
@@ -144,9 +142,7 @@ class _LookingList extends ConsumerWidget {
               );
             }
             return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: Column(
                 children: [
                   for (var i = 0; i < posts.length; i++) ...[
@@ -212,7 +208,8 @@ class _JobSeekCard extends ConsumerWidget {
     final profile = ref.watch(profileControllerProvider);
     final user = ref.watch(currentAuthUserProvider);
     final isOwn = user != null && post.ownerId == user.id;
-    final isCommercial = profile?.accountType == AccountType.commercial ||
+    final isCommercial =
+        profile?.accountType == AccountType.commercial ||
         profile?.accountType == AccountType.wholesaler;
     final showCta = !isOwn && (isCommercial || profile == null);
     final card = JobOpportunityCard(
@@ -259,7 +256,8 @@ class _HiringList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(activeJobOffersProvider);
     final profile = ref.watch(profileControllerProvider);
-    final canPostOffer = profile?.accountType == AccountType.commercial ||
+    final canPostOffer =
+        profile?.accountType == AccountType.commercial ||
         profile?.accountType == AccountType.wholesaler;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,18 +295,22 @@ class _HiringList extends ConsumerWidget {
                       ),
                       child: SizedBox(
                         width: double.infinity,
-                        height: 48,
+                        height: 42,
                         child: FilledButton.icon(
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: const Text(AppStrings.jobOfferAddCta),
-                          onPressed: () =>
-                              context.push(AppRoutes.jobOfferNew),
+                          icon: const Icon(Icons.add_rounded, size: 16),
+                          label: const Text(
+                            AppStrings.jobOfferAddCta,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          onPressed: () => context.push(AppRoutes.jobOfferNew),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.copper,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppColors.brandInk,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.m),
+                              borderRadius: BorderRadius.circular(AppRadius.m),
                             ),
                           ),
                         ),
@@ -318,9 +320,7 @@ class _HiringList extends ConsumerWidget {
               );
             }
             return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: Column(
                 children: [
                   for (var i = 0; i < offers.length; i++) ...[

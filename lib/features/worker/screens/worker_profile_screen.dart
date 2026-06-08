@@ -30,15 +30,9 @@ class WorkerProfileScreen extends ConsumerStatefulWidget {
 class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
   // M5 Data Foundation — meslek listesi ortak taxonomy'den; hardcoded
   // liste kaldırıldı. UI label gösterir, save'de code yazılır.
-  static List<String> get _professionCodes =>
-      FirinnetTaxonomy.professionCodes;
+  static List<String> get _professionCodes => FirinnetTaxonomy.professionCodes;
 
-  static const List<String> _shifts = [
-    'gunduz',
-    'gece',
-    'vardiyali',
-    'esnek',
-  ];
+  static const List<String> _shifts = ['gunduz', 'gece', 'vardiyali', 'esnek'];
 
   static String _shiftLabel(String key) {
     switch (key) {
@@ -111,12 +105,14 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
     if (p != null) {
       _initial = p;
       // M5 — code öncelikli; yoksa eski label'dan code'a çevir (legacy hydrate).
-      _professionCode = p.professionBadgeCode ??
+      _professionCode =
+          p.professionBadgeCode ??
           FirinnetTaxonomy.professionCodeFromLabel(p.professionBadge);
       _shift = p.shiftPreference;
       _workType = p.workType;
-      _experience.text =
-          p.experienceYears != null ? '${p.experienceYears}' : '';
+      _experience.text = p.experienceYears != null
+          ? '${p.experienceYears}'
+          : '';
       _salary.text = p.salaryExpectation != null
           ? p.salaryExpectation!.toStringAsFixed(0)
           : '';
@@ -168,8 +164,7 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
       isScrollControlled: true,
       backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => _SkillPickerSheet(
         initialSelected: List<String>.from(_selectedSkillCodes),
@@ -209,22 +204,18 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
     try {
       final repo = ref.read(workerRepositoryProvider);
       // M6A — dual-write: city_codes (taxonomy) + cities (label fallback).
-      final cityCodes = <String>[
-        for (final p in _selectedProvinces) p.code,
-      ];
-      final cities = <String>[
-        for (final p in _selectedProvinces) p.name,
-      ];
+      final cityCodes = <String>[for (final p in _selectedProvinces) p.code];
+      final cities = <String>[for (final p in _selectedProvinces) p.name];
       // M7 — dual-write: skill_codes (taxonomy) + skills (label fallback).
       final skillCodes = List<String>.from(_selectedSkillCodes);
       final skills = <String>[
-        for (final c in skillCodes)
-          FirinnetTaxonomy.workerSkillLabel(c) ?? c,
+        for (final c in skillCodes) FirinnetTaxonomy.workerSkillLabel(c) ?? c,
       ];
       // M5 — dual-write: code (yeni) + label (backward compat).
       final code = _professionCode;
-      final label =
-          code == null ? null : FirinnetTaxonomy.professionLabel(code);
+      final label = code == null
+          ? null
+          : FirinnetTaxonomy.professionLabel(code);
       final draft = WorkerProfile(
         id: _initial?.id,
         ownerId: _initial?.ownerId,
@@ -252,9 +243,9 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
       Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kaydedilemedi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -288,8 +279,7 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
             _ChipPicker(
               // M5 — options = taxonomy code listesi; label çevirim helper'da.
               options: _professionCodes,
-              labelOf: (code) =>
-                  FirinnetTaxonomy.professionLabel(code) ?? code,
+              labelOf: (code) => FirinnetTaxonomy.professionLabel(code) ?? code,
               selected: _professionCode,
               onChanged: (v) => setState(() => _professionCode = v),
             ),
@@ -376,8 +366,11 @@ class _Hint extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.m),
       child: Row(
         children: [
-          const Icon(Icons.lightbulb_outline_rounded,
-              color: AppColors.softGold, size: 18),
+          const Icon(
+            Icons.lightbulb_outline_rounded,
+            color: AppColors.softGold,
+            size: 18,
+          ),
           const SizedBox(width: AppSpacing.s),
           Expanded(
             child: Text(
@@ -438,8 +431,8 @@ class _ChipPicker extends StatelessWidget {
             label: Text(labelOf(o)),
             selected: selected == o,
             onSelected: (v) => onChanged(v ? o : null),
-            selectedColor: AppColors.copper.withValues(alpha: 0.22),
-            backgroundColor: AppColors.card,
+            selectedColor: AppColors.copperMuted.withValues(alpha: 0.28),
+            backgroundColor: Colors.transparent,
             labelStyle: TextStyle(
               color: selected == o
                   ? AppColors.softGold
@@ -451,9 +444,9 @@ class _ChipPicker extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.pill),
               side: BorderSide(
                 color: selected == o
-                    ? AppColors.copper.withValues(alpha: 0.55)
-                    : AppColors.borderHairline,
-                width: 0.6,
+                    ? AppColors.copperMuted
+                    : AppColors.surfaceVariant,
+                width: 1,
               ),
             ),
           ),
@@ -485,7 +478,7 @@ class _CitiesPicker extends StatelessWidget {
         for (final p in selected)
           InputChip(
             label: Text(p.name),
-            backgroundColor: AppColors.card,
+            backgroundColor: AppColors.copperMuted.withValues(alpha: 0.22),
             labelStyle: const TextStyle(
               color: AppColors.softGold,
               fontWeight: FontWeight.w700,
@@ -499,10 +492,7 @@ class _CitiesPicker extends StatelessWidget {
             onDeleted: onRemove == null ? null : () => onRemove!(p),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              side: BorderSide(
-                color: AppColors.copper.withValues(alpha: 0.55),
-                width: 0.6,
-              ),
+              side: BorderSide(color: AppColors.copperMuted, width: 1),
             ),
           ),
         ActionChip(
@@ -520,13 +510,10 @@ class _CitiesPicker extends StatelessWidget {
             ),
           ),
           onPressed: onAdd,
-          backgroundColor: AppColors.card,
+          backgroundColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            side: const BorderSide(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            side: const BorderSide(color: AppColors.surfaceVariant, width: 1),
           ),
         ),
       ],
@@ -556,10 +543,8 @@ class _SkillsPicker extends StatelessWidget {
       children: [
         for (final code in selectedCodes)
           InputChip(
-            label: Text(
-              FirinnetTaxonomy.workerSkillLabel(code) ?? code,
-            ),
-            backgroundColor: AppColors.card,
+            label: Text(FirinnetTaxonomy.workerSkillLabel(code) ?? code),
+            backgroundColor: AppColors.copperMuted.withValues(alpha: 0.22),
             labelStyle: const TextStyle(
               color: AppColors.softGold,
               fontWeight: FontWeight.w700,
@@ -570,14 +555,10 @@ class _SkillsPicker extends StatelessWidget {
               size: 16,
               color: AppColors.textMuted,
             ),
-            onDeleted:
-                onRemove == null ? null : () => onRemove!(code),
+            onDeleted: onRemove == null ? null : () => onRemove!(code),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              side: BorderSide(
-                color: AppColors.copper.withValues(alpha: 0.55),
-                width: 0.6,
-              ),
+              side: BorderSide(color: AppColors.copperMuted, width: 1),
             ),
           ),
         ActionChip(
@@ -595,13 +576,10 @@ class _SkillsPicker extends StatelessWidget {
             ),
           ),
           onPressed: onAdd,
-          backgroundColor: AppColors.card,
+          backgroundColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            side: const BorderSide(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            side: const BorderSide(color: AppColors.surfaceVariant, width: 1),
           ),
         ),
       ],
@@ -708,9 +686,10 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                       label: Text(e.value),
                       selected: _selected.contains(e.key),
                       onSelected: (_) => _toggle(e.key),
-                      selectedColor:
-                          AppColors.copper.withValues(alpha: 0.22),
-                      backgroundColor: AppColors.card,
+                      selectedColor: AppColors.copperMuted.withValues(
+                        alpha: 0.28,
+                      ),
+                      backgroundColor: Colors.transparent,
                       labelStyle: TextStyle(
                         color: _selected.contains(e.key)
                             ? AppColors.softGold
@@ -722,9 +701,9 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                         borderRadius: BorderRadius.circular(AppRadius.pill),
                         side: BorderSide(
                           color: _selected.contains(e.key)
-                              ? AppColors.copper.withValues(alpha: 0.55)
-                              : AppColors.borderHairline,
-                          width: 0.6,
+                              ? AppColors.copperMuted
+                              : AppColors.surfaceVariant,
+                          width: 1,
                         ),
                       ),
                     ),
@@ -735,9 +714,8 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                 width: double.infinity,
                 height: 48,
                 child: FilledButton.icon(
-                  onPressed: () => Navigator.of(context).pop(
-                    _selected.toList(),
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context).pop(_selected.toList()),
                   icon: const Icon(Icons.check_rounded, size: 18),
                   label: Text(
                     'Onayla (${_selected.length})',
@@ -745,7 +723,7 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
