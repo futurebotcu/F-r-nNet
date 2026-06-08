@@ -29,10 +29,12 @@ class DealerPdfBuilder {
     final df = DateFormat('d MMMM yyyy, EEEE', 'tr_TR');
     final dt = DateFormat('d MMM, HH:mm', 'tr_TR');
 
-    final pw.Font? base =
-        regularFont != null ? pw.Font.ttf(regularFont.buffer.asByteData()) : null;
-    final pw.Font? bold =
-        boldFont != null ? pw.Font.ttf(boldFont.buffer.asByteData()) : null;
+    final pw.Font? base = regularFont != null
+        ? pw.Font.ttf(regularFont.buffer.asByteData())
+        : null;
+    final pw.Font? bold = boldFont != null
+        ? pw.Font.ttf(boldFont.buffer.asByteData())
+        : null;
 
     final doc = pw.Document(
       title: 'FırınNet — ${dealer.name} hesap özeti',
@@ -48,10 +50,10 @@ class DealerPdfBuilder {
     );
 
     // Renk paleti — uygulama dark ama PDF light/printer dostu.
-    const copper = PdfColor.fromInt(0xFFC26A2D);
-    const ink = PdfColor.fromInt(0xFF1A1612);
-    const muted = PdfColor.fromInt(0xFF6E6864);
-    const line = PdfColor.fromInt(0xFFE5DED5);
+    const lemon = PdfColor.fromInt(0xFFFFE66D);
+    const ink = PdfColor.fromInt(0xFF111827);
+    const muted = PdfColor.fromInt(0xFF6B7280);
+    const line = PdfColor.fromInt(0xFFF2F2F2);
 
     pw.Widget kv(String k, String v, {pw.TextStyle? vStyle}) {
       return pw.Padding(
@@ -59,13 +61,11 @@ class DealerPdfBuilder {
         child: pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text(
-              k,
-              style: const pw.TextStyle(color: muted, fontSize: 11),
-            ),
+            pw.Text(k, style: const pw.TextStyle(color: muted, fontSize: 11)),
             pw.Text(
               v,
-              style: vStyle ??
+              style:
+                  vStyle ??
                   pw.TextStyle(
                     color: ink,
                     fontSize: 12,
@@ -132,8 +132,8 @@ class DealerPdfBuilder {
     final balanceTag = summary.currentBalance > 0
         ? 'borç'
         : summary.currentBalance < 0
-            ? 'alacak'
-            : 'kapalı';
+        ? 'alacak'
+        : 'kapalı';
 
     doc.addPage(
       pw.Page(
@@ -154,7 +154,7 @@ class DealerPdfBuilder {
                   width: 32,
                   height: 32,
                   decoration: const pw.BoxDecoration(
-                    color: copper,
+                    color: lemon,
                     borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
                   ),
                   alignment: pw.Alignment.center,
@@ -199,8 +199,7 @@ class DealerPdfBuilder {
               padding: const pw.EdgeInsets.all(14),
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: line, width: 0.6),
-                borderRadius:
-                    const pw.BorderRadius.all(pw.Radius.circular(8)),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
               ),
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -218,19 +217,18 @@ class DealerPdfBuilder {
                       padding: const pw.EdgeInsets.only(top: 2),
                       child: pw.Text(
                         dealer.area,
-                        style:
-                            const pw.TextStyle(color: muted, fontSize: 10),
+                        style: const pw.TextStyle(color: muted, fontSize: 10),
                       ),
                     ),
                   if (dealer.contactName.isNotEmpty || dealer.phone.isNotEmpty)
                     pw.Padding(
                       padding: const pw.EdgeInsets.only(top: 2),
                       child: pw.Text(
-                        [dealer.contactName, dealer.phone]
-                            .where((s) => s.isNotEmpty)
-                            .join(' · '),
-                        style:
-                            const pw.TextStyle(color: muted, fontSize: 10),
+                        [
+                          dealer.contactName,
+                          dealer.phone,
+                        ].where((s) => s.isNotEmpty).join(' · '),
+                        style: const pw.TextStyle(color: muted, fontSize: 10),
                       ),
                     ),
                   pw.SizedBox(height: 6),
@@ -244,15 +242,14 @@ class DealerPdfBuilder {
             pw.SizedBox(height: 16),
 
             // Toplamlar
-            kv('Toplam teslim',
-                NumberFormatter.currency(summary.totalDelivery)),
-            kv('Toplam iade',
-                NumberFormatter.currency(summary.totalReturn)),
-            kv('Toplam ödeme',
-                NumberFormatter.currency(summary.totalPayment)),
+            kv(
+              'Toplam teslim',
+              NumberFormatter.currency(summary.totalDelivery),
+            ),
+            kv('Toplam iade', NumberFormatter.currency(summary.totalReturn)),
+            kv('Toplam ödeme', NumberFormatter.currency(summary.totalPayment)),
             if (summary.totalAdjustment != 0)
-              kv('Düzeltme',
-                  NumberFormatter.currency(summary.totalAdjustment)),
+              kv('Düzeltme', NumberFormatter.currency(summary.totalAdjustment)),
             pw.SizedBox(height: 4),
             pw.Divider(color: line, thickness: 0.6),
             pw.SizedBox(height: 4),
@@ -260,7 +257,7 @@ class DealerPdfBuilder {
               'Güncel bakiye  ($balanceTag)',
               NumberFormatter.currency(summary.currentBalance),
               vStyle: pw.TextStyle(
-                color: copper,
+                color: lemon,
                 fontSize: 18,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -274,7 +271,7 @@ class DealerPdfBuilder {
             pw.Text(
               'SON HAREKETLER',
               style: pw.TextStyle(
-                color: copper,
+                color: lemon,
                 fontSize: 10,
                 fontWeight: pw.FontWeight.bold,
                 letterSpacing: 1.2,
