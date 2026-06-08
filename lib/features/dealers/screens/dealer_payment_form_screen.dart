@@ -64,8 +64,10 @@ class _DealerPaymentFormScreenState
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${AppStrings.dealerSaveSnackPayment}'
-              '${NumberFormatter.currency(amount)} (${_method.label})'),
+          content: Text(
+            '${AppStrings.dealerSaveSnackPayment}'
+            '${NumberFormatter.currency(amount)} (${_method.label})',
+          ),
         ),
       );
     } on GuestActionRequiredException {
@@ -181,12 +183,12 @@ class _Label extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.1,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w800,
+      color: AppColors.textPrimary,
+      letterSpacing: -0.1,
+    ),
+  );
 }

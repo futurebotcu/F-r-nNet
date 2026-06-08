@@ -58,9 +58,8 @@ class RecipeDetailScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: async.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(strokeWidth: 1.6),
-          ),
+          loading: () =>
+              const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
           error: (e, _) => Padding(
             padding: const EdgeInsets.all(AppSpacing.l),
             child: Text(
@@ -120,9 +119,9 @@ class RecipeDetailScreen extends ConsumerWidget {
     await repo.delete(recipeId);
     if (context.mounted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reçete silindi.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reçete silindi.')));
     }
   }
 }
@@ -210,8 +209,8 @@ class _Body extends ConsumerWidget {
           icon: const Icon(Icons.share_outlined),
           label: const Text('Reçeteyi Paylaş'),
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.copper,
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.surface,
             minimumSize: const Size.fromHeight(52),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.m),
@@ -227,14 +226,17 @@ class _Body extends ConsumerWidget {
   }
 
   Future<void> _openShareSheet(
-      BuildContext context, WidgetRef ref, Recipe recipe) async {
+    BuildContext context,
+    WidgetRef ref,
+    Recipe recipe,
+  ) async {
     final builder = ref.read(recipeShareTextBuilderProvider);
     final text = builder.build(recipe);
 
     if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.elevatedCard,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
@@ -260,17 +262,9 @@ class _Header extends StatelessWidget {
         AppSpacing.xl,
       ),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.heroFrom, AppColors.heroTo],
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.22),
-          width: 0.8,
-        ),
-        boxShadow: AppShadow.heroGlow,
+        boxShadow: AppShadow.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,16 +275,12 @@ class _Header extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.copper.withValues(alpha: 0.20),
+                  color: AppColors.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(AppRadius.s),
-                  border: Border.all(
-                    color: AppColors.copper.withValues(alpha: 0.32),
-                    width: 0.6,
-                  ),
                 ),
                 child: const Icon(
                   Icons.menu_book_rounded,
-                  color: AppColors.softGold,
+                  color: AppColors.primary,
                   size: 20,
                 ),
               ),
@@ -304,7 +294,7 @@ class _Header extends StatelessWidget {
                       Text(
                         recipe.productName.toUpperCase(),
                         style: const TextStyle(
-                          color: AppColors.softGold,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w800,
                           fontSize: 11,
                           letterSpacing: 1.4,
@@ -359,7 +349,7 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: const TextStyle(
-          color: AppColors.softGold,
+          color: AppColors.primary,
           fontWeight: FontWeight.w800,
           fontSize: 11.5,
           letterSpacing: 1.4,
@@ -424,8 +414,7 @@ class _ResultGrid extends StatelessWidget {
               child: StatCard(
                 icon: Icons.cleaning_services_outlined,
                 label: 'Fire sonrası',
-                value:
-                    '${NumberFormatter.decimal(r.doughAfterWasteKg)} kg',
+                value: '${NumberFormatter.decimal(r.doughAfterWasteKg)} kg',
               ),
             ),
             const SizedBox(width: AppSpacing.m),
@@ -435,7 +424,7 @@ class _ResultGrid extends StatelessWidget {
                 icon: Icons.bakery_dining_outlined,
                 label: 'Tahmini adet',
                 value: NumberFormatter.integer(r.estimatedPieces),
-                accent: AppColors.softGold,
+                accent: AppColors.primary,
               ),
             ),
           ],
@@ -474,12 +463,12 @@ class _IngredientList extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: AppColors.copper.withValues(alpha: 0.14),
+                      color: AppColors.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(AppRadius.s),
                     ),
                     child: const Icon(
                       Icons.circle,
-                      color: AppColors.softGold,
+                      color: AppColors.primary,
                       size: 8,
                     ),
                   ),
@@ -514,7 +503,7 @@ class _IngredientList extends StatelessWidget {
                   Text(
                     '${NumberFormatter.decimal(items[i].amount)} ${items[i].unit}',
                     style: const TextStyle(
-                      color: AppColors.softGold,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
                       letterSpacing: -0.1,
@@ -562,13 +551,13 @@ class _StepList extends StatelessWidget {
                     height: 28,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: AppColors.softGold.withValues(alpha: 0.16),
+                      color: AppColors.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(AppRadius.s),
                     ),
                     child: Text(
                       '${sorted[i].order}',
                       style: const TextStyle(
-                        color: AppColors.softGold,
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
                       ),
@@ -621,25 +610,31 @@ class _BakeInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = <_BakeMetric>[];
     if (bake.tempC != null) {
-      items.add(_BakeMetric(
-        icon: Icons.thermostat_rounded,
-        label: 'Pişirme derecesi',
-        value: '${NumberFormatter.decimal(bake.tempC!)}°C',
-      ));
+      items.add(
+        _BakeMetric(
+          icon: Icons.thermostat_rounded,
+          label: 'Pişirme derecesi',
+          value: '${NumberFormatter.decimal(bake.tempC!)}°C',
+        ),
+      );
     }
     if (bake.durationMin != null) {
-      items.add(_BakeMetric(
-        icon: Icons.timer_outlined,
-        label: 'Pişirme süresi',
-        value: '${bake.durationMin} dk',
-      ));
+      items.add(
+        _BakeMetric(
+          icon: Icons.timer_outlined,
+          label: 'Pişirme süresi',
+          value: '${bake.durationMin} dk',
+        ),
+      );
     }
     if (bake.proofMin != null) {
-      items.add(_BakeMetric(
-        icon: Icons.hourglass_bottom_rounded,
-        label: 'Mayalanma',
-        value: '${bake.proofMin} dk',
-      ));
+      items.add(
+        _BakeMetric(
+          icon: Icons.hourglass_bottom_rounded,
+          label: 'Mayalanma',
+          value: '${bake.proofMin} dk',
+        ),
+      );
     }
 
     return PremiumCard(
@@ -647,9 +642,7 @@ class _BakeInfoCard extends StatelessWidget {
       child: Wrap(
         spacing: 12,
         runSpacing: 12,
-        children: [
-          for (final m in items) m,
-        ],
+        children: [for (final m in items) m],
       ),
     );
   }
@@ -670,17 +663,14 @@ class _BakeMetric extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.10),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.22),
-          width: 0.6,
-        ),
+        boxShadow: AppShadow.card,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.softGold, size: 16),
+          Icon(icon, color: AppColors.primary, size: 16),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -726,12 +716,12 @@ class _MediaPlaceholder extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.softGold.withValues(alpha: 0.10),
+              color: AppColors.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(AppRadius.s),
             ),
             child: const Icon(
               Icons.photo_library_outlined,
-              color: AppColors.softGold,
+              color: AppColors.primary,
               size: 22,
             ),
           ),
@@ -854,16 +844,16 @@ class _ShareSheet extends ConsumerWidget {
       );
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reçete akışa eklendi.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reçete akışa eklendi.')));
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Feed paylaşımı başarısız: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Feed paylaşımı başarısız: $e')));
       }
     }
   }
@@ -905,12 +895,9 @@ class _ShareOption extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.m),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadius.m),
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            boxShadow: AppShadow.card,
           ),
           child: Row(
             children: [
@@ -918,10 +905,10 @@ class _ShareOption extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.copper.withValues(alpha: 0.14),
+                  color: AppColors.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
-                child: Icon(icon, color: AppColors.softGold, size: 18),
+                child: Icon(icon, color: AppColors.primary, size: 18),
               ),
               const SizedBox(width: AppSpacing.m),
               Expanded(
@@ -943,17 +930,19 @@ class _ShareOption extends StatelessWidget {
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color:
-                                  AppColors.softGold.withValues(alpha: 0.14),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
+                              color: AppColors.primary.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                             ),
                             child: const Text(
                               'YAKINDA',
                               style: TextStyle(
-                                color: AppColors.softGold,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 9.5,
                                 letterSpacing: 1.0,
@@ -977,7 +966,7 @@ class _ShareOption extends StatelessWidget {
               ),
               const Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.softGold,
+                color: AppColors.textSecondary,
                 size: 20,
               ),
             ],

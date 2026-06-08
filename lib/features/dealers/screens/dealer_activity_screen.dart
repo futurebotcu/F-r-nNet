@@ -42,9 +42,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
     final dealersAsync = ref.watch(dealersListProvider);
 
     return PremiumScaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.dealerActivityTitle),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.dealerActivityTitle)),
       body: SafeArea(
         top: false,
         child: txsAsync.when(
@@ -158,10 +156,10 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
                 child: Text(
                   g.label.toUpperCase(),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
-                      ),
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
                 ),
               ),
               PremiumCard(
@@ -171,8 +169,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
                     for (var i = 0; i < g.txs.length; i++) ...[
                       _ActivityRow(
                         tx: g.txs[i],
-                        dealerName:
-                            dealerNameById[g.txs[i].dealerId] ?? '—',
+                        dealerName: dealerNameById[g.txs[i].dealerId] ?? '—',
                       ),
                       if (i < g.txs.length - 1)
                         const Divider(
@@ -279,8 +276,7 @@ class _FilterChipRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
         scrollDirection: Axis.horizontal,
         children: [
-          _chip('${AppStrings.dealerTxFilterTypeAll} ($total)',
-              _TxFilter.all),
+          _chip('${AppStrings.dealerTxFilterTypeAll} ($total)', _TxFilter.all),
           const SizedBox(width: 8),
           _chip(
             '${AppStrings.dealerTxFilterTypeDelivery} '
@@ -333,8 +329,7 @@ class _ActivityRow extends StatelessWidget {
     final formattedAmount = '$sign${NumberFormatter.currency(amount)}';
 
     return InkWell(
-      onTap: () =>
-          context.push('${AppRoutes.dealers}/${tx.dealerId}'),
+      onTap: () => context.push('${AppRoutes.dealers}/${tx.dealerId}'),
       borderRadius: BorderRadius.circular(AppRadius.s),
       child: Padding(
         padding: const EdgeInsets.symmetric(

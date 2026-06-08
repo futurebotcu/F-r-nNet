@@ -21,8 +21,7 @@ class ProductionEntryScreen extends ConsumerStatefulWidget {
       _ProductionEntryScreenState();
 }
 
-class _ProductionEntryScreenState
-    extends ConsumerState<ProductionEntryScreen> {
+class _ProductionEntryScreenState extends ConsumerState<ProductionEntryScreen> {
   String? _product;
   final _quantity = TextEditingController();
   final _note = TextEditingController();

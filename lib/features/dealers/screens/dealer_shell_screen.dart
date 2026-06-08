@@ -107,4 +107,3 @@ class DealerShellScreen extends ConsumerWidget {
     );
   }
 }
-

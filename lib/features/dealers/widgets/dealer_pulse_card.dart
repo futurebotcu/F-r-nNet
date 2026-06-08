@@ -19,7 +19,7 @@ import '../providers/dealer_providers.dart';
 /// Concept inspired by evan361425/flutter-pos-system GoalsCardView
 /// (Apache-2.0): EMA-over-20-non-empty-days baseline + bugünü hariç
 /// tutma pattern'i. Donor widget kodu kopyalanmadı; FırınNet style
-/// (compact 3-row, cream/copper) sıfırdan yazıldı. See
+/// (compact 3-row, white/lemon) sifirdan yazildi. See
 /// THIRD_PARTY_LICENSES.md.
 class DealerPulseCard extends ConsumerWidget {
   const DealerPulseCard({super.key});
@@ -60,9 +60,9 @@ class _PulseErrorCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.l),
       child: Text(
         message,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.danger,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.danger),
       ),
     );
   }
@@ -162,11 +162,7 @@ class _RowDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: AppSpacing.s),
-      child: Divider(
-        height: 0.6,
-        thickness: 0.6,
-        color: AppColors.borderHairline,
-      ),
+      child: Divider(height: 0.5, thickness: 0.5, color: Color(0xFFEFE6DB)),
     );
   }
 }
@@ -350,9 +346,9 @@ enum _Direction {
   Color get color {
     switch (this) {
       case _Direction.up:
-        return AppColors.copper;
+        return Color(0xFF10B981);
       case _Direction.down:
-        return AppColors.success;
+        return Color(0xFFEF4444);
       case _Direction.flat:
         return AppColors.textMuted;
     }

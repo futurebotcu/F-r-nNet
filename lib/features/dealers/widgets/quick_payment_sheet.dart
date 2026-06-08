@@ -123,12 +123,12 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
       Navigator.of(context).pop();
       final successMsg = change > 0
           ? '${AppStrings.quickPaymentSuccess} · '
-              '${AppStrings.quickPaymentChangeReturn} '
-              '${NumberFormatter.currency(change)}'
+                '${AppStrings.quickPaymentChangeReturn} '
+                '${NumberFormatter.currency(change)}'
           : AppStrings.quickPaymentSuccess;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(successMsg)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(successMsg)));
     } on GuestActionRequiredException {
       if (!mounted) return;
       setState(() => _busy = false);

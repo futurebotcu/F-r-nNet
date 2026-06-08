@@ -103,9 +103,11 @@ class _DealerDeliveryFormScreenState
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${AppStrings.dealerSaveSnackDelivery}'
-              '$qty $productName · '
-              '${NumberFormatter.currency(qty * price)}'),
+          content: Text(
+            '${AppStrings.dealerSaveSnackDelivery}'
+            '$qty $productName · '
+            '${NumberFormatter.currency(qty * price)}',
+          ),
         ),
       );
     } on GuestActionRequiredException {
@@ -288,10 +290,7 @@ class _DealerStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(
-          color: AppColors.borderHairline,
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
       child: Row(
         children: [

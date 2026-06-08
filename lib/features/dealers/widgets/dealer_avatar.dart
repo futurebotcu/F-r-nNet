@@ -40,8 +40,9 @@ class DealerAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = _resolveColors(palette, dealer.isActive);
-    final initial =
-        dealer.name.isNotEmpty ? dealer.name[0].toUpperCase() : fallbackChar;
+    final initial = dealer.name.isNotEmpty
+        ? dealer.name[0].toUpperCase()
+        : fallbackChar;
 
     return Container(
       width: size,

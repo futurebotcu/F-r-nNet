@@ -77,9 +77,13 @@ class _DealerRangeReportScreenState
   Widget build(BuildContext context) {
     final dealerAsync = ref.watch(dealerByIdProvider(widget.dealerId));
     final range = _period.range(now: widget.now);
-    final metricsAsync = ref.watch(dealerRangeMetricsProvider(
-      (dealerId: widget.dealerId, start: range.start, end: range.end),
-    ));
+    final metricsAsync = ref.watch(
+      dealerRangeMetricsProvider((
+        dealerId: widget.dealerId,
+        start: range.start,
+        end: range.end,
+      )),
+    );
 
     return PremiumScaffold(
       appBar: AppBar(
@@ -175,9 +179,9 @@ class _DateRangeLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w600,
-          ),
+        color: AppColors.textMuted,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }
@@ -272,14 +276,17 @@ class _MetricTile extends StatelessWidget {
           ),
           Text(
             value,
-            style: (emphasized
-                    ? theme.textTheme.headlineSmall
-                    : theme.textTheme.titleLarge)
-                ?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w800,
-              fontFeatures: isCount ? null : const [FontFeature.tabularFigures()],
-            ),
+            style:
+                (emphasized
+                        ? theme.textTheme.headlineSmall
+                        : theme.textTheme.titleLarge)
+                    ?.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.w800,
+                      fontFeatures: isCount
+                          ? null
+                          : const [FontFeature.tabularFigures()],
+                    ),
           ),
         ],
       ),

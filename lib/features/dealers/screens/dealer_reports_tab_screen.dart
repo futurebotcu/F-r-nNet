@@ -45,16 +45,12 @@ class _DealerReportsTabScreenState
   Widget build(BuildContext context) {
     final range = _period.range(now: widget.now);
     final metricsAsync = ref.watch(
-      allDealersRangeMetricsProvider(
-        (start: range.start, end: range.end),
-      ),
+      allDealersRangeMetricsProvider((start: range.start, end: range.end)),
     );
     final dealersAsync = ref.watch(activeDealersListProvider);
 
     return PremiumScaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.dealerShellTabReports),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.dealerShellTabReports)),
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -104,11 +100,7 @@ class _DealerReportsTabScreenState
   }
 }
 
-enum _ReportsPeriod {
-  last7Days,
-  last30Days,
-  thisMonth,
-}
+enum _ReportsPeriod { last7Days, last30Days, thisMonth }
 
 extension on _ReportsPeriod {
   String get label {

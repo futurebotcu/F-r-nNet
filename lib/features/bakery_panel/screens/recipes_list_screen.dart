@@ -40,9 +40,8 @@ class RecipesListScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: async.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(strokeWidth: 1.6),
-          ),
+          loading: () =>
+              const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
           error: (e, _) => _ErrorBox(message: '$e'),
           data: (items) {
             if (items.isEmpty) return const _EmptyState();
@@ -69,7 +68,7 @@ class RecipesListScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni reçete'),
         backgroundColor: AppColors.copper,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.surface,
       ),
     );
   }
@@ -210,7 +209,7 @@ class _RecipeCard extends ConsumerWidget {
                   label: const Text('Paylaş'),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
@@ -233,11 +232,7 @@ class _RecipeCard extends ConsumerWidget {
 }
 
 class _MiniChip extends StatelessWidget {
-  const _MiniChip({
-    required this.icon,
-    required this.label,
-    this.accent,
-  });
+  const _MiniChip({required this.icon, required this.label, this.accent});
   final IconData icon;
   final String label;
   final Color? accent;

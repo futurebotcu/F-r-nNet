@@ -35,8 +35,9 @@ class _WholesaleCustomersScreenState
 
   @override
   Widget build(BuildContext context) {
-    final async =
-        ref.watch(dealersByTypeProvider(DealerCustomerType.wholesaleCustomer));
+    final async = ref.watch(
+      dealersByTypeProvider(DealerCustomerType.wholesaleCustomer),
+    );
 
     return PremiumScaffold(
       appBar: AppBar(
@@ -54,7 +55,7 @@ class _WholesaleCustomersScreenState
         icon: const Icon(Icons.add_rounded),
         label: const Text('Müşteri ekle'),
         backgroundColor: AppColors.copper,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
         top: false,
@@ -78,11 +79,13 @@ class _WholesaleCustomersScreenState
             final filtered = q.isEmpty
                 ? all
                 : all
-                    .where((d) =>
-                        d.name.toLowerCase().contains(q) ||
-                        d.area.toLowerCase().contains(q) ||
-                        d.contactName.toLowerCase().contains(q))
-                    .toList();
+                      .where(
+                        (d) =>
+                            d.name.toLowerCase().contains(q) ||
+                            d.area.toLowerCase().contains(q) ||
+                            d.contactName.toLowerCase().contains(q),
+                      )
+                      .toList();
             return ListView(
               padding: const EdgeInsets.only(bottom: AppSpacing.xxl + 40),
               children: [
@@ -121,7 +124,8 @@ class _WholesaleCustomersScreenState
                 if (filtered.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.pageH),
+                      horizontal: AppSpacing.pageH,
+                    ),
                     child: PremiumCard(
                       padding: const EdgeInsets.all(AppSpacing.l),
                       child: Text(
@@ -177,9 +181,7 @@ class _CustomerCard extends ConsumerWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  dealer.name.isNotEmpty
-                      ? dealer.name[0].toUpperCase()
-                      : 'M',
+                  dealer.name.isNotEmpty ? dealer.name[0].toUpperCase() : 'M',
                   style: TextStyle(
                     color: dealer.isActive
                         ? AppColors.softGold
@@ -249,13 +251,13 @@ class _CustomerCard extends ConsumerWidget {
               final balanceColor = s.currentBalance > 0
                   ? AppColors.copper
                   : s.currentBalance < 0
-                      ? AppColors.success
-                      : AppColors.textSecondary;
+                  ? AppColors.success
+                  : AppColors.textSecondary;
               final label = s.currentBalance > 0
                   ? 'Bakiye'
                   : s.currentBalance < 0
-                      ? 'Alacak'
-                      : 'Kapalı';
+                  ? 'Alacak'
+                  : 'Kapalı';
               return Row(
                 children: [
                   Text(

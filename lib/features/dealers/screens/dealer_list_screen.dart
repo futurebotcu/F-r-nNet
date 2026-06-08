@@ -43,8 +43,7 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
       final prefilter = ref.read(dealerShellPrefilterDebtOnlyProvider);
       if (prefilter) {
         setState(() => _filter = _ActiveFilter.debtOnly);
-        ref.read(dealerShellPrefilterDebtOnlyProvider.notifier).state =
-            false;
+        ref.read(dealerShellPrefilterDebtOnlyProvider.notifier).state = false;
       }
     });
   }
@@ -86,8 +85,7 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
       body: SafeArea(
         top: false,
         child: dealersAsync.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) =>
               const Center(child: Text(AppStrings.dealersErrorLoad)),
           data: (all) {
@@ -123,8 +121,7 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                 e.key: e.value.currentBalance,
             };
             final debtorCount = all
-                .where((d) =>
-                    d.isActive && (balanceById[d.id] ?? 0) > 0)
+                .where((d) => d.isActive && (balanceById[d.id] ?? 0) > 0)
                 .length;
 
             final filtered = _applyFilters(all, balanceById);
@@ -225,16 +222,17 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
         // Sprint 6B.x: aktif + currentBalance > 0. Pasif borçlular
         // bilinçli olarak hariç (kullanıcı "ödenmedi ama bayi de
         // gitti" durumunu zaten pasif filtresinden görür).
-        r = r.where((d) =>
-            d.isActive && (balanceById[d.id] ?? 0) > 0);
+        r = r.where((d) => d.isActive && (balanceById[d.id] ?? 0) > 0);
         break;
     }
     if (_query.isNotEmpty) {
       final q = _query.toLowerCase();
-      r = r.where((d) =>
-          d.name.toLowerCase().contains(q) ||
-          d.area.toLowerCase().contains(q) ||
-          d.contactName.toLowerCase().contains(q));
+      r = r.where(
+        (d) =>
+            d.name.toLowerCase().contains(q) ||
+            d.area.toLowerCase().contains(q) ||
+            d.contactName.toLowerCase().contains(q),
+      );
     }
     return r.toList();
   }
@@ -267,17 +265,29 @@ class _FilterRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
         scrollDirection: Axis.horizontal,
         children: [
-          _chip(context, '${AppStrings.dealerFilterAll} ($total)',
-              _ActiveFilter.all),
+          _chip(
+            context,
+            '${AppStrings.dealerFilterAll} ($total)',
+            _ActiveFilter.all,
+          ),
           const SizedBox(width: 8),
-          _chip(context, '${AppStrings.dealerFilterActive} ($active)',
-              _ActiveFilter.active),
+          _chip(
+            context,
+            '${AppStrings.dealerFilterActive} ($active)',
+            _ActiveFilter.active,
+          ),
           const SizedBox(width: 8),
-          _chip(context, '${AppStrings.dealerFilterPassive} ($passive)',
-              _ActiveFilter.passive),
+          _chip(
+            context,
+            '${AppStrings.dealerFilterPassive} ($passive)',
+            _ActiveFilter.passive,
+          ),
           const SizedBox(width: 8),
-          _chip(context, '${AppStrings.dealerFilterDebtOnly} ($debtor)',
-              _ActiveFilter.debtOnly),
+          _chip(
+            context,
+            '${AppStrings.dealerFilterDebtOnly} ($debtor)',
+            _ActiveFilter.debtOnly,
+          ),
         ],
       ),
     );
@@ -314,70 +324,70 @@ class _DealerCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.l),
       warm: !dealer.isActive,
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                DealerAvatar(
-                  dealer: dealer,
-                  size: 42,
-                  palette: DealerAvatarPalette.autoActivity,
-                ),
-                const SizedBox(width: AppSpacing.m),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              dealer.name,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                                letterSpacing: -0.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              DealerAvatar(
+                dealer: dealer,
+                size: 42,
+                palette: DealerAvatarPalette.autoActivity,
+              ),
+              const SizedBox(width: AppSpacing.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            dealer.name,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              letterSpacing: -0.2,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (!dealer.isActive)
-                            const _Badge(
-                              label: AppStrings.dealerCardPassiveBadge,
-                              color: AppColors.textMuted,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        [
-                          if (dealer.area.isNotEmpty) dealer.area,
-                          dealer.workingType.label,
-                        ].join(' · '),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12.5,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        if (!dealer.isActive)
+                          const _Badge(
+                            label: AppStrings.dealerCardPassiveBadge,
+                            color: AppColors.textMuted,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      [
+                        if (dealer.area.isNotEmpty) dealer.area,
+                        dealer.workingType.label,
+                      ].join(' · '),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.5,
                       ),
-                    ],
-                  ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.m),
-            const Divider(
-              height: 1,
-              thickness: 0.6,
-              color: AppColors.borderHairline,
-            ),
-            const SizedBox(height: AppSpacing.m),
-            _BalanceFooter(summary: summary, lastTx: lastTx),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.m),
+          const Divider(
+            height: 1,
+            thickness: 0.6,
+            color: AppColors.borderHairline,
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _BalanceFooter(summary: summary, lastTx: lastTx),
+        ],
+      ),
     );
   }
 }
@@ -394,14 +404,14 @@ class _BalanceFooter extends StatelessWidget {
     final color = balance > 0
         ? AppColors.copper
         : balance < 0
-            ? AppColors.success
-            : AppColors.textMuted;
+        ? AppColors.success
+        : AppColors.textMuted;
 
     final label = balance > 0
         ? AppStrings.dealerCardBalanceLabel
         : balance < 0
-            ? AppStrings.dealerCardCreditLabel
-            : AppStrings.dealerCardClosedLabel;
+        ? AppStrings.dealerCardCreditLabel
+        : AppStrings.dealerCardClosedLabel;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -491,10 +501,7 @@ class _Badge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: color.withValues(alpha: 0.30),
-          width: 0.6,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.30), width: 0.6),
       ),
       child: Text(
         label.toUpperCase(),

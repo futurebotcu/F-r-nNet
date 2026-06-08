@@ -33,9 +33,7 @@ class DealerOverviewScreen extends ConsumerWidget {
     final overviewAsync = ref.watch(dealersOverviewProvider);
 
     return PremiumScaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.dealerShellTabOverview),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.dealerShellTabOverview)),
       body: SafeArea(
         top: false,
         child: overviewAsync.when(
@@ -99,8 +97,11 @@ class _ActiveDealersChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.storefront_rounded,
-              size: 16, color: AppColors.softGold),
+          const Icon(
+            Icons.storefront_rounded,
+            size: 16,
+            color: AppColors.softGold,
+          ),
           const SizedBox(width: AppSpacing.s),
           Text(
             AppStrings.dealerOverviewActiveDealersLabel,
@@ -171,8 +172,8 @@ class _KpiGrid extends StatelessWidget {
           accent: overview.monthNetChange == 0
               ? AppColors.textMuted
               : (overview.monthNetChange > 0
-                  ? AppColors.copper
-                  : AppColors.success),
+                    ? AppColors.copper
+                    : AppColors.success),
           emphasized: true,
           fullWidth: true,
         ),
@@ -286,12 +287,11 @@ class _RecentTxRow extends StatelessWidget {
     final theme = Theme.of(context);
     final (icon, color, sign) = _meta(tx.type);
     final amount = tx.amount.abs();
-    final formattedAmount =
-        '$sign${NumberFormatter.currency(amount)}'.replaceAll(' ', ' ');
+    final formattedAmount = '$sign${NumberFormatter.currency(amount)}'
+        .replaceAll(' ', ' ');
 
     return InkWell(
-      onTap: () =>
-          context.push('${AppRoutes.dealers}/${tx.dealerId}'),
+      onTap: () => context.push('${AppRoutes.dealers}/${tx.dealerId}'),
       borderRadius: BorderRadius.circular(AppRadius.s),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -413,32 +413,41 @@ class _QuickActionsSection extends ConsumerWidget {
               icon: Icons.bakery_dining_rounded,
               label: AppStrings.dealerOverviewQuickDelivery,
               accent: AppColors.copper,
-              onTap: () => _pickThen(context, ref, debtOnly: false,
-                  onPicked: (d) => context.push(
-                        '${AppRoutes.dealers}/${d.id}/delivery',
-                      )),
+              onTap: () => _pickThen(
+                context,
+                ref,
+                debtOnly: false,
+                onPicked: (d) =>
+                    context.push('${AppRoutes.dealers}/${d.id}/delivery'),
+              ),
             ),
             _QuickActionChip(
               icon: Icons.payments_rounded,
               label: AppStrings.dealerOverviewQuickPayment,
               accent: AppColors.success,
-              onTap: () => _pickThen(context, ref, debtOnly: true,
-                  onPicked: (d) async {
-                // Borçlu filter zaten currentBalance > 0 garantiler;
-                // QuickPaymentSheet.show direkt çağrılır.
-                final svc = ref.read(dealerBalanceServiceProvider);
-                final repo = ref.read(dealerRepositoryProvider);
-                final txs = await repo.listTransactions(d.id);
-                final summary =
-                    svc.summarize(dealerId: d.id, transactions: txs);
-                if (!context.mounted) return;
-                await QuickPaymentSheet.show(
-                  context: context,
-                  dealerId: d.id,
-                  dealerName: d.name,
-                  currentBalance: summary.currentBalance,
-                );
-              }),
+              onTap: () => _pickThen(
+                context,
+                ref,
+                debtOnly: true,
+                onPicked: (d) async {
+                  // Borçlu filter zaten currentBalance > 0 garantiler;
+                  // QuickPaymentSheet.show direkt çağrılır.
+                  final svc = ref.read(dealerBalanceServiceProvider);
+                  final repo = ref.read(dealerRepositoryProvider);
+                  final txs = await repo.listTransactions(d.id);
+                  final summary = svc.summarize(
+                    dealerId: d.id,
+                    transactions: txs,
+                  );
+                  if (!context.mounted) return;
+                  await QuickPaymentSheet.show(
+                    context: context,
+                    dealerId: d.id,
+                    dealerName: d.name,
+                    currentBalance: summary.currentBalance,
+                  );
+                },
+              ),
             ),
             _QuickActionChip(
               icon: Icons.warning_amber_rounded,
@@ -448,9 +457,8 @@ class _QuickActionsSection extends ConsumerWidget {
               // chip'i bir kez preset et. DealerListScreen initState'te
               // prefilter'ı tüketir ve false'a reset eder (one-shot).
               onTap: () {
-                ref
-                    .read(dealerShellPrefilterDebtOnlyProvider.notifier)
-                    .state = true;
+                ref.read(dealerShellPrefilterDebtOnlyProvider.notifier).state =
+                    true;
                 ref.read(dealerShellTabIndexProvider.notifier).state = 1;
               },
             ),
@@ -512,10 +520,7 @@ class _QuickActionChip extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            border: Border.all(color: AppColors.borderHairline, width: 0.6),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -525,9 +530,9 @@ class _QuickActionChip extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),

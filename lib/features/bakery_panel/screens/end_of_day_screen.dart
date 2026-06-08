@@ -36,8 +36,7 @@ class EndOfDayScreen extends ConsumerWidget {
                     'Üretim, bayi veya fire girişi yaptığında burada özetleyeceğim.',
                 icon: Icons.nightlight_outlined,
                 actionLabel: 'Üretim Gir',
-                onAction: () =>
-                    GoRouter.of(context).push(AppRoutes.production),
+                onAction: () => GoRouter.of(context).push(AppRoutes.production),
               );
             }
             return ListView(
@@ -105,8 +104,7 @@ class EndOfDayScreen extends ConsumerWidget {
                       child: StatCard(
                         icon: Icons.delete_sweep_outlined,
                         label: 'Fire',
-                        value:
-                            '${NumberFormatter.integer(s.totalWaste)} adet',
+                        value: '${NumberFormatter.integer(s.totalWaste)} adet',
                         accent: AppColors.danger,
                       ),
                     ),

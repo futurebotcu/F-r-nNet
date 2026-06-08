@@ -48,8 +48,7 @@ class CashTenderedCalculator extends StatefulWidget {
   });
 
   @override
-  State<CashTenderedCalculator> createState() =>
-      _CashTenderedCalculatorState();
+  State<CashTenderedCalculator> createState() => _CashTenderedCalculatorState();
 }
 
 class _CashTenderedCalculatorState extends State<CashTenderedCalculator> {
@@ -98,27 +97,60 @@ class _CashTenderedCalculatorState extends State<CashTenderedCalculator> {
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _CalculatorPostfixAction(action: _execPostfix, text: '1'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '4'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '7'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '00'),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '1',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '4',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '7',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '00',
+                        ),
                       ],
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _CalculatorPostfixAction(action: _execPostfix, text: '2'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '5'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '8'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '0'),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '2',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '5',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '8',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '0',
+                        ),
                       ],
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _CalculatorPostfixAction(action: _execPostfix, text: '3'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '6'),
-                        _CalculatorPostfixAction(action: _execPostfix, text: '9'),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '3',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '6',
+                        ),
+                        _CalculatorPostfixAction(
+                          action: _execPostfix,
+                          text: '9',
+                        ),
                         _CalculatorAction(
                           key: const Key('cashier.calculator.dot'),
                           action: _execDot,
@@ -393,8 +425,8 @@ class _SingleFieldState extends State<_SingleField> {
         _text == null
             ? Text(widget.errorText, key: Key('${widget.id}.error'))
             : _text!.isEmpty
-                ? Text(widget.defaultText, key: Key('${widget.id}.hint'))
-                : Text(_text!, key: Key(widget.id)),
+            ? Text(widget.defaultText, key: Key('${widget.id}.hint'))
+            : Text(_text!, key: Key(widget.id)),
       ],
     );
   }

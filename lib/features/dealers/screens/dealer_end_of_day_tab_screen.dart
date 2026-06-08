@@ -38,9 +38,12 @@ class DealerEndOfDayTabScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ref0 = now ?? DateTime.now();
     final todayRange = DealerPeriod.today(now: ref0);
-    final metricsAsync = ref.watch(allDealersRangeMetricsProvider(
-      (start: todayRange.start, end: todayRange.end),
-    ));
+    final metricsAsync = ref.watch(
+      allDealersRangeMetricsProvider((
+        start: todayRange.start,
+        end: todayRange.end,
+      )),
+    );
     final dealersAsync = ref.watch(dealersListProvider);
     final txsAsync = ref.watch(allTransactionsProvider);
 
@@ -99,17 +102,19 @@ class DealerEndOfDayTabScreen extends ConsumerWidget {
   ) {
     if (all == null) return const <DealerTransaction>[];
     return all
-        .where((t) =>
-            !t.createdAt.isBefore(r.start) && t.createdAt.isBefore(r.end))
+        .where(
+          (t) => !t.createdAt.isBefore(r.start) && t.createdAt.isBefore(r.end),
+        )
         .toList();
   }
 
   Future<void> _share(WidgetRef ref, DateTime nowRef) async {
     final todayRange = DealerPeriod.today(now: nowRef);
     final metrics = await ref.read(
-      allDealersRangeMetricsProvider(
-        (start: todayRange.start, end: todayRange.end),
-      ).future,
+      allDealersRangeMetricsProvider((
+        start: todayRange.start,
+        end: todayRange.end,
+      )).future,
     );
     final dealers = await ref.read(dealersListProvider.future);
     final builder = ref.read(dealerShareBuilderProvider);
@@ -280,14 +285,15 @@ class _ByDealerSection extends StatelessWidget {
     // Yalnız bugün hareketi olan aktif bayiler (perDealerTxCount > 0).
     // Provider zaten pasif bayileri groupBy filter'lamış; bu yüzden
     // map'te yalnız aktif kayıt var.
-    final entries = metrics.perDealerTxCount.entries
-        .where((e) => e.value > 0 && dealerById.containsKey(e.key))
-        .toList()
-      ..sort((a, b) {
-        final na = metrics.perDealerNet[a.key] ?? 0;
-        final nb = metrics.perDealerNet[b.key] ?? 0;
-        return nb.compareTo(na);
-      });
+    final entries =
+        metrics.perDealerTxCount.entries
+            .where((e) => e.value > 0 && dealerById.containsKey(e.key))
+            .toList()
+          ..sort((a, b) {
+            final na = metrics.perDealerNet[a.key] ?? 0;
+            final nb = metrics.perDealerNet[b.key] ?? 0;
+            return nb.compareTo(na);
+          });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,8 +509,8 @@ class _TodayTxRow extends StatelessWidget {
     final theme = Theme.of(context);
     final (icon, color, sign) = _meta(tx.type);
     final amount = tx.amount.abs();
-    final formattedAmount =
-        '$sign${NumberFormatter.currency(amount)}'.replaceAll(' ', ' ');
+    final formattedAmount = '$sign${NumberFormatter.currency(amount)}'
+        .replaceAll(' ', ' ');
     final hm = DateFormat('HH:mm').format(tx.createdAt);
 
     return InkWell(

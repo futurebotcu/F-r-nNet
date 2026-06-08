@@ -59,15 +59,17 @@ class DealerKpiTile extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             value,
-            style: (emphasized
-                    ? theme.textTheme.headlineSmall
-                    : theme.textTheme.titleLarge)
-                ?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w800,
-              fontFeatures:
-                  isCount ? null : const [FontFeature.tabularFigures()],
-            ),
+            style:
+                (emphasized
+                        ? theme.textTheme.headlineSmall
+                        : theme.textTheme.titleLarge)
+                    ?.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.w800,
+                      fontFeatures: isCount
+                          ? null
+                          : const [FontFeature.tabularFigures()],
+                    ),
           ),
         ],
       ),

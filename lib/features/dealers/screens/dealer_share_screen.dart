@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
+import 'package:flutter/services.dart'
+    show Clipboard, ClipboardData, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -19,8 +20,7 @@ class DealerShareScreen extends ConsumerStatefulWidget {
   final String dealerId;
 
   @override
-  ConsumerState<DealerShareScreen> createState() =>
-      _DealerShareScreenState();
+  ConsumerState<DealerShareScreen> createState() => _DealerShareScreenState();
 }
 
 class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
@@ -47,8 +47,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Bakiye hatası: $e')),
               data: (summary) => txAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('İşlem hatası: $e')),
                 data: (txs) {
                   final shareBuilder = ref.read(dealerShareBuilderProvider);
@@ -88,8 +87,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                         label: AppStrings.copyText,
                         icon: Icons.copy_rounded,
                         onPressed: () async {
-                          await Clipboard.setData(
-                              ClipboardData(text: text));
+                          await Clipboard.setData(ClipboardData(text: text));
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -107,8 +105,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                           onPressed: () {
                             Share.share(
                               text,
-                              subject:
-                                  'FırınNet — ${dealer.name} hesap özeti',
+                              subject: 'FırınNet — ${dealer.name} hesap özeti',
                             );
                           },
                         ),
@@ -125,11 +122,8 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                           ),
                           onPressed: _pdfBusy
                               ? null
-                              : () => _buildAndSharePdf(
-                                    dealer,
-                                    summary,
-                                    recent,
-                                  ),
+                              : () =>
+                                    _buildAndSharePdf(dealer, summary, recent),
                         ),
                       ),
                       if (_pdfStatus != null)
@@ -169,11 +163,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
     );
   }
 
-  Future<void> _buildAndSharePdf(
-    Dealer dealer,
-    summary,
-    recent,
-  ) async {
+  Future<void> _buildAndSharePdf(Dealer dealer, summary, recent) async {
     setState(() {
       _pdfBusy = true;
       _pdfStatus = null;
@@ -181,13 +171,12 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
     try {
       final pdfBuilder = ref.read(dealerPdfBuilderProvider);
       // Türkçe karakter + ₺ için Roboto bundled font (V1.1).
-      final regular =
-          (await rootBundle.load('assets/fonts/Roboto-Regular.ttf'))
-              .buffer
-              .asUint8List();
-      final bold = (await rootBundle.load('assets/fonts/Roboto-Bold.ttf'))
-          .buffer
-          .asUint8List();
+      final regular = (await rootBundle.load(
+        'assets/fonts/Roboto-Regular.ttf',
+      )).buffer.asUint8List();
+      final bold = (await rootBundle.load(
+        'assets/fonts/Roboto-Bold.ttf',
+      )).buffer.asUint8List();
       final bytes = await pdfBuilder.build(
         dealer: dealer,
         summary: summary,
@@ -197,20 +186,15 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
       );
       final fileName =
           'firinnet_${dealer.name.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), "_")}_hesap_ozeti.pdf';
-      await Share.shareXFiles(
-        [
-          XFile.fromData(
-            bytes,
-            name: fileName,
-            mimeType: 'application/pdf',
-          ),
-        ],
-        subject: 'FırınNet — ${dealer.name} hesap özeti',
-      );
+      await Share.shareXFiles([
+        XFile.fromData(bytes, name: fileName, mimeType: 'application/pdf'),
+      ], subject: 'FırınNet — ${dealer.name} hesap özeti');
       if (!mounted) return;
-      setState(() => _pdfStatus =
-          'PDF hazırlandı (${(bytes.length / 1024).toStringAsFixed(1)} KB)'
-          '${AppStrings.dealerSharePdfSuffix}');
+      setState(
+        () => _pdfStatus =
+            'PDF hazırlandı (${(bytes.length / 1024).toStringAsFixed(1)} KB)'
+            '${AppStrings.dealerSharePdfSuffix}',
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -232,13 +216,13 @@ class _Header extends StatelessWidget {
     final tag = balance > 0
         ? 'BORÇ'
         : balance < 0
-            ? 'ALACAK'
-            : 'KAPALI';
+        ? 'ALACAK'
+        : 'KAPALI';
     final color = balance > 0
         ? AppColors.copper
         : balance < 0
-            ? AppColors.success
-            : AppColors.softGold;
+        ? AppColors.success
+        : AppColors.softGold;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.l),

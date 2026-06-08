@@ -31,16 +31,14 @@ class DealerPickerSheet extends ConsumerStatefulWidget {
       isScrollControlled: true,
       backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => DealerPickerSheet(initialDebtOnly: debtOnly),
     );
   }
 
   @override
-  ConsumerState<DealerPickerSheet> createState() =>
-      _DealerPickerSheetState();
+  ConsumerState<DealerPickerSheet> createState() => _DealerPickerSheetState();
 }
 
 class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
@@ -142,9 +140,7 @@ class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
                   onChanged: (v) => setState(() => _query = v.trim()),
                 ),
               ),
-              Expanded(
-                child: _buildList(dealersAsync, txsAsync, svc),
-              ),
+              Expanded(child: _buildList(dealersAsync, txsAsync, svc)),
             ],
           ),
         ),
@@ -184,10 +180,13 @@ class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
     }).toList();
 
     // Balance hesapla + debt filtresi uygula
-    final entries = filtered.map((d) {
-      final s = svc.summarize(dealerId: d.id, transactions: txs);
-      return (dealer: d, balance: s.currentBalance as double);
-    }).where((e) => _debtOnly ? e.balance > 0 : true).toList();
+    final entries = filtered
+        .map((d) {
+          final s = svc.summarize(dealerId: d.id, transactions: txs);
+          return (dealer: d, balance: s.currentBalance as double);
+        })
+        .where((e) => _debtOnly ? e.balance > 0 : true)
+        .toList();
 
     if (entries.isEmpty) {
       return Padding(
@@ -253,10 +252,7 @@ class _DealerRow extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.m),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.l),
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            border: Border.all(color: AppColors.borderHairline, width: 0.6),
           ),
           child: Row(
             children: [
@@ -264,9 +260,7 @@ class _DealerRow extends StatelessWidget {
                 radius: 18,
                 backgroundColor: AppColors.softGold.withValues(alpha: 0.18),
                 child: Text(
-                  dealer.name.isNotEmpty
-                      ? dealer.name[0].toUpperCase()
-                      : '?',
+                  dealer.name.isNotEmpty ? dealer.name[0].toUpperCase() : '?',
                   style: TextStyle(
                     color: AppColors.softGold,
                     fontWeight: FontWeight.w800,
@@ -289,9 +283,10 @@ class _DealerRow extends StatelessWidget {
                     ),
                     if (dealer.area.isNotEmpty || dealer.city.isNotEmpty)
                       Text(
-                        [dealer.area, dealer.city]
-                            .where((s) => s.isNotEmpty)
-                            .join(' · '),
+                        [
+                          dealer.area,
+                          dealer.city,
+                        ].where((s) => s.isNotEmpty).join(' · '),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.textMuted,
                         ),

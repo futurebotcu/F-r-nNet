@@ -77,8 +77,10 @@ class _DealerAdjustmentFormScreenState
       final sign = signed >= 0 ? '+' : '−';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${AppStrings.dealerSaveSnackAdjustment}'
-              '$sign${NumberFormatter.currency(signed.abs())}'),
+          content: Text(
+            '${AppStrings.dealerSaveSnackAdjustment}'
+            '$sign${NumberFormatter.currency(signed.abs())}',
+          ),
         ),
       );
     } on GuestActionRequiredException {
@@ -134,8 +136,7 @@ class _DealerAdjustmentFormScreenState
                 ),
               ],
               selected: {_direction},
-              onSelectionChanged: (s) =>
-                  setState(() => _direction = s.first),
+              onSelectionChanged: (s) => setState(() => _direction = s.first),
             ),
             const SizedBox(height: AppSpacing.l),
             const _Label(AppStrings.dealerPaymentAmountLabel),
@@ -215,12 +216,12 @@ class _Label extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.1,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w800,
+      color: AppColors.textPrimary,
+      letterSpacing: -0.1,
+    ),
+  );
 }

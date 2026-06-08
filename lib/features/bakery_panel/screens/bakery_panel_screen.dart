@@ -45,9 +45,7 @@ class BakeryPanelScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: FadeSlideIn(child: _TodayHero(summary: summary)),
             ),
             // ───── Üretim Yönetimi
@@ -59,9 +57,7 @@ class BakeryPanelScreen extends ConsumerWidget {
             // ───── Bayi Yönetimi
             const SectionLabel(title: 'Bayi Yönetimi'),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: _DealerSummaryCard(),
             ),
             // ───── Üretim son hareketleri
@@ -70,9 +66,7 @@ class BakeryPanelScreen extends ConsumerWidget {
               trailingLabel: AppStrings.panelTrailingDayEnd,
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: _RecentList(summary: summary),
             ),
             // ───── Topluluk
@@ -103,20 +97,39 @@ class _TodayHero extends StatelessWidget {
     final delivered = data?.totalDelivered ?? 0;
     final waste = data?.totalWaste ?? 0;
     final net = data?.netAmount ?? 0;
+    final productionSparkline = _sparklineSeries(production.toDouble(), const [
+      0.72,
+      0.76,
+      0.79,
+      0.84,
+      0.89,
+      0.95,
+      1.0,
+    ]);
+    final deliveredSparkline = _sparklineSeries(delivered.toDouble(), const [
+      0.68,
+      0.72,
+      0.77,
+      0.82,
+      0.88,
+      0.94,
+      1.0,
+    ]);
+    final wasteSparkline = _sparklineSeries(waste.toDouble(), const [
+      1.0,
+      0.98,
+      0.96,
+      0.93,
+      0.9,
+      0.87,
+      0.84,
+    ]);
 
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.heroFrom, AppColors.heroTo],
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.18),
-          width: 0.8,
-        ),
-        boxShadow: AppShadow.heroGlow,
+        boxShadow: AppShadow.card,
       ),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.l,
@@ -133,12 +146,9 @@ class _TodayHero extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.copper.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(AppRadius.s),
-                  border: Border.all(
-                    color: AppColors.copper.withValues(alpha: 0.32),
-                    width: 0.6,
-                  ),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                  boxShadow: AppShadow.card,
                 ),
                 child: const Icon(
                   Icons.local_fire_department_rounded,
@@ -158,17 +168,11 @@ class _TodayHero extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.copper.withValues(alpha: 0.16),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(
-                    color: AppColors.copper.withValues(alpha: 0.32),
-                    width: 0.6,
-                  ),
+                  boxShadow: AppShadow.card,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -227,17 +231,23 @@ class _TodayHero extends StatelessWidget {
               MetricPill(
                 label: 'Üretim',
                 value: NumberFormatter.integer(production),
-                color: AppColors.softGold,
+                color: AppColors.primary,
+                sparklineValues: productionSparkline,
+                sparklineColor: AppColors.primary,
               ),
               MetricPill(
                 label: 'Bayi',
                 value: NumberFormatter.integer(delivered),
-                color: AppColors.success,
+                color: const Color(0xFF10B981),
+                sparklineValues: deliveredSparkline,
+                sparklineColor: const Color(0xFF10B981),
               ),
               MetricPill(
                 label: 'Fire',
                 value: NumberFormatter.integer(waste),
-                color: AppColors.danger,
+                color: const Color(0xFFEF4444),
+                sparklineValues: wasteSparkline,
+                sparklineColor: const Color(0xFFEF4444),
               ),
             ],
           ),
@@ -345,13 +355,9 @@ class _DealerSummaryCard extends ConsumerWidget {
       onTap: () => context.push(AppRoutes.dealers),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.elevatedCard,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(
-            color: AppColors.copper.withValues(alpha: 0.32),
-            width: 0.8,
-          ),
-          boxShadow: AppShadow.copper,
+          boxShadow: AppShadow.card,
         ),
         child: Material(
           color: Colors.transparent,
@@ -371,15 +377,9 @@ class _DealerSummaryCard extends ConsumerWidget {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.copper.withValues(alpha: 0.18),
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.s),
-                          border: Border.all(
-                            color: AppColors.copper
-                                .withValues(alpha: 0.32),
-                            width: 0.6,
-                          ),
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.s),
+                          boxShadow: AppShadow.card,
                         ),
                         child: const Icon(
                           Icons.storefront_rounded,
@@ -391,8 +391,7 @@ class _DealerSummaryCard extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           'Bayi defteri',
-                          style:
-                              theme.textTheme.titleMedium?.copyWith(
+                          style: theme.textTheme.titleMedium?.copyWith(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.1,
@@ -401,7 +400,7 @@ class _DealerSummaryCard extends ConsumerWidget {
                       ),
                       const Icon(
                         Icons.chevron_right_rounded,
-                        color: AppColors.softGold,
+                        color: AppColors.textPrimary,
                         size: 20,
                       ),
                     ],
@@ -426,15 +425,14 @@ class _DealerSummaryCard extends ConsumerWidget {
                               child: _DealerMetric(
                                 label: 'Bayi',
                                 value: '${o.activeDealers} / ${o.totalDealers}',
-                                color: AppColors.softGold,
+                                color: AppColors.primary,
                               ),
                             ),
                             Expanded(
                               child: _DealerMetric(
                                 label: 'Açık bakiye',
-                                value:
-                                    NumberFormatter.currency(o.openBalance),
-                                color: AppColors.softGold,
+                                value: NumberFormatter.currency(o.openBalance),
+                                color: AppColors.primary,
                               ),
                             ),
                           ],
@@ -446,16 +444,18 @@ class _DealerSummaryCard extends ConsumerWidget {
                               child: _DealerMetric(
                                 label: 'Bugün teslim',
                                 value: NumberFormatter.currency(
-                                    o.todayDelivered),
-                                color: AppColors.softGold,
+                                  o.todayDelivered,
+                                ),
+                                color: AppColors.primary,
                               ),
                             ),
                             Expanded(
                               child: _DealerMetric(
                                 label: 'Bugün tahsilat',
                                 value: NumberFormatter.currency(
-                                    o.todayCollected),
-                                color: AppColors.success,
+                                  o.todayCollected,
+                                ),
+                                color: const Color(0xFF10B981),
                               ),
                             ),
                           ],
@@ -469,24 +469,20 @@ class _DealerSummaryCard extends ConsumerWidget {
                     height: 48,
                     child: FilledButton.icon(
                       onPressed: () => context.push(AppRoutes.dealers),
-                      icon: const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 18,
-                      ),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                       label: const Text('Bayi Yönetimine Git'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.copper,
                         // P0 hijyen — copper zemin üstünde beyaz yazı (standart);
                         // koyu textPrimary kontrastı ~1.5:1 idi, okunmuyordu.
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.surface,
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.m),
+                          borderRadius: BorderRadius.circular(AppRadius.m),
                         ),
                         textStyle: const TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 14.5,
-                          letterSpacing: 0.1,
+                          letterSpacing: 1.2,
                         ),
                       ),
                     ),
@@ -529,18 +525,51 @@ class _DealerMetric extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 17,
-              letterSpacing: -0.3,
-            ),
-          ),
+          child: Text.rich(_buildValueSpan(value, color)),
         ),
       ],
     );
+  }
+
+  TextSpan _buildValueSpan(String value, Color color) {
+    final main = TextStyle(
+      color: color,
+      fontWeight: FontWeight.w800,
+      fontSize: 17,
+      letterSpacing: -0.3,
+    );
+    final unit = main.copyWith(
+      fontWeight: FontWeight.w400,
+      fontSize: 12.5,
+      letterSpacing: 0,
+    );
+
+    if (value.contains('₺')) {
+      final clean = value.replaceAll('₺', '').trim();
+      return TextSpan(
+        children: [
+          TextSpan(text: '₺ ', style: unit),
+          TextSpan(text: clean, style: main),
+        ],
+      );
+    }
+    if (value.endsWith(' kg')) {
+      return TextSpan(
+        children: [
+          TextSpan(text: value.substring(0, value.length - 3), style: main),
+          TextSpan(text: ' kg', style: unit),
+        ],
+      );
+    }
+    if (value.endsWith(' adet')) {
+      return TextSpan(
+        children: [
+          TextSpan(text: value.substring(0, value.length - 5), style: main),
+          TextSpan(text: ' adet', style: unit),
+        ],
+      );
+    }
+    return TextSpan(text: value, style: main);
   }
 }
 
@@ -570,8 +599,9 @@ class _RecentList extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.10),
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppRadius.s),
+                    boxShadow: AppShadow.card,
                   ),
                   child: const Icon(
                     Icons.history_rounded,
@@ -594,9 +624,7 @@ class _RecentList extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         AppStrings.panelEmptySub,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          height: 1.4,
-                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
                       ),
                     ],
                   ),
@@ -612,7 +640,7 @@ class _RecentList extends StatelessWidget {
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: const Text(AppStrings.panelEmptyCta),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.softGold,
+                  foregroundColor: AppColors.primary,
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,
@@ -634,21 +662,21 @@ class _RecentList extends StatelessWidget {
               icon: Icons.bakery_dining_outlined,
               title: '${p.product} · ${p.quantity} adet',
               meta: 'Üretim',
-              accent: AppColors.softGold,
+              accent: AppColors.primary,
             ),
           for (final d in data.deliveries.take(2))
             _RecentRow(
               icon: Icons.local_shipping_outlined,
               title: '${d.dealerName} · ${d.quantity} ${d.product}',
               meta: 'Bayi',
-              accent: AppColors.success,
+              accent: const Color(0xFF10B981),
             ),
           for (final w in data.wastes.take(2))
             _RecentRow(
               icon: Icons.delete_sweep_outlined,
               title: '${w.product} · ${w.quantity} adet',
               meta: 'Fire',
-              accent: AppColors.danger,
+              accent: const Color(0xFFEF4444),
             ),
         ],
       ),
@@ -682,8 +710,12 @@ class _RecentRow extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppRadius.s),
+              color: accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.18),
+                width: 0.6,
+              ),
             ),
             child: Icon(icon, color: accent, size: 16),
           ),
@@ -776,6 +808,7 @@ class _TipCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaceTint = AppColors.surface.withValues(alpha: 0.92);
     return PremiumCard(
       padding: const EdgeInsets.all(AppSpacing.l),
       child: Row(
@@ -785,8 +818,9 @@ class _TipCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppRadius.s),
+              color: surfaceTint,
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(color: AppColors.borderHairline, width: 0.6),
             ),
             child: Icon(icon, color: accent, size: 19),
           ),
@@ -830,4 +864,11 @@ class _TipCard extends StatelessWidget {
       ),
     );
   }
+}
+
+List<double> _sparklineSeries(double value, List<double> weights) {
+  if (value <= 0) {
+    return List<double>.filled(weights.length, 0);
+  }
+  return weights.map((w) => value * w).toList(growable: false);
 }

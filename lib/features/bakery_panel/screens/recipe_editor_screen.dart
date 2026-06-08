@@ -38,8 +38,7 @@ class RecipeEditorScreen extends ConsumerStatefulWidget {
   final String? recipeId;
 
   @override
-  ConsumerState<RecipeEditorScreen> createState() =>
-      _RecipeEditorScreenState();
+  ConsumerState<RecipeEditorScreen> createState() => _RecipeEditorScreenState();
 }
 
 class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
@@ -99,9 +98,9 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
     if (!mounted) return;
     if (r == null) {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reçete bulunamadı.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reçete bulunamadı.')));
       Navigator.of(context).pop();
       return;
     }
@@ -114,17 +113,24 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
 
     _flour.text = NumberFormatter.decimal(r.quantities.flourKg);
     _waterUnit = _MassUnit.l;
-    _water.text = NumberFormatter.decimal(_fromKg(r.quantities.waterKg, _waterUnit));
+    _water.text = NumberFormatter.decimal(
+      _fromKg(r.quantities.waterKg, _waterUnit),
+    );
     // Maya: 1 kg altıysa gr, üstüyse kg.
     _yeastUnit = r.quantities.yeastKg < 1 ? _MassUnit.gr : _MassUnit.kg;
-    _yeast.text = NumberFormatter.decimal(_fromKg(r.quantities.yeastKg, _yeastUnit));
+    _yeast.text = NumberFormatter.decimal(
+      _fromKg(r.quantities.yeastKg, _yeastUnit),
+    );
     _saltUnit = r.quantities.saltKg < 1 ? _MassUnit.gr : _MassUnit.kg;
-    _salt.text = NumberFormatter.decimal(_fromKg(r.quantities.saltKg, _saltUnit));
+    _salt.text = NumberFormatter.decimal(
+      _fromKg(r.quantities.saltKg, _saltUnit),
+    );
     _piece.text = NumberFormatter.decimal(r.quantities.pieceWeightG);
     if (r.quantities.wasteKg > 0) {
       _wasteUnit = r.quantities.wasteKg < 1 ? _MassUnit.gr : _MassUnit.kg;
-      _waste.text =
-          NumberFormatter.decimal(_fromKg(r.quantities.wasteKg, _wasteUnit));
+      _waste.text = NumberFormatter.decimal(
+        _fromKg(r.quantities.wasteKg, _wasteUnit),
+      );
     } else {
       _waste.text = '';
     }
@@ -193,12 +199,14 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       if (name.isEmpty) continue;
       final amount = NumberFormatter.parseLoose(c.amount.text);
       final unit = c.unit.text.trim();
-      out.add(RecipeIngredient(
-        name: name,
-        amount: amount,
-        unit: unit.isEmpty ? 'kg' : unit,
-        note: c.note.text.trim().isEmpty ? null : c.note.text.trim(),
-      ));
+      out.add(
+        RecipeIngredient(
+          name: name,
+          amount: amount,
+          unit: unit.isEmpty ? 'kg' : unit,
+          note: c.note.text.trim().isEmpty ? null : c.note.text.trim(),
+        ),
+      );
     }
     return out;
   }
@@ -235,10 +243,7 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       _err('Birim gramaj sıfırdan büyük olmalı.');
       return;
     }
-    if (q.waterKg < 0 ||
-        q.yeastKg < 0 ||
-        q.saltKg < 0 ||
-        q.wasteKg < 0) {
+    if (q.waterKg < 0 || q.yeastKg < 0 || q.saltKg < 0 || q.wasteKg < 0) {
       _err('Miktarlar negatif olamaz.');
       return;
     }
@@ -270,8 +275,9 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
 
     final metadata = RecipeMetadata(
       title: _title.text.trim().isEmpty ? null : _title.text.trim(),
-      description:
-          _description.text.trim().isEmpty ? null : _description.text.trim(),
+      description: _description.text.trim().isEmpty
+          ? null
+          : _description.text.trim(),
       ingredients: cleanIngredients,
       steps: cleanSteps,
       bake: bake,
@@ -291,7 +297,8 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       ownerId: _existing?.ownerId ?? user?.id ?? 'local',
       productName: productName.isEmpty ? 'Genel reçete' : productName,
       quantities: q,
-      result: _previewResult ??
+      result:
+          _previewResult ??
           const RecipeResult(
             waterLiters: 0,
             yeastKg: 0,
@@ -302,8 +309,9 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
           ),
       metadata: metadata,
       createdAt: _existing?.createdAt ?? DateTime.now(),
-      visibility:
-          _isPublic ? RecipeVisibility.public : RecipeVisibility.private,
+      visibility: _isPublic
+          ? RecipeVisibility.public
+          : RecipeVisibility.private,
       publishedAt: _existing?.publishedAt,
     );
 
@@ -337,9 +345,9 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       // form alanları korunur (setState reset edilmez), kullanıcı tek tıkla
       // tekrar deneyebilir.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.recipeSaveError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.recipeSaveError)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -401,11 +409,7 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
             ),
             const SizedBox(height: AppSpacing.l),
             const _Section(label: 'HAMUR (gerçek miktar)'),
-            AppNumberField(
-              label: 'Un (kg)',
-              controller: _flour,
-              suffix: 'kg',
-            ),
+            AppNumberField(label: 'Un (kg)', controller: _flour, suffix: 'kg'),
             const SizedBox(height: AppSpacing.s),
             _QuantityRow(
               label: 'Su',
@@ -634,18 +638,18 @@ class _IngredientCtrl {
   });
 
   factory _IngredientCtrl.empty() => _IngredientCtrl(
-        name: TextEditingController(),
-        amount: TextEditingController(),
-        unit: TextEditingController(text: 'kg'),
-        note: TextEditingController(),
-      );
+    name: TextEditingController(),
+    amount: TextEditingController(),
+    unit: TextEditingController(text: 'kg'),
+    note: TextEditingController(),
+  );
 
   factory _IngredientCtrl.fromModel(RecipeIngredient ing) => _IngredientCtrl(
-        name: TextEditingController(text: ing.name),
-        amount: TextEditingController(text: NumberFormatter.decimal(ing.amount)),
-        unit: TextEditingController(text: ing.unit),
-        note: TextEditingController(text: ing.note ?? ''),
-      );
+    name: TextEditingController(text: ing.name),
+    amount: TextEditingController(text: NumberFormatter.decimal(ing.amount)),
+    unit: TextEditingController(text: ing.unit),
+    note: TextEditingController(text: ing.note ?? ''),
+  );
 
   final TextEditingController name;
   final TextEditingController amount;
@@ -664,15 +668,16 @@ class _StepCtrl {
   _StepCtrl({required this.text, required this.duration});
 
   factory _StepCtrl.empty() => _StepCtrl(
-        text: TextEditingController(),
-        duration: TextEditingController(),
-      );
+    text: TextEditingController(),
+    duration: TextEditingController(),
+  );
 
   factory _StepCtrl.fromModel(RecipeStep s) => _StepCtrl(
-        text: TextEditingController(text: s.text),
-        duration: TextEditingController(
-            text: s.durationMin == null ? '' : '${s.durationMin}'),
-      );
+    text: TextEditingController(text: s.text),
+    duration: TextEditingController(
+      text: s.durationMin == null ? '' : '${s.durationMin}',
+    ),
+  );
 
   final TextEditingController text;
   final TextEditingController duration;
@@ -736,11 +741,7 @@ class _QuantityRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.s),
-        _UnitChips(
-          selected: unit,
-          options: units,
-          onSelected: onUnitChanged,
-        ),
+        _UnitChips(selected: unit, options: units, onSelected: onUnitChanged),
       ],
     );
   }
@@ -762,10 +763,7 @@ class _UnitChips extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: AppColors.borderHairline,
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
       padding: const EdgeInsets.all(3),
       child: Row(
@@ -776,8 +774,10 @@ class _UnitChips extends StatelessWidget {
               onTap: () => onSelected(o),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: o == selected
                       ? AppColors.copper.withValues(alpha: 0.30)
@@ -829,8 +829,8 @@ class _ProductPicker extends StatelessWidget {
                 label: Text(p),
                 selected: selected == p,
                 onSelected: (v) => onSelected(v ? p : null),
-                selectedColor: AppColors.copper.withValues(alpha: 0.22),
-                backgroundColor: AppColors.card,
+                selectedColor: AppColors.copperMuted.withValues(alpha: 0.28),
+                backgroundColor: Colors.transparent,
                 labelStyle: TextStyle(
                   color: selected == p
                       ? AppColors.softGold
@@ -842,9 +842,9 @@ class _ProductPicker extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   side: BorderSide(
                     color: selected == p
-                        ? AppColors.copper.withValues(alpha: 0.55)
-                        : AppColors.borderHairline,
-                    width: 0.6,
+                        ? AppColors.copperMuted
+                        : AppColors.surfaceVariant,
+                    width: 1,
                   ),
                 ),
               ),
@@ -1035,8 +1035,9 @@ class _IngredientRow extends StatelessWidget {
                 flex: 2,
                 child: TextField(
                   controller: ctrl.amount,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Miktar',
                     isDense: true,

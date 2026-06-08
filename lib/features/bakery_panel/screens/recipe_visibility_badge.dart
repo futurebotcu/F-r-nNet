@@ -21,10 +21,7 @@ class VisibilityBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: color.withValues(alpha: 0.30),
-          width: 0.6,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.30), width: 0.6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

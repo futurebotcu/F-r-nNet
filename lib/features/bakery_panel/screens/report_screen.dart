@@ -36,8 +36,7 @@ class ReportScreen extends ConsumerWidget {
                     'Üretim ve bayi kayıtların oluştukça gün sonu özetin burada paylaşıma hazır olur.',
                 icon: Icons.share_outlined,
                 actionLabel: 'Üretim Gir',
-                onAction: () =>
-                    GoRouter.of(context).push(AppRoutes.production),
+                onAction: () => GoRouter.of(context).push(AppRoutes.production),
               );
             }
             final text = builder.buildPlainText(s);
@@ -94,7 +93,9 @@ class ReportScreen extends ConsumerWidget {
                     label: const Text(AppStrings.pdfReport),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('PDF V2\'de aktif olacak.')),
+                        const SnackBar(
+                          content: Text('PDF V2\'de aktif olacak.'),
+                        ),
                       );
                     },
                   ),

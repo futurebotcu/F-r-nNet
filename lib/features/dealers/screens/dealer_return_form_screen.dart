@@ -92,9 +92,11 @@ class _DealerReturnFormScreenState
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${AppStrings.dealerSaveSnackReturn}'
-              '$qty $productName · '
-              '${NumberFormatter.currency(qty * price)}'),
+          content: Text(
+            '${AppStrings.dealerSaveSnackReturn}'
+            '$qty $productName · '
+            '${NumberFormatter.currency(qty * price)}',
+          ),
         ),
       );
     } on GuestActionRequiredException {
@@ -215,12 +217,12 @@ class _Label extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.1,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w800,
+      color: AppColors.textPrimary,
+      letterSpacing: -0.1,
+    ),
+  );
 }

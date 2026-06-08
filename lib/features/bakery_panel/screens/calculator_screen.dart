@@ -169,11 +169,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           children: [
             const _Hint(),
             const SizedBox(height: AppSpacing.l),
-            AppNumberField(
-              label: 'Un (kg)',
-              controller: _flour,
-              suffix: 'kg',
-            ),
+            AppNumberField(label: 'Un (kg)', controller: _flour, suffix: 'kg'),
             const SizedBox(height: AppSpacing.s),
             _QuantityRow(
               label: 'Su',
@@ -251,7 +247,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       label: const Text('Paylaş'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.copper,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.surface,
                         minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.m),
@@ -402,7 +398,9 @@ class _QuantityRow extends StatelessWidget {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: o == unit
                           ? AppColors.copper.withValues(alpha: 0.30)
