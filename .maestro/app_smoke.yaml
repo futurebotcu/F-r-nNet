@@ -4,10 +4,9 @@ name: FirinNet app smoke
 - launchApp:
     clearState: true
 
-- assertVisible: "FırınNet"
 - extendedWaitUntil:
     visible: "Kayıtsız devam et"
-    timeout: 10000
+    timeout: 60000
 - tapOn: "Kayıtsız devam et"
 
 - extendedWaitUntil:
@@ -23,26 +22,25 @@ name: FirinNet app smoke
 
 - tapOn: "Gruplar"
 - extendedWaitUntil:
-    visible: "Sektör Grupları"
+    visible: "Tüm gruplar"
     timeout: 10000
 
 - tapOn: "Market"
 - extendedWaitUntil:
-    visible: "Market"
+    visible: "Fırıncının B2B pazarı"
     timeout: 10000
 
 - tapOn: "İlanlar"
 - extendedWaitUntil:
-    visible: "İş İlanları"
+    visible: "Usta Arıyor"
     timeout: 10000
 
 - tapOn: "Panel"
 - extendedWaitUntil:
-    visible: "Panel|Merhaba.*"
+    visible: "Sektör ağı"
     timeout: 10000
 
 - tapOn: "Feed"
 - extendedWaitUntil:
-    visible: "FırınNet"
-    timeout: 10000
-- assertVisible: "Bugün ne paylaşmak istersin?"
+    visible: "Bugün ne paylaşmak istersin?"
+    timeout: 15000

@@ -154,7 +154,10 @@ void main() {
       expect(
           src.contains('MarketplaceTaxonomy.listingTypeEquipmentSale'), isTrue,
           reason: 'Equipment kategorisi sadece equipment_sale seçilince');
-      expect(src.contains('MarketplaceTaxonomy.equipmentCategories'), isTrue);
+      expect(
+        RegExp(r'MarketplaceTaxonomy\s*\.equipmentCategories').hasMatch(src),
+        isTrue,
+      );
     });
 
     test('Price range min/max + condition + negotiable', () {

@@ -30,8 +30,9 @@ void main() {
   group('CreateProfileScreen P1.5 hydrate-submit guard (source)', () {
     late String src;
     setUpAll(() {
-      src = File('lib/features/profile/screens/create_profile_screen.dart')
-          .readAsStringSync();
+      src = File(
+        'lib/features/profile/screens/create_profile_screen.dart',
+      ).readAsStringSync();
     });
 
     test('AppStrings.profileStillLoadingError referansı mevcut', () {
@@ -46,36 +47,61 @@ void main() {
       expect(
         src.contains('_isCompletion && !_profileHydrated'),
         isTrue,
-        reason: 'Guard yalnız completion mode + pre-hydrate durumunda devreye girer',
+        reason:
+            'Guard yalnız completion mode + pre-hydrate durumunda devreye girer',
       );
     });
 
-    test('guard _save\'in başında — validate ve _submitting kontrollerinden sonra, '
-        'legal check ve repo save\'den önce', () {
-      final idxSaveStart = src.indexOf('Future<void> _save() async');
-      final idxValidate =
-          src.indexOf('_formKey.currentState!.validate()', idxSaveStart);
-      final idxSubmittingCheck =
-          src.indexOf('if (_submitting) return;', idxSaveStart);
-      final idxGuard =
-          src.indexOf('_isCompletion && !_profileHydrated', idxSaveStart);
-      // Legal check daha sonra gelmeli (signup mode):
-      final idxLegalCheck =
-          src.indexOf('if (!_isCompletion && !_legalAccepted)', idxSaveStart);
-      // Repo save çağrılarının ilki (completion path):
-      final idxRepoSave =
-          src.indexOf('profileControllerProvider.notifier).save', idxSaveStart);
+    test(
+      'guard _save\'in başında — validate ve _submitting kontrollerinden sonra, '
+      'legal check ve repo save\'den önce',
+      () {
+        final idxSaveStart = src.indexOf('Future<void> _save() async');
+        final idxValidate = src.indexOf(
+          '_formKey.currentState!.validate()',
+          idxSaveStart,
+        );
+        final idxSubmittingCheck = src.indexOf(
+          'if (_submitting) return;',
+          idxSaveStart,
+        );
+        final idxGuard = src.indexOf(
+          '_isCompletion && !_profileHydrated',
+          idxSaveStart,
+        );
+        // Legal check daha sonra gelmeli (signup mode):
+        final idxLegalCheck = src.indexOf(
+          'if (!_isCompletion && !_legalAccepted)',
+          idxSaveStart,
+        );
+        // Repo save çağrılarının ilki (completion path):
+        final saveMatch = RegExp(
+          r'profileControllerProvider\.notifier\)\s*\.save',
+        ).firstMatch(src.substring(idxSaveStart));
+        final idxRepoSave = saveMatch == null
+            ? -1
+            : idxSaveStart + saveMatch.start;
 
-      expect(idxSaveStart, greaterThan(-1));
-      expect(idxValidate, greaterThan(idxSaveStart));
-      expect(idxSubmittingCheck, greaterThan(idxValidate));
-      expect(idxGuard, greaterThan(idxSubmittingCheck),
-          reason: 'Guard `_submitting` kontrolünden sonra olmalı');
-      expect(idxLegalCheck, greaterThan(idxGuard),
-          reason: 'Legal check guard\'dan sonra çalışmalı');
-      expect(idxRepoSave, greaterThan(idxGuard),
-          reason: 'Repo save guard\'dan sonra çağrılmalı');
-    });
+        expect(idxSaveStart, greaterThan(-1));
+        expect(idxValidate, greaterThan(idxSaveStart));
+        expect(idxSubmittingCheck, greaterThan(idxValidate));
+        expect(
+          idxGuard,
+          greaterThan(idxSubmittingCheck),
+          reason: 'Guard `_submitting` kontrolünden sonra olmalı',
+        );
+        expect(
+          idxLegalCheck,
+          greaterThan(idxGuard),
+          reason: 'Legal check guard\'dan sonra çalışmalı',
+        );
+        expect(
+          idxRepoSave,
+          greaterThan(idxGuard),
+          reason: 'Repo save guard\'dan sonra çağrılmalı',
+        );
+      },
+    );
 
     test('guard içinde mounted check + snackbar + return var', () {
       final idxGuard = src.indexOf('_isCompletion && !_profileHydrated');
@@ -86,28 +112,49 @@ void main() {
         idxGuard,
       );
       // Guard return early olmalı (legal check'e kadar düşmesin):
-      final idxLegalCheck =
-          src.indexOf('if (!_isCompletion && !_legalAccepted)', idxGuard);
+      final idxLegalCheck = src.indexOf(
+        'if (!_isCompletion && !_legalAccepted)',
+        idxGuard,
+      );
 
-      expect(idxMounted, greaterThan(idxGuard),
-          reason: 'Guard içinde mounted check olmalı');
-      expect(idxSnackbar, greaterThan(idxMounted),
-          reason: 'Snackbar mounted check sonrası fire etmeli');
-      expect(idxSnackbar, lessThan(idxLegalCheck),
-          reason: 'Snackbar guard içinde olmalı, legal check\'ten önce');
+      expect(
+        idxMounted,
+        greaterThan(idxGuard),
+        reason: 'Guard içinde mounted check olmalı',
+      );
+      expect(
+        idxSnackbar,
+        greaterThan(idxMounted),
+        reason: 'Snackbar mounted check sonrası fire etmeli',
+      );
+      expect(
+        idxSnackbar,
+        lessThan(idxLegalCheck),
+        reason: 'Snackbar guard içinde olmalı, legal check\'ten önce',
+      );
     });
 
     test('mevcut completion mode contract korunmuş (_isCompletion = true)', () {
       // Patch _hydrateFromProfile semantiğini değiştirmedi; mevcut
       // _isCompletion atamaları (initState'te authUser != null veya existing
       // != null durumlarında) yerinde kalmalı.
-      expect(src.contains('_isCompletion = true'), isTrue,
-          reason: 'Completion mode'
-              ' atama satırları korunmalı');
-      expect(src.contains('_hydrateFromProfile'), isTrue,
-          reason: '_hydrateFromProfile metodu korunmalı');
-      expect(src.contains('_profileHydrated = true'), isTrue,
-          reason: 'Hydrate tamamlanınca flag true yapılmalı');
+      expect(
+        src.contains('_isCompletion = true'),
+        isTrue,
+        reason:
+            'Completion mode'
+            ' atama satırları korunmalı',
+      );
+      expect(
+        src.contains('_hydrateFromProfile'),
+        isTrue,
+        reason: '_hydrateFromProfile metodu korunmalı',
+      );
+      expect(
+        src.contains('_profileHydrated = true'),
+        isTrue,
+        reason: 'Hydrate tamamlanınca flag true yapılmalı',
+      );
     });
   });
 }

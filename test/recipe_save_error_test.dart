@@ -60,72 +60,71 @@ Widget _wrap({required RecipeRepository repo}) {
         (ref) => _SeededProfileController(ref, _realProfile),
       ),
     ],
-    child: const MaterialApp(
-      home: RecipeEditorScreen(),
-    ),
+    child: const MaterialApp(home: RecipeEditorScreen()),
   );
 }
 
-void main() {
-  testWidgets(
-    'P1.6 — RecipeEditorScreen save throws → Türkçe hata snackbar; '
-    '_saving false, form korunur, raw error UI\'ya sızmaz',
-    (tester) async {
-      final repo = _ThrowingRecipeRepository();
-      await tester.pumpWidget(_wrap(repo: repo));
-
-      // İlk render — varsayılan değerler (_flour='50', _water='30', _piece='250')
-      // validation'ı geçer; ek form doldurmaya gerek yok.
-      await tester.pumpAndSettle();
-
-      // Kaydet butonunu bul ve tıkla. Butonun label'ı isEditing=false
-      // olduğu için "Reçeteyi Kaydet". Liste/sayfa altında — ListView içinde
-      // olabileceğinden scroll gerekebilir; AppPrimaryButton type ile bul.
-      final saveButton = find.widgetWithText(ElevatedButton, 'Reçeteyi Kaydet');
-      // AppPrimaryButton implementasyonu ElevatedButton'a değil de FilledButton
-      // veya başkasına sarabilir; ikon + label ile de düşebiliriz.
-      // Fallback: ana kayıt label metnine direkt by text.
-      if (saveButton.evaluate().isEmpty) {
-        // ListView ile scroll — buton ekranda olmayabilir.
-        await tester.dragUntilVisible(
-          find.text('Reçeteyi Kaydet'),
-          find.byType(Scrollable).first,
-          const Offset(0, -300),
-        );
-        await tester.pumpAndSettle();
-      }
-
-      await tester.tap(find.text('Reçeteyi Kaydet'));
-      await tester.pumpAndSettle();
-
-      // 1) Repo gerçekten çağrıldı (validation + guard passed).
-      expect(repo.saveCalls, 1);
-
-      // 2) Türkçe hata snackbar'ı görünür.
-      expect(
-        find.text(AppStrings.recipeSaveError),
-        findsOneWidget,
-        reason: 'recipe save fırlattığında Türkçe hata gösterilmeli.',
-      );
-
-      // 3) Raw "Kaydedilemedi: " prefix'i artık UI'da görünmemeli.
-      expect(
-        find.textContaining('Kaydedilemedi:'),
-        findsNothing,
-        reason: 'Raw exception sızıntısı kaldırıldı; eski snackbar metni yok.',
-      );
-
-      // 4) Buton tekrar basılabilir (label "Reçeteyi Kaydet" hâlâ görünür,
-      //    "Kaydediliyor…" değil).
-      expect(find.text('Reçeteyi Kaydet'), findsOneWidget);
-      expect(find.text('Kaydediliyor…'), findsNothing);
-
-      // 5) Form korunur — RecipeEditorScreen hâlâ render'da. Spesifik
-      //    field değerlerini test etmek yerine ekranın hâlâ açık olduğunu
-      //    (kaydet butonu mevcut) doğrulamak yeterli; ayrıntı yukarıda (#4).
-      expect(find.byType(RecipeEditorScreen), findsOneWidget);
-    },
+Finder _primaryButton() {
+  return find.byWidgetPredicate(
+    (widget) => widget.runtimeType.toString() == 'AppPrimaryButton',
   );
+}
+
+Future<Finder> _findSaveButton(WidgetTester tester) async {
+  final saveButton = _primaryButton();
+  if (saveButton.evaluate().isEmpty) {
+    await tester.dragUntilVisible(
+      saveButton,
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+  } else {
+    await tester.ensureVisible(saveButton);
+  }
+  await tester.pumpAndSettle();
+  return saveButton;
+}
+
+void main() {
+  testWidgets('P1.6 — RecipeEditorScreen save throws → Türkçe hata snackbar; '
+      '_saving false, form korunur, raw error UI\'ya sızmaz', (tester) async {
+    final repo = _ThrowingRecipeRepository();
+    await tester.pumpWidget(_wrap(repo: repo));
+
+    // İlk render — varsayılan değerler (_flour='50', _water='30', _piece='250')
+    // validation'ı geçer; ek form doldurmaya gerek yok.
+    await tester.pumpAndSettle();
+
+    final saveButton = await _findSaveButton(tester);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    // 1) Repo gerçekten çağrıldı (validation + guard passed).
+    expect(repo.saveCalls, 1);
+
+    // 2) Türkçe hata snackbar'ı görünür.
+    expect(
+      find.text(AppStrings.recipeSaveError),
+      findsOneWidget,
+      reason: 'recipe save fırlattığında Türkçe hata gösterilmeli.',
+    );
+
+    // 3) Raw "Kaydedilemedi: " prefix'i artık UI'da görünmemeli.
+    expect(
+      find.textContaining('Kaydedilemedi:'),
+      findsNothing,
+      reason: 'Raw exception sızıntısı kaldırıldı; eski snackbar metni yok.',
+    );
+
+    // 4) Buton tekrar basılabilir, kaydetme state'inde kalmamalı.
+    expect(_primaryButton(), findsOneWidget);
+    expect(find.text('Kaydediliyor…'), findsNothing);
+
+    // 5) Form korunur — RecipeEditorScreen hâlâ render'da. Spesifik
+    //    field değerlerini test etmek yerine ekranın hâlâ açık olduğunu
+    //    (kaydet butonu mevcut) doğrulamak yeterli; ayrıntı yukarıda (#4).
+    expect(find.byType(RecipeEditorScreen), findsOneWidget);
+  });
 
   testWidgets(
     'P1.6 regression — başarılı save mevcut akışı korur (sadece smoke)',
@@ -139,13 +138,8 @@ void main() {
       // davranışını doğrulamaz (navigation provider override gerektirir);
       // sadece raw "Kaydedilemedi:" snackbar veya recipeSaveError görünmediğini
       // doğrular — yani success path break etmedi.
-      await tester.dragUntilVisible(
-        find.text('Reçeteyi Kaydet'),
-        find.byType(Scrollable).first,
-        const Offset(0, -300),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Reçeteyi Kaydet'));
+      final saveButton = await _findSaveButton(tester);
+      await tester.tap(saveButton);
       // pushReplacement çağrısı yapabileceği için pumpAndSettle yerine kısa pump.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));

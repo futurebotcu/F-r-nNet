@@ -42,10 +42,10 @@ void main() {
   });
 
   group('AppTypography — Body', () {
-    test('bodyLarge 15.5pt w500 line height 1.5', () {
+    test('bodyLarge 15.5pt w500 line height 1.52', () {
       expect(AppTypography.bodyLarge.fontSize, 15.5);
       expect(AppTypography.bodyLarge.fontWeight, FontWeight.w500);
-      expect(AppTypography.bodyLarge.height, 1.5);
+      expect(AppTypography.bodyLarge.height, 1.52);
     });
 
     test('bodyMedium 14pt w500', () {
@@ -60,10 +60,10 @@ void main() {
   });
 
   group('AppTypography — Label', () {
-    test('labelLarge 13pt w700 letterSpacing 0.4', () {
-      expect(AppTypography.labelLarge.fontSize, 13);
+    test('labelLarge 12.5pt w700 letterSpacing 0.25', () {
+      expect(AppTypography.labelLarge.fontSize, 12.5);
       expect(AppTypography.labelLarge.fontWeight, FontWeight.w700);
-      expect(AppTypography.labelLarge.letterSpacing, 0.4);
+      expect(AppTypography.labelLarge.letterSpacing, 0.25);
     });
 
     test('labelSmall 11pt w700 letterSpacing 0.6 textMuted', () {

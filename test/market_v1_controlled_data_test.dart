@@ -386,7 +386,10 @@ void main() {
     test('Listing type chip MarketplaceTaxonomy.listingTypes\'tan', () {
       // Multi-line tolerant — bazı for-in satırları wrap olabilir.
       expect(src.contains('MarketplaceTaxonomy.listingTypes'), isTrue);
-      expect(src.contains('MarketplaceTaxonomy.equipmentCategories'), isTrue);
+      expect(
+        RegExp(r'MarketplaceTaxonomy\s*\.equipmentCategories').hasMatch(src),
+        isTrue,
+      );
       expect(src.contains('MarketplaceTaxonomy.conditions'), isTrue);
     });
   });

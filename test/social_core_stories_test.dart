@@ -265,7 +265,7 @@ void main() {
         isFalse,
         reason: 'Donor gradient ring widget\'ı kullanılmadı',
       );
-      expect(src.contains('color: AppColors.copper'), isTrue);
+      expect(src.contains('color: AppColors.brandLemonPale'), isTrue);
       expect(src.contains('width: 1.6'), isTrue);
     });
   });

@@ -12,6 +12,7 @@
 //   - State temiz kalır (sheet açık kalır / confirm dialog akışı)
 
 import 'package:firin_defter/core/constants/app_strings.dart';
+import 'package:firin_defter/core/widgets/app_primary_button.dart';
 import 'package:firin_defter/features/dealers/models/dealer_price.dart';
 import 'package:firin_defter/features/dealers/providers/dealer_providers.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
@@ -107,9 +108,7 @@ Widget _wrapDealer(LocalDealerRepository repo, Widget child) {
     ],
     child: MaterialApp(
       home: Scaffold(
-        body: SingleChildScrollView(
-          child: SizedBox(width: 360, child: child),
-        ),
+        body: SingleChildScrollView(child: SizedBox(width: 360, child: child)),
       ),
     ),
   );
@@ -125,9 +124,7 @@ Widget _wrapWorker(LocalWorkerRepository repo, Widget child) {
     ],
     child: MaterialApp(
       home: Scaffold(
-        body: SingleChildScrollView(
-          child: SizedBox(width: 360, child: child),
-        ),
+        body: SingleChildScrollView(child: SizedBox(width: 360, child: child)),
       ),
     ),
   );
@@ -158,7 +155,7 @@ void main() {
       await tester.pump();
 
       // Kaydet — addPrice fırlatır.
-      await tester.tap(find.text(AppStrings.dealerPriceSheetSave));
+      await tester.tap(find.byType(AppPrimaryButton));
       await tester.pumpAndSettle();
 
       expect(repo.addPriceCalls, 1);
@@ -181,62 +178,56 @@ void main() {
 
   // ─────────────────────────────────────── P1.24
 
-  testWidgets(
-    'P1.24 — upsertJobSeekPost throws → Türkçe hata snackbar; '
-    'runGuardedMutation guest contract korunur',
-    (tester) async {
-      final repo = _ThrowingWorkerRepository(throwOnUpsert: true);
-      await tester.pumpWidget(
-        _wrapWorker(repo, JobSeekPostCard(post: _samplePost(isActive: true))),
-      );
+  testWidgets('P1.24 — upsertJobSeekPost throws → Türkçe hata snackbar; '
+      'runGuardedMutation guest contract korunur', (tester) async {
+    final repo = _ThrowingWorkerRepository(throwOnUpsert: true);
+    await tester.pumpWidget(
+      _wrapWorker(repo, JobSeekPostCard(post: _samplePost(isActive: true))),
+    );
 
-      // isActive=true → toggle_on_rounded ikonu görünür.
-      expect(find.byIcon(Icons.toggle_on_rounded), findsOneWidget);
+    // isActive=true → toggle_on_rounded ikonu görünür.
+    expect(find.byIcon(Icons.toggle_on_rounded), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.toggle_on_rounded));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.toggle_on_rounded));
+    await tester.pumpAndSettle();
 
-      expect(repo.upsertCalls, 1);
-      expect(
-        find.text(AppStrings.jobSeekPostToggleError),
-        findsOneWidget,
-        reason: 'upsertJobSeekPost fırlattığında Türkçe hata gösterilmeli.',
-      );
-    },
-  );
+    expect(repo.upsertCalls, 1);
+    expect(
+      find.text(AppStrings.jobSeekPostToggleError),
+      findsOneWidget,
+      reason: 'upsertJobSeekPost fırlattığında Türkçe hata gösterilmeli.',
+    );
+  });
 
   // ─────────────────────────────────────── P1.25
 
-  testWidgets(
-    'P1.25 — deleteJobSeekPost throws → Türkçe hata snackbar; '
-    'confirm dialog davranışı bozulmaz',
-    (tester) async {
-      final repo = _ThrowingWorkerRepository(throwOnDelete: true);
-      await tester.pumpWidget(
-        _wrapWorker(repo, JobSeekPostCard(post: _samplePost())),
-      );
+  testWidgets('P1.25 — deleteJobSeekPost throws → Türkçe hata snackbar; '
+      'confirm dialog davranışı bozulmaz', (tester) async {
+    final repo = _ThrowingWorkerRepository(throwOnDelete: true);
+    await tester.pumpWidget(
+      _wrapWorker(repo, JobSeekPostCard(post: _samplePost())),
+    );
 
-      // Sil ikonunu tıkla → confirm dialog açılır.
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pumpAndSettle();
+    // Sil ikonunu tıkla → confirm dialog açılır.
+    await tester.tap(find.byIcon(Icons.delete_outline));
+    await tester.pumpAndSettle();
 
-      // Confirm dialog: "Sil" buton text'i ile FilledButton.
-      expect(find.text('İlanı sil'), findsOneWidget);
-      expect(find.text('Sil'), findsOneWidget);
+    // Confirm dialog: "Sil" buton text'i ile FilledButton.
+    expect(find.text('İlanı sil'), findsOneWidget);
+    expect(find.text('Sil'), findsOneWidget);
 
-      // Sil onayı.
-      await tester.tap(find.text('Sil'));
-      await tester.pumpAndSettle();
+    // Sil onayı.
+    await tester.tap(find.text('Sil'));
+    await tester.pumpAndSettle();
 
-      expect(repo.deleteCalls, 1);
-      expect(
-        find.text(AppStrings.jobSeekPostDeleteError),
-        findsOneWidget,
-        reason: 'deleteJobSeekPost fırlattığında Türkçe hata gösterilmeli.',
-      );
+    expect(repo.deleteCalls, 1);
+    expect(
+      find.text(AppStrings.jobSeekPostDeleteError),
+      findsOneWidget,
+      reason: 'deleteJobSeekPost fırlattığında Türkçe hata gösterilmeli.',
+    );
 
-      // Dialog kapanmış — "İlanı sil" başlık metni artık görünmez.
-      expect(find.text('İlanı sil'), findsNothing);
-    },
-  );
+    // Dialog kapanmış — "İlanı sil" başlık metni artık görünmez.
+    expect(find.text('İlanı sil'), findsNothing);
+  });
 }
