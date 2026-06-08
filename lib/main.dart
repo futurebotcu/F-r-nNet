@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
+import 'app/theme/app_colors.dart';
 import 'core/config/app_config.dart';
 
 Future<void> main() async {
@@ -17,21 +18,16 @@ Future<void> main() async {
       anonKey: AppConfig.supabaseAnonKey,
     );
   }
-  // Anahtar yoksa initialize atlanır; uygulama local/mock modda devam eder.
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
-      // Color Foundation Sprint — AppColors.background ile sync (#FAF3EA).
-      systemNavigationBarColor: Color(0xFFFAF3EA),
+      systemNavigationBarColor: AppColors.surface,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(
-    const ProviderScope(
-      child: FirinNetApp(),
-    ),
-  );
+
+  runApp(const ProviderScope(child: FirinNetApp()));
 }
