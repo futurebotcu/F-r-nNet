@@ -32,8 +32,7 @@ class LocationPicker {
       isScrollControlled: true,
       backgroundColor: AppColors.elevatedCard,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
       ),
       builder: (_) => _ProvinceSheet(initialCode: initialCode),
     );
@@ -49,13 +48,10 @@ class LocationPicker {
       isScrollControlled: true,
       backgroundColor: AppColors.elevatedCard,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
       ),
-      builder: (_) => _DistrictSheet(
-        province: province,
-        initialCode: initialCode,
-      ),
+      builder: (_) =>
+          _DistrictSheet(province: province, initialCode: initialCode),
     );
   }
 
@@ -118,9 +114,10 @@ class _ProvinceSheetState extends State<_ProvinceSheet> {
                 onChanged: (v) => setState(() => _query = v),
               ),
               const Divider(
-                  height: 1,
-                  thickness: 0.6,
-                  color: AppColors.borderHairline),
+                height: 1,
+                thickness: 0.6,
+                color: AppColors.borderHairline,
+              ),
               Expanded(
                 child: ListView.builder(
                   itemCount: list.length,
@@ -189,9 +186,10 @@ class _DistrictSheetState extends State<_DistrictSheet> {
                 onChanged: (v) => setState(() => _query = v),
               ),
               const Divider(
-                  height: 1,
-                  thickness: 0.6,
-                  color: AppColors.borderHairline),
+                height: 1,
+                thickness: 0.6,
+                color: AppColors.borderHairline,
+              ),
               Expanded(
                 child: ListView.builder(
                   itemCount: list.length,
@@ -241,10 +239,7 @@ class _SheetHeader extends StatelessWidget {
           ),
           IconButton(
             onPressed: () => Navigator.of(context).maybePop(),
-            icon: const Icon(
-              Icons.close_rounded,
-              color: AppColors.textPrimary,
-            ),
+            icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary),
           ),
         ],
       ),
@@ -309,8 +304,7 @@ class _SheetTile extends StatelessWidget {
               ? AppColors.softGold.withValues(alpha: 0.10)
               : Colors.transparent,
           border: const Border(
-            bottom: BorderSide(
-                color: AppColors.borderHairline, width: 0.4),
+            bottom: BorderSide(color: AppColors.borderHairline, width: 0.4),
           ),
         ),
         child: Row(
@@ -395,9 +389,7 @@ class LocationPickerField extends StatelessWidget {
               : Icon(
                   Icons.expand_more_rounded,
                   size: 20,
-                  color: enabled
-                      ? AppColors.textPrimary
-                      : AppColors.textMuted,
+                  color: enabled ? AppColors.textPrimary : AppColors.textMuted,
                 ),
         ),
         isEmpty: !hasValue,

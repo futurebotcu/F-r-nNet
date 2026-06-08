@@ -15,11 +15,7 @@ import '../../app/theme/app_tokens.dart';
 import '../constants/app_strings.dart';
 
 class ListingPhoneCta extends StatelessWidget {
-  const ListingPhoneCta({
-    super.key,
-    required this.phone,
-    this.compact = false,
-  });
+  const ListingPhoneCta({super.key, required this.phone, this.compact = false});
 
   /// Opsiyonel telefon. null/boş ise widget boş `SizedBox.shrink()` döner.
   final String? phone;

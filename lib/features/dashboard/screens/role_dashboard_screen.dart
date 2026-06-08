@@ -44,16 +44,12 @@ class RoleDashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: _RoleBadgeStrip(account: account),
             ),
             SectionLabel(title: _sectionTitleFor(account)),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: Column(
                 children: [
                   for (var i = 0; i < cards.length; i++) ...[
@@ -65,7 +61,7 @@ class RoleDashboardScreen extends ConsumerWidget {
                       onTap: () => _onTap(context, cards[i]),
                     ),
                     if (i != cards.length - 1)
-                      const SizedBox(height: AppSpacing.s),
+                      const SizedBox(height: AppSpacing.xs),
                   ],
                 ],
               ),
@@ -119,39 +115,34 @@ class _RoleBadgeStrip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.l,
-        vertical: AppSpacing.m,
+        horizontal: AppSpacing.m,
+        vertical: AppSpacing.s,
       ),
       decoration: BoxDecoration(
-        color: AppColors.elevatedCard,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.l),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.22),
-          width: 0.6,
-        ),
+        boxShadow: AppShadow.card,
       ),
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
-              color: AppColors.copper.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(AppRadius.s),
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                color: AppColors.copper.withValues(alpha: 0.32),
+                color: AppColors.primary.withValues(alpha: 0.18),
                 width: 0.6,
               ),
+              boxShadow: AppShadow.card,
             ),
-            child: Icon(
-              _iconFor(account),
-              color: AppColors.softGold,
-              size: 18,
-            ),
+            child: Icon(_iconFor(account), color: AppColors.primary, size: 16),
           ),
-          const SizedBox(width: AppSpacing.m),
+          const SizedBox(width: AppSpacing.s),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

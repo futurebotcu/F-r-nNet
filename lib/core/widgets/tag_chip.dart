@@ -6,8 +6,8 @@ import '../../app/theme/app_typography.dart';
 
 /// FırınNet hashtag pill chip (Visual North Star Sprint 1A).
 ///
-/// Post tags için brand-uyumlu pill: softGold tint bg + softGold ince
-/// border + softGold label (`AppTypography.labelLarge` 13pt w700).
+/// Post tags için brand-uyumlu pill: pale lemon tint bg + soft border +
+/// ink label (`AppTypography.labelLarge`).
 /// `#` prefix widget içinde otomatik eklenir; caller ham `label` verir.
 ///
 /// `onTap` opsiyonel — Sprint 1A'da `null` (placeholder). Sprint 5+'ta
@@ -26,16 +26,19 @@ class TagChip extends StatelessWidget {
     final pill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.softGold.withValues(alpha: 0.10),
+        color: AppColors.brandLemonPale,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.25),
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.brandLemonSoft, width: 0.6),
+        boxShadow: AppShadow.subtle,
       ),
       child: Text(
         '#$label',
-        style: AppTypography.labelLarge.copyWith(color: AppColors.softGold),
+        style: AppTypography.labelLarge.copyWith(
+          color: AppColors.brandInk,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
       ),
     );
 

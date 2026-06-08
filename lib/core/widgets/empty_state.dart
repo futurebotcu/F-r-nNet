@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_tokens.dart';
 
-/// Editorial empty state — copper-glow ikon kutusu, başlık, alt metin
+/// Editorial empty state - yellow accent ikon kutusu, baslik, alt metin.
 /// ve opsiyonel birincil aksiyon.
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -29,8 +29,8 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final iconBox = Container(
-      width: 96,
-      height: 96,
+      width: compact ? 60 : 68,
+      height: compact ? 60 : 68,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -38,11 +38,13 @@ class EmptyState extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [AppColors.elevatedCard, AppColors.card],
         ),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(
+          compact ? AppRadius.l : AppRadius.xl,
+        ),
         border: Border.all(color: AppColors.borderHairline, width: 0.8),
-        boxShadow: AppShadow.copper,
+        boxShadow: AppShadow.subtle,
       ),
-      child: Icon(icon, size: 38, color: AppColors.softGold),
+      child: Icon(icon, size: compact ? 24 : 27, color: AppColors.softGold),
     );
 
     final body = ConstrainedBox(
@@ -51,7 +53,7 @@ class EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           iconBox,
-          const SizedBox(height: AppSpacing.l),
+          const SizedBox(height: AppSpacing.m),
           Text(
             title,
             textAlign: TextAlign.center,
@@ -61,7 +63,7 @@ class EmptyState extends StatelessWidget {
             ),
           ),
           if (subtitle != null) ...[
-            const SizedBox(height: AppSpacing.s),
+            const SizedBox(height: 6),
             Text(
               subtitle!,
               textAlign: TextAlign.center,
@@ -69,26 +71,25 @@ class EmptyState extends StatelessWidget {
             ),
           ],
           if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: AppSpacing.l),
+            const SizedBox(height: AppSpacing.m),
             FilledButton.icon(
               onPressed: onAction,
-              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              icon: const Icon(Icons.arrow_forward_rounded, size: 16),
               label: Text(actionLabel!),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.copper,
-                // P0 Design Tokens — copper primary aksiyon yazısı beyaz.
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.brandInk,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: 14,
+                  horizontal: AppSpacing.l,
+                  vertical: 10,
                 ),
-                minimumSize: const Size(0, 48),
+                minimumSize: const Size(0, 42),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 14.5,
+                  fontSize: 14,
                 ),
               ),
             ),
@@ -101,7 +102,7 @@ class EmptyState extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.pageH,
-          vertical: AppSpacing.l,
+          vertical: AppSpacing.m,
         ),
         child: Center(child: body),
       );

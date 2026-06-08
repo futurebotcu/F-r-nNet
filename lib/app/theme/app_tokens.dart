@@ -33,66 +33,42 @@ class AppRadius {
 
 /// Gölge / yükseltme katmanları.
 ///
-/// Cream zemin üstünde "premium drop shadow" hissini kaldırmak için
-/// shadow renkleri saf siyah yerine sıcak espresso tonunda tutuldu;
-/// alpha değerleri düşürüldü. Mat, doğal, parlamasız bir yükseliş.
+/// Beyaz zemin için tek gölge dili: çok düşük opaklıklı saf siyah.
 class AppShadow {
   const AppShadow._();
 
   /// Standart kart gölgesi — açık kartlar arasında hafif yükseliş.
-  /// Sıcak kahve tonu, çok düşük alpha — krem zeminde belli belirsiz.
   static const List<BoxShadow> card = <BoxShadow>[
-    BoxShadow(
-      color: Color(0x0F221A13),
-      blurRadius: 12,
-      offset: Offset(0, 4),
-    ),
+    BoxShadow(color: Color(0x07000000), blurRadius: 6, offset: Offset(0, 2)),
   ];
 
   /// Yumuşak — modal/sheet için biraz daha derin.
   static const List<BoxShadow> soft = <BoxShadow>[
-    BoxShadow(
-      color: Color(0x18221A13),
-      blurRadius: 18,
-      offset: Offset(0, 8),
-    ),
+    BoxShadow(color: Color(0x09000000), blurRadius: 10, offset: Offset(0, 3)),
   ];
 
   /// Sade — neredeyse görünmez, küçük tile için.
   static const List<BoxShadow> subtle = <BoxShadow>[
-    BoxShadow(
-      color: Color(0x0A221A13),
+    BoxShadow(color: Color(0x05000000), blurRadius: 4, offset: Offset(0, 1)),
+  ];
+
+  /// Yüksek katman / floating panel için.
+  static const List<BoxShadow> floating = <BoxShadow>[
+    BoxShadow(color: Color(0x0B000000), blurRadius: 14, offset: Offset(0, 4)),
+  ];
+
+  /// Featured/elevated card için aynı nötr gölge dili.
+  static List<BoxShadow> copper = [
+    const BoxShadow(
+      color: Color(0x07000000),
       blurRadius: 6,
       offset: Offset(0, 2),
     ),
   ];
 
-  /// Yüksek katman / floating panel için.
-  static const List<BoxShadow> floating = <BoxShadow>[
-    BoxShadow(
-      color: Color(0x1A221A13),
-      blurRadius: 20,
-      offset: Offset(0, 10),
-    ),
-  ];
-
-  /// Yumuşak amber sızıntı — featured/elevated card için.
-  /// Glow değil, sıcak duvar yansıması hissi.
-  static List<BoxShadow> copper = [
-    BoxShadow(
-      color: AppColors.copper.withValues(alpha: 0.16),
-      blurRadius: 18,
-      offset: const Offset(0, 8),
-    ),
-  ];
-
-  /// Hero kartlarda yumuşak sıcaklık — parlamasız, doğal.
+  /// Hero kartlarda da aynı nötr gölge.
   static List<BoxShadow> heroGlow = const [
-    BoxShadow(
-      color: Color(0x14221A13),
-      blurRadius: 14,
-      offset: Offset(0, 8),
-    ),
+    BoxShadow(color: Color(0x09000000), blurRadius: 10, offset: Offset(0, 3)),
   ];
 }
 

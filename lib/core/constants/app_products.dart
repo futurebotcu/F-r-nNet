@@ -31,8 +31,8 @@ class RoleBadges {
   const RoleBadges._();
 
   /// Tüm meslek label'ları (insertion order).
-  static List<String> get all => FirinnetTaxonomy.professions.values
-      .toList(growable: false);
+  static List<String> get all =>
+      FirinnetTaxonomy.professions.values.toList(growable: false);
 
   /// Ticari rolü için meslek label'ları.
   static List<String> get commercial => _labelsFor(AccountType.commercial);
@@ -46,8 +46,7 @@ class RoleBadges {
   static List<String> _labelsFor(AccountType type) {
     final codes = FirinnetTaxonomy.professionCodesForAccountType(type);
     return <String>[
-      for (final c in codes)
-        FirinnetTaxonomy.professions[c] ?? c,
+      for (final c in codes) FirinnetTaxonomy.professions[c] ?? c,
     ];
   }
 }

@@ -4,41 +4,29 @@ import 'package:flutter/services.dart';
 import 'app_colors.dart';
 import 'app_tokens.dart';
 
-/// Tema: açık krem zemin + açık kartlar + zengin bakır vurgu.
-/// %75 krem, %20 sıcak destek, %5 koyu kahve vurgu.
-///
-/// Color Polish Sprint: copper derinleştirildi (#A8632C, beyaz yazı ~4.7:1
-/// WCAG AA), bu yüzden primary üstündeki yazı artık BEYAZ (onPrimary) —
-/// buton temaları ile sistem genel uyumu. Light kart üstündeki vurgu metni
-/// hâlâ softGold (deep brown).
+final TextStyle premiumFont = const TextStyle(fontFamily: 'Inter');
+
 class AppTheme {
   const AppTheme._();
 
-  // Eski API'lerle uyum için radius sabitleri.
   static const double radiusLg = AppRadius.l;
   static const double radiusMd = AppRadius.m;
   static const double radiusSm = AppRadius.s;
 
-  /// Eski `darkTheme()` çağrı yerlerini bozmamak için aynı isim;
-  /// içeriği artık açık tema.
-  static ThemeData darkTheme() => _bakeryTheme();
+  static ThemeData lightTheme() => _socialTheme();
+  static ThemeData darkTheme() => _socialTheme();
 
-  /// Asıl tema fabrikası — açık, sıcak, samimi.
-  static ThemeData _bakeryTheme() {
+  static ThemeData _socialTheme() {
     const colorScheme = ColorScheme.light(
-      primary: AppColors.copper,
-      // Color Polish Sprint: zengin copper üstünde beyaz (FAB, segmented vb.
-      // primary yüzeyleri buton standardıyla aynı dile bağlanır).
-      onPrimary: Colors.white,
-      primaryContainer: AppColors.copperMuted,
-      onPrimaryContainer: AppColors.textPrimary,
-      secondary: AppColors.softGold,
-      onSecondary: AppColors.textPrimary,
-      surface: AppColors.background,
-      onSurface: AppColors.textPrimary,
-      surfaceContainerHighest: AppColors.card,
+      primary: AppColors.brandLemon,
+      onPrimary: AppColors.brandInk,
+      secondary: AppColors.brandLemonPressed,
+      onSecondary: AppColors.brandInk,
+      surface: AppColors.surface,
+      onSurface: AppColors.brandInk,
       outline: AppColors.borderHairline,
-      outlineVariant: AppColors.surfaceLine,
+      surfaceContainerHighest: AppColors.surfaceContainerHighest,
+      surfaceContainerLowest: AppColors.surface,
       error: AppColors.danger,
       onError: Colors.white,
     );
@@ -46,6 +34,7 @@ class AppTheme {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: 'Inter',
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       canvasColor: AppColors.background,
@@ -57,7 +46,7 @@ class AppTheme {
           .apply(
             bodyColor: AppColors.textPrimary,
             displayColor: AppColors.textPrimary,
-            fontFamily: 'Roboto',
+            fontFamily: 'Inter',
           )
           .copyWith(
             displayLarge: base.textTheme.displayLarge?.copyWith(
@@ -82,43 +71,44 @@ class AppTheme {
             ),
             titleLarge: base.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
-              fontSize: 20,
-              letterSpacing: -0.1,
+              fontSize: 19,
+              letterSpacing: 0.1,
             ),
             titleMedium: base.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              letterSpacing: 0,
+              fontSize: 16,
+              letterSpacing: 0.1,
             ),
             bodyLarge: base.textTheme.bodyLarge?.copyWith(
-              fontSize: 16,
-              height: 1.45,
+              fontSize: 15.5,
+              height: 1.5,
               color: AppColors.textPrimary,
             ),
             bodyMedium: base.textTheme.bodyMedium?.copyWith(
-              fontSize: 14.5,
+              fontSize: 14.25,
               height: 1.45,
               color: AppColors.textSecondary,
             ),
             bodySmall: base.textTheme.bodySmall?.copyWith(
-              fontSize: 12.5,
+              fontSize: 12.25,
               color: AppColors.textMuted,
               letterSpacing: 0.2,
             ),
             labelLarge: base.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              letterSpacing: 0.1,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+              letterSpacing: 0.25,
             ),
             labelMedium: base.textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              fontSize: 13,
+              fontSize: 12.5,
               color: AppColors.textSecondary,
-              letterSpacing: 0.4,
+              letterSpacing: 0.25,
             ),
           ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: AppColors.background,
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -132,18 +122,55 @@ class AppTheme {
         toolbarHeight: 60,
         titleTextStyle: TextStyle(
           fontSize: 20,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
-          letterSpacing: -0.2,
         ),
-        iconTheme: IconThemeData(
-          color: AppColors.textPrimary,
-          size: 22,
+        iconTheme: IconThemeData(color: AppColors.textPrimary, size: 22),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.brandInk,
+        unselectedItemColor: AppColors.textSecondary,
+        selectedLabelStyle: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
         ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        ),
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: AppColors.surface,
+        indicatorColor: AppColors.brandLemonPale,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
+            letterSpacing: 0.2,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.brandInk
+                : AppColors.textSecondary,
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.brandInk
+                : AppColors.textSecondary,
+            size: 24,
+          ),
+        ),
+        height: 70,
       ),
       cardTheme: CardThemeData(
-        color: AppColors.card,
+        color: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        shadowColor: Colors.black,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.l),
@@ -151,157 +178,121 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.copper,
-          // P0 Design Tokens — FırınNet primary copper button standardı:
-          // yazı her yerde BEYAZ (referans + ekranların çoğu zaten beyaz).
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.copper.withValues(alpha: 0.35),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.brandInk,
+          disabledBackgroundColor: AppColors.brandLemonPale,
           disabledForegroundColor: AppColors.textMuted,
-          minimumSize: const Size.fromHeight(56),
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.1,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.2,
           ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.copper,
-          // P0 Design Tokens — copper primary button yazısı beyaz (standart).
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.brandInk,
+          disabledBackgroundColor: AppColors.brandLemonPale,
+          disabledForegroundColor: AppColors.textMuted,
           elevation: 0,
-          minimumSize: const Size.fromHeight(56),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+          minimumSize: const Size.fromHeight(50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+          textStyle: premiumFont.copyWith(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.2,
           ),
         ),
       ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          // Deep amber foreground — light krem üzerinde okunabilir.
-          foregroundColor: AppColors.softGold,
-          minimumSize: const Size.fromHeight(54),
-          side: BorderSide(
-            color: AppColors.softGold.withValues(alpha: 0.55),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.m),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.surface,
+        disabledColor: AppColors.surface,
+        selectedColor: AppColors.brandLemonPale,
+        secondarySelectedColor: AppColors.brandLemonPale,
+        side: BorderSide.none,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
+        labelStyle: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.15,
+        ),
+        secondaryLabelStyle: const TextStyle(
+          color: AppColors.brandInk,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
         ),
       ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.softGold,
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
-        ),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.borderHairline,
+        thickness: 0.6,
+        space: 0,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.surfaceVariant,
         labelStyle: const TextStyle(
           color: AppColors.textSecondary,
           fontWeight: FontWeight.w500,
         ),
         hintStyle: const TextStyle(color: AppColors.textMuted),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
           borderSide: const BorderSide(
             color: AppColors.borderHairline,
-            width: 0.6,
+            width: 1,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
           borderSide: const BorderSide(
             color: AppColors.borderHairline,
-            width: 0.6,
+            width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
-          borderSide: const BorderSide(color: AppColors.softGold, width: 1.4),
-        ),
-      ),
-      // P0 Design Tokens — FırınNet chip standardı.
-      // Kanonik filter/segment chip widget'ı: `DealerFilterChip`
-      // (core ölçü: seçili = copper border 1.2 + copper@0.18 bg + softGold
-      // w800; pasif = card bg + hairline 0.6 + textSecondary w600; radius
-      // pill; font 12.5; ikon 16). ChipThemeData `side`'ı seçime göre
-      // değiştiremediği için ekranlar bu kanonik widget'ı kullanmalı; tema
-      // default'u o standarda yaklaşacak şekilde hizalandı (raw ChoiceChip
-      // için en yakın görünüm).
-      chipTheme: ChipThemeData(
-        backgroundColor: AppColors.card,
-        selectedColor: AppColors.copper.withValues(alpha: 0.18),
-        side: const BorderSide(color: AppColors.borderHairline, width: 0.6),
-        labelStyle: const TextStyle(
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w600,
-          fontSize: 12.5,
-        ),
-        // Seçili chip: softGold (deep amber) w800 — kanonik standartla aynı.
-        secondaryLabelStyle: const TextStyle(
-          color: AppColors.softGold,
-          fontWeight: FontWeight.w800,
-          fontSize: 12.5,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
-        showCheckmark: false,
-      ),
-      dividerTheme: const DividerThemeData(
-        color: AppColors.surfaceLine,
-        thickness: 0.6,
-        space: 0,
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: AppColors.surface,
-        indicatorColor: Colors.transparent,
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (states) => TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 11.5,
-            letterSpacing: 0.2,
-            color: states.contains(WidgetState.selected)
-                ? AppColors.softGold
-                : AppColors.textMuted,
+          borderSide: const BorderSide(
+            color: AppColors.brandLemonPressed,
+            width: 1.5,
           ),
         ),
-        iconTheme: WidgetStateProperty.resolveWith(
-          (states) => IconThemeData(
-            color: states.contains(WidgetState.selected)
-                ? AppColors.softGold
-                : AppColors.textMuted,
-            size: 24,
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.brandInk,
+          disabledForegroundColor: AppColors.textMuted,
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.brandInk,
+          disabledForegroundColor: AppColors.textMuted,
+          side: const BorderSide(color: AppColors.warmBorder),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
           ),
         ),
-        height: 70,
       ),
+      iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 22),
+      shadowColor: Colors.black,
       snackBarTheme: SnackBarThemeData(
-        // Light tema — snackbar da kart hissi, koyu kahve text.
-        backgroundColor: AppColors.elevatedCard,
+        backgroundColor: AppColors.surface,
         contentTextStyle: const TextStyle(
           color: AppColors.textPrimary,
           fontSize: 14.5,
@@ -311,10 +302,6 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
-      ),
-      iconTheme: const IconThemeData(
-        color: AppColors.textPrimary,
-        size: 22,
       ),
     );
   }

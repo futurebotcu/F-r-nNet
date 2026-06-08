@@ -26,16 +26,15 @@ class QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bg = featured ? AppColors.elevatedCard : AppColors.card;
     return PressScale(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.l),
-          boxShadow: featured ? AppShadow.copper : AppShadow.card,
+          boxShadow: AppShadow.card,
         ),
         child: Material(
-          color: bg,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.l),
           child: InkWell(
             onTap: onTap,
@@ -45,25 +44,19 @@ class QuickActionTile extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppRadius.l),
-                border: Border.all(
-                  color: featured
-                      ? AppColors.copper.withValues(alpha: 0.32)
-                      : AppColors.borderHairline,
-                  width: featured ? 0.8 : 0.6,
-                ),
               ),
               padding: EdgeInsets.fromLTRB(
                 featured ? AppSpacing.m : AppSpacing.l,
-                AppSpacing.l,
-                AppSpacing.l,
-                AppSpacing.l,
+                AppSpacing.m,
+                AppSpacing.m,
+                AppSpacing.m,
               ),
               child: Row(
                 children: [
                   if (featured) ...[
                     Container(
                       width: 3,
-                      height: 42,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: AppColors.softGold,
                         borderRadius: BorderRadius.circular(2),
@@ -72,30 +65,26 @@ class QuickActionTile extends StatelessWidget {
                     const SizedBox(width: AppSpacing.m),
                   ],
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: featured ? 38 : 36,
+                    height: featured ? 38 : 36,
                     decoration: BoxDecoration(
-                      // Premium card trio sprint — icon halo:
-                      //  • featured: alpha 0.20 → 0.22 + ince softGold
-                      //    inner border (sıcak bakır vurgu)
-                      //  • default:  alpha 0.12 → 0.14 (subtle warmth)
-                      color: accent.withValues(alpha: featured ? 0.22 : 0.14),
-                      borderRadius: BorderRadius.circular(AppRadius.s),
-                      border: featured
-                          ? Border.all(
-                              color:
-                                  AppColors.softGold.withValues(alpha: 0.32),
-                              width: 0.6,
-                            )
-                          : null,
+                      color: accent.withValues(alpha: featured ? 0.10 : 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                      border: Border.all(
+                        color: accent.withValues(alpha: 0.18),
+                        width: 0.6,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    child: Icon(
-                      icon,
-                      color: accent,
-                      size: featured ? 22 : 21,
-                    ),
+                    child: Icon(icon, color: accent, size: featured ? 19 : 18),
                   ),
-                  const SizedBox(width: AppSpacing.m),
+                  const SizedBox(width: AppSpacing.s),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,15 +93,16 @@ class QuickActionTile extends StatelessWidget {
                         Text(
                           label,
                           style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight:
-                                featured ? FontWeight.w800 : FontWeight.w700,
+                            fontWeight: featured
+                                ? FontWeight.w800
+                                : FontWeight.w700,
                             color: AppColors.textPrimary,
-                            fontSize: featured ? 16 : 15.5,
+                            fontSize: featured ? 15.5 : 15,
                             letterSpacing: -0.1,
                           ),
                         ),
                         if (subtitle != null) ...[
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 2),
                           Text(
                             subtitle!,
                             style: theme.textTheme.bodySmall,
@@ -164,7 +154,7 @@ class QuickActionMini extends StatelessWidget {
           boxShadow: AppShadow.card,
         ),
         child: Material(
-          color: AppColors.card,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.l),
           child: InkWell(
             onTap: onTap,
@@ -174,35 +164,35 @@ class QuickActionMini extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppRadius.l),
-                border: Border.all(
-                  color: AppColors.borderHairline,
-                  width: 0.6,
-                ),
               ),
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.m,
-                vertical: AppSpacing.l,
+                vertical: AppSpacing.m,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    height: 36,
+                    width: 36,
                     decoration: BoxDecoration(
-                      // Premium card trio sprint — Mini icon halo:
-                      // 38px → 40px + alpha 0.12 → 0.14 + ince softGold
-                      // border (0.20). Featured tile ile aynı warmth ailesi.
-                      color: accent.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(AppRadius.s),
+                      color: accent.withValues(alpha: 0.09),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
                       border: Border.all(
-                        color: AppColors.softGold.withValues(alpha: 0.20),
+                        color: accent.withValues(alpha: 0.16),
                         width: 0.6,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    child: Icon(icon, color: accent, size: 19),
+                    child: Icon(icon, color: accent, size: 17),
                   ),
-                  const SizedBox(height: AppSpacing.m),
+                  const SizedBox(height: AppSpacing.s),
                   Text(
                     label,
                     style: theme.textTheme.titleMedium?.copyWith(

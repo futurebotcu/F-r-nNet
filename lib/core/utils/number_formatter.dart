@@ -6,8 +6,11 @@ class NumberFormatter {
 
   static final NumberFormat _decimal = NumberFormat.decimalPattern('tr_TR');
   static final NumberFormat _decimal2 = NumberFormat('#,##0.##', 'tr_TR');
-  static final NumberFormat _currency =
-      NumberFormat.currency(locale: 'tr_TR', symbol: '₺', decimalDigits: 2);
+  static final NumberFormat _currency = NumberFormat.currency(
+    locale: 'tr_TR',
+    symbol: '₺',
+    decimalDigits: 2,
+  );
 
   static String integer(num value) => _decimal.format(value.round());
 

@@ -10,13 +10,15 @@ class PressScale extends StatefulWidget {
     required this.child,
     this.onTap,
     this.scale = 0.97,
-    this.duration = const Duration(milliseconds: 110),
+    this.pressDuration = const Duration(milliseconds: 90),
+    this.releaseDuration = const Duration(milliseconds: 250),
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final double scale;
-  final Duration duration;
+  final Duration pressDuration;
+  final Duration releaseDuration;
 
   @override
   State<PressScale> createState() => _PressScaleState();
@@ -33,20 +35,23 @@ class _PressScaleState extends State<PressScale> {
 
   @override
   Widget build(BuildContext context) {
+    final animatedChild = AnimatedScale(
+      scale: _down ? widget.scale : 1.0,
+      duration: _down ? widget.pressDuration : widget.releaseDuration,
+      curve: _down ? Curves.easeOut : Curves.easeOutBack,
+      child: widget.child,
+    );
     return Listener(
       onPointerDown: (_) => _set(true),
       onPointerUp: (_) => _set(false),
       onPointerCancel: (_) => _set(false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: _down ? widget.scale : 1.0,
-          duration: widget.duration,
-          curve: Curves.easeOut,
-          child: widget.child,
-        ),
-      ),
+      child: widget.onTap == null
+          ? animatedChild
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onTap,
+              child: animatedChild,
+            ),
     );
   }
 }

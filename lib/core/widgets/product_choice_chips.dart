@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_tokens.dart';
+import 'interactions.dart';
 import '../constants/app_products.dart';
 
 /// Ekmek/Simit/Pide… hızlı seçim chip'leri.
@@ -101,15 +104,33 @@ class _ProductChoiceChipsState extends State<ProductChoiceChips> {
           runSpacing: 10,
           children: [
             for (final p in widget.products)
-              ChoiceChip(
-                label: Text(p),
-                selected: !_otherMode && p == widget.selected,
-                onSelected: (_) => _onPredefined(p),
+              PressScale(
+                onTap: null,
+                child: ChoiceChip(
+                  label: Text(p),
+                  selected: !_otherMode && p == widget.selected,
+                  onSelected: (_) => _onPredefined(p),
+                  selectedColor: AppColors.copper,
+                  backgroundColor: AppColors.surfaceVariant,
+                  side: BorderSide.none,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                ),
               ),
-            ChoiceChip(
-              label: Text(widget.otherChipLabel),
-              selected: _otherMode,
-              onSelected: (_) => _onOtherChip(),
+            PressScale(
+              onTap: null,
+              child: ChoiceChip(
+                label: Text(widget.otherChipLabel),
+                selected: _otherMode,
+                onSelected: (_) => _onOtherChip(),
+                selectedColor: AppColors.copper,
+                backgroundColor: AppColors.surfaceVariant,
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+              ),
             ),
           ],
         ),

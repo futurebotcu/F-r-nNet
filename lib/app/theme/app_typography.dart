@@ -71,7 +71,7 @@ class AppTypography {
     color: AppColors.textPrimary,
     fontSize: 15.5,
     fontWeight: FontWeight.w500,
-    height: 1.5,
+    height: 1.52,
   );
 
   static const TextStyle bodyMedium = TextStyle(
@@ -93,9 +93,9 @@ class AppTypography {
 
   static const TextStyle labelLarge = TextStyle(
     color: AppColors.textPrimary,
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: FontWeight.w700,
-    letterSpacing: 0.4,
+    letterSpacing: 0.25,
   );
 
   static const TextStyle labelSmall = TextStyle(
@@ -152,7 +152,7 @@ class AppTypography {
     letterSpacing: -0.1,
   );
 
-  /// Primary/secondary buton etiketi (copper button üstünde beyaz ile).
+  /// Primary/secondary buton etiketi.
   static const TextStyle buttonLabel = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w800,
@@ -161,7 +161,7 @@ class AppTypography {
 
   /// Küçük aksiyon etiketi — kompakt pill CTA, satır içi link.
   static const TextStyle smallAction = TextStyle(
-    color: AppColors.softGold,
+    color: AppColors.brandInk,
     fontSize: 12,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.1,

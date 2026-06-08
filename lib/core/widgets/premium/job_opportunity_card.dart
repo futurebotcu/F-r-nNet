@@ -153,13 +153,9 @@ class JobOpportunityCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.s),
           Row(
             children: [
-              _Tag(
-                  icon: Icons.workspace_premium_outlined, label: experience),
+              _Tag(icon: Icons.workspace_premium_outlined, label: experience),
               const SizedBox(width: AppSpacing.s),
-              _Tag(
-                icon: Icons.schedule_rounded,
-                label: shift ?? '—',
-              ),
+              _Tag(icon: Icons.schedule_rounded, label: shift ?? '—'),
             ],
           ),
           // V1 — Job messaging gerçek oldu: onApply parent'tan geçilir.
@@ -175,7 +171,7 @@ class JobOpportunityCard extends StatelessWidget {
                 label: Text(applyLabel ?? AppStrings.jobsApply),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.brandInk,
                   // İş İlanları Polish V1 — global buton radius standardı (m).
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),
@@ -211,10 +207,7 @@ class _Tag extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.s),
-          border: Border.all(
-            color: AppColors.borderHairline,
-            width: 0.6,
-          ),
+          border: Border.all(color: AppColors.borderHairline, width: 0.6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

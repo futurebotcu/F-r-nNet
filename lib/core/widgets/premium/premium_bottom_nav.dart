@@ -1,10 +1,13 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../widgets/interactions.dart';
 
-/// FırınNet alt navigasyonu — ince hairline üst çizgi, sıcak softGold vurgu.
-/// Seçili: ikon dolu, etiket softGold, üstte 2 px yumuşak indicator.
+/// FirinNet alt navigasyonu - ince hairline ust cizgi, soft lemon vurgu.
+/// Secili: ikon/etiket koyu, ustte ince pale lemon indicator.
 class PremiumBottomNav extends StatelessWidget {
   const PremiumBottomNav({
     super.key,
@@ -21,26 +24,31 @@ class PremiumBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: const Border(
-            top: BorderSide(color: AppColors.surfaceLine, width: 0.6),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              boxShadow: AppShadow.subtle,
+            ),
+            height: 70,
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  Expanded(
+                    child: PressScale(
+                      onTap: null,
+                      child: _NavTile(
+                        item: items[i],
+                        selected: i == selectedIndex,
+                        onTap: () => onSelect(i),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-          boxShadow: AppShadow.subtle,
-        ),
-        height: 72,
-        child: Row(
-          children: [
-            for (var i = 0; i < items.length; i++)
-              Expanded(
-                child: _NavTile(
-                  item: items[i],
-                  selected: i == selectedIndex,
-                  onTap: () => onSelect(i),
-                ),
-              ),
-          ],
         ),
       ),
     );
@@ -72,8 +80,8 @@ class _NavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Cream surface üzerinde — aktif sekme tok bakır, pasif muted kahve.
-    final color = selected ? AppColors.copper : AppColors.onBackgroundMuted;
+    // White surface uzerinde aktif sekme soft lemon indicator + koyu ikon.
+    final color = selected ? AppColors.brandInk : AppColors.onBackgroundMuted;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -86,15 +94,14 @@ class _NavTile extends StatelessWidget {
             AnimatedOpacity(
               duration: AppDuration.fast,
               opacity: selected ? 1 : 0,
-              // Sade tek-renk mat bakır çizgi — operasyonel his için
-              // gradient/glow yok.
+              // Sade tek-renk pale lemon cizgi.
               child: Container(
                 margin: const EdgeInsets.only(top: 0),
-                height: 3,
-                width: 28,
+                height: 2,
+                width: 24,
                 decoration: BoxDecoration(
-                  color: AppColors.copper,
-                  borderRadius: BorderRadius.circular(1.5),
+                  color: AppColors.brandLemonPale,
+                  borderRadius: BorderRadius.circular(1),
                 ),
               ),
             ),
@@ -119,9 +126,8 @@ class _NavTile extends StatelessWidget {
                     item.label,
                     style: TextStyle(
                       color: color,
-                      fontSize: 11.5,
-                      fontWeight:
-                          selected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 11,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                       letterSpacing: 0.35,
                     ),
                   ),

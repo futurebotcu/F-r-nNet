@@ -27,7 +27,7 @@ class StatCard extends StatelessWidget {
   final Color? accent;
   final bool warm;
 
-  /// `true` ise daha büyük rakam, ek padding, copper helper.
+  /// `true` ise daha buyuk rakam, ek padding, brand accent helper.
   final bool hero;
 
   @override

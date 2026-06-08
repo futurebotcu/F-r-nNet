@@ -41,9 +41,8 @@ class FirinnetTaxonomy {
   };
 
   /// Allowed code listesi — DB CHECK constraint ile birebir eş.
-  static List<String> get professionCodes => professions.keys.toList(
-        growable: false,
-      );
+  static List<String> get professionCodes =>
+      professions.keys.toList(growable: false);
 
   /// UI iteration için entry listesi (insertion order korunur).
   static Iterable<MapEntry<String, String>> get professionEntries =>
@@ -194,8 +193,7 @@ class FirinnetTaxonomy {
   };
 
   static List<String> get shiftCodes => shifts.keys.toList(growable: false);
-  static Iterable<MapEntry<String, String>> get shiftEntries =>
-      shifts.entries;
+  static Iterable<MapEntry<String, String>> get shiftEntries => shifts.entries;
 
   static String? shiftLabel(String? code) {
     if (code == null || code.isEmpty) return null;

@@ -1178,9 +1178,9 @@ class TurkeyLocations {
   ];
 
   static final UnmodifiableMapView<String, TurkeyProvince> _byCode =
-      UnmodifiableMapView<String, TurkeyProvince>(
-    <String, TurkeyProvince>{for (final p in provinces) p.code: p},
-  );
+      UnmodifiableMapView<String, TurkeyProvince>(<String, TurkeyProvince>{
+        for (final p in provinces) p.code: p,
+      });
 
   static TurkeyProvince? findProvinceByCode(String? code) {
     if (code == null || code.isEmpty) return null;

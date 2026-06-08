@@ -36,9 +36,9 @@ class SectionLabel extends StatelessWidget {
             child: Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                letterSpacing: -0.1,
+                fontWeight: FontWeight.w700,
+                fontSize: 15.5,
+                letterSpacing: -0.15,
                 color: AppColors.onBackgroundPrimary,
               ),
             ),
@@ -48,26 +48,23 @@ class SectionLabel extends StatelessWidget {
               onTap: onTrailingTap,
               borderRadius: BorderRadius.circular(AppRadius.s),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       trailingLabel!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.copper,
+                        color: AppColors.brandInk,
                         fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(width: 2),
                     const Icon(
                       Icons.chevron_right_rounded,
                       size: 16,
-                      color: AppColors.copper,
+                      color: AppColors.brandLemonPressed,
                     ),
                   ],
                 ),
@@ -81,11 +78,7 @@ class SectionLabel extends StatelessWidget {
 
 /// Editorial büyük sayfa başlığı.
 class PageTitle extends StatelessWidget {
-  const PageTitle({
-    super.key,
-    required this.title,
-    this.subtitle,
-  });
+  const PageTitle({super.key, required this.title, this.subtitle});
 
   final String title;
   final String? subtitle;
@@ -107,17 +100,14 @@ class PageTitle extends StatelessWidget {
             title,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              fontSize: 28,
-              letterSpacing: -0.6,
-              height: 1.1,
+              fontSize: 27,
+              letterSpacing: -0.4,
+              height: 1.12,
             ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 6),
-            Text(
-              subtitle!,
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(subtitle!, style: theme.textTheme.bodyMedium),
           ],
         ],
       ),

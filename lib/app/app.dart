@@ -19,18 +19,14 @@ class _FirinNetAppState extends State<FirinNetApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: AppStrings.appName,
-      // Tek tema modu — bakery operasyon paleti (açık cream zemin,
-      // espresso kartlar, mat bakır). Hem light hem dark slot'unda
-      // aynı tema; sistemin temasından bağımsız tutarlı görünüm.
-      theme: AppTheme.darkTheme(),
-      darkTheme: AppTheme.darkTheme(),
+      // Tek tema modu: white-first + yellow accent social identity.
+      // Sistem temasindan bagimsiz, tutarli aydinlik gorunum.
+      theme: AppTheme.lightTheme(),
       themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
       locale: const Locale('tr', 'TR'),
-      supportedLocales: const [
-        Locale('tr', 'TR'),
-      ],
+      supportedLocales: const [Locale('tr', 'TR')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
