@@ -36,10 +36,7 @@ abstract class AuthRepository {
     required Map<String, dynamic> metadata,
   });
 
-  Future<AuthUser> signIn({
-    required String email,
-    required String password,
-  });
+  Future<AuthUser> signIn({required String email, required String password});
 
   /// V1.4 — Google ile devam et (OAuth).
   ///

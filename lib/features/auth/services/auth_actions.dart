@@ -42,10 +42,7 @@ Future<void> performSignOut(BuildContext context, WidgetRef ref) async {
 ///
 /// Daha önce `profile_screen.dart` içinde `_onDeleteAccountPressed`
 /// olarak vardı; aynı kontrat ile bu shared service'e taşındı.
-Future<void> performDeleteAccount(
-  BuildContext context,
-  WidgetRef ref,
-) async {
+Future<void> performDeleteAccount(BuildContext context, WidgetRef ref) async {
   if (!AppConfig.supabaseEnabled) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text(AppStrings.accountDeleteUnsupportedOffline)),
@@ -138,8 +135,8 @@ class _DeleteAccountConfirmDialogState
   }
 
   void _onChanged(String value) {
-    final ok = value.trim().toUpperCase() ==
-        AppStrings.accountDeleteConfirmKeyword;
+    final ok =
+        value.trim().toUpperCase() == AppStrings.accountDeleteConfirmKeyword;
     if (ok != _enabled) {
       setState(() => _enabled = ok);
     }
@@ -187,11 +184,10 @@ class _DeleteAccountConfirmDialogState
           child: const Text(AppStrings.accountDeleteCancel),
         ),
         FilledButton(
-          onPressed:
-              _enabled ? () => Navigator.of(context).pop(true) : null,
+          onPressed: _enabled ? () => Navigator.of(context).pop(true) : null,
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.danger,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.surface,
           ),
           child: const Text(AppStrings.accountDeleteConfirmButton),
         ),

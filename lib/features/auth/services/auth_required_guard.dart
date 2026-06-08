@@ -215,7 +215,7 @@ class _AuthRequiredSheet extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.local_fire_department_rounded,
-                    color: Colors.white,
+                    color: AppColors.surface,
                     size: 26,
                   ),
                 ),
@@ -250,7 +250,7 @@ class _AuthRequiredSheet extends StatelessWidget {
                 label: const Text(AppStrings.authRequiredCreate),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
@@ -294,10 +294,7 @@ class _AuthRequiredSheet extends StatelessWidget {
                 ),
                 child: const Text(
                   AppStrings.authRequiredKeepBrowsing,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

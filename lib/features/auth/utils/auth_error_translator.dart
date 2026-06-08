@@ -63,9 +63,7 @@ String translateAuthError(Object error) {
     return 'Sunucu bağlantısı yapılandırılamadı. Lütfen daha sonra tekrar dene.';
   }
   if (error is AuthException) {
-    return error.message.isEmpty
-        ? 'Kimlik doğrulama hatası.'
-        : error.message;
+    return error.message.isEmpty ? 'Kimlik doğrulama hatası.' : error.message;
   }
   final s = error.toString();
   if (s.contains('SocketException') || s.contains('Failed host lookup')) {
