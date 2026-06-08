@@ -295,14 +295,20 @@ void main() {
   group('Sprint 2 — Supabase impl source-level (RPC names)', () {
     final src = File(
       'lib/features/social_groups/repositories/supabase_social_group_repository.dart',
-    ).readAsStringSync();
+    ).readAsStringSync().replaceAll('\r\n', '\n');
 
     test('leaveGroupSafely RPC adı doğru', () {
-      expect(src.contains("rpc(\n      'leave_group_safely'"), isTrue);
+      expect(
+        RegExp(r"rpc\(\s*'leave_group_safely'").hasMatch(src),
+        isTrue,
+      );
     });
 
     test('removeMember RPC adı doğru', () {
-      expect(src.contains("rpc(\n      'remove_group_member'"), isTrue);
+      expect(
+        RegExp(r"rpc\(\s*'remove_group_member'").hasMatch(src),
+        isTrue,
+      );
     });
 
     test('closeGroup is_deleted update kullanır (RPC yok)', () {
@@ -326,7 +332,7 @@ void main() {
     });
 
     test('leave_group_safely fonksiyonu tanımlanmış', () {
-      final sql = File(migrationPath).readAsStringSync();
+      final sql = File(migrationPath).readAsStringSync().replaceAll('\r\n', '\n');
       expect(sql.contains('function public.leave_group_safely'), isTrue);
       expect(sql.contains("return 'transferred'"), isTrue);
       expect(sql.contains("return 'closed'"), isTrue);
@@ -335,14 +341,14 @@ void main() {
     });
 
     test('remove_group_member fonksiyonu tanımlanmış', () {
-      final sql = File(migrationPath).readAsStringSync();
+      final sql = File(migrationPath).readAsStringSync().replaceAll('\r\n', '\n');
       expect(sql.contains('function public.remove_group_member'), isTrue);
       expect(sql.contains('cannot_remove_owner'), isTrue);
       expect(sql.contains('not_group_owner'), isTrue);
     });
 
     test('execute grant authenticated; anon revoke', () {
-      final sql = File(migrationPath).readAsStringSync();
+      final sql = File(migrationPath).readAsStringSync().replaceAll('\r\n', '\n');
       // leave_group_safely
       expect(
         sql.contains(
@@ -375,7 +381,7 @@ void main() {
   group('Sprint 2 — Repository interface signatures', () {
     final src = File(
       'lib/features/social_groups/repositories/social_group_repository.dart',
-    ).readAsStringSync();
+    ).readAsStringSync().replaceAll('\r\n', '\n');
 
     test('listMembers / removeMember / leaveGroupSafely / closeGroup', () {
       expect(
