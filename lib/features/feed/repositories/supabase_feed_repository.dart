@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../app/theme/app_colors.dart';
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_media.dart';
@@ -48,14 +49,14 @@ class SupabaseFeedRepository implements FeedRepository {
   /// post id seed → 8 farklı sıcak tonlu gradient.
   /// LocalFeedRepository ile aynı palet (görsel tutarlılık).
   static const List<List<Color>> _gradients = <List<Color>>[
-    [Color(0xFFF3E6D3), Color(0xFFE5D2B0)],
-    [Color(0xFFEDDDC4), Color(0xFFDFCCA8)],
-    [Color(0xFFF2E2C6), Color(0xFFE4D0AC)],
-    [Color(0xFFF5E8CF), Color(0xFFE8D6AE)],
-    [Color(0xFFEEE0C4), Color(0xFFE0CDA8)],
-    [Color(0xFFF3E5C8), Color(0xFFE6D2A8)],
-    [Color(0xFFEEDDC0), Color(0xFFE0CBA4)],
-    [Color(0xFFF1E2C5), Color(0xFFE4D0A8)],
+    [AppColors.surfaceVariant, AppColors.background],
+    [AppColors.background, AppColors.surfaceVariant],
+    [AppColors.surfaceVariant, AppColors.surface],
+    [AppColors.surface, AppColors.surfaceVariant],
+    [AppColors.elevatedCard, AppColors.background],
+    [AppColors.background, AppColors.elevatedCard],
+    [AppColors.surfaceVariant, AppColors.elevatedCard],
+    [AppColors.elevatedCard, AppColors.surface],
   ];
 
   static List<Color> _gradientForId(String id) {
@@ -104,16 +105,17 @@ class SupabaseFeedRepository implements FeedRepository {
     try {
       final rows = await _client
           .from('feed_media')
-          .select('id, post_id, owner_id, media_type, storage_path, '
-              'width, height, size_bytes, created_at')
+          .select(
+            'id, post_id, owner_id, media_type, storage_path, '
+            'width, height, size_bytes, created_at',
+          )
           .inFilter('post_id', postIds)
           .eq('is_deleted', false)
           .order('created_at', ascending: true);
       final byId = <String, List<FeedMedia>>{};
       for (final r in (rows as List).cast<Map<String, dynamic>>()) {
         final path = r['storage_path'] as String;
-        final publicUrl =
-            _client.storage.from('feed-media').getPublicUrl(path);
+        final publicUrl = _client.storage.from('feed-media').getPublicUrl(path);
         final media = FeedMedia.fromRow(r, publicUrl: publicUrl);
         byId.putIfAbsent(media.postId, () => <FeedMedia>[]).add(media);
       }
@@ -172,12 +174,14 @@ class SupabaseFeedRepository implements FeedRepository {
     final media = await _fetchMediaByPostIds(ids);
 
     return list
-        .map((row) => _fromRow(
-              row,
-              likedPostIds: liked,
-              savedPostIds: saved,
-              mediaByPostId: media,
-            ))
+        .map(
+          (row) => _fromRow(
+            row,
+            likedPostIds: liked,
+            savedPostIds: saved,
+            mediaByPostId: media,
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -197,12 +201,14 @@ class SupabaseFeedRepository implements FeedRepository {
     final saved = await _fetchSavedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
-        .map((row) => _fromRow(
-              row,
-              likedPostIds: liked,
-              savedPostIds: saved,
-              mediaByPostId: media,
-            ))
+        .map(
+          (row) => _fromRow(
+            row,
+            likedPostIds: liked,
+            savedPostIds: saved,
+            mediaByPostId: media,
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -229,12 +235,14 @@ class SupabaseFeedRepository implements FeedRepository {
     final saved = await _fetchSavedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
-        .map((row) => _fromRow(
-              row,
-              likedPostIds: liked,
-              savedPostIds: saved,
-              mediaByPostId: media,
-            ))
+        .map(
+          (row) => _fromRow(
+            row,
+            likedPostIds: liked,
+            savedPostIds: saved,
+            mediaByPostId: media,
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -262,12 +270,14 @@ class SupabaseFeedRepository implements FeedRepository {
     final saved = await _fetchSavedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
-        .map((row) => _fromRow(
-              row,
-              likedPostIds: liked,
-              savedPostIds: saved,
-              mediaByPostId: media,
-            ))
+        .map(
+          (row) => _fromRow(
+            row,
+            likedPostIds: liked,
+            savedPostIds: saved,
+            mediaByPostId: media,
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -295,12 +305,14 @@ class SupabaseFeedRepository implements FeedRepository {
     final saved = await _fetchSavedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
-        .map((row) => _fromRow(
-              row,
-              likedPostIds: liked,
-              savedPostIds: saved,
-              mediaByPostId: media,
-            ))
+        .map(
+          (row) => _fromRow(
+            row,
+            likedPostIds: liked,
+            savedPostIds: saved,
+            mediaByPostId: media,
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -391,13 +403,12 @@ class SupabaseFeedRepository implements FeedRepository {
     final mime = _mimeForImageExt(ext);
 
     // 1) Storage upload — path prefix RLS policy `{userId}/...` ile uyumlu.
-    await _client.storage.from('feed-media').uploadBinary(
+    await _client.storage
+        .from('feed-media')
+        .uploadBinary(
           path,
           bytes,
-          fileOptions: sb.FileOptions(
-            contentType: mime,
-            upsert: false,
-          ),
+          fileOptions: sb.FileOptions(contentType: mime, upsert: false),
         );
 
     // 2) feed_media INSERT — RLS owner_id = auth.uid() + post owner cross-check.
@@ -420,8 +431,7 @@ class SupabaseFeedRepository implements FeedRepository {
             'width, height, size_bytes, created_at',
           )
           .single();
-      final publicUrl =
-          _client.storage.from('feed-media').getPublicUrl(path);
+      final publicUrl = _client.storage.from('feed-media').getPublicUrl(path);
       _notify();
       return FeedMedia.fromRow(row, publicUrl: publicUrl);
     } catch (e) {
@@ -484,13 +494,12 @@ class SupabaseFeedRepository implements FeedRepository {
     final mime = _mimeForVideoExt(ext);
 
     // 1) Storage upload — path prefix RLS owner_id=auth.uid().
-    await _client.storage.from('feed-media').uploadBinary(
+    await _client.storage
+        .from('feed-media')
+        .uploadBinary(
           path,
           bytes,
-          fileOptions: sb.FileOptions(
-            contentType: mime,
-            upsert: false,
-          ),
+          fileOptions: sb.FileOptions(contentType: mime, upsert: false),
         );
 
     // 2) feed_media INSERT — media_type='video' + size_bytes.
@@ -513,8 +522,7 @@ class SupabaseFeedRepository implements FeedRepository {
             'width, height, size_bytes, created_at',
           )
           .single();
-      final publicUrl =
-          _client.storage.from('feed-media').getPublicUrl(path);
+      final publicUrl = _client.storage.from('feed-media').getPublicUrl(path);
       _notify();
       return FeedMedia.fromRow(row, publicUrl: publicUrl);
     } catch (e) {
@@ -565,9 +573,7 @@ class SupabaseFeedRepository implements FeedRepository {
         .eq('owner_id', userId)
         .select('id');
     if ((rows as List).isEmpty) {
-      throw StateError(
-        'Gönderi silinemedi: yetki yok veya kayıt bulunamadı.',
-      );
+      throw StateError('Gönderi silinemedi: yetki yok veya kayıt bulunamadı.');
     }
     _notify();
   }

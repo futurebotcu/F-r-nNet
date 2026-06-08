@@ -7,10 +7,10 @@ import '../../../app/theme/app_colors.dart';
 /// bir grubun pinned mesajından üretilen feed enjeksiyonu.
 enum PostType {
   production, // Üretim paylaşımı (atölyeden)
-  question,   // Soru
-  supply,     // Tedarik duyurusu
-  equipment,  // Ekipman ilanı
-  job,        // Usta arayışı / iş
+  question, // Soru
+  supply, // Tedarik duyurusu
+  equipment, // Ekipman ilanı
+  job, // Usta arayışı / iş
   groupHighlight, // Gruptan öne çıkan mesaj
 }
 
@@ -55,17 +55,17 @@ extension PostTypeMeta on PostType {
   Color get accent {
     switch (this) {
       case PostType.production:
-        return AppColors.softGold;
+        return AppColors.brandLemonPressed;
       case PostType.question:
         return AppColors.info;
       case PostType.supply:
-        return AppColors.copper;
+        return AppColors.brandGray;
       case PostType.equipment:
         return AppColors.textSecondary;
       case PostType.job:
         return AppColors.success;
       case PostType.groupHighlight:
-        return AppColors.copper;
+        return AppColors.brandLemonPressed;
     }
   }
 

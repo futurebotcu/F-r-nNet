@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_media.dart';
@@ -17,8 +18,8 @@ class LocalFeedRepository implements FeedRepository {
     bool seed = true,
     String currentUserId = 'me_misafir',
     String currentUserName = 'Misafir',
-  })  : _meId = currentUserId,
-        _meName = currentUserName {
+  }) : _meId = currentUserId,
+       _meName = currentUserName {
     if (seed) _seed();
   }
 
@@ -29,10 +30,10 @@ class LocalFeedRepository implements FeedRepository {
 
   final List<FeedPost> _posts = <FeedPost>[];
   // V1 P1-B — Local fallback için in-memory yorumlar (post_id -> liste).
-  final Map<String, List<FeedComment>> _comments = <String, List<FeedComment>>{};
+  final Map<String, List<FeedComment>> _comments =
+      <String, List<FeedComment>>{};
 
-  final StreamController<void> _changes =
-      StreamController<void>.broadcast();
+  final StreamController<void> _changes = StreamController<void>.broadcast();
   void _notify() => _changes.add(null);
 
   @override
@@ -86,9 +87,8 @@ class LocalFeedRepository implements FeedRepository {
     int limit = 20,
   }) async {
     if (followingIds.isEmpty) return const <FeedPost>[];
-    final src =
-        _posts.where((p) => followingIds.contains(p.ownerId)).toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final src = _posts.where((p) => followingIds.contains(p.ownerId)).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (offset >= src.length) return const <FeedPost>[];
     final end = (offset + limit).clamp(0, src.length);
     return List.unmodifiable(src.sublist(offset, end));
@@ -308,7 +308,9 @@ class LocalFeedRepository implements FeedRepository {
     // commentCount sayacı local'de manuel artırılır (server-side trigger yok).
     final pi = _posts.indexWhere((p) => p.id == postId);
     if (pi >= 0) {
-      _posts[pi] = _posts[pi].copyWith(commentCount: _posts[pi].commentCount + 1);
+      _posts[pi] = _posts[pi].copyWith(
+        commentCount: _posts[pi].commentCount + 1,
+      );
     }
     _notify();
     return comment;
@@ -334,7 +336,9 @@ class LocalFeedRepository implements FeedRepository {
         // commentCount düşür.
         final pi = _posts.indexWhere((p) => p.id == old.postId);
         if (pi >= 0 && _posts[pi].commentCount > 0) {
-          _posts[pi] = _posts[pi].copyWith(commentCount: _posts[pi].commentCount - 1);
+          _posts[pi] = _posts[pi].copyWith(
+            commentCount: _posts[pi].commentCount - 1,
+          );
         }
         _notify();
         return;
@@ -348,14 +352,14 @@ class LocalFeedRepository implements FeedRepository {
   // ─────────────────────────────────────── Seed
 
   static const List<List<Color>> _gradients = <List<Color>>[
-    [Color(0xFFF3E6D3), Color(0xFFE5D2B0)],
-    [Color(0xFFEDDDC4), Color(0xFFDFCCA8)],
-    [Color(0xFFF2E2C6), Color(0xFFE4D0AC)],
-    [Color(0xFFF5E8CF), Color(0xFFE8D6AE)],
-    [Color(0xFFEEE0C4), Color(0xFFE0CDA8)],
-    [Color(0xFFF3E5C8), Color(0xFFE6D2A8)],
-    [Color(0xFFEEDDC0), Color(0xFFE0CBA4)],
-    [Color(0xFFF1E2C5), Color(0xFFE4D0A8)],
+    [AppColors.surfaceVariant, AppColors.background],
+    [AppColors.background, AppColors.surfaceVariant],
+    [AppColors.surfaceVariant, AppColors.surface],
+    [AppColors.surface, AppColors.surfaceVariant],
+    [AppColors.elevatedCard, AppColors.background],
+    [AppColors.background, AppColors.elevatedCard],
+    [AppColors.surfaceVariant, AppColors.elevatedCard],
+    [AppColors.elevatedCard, AppColors.surface],
   ];
 
   List<Color> _gradientForSeed(int seed) =>
