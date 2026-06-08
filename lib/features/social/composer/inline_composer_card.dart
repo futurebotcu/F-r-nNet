@@ -37,7 +37,7 @@ class InlineComposerCard extends ConsumerWidget {
             AppSpacing.pageH,
             AppSpacing.m,
             AppSpacing.pageH,
-            AppSpacing.s,
+            8,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,27 +49,29 @@ class InlineComposerCard extends ConsumerWidget {
                   onTap: () => _openComposer(context, ref),
                   borderRadius: BorderRadius.circular(AppRadius.m),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xs,
+                    ),
                     child: Row(
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 36,
+                          height: 36,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.softGold.withValues(alpha: 0.14),
+                            color: AppColors.brandLemonPale,
                             border: Border.all(
-                              color: AppColors.copper.withValues(alpha: 0.40),
+                              color: AppColors.brandLemonSoft,
                               width: 1,
                             ),
                           ),
                           child: Text(
                             initial,
                             style: const TextStyle(
-                              color: AppColors.softGold,
+                              color: AppColors.brandInk,
                               fontWeight: FontWeight.w800,
-                              fontSize: 15,
+                              fontSize: 13.5,
                             ),
                           ),
                         ),
@@ -83,7 +85,7 @@ class InlineComposerCard extends ConsumerWidget {
                                 AppStrings.feedComposerPanelPlaceholder,
                                 style: TextStyle(
                                   color: AppColors.textSecondary,
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -94,7 +96,7 @@ class InlineComposerCard extends ConsumerWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: AppColors.textMuted,
-                                  fontSize: 11.5,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -106,7 +108,7 @@ class InlineComposerCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: 6),
               // Alt aksiyon satırı: Medya / Soru / Tarif / Duyuru + Paylaş.
               // Aksiyonlar yatay kaydırılabilir alanda (dar ekran/büyük yazı
               // ölçeğinde taşma yok); Paylaş her zaman sağda sabit.
@@ -236,21 +238,18 @@ class _ComposerAction extends StatelessWidget {
         child: Padding(
           // Küçük, zarif composer aksiyon etiketi — büyük dolgulu kutu yok.
           // Yükseklik ~30 px (ikon 17 + dikey 6×2 + satır).
-          padding: const EdgeInsets.symmetric(
-            vertical: 6,
-            horizontal: 8,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 7),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 17, color: AppColors.copper),
-              const SizedBox(width: 5),
+              Icon(icon, size: 16, color: AppColors.brandInk),
+              const SizedBox(width: 4),
               Text(
                 label,
                 style: const TextStyle(
-                  color: AppColors.softGold,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -269,18 +268,18 @@ class _ShareButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.copper,
+      color: AppColors.brandLemon,
       borderRadius: BorderRadius.circular(AppRadius.pill),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           child: Text(
             AppStrings.feedComposerActionShare,
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
+              color: AppColors.brandInk,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -367,13 +366,10 @@ class _MediaSheetTile extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.softGold.withValues(alpha: 0.12),
-          border: Border.all(
-            color: AppColors.copper.withValues(alpha: 0.30),
-            width: 0.8,
-          ),
+          color: AppColors.brandLemonPale,
+          border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
         ),
-        child: Icon(icon, size: 20, color: AppColors.copper),
+        child: Icon(icon, size: 20, color: AppColors.brandLemonPressed),
       ),
       title: Text(
         label,

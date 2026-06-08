@@ -28,7 +28,7 @@ import 'models/social_story.dart';
 class SocialStoriesCarousel extends ConsumerWidget {
   const SocialStoriesCarousel({super.key});
 
-  static const double _height = 104;
+  static const double _height = 92;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -102,8 +102,8 @@ class _MyStorySlot extends ConsumerWidget {
     final initial = (profile?.displayName.isNotEmpty ?? false)
         ? profile!.displayName[0].toUpperCase()
         : (user?.email?.isNotEmpty == true
-            ? user!.email![0].toUpperCase()
-            : 'M');
+              ? user!.email![0].toUpperCase()
+              : 'M');
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -113,14 +113,14 @@ class _MyStorySlot extends ConsumerWidget {
           Stack(
             children: [
               Container(
-                width: 62,
-                height: 62,
+                width: 54,
+                height: 54,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.softGold.withValues(alpha: 0.16),
+                  color: AppColors.brandLemonPale,
                   border: Border.all(
-                    color: AppColors.softGold.withValues(alpha: 0.32),
+                    color: AppColors.brandLemonSoft,
                     width: 0.8,
                   ),
                   boxShadow: AppShadow.subtle,
@@ -128,9 +128,9 @@ class _MyStorySlot extends ConsumerWidget {
                 child: Text(
                   initial,
                   style: const TextStyle(
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     fontWeight: FontWeight.w800,
-                    fontSize: 22,
+                    fontSize: 19,
                   ),
                 ),
               ),
@@ -138,11 +138,11 @@ class _MyStorySlot extends ConsumerWidget {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  width: 18,
-                  height: 18,
+                  width: 16,
+                  height: 16,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.copper,
+                    color: AppColors.brandLemonPressed,
                     border: Border.all(
                       color: AppColors.elevatedCard,
                       width: 1.6,
@@ -150,8 +150,8 @@ class _MyStorySlot extends ConsumerWidget {
                   ),
                   child: const Icon(
                     Icons.add_rounded,
-                    color: Colors.white,
-                    size: 12,
+                    color: AppColors.brandInk,
+                    size: 11,
                   ),
                 ),
               ),
@@ -162,7 +162,7 @@ class _MyStorySlot extends ConsumerWidget {
             AppStrings.storiesMyStoryLabel,
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 11.5,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -189,22 +189,21 @@ class _OwnerStorySlot extends ConsumerWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),
       child: SizedBox(
-        width: 64,
+        width: 58,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // FırınNet bakery halkası — sıcak bakır→buğday gradient ring
-            // (Instagram gökkuşağı değil). Dış gradient + iç krem boşluk.
+            // Premium lemon accent ring; clean social identity.
             Container(
-              width: 62,
-              height: 62,
+              width: 54,
+              height: 54,
               padding: const EdgeInsets.all(2.4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.copper, AppColors.copperMuted],
+                  colors: [AppColors.brandLemonPale, AppColors.brandLemonSoft],
                 ),
                 boxShadow: AppShadow.subtle,
               ),
@@ -212,18 +211,15 @@ class _OwnerStorySlot extends ConsumerWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.softGold.withValues(alpha: 0.14),
-                  border: Border.all(
-                    color: AppColors.card,
-                    width: 1.6,
-                  ),
+                  color: AppColors.brandLemonPale,
+                  border: Border.all(color: AppColors.card, width: 1.6),
                 ),
                 child: Text(
                   initial,
                   style: const TextStyle(
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     fontWeight: FontWeight.w800,
-                    fontSize: 22,
+                    fontSize: 19,
                   ),
                 ),
               ),
@@ -235,7 +231,7 @@ class _OwnerStorySlot extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: AppColors.textPrimary,
-                fontSize: 11.5,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
               ),
             ),

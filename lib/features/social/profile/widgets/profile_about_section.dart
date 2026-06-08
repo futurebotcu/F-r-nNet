@@ -49,10 +49,7 @@ class ProfileAboutSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: AppTypography.sectionTitle,
-          ),
+          Text(title, style: AppTypography.sectionTitle),
           const SizedBox(height: 6),
           if (hasBio)
             Text(
@@ -71,8 +68,11 @@ class ProfileAboutSection extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_rounded,
-                        size: 15, color: AppColors.softGold),
+                    const Icon(
+                      Icons.add_rounded,
+                      size: 15,
+                      color: AppColors.softGold,
+                    ),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(

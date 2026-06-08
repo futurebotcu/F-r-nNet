@@ -31,10 +31,8 @@ class SocialUserListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final idsAsync = switch (kind) {
-      UserListKind.followers =>
-        ref.watch(socialFollowersIdsProvider(userId)),
-      UserListKind.following =>
-        ref.watch(socialFollowingIdsProvider(userId)),
+      UserListKind.followers => ref.watch(socialFollowersIdsProvider(userId)),
+      UserListKind.following => ref.watch(socialFollowingIdsProvider(userId)),
     };
     final title = kind == UserListKind.followers
         ? AppStrings.followersListTitle
@@ -53,10 +51,7 @@ class SocialUserListPage extends ConsumerWidget {
             child: Center(
               child: Text(
                 AppStrings.publicProfileLoadError,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
             ),
           ),
@@ -78,8 +73,7 @@ class SocialUserListPage extends ConsumerWidget {
             // Profil snapshot'larını batch ile al.
             final profilesAsync = ref.watch(socialProfilesBatchProvider(ids));
             return profilesAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, __) => const Padding(
                 padding: EdgeInsets.all(AppSpacing.l),
                 child: Center(
@@ -101,18 +95,15 @@ class SocialUserListPage extends ConsumerWidget {
                   vertical: AppSpacing.s,
                 ),
                 itemCount: ids.length,
-                separatorBuilder: (_, __) => const Divider(
-                  height: 0,
-                  color: AppColors.borderHairline,
-                ),
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 0, color: AppColors.borderHairline),
                 itemBuilder: (_, i) {
                   final id = ids[i];
                   final p = byId[id] ?? SocialProfile(id: id);
                   return _UserTile(
                     profile: p,
-                    onTap: () => context.push(
-                      '${AppRoutes.userPublicProfile}/$id',
-                    ),
+                    onTap: () =>
+                        context.push('${AppRoutes.userPublicProfile}/$id'),
                   );
                 },
               ),
@@ -139,12 +130,10 @@ class _UserTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          // Profil header avatar diliyle uyumlu: copper → softGold ramp +
-          // beyaz initial + ince hairline çerçeve.
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.copper, AppColors.softGold],
+            colors: [AppColors.brandLemon, AppColors.brandLemonSoft],
           ),
           borderRadius: BorderRadius.circular(AppRadius.m),
           border: Border.all(color: AppColors.borderHairline, width: 0.8),
@@ -153,7 +142,7 @@ class _UserTile extends StatelessWidget {
         child: Text(
           profile.initial,
           style: const TextStyle(
-            color: Colors.white,
+            color: AppColors.brandInk,
             fontWeight: FontWeight.w800,
             fontSize: 16,
           ),
@@ -180,9 +169,6 @@ class _UserTile extends StatelessWidget {
       if (p.city?.isNotEmpty == true) p.city!,
     ];
     if (parts.isEmpty) return null;
-    return Text(
-      parts.join(' · '),
-      style: AppTypography.meta,
-    );
+    return Text(parts.join(' · '), style: AppTypography.meta);
   }
 }

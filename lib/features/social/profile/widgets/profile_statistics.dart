@@ -83,11 +83,7 @@ class _StatDivider extends StatelessWidget {
   const _StatDivider();
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 0.6,
-      height: 26,
-      color: AppColors.borderHairline,
-    );
+    return Container(width: 0.6, height: 26, color: AppColors.borderHairline);
   }
 }
 
@@ -109,15 +105,9 @@ class _StatTile extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '$value',
-            style: AppTypography.titleLarge,
-          ),
+          Text('$value', style: AppTypography.titleLarge),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppTypography.meta,
-          ),
+          Text(label, style: AppTypography.meta),
         ],
       ),
     );

@@ -35,8 +35,7 @@ class SocialStoryViewerPage extends ConsumerStatefulWidget {
       _SocialStoryViewerPageState();
 }
 
-class _SocialStoryViewerPageState
-    extends ConsumerState<SocialStoryViewerPage>
+class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
     with SingleTickerProviderStateMixin {
   static const Duration _imageDuration = Duration(seconds: 5);
   int _index = 0;
@@ -45,10 +44,8 @@ class _SocialStoryViewerPageState
   @override
   void initState() {
     super.initState();
-    _progress = AnimationController(
-      vsync: this,
-      duration: _imageDuration,
-    )..addStatusListener((s) {
+    _progress = AnimationController(vsync: this, duration: _imageDuration)
+      ..addStatusListener((s) {
         if (s == AnimationStatus.completed) {
           _next();
         }
@@ -103,9 +100,7 @@ class _SocialStoryViewerPageState
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             child: const Text(AppStrings.storyDeleteCta),
           ),
         ],
@@ -118,17 +113,11 @@ class _SocialStoryViewerPageState
     debugPrint('[FirinNet][StoryViewer] delete tap id=${story.id}');
     final repo = ref.read(socialStoriesRepositoryProvider);
     try {
-      await repo
-          .deleteStory(story.id)
-          .timeout(const Duration(seconds: 15));
-      debugPrint(
-        '[FirinNet][StoryViewer] delete success id=${story.id}',
-      );
+      await repo.deleteStory(story.id).timeout(const Duration(seconds: 15));
+      debugPrint('[FirinNet][StoryViewer] delete success id=${story.id}');
       if (!mounted) return;
       ref.invalidate(socialFreshStoriesProvider);
-      ref.invalidate(
-        socialUserFreshStoriesProvider(widget.ownerId),
-      );
+      ref.invalidate(socialUserFreshStoriesProvider(widget.ownerId));
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.storyDeletedSnack)),
       );
@@ -147,20 +136,21 @@ class _SocialStoryViewerPageState
 
   @override
   Widget build(BuildContext context) {
-    final storiesAsync =
-        ref.watch(socialUserFreshStoriesProvider(widget.ownerId));
+    final storiesAsync = ref.watch(
+      socialUserFreshStoriesProvider(widget.ownerId),
+    );
     final profileAsync = ref.watch(socialProfileProvider(widget.ownerId));
     final currentUser = ref.watch(currentAuthUserProvider);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.imageScrimDark,
       body: storiesAsync.when(
         loading: () => const Center(
-          child: CircularProgressIndicator(color: Colors.white),
+          child: CircularProgressIndicator(color: AppColors.surface),
         ),
         error: (_, __) => const Center(
           child: Text(
             'Hikaye yüklenemedi.',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppColors.surface70),
           ),
         ),
         data: (stories) {
@@ -208,13 +198,13 @@ class _SocialStoryViewerPageState
                       fit: BoxFit.contain,
                       placeholder: (_, __) => const Center(
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppColors.surface,
                         ),
                       ),
                       errorWidget: (_, __, ___) => const Center(
                         child: Icon(
                           Icons.broken_image_outlined,
-                          color: Colors.white54,
+                          color: AppColors.surface54,
                           size: 48,
                         ),
                       ),
@@ -235,23 +225,23 @@ class _SocialStoryViewerPageState
                                 final value = i < _index
                                     ? 1.0
                                     : i == _index
-                                        ? _progress!.value
-                                        : 0.0;
+                                    ? _progress!.value
+                                    : 0.0;
                                 return LinearProgressIndicator(
                                   value: value,
-                                  backgroundColor:
-                                      Colors.white.withValues(alpha: 0.25),
+                                  backgroundColor: AppColors.surface.withValues(
+                                    alpha: 0.25,
+                                  ),
                                   valueColor:
                                       const AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
+                                        AppColors.surface,
+                                      ),
                                   minHeight: 3,
                                 );
                               },
                             ),
                           ),
-                          if (i < stories.length - 1)
-                            const SizedBox(width: 4),
+                          if (i < stories.length - 1) const SizedBox(width: 4),
                         ],
                       ],
                     ),
@@ -270,7 +260,7 @@ class _SocialStoryViewerPageState
                             tooltip: AppStrings.storyDeleteCta,
                             icon: const Icon(
                               Icons.delete_outline_rounded,
-                              color: Colors.white,
+                              color: AppColors.surface,
                               size: 26,
                             ),
                             onPressed: () => _onDelete(story),
@@ -278,7 +268,7 @@ class _SocialStoryViewerPageState
                         IconButton(
                           icon: const Icon(
                             Icons.close_rounded,
-                            color: Colors.white,
+                            color: AppColors.surface,
                             size: 26,
                           ),
                           onPressed: () => Navigator.of(context).maybePop(),
@@ -313,7 +303,7 @@ class _OwnerChip extends StatelessWidget {
         vertical: 6,
       ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.32),
+        color: AppColors.imageScrimDark.withValues(alpha: 0.32),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Row(
@@ -330,7 +320,7 @@ class _OwnerChip extends StatelessWidget {
             child: Text(
               initial,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.surface,
                 fontWeight: FontWeight.w800,
                 fontSize: 13,
               ),
@@ -340,7 +330,7 @@ class _OwnerChip extends StatelessWidget {
           Text(
             name,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.surface,
               fontWeight: FontWeight.w700,
               fontSize: 13.5,
             ),

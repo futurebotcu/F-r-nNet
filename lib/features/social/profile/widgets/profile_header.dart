@@ -118,8 +118,7 @@ class ProfileHeader extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.softGold.withValues(alpha: 0.14),
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.pill),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                           border: Border.all(
                             color: AppColors.softGold.withValues(alpha: 0.36),
                             width: 0.6,
@@ -161,11 +160,10 @@ class _Avatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        // copper → softGold sıcak ramp; beyaz initial ile yüksek kontrast.
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.copper, AppColors.softGold],
+          colors: [AppColors.brandLemon, AppColors.brandLemonSoft],
         ),
         borderRadius: borderRadius,
       ),
@@ -173,7 +171,7 @@ class _Avatar extends StatelessWidget {
       child: Text(
         initial,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.brandInk,
           fontWeight: FontWeight.w800,
           fontSize: 32,
         ),

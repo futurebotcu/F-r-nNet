@@ -39,8 +39,9 @@ class _SocialPostVideoState extends State<SocialPostVideo> {
   // M4 Polish — visibility-based pause. autoplay yok; sadece kullanıcı
   // play'lediği videoyu ekran dışına kayınca duraklat.
   static const double _visibleThreshold = 0.5;
-  late final Key _visibilityKey =
-      ValueKey<String>('social_post_video_${widget.url}_$hashCode');
+  late final Key _visibilityKey = ValueKey<String>(
+    'social_post_video_${widget.url}_$hashCode',
+  );
 
   @override
   void initState() {
@@ -85,7 +86,7 @@ class _SocialPostVideoState extends State<SocialPostVideo> {
           bufferedColor: AppColors.borderHairline,
           backgroundColor: AppColors.surface,
         ),
-        placeholder: const ColoredBox(color: Colors.black),
+        placeholder: const ColoredBox(color: AppColors.imageScrimDark),
       );
       setState(() {});
     } catch (_) {
@@ -128,14 +129,14 @@ class _SocialPostVideoState extends State<SocialPostVideo> {
       return AspectRatio(
         aspectRatio: widget.aspectRatio,
         child: Container(
-          color: Colors.black,
+          color: AppColors.imageScrimDark,
           alignment: Alignment.center,
           child: const SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation(Colors.white70),
+              valueColor: AlwaysStoppedAnimation(AppColors.surface70),
             ),
           ),
         ),

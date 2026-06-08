@@ -14,7 +14,7 @@
 // Tasarım kuralları (kullanıcı PRD):
 //   * Avatar 44px, isim 15.5px w800, metin 16px h:1.45
 //   * Yorum item'ları dikey nefes (16-18px vertical padding)
-//   * Composer min 60px yükseklik, gönder butonu 48px, AppColors.copper
+//   * Composer min 60px yükseklik, gönder butonu 48px, AppColors.primary
 //   * Loading sadece Gönder buton üzerinde (TextField/list bloklanmaz)
 //   * Empty: "İlk yorumu sen yaz"
 //   * Error: inline mesaj (snackbar değil)
@@ -56,10 +56,10 @@ class SocialCommentsPage extends ConsumerWidget {
     final postAsync = ref.watch(feedPostByIdProvider(postId));
     final user = ref.watch(currentAuthUserProvider);
     return Scaffold(
-      backgroundColor: AppColors.elevatedCard,
+      backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        backgroundColor: AppColors.elevatedCard,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leadingWidth: 56,
         leading: IconButton(
@@ -93,8 +93,7 @@ class SocialCommentsPage extends ConsumerWidget {
                 loading: () => _ScrollableShell(
                   postAsync: postAsync,
                   child: const Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
@@ -131,10 +130,7 @@ class SocialCommentsPage extends ConsumerWidget {
               ),
             ),
             const Divider(height: 1, color: AppColors.borderHairline),
-            _CommentComposer(
-              postId: postId,
-              guest: user == null,
-            ),
+            _CommentComposer(postId: postId, guest: user == null),
           ],
         ),
       ),
@@ -206,11 +202,7 @@ class _PostDetailScroll extends StatelessWidget {
         final isOwn = user != null && c.ownerId == user.id;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-          child: _CommentItem(
-            comment: c,
-            isOwn: isOwn,
-            postId: postId,
-          ),
+          child: _CommentItem(comment: c, isOwn: isOwn, postId: postId),
         );
       },
     );
@@ -253,10 +245,7 @@ class _PostContextHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final post = postAsync.maybeWhen(
-      data: (p) => p,
-      orElse: () => null,
-    );
+    final post = postAsync.maybeWhen(data: (p) => p, orElse: () => null);
     if (post == null) {
       // Cache miss / lookup başarısız: sade fallback (yorum yine açılır).
       return Container(
@@ -268,12 +257,9 @@ class _PostContextHeader extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(AppSpacing.m),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.m),
-          border: Border.all(
-            color: AppColors.borderHairline,
-            width: 0.6,
-          ),
+          boxShadow: AppShadow.card,
         ),
         child: const Text(
           'Bu gönderiye ait yorumlar.',
@@ -294,12 +280,9 @@ class _PostContextHeader extends StatelessWidget {
         AppSpacing.s,
       ),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(
-          color: AppColors.borderHairline,
-          width: 0.6,
-        ),
+        boxShadow: AppShadow.card,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -321,18 +304,12 @@ class _PostContextHeader extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.softGold.withValues(alpha: 0.16),
-                    border: Border.all(
-                      color: AppColors.softGold.withValues(alpha: 0.32),
-                      width: 0.8,
-                    ),
+                    color: AppColors.primary.withValues(alpha: 0.10),
                   ),
                   child: Text(
-                    post.author.isNotEmpty
-                        ? post.author[0].toUpperCase()
-                        : '?',
+                    post.author.isNotEmpty ? post.author[0].toUpperCase() : '?',
                     style: const TextStyle(
-                      color: AppColors.softGold,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w800,
                       fontSize: 17,
                     ),
@@ -391,9 +368,7 @@ class _PostContextHeader extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
-                  color: AppColors.surface,
-                ),
+                placeholder: (_, __) => Container(color: AppColors.surface),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.surface,
                   alignment: Alignment.center,
@@ -454,13 +429,13 @@ class _EmptyState extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.softGold.withValues(alpha: 0.14),
+                color: AppColors.primary.withValues(alpha: 0.10),
               ),
               alignment: Alignment.center,
               child: const Icon(
                 Icons.chat_bubble_outline_rounded,
                 size: 30,
-                color: AppColors.softGold,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: AppSpacing.m),
@@ -510,89 +485,93 @@ class _CommentItem extends ConsumerWidget {
         : '?';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.softGold.withValues(alpha: 0.16),
-              border: Border.all(
-                color: AppColors.softGold.withValues(alpha: 0.32),
-                width: 0.8,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          boxShadow: AppShadow.card,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.10),
+              ),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
               ),
             ),
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: AppColors.softGold,
-                fontWeight: FontWeight.w800,
-                fontSize: 17,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        isOwn
-                            ? AppStrings.feedCommentOwnLabel
-                            : comment.authorName,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15.5,
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          isOwn
+                              ? AppStrings.feedCommentOwnLabel
+                              : comment.authorName,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '· ${_timeAgo(comment.createdAt)}',
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(width: 6),
+                      Text(
+                        '· ${_timeAgo(comment.createdAt)}',
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    if (isOwn)
-                      InkWell(
-                        onTap: () => _confirmAndDelete(context, ref),
-                        borderRadius: BorderRadius.circular(20),
-                        child: const Padding(
-                          padding: EdgeInsets.all(6),
-                          child: Icon(
-                            Icons.delete_outline_rounded,
-                            size: 20,
-                            color: AppColors.textMuted,
+                      const Spacer(),
+                      if (isOwn)
+                        InkWell(
+                          onTap: () => _confirmAndDelete(context, ref),
+                          borderRadius: BorderRadius.circular(20),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 20,
+                              color: AppColors.textMuted,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  comment.text,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    height: 1.45,
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    comment.text,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -601,7 +580,10 @@ class _CommentItem extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.elevatedCard,
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
         content: const Text(
           AppStrings.feedCommentDeleteConfirm,
           style: TextStyle(fontSize: 15.5),
@@ -613,9 +595,7 @@ class _CommentItem extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             child: const Text(AppStrings.feedCommentDeleteCta),
           ),
         ],
@@ -626,9 +606,7 @@ class _CommentItem extends ConsumerWidget {
     final repo = ref.read(socialCommentsRepositoryProvider);
     final messenger = ScaffoldMessenger.maybeOf(context);
     try {
-      await repo
-          .deleteComment(comment.id)
-          .timeout(const Duration(seconds: 15));
+      await repo.deleteComment(comment.id).timeout(const Duration(seconds: 15));
       debugPrint('[FirinNet][Comments] delete success id=${comment.id}');
       // V1 P0 wiring-fix: _notify() stream tick'ine ek olarak manuel
       // invalidate. autoDispose.family bazı senaryolarda watch
@@ -658,8 +636,7 @@ class _CommentComposer extends ConsumerStatefulWidget {
   final bool guest;
 
   @override
-  ConsumerState<_CommentComposer> createState() =>
-      _CommentComposerState();
+  ConsumerState<_CommentComposer> createState() => _CommentComposerState();
 }
 
 class _CommentComposerState extends ConsumerState<_CommentComposer> {
@@ -748,8 +725,8 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
             ),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.copper,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.brandInk,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.m),
               ),
@@ -841,18 +818,16 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                         vertical: 14,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.l),
+                        borderRadius: BorderRadius.circular(16),
                         borderSide: const BorderSide(
                           color: AppColors.borderHairline,
                           width: 0.6,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.l),
+                        borderRadius: BorderRadius.circular(16),
                         borderSide: const BorderSide(
-                          color: AppColors.copper,
+                          color: AppColors.primary,
                           width: 1.2,
                         ),
                       ),
@@ -865,7 +840,7 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                 width: 52,
                 height: 52,
                 child: Material(
-                  color: AppColors.copper,
+                  color: AppColors.primary,
                   shape: const CircleBorder(),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
@@ -879,13 +854,13 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation(
-                                  Colors.white,
+                                  AppColors.surface,
                                 ),
                               ),
                             )
                           : const Icon(
                               Icons.send_rounded,
-                              color: Colors.white,
+                              color: AppColors.surface,
                               size: 22,
                             ),
                     ),

@@ -17,8 +17,7 @@ class GroupCreateScreen extends ConsumerStatefulWidget {
   const GroupCreateScreen({super.key});
 
   @override
-  ConsumerState<GroupCreateScreen> createState() =>
-      _GroupCreateScreenState();
+  ConsumerState<GroupCreateScreen> createState() => _GroupCreateScreenState();
 }
 
 const _limitOptions = <_LimitChoice>[
@@ -67,8 +66,9 @@ class _GroupCreateScreenState extends ConsumerState<GroupCreateScreen> {
         limitErr != null) {
       // FormState validate name/desc'i errorText üzerinden gösterir.
       if (limitErr != null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(limitErr)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(limitErr)));
       }
       return;
     }
@@ -97,7 +97,8 @@ class _GroupCreateScreenState extends ConsumerState<GroupCreateScreen> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('${AppStrings.groupCreatedSnack}${group.name}')),
+            content: Text('${AppStrings.groupCreatedSnack}${group.name}'),
+          ),
         );
         context.push('${AppRoutes.groups}/${group.id}');
       },
@@ -228,12 +229,12 @@ class _Label extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.1,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w800,
+      color: AppColors.textPrimary,
+      letterSpacing: -0.1,
+    ),
+  );
 }

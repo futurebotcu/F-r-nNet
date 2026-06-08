@@ -29,8 +29,7 @@ class SocialStoryCreatePage extends ConsumerStatefulWidget {
       _SocialStoryCreatePageState();
 }
 
-class _SocialStoryCreatePageState
-    extends ConsumerState<SocialStoryCreatePage> {
+class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
   Uint8List? _pickedBytes;
   String? _pickedExt;
   bool _saving = false;
@@ -47,9 +46,7 @@ class _SocialStoryCreatePageState
   /// Sağlam ext çıkarma: önce x.name'den, yoksa x.path'ten dene, en son
   /// `.jpg` fallback. Kamera iptal edilirse (x==null) sessizce dön.
   Future<void> _captureOrPick(ImageSource source) async {
-    debugPrint(
-      '[FirinNet][StoryCreate] pick start source=$source',
-    );
+    debugPrint('[FirinNet][StoryCreate] pick start source=$source');
     try {
       final picker = ImagePicker();
       final x = await picker.pickImage(
@@ -89,11 +86,12 @@ class _SocialStoryCreatePageState
     String fromCandidate(String c) {
       final dot = c.lastIndexOf('.');
       if (dot <= 0 || dot >= c.length - 1) return '';
-      return c.substring(dot + 1).toLowerCase().replaceAll(
-            RegExp(r'[^a-z0-9]'),
-            '',
-          );
+      return c
+          .substring(dot + 1)
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]'), '');
     }
+
     final fromName = fromCandidate(name);
     if (known.contains(fromName)) return fromName;
     final fromPath = fromCandidate(path);
@@ -187,15 +185,12 @@ class _SocialStoryCreatePageState
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation(Colors.white),
+                        valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
                       ),
                     )
                   : const Icon(Icons.send_rounded, size: 18),
               label: Text(
-                _saving
-                    ? AppStrings.storySharingCta
-                    : AppStrings.storyShareCta,
+                _saving ? AppStrings.storySharingCta : AppStrings.storyShareCta,
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 15.5,
@@ -203,11 +198,13 @@ class _SocialStoryCreatePageState
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.copper,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    AppColors.copper.withValues(alpha: 0.35),
-                disabledForegroundColor:
-                    Colors.white.withValues(alpha: 0.7),
+                foregroundColor: AppColors.brandInk,
+                disabledBackgroundColor: AppColors.copper.withValues(
+                  alpha: 0.35,
+                ),
+                disabledForegroundColor: AppColors.surface.withValues(
+                  alpha: 0.7,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
@@ -276,13 +273,11 @@ class _SocialStoryCreatePageState
                             ),
                             label: const Text(
                               AppStrings.storyCreatePickCta,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.w800),
                             ),
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.copper,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppColors.brandInk,
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.s,
                               ),
@@ -299,9 +294,7 @@ class _SocialStoryCreatePageState
                             ),
                             label: const Text(
                               AppStrings.storyCapturePhotoCta,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.w800),
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.textPrimary,
@@ -325,10 +318,7 @@ class _SocialStoryCreatePageState
                 borderRadius: BorderRadius.circular(AppRadius.m),
                 child: AspectRatio(
                   aspectRatio: 9 / 16,
-                  child: Image.memory(
-                    _pickedBytes!,
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.memory(_pickedBytes!, fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(height: AppSpacing.m),
@@ -337,10 +327,7 @@ class _SocialStoryCreatePageState
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _saving ? null : _pickImage,
-                      icon: const Icon(
-                        Icons.photo_library_outlined,
-                        size: 16,
-                      ),
+                      icon: const Icon(Icons.photo_library_outlined, size: 16),
                       label: const Text('Galeriden değiştir'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
@@ -358,10 +345,7 @@ class _SocialStoryCreatePageState
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _saving ? null : _capturePhoto,
-                      icon: const Icon(
-                        Icons.photo_camera_outlined,
-                        size: 16,
-                      ),
+                      icon: const Icon(Icons.photo_camera_outlined, size: 16),
                       label: const Text('Yeniden çek'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
@@ -380,10 +364,7 @@ class _SocialStoryCreatePageState
               const SizedBox(height: AppSpacing.s),
               const Text(
                 AppStrings.storyExpiresInHint,
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                 textAlign: TextAlign.center,
               ),
             ],

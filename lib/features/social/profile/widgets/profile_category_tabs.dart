@@ -2,7 +2,7 @@
 // yatay kategori seçimi: [ Gönderiler ] [ Reçeteler ] [ Mesleki Bilgi ].
 //
 // Alt alta kart DEĞİL — üç segment tek satırda Expanded ile eşit genişlikte;
-// aktif segment bakır/softGold vurgulu, pasifler sade. Provider'sız, stateless,
+// Aktif segment lemon accent vurgulu, pasifler sade. Provider'siz, stateless,
 // doğrudan widget-test edilebilir.
 
 import 'package:flutter/material.dart';
@@ -87,7 +87,7 @@ class _Segment extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.copper : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          // Seçili segment hafif bakır halo ile zarifçe yükselir; pasifler düz.
+          // Secili segment hafif lemon accent ile zarifce yukselir; pasifler duz.
           boxShadow: selected ? AppShadow.subtle : null,
         ),
         child: Text(
@@ -96,7 +96,7 @@ class _Segment extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondary,
+            color: selected ? AppColors.surface : AppColors.textSecondary,
             fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
             fontSize: 13,
             letterSpacing: -0.1,

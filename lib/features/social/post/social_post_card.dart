@@ -81,8 +81,9 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
     final wasLiked = _displayLiked;
     final wasCount = _displayLikeCount;
     final newLiked = !wasLiked;
-    final newCount =
-        newLiked ? wasCount + 1 : (wasCount > 0 ? wasCount - 1 : 0);
+    final newCount = newLiked
+        ? wasCount + 1
+        : (wasCount > 0 ? wasCount - 1 : 0);
     setState(() {
       _likeBusy = true;
       _likedOverride = newLiked;
@@ -167,9 +168,9 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       await Share.share(buf.toString(), subject: AppStrings.feedShareSubject);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedShareError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.feedShareError)));
     } finally {
       if (mounted) setState(() => _shareBusy = false);
     }
@@ -198,12 +199,8 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
     debugPrint('[FirinNet][PostCard] delete tap postId=${post.id}');
     final repo = ref.read(feedRepositoryProvider);
     try {
-      await repo
-          .deletePost(post.id)
-          .timeout(const Duration(seconds: 15));
-      debugPrint(
-        '[FirinNet][PostCard] delete success postId=${post.id}',
-      );
+      await repo.deletePost(post.id).timeout(const Duration(seconds: 15));
+      debugPrint('[FirinNet][PostCard] delete success postId=${post.id}');
       if (!mounted) return;
       // V1 P0 wiring-fix: _notify() stream tick'ine ek olarak manuel
       // invalidate. Feed listesi + profile post listesi + comments
@@ -240,6 +237,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   @override
   Widget build(BuildContext context) {
     final repo = ref.read(feedRepositoryProvider);
+    final theme = Theme.of(context);
     final imageUrl = post.firstImage?.publicUrl;
     // V2 Commit 3 — Video post desteği. Image yoksa video varsa player
     // render edilir. Tek post'ta image OR video (V3'te kombo).
@@ -250,22 +248,14 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
         AppSpacing.pageH,
         // Visual North Star Sprint 1A — kartlar arası 12 px nefes
         // (önceki 6); referans tasarıma yaklaşma, görsel ayrışma.
-        12,
+        10,
         AppSpacing.pageH,
-        12,
+        10,
       ),
       decoration: BoxDecoration(
-        // Color Foundation Sprint — post kartı sıcak beyaz (AppColors.card)
-        // çizgisinde kalır; soft wheat ana feed yüzeyi değil.
-        color: AppColors.card,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.l),
-        // Feed Premium Sprint — ağır border yerine yumuşak gölge + çok ince
-        // hairline. Kart krem zeminden nazikçe yükselir (ERP çizgi yok).
         boxShadow: AppShadow.card,
-        border: Border.all(
-          color: AppColors.borderHairline.withValues(alpha: 0.6),
-          width: 0.6,
-        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -312,15 +302,13 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             shareBusy: _shareBusy,
             onLike: _likeBusy ? null : () => _onLikeTap(repo),
             onComment: () {
-              debugPrint(
-                '[FirinNet][PostCard] comment tap postId=${post.id}',
-              );
+              debugPrint('[FirinNet][PostCard] comment tap postId=${post.id}');
               SocialCommentsPage.show(context, post.id);
             },
             onShare: _shareBusy ? null : _onShareTap,
             onSave: _saveBusy ? null : () => _onSaveTap(repo),
           ),
-          const SizedBox(height: AppSpacing.s),
+          const SizedBox(height: 4),
         ],
       ),
     );
@@ -348,10 +336,11 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.m,
-        AppSpacing.s,
+        AppSpacing.m,
         AppSpacing.s,
         AppSpacing.s,
       ),
@@ -361,28 +350,26 @@ class _Header extends StatelessWidget {
             onTap: onAuthorTap,
             borderRadius: BorderRadius.circular(22),
             child: Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.softGold.withValues(alpha: 0.16),
-                border: Border.all(
-                  color: AppColors.softGold.withValues(alpha: 0.32),
-                  width: 0.8,
-                ),
+                color: AppColors.surface,
+                border: Border.all(color: AppColors.borderHairline, width: 1),
+                boxShadow: AppShadow.card,
               ),
               child: Text(
                 post.author.isNotEmpty ? post.author[0].toUpperCase() : '?',
                 style: const TextStyle(
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,
-                  fontSize: 17,
+                  fontSize: 15,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.m),
+          const SizedBox(width: AppSpacing.s),
           // V1 P0 wiring-fix: author name area artık geniş Expanded InkWell
           // değil; sadece author Text + role/time satırı kendi tap target'ı
           // kadar tıklanabilir. Kartın ortasının (geniş Expanded) yanlışlıkla
@@ -405,8 +392,9 @@ class _Header extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               fontSize: 15.5,
+                              height: 1.2,
                             ),
                           ),
                         ),
@@ -416,10 +404,11 @@ class _Header extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Feed Premium Sprint — rol rozeti: sade soft wheat pill.
+                    // Feed Premium Sprint - rol rozeti: sade lemon pale pill.
                     if (post.role.isNotEmpty) ...[
                       Flexible(
                         child: Container(
@@ -428,7 +417,7 @@ class _Header extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.softGold.withValues(alpha: 0.10),
+                            color: AppColors.brandLemonPale,
                             borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: Text(
@@ -436,9 +425,10 @@ class _Header extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
+                              color: AppColors.brandInk,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              height: 1.15,
                             ),
                           ),
                         ),
@@ -448,8 +438,9 @@ class _Header extends StatelessWidget {
                     Text(
                       timeAgo,
                       style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12.5,
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        height: 1.15,
                       ),
                     ),
                   ],
@@ -462,8 +453,9 @@ class _Header extends StatelessWidget {
               icon: const Icon(
                 Icons.more_horiz_rounded,
                 color: AppColors.textMuted,
+                size: 20,
               ),
-              color: AppColors.elevatedCard,
+              color: theme.colorScheme.surface,
               onSelected: (v) {
                 if (v == 'edit') onEdit?.call();
                 if (v == 'delete') onDelete?.call();
@@ -533,7 +525,7 @@ class _TypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: type.accent.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -545,15 +537,15 @@ class _TypeBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(type.icon, size: 14, color: type.accent),
-          const SizedBox(width: 5),
+          Icon(type.icon, size: 13, color: type.accent),
+          const SizedBox(width: 4),
           Text(
             type.label,
             style: TextStyle(
               color: type.accent,
-              fontSize: 12.5,
+              fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
+              letterSpacing: 0,
             ),
           ),
         ],
@@ -620,27 +612,26 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.borderHairline, width: 0.6),
-        ),
-      ),
+      decoration: BoxDecoration(boxShadow: const []),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xs,
-        vertical: 2,
+        vertical: 0,
       ),
       child: Row(
         children: [
           // V1 P0 — Beğeni Icons.favorite (kalp) yerine thumb_up_alt.
           // Kalp + kırmızı romantik Instagram dili istemiyoruz.
-          // Aktif renk: softGold (amber). Idle: textPrimary.
+          // Aktif renk: pressed lemon. Idle: textPrimary.
           Expanded(
             child: _ActionButton(
               icon: isLiked
                   ? Icons.thumb_up_alt_rounded
                   : Icons.thumb_up_alt_outlined,
-              color: isLiked ? AppColors.softGold : AppColors.textPrimary,
+              color: isLiked
+                  ? AppColors.brandLemonPressed
+                  : AppColors.textPrimary,
               label: AppStrings.feedActionLike,
               onTap: onLike,
             ),
@@ -658,7 +649,9 @@ class _ActionRow extends StatelessWidget {
               icon: isSaved
                   ? Icons.bookmark_rounded
                   : Icons.bookmark_border_rounded,
-              color: isSaved ? AppColors.softGold : AppColors.textPrimary,
+              color: isSaved
+                  ? AppColors.brandLemonPressed
+                  : AppColors.textPrimary,
               label: AppStrings.feedActionSave,
               onTap: onSave,
             ),
@@ -698,15 +691,13 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 9,
-          horizontal: 4,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 18),
+            Icon(icon, color: color, size: 20),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
@@ -715,6 +706,7 @@ class _ActionButton extends StatelessWidget {
                   color: onTap == null ? AppColors.textMuted : color,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  height: 1.0,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -736,10 +728,10 @@ class _Caption extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.l,
-        AppSpacing.xs,
-        AppSpacing.l,
+        AppSpacing.m,
         AppSpacing.s,
+        AppSpacing.m,
+        AppSpacing.m,
       ),
       // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik, 17 px.
       // Post card polish — height 1.4 → 1.5 (daha rahat satır aralığı).
@@ -747,8 +739,9 @@ class _Caption extends StatelessWidget {
         text,
         style: const TextStyle(
           color: AppColors.textPrimary,
-          fontSize: 17,
-          height: 1.5,
+          fontSize: 16.5,
+          height: 1.48,
+          letterSpacing: 0,
         ),
       ),
     );
@@ -765,15 +758,10 @@ class _TagsRow extends StatelessWidget {
     // softGold pill bg + label (AppTypography.labelLarge), `#` prefix
     // TagChip içinde otomatik.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.l,
-        AppSpacing.xs,
-        AppSpacing.l,
-        AppSpacing.s,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.m, 0, AppSpacing.m, 6),
       child: Wrap(
-        spacing: 6,
-        runSpacing: 6,
+        spacing: 5,
+        runSpacing: 4,
         children: [for (final t in tags) TagChip(label: t)],
       ),
     );
@@ -818,7 +806,12 @@ class _PostEngagementSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.l, 6, AppSpacing.l, 6),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.m,
+        AppSpacing.s,
+        AppSpacing.m,
+        AppSpacing.s,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -828,10 +821,10 @@ class _PostEngagementSummary extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.thumb_up_alt_rounded,
-                        size: 14,
-                        color: AppColors.copper,
+                        size: 13,
+                        color: AppColors.brandLemonPressed,
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 6),
                       Flexible(
                         child: Text(
                           '${_formatCount(likeCount)} '
@@ -840,7 +833,7 @@ class _PostEngagementSummary extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 12.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -856,7 +849,7 @@ class _PostEngagementSummary extends StatelessWidget {
                 onTap: onTapComments,
                 borderRadius: BorderRadius.circular(AppRadius.s),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -865,19 +858,20 @@ class _PostEngagementSummary extends StatelessWidget {
                           TextSpan(
                             children: [
                               TextSpan(
-                                text: '${_formatCount(commentCount)} '
+                                text:
+                                    '${_formatCount(commentCount)} '
                                     '${AppStrings.postCommentsCountLabel} · ',
                                 style: const TextStyle(
                                   color: AppColors.textSecondary,
-                                  fontSize: 12.5,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                               const TextSpan(
                                 text: AppStrings.postViewAllComments,
                                 style: TextStyle(
-                                  color: AppColors.softGold,
-                                  fontSize: 12.5,
+                                  color: AppColors.brandInk,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -889,8 +883,8 @@ class _PostEngagementSummary extends StatelessWidget {
                       ),
                       const Icon(
                         Icons.chevron_right_rounded,
-                        color: AppColors.softGold,
-                        size: 16,
+                        color: AppColors.brandLemonPressed,
+                        size: 15,
                       ),
                     ],
                   ),

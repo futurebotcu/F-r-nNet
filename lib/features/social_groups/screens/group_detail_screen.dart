@@ -92,7 +92,9 @@ class _AppBarTitle extends ConsumerWidget {
     if (g == null) {
       return const Text(AppStrings.groupDetailFallbackTitle);
     }
-    final subtitle = StringBuffer(AppStrings.groupInfoMembers(g.currentMemberCount));
+    final subtitle = StringBuffer(
+      AppStrings.groupInfoMembers(g.currentMemberCount),
+    );
     if (g.isPrivate) {
       subtitle
         ..write(' · ')
@@ -194,11 +196,7 @@ class _GroupBody extends ConsumerWidget {
             ),
           ),
           // Footer: composer (üye/owner) veya "Sohbete katıl" (non-member public).
-          _GroupFooter(
-            group: group,
-            isJoined: joined,
-            isOwner: isOwner,
-          ),
+          _GroupFooter(group: group, isJoined: joined, isOwner: isOwner),
         ],
       ),
     );
@@ -360,7 +358,7 @@ class _OwnerPendingAlert extends ConsumerWidget {
                       color: AppColors.copper,
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
-                      letterSpacing: 0.1,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
@@ -513,12 +511,26 @@ class _ChatBubble extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  message.text,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13.5,
-                    height: 1.4,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.m),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(AppRadius.m),
+                      topRight: const Radius.circular(AppRadius.m),
+                      bottomLeft: const Radius.circular(AppRadius.m),
+                      bottomRight: const Radius.circular(AppRadius.s),
+                    ),
+                    boxShadow: AppShadow.card,
+                  ),
+                  child: Text(
+                    message.text,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13.5,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -578,10 +590,7 @@ class _GroupFooter extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppColors.background,
         border: Border(
-          top: BorderSide(
-            color: AppColors.borderHairline,
-            width: 0.6,
-          ),
+          top: BorderSide(color: AppColors.borderHairline, width: 0.6),
         ),
       ),
       padding: const EdgeInsets.fromLTRB(
@@ -591,11 +600,7 @@ class _GroupFooter extends StatelessWidget {
         AppSpacing.s,
       ),
       child: canWrite
-          ? GroupComposer(
-              group: group,
-              isJoined: isJoined,
-              isOwner: isOwner,
-            )
+          ? GroupComposer(group: group, isJoined: isJoined, isOwner: isOwner)
           : _JoinFooterCta(group: group, isJoined: isJoined),
     );
   }
@@ -617,8 +622,7 @@ class _JoinFooterCta extends ConsumerWidget {
           child: Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
         ),
         error: (_, __) => _RequestButton(group: group, existing: null),
-        data: (existing) =>
-            _RequestButton(group: group, existing: existing),
+        data: (existing) => _RequestButton(group: group, existing: existing),
       );
     }
     final repo = ref.read(socialGroupRepositoryProvider);
@@ -635,9 +639,9 @@ class _JoinFooterCta extends ConsumerWidget {
                   action: () async {
                     final r = await repo.joinGroup(group.id);
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(r.message)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(r.message)));
                   },
                 );
               }
@@ -650,7 +654,7 @@ class _JoinFooterCta extends ConsumerWidget {
         ),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.surface,
           disabledBackgroundColor: AppColors.surfaceLine,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -659,7 +663,7 @@ class _JoinFooterCta extends ConsumerWidget {
           textStyle: const TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 14,
-            letterSpacing: 0.1,
+            letterSpacing: 1.2,
           ),
         ),
       ),
@@ -707,8 +711,7 @@ class PrimaryActionButton extends ConsumerWidget {
           child: Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
         ),
         error: (_, __) => _RequestButton(group: group, existing: null),
-        data: (existing) =>
-            _RequestButton(group: group, existing: existing),
+        data: (existing) => _RequestButton(group: group, existing: existing),
       );
     }
     final String label;
@@ -754,9 +757,9 @@ class PrimaryActionButton extends ConsumerWidget {
                   action: () async {
                     final r = await repo.joinGroup(group.id);
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(r.message)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(r.message)));
                   },
                 );
               }
@@ -765,22 +768,19 @@ class PrimaryActionButton extends ConsumerWidget {
         label: Text(label),
         style: FilledButton.styleFrom(
           backgroundColor: color,
-          foregroundColor: isJoined ? AppColors.textPrimary : Colors.white,
+          foregroundColor: isJoined ? AppColors.textPrimary : AppColors.surface,
           disabledBackgroundColor: color,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
             side: isJoined
-                ? const BorderSide(
-                    color: AppColors.borderHairline,
-                    width: 0.6,
-                  )
+                ? const BorderSide(color: AppColors.borderHairline, width: 0.6)
                 : BorderSide.none,
           ),
           textStyle: const TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 14.5,
-            letterSpacing: 0.1,
+            letterSpacing: 1.2,
           ),
         ),
       ),
@@ -843,11 +843,7 @@ class _OwnerStatusCard extends StatelessWidget {
             ),
           ),
           if (onTap != null)
-            const Icon(
-              Icons.tune_rounded,
-              color: AppColors.copper,
-              size: 18,
-            ),
+            const Icon(Icons.tune_rounded, color: AppColors.copper, size: 18),
         ],
       ),
     );
@@ -862,10 +858,7 @@ class _OwnerStatusCard extends StatelessWidget {
 
 /// V1 P1-D — Private grup için Request-Join button.
 class _RequestButton extends ConsumerWidget {
-  const _RequestButton({
-    required this.group,
-    required this.existing,
-  });
+  const _RequestButton({required this.group, required this.existing});
 
   final SocialGroup group;
   final GroupJoinRequest? existing;
@@ -928,7 +921,7 @@ class _RequestButton extends ConsumerWidget {
         label: Text(label),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.surface,
           disabledBackgroundColor: AppColors.surface,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -937,7 +930,7 @@ class _RequestButton extends ConsumerWidget {
           textStyle: const TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 14.5,
-            letterSpacing: 0.1,
+            letterSpacing: 1.2,
           ),
         ),
       ),
@@ -958,12 +951,9 @@ class _PrivateGated extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppSpacing.l),
           decoration: BoxDecoration(
-            color: AppColors.elevatedCard,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadius.m),
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            boxShadow: AppShadow.card,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1012,11 +1002,7 @@ class _FullBanner extends StatelessWidget {
       ),
       child: Row(
         children: const [
-          Icon(
-            Icons.lock_rounded,
-            color: AppColors.danger,
-            size: 18,
-          ),
+          Icon(Icons.lock_rounded, color: AppColors.danger, size: 18),
           SizedBox(width: AppSpacing.s),
           Expanded(
             child: Text(
@@ -1137,10 +1123,7 @@ class PendingRequestsSection extends ConsumerWidget {
             for (final r in items)
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.s),
-                child: _PendingRequestRow(
-                  request: r,
-                  groupId: groupId,
-                ),
+                child: _PendingRequestRow(request: r, groupId: groupId),
               ),
           ],
         );
@@ -1150,16 +1133,12 @@ class PendingRequestsSection extends ConsumerWidget {
 }
 
 class _PendingRequestRow extends ConsumerStatefulWidget {
-  const _PendingRequestRow({
-    required this.request,
-    required this.groupId,
-  });
+  const _PendingRequestRow({required this.request, required this.groupId});
   final GroupJoinRequest request;
   final String groupId;
 
   @override
-  ConsumerState<_PendingRequestRow> createState() =>
-      _PendingRequestRowState();
+  ConsumerState<_PendingRequestRow> createState() => _PendingRequestRowState();
 }
 
 class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
@@ -1177,9 +1156,11 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(approve
-              ? AppStrings.groupJoinRequestApproved
-              : AppStrings.groupJoinRequestRejected),
+          content: Text(
+            approve
+                ? AppStrings.groupJoinRequestApproved
+                : AppStrings.groupJoinRequestRejected,
+          ),
         ),
       );
       ref.invalidate(pendingJoinRequestsProvider(widget.groupId));
@@ -1188,9 +1169,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(AppStrings.groupJoinRequestDecideError),
-        ),
+        const SnackBar(content: Text(AppStrings.groupJoinRequestDecideError)),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1204,9 +1183,9 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.m),
       decoration: BoxDecoration(
-        color: AppColors.elevatedCard,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(color: AppColors.borderHairline, width: 0.6),
+        boxShadow: AppShadow.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1290,6 +1269,13 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                       color: AppColors.borderHairline,
                       width: 0.6,
                     ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   child: const Text(AppStrings.groupJoinRequestRejectCta),
                 ),
@@ -1300,7 +1286,14 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                   onPressed: _busy ? null : () => _decide(true),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   child: const Text(AppStrings.groupJoinRequestApproveCta),
                 ),
@@ -1416,6 +1409,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
                 horizontal: AppSpacing.l,
                 vertical: 12,
               ),
+              border: OutlineInputBorder(),
             ),
             onSubmitted: (_) => _send(),
           ),
@@ -1428,10 +1422,14 @@ class _ComposerState extends ConsumerState<GroupComposer> {
             onPressed: _send,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.copper,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.surface,
               padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
               ),
             ),
             child: const Icon(Icons.send_rounded),
@@ -1446,15 +1444,15 @@ class _MiniLoading extends StatelessWidget {
   const _MiniLoading();
   @override
   Widget build(BuildContext context) => const SizedBox(
-        height: 80,
-        child: Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 1.6),
-          ),
-        ),
-      );
+    height: 80,
+    child: Center(
+      child: SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 1.6),
+      ),
+    ),
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -1652,10 +1650,8 @@ class _MembersSheetBody extends ConsumerWidget {
                   horizontal: AppSpacing.pageH,
                 ),
                 itemCount: members.length,
-                separatorBuilder: (_, __) => const Divider(
-                  height: 0,
-                  color: AppColors.borderHairline,
-                ),
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 0, color: AppColors.borderHairline),
                 itemBuilder: (_, i) {
                   final m = members[i];
                   return _MemberRow(
@@ -1755,10 +1751,7 @@ class _MemberRow extends StatelessWidget {
           ? null
           : Text(
               subtitleParts.join(' · '),
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
       trailing: canRemove
           ? IconButton(
@@ -1815,8 +1808,8 @@ Future<void> _confirmAndLeaveGroup(
 }) async {
   final body = isOwner
       ? (group.currentMemberCount <= 1
-          ? AppStrings.groupLeaveConfirmBodyClose
-          : AppStrings.groupLeaveConfirmBodyTransfer)
+            ? AppStrings.groupLeaveConfirmBodyClose
+            : AppStrings.groupLeaveConfirmBodyTransfer)
       : AppStrings.groupLeaveConfirmBodyMember;
 
   final ok = await _showConfirmDialog(
@@ -1842,9 +1835,9 @@ Future<void> _confirmAndLeaveGroup(
     if (context.mounted) await showAuthRequiredSheet(context, ref);
   } catch (_) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.groupLeaveError)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(AppStrings.groupLeaveError)));
   }
 }
 
@@ -1874,9 +1867,9 @@ Future<void> _confirmAndCloseGroup(
     if (context.mounted) await showAuthRequiredSheet(context, ref);
   } catch (_) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.groupDeleteError)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(AppStrings.groupDeleteError)));
   }
 }
 

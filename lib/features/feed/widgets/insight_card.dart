@@ -20,16 +20,10 @@ class InsightCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            accent.withValues(alpha: 0.10),
-            AppColors.card,
-          ],
+          colors: [accent.withValues(alpha: 0.10), AppColors.card],
         ),
         borderRadius: BorderRadius.circular(AppRadius.l),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.32),
-          width: 0.6,
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.32), width: 0.6),
         boxShadow: AppShadow.card,
       ),
       child: Row(

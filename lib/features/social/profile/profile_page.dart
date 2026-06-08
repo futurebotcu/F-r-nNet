@@ -213,7 +213,8 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
         // Visitor + hiç public mesleki içerik yok → sade empty state.
         if (!isSelf) {
           final d = detailAsync.asData?.value;
-          final hasAny = (d != null &&
+          final hasAny =
+              (d != null &&
                   (d.hasWorkerInfo || d.hasExperiences || d.hasBakery)) ||
               jobSeekAsync.asData?.value != null;
           if (!hasAny) {
@@ -347,10 +348,7 @@ class _SelfEditCta extends StatelessWidget {
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(
-            color: AppColors.borderHairline,
-            width: 0.8,
-          ),
+          side: const BorderSide(color: AppColors.borderHairline, width: 0.8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
@@ -376,10 +374,7 @@ class _ProfileMessageCta extends StatelessWidget {
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(
-            color: AppColors.borderHairline,
-            width: 0.8,
-          ),
+          side: const BorderSide(color: AppColors.borderHairline, width: 0.8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
@@ -398,17 +393,13 @@ class _AccountTypeBadge extends StatelessWidget {
       data: (d) {
         final code = d?.header.accountType;
         if (code == null || code.isEmpty) return const SizedBox.shrink();
-        final label =
-            AppStrings.profileAccountTypeLabels[code] ?? code;
+        final label = AppStrings.profileAccountTypeLabels[code] ?? code;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 3,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
                 color: AppColors.softGold.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -455,7 +446,7 @@ class _CvHeader extends StatelessWidget {
     final d = detailAsync.asData?.value;
     final hasContent =
         (d != null && (d.hasWorkerInfo || d.hasExperiences)) ||
-            (jobSeekAsync.asData?.value != null);
+        (jobSeekAsync.asData?.value != null);
     // Başkası bakıyor + hiç CV içeriği yok → çatı başlığını gizle.
     if (!isSelf && !hasContent) return const SizedBox.shrink();
     return Column(
@@ -488,8 +479,12 @@ class _CvHeader extends StatelessWidget {
         // Owner'a hitap eden açıklama yalnız self'te — visitor'da gösterilmez.
         if (isSelf)
           const Padding(
-            padding:
-                EdgeInsets.fromLTRB(AppSpacing.pageH, 0, AppSpacing.pageH, 0),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.pageH,
+              0,
+              AppSpacing.pageH,
+              0,
+            ),
             child: Text(
               AppStrings.profileCvSectionSubtitle,
               style: TextStyle(
@@ -671,10 +666,7 @@ class _ExperienceRow extends StatelessWidget {
     final e = exp.isCurrent
         ? AppStrings.profileExperienceCurrent
         : exp.endDate?.year.toString();
-    return <String>[
-      if (s != null) s,
-      if (e != null) e,
-    ].join(' – ');
+    return <String>[if (s != null) s, if (e != null) e].join(' – ');
   }
 
   @override
@@ -690,10 +682,7 @@ class _ExperienceRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            exp.title,
-            style: AppTypography.cardTitle,
-          ),
+          Text(exp.title, style: AppTypography.cardTitle),
           if (meta.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(
@@ -883,9 +872,7 @@ class _JobSeekCard extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: isSelf ? onManage : onView,
                 icon: Icon(
-                  isSelf
-                      ? Icons.campaign_outlined
-                      : Icons.open_in_new_rounded,
+                  isSelf ? Icons.campaign_outlined : Icons.open_in_new_rounded,
                   size: 16,
                 ),
                 label: Text(
@@ -927,12 +914,7 @@ class _SectionHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: AppTypography.sectionTitle,
-            ),
-          ),
+          Expanded(child: Text(label, style: AppTypography.sectionTitle)),
           if (trailing != null) trailing!,
         ],
       ),
@@ -943,10 +925,7 @@ class _SectionHeader extends StatelessWidget {
 // ── Hakkında / İşletme ────────────────────────────────────────────
 
 class _AboutBakerySection extends StatelessWidget {
-  const _AboutBakerySection({
-    required this.detailAsync,
-    required this.isSelf,
-  });
+  const _AboutBakerySection({required this.detailAsync, required this.isSelf});
   final AsyncValue<PublicProfileDetail?> detailAsync;
   final bool isSelf;
   @override
@@ -965,9 +944,7 @@ class _AboutBakerySection extends StatelessWidget {
           children: [
             const _SectionHeader(label: AppStrings.profileSectionBakery),
             if (!hasContent)
-              const _SectionEmptyHint(
-                message: AppStrings.profileEmptyBakery,
-              )
+              const _SectionEmptyHint(message: AppStrings.profileEmptyBakery)
             else
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -979,10 +956,7 @@ class _AboutBakerySection extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        bakery.name,
-                        style: AppTypography.sectionTitle,
-                      ),
+                      Text(bakery.name, style: AppTypography.sectionTitle),
                       if ((bakery.city ?? '').isNotEmpty ||
                           (bakery.district ?? '').isNotEmpty) ...[
                         const SizedBox(height: 4),
@@ -1074,8 +1048,7 @@ class _ProfessionalSection extends StatelessWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.softGold,
                         minimumSize: const Size(0, 32),
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
                         visualDensity: VisualDensity.compact,
                       ),
                     )
@@ -1122,10 +1095,12 @@ class _WorkerSnapshot extends StatelessWidget {
   Widget build(BuildContext context) {
     final chips = <Widget>[];
     if (worker.experienceYears != null) {
-      chips.add(_MiniChip(
-        label:
-            '${worker.experienceYears} ${AppStrings.profileExperienceYearsLabel}',
-      ));
+      chips.add(
+        _MiniChip(
+          label:
+              '${worker.experienceYears} ${AppStrings.profileExperienceYearsLabel}',
+        ),
+      );
     }
     if ((worker.shiftPreference ?? '').isNotEmpty) {
       chips.add(_MiniChip(label: worker.shiftPreference!));
@@ -1133,8 +1108,7 @@ class _WorkerSnapshot extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (chips.isNotEmpty)
-          Wrap(spacing: 6, runSpacing: 6, children: chips),
+        if (chips.isNotEmpty) Wrap(spacing: 6, runSpacing: 6, children: chips),
         if (worker.effectiveSkills.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s),
           Text(
@@ -1204,19 +1178,16 @@ class _PublicRecipesSection extends StatelessWidget {
     return async.maybeWhen(
       data: (list) {
         if (list.isEmpty && !isSelf) return const SizedBox.shrink();
-        final preview =
-            full ? list : list.take(_previewLimit).toList(growable: false);
+        final preview = full
+            ? list
+            : list.take(_previewLimit).toList(growable: false);
         final overflow = full ? 0 : list.length - preview.length;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _SectionHeader(
-              label: AppStrings.profileSectionPublicRecipes,
-            ),
+            _SectionHeader(label: AppStrings.profileSectionPublicRecipes),
             if (list.isEmpty)
-              const _SectionEmptyHint(
-                message: AppStrings.profileEmptyRecipes,
-              )
+              const _SectionEmptyHint(message: AppStrings.profileEmptyRecipes)
             else
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -1226,9 +1197,7 @@ class _PublicRecipesSection extends StatelessWidget {
                   children: [
                     for (final r in preview)
                       Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.s,
-                        ),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.s),
                         child: _PublicRecipeRow(recipe: r),
                       ),
                     if (overflow > 0)
@@ -1307,10 +1276,7 @@ class _MiniChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.s),
-        border: Border.all(
-          color: AppColors.borderHairline,
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
       child: Text(
         label,
@@ -1336,10 +1302,7 @@ class _SectionEmptyHint extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: const TextStyle(
-          color: AppColors.textMuted,
-          fontSize: 12.5,
-        ),
+        style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
       ),
     );
   }
@@ -1366,10 +1329,7 @@ class _LoadMoreCta extends StatelessWidget {
           onPressed: isLoading ? null : onTap,
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(
-              color: AppColors.borderHairline,
-              width: 0.8,
-            ),
+            side: const BorderSide(color: AppColors.borderHairline, width: 0.8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.m),
             ),
@@ -1382,10 +1342,7 @@ class _LoadMoreCta extends StatelessWidget {
                 )
               : const Text(
                   AppStrings.profilePostsLoadMore,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
                 ),
         ),
       ),

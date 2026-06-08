@@ -10,7 +10,7 @@
 // FırınNet farkları:
 //   * BLoC `FeedBloc` yok → mevcut `feedPostsProvider` + `feedChangesProvider`.
 //   * Hikaye akışı V1'de iskelet (Story create/view F5'te).
-//   * AppBar FırınNet header'ı (Bildirim + Avatar + Gruplar shortcut).
+//   * AppBar FırınNet header'ı (Bildirim + Avatar).
 //   * Composer ayrı route (`/social/composer`); donor pattern.
 //   * Post kartı `SocialPostCard` (donor `PostLarge` widget tree).
 //
@@ -116,7 +116,7 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
             const Divider(height: 1, color: AppColors.borderHairline),
             Expanded(
               child: RefreshIndicator.adaptive(
-                color: AppColors.copper,
+                color: AppColors.brandLemonPressed,
                 onRefresh: _onRefresh,
                 child: pagedAsync.when(
                   loading: () => const _FeedLoading(),
@@ -134,7 +134,6 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
           ],
         ),
       ),
-      floatingActionButton: _ComposerFab(),
     );
   }
 }
@@ -146,14 +145,8 @@ class _SocialFeedHeader extends ConsumerWidget {
       title: AppStrings.feedTitle,
       subtitle: AppStrings.feedSubtitle,
       actions: [
-        HeaderActionButton(
-          icon: Icons.groups_2_outlined,
-          tooltip: AppStrings.groupsTitle,
-          onTap: () => context.go(AppRoutes.groups),
-        ),
-        const SizedBox(width: 8),
         const NotificationsHeaderAction(),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         const _ProfileAvatarAction(),
       ],
     );
@@ -178,6 +171,7 @@ class _ProfileAvatarAction extends ConsumerWidget {
         context.push(AppRoutes.profile);
       }
     }
+
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(
@@ -188,41 +182,23 @@ class _ProfileAvatarAction extends ConsumerWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Container(
-          width: 32,
-          height: 32,
+          height: 30,
+          width: 30,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.softGold.withValues(alpha: 0.14),
+            color: AppColors.brandLemonPale,
           ),
           child: Text(
             initial,
             style: const TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w800,
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Sağ alt köşede FAB — yeni gönderi composer'ına götürür.
-class _ComposerFab extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Feed Premium Sprint — inline composer paneli zaten var; FAB minimal
-    // (küçük, ikon-only) tutuldu. Aşağı kaydırınca kalıcı erişim sağlar ama
-    // içeriğe binmez. Aksiyon/route korunur.
-    return FloatingActionButton.small(
-      onPressed: () => context.push(AppRoutes.socialComposer),
-      backgroundColor: AppColors.copper,
-      foregroundColor: Colors.white,
-      elevation: 2,
-      tooltip: AppStrings.feedComposerNewPostCta,
-      child: const Icon(Icons.edit_rounded, size: 18),
     );
   }
 }
@@ -278,10 +254,7 @@ class _FeedList extends ConsumerWidget {
         ),
         children: [
           ...headers,
-          if (segment == 1)
-            const _FollowingEmpty()
-          else
-            const _FeedEmpty(),
+          if (segment == 1) const _FollowingEmpty() else const _FeedEmpty(),
         ],
       );
     }
@@ -395,8 +368,8 @@ class _FeedError extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.brandLemon,
+                    foregroundColor: AppColors.brandInk,
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.l,
                       vertical: AppSpacing.s,
@@ -442,7 +415,7 @@ class _FeedEmpty extends StatelessWidget {
 
 /// Feed Premium Sprint — modern segmented control.
 /// "Genel Akış" / "Takip Edilenler" arasında geçiş; seçili segment
-/// sıcak beyaz kapsül + copper metin, kayan indicator hissi.
+/// yellow accent kapsul + koyu metin, kayan indicator hissi.
 /// State kaynağı korunur: `feedSegmentProvider` (0 = Genel, 1 = Takip).
 class _FeedSegment extends ConsumerWidget {
   const _FeedSegment();
@@ -453,19 +426,16 @@ class _FeedSegment extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
-        AppSpacing.m,
-        AppSpacing.pageH,
         AppSpacing.s,
+        AppSpacing.pageH,
+        6,
       ),
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(
-            color: AppColors.borderHairline,
-            width: 0.6,
-          ),
+          border: Border.all(color: AppColors.borderHairline, width: 0.6),
         ),
         child: Row(
           children: [
@@ -510,11 +480,10 @@ class _SegmentTab extends StatelessWidget {
         child: AnimatedContainer(
           duration: AppDuration.fast,
           curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(vertical: 9),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? AppColors.card : Colors.transparent,
+            color: selected ? AppColors.brandLemonPale : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            boxShadow: selected ? AppShadow.subtle : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -522,17 +491,17 @@ class _SegmentTab extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                size: 16,
-                color: selected ? AppColors.copper : AppColors.textMuted,
+                size: 15,
+                color: selected ? AppColors.brandInk : AppColors.textMuted,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? AppColors.softGold : AppColors.textMuted,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.1,
+                  color: selected ? AppColors.brandInk : AppColors.textMuted,
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  letterSpacing: 0,
                 ),
               ),
             ],
@@ -560,8 +529,7 @@ class _FollowingEmpty extends ConsumerWidget {
           title: AppStrings.feedFollowingEmptyGuest,
           icon: Icons.lock_outline_rounded,
           actionLabel: AppStrings.feedFollowingBackToAll,
-          onAction: () =>
-              ref.read(feedSegmentProvider.notifier).state = 0,
+          onAction: () => ref.read(feedSegmentProvider.notifier).state = 0,
           compact: true,
         ),
       );
@@ -579,8 +547,7 @@ class _FollowingEmpty extends ConsumerWidget {
           subtitle: AppStrings.feedFollowingEmptyNoFollowsHint,
           icon: Icons.person_add_alt_1_outlined,
           actionLabel: AppStrings.feedFollowingBackToAll,
-          onAction: () =>
-              ref.read(feedSegmentProvider.notifier).state = 0,
+          onAction: () => ref.read(feedSegmentProvider.notifier).state = 0,
           compact: true,
         ),
       );
@@ -593,8 +560,7 @@ class _FollowingEmpty extends ConsumerWidget {
         title: AppStrings.feedFollowingEmptyNoPosts,
         icon: Icons.feed_outlined,
         actionLabel: AppStrings.feedFollowingBackToAll,
-        onAction: () =>
-            ref.read(feedSegmentProvider.notifier).state = 0,
+        onAction: () => ref.read(feedSegmentProvider.notifier).state = 0,
         compact: true,
       ),
     );

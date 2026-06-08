@@ -29,8 +29,7 @@ class SocialPostEditPage extends ConsumerStatefulWidget {
   final String postId;
 
   @override
-  ConsumerState<SocialPostEditPage> createState() =>
-      _SocialPostEditPageState();
+  ConsumerState<SocialPostEditPage> createState() => _SocialPostEditPageState();
 }
 
 class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
@@ -67,9 +66,7 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
       await repo
           .updatePost(postId: widget.postId, text: text)
           .timeout(const Duration(seconds: 30));
-      debugPrint(
-        '[FirinNet][PostEdit] save success postId=${widget.postId}',
-      );
+      debugPrint('[FirinNet][PostEdit] save success postId=${widget.postId}');
       if (!mounted) return;
       // V2: feedPagedNotifier + post detail header refresh.
       ref.invalidate(feedPagedNotifierProvider);
@@ -129,7 +126,7 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
               onPressed: (_saving || !isOwner) ? null : _save,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.copper,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.brandInk,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
@@ -144,8 +141,7 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
                       height: 14,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.8,
-                        valueColor:
-                            AlwaysStoppedAnimation(Colors.white),
+                        valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
                       ),
                     )
                   : const Text(

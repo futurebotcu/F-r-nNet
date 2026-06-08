@@ -40,14 +40,14 @@ class GroupCard extends StatelessWidget {
   final int pendingRequestCount;
 
   static const _seedGradients = <List<Color>>[
-    [Color(0xFFF3E6D3), Color(0xFFE5D2B0)],
-    [Color(0xFFEDDDC4), Color(0xFFDFCCA8)],
-    [Color(0xFFF2E2C6), Color(0xFFE4D0AC)],
-    [Color(0xFFF5E8CF), Color(0xFFE8D6AE)],
-    [Color(0xFFEEE0C4), Color(0xFFE0CDA8)],
-    [Color(0xFFF3E5C8), Color(0xFFE6D2A8)],
-    [Color(0xFFEEDDC0), Color(0xFFE0CBA4)],
-    [Color(0xFFF1E2C5), Color(0xFFE4D0A8)],
+    [AppColors.surfaceVariant, AppColors.background],
+    [AppColors.background, AppColors.surfaceVariant],
+    [AppColors.surfaceVariant, AppColors.surface],
+    [AppColors.surface, AppColors.surfaceVariant],
+    [AppColors.elevatedCard, AppColors.background],
+    [AppColors.background, AppColors.elevatedCard],
+    [AppColors.surfaceVariant, AppColors.elevatedCard],
+    [AppColors.elevatedCard, AppColors.surface],
   ];
 
   @override
@@ -80,7 +80,7 @@ class GroupCard extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            splashColor: AppColors.softGold.withValues(alpha: 0.06),
+            splashColor: AppColors.brandLemonPressed.withValues(alpha: 0.06),
             child: Padding(
               padding: EdgeInsets.all(compact ? AppSpacing.m : AppSpacing.l),
               child: Column(
@@ -97,32 +97,33 @@ class GroupCard extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(AppRadius.m),
                       border: Border.all(
-                        color: AppColors.copper.withValues(alpha: 0.2),
+                        color: AppColors.brandLemonSoft,
                         width: 0.6,
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.m,
-                      vertical: AppSpacing.s,
+                      horizontal: AppSpacing.s,
+                      vertical: 6,
                     ),
                     child: Row(
                       children: [
                         Container(
-                          width: 32,
-                          height: 32,
+                          width: 28,
+                          height: 28,
                           decoration: BoxDecoration(
-                            color: AppColors.background.withValues(alpha: 0.7),
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.s),
+                            color: AppColors.surfaceVariant.withValues(
+                              alpha: 0.82,
+                            ),
+                            borderRadius: BorderRadius.circular(AppRadius.m),
                             border: Border.all(
-                              color: AppColors.softGold.withValues(alpha: 0.25),
+                              color: AppColors.borderHairline,
                               width: 0.6,
                             ),
                           ),
                           child: Icon(
                             _categoryIcon(group.category),
-                            color: AppColors.softGold,
-                            size: 18,
+                            color: AppColors.brandLemonPressed,
+                            size: 16,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s),
@@ -142,7 +143,7 @@ class GroupCard extends StatelessWidget {
                         if (showApprovalBadge)
                           _MiniBadge(
                             label: AppStrings.groupApprovalRequiredBadge,
-                            color: AppColors.softGold,
+                            color: AppColors.brandInk,
                           ),
                         if (isJoined)
                           _MiniBadge(
@@ -289,8 +290,8 @@ class _MembersRow extends StatelessWidget {
                 group.isFull
                     ? AppColors.danger
                     : group.fillRatio > 0.8
-                        ? AppColors.copper
-                        : AppColors.softGold,
+                    ? AppColors.brandLemonPressed
+                    : AppColors.brandLemonPale,
               ),
             ),
           ),
@@ -318,9 +319,8 @@ class _PrimaryCta extends StatelessWidget {
 
     if (isJoined) {
       label = AppStrings.groupActionOpen;
-      bg = AppColors.copper;
-      // Görsel kalite — bakır dolu CTA üstünde beyaz metin (premium kontrast).
-      fg = Colors.white;
+      bg = AppColors.brandLemon;
+      fg = AppColors.brandInk;
       enabled = true;
     } else if (group.isFull) {
       label = AppStrings.groupActionFull;
@@ -333,15 +333,13 @@ class _PrimaryCta extends StatelessWidget {
       // `_GroupCardWired.onPrimary` private branch'ine dispatch eder
       // (requestJoinGroup RPC).
       label = AppStrings.groupJoinRequestSend;
-      bg = AppColors.copper;
-      // Görsel kalite — bakır dolu CTA üstünde beyaz metin (premium kontrast).
-      fg = Colors.white;
+      bg = AppColors.brandLemonPale;
+      fg = AppColors.brandInk;
       enabled = true;
     } else {
       label = AppStrings.groupActionJoin;
-      bg = AppColors.copper;
-      // Görsel kalite — bakır dolu CTA üstünde beyaz metin (premium kontrast).
-      fg = Colors.white;
+      bg = AppColors.brandLemon;
+      fg = AppColors.brandInk;
       enabled = true;
     }
 
@@ -361,7 +359,7 @@ class _PrimaryCta extends StatelessWidget {
           textStyle: const TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 13,
-            letterSpacing: 0.2,
+            letterSpacing: 1.2,
           ),
         ),
         child: Text(label),
@@ -383,16 +381,13 @@ class _PendingRequestsPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.m,
-        vertical: 7,
+        horizontal: AppSpacing.s,
+        vertical: 5,
       ),
       decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.14),
+        color: AppColors.surfaceVariant.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.36),
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.brandLemonSoft, width: 0.6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -400,16 +395,16 @@ class _PendingRequestsPill extends StatelessWidget {
           const Icon(
             Icons.hourglass_top_rounded,
             size: 13,
-            color: AppColors.copper,
+            color: AppColors.brandLemonPressed,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           Text(
             AppStrings.groupPendingRequestCount(count),
             style: const TextStyle(
-              color: AppColors.copper,
-              fontSize: 11.5,
+              color: AppColors.brandLemonPressed,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
+              letterSpacing: 0,
             ),
           ),
         ],
@@ -426,22 +421,19 @@ class _MiniBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
+        color: AppColors.surfaceVariant.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: color.withValues(alpha: 0.36),
-          width: 0.6,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.22), width: 0.6),
       ),
       child: Text(
         label.toUpperCase(),
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w800,
-          fontSize: 9.5,
-          letterSpacing: 1.0,
+          fontSize: 9,
+          letterSpacing: 0.7,
         ),
       ),
     );

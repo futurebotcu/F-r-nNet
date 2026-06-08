@@ -26,6 +26,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
@@ -81,8 +82,7 @@ class SocialComposerPage extends ConsumerStatefulWidget {
   final PostType? initialType;
 
   @override
-  ConsumerState<SocialComposerPage> createState() =>
-      _SocialComposerPageState();
+  ConsumerState<SocialComposerPage> createState() => _SocialComposerPageState();
 }
 
 class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
@@ -197,11 +197,12 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     String fromCandidate(String c) {
       final dot = c.lastIndexOf('.');
       if (dot <= 0 || dot >= c.length - 1) return '';
-      return c.substring(dot + 1).toLowerCase().replaceAll(
-            RegExp(r'[^a-z0-9]'),
-            '',
-          );
+      return c
+          .substring(dot + 1)
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]'), '');
     }
+
     final fromName = fromCandidate(name);
     if (known.contains(fromName)) return fromName;
     final fromPath = fromCandidate(path);
@@ -237,8 +238,9 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
           '[FirinNet][Composer] pickVideo too large bytes=${bytes.length}',
         );
         if (mounted) {
-          setState(() =>
-              _composerError = AppStrings.composerVideoTooLargeError);
+          setState(
+            () => _composerError = AppStrings.composerVideoTooLargeError,
+          );
         }
         return;
       }
@@ -259,9 +261,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     } catch (e) {
       debugPrint('[FirinNet][Composer] pickVideo error: $e');
       if (mounted) {
-        setState(
-          () => _composerError = AppStrings.composerVideoPickError,
-        );
+        setState(() => _composerError = AppStrings.composerVideoPickError);
       }
     }
   }
@@ -271,11 +271,12 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     String fromCandidate(String c) {
       final dot = c.lastIndexOf('.');
       if (dot <= 0 || dot >= c.length - 1) return '';
-      return c.substring(dot + 1).toLowerCase().replaceAll(
-            RegExp(r'[^a-z0-9]'),
-            '',
-          );
+      return c
+          .substring(dot + 1)
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]'), '');
     }
+
     final fromName = fromCandidate(name);
     if (known.contains(fromName)) return fromName;
     final fromPath = fromCandidate(path);
@@ -392,7 +393,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   Widget build(BuildContext context) {
     return PremiumScaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.elevatedCard,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
@@ -436,8 +437,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation(Colors.white),
+                        valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
                       ),
                     )
                   : const Icon(Icons.send_rounded, size: 18),
@@ -451,12 +451,14 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                 ),
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    AppColors.copper.withValues(alpha: 0.35),
-                disabledForegroundColor:
-                    Colors.white.withValues(alpha: 0.7),
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.brandInk,
+                disabledBackgroundColor: AppColors.primary.withValues(
+                  alpha: 0.35,
+                ),
+                disabledForegroundColor: AppColors.textMuted.withValues(
+                  alpha: 0.7,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
@@ -485,10 +487,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
             ),
             const SizedBox(height: AppSpacing.m),
             if (_pickedBytes != null)
-              _MediaPreview(
-                bytes: _pickedBytes!,
-                onRemove: _removePickedImage,
-              ),
+              _MediaPreview(bytes: _pickedBytes!, onRemove: _removePickedImage),
             if (_pickedVideoBytes != null)
               _VideoPickedPreview(
                 bytes: _pickedVideoBytes!,
@@ -506,9 +505,32 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               // V2 Commit 3.5 — onChanged setState ile sticky Paylaş
               // CTA disabled→enabled state'i güncellenir.
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: AppStrings.feedComposerExpandHint,
-                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: AppColors.surface,
+                contentPadding: const EdgeInsets.all(AppSpacing.m),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: AppColors.borderHairline,
+                    width: 0.8,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: AppColors.borderHairline,
+                    width: 0.8,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.2,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.m),
@@ -526,39 +548,42 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               runSpacing: 8,
               children: _types.map((t) {
                 final selected = t == _type;
-                return ChoiceChip(
-                  selected: selected,
-                  selectedColor: t.accent.withValues(alpha: 0.20),
-                  backgroundColor: AppColors.surface,
-                  side: BorderSide(
-                    color: selected
-                        ? t.accent
-                        : AppColors.borderHairline,
-                    width: selected ? 1.0 : 0.6,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.s),
-                  ),
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(t.icon, size: 14, color: t.accent),
-                      const SizedBox(width: 4),
-                      Text(
-                        t.label,
-                        style: TextStyle(
-                          color: selected
-                              ? t.accent
-                              : AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                return PressScale(
+                  onTap: null,
+                  child: ChoiceChip(
+                    selected: selected,
+                    selectedColor: AppColors.primary.withValues(alpha: 0.10),
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide(
+                      color: selected
+                          ? AppColors.primary
+                          : AppColors.borderHairline,
+                      width: 1,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                    ),
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(t.icon, size: 14, color: t.accent),
+                        const SizedBox(width: 4),
+                        Text(
+                          t.label,
+                          style: TextStyle(
+                            color: selected
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    onSelected: _saving
+                        ? null
+                        : (_) => setState(() => _type = t),
                   ),
-                  onSelected: _saving
-                      ? null
-                      : (_) => setState(() => _type = t),
                 );
               }).toList(),
             ),
@@ -702,9 +727,7 @@ class _MediaButton extends StatelessWidget {
               Icon(
                 icon,
                 size: 22,
-                color: enabled
-                    ? AppColors.softGold
-                    : AppColors.textMuted,
+                color: enabled ? AppColors.primary : AppColors.textMuted,
               ),
               const SizedBox(width: AppSpacing.s),
               Flexible(
@@ -753,10 +776,7 @@ class _VideoPickedPreview extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(
-          color: AppColors.borderHairline,
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
       child: Row(
         children: [
@@ -765,12 +785,12 @@ class _VideoPickedPreview extends StatelessWidget {
             height: 56,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.softGold.withValues(alpha: 0.14),
+              color: AppColors.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(AppRadius.s),
             ),
             child: const Icon(
               Icons.play_circle_outlined,
-              color: AppColors.softGold,
+              color: AppColors.primary,
               size: 28,
             ),
           ),
@@ -833,7 +853,7 @@ class _MediaPreview extends StatelessWidget {
             top: AppSpacing.s,
             right: AppSpacing.s,
             child: Material(
-              color: Colors.black.withValues(alpha: 0.55),
+              color: AppColors.textPrimary.withValues(alpha: 0.72),
               shape: const CircleBorder(),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
@@ -843,7 +863,7 @@ class _MediaPreview extends StatelessWidget {
                   padding: EdgeInsets.all(6),
                   child: Icon(
                     Icons.close_rounded,
-                    color: Colors.white,
+                    color: AppColors.surface,
                     size: 18,
                   ),
                 ),

@@ -43,9 +43,8 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
         bottom: false,
         child: allAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const _GroupsErrorState(
-            message: AppStrings.groupsErrorGeneric,
-          ),
+          error: (_, __) =>
+              const _GroupsErrorState(message: AppStrings.groupsErrorGeneric),
           data: (all) {
             final filtered = _applySearch(all);
             final isDefaultView = _query.isEmpty && _category == null;
@@ -113,11 +112,11 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                       ),
                       prefixIcon: const Icon(
                         Icons.search_rounded,
-                        color: AppColors.softGold,
+                        color: AppColors.brandLemonPressed,
                         size: 20,
                       ),
                       filled: true,
-                      fillColor: AppColors.card,
+                      fillColor: AppColors.surface,
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.l,
@@ -133,7 +132,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.m),
                         borderSide: const BorderSide(
-                          color: AppColors.copper,
+                          color: AppColors.brandLemonPressed,
                           width: 1.2,
                         ),
                       ),
@@ -176,9 +175,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                     },
                   ),
                   if (allListItems.isNotEmpty)
-                    const SectionLabel(
-                      title: AppStrings.groupsSectionAll,
-                    ),
+                    const SectionLabel(title: AppStrings.groupsSectionAll),
                 ],
                 if (allListItems.isEmpty)
                   Padding(
@@ -219,12 +216,14 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
     if (_query.isEmpty) return src;
     final q = _query.toLowerCase();
     return src
-        .where((g) =>
-            g.name.toLowerCase().contains(q) ||
-            g.description.toLowerCase().contains(q) ||
-            g.category.label.toLowerCase().contains(q) ||
-            g.city.toLowerCase().contains(q) ||
-            g.tags.any((t) => t.toLowerCase().contains(q)))
+        .where(
+          (g) =>
+              g.name.toLowerCase().contains(q) ||
+              g.description.toLowerCase().contains(q) ||
+              g.category.label.toLowerCase().contains(q) ||
+              g.city.toLowerCase().contains(q) ||
+              g.tags.any((t) => t.toLowerCase().contains(q)),
+        )
         .toList();
   }
 }
@@ -242,7 +241,7 @@ class _CategoryRow extends StatelessWidget {
     // Görsel kalite — default ChoiceChip yerine rafine bakır/krem pill.
     // Seçim mantığı (onChange/selected) ve kategori filtre işleyişi aynı.
     return SizedBox(
-      height: 40,
+      height: 42,
       child: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
@@ -286,18 +285,18 @@ class _CatChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         child: AnimatedContainer(
           duration: AppDuration.fast,
           curve: Curves.easeOut,
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 1),
           decoration: BoxDecoration(
-            color: selected ? AppColors.copper : AppColors.card,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
+            color: selected ? AppColors.brandLemonPale : AppColors.card,
+            borderRadius: BorderRadius.circular(AppRadius.m),
             border: Border.all(
               color: selected
-                  ? AppColors.copper
+                  ? AppColors.brandLemonSoft
                   : AppColors.borderHairline,
               width: 0.8,
             ),
@@ -306,10 +305,10 @@ class _CatChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? Colors.white : AppColors.textSecondary,
-              fontSize: 12.5,
+              color: selected ? AppColors.brandInk : AppColors.textSecondary,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
-              letterSpacing: -0.1,
+              letterSpacing: -0.05,
             ),
           ),
         ),
@@ -348,11 +347,8 @@ class _JoinedRow extends ConsumerWidget {
         scrollDirection: Axis.horizontal,
         itemCount: joined.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.s),
-        itemBuilder: (_, i) => _GroupCardWired(
-          group: joined[i],
-          width: 240,
-          compact: true,
-        ),
+        itemBuilder: (_, i) =>
+            _GroupCardWired(group: joined[i], width: 240, compact: true),
       ),
     );
   }
@@ -380,10 +376,9 @@ class _GroupCardWired extends ConsumerWidget {
     final user = ref.watch(currentAuthUserProvider);
     final isOwner = user != null && group.ownerId == user.id;
     final pendingCount = isOwner
-        ? ref.watch(pendingJoinRequestCountProvider(group.id)).maybeWhen(
-              data: (n) => n,
-              orElse: () => 0,
-            )
+        ? ref
+              .watch(pendingJoinRequestCountProvider(group.id))
+              .maybeWhen(data: (n) => n, orElse: () => 0)
         : 0;
     return GroupCard(
       group: group,
@@ -437,9 +432,9 @@ class _GroupCardWired extends ConsumerWidget {
             final repo = ref.read(socialGroupRepositoryProvider);
             final r = await repo.joinGroup(group.id);
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(r.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(r.message)));
             if (r == GroupJoinResult.success) {
               context.push('${AppRoutes.groups}/${group.id}');
             }
@@ -454,15 +449,15 @@ class _MiniLoading extends StatelessWidget {
   const _MiniLoading();
   @override
   Widget build(BuildContext context) => const SizedBox(
-        height: 80,
-        child: Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 1.6),
-          ),
-        ),
-      );
+    height: 80,
+    child: Center(
+      child: SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 1.6),
+      ),
+    ),
+  );
 }
 
 /// Sosyal Omurga V1 — gruplar listesi hata durumunda gösterilen sade
@@ -499,4 +494,3 @@ class _GroupsErrorState extends StatelessWidget {
     );
   }
 }
-
