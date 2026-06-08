@@ -102,10 +102,11 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       _nameCtrl.text = existing.displayName;
       _selectedProvince =
           TurkeyLocations.findProvinceByCode(existing.cityCode) ??
-              TurkeyLocations.findProvinceByName(existing.city);
+          TurkeyLocations.findProvinceByName(existing.city);
       _emailCtrl.text = existing.email;
       final preset = _badgesForRole(_accountType);
-      _badge = preset.contains(existing.roleBadge) && existing.roleBadge.isNotEmpty
+      _badge =
+          preset.contains(existing.roleBadge) && existing.roleBadge.isNotEmpty
           ? existing.roleBadge
           : preset.first;
     } else if (authUser != null) {
@@ -125,7 +126,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     if (_nameCtrl.text.isEmpty) _nameCtrl.text = profile.displayName;
     _selectedProvince ??=
         TurkeyLocations.findProvinceByCode(profile.cityCode) ??
-            TurkeyLocations.findProvinceByName(profile.city);
+        TurkeyLocations.findProvinceByName(profile.city);
     if (_emailCtrl.text.isEmpty) _emailCtrl.text = profile.email;
     _accountType = profile.accountType;
     final preset = _badgesForRole(_accountType);
@@ -207,9 +208,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
-              ),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.copper),
               child: const Text(AppStrings.profileCreateDiscardLeave),
             ),
           ],
@@ -272,9 +271,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     // M6A — il seçimi zorunlu (controlled).
     final province = _selectedProvince;
     if (province == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Şehir seçilmedi.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Şehir seçilmedi.')));
       return;
     }
     final city = province.name;
@@ -288,7 +287,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
     // Supabase yok → local-only profile state.
     if (auth == null) {
-      ref.read(profileControllerProvider.notifier).save(
+      ref
+          .read(profileControllerProvider.notifier)
+          .save(
             BakeryProfile(
               displayName: displayName,
               accountType: _accountType,
@@ -313,7 +314,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       if (_isCompletion) {
         // Zaten signed-in, eksik profile completion: mevcut profile satırını
         // güncelle (Supabase trigger zaten signUp sırasında insert etmişti).
-        await ref.read(profileControllerProvider.notifier).save(
+        await ref
+            .read(profileControllerProvider.notifier)
+            .save(
               BakeryProfile(
                 displayName: displayName,
                 accountType: _accountType,
@@ -465,14 +468,17 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
             const SizedBox(height: 14),
             TextFormField(
               controller: _emailCtrl,
-              enabled: !_isCompletion, // signed-in iken email değişimi auth update gerektirir
+              enabled:
+                  !_isCompletion, // signed-in iken email değişimi auth update gerektirir
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
               decoration: const InputDecoration(
                 labelText: AppStrings.email,
                 hintText: AppStrings.authEmailHint,
-                suffixIcon: Icon(Icons.mark_email_unread_outlined,
-                    color: AppColors.textMuted),
+                suffixIcon: Icon(
+                  Icons.mark_email_unread_outlined,
+                  color: AppColors.textMuted,
+                ),
               ),
               validator: supabaseOn && !_isCompletion ? _validateEmail : null,
             ),
@@ -484,8 +490,10 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                 decoration: const InputDecoration(
                   labelText: AppStrings.password,
                   hintText: AppStrings.authPasswordHint,
-                  suffixIcon: Icon(Icons.lock_outline,
-                      color: AppColors.textMuted),
+                  suffixIcon: Icon(
+                    Icons.lock_outline,
+                    color: AppColors.textMuted,
+                  ),
                 ),
                 validator: _validatePassword,
               ),
@@ -532,10 +540,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                 ),
                 child: const Text(
                   AppStrings.profileCreateGuestEscape,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -560,10 +565,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
 /// Üçlü hesap türü seçici — Ticari / Bireysel / Toptancı.
 class _AccountTypePicker extends StatelessWidget {
-  const _AccountTypePicker({
-    required this.selected,
-    required this.onChanged,
-  });
+  const _AccountTypePicker({required this.selected, required this.onChanged});
 
   final AccountType selected;
   final ValueChanged<AccountType> onChanged;
@@ -668,8 +670,7 @@ class _LegalAcceptCheckbox extends StatelessWidget {
                             decoration: TextDecoration.underline,
                           ),
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () =>
-                                context.push(AppRoutes.legalTerms),
+                            ..onTap = () => context.push(AppRoutes.legalTerms),
                         ),
                         const TextSpan(text: ' ve '),
                         TextSpan(
@@ -683,9 +684,7 @@ class _LegalAcceptCheckbox extends StatelessWidget {
                             ..onTap = () =>
                                 context.push(AppRoutes.legalPrivacy),
                         ),
-                        const TextSpan(
-                          text: '\'nı okudum, kabul ediyorum.',
-                        ),
+                        const TextSpan(text: '\'nı okudum, kabul ediyorum.'),
                       ],
                     ),
                   ),
@@ -729,9 +728,7 @@ class _AccountTypeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     const accent = AppColors.softGold;
     return Material(
-      color: isSelected
-          ? accent.withValues(alpha: 0.12)
-          : AppColors.card,
+      color: isSelected ? accent.withValues(alpha: 0.12) : AppColors.card,
       borderRadius: BorderRadius.circular(AppRadius.m),
       child: InkWell(
         onTap: onTap,

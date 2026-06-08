@@ -38,9 +38,7 @@ class SettingsScreen extends ConsumerWidget {
             // ───── Hesap
             const SectionLabel(title: AppStrings.settingsSectionAccount),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: PremiumCard(
                 padding: EdgeInsets.zero,
                 child: Column(
@@ -101,9 +99,7 @@ class SettingsScreen extends ConsumerWidget {
             // ───── Güvenlik ve Veri
             const SectionLabel(title: AppStrings.settingsSectionSecurity),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: PremiumCard(
                 padding: EdgeInsets.zero,
                 child: Column(
@@ -130,9 +126,7 @@ class SettingsScreen extends ConsumerWidget {
             // ───── Yasal
             const SectionLabel(title: AppStrings.settingsSectionLegal),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: PremiumCard(
                 padding: EdgeInsets.zero,
                 child: Column(
@@ -156,9 +150,7 @@ class SettingsScreen extends ConsumerWidget {
             // ───── Uygulama
             const SectionLabel(title: AppStrings.settingsSectionApp),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pageH,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: PremiumCard(
                 padding: EdgeInsets.zero,
                 child: SettingsTile(
@@ -182,9 +174,9 @@ class _TileDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Divider(
-        height: 0,
-        indent: 70, // icon + gap
-        endIndent: AppSpacing.l,
-        color: AppColors.borderHairline,
-      );
+    height: 0,
+    indent: 70, // icon + gap
+    endIndent: AppSpacing.l,
+    color: AppColors.borderHairline,
+  );
 }

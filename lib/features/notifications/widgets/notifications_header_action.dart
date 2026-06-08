@@ -17,10 +17,9 @@ class NotificationsHeaderAction extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(unreadNotificationsCountProvider).maybeWhen(
-          data: (n) => n,
-          orElse: () => 0,
-        );
+    final unread = ref
+        .watch(unreadNotificationsCountProvider)
+        .maybeWhen(data: (n) => n, orElse: () => 0);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -34,11 +33,10 @@ class NotificationsHeaderAction extends ConsumerWidget {
             right: -2,
             top: -2,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               decoration: BoxDecoration(
-                color: AppColors.copper,
+                color: AppColors.brandLemonPressed,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.surface, width: 1),
               ),
@@ -46,7 +44,7 @@ class NotificationsHeaderAction extends ConsumerWidget {
                 unread > 99 ? '99+' : '$unread',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.brandInk,
                   fontSize: 9.5,
                   fontWeight: FontWeight.w800,
                   height: 1.0,

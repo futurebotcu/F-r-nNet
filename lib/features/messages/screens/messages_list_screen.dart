@@ -85,9 +85,7 @@ class MessagesListScreen extends ConsumerWidget {
                       final c = items[i];
                       return _ConversationTile(
                         conversation: c,
-                        onTap: () => context.push(
-                          AppRoutes.conversation(c.id),
-                        ),
+                        onTap: () => context.push(AppRoutes.conversation(c.id)),
                       );
                     },
                   ),
@@ -102,10 +100,7 @@ class MessagesListScreen extends ConsumerWidget {
 }
 
 class _ConversationTile extends StatelessWidget {
-  const _ConversationTile({
-    required this.conversation,
-    required this.onTap,
-  });
+  const _ConversationTile({required this.conversation, required this.onTap});
 
   final Conversation conversation;
   final VoidCallback onTap;
@@ -139,16 +134,16 @@ class _ConversationTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.m),
+        borderRadius: BorderRadius.circular(AppRadius.l),
         child: Container(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.m,
             vertical: AppSpacing.m,
           ),
           decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(AppRadius.m),
-            border: Border.all(color: AppColors.borderHairline, width: 0.6),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            boxShadow: AppShadow.card,
           ),
           child: Row(
             children: [
@@ -217,11 +212,13 @@ class _ConversationTile extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.softGold.withValues(alpha: 0.12),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                               border: Border.all(
-                                color: AppColors.softGold
-                                    .withValues(alpha: 0.32),
+                                color: AppColors.softGold.withValues(
+                                  alpha: 0.32,
+                                ),
                                 width: 0.6,
                               ),
                             ),
@@ -269,7 +266,7 @@ class _ConversationTile extends StatelessWidget {
                         ? '99+'
                         : '${conversation.unreadCount}',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       fontWeight: FontWeight.w800,
                       fontSize: 11,
                     ),

@@ -58,23 +58,17 @@ class AuthEntryScreen extends ConsumerWidget {
                   width: 84,
                   height: 84,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.copper, AppColors.copperMuted],
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.l),
+                    border: Border.all(
+                      color: AppColors.borderHairline,
+                      width: 0.6,
                     ),
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.copper.withValues(alpha: 0.32),
-                        blurRadius: 32,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                    boxShadow: AppShadow.card,
                   ),
                   child: const Icon(
                     Icons.local_fire_department_rounded,
-                    color: Colors.white,
+                    color: AppColors.primary,
                     size: 44,
                   ),
                 ),
@@ -104,22 +98,23 @@ class AuthEntryScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.m),
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.10),
+                    color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(AppRadius.m),
-                    border: Border.all(
-                      color: AppColors.softGold.withValues(alpha: 0.30),
-                    ),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
                   child: Row(
                     children: const [
-                      Icon(Icons.info_outline,
-                          color: AppColors.softGold, size: 18),
+                      Icon(
+                        Icons.info_outline,
+                        color: Color(0xFFB45309),
+                        size: 18,
+                      ),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           AppStrings.authEntryBackendOff,
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: Color(0xFFB45309),
                             fontSize: 13,
                             height: 1.4,
                           ),
@@ -137,8 +132,9 @@ class AuthEntryScreen extends ConsumerWidget {
               AppPrimaryButton(
                 label: AppStrings.authEntrySignIn,
                 icon: Icons.login_rounded,
-                onPressed:
-                    supabaseOn ? () => context.push(AppRoutes.login) : null,
+                onPressed: supabaseOn
+                    ? () => context.push(AppRoutes.login)
+                    : null,
               ),
               const SizedBox(height: AppSpacing.s),
               SizedBox(
@@ -150,9 +146,9 @@ class AuthEntryScreen extends ConsumerWidget {
                   icon: const Icon(Icons.person_add_alt_1_rounded),
                   label: const Text(AppStrings.authEntrySignUp),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.softGold,
+                    foregroundColor: AppColors.primary,
                     side: BorderSide(
-                      color: AppColors.copper.withValues(alpha: 0.55),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       width: 0.8,
                     ),
                     shape: RoundedRectangleBorder(
@@ -161,6 +157,7 @@ class AuthEntryScreen extends ConsumerWidget {
                     textStyle: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
@@ -170,21 +167,20 @@ class AuthEntryScreen extends ConsumerWidget {
                 height: 56,
                 child: TextButton(
                   onPressed: () async {
-                    await ref
-                        .read(guestModeProvider.notifier)
-                        .setGuest(true);
+                    await ref.read(guestModeProvider.notifier).setGuest(true);
                     ref.read(profileControllerProvider.notifier).useGuest();
                     if (!context.mounted) return;
                     context.go(AppRoutes.feed);
                   },
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textMuted,
+                    foregroundColor: AppColors.textSecondary,
                   ),
                   child: const Text(
                     AppStrings.authEntryGuest,
                     style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
                     ),
                   ),
                 ),

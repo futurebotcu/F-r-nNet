@@ -44,9 +44,9 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
           rethrow;
         } catch (_) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.followError)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text(AppStrings.followError)));
         }
       },
     );
@@ -114,18 +114,12 @@ class _FollowButtonShell extends StatelessWidget {
         label: Text(label),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(
-            color: AppColors.borderHairline,
-            width: 0.8,
-          ),
+          side: const BorderSide(color: AppColors.borderHairline, width: 0.8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
         ),
       );
     }
@@ -137,22 +131,19 @@ class _FollowButtonShell extends StatelessWidget {
               height: 12,
               child: CircularProgressIndicator(
                 strokeWidth: 1.6,
-                valueColor: AlwaysStoppedAnimation(Colors.white),
+                valueColor: AlwaysStoppedAnimation(AppColors.surface),
               ),
             )
           : const Icon(Icons.person_add_alt_1_rounded, size: 16),
       label: Text(label),
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.copper,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-        textStyle: const TextStyle(
-          fontWeight: FontWeight.w800,
-          fontSize: 13,
-        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
       ),
     );
   }

@@ -69,8 +69,7 @@ class NotificationsScreen extends ConsumerWidget {
                 AppSpacing.xxl,
               ),
               itemCount: items.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSpacing.s),
+              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.s),
               itemBuilder: (_, i) => NotificationRow(item: items[i]),
             );
           },
@@ -129,8 +128,7 @@ class NotificationRow extends ConsumerWidget {
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14.5,
-                      fontWeight:
-                          isUnread ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),

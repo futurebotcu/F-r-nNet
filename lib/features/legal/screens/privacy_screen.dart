@@ -127,9 +127,7 @@ class _DraftBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.softGold.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.30),
-        ),
+        border: Border.all(color: AppColors.softGold.withValues(alpha: 0.30)),
       ),
       child: Row(
         children: const [

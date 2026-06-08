@@ -75,14 +75,14 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
           .read(workerRepositoryProvider)
           .upsertMyProfile(base.copyWith(bio: _bio.text.trim()));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.cvBioSaved)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.cvBioSaved)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kaydedilemedi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
     } finally {
       if (mounted) setState(() => _savingBio = false);
     }
@@ -111,8 +111,9 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
       cityCode: worker != null && worker.cityCodes.isNotEmpty
           ? worker.cityCodes.first
           : null,
-      cityName:
-          worker != null && worker.cities.isNotEmpty ? worker.cities.first : null,
+      cityName: worker != null && worker.cities.isNotEmpty
+          ? worker.cities.first
+          : null,
       experienceYears: worker?.experienceYears,
       description: worker?.bio,
     );
@@ -169,8 +170,10 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.copper.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -199,9 +202,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
               controller: _bio,
               maxLines: 3,
               maxLength: 300,
-              decoration: const InputDecoration(
-                hintText: AppStrings.cvBioHint,
-              ),
+              decoration: const InputDecoration(hintText: AppStrings.cvBioHint),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppPrimaryButton(
@@ -231,10 +232,13 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
               loading: () => const Padding(
                 padding: EdgeInsets.all(AppSpacing.l),
                 child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 1.6)),
+                  child: CircularProgressIndicator(strokeWidth: 1.6),
+                ),
               ),
-              error: (e, _) => Text('Okunamadı: $e',
-                  style: const TextStyle(color: AppColors.danger)),
+              error: (e, _) => Text(
+                'Okunamadı: $e',
+                style: const TextStyle(color: AppColors.danger),
+              ),
               data: (items) {
                 if (items.isEmpty) {
                   return const Padding(
@@ -242,7 +246,9 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                     child: Text(
                       AppStrings.cvEmptyRecords,
                       style: TextStyle(
-                          color: AppColors.textMuted, fontSize: 13),
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
                     ),
                   );
                 }
@@ -349,8 +355,7 @@ class _CvRecordCard extends ConsumerWidget {
                   action: () async {
                     await ref
                         .read(workerRepositoryProvider)
-                        .setExperienceVisibility(
-                            record.id!, !record.isPublic);
+                        .setExperienceVisibility(record.id!, !record.isPublic);
                   },
                 ),
                 icon: Icon(
@@ -367,8 +372,11 @@ class _CvRecordCard extends ConsumerWidget {
                 tooltip: 'Kaldır',
                 visualDensity: VisualDensity.compact,
                 onPressed: () => _confirmDelete(context, ref),
-                icon: const Icon(Icons.delete_outline,
-                    color: AppColors.textMuted, size: 18),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.textMuted,
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -392,9 +400,10 @@ class _CvRecordCard extends ConsumerWidget {
                 const _Pill(label: AppStrings.cvVisibilityHidden, muted: true),
               if (range.isNotEmpty || (record.city ?? '').isNotEmpty)
                 Text(
-                  [if (range.isNotEmpty) range, if (record.city != null) record.city!]
-                      .where((s) => s.isNotEmpty)
-                      .join(' · '),
+                  [
+                    if (range.isNotEmpty) range,
+                    if (record.city != null) record.city!,
+                  ].where((s) => s.isNotEmpty).join(' · '),
                   style: const TextStyle(
                     color: AppColors.textMuted,
                     fontWeight: FontWeight.w600,
@@ -515,9 +524,9 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Başlık / rol boş olamaz.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Başlık / rol boş olamaz.')));
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -526,27 +535,32 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
     }
     setState(() => _saving = true);
     try {
-      await ref.read(workerRepositoryProvider).addExperience(WorkerExperience(
-            title: _title.text.trim(),
-            workplace:
-                _workplace.text.trim().isEmpty ? null : _workplace.text.trim(),
-            city: _province?.name,
-            cityCode: _province?.code,
-            startDate: _start,
-            endDate: _end,
-            description: _description.text.trim().isEmpty
-                ? null
-                : _description.text.trim(),
-            entryType: _entryType,
-            isPublic: _isPublic,
-          ));
+      await ref
+          .read(workerRepositoryProvider)
+          .addExperience(
+            WorkerExperience(
+              title: _title.text.trim(),
+              workplace: _workplace.text.trim().isEmpty
+                  ? null
+                  : _workplace.text.trim(),
+              city: _province?.name,
+              cityCode: _province?.code,
+              startDate: _start,
+              endDate: _end,
+              description: _description.text.trim().isEmpty
+                  ? null
+                  : _description.text.trim(),
+              entryType: _entryType,
+              isPublic: _isPublic,
+            ),
+          );
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kaydedilemedi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -556,7 +570,9 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
   Widget build(BuildContext context) {
     final df = DateFormat('MMM yyyy', 'tr_TR');
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -623,10 +639,17 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                     ChoiceChip(
                       label: Text(entry.value),
                       selected: _entryType == entry.key,
-                      onSelected: (_) =>
-                          setState(() => _entryType = entry.key),
-                      selectedColor: AppColors.copper.withValues(alpha: 0.22),
-                      backgroundColor: AppColors.card,
+                      onSelected: (_) => setState(() => _entryType = entry.key),
+                      selectedColor: AppColors.copperMuted.withValues(
+                        alpha: 0.28,
+                      ),
+                      backgroundColor: Colors.transparent,
+                      side: BorderSide(
+                        color: _entryType == entry.key
+                            ? AppColors.copperMuted
+                            : AppColors.surfaceVariant,
+                        width: 1,
+                      ),
                       labelStyle: TextStyle(
                         color: _entryType == entry.key
                             ? AppColors.softGold
@@ -650,8 +673,9 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                   );
                   if (picked != null) setState(() => _province = picked);
                 },
-                onClear:
-                    _province == null ? null : () => setState(() => _province = null),
+                onClear: _province == null
+                    ? null
+                    : () => setState(() => _province = null),
               ),
               const SizedBox(height: AppSpacing.s),
               Row(
@@ -659,8 +683,9 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => _pickDate(start: true),
-                      child:
-                          Text(_start == null ? 'Başlangıç' : df.format(_start!)),
+                      child: Text(
+                        _start == null ? 'Başlangıç' : df.format(_start!),
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.s),
@@ -668,7 +693,10 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                     child: OutlinedButton(
                       onPressed: () => _pickDate(start: false),
                       child: Text(
-                          _end == null ? 'Bitiş (boşsa: devam)' : df.format(_end!)),
+                        _end == null
+                            ? 'Bitiş (boşsa: devam)'
+                            : df.format(_end!),
+                      ),
                     ),
                   ),
                 ],

@@ -25,9 +25,7 @@ class RoleSelectScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return PremiumScaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.authEntrySignUp),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.authEntrySignUp)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(

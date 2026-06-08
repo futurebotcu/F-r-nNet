@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -137,17 +138,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   colors: [AppColors.copper, AppColors.copperMuted],
                 ),
                 borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.copper.withValues(alpha: 0.18),
-                    blurRadius: 40,
-                    spreadRadius: 2,
-                  ),
-                ],
+                boxShadow: AppShadow.card,
               ),
               child: const Icon(
                 Icons.local_fire_department_rounded,
-                color: Colors.white,
+                color: AppColors.surface,
                 size: 44,
               ),
             ),

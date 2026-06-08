@@ -34,24 +34,17 @@ class OnboardingScreen extends ConsumerWidget {
                 height: 76,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.copper, AppColors.copperMuted],
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.l),
+                  border: Border.all(
+                    color: AppColors.borderHairline,
+                    width: 0.6,
                   ),
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.copper.withValues(alpha: 0.32),
-                      blurRadius: 32,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+                  boxShadow: AppShadow.card,
                 ),
                 child: const Icon(
                   Icons.local_fire_department_rounded,
-                  color: Colors.white,
+                  color: AppColors.primary,
                   size: 38,
                 ),
               ),
@@ -100,7 +93,7 @@ class OnboardingScreen extends ConsumerWidget {
                 AppStrings.onboardingFooter,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textMuted,
+                  color: AppColors.textSecondary,
                   fontSize: 11.5,
                   height: 1.4,
                 ),
@@ -145,11 +138,14 @@ class _OnboardingHighlights extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.16),
+                      width: 0.6,
+                    ),
                   ),
-                  child: Icon(item.icon,
-                      color: AppColors.softGold, size: 17),
+                  child: Icon(item.icon, color: AppColors.primary, size: 17),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

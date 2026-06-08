@@ -20,34 +20,26 @@ import '../providers/job_messaging_providers.dart';
 /// 3. `startForJobOffer` / `startForJobSeek` çağrılır, conversation döner.
 /// 4. Conversation screen'e push edilir; başarı snackbar'ı gösterilir.
 class StartJobConversationSheet extends ConsumerStatefulWidget {
-  const StartJobConversationSheet._({
-    this.offer,
-    this.seekPost,
-  }) : assert(
-          (offer != null) ^ (seekPost != null),
-          'Tam olarak bir hedef post verilmeli.',
-        );
+  const StartJobConversationSheet._({this.offer, this.seekPost})
+    : assert(
+        (offer != null) ^ (seekPost != null),
+        'Tam olarak bir hedef post verilmeli.',
+      );
 
   final JobOfferPost? offer;
   final JobSeekPost? seekPost;
 
-  static Future<void> showForOffer(
-    BuildContext context,
-    JobOfferPost offer,
-  ) =>
+  static Future<void> showForOffer(BuildContext context, JobOfferPost offer) =>
       _open(context, StartJobConversationSheet._(offer: offer));
 
-  static Future<void> showForSeek(
-    BuildContext context,
-    JobSeekPost post,
-  ) =>
+  static Future<void> showForSeek(BuildContext context, JobSeekPost post) =>
       _open(context, StartJobConversationSheet._(seekPost: post));
 
   static Future<void> _open(BuildContext context, Widget child) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.elevatedCard,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
@@ -123,7 +115,9 @@ class _StartJobConversationSheetState
         final msg = e.message.contains('Kendi ilanına')
             ? AppStrings.startConvoOwnPostError
             : AppStrings.startConvoGenericError;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (_) {
       if (mounted) {
@@ -201,10 +195,36 @@ class _StartJobConversationSheetState
                 maxLines: 8,
                 maxLength: 1000,
                 enabled: !_sending,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: AppStrings.conversationComposerHint,
                   isDense: true,
-                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.l,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    borderSide: const BorderSide(
+                      color: AppColors.borderHairline,
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    borderSide: const BorderSide(
+                      color: AppColors.borderHairline,
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.s),
@@ -218,8 +238,9 @@ class _StartJobConversationSheetState
                           height: 14,
                           child: CircularProgressIndicator(
                             strokeWidth: 1.6,
-                            valueColor:
-                                AlwaysStoppedAnimation(Colors.white),
+                            valueColor: AlwaysStoppedAnimation(
+                              AppColors.surface,
+                            ),
                           ),
                         )
                       : const Icon(Icons.send_rounded, size: 16),
@@ -227,9 +248,13 @@ class _StartJobConversationSheetState
                   label: const Text(AppStrings.startConvoSendCta),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),

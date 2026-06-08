@@ -71,11 +71,7 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.toString().replaceFirst('Exception: ', ''),
-          ),
-        ),
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -116,9 +112,9 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
             key: const ValueKey('social_btn_google'),
             onPressed: enabled
                 ? () => _runProvider(
-                      () => repo.signInWithGoogle(),
-                      fallbackError: AppStrings.authOAuthFailed,
-                    )
+                    () => repo.signInWithGoogle(),
+                    fallbackError: AppStrings.authOAuthFailed,
+                  )
                 : null,
             icon: const Icon(
               // SVG/asset eklenmediği için Material kapı simgesi —
@@ -128,19 +124,23 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
             ),
             label: const Text(AppStrings.authContinueWithGoogle),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.surface,
               foregroundColor: AppColors.textPrimary,
-              disabledBackgroundColor: Colors.white.withValues(alpha: 0.55),
+              disabledBackgroundColor: AppColors.surface.withValues(
+                alpha: 0.70,
+              ),
+              disabledForegroundColor: AppColors.textSecondary,
+              minimumSize: const Size.fromHeight(56),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.m),
-                side: BorderSide(
-                  color: AppColors.borderHairline,
-                  width: 0.6,
-                ),
+                side: BorderSide(color: AppColors.borderHairline, width: 0.6),
               ),
               textStyle: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                letterSpacing: 0.15,
               ),
             ),
           ),
@@ -157,26 +157,34 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
               onPressed: !enabled
                   ? null
                   : (kAppleSignInComingSoon
-                      ? _showAppleComingSoon
-                      : () => _runProvider(
+                        ? _showAppleComingSoon
+                        : () => _runProvider(
                             () => repo.signInWithApple(),
                             fallbackError: AppStrings.authOAuthFailed,
                           )),
-              icon: const Icon(Icons.apple_rounded, color: Colors.white),
+              icon: const Icon(
+                Icons.apple_rounded,
+                color: AppColors.textPrimary,
+              ),
               label: const Text(AppStrings.authContinueWithApple),
               style: FilledButton.styleFrom(
-                backgroundColor: kAppleSignInComingSoon
-                    ? Colors.black.withValues(alpha: 0.45)
-                    : Colors.black,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    Colors.black.withValues(alpha: 0.55),
+                backgroundColor: AppColors.surface,
+                foregroundColor: AppColors.textPrimary,
+                disabledBackgroundColor: AppColors.surface.withValues(
+                  alpha: 0.70,
+                ),
+                disabledForegroundColor: AppColors.textSecondary,
+                minimumSize: const Size.fromHeight(56),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
+                  side: BorderSide(color: AppColors.borderHairline, width: 0.6),
                 ),
                 textStyle: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  letterSpacing: 0.15,
                 ),
               ),
             ),
@@ -187,7 +195,7 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
               child: Text(
                 AppStrings.authAppleComingSoonBadge,
                 style: TextStyle(
-                  color: AppColors.textMuted,
+                  color: AppColors.textSecondary,
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
@@ -201,17 +209,14 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
           Row(
             children: [
               const Expanded(
-                child: Divider(
-                  color: AppColors.borderHairline,
-                  thickness: 0.6,
-                ),
+                child: Divider(color: AppColors.borderHairline, thickness: 0.6),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
                 child: Text(
                   AppStrings.authSocialDivider,
                   style: TextStyle(
-                    color: AppColors.textMuted,
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.0,
@@ -219,10 +224,7 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
                 ),
               ),
               const Expanded(
-                child: Divider(
-                  color: AppColors.borderHairline,
-                  thickness: 0.6,
-                ),
+                child: Divider(color: AppColors.borderHairline, thickness: 0.6),
               ),
             ],
           ),

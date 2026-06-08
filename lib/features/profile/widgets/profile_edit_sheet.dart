@@ -43,8 +43,7 @@ class ProfileEditSheet extends ConsumerStatefulWidget {
       isScrollControlled: true,
       backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => const ProfileEditSheet(),
     );
@@ -95,10 +94,12 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     _accountType = p.accountType;
     _avatarUrl = p.avatarUrl;
     // M5 — code öncelikli; yoksa legacy label'dan çevir.
-    _professionCode = p.roleBadgeCode ??
+    _professionCode =
+        p.roleBadgeCode ??
         FirinnetTaxonomy.professionCodeFromLabel(p.roleBadge);
     // M6A — city code öncelikli; yoksa legacy label'dan plaka çıkarmayı dene.
-    _selectedProvince = TurkeyLocations.findProvinceByCode(p.cityCode) ??
+    _selectedProvince =
+        TurkeyLocations.findProvinceByCode(p.cityCode) ??
         TurkeyLocations.findProvinceByName(p.city);
   }
 
@@ -136,9 +137,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       debugPrint('[FirinNet][ProfileEdit] avatar pick error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(AppStrings.profileEditAvatarErrorPick),
-        ),
+        const SnackBar(content: Text(AppStrings.profileEditAvatarErrorPick)),
       );
       return;
     }
@@ -153,9 +152,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       debugPrint('[FirinNet][ProfileEdit] avatar upload error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(AppStrings.profileEditAvatarErrorUpload),
-        ),
+        const SnackBar(content: Text(AppStrings.profileEditAvatarErrorUpload)),
       );
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -179,27 +176,29 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     try {
       // M5 — meslek dual-write: code (taxonomy) + label (backward compat).
       final pCode = _professionCode;
-      final pLabel =
-          pCode == null ? null : FirinnetTaxonomy.professionLabel(pCode);
+      final pLabel = pCode == null
+          ? null
+          : FirinnetTaxonomy.professionLabel(pCode);
       // M6A — şehir dual-write: city_code (taxonomy) + city (eski text).
       final province = _selectedProvince;
-      final draft = (_initial ??
-              const BakeryProfile(
-                displayName: '',
-                accountType: AccountType.individual,
-                city: '',
-                roleBadge: '',
-                email: '',
-              ))
-          .copyWith(
-        displayName: name,
-        city: province?.name ?? '',
-        cityCode: province?.code,
-        accountType: _accountType,
-        avatarUrl: _avatarUrl,
-        roleBadge: pLabel ?? '',
-        roleBadgeCode: pCode,
-      );
+      final draft =
+          (_initial ??
+                  const BakeryProfile(
+                    displayName: '',
+                    accountType: AccountType.individual,
+                    city: '',
+                    roleBadge: '',
+                    email: '',
+                  ))
+              .copyWith(
+                displayName: name,
+                city: province?.name ?? '',
+                cityCode: province?.code,
+                accountType: _accountType,
+                avatarUrl: _avatarUrl,
+                roleBadge: pLabel ?? '',
+                roleBadgeCode: pCode,
+              );
       await ref.read(profileControllerProvider.notifier).save(draft);
       // M4 Polish — kaydet başarılı + yeni avatar gerçekten değiştiyse
       // eski avatar dosyasını best-effort sil. Save fail olursa cleanup
@@ -264,8 +263,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                       child: Container(
                         width: 36,
                         height: 4,
-                        margin:
-                            const EdgeInsets.only(bottom: AppSpacing.m),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.m),
                         decoration: BoxDecoration(
                           color: AppColors.borderHairline,
                           borderRadius: BorderRadius.circular(2),
@@ -287,8 +285,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                           ? _name.text.trim()[0].toUpperCase()
                           : '?',
                       uploading: _uploading,
-                      onTap:
-                          _uploading || _saving ? null : _pickAndUploadAvatar,
+                      onTap: _uploading || _saving
+                          ? null
+                          : _pickAndUploadAvatar,
                     ),
                     const SizedBox(height: AppSpacing.l),
                     TextField(
@@ -332,8 +331,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        for (final e
-                            in FirinnetTaxonomy.professionEntries)
+                        for (final e in FirinnetTaxonomy.professionEntries)
                           ChoiceChip(
                             label: Text(e.value),
                             selected: _professionCode == e.key,
@@ -344,9 +342,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                                       _professionCode = v ? e.key : null;
                                     });
                                   },
-                            selectedColor:
-                                AppColors.copper.withValues(alpha: 0.22),
-                            backgroundColor: AppColors.card,
+                            selectedColor: AppColors.copperMuted.withValues(
+                              alpha: 0.28,
+                            ),
+                            backgroundColor: Colors.transparent,
                             labelStyle: TextStyle(
                               color: _professionCode == e.key
                                   ? AppColors.softGold
@@ -355,14 +354,14 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                               fontSize: 12.5,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                               side: BorderSide(
                                 color: _professionCode == e.key
-                                    ? AppColors.copper
-                                        .withValues(alpha: 0.55)
-                                    : AppColors.borderHairline,
-                                width: 0.6,
+                                    ? AppColors.copperMuted
+                                    : AppColors.surfaceVariant,
+                                width: 1,
                               ),
                             ),
                           ),
@@ -394,9 +393,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                                       setState(() => _accountType = t);
                                     }
                                   },
-                            selectedColor:
-                                AppColors.copper.withValues(alpha: 0.22),
-                            backgroundColor: AppColors.card,
+                            selectedColor: AppColors.copperMuted.withValues(
+                              alpha: 0.28,
+                            ),
+                            backgroundColor: Colors.transparent,
                             labelStyle: TextStyle(
                               color: _accountType == t
                                   ? AppColors.softGold
@@ -405,14 +405,14 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                               fontSize: 13,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                               side: BorderSide(
                                 color: _accountType == t
-                                    ? AppColors.copper
-                                        .withValues(alpha: 0.55)
-                                    : AppColors.borderHairline,
-                                width: 0.6,
+                                    ? AppColors.copperMuted
+                                    : AppColors.surfaceVariant,
+                                width: 1,
                               ),
                             ),
                           ),

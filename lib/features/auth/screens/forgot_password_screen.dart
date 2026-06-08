@@ -113,7 +113,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   child: const Icon(
                     Icons.lock_reset_rounded,
-                    color: Colors.white,
+                    color: AppColors.surface,
                     size: 32,
                   ),
                 ),
@@ -150,8 +150,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline,
-                          color: AppColors.softGold, size: 18),
+                      const Icon(
+                        Icons.info_outline,
+                        color: AppColors.softGold,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -173,8 +176,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 decoration: const InputDecoration(
                   labelText: AppStrings.email,
                   hintText: AppStrings.authEmailHint,
-                  prefixIcon: Icon(Icons.mail_outline,
-                      color: AppColors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.mail_outline,
+                    color: AppColors.textMuted,
+                  ),
                 ),
                 validator: supabaseOn ? _validateEmail : null,
               ),
@@ -191,8 +196,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   child: Row(
                     children: const [
-                      Icon(Icons.mark_email_read_outlined,
-                          color: AppColors.success, size: 22),
+                      Icon(
+                        Icons.mark_email_read_outlined,
+                        color: AppColors.success,
+                        size: 22,
+                      ),
                       SizedBox(width: AppSpacing.m),
                       Expanded(
                         child: Text(
@@ -213,8 +221,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ? '…'
                       : AppStrings.authForgotPasswordSubmit,
                   icon: Icons.send_rounded,
-                  onPressed:
-                      (supabaseOn && !_submitting) ? _submit : null,
+                  onPressed: (supabaseOn && !_submitting) ? _submit : null,
                 ),
             ],
           ),

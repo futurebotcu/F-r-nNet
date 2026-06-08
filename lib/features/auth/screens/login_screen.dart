@@ -125,16 +125,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   height: 64,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.copper, AppColors.copperMuted],
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.l),
+                    border: Border.all(
+                      color: AppColors.borderHairline,
+                      width: 0.6,
                     ),
-                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: AppShadow.card,
                   ),
                   child: const Icon(
                     Icons.local_fire_department_rounded,
-                    color: Colors.white,
+                    color: AppColors.primary,
                     size: 32,
                   ),
                 ),
@@ -165,22 +166,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   padding: const EdgeInsets.all(AppSpacing.m),
                   margin: const EdgeInsets.only(bottom: AppSpacing.l),
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.10),
+                    color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(AppRadius.m),
-                    border: Border.all(
-                      color: AppColors.softGold.withValues(alpha: 0.30),
-                    ),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline,
-                          color: AppColors.softGold, size: 18),
+                      const Icon(
+                        Icons.info_outline,
+                        color: Color(0xFFB45309),
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           AppStrings.authBackendDisabled,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: Color(0xFFB45309),
                             height: 1.4,
                           ),
                         ),
@@ -196,8 +198,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 decoration: const InputDecoration(
                   labelText: AppStrings.email,
                   hintText: AppStrings.authEmailHint,
-                  prefixIcon: Icon(Icons.mail_outline,
-                      color: AppColors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.mail_outline,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 validator: supabaseOn ? _validateEmail : null,
               ),
@@ -208,8 +212,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: AppStrings.password,
-                  prefixIcon: Icon(Icons.lock_outline,
-                      color: AppColors.textMuted),
+                  prefixIcon: Icon(
+                    Icons.lock_outline,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 validator: supabaseOn ? _validatePassword : null,
               ),
@@ -250,12 +256,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ? null
                       : () => context.push(AppRoutes.roleSelect),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.softGold,
+                    foregroundColor: AppColors.primary,
                   ),
                   child: const Text(
                     AppStrings.authLoginNoAccountQ,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
                     ),
                   ),
                 ),

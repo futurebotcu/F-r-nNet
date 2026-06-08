@@ -58,7 +58,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       // markAsRead — guarded (guest reddi sessizce yutar).
       try {
         await repo.markAsRead(widget.conversationId);
-        if (mounted) ref.invalidate(messagesListProvider(widget.conversationId));
+        if (mounted)
+          ref.invalidate(messagesListProvider(widget.conversationId));
         if (mounted) ref.invalidate(conversationsListProvider);
       } catch (e) {
         debugPrint('[FirinNet][Chat] markAsRead skip: $e');

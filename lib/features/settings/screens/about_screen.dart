@@ -38,16 +38,13 @@ class AboutScreen extends StatelessWidget {
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.copper,
-                              AppColors.copperMuted,
-                            ],
+                            colors: [AppColors.copper, AppColors.copperMuted],
                           ),
                           borderRadius: BorderRadius.circular(AppRadius.m),
                         ),
                         child: const Icon(
                           Icons.local_fire_department_rounded,
-                          color: Colors.white,
+                          color: AppColors.surface,
                           size: 30,
                         ),
                       ),
@@ -141,10 +138,7 @@ class _VersionRowState extends State<_VersionRow> {
       decoration: BoxDecoration(
         color: AppColors.elevatedCard,
         borderRadius: BorderRadius.circular(AppRadius.s),
-        border: Border.all(
-          color: AppColors.borderHairline,
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
       child: Row(
         children: [

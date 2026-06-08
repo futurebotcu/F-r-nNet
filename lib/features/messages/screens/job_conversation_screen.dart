@@ -23,8 +23,7 @@ class JobConversationScreen extends ConsumerStatefulWidget {
       _JobConversationScreenState();
 }
 
-class _JobConversationScreenState
-    extends ConsumerState<JobConversationScreen> {
+class _JobConversationScreenState extends ConsumerState<JobConversationScreen> {
   final _ctrl = TextEditingController();
   bool _sending = false;
 
@@ -48,10 +47,7 @@ class _JobConversationScreenState
     setState(() => _sending = true);
     final repo = ref.read(jobMessagingRepositoryProvider);
     try {
-      await repo.sendMessage(
-        conversationId: widget.conversationId,
-        body: body,
-      );
+      await repo.sendMessage(conversationId: widget.conversationId, body: body);
       _ctrl.clear();
       ref.invalidate(jobMessagesProvider(widget.conversationId));
       ref.invalidate(myJobConversationsProvider);
@@ -72,7 +68,7 @@ class _JobConversationScreenState
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.elevatedCard,
+        backgroundColor: AppColors.surface,
         content: const Text('Bu sohbeti kapatıyor musun? Yeni mesaj alınmaz.'),
         actions: [
           TextButton(
@@ -113,7 +109,7 @@ class _JobConversationScreenState
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.elevatedCard,
+        backgroundColor: AppColors.surface,
         content: const Text('Bu mesajı silmek istiyor musun?'),
         actions: [
           TextButton(
@@ -150,8 +146,7 @@ class _JobConversationScreenState
     final selfId = user?.id ?? '';
     final convoListAsync = ref.watch(myJobConversationsProvider);
     final convo = _findConvo(convoListAsync.valueOrNull);
-    final messagesAsync =
-        ref.watch(jobMessagesProvider(widget.conversationId));
+    final messagesAsync = ref.watch(jobMessagesProvider(widget.conversationId));
     final title = convo?.relatedTitle ?? AppStrings.conversationTitleFallback;
     final isClosed = convo?.isClosed == true;
 
@@ -222,8 +217,9 @@ class _JobConversationScreenState
                       return _MessageBubble(
                         message: m,
                         isMe: isMe,
-                        onDelete:
-                            (isMe && !m.isDeleted) ? () => _onDeleteOwnMessage(m) : null,
+                        onDelete: (isMe && !m.isDeleted)
+                            ? () => _onDeleteOwnMessage(m)
+                            : null,
                       );
                     },
                   );
@@ -248,11 +244,37 @@ class _JobConversationScreenState
                       maxLength: 1000,
                       textInputAction: TextInputAction.send,
                       enabled: !_sending && !isClosed,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: AppStrings.conversationComposerHint,
                         isDense: true,
                         counterText: '',
-                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.l,
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          borderSide: const BorderSide(
+                            color: AppColors.borderHairline,
+                            width: 1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          borderSide: const BorderSide(
+                            color: AppColors.borderHairline,
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                       onSubmitted: (_) => _onSendPressed(),
                     ),
@@ -265,19 +287,23 @@ class _JobConversationScreenState
                             height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 1.6,
-                              valueColor:
-                                  AlwaysStoppedAnimation(Colors.white),
+                              valueColor: AlwaysStoppedAnimation(
+                                AppColors.surface,
+                              ),
                             ),
                           )
                         : const Icon(Icons.send_rounded, size: 16),
-                    onPressed:
-                        (_sending || isClosed) ? null : _onSendPressed,
+                    onPressed: (_sending || isClosed) ? null : _onSendPressed,
                     label: const Text(AppStrings.conversationSendCta),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.copper,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.surface,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.s),
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                      ),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   ),
@@ -306,8 +332,23 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final df = DateFormat('d MMM HH:mm', 'tr_TR');
-    final bg = isMe ? AppColors.copper.withValues(alpha: 0.16) : AppColors.surface;
+    final bg = isMe
+        ? AppColors.primary.withValues(alpha: 0.08)
+        : AppColors.surface;
     final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
+    final radius = isMe
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.m),
+            topRight: Radius.circular(AppRadius.m),
+            bottomLeft: Radius.circular(AppRadius.m),
+            bottomRight: Radius.circular(4),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.m),
+            topRight: Radius.circular(AppRadius.m),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(AppRadius.m),
+          );
     return Align(
       alignment: align,
       child: ConstrainedBox(
@@ -318,11 +359,8 @@ class _MessageBubble extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.m),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(AppRadius.m),
-            border: Border.all(
-              color: AppColors.borderHairline,
-              width: 0.6,
-            ),
+            borderRadius: radius,
+            boxShadow: AppShadow.card,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,8 +371,9 @@ class _MessageBubble extends StatelessWidget {
                     : message.body,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   height: 1.4,
-                  fontStyle:
-                      message.isDeleted ? FontStyle.italic : FontStyle.normal,
+                  fontStyle: message.isDeleted
+                      ? FontStyle.italic
+                      : FontStyle.normal,
                   color: message.isDeleted
                       ? AppColors.textMuted
                       : AppColors.textPrimary,
