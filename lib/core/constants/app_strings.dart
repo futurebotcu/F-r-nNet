@@ -854,6 +854,23 @@ class AppStrings {
   static const String messagingEmptySubtitle =
       'Mesajını yaz, sohbet burada başlasın.';
   static const String messagingRetryCta = 'Tekrar dene';
+
+  // Sprint G — chat media (image V1).
+  static const String chatMediaSheetTitle = 'Fotoğraf ekle';
+  static const String chatMediaPickGallery = 'Galeriden seç';
+  static const String chatMediaTakePhoto = 'Fotoğraf çek';
+  static const String chatMediaUploading = 'Fotoğraf gönderiliyor…';
+  static const String chatMediaSendError =
+      'Fotoğraf gönderilemedi. Bağlantını kontrol edip tekrar dene.';
+  static const String chatMediaTooLarge =
+      'Fotoğraf çok büyük (en fazla 10 MB).';
+  static const String chatMediaUnsupported =
+      'Bu dosya türü desteklenmiyor. JPG, PNG veya WebP seç.';
+  static const String chatMediaPermissionDenied =
+      'Galeri/kamera izni verilmedi.';
+  // Resim mesajında caption yoksa content alanına yazılan kısa placeholder
+  // (messages.content 1..4000 CHECK'ini karşılar; UI resmi render eder).
+  static const String messagingImageFallback = '📷 Fotoğraf';
   static const String messagingMessageCtaProfile = 'Mesaj';
   static const String messagingMessageCtaMarket = 'Satıcıya mesaj gönder';
   static const String messagingAuthRequiredMarketReason =

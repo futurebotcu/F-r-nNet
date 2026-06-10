@@ -53,6 +53,20 @@ class GuardedMessagingRepository implements MessagingRepository {
   }
 
   @override
+  Future<Message> sendImageMessage({
+    required String conversationId,
+    required Map<String, dynamic> attachments,
+    String? caption,
+  }) {
+    _requireWrite('fotoğraf göndermek');
+    return inner.sendImageMessage(
+      conversationId: conversationId,
+      attachments: attachments,
+      caption: caption,
+    );
+  }
+
+  @override
   Future<void> markAsRead(String conversationId) {
     _requireWrite('mesajı okundu işaretlemek');
     return inner.markAsRead(conversationId);

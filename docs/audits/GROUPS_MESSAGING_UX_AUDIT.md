@@ -470,3 +470,49 @@ Resim göndermek için gerekenler (hepsi bu sprintte yasak kapsamda):
 
 ### Sprint F kod değişikliği özeti
 - **Kod/davranış değişikliği YOK** (audit-only). Grup empty/first-post copy'leri `groups_v1_ux_reset_test` ile kilitli olduğundan ve net bir gereksinim doğmadığından dokunulmadı (gereksiz risk alınmadı). Supabase/schema/RLS/storage değişmedi; yeni dependency yok.
+
+---
+
+## Sprint G — Group & Messaging Media Attachments (image V1) (2026-06-10)
+
+Commit: `feat(messaging): add image and video attachments to chats`.
+Kullanıcı kararları: **private bucket + signed URL**, **migration dosyası (prod'a uygulama YOK)**, **image-first** (video sonraki sprint). **Yeni dependency yok.**
+
+### Hangi schema seçildi?
+- **Generic:** mevcut `public.messages.attachments jsonb` **reuse** edildi (yeni tablo yok). `message_type` **'text' kalır** → hardened `messages_insert_sender` policy ve `content 1..4000` CHECK'ine dokunulmadı. Resim `attachments.media_type='image'` ile tespit edilir; `content` = caption veya `📷 Fotoğraf` placeholder.
+- **Group:** `public.group_messages`'a tek `attachments jsonb` kolonu eklendi; member-gated insert RLS aynı kaldı.
+- **Gerekçe:** ayrı medya tabloları yerine mevcut/eklenen jsonb → en az şema yüzeyi, en az yeni RLS, mevcut hardening korunur. Migration: `supabase/migrations/20260610170000_chat_media_v1.sql` (yalnız repo; deploy/review'da uygulanır).
+
+### Hangi bucket/path seçildi?
+- **Private bucket `chat-media`** (`public=false`). Render **signed URL** ile (`createSignedUrl`, 1 saat).
+- Path: `conversations/{conversationId}/{ownerId}/m_{ts}.{ext}` ve `groups/{groupId}/{ownerId}/m_{ts}.{ext}`.
+
+### Image / Video destek durumu
+- **Image: ÇALIŞIR (V1).** Generic ChatScreen + grup composer'da medya ikonu → bottom sheet (Galeriden seç / Fotoğraf çek) → upload → bubble + fullscreen viewer.
+- **Video: KAPSAM DIŞI (bu sprint).** image-first kararı; video (upload/playback/thumbnail/limit) ayrı sprint. Picker sheet 2 image seçeneğiyle açıldı; video seçenekleri V1.1'de aynı sheet'e eklenecek.
+
+### Generic messaging media
+- `MessagingRepository.sendImageMessage` (supabase+local+guarded). `listMessages`/realtime → signed URL enrich. `ChatScreen.onAttachmentTap` flutter_chat_ui default composer'da attach ikonu açar; resim `fcc.ImageMessage` ile render; tap → fullscreen.
+
+### Group chat media
+- `SocialGroupRepository.postMessage` `GroupMessage.attachments` ile resim yazar (yeni interface metodu yok). `listMessages` signed URL enrich. Composer'da `add_photo_alternate` ikonu → sheet → upload → post; `_GroupImageBubble` (cached_network_image) + tap → fullscreen.
+
+### Upload / retry / error davranışı
+- Gönderim sırasında **persistan "Fotoğraf gönderiliyor…" üst şeridi** (optimistic in-bubble preview yerine — V1 sade/robust; in-bubble preview = polish notu).
+- **Mesaj kaybı yok + duplicate yok:** mesaj satırı **yalnız upload+insert başarısında** eklenir; başarısızlıkta hiç satır yazılmaz → "Tekrar dene" aynı dosyayla yeniden dener, duplicate üretmez.
+- Hata türleri: çok büyük (>10MB) / desteklenmeyen tür → uyarı şeridi; izin reddi → uyarı; guest → `AuthRequiredSheet`; ağ hatası → danger + retry.
+- Validation: ≤10MB, jpg/png/webp.
+
+### RLS / storage policy notları
+- `storage.objects` `chat-media` için: **SELECT** = participant (`is_in_conversation`) veya grup üyesi (`group_members.owner_id=auth.uid()`); **INSERT** = owner segmenti (`foldername[3]=auth.uid()`) + üyelik; **UPDATE/DELETE** = owner. Bucket private → signed URL yalnız SELECT yetkisi olana üretilir.
+- **Privacy:** private grup/DM medyası yalnız üye/participant'a görünür (public bucket sızıntısı yok).
+
+### Kalan riskler
+- Migration **prod'a uygulanmadı** (karar gereği) → medya akışı deploy + RLS review sonrası canlanır; o ana dek text sohbet etkilenmez. Manuel upload smoke prod migration uygulanınca yapılmalı.
+- `createSignedUrl` 1 saat expiry; uzun açık kalan ekranda yenileme provider refresh ile olur (V1 kabul).
+- Orphan storage objesi: upload başarılı ama insert başarısız olursa (nadir) orphan kalır → ileride cleanup job (P2).
+- Video thumbnail/compression: **sonraya kaldı** (Sprint Media V1.1).
+
+### Sprint G kod değişikliği özeti
+- Eklenen: migration, `ChatMediaUploadService`, `ChatMediaPickerSheet`, Message/GroupMessage image getter'ları, generic+grup repo image yolu, ChatScreen + GroupComposer medya UI, `_GroupImageBubble`, AppStrings, `chat_media_v1_test.dart`.
+- Supabase **schema/RLS/storage CANLI'ya uygulanmadı** (migration dosyası). Generic text send/read/unread davranışı değişmedi. Yeni dependency yok.

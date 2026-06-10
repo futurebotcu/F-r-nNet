@@ -20,19 +20,24 @@
 
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart' as fcc;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart' as fcu;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/premium/chat_media_picker_sheet.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../auth/services/auth_required_guard.dart';
 import '../models/conversation.dart' as our;
 import '../models/message.dart' as our;
 import '../providers/messaging_providers.dart';
+import '../services/chat_media_upload_service.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.conversationId});
@@ -89,7 +94,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           next.whenData((m) async {
             if (_seenMessageIds.contains(m.id)) return;
             _seenMessageIds.add(m.id);
-            await _chatController.insertMessage(_toUiMessage(m));
+            // Realtime image mesajı ham gelir (signed url yok) → zenginleştir.
+            final enriched = await _enrichForUi(m);
+            await _chatController.insertMessage(_toUiMessage(enriched));
           });
         },
       );
@@ -100,12 +107,166 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   fcc.Message _toUiMessage(our.Message m) {
+    // Sprint G — resim mesajı: signed URL varsa ImageMessage.
+    if (m.hasImage && (m.imageUrl ?? '').isNotEmpty) {
+      return fcc.ImageMessage(
+        id: m.id,
+        authorId: m.senderId,
+        source: m.imageUrl!,
+        createdAt: m.createdAt,
+        status: fcc.MessageStatus.sent,
+      );
+    }
     return fcc.TextMessage(
       id: m.id,
       authorId: m.senderId,
       text: m.content,
       createdAt: m.createdAt,
       status: fcc.MessageStatus.sent,
+    );
+  }
+
+  /// Realtime/ham image mesajına signed URL gömer (bootstrap'ta repo zaten
+  /// enrich eder; bu yol yalnız stream arrival içindir).
+  Future<our.Message> _enrichForUi(our.Message m) async {
+    if (!m.hasImage || (m.imageUrl ?? '').isNotEmpty) return m;
+    final svc = ref.read(chatMediaUploadServiceProvider);
+    final path = m.imageStoragePath;
+    if (svc == null || path == null) return m;
+    try {
+      final url = await svc.signedUrl(path);
+      final next = Map<String, dynamic>.from(m.attachments ?? const {});
+      next['url'] = url;
+      return m.copyWith(attachments: next);
+    } catch (_) {
+      return m;
+    }
+  }
+
+  // ── Sprint G — image attachment flow ─────────────────────────────
+  /// Medya ikonu (flutter_chat_ui onAttachmentTap) → sheet → seç/çek → yükle.
+  Future<void> _onAttach() async {
+    final source = await ChatMediaPickerSheet.show(context);
+    if (source == null || !mounted) return;
+    final svc = ref.read(chatMediaUploadServiceProvider);
+    if (svc == null) return;
+    XFile? file;
+    try {
+      file = await svc.pickImage(source);
+    } catch (e) {
+      debugLogMediaPick('pick', e);
+      if (mounted) {
+        _showMediaBanner(
+          AppStrings.chatMediaPermissionDenied,
+          PremiumTopBannerTone.warning,
+        );
+      }
+      return;
+    }
+    if (file == null || !mounted) return;
+    await _uploadAndSend(file);
+  }
+
+  Future<void> _uploadAndSend(XFile file) async {
+    final svc = ref.read(chatMediaUploadServiceProvider);
+    final repo = ref.read(messagingRepositoryProvider);
+    final meId = ref.read(currentAuthUserProvider)?.id ?? 'local-user-me';
+    if (svc == null) return;
+    // Persistan "gönderiliyor" şeridi (upload + insert boyunca).
+    PremiumTopBannerController.show(
+      context,
+      message: AppStrings.chatMediaUploading,
+      tone: PremiumTopBannerTone.info,
+      duration: Duration.zero,
+    );
+    try {
+      final res = await svc.upload(
+        scope: 'conversations',
+        scopeId: widget.conversationId,
+        ownerId: meId,
+        file: file,
+      );
+      final saved = await repo.sendImageMessage(
+        conversationId: widget.conversationId,
+        attachments: res.toAttachments(),
+      );
+      PremiumTopBannerController.dismiss();
+      // Insert yalnız başarıda → retry duplicate mesaj üretmez.
+      if (!_seenMessageIds.contains(saved.id)) {
+        _seenMessageIds.add(saved.id);
+        await _chatController.insertMessage(_toUiMessage(saved));
+      }
+    } on ChatMediaTooLargeException {
+      PremiumTopBannerController.dismiss();
+      if (mounted) {
+        _showMediaBanner(AppStrings.chatMediaTooLarge,
+            PremiumTopBannerTone.warning);
+      }
+    } on ChatMediaUnsupportedException {
+      PremiumTopBannerController.dismiss();
+      if (mounted) {
+        _showMediaBanner(AppStrings.chatMediaUnsupported,
+            PremiumTopBannerTone.warning);
+      }
+    } on GuestActionRequiredException {
+      PremiumTopBannerController.dismiss();
+      if (mounted) await showAuthRequiredSheet(context, ref);
+    } catch (e) {
+      debugLogMediaPick('upload', e);
+      PremiumTopBannerController.dismiss();
+      if (mounted) {
+        // Aynı dosyayla retry; başarısızlıkta hiçbir mesaj eklenmedi (kayıp yok).
+        PremiumTopBannerController.show(
+          context,
+          message: AppStrings.chatMediaSendError,
+          tone: PremiumTopBannerTone.danger,
+          actionLabel: AppStrings.messagingRetryCta,
+          duration: const Duration(seconds: 6),
+          onAction: () => _uploadAndSend(file),
+        );
+      }
+    }
+  }
+
+  void _showMediaBanner(String msg, PremiumTopBannerTone tone) {
+    PremiumTopBannerController.show(context, message: msg, tone: tone);
+  }
+
+  void _openImageViewer(String url) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.92),
+      builder: (ctx) => GestureDetector(
+        onTap: () => Navigator.of(ctx).maybePop(),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                maxScale: 4,
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.contain,
+                  errorWidget: (_, __, ___) => const Icon(
+                    Icons.broken_image_rounded,
+                    color: AppColors.surface,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded,
+                      color: AppColors.surface),
+                  onPressed: () => Navigator.of(ctx).maybePop(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -245,13 +406,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  /// Hatalı (error) bir bubble'a dokununca aynı mesajı yeniden dene.
+  /// Resim bubble → fullscreen viewer; hatalı (error) text bubble → retry.
   void _onMessageTap(
     BuildContext context,
     fcc.Message message, {
     required int index,
     required TapUpDetails details,
   }) {
+    if (message is fcc.ImageMessage) {
+      final src = message.source;
+      if (src.isNotEmpty) _openImageViewer(src);
+      return;
+    }
     if (message.resolvedStatus == fcc.MessageStatus.error) {
       final text = _pendingText[message.id];
       if (text != null) _trySend(text, tempId: message.id);
@@ -378,6 +544,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               },
               onMessageSend: _onSend,
               onMessageTap: _onMessageTap,
+              onAttachmentTap: _onAttach,
             ),
     );
   }

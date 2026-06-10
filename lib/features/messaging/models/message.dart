@@ -44,6 +44,12 @@ class Message {
   bool get isDeleted => deletedAt != null;
   bool get isEdited => editedAt != null;
 
+  // Sprint G — image eki. message_type 'text' kalır; resim attachments ile
+  // taşınır. `imageUrl` repo tarafından signed URL ile doldurulur (url alanı).
+  bool get hasImage => (attachments?['media_type'] as String?) == 'image';
+  String? get imageUrl => attachments?['url'] as String?;
+  String? get imageStoragePath => attachments?['storage_path'] as String?;
+
   Message copyWith({
     String? content,
     String? messageType,

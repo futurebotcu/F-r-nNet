@@ -1,6 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/router/app_router.dart';
@@ -10,8 +12,10 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
+import '../../../core/widgets/premium/chat_media_picker_sheet.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../messaging/services/chat_media_upload_service.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/group_join_request.dart';
 import '../models/group_member.dart';
@@ -640,33 +644,141 @@ class _ChatBubble extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.m),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(AppRadius.m),
-                      topRight: const Radius.circular(AppRadius.m),
-                      bottomLeft: const Radius.circular(AppRadius.m),
-                      bottomRight: const Radius.circular(AppRadius.s),
+                // Sprint G — resim eki varsa image bubble; caption placeholder
+                // değilse altında metin gösterilir.
+                if (message.hasImage && (message.imageUrl ?? '').isNotEmpty)
+                  _GroupImageBubble(
+                    url: message.imageUrl!,
+                    caption: message.text == AppStrings.messagingImageFallback
+                        ? null
+                        : message.text,
+                  )
+                else
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.m),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(AppRadius.m),
+                        topRight: const Radius.circular(AppRadius.m),
+                        bottomLeft: const Radius.circular(AppRadius.m),
+                        bottomRight: const Radius.circular(AppRadius.s),
+                      ),
+                      boxShadow: AppShadow.card,
                     ),
-                    boxShadow: AppShadow.card,
-                  ),
-                  child: Text(
-                    message.text,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 13.5,
-                      height: 1.4,
+                    child: Text(
+                      message.text,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13.5,
+                        height: 1.4,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Sprint G — grup sohbeti resim bubble'ı (cached_network_image + viewer).
+class _GroupImageBubble extends StatelessWidget {
+  const _GroupImageBubble({required this.url, this.caption});
+  final String url;
+  final String? caption;
+
+  void _openViewer(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.92),
+      builder: (ctx) => GestureDetector(
+        onTap: () => Navigator.of(ctx).maybePop(),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                maxScale: 4,
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.contain,
+                  errorWidget: (_, __, ___) => const Icon(
+                    Icons.broken_image_rounded,
+                    color: AppColors.surface,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded,
+                      color: AppColors.surface),
+                  onPressed: () => Navigator.of(ctx).maybePop(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: () => _openViewer(context),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 240, maxWidth: 280),
+              child: CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => Container(
+                  height: 160,
+                  width: 220,
+                  color: AppColors.surfaceVariant,
+                  alignment: Alignment.center,
+                  child: const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 1.6),
+                  ),
+                ),
+                errorWidget: (_, __, ___) => Container(
+                  height: 120,
+                  width: 220,
+                  color: AppColors.surfaceVariant,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.broken_image_rounded,
+                      color: AppColors.textMuted),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (caption != null && caption!.trim().isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            caption!,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 13.5,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1520,6 +1632,107 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     }
   }
 
+  // Sprint G — resim eki: medya ikonu → sheet → seç/çek → yükle → postMessage.
+  Future<void> _attach() async {
+    if (!_effectiveCanWrite || _sending) return;
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    final source = await ChatMediaPickerSheet.show(context);
+    if (source == null || !mounted) return;
+    final svc = ref.read(chatMediaUploadServiceProvider);
+    if (svc == null) return;
+    XFile? file;
+    try {
+      file = await svc.pickImage(source);
+    } catch (e) {
+      debugLogMediaPick('pick', e);
+      if (mounted) {
+        PremiumTopBannerController.show(
+          context,
+          message: AppStrings.chatMediaPermissionDenied,
+          tone: PremiumTopBannerTone.warning,
+        );
+      }
+      return;
+    }
+    if (file == null || !mounted) return;
+    await _uploadAndPost(file);
+  }
+
+  Future<void> _uploadAndPost(XFile file) async {
+    final svc = ref.read(chatMediaUploadServiceProvider);
+    final repo = ref.read(socialGroupRepositoryProvider);
+    final meId = ref.read(currentAuthUserProvider)?.id ?? '';
+    if (svc == null) return;
+    final profile = ref.read(profileControllerProvider);
+    final displayName = profile?.displayName.trim() ?? '';
+    final authorName =
+        displayName.isNotEmpty ? displayName : PublicProfile.fallbackName;
+    setState(() => _sending = true);
+    PremiumTopBannerController.show(
+      context,
+      message: AppStrings.chatMediaUploading,
+      tone: PremiumTopBannerTone.info,
+      duration: Duration.zero,
+    );
+    try {
+      final res = await svc.upload(
+        scope: 'groups',
+        scopeId: widget.group.id,
+        ownerId: meId,
+        file: file,
+      );
+      await repo.postMessage(
+        GroupMessage(
+          id: 'gm_${DateTime.now().microsecondsSinceEpoch}',
+          groupId: widget.group.id,
+          authorName: authorName,
+          authorRole: widget.isOwner ? AppStrings.groupFounder : 'Üye',
+          text: AppStrings.messagingImageFallback,
+          createdAt: DateTime.now(),
+          attachments: res.toAttachments(),
+        ),
+      );
+      // Liste groupChangesProvider tick ile yenilenir (signed url enrich).
+      PremiumTopBannerController.dismiss();
+    } on ChatMediaTooLargeException {
+      PremiumTopBannerController.dismiss();
+      if (mounted) {
+        PremiumTopBannerController.show(context,
+            message: AppStrings.chatMediaTooLarge,
+            tone: PremiumTopBannerTone.warning);
+      }
+    } on ChatMediaUnsupportedException {
+      PremiumTopBannerController.dismiss();
+      if (mounted) {
+        PremiumTopBannerController.show(context,
+            message: AppStrings.chatMediaUnsupported,
+            tone: PremiumTopBannerTone.warning);
+      }
+    } on GuestActionRequiredException {
+      PremiumTopBannerController.dismiss();
+      if (mounted) await showAuthRequiredSheet(context, ref);
+    } catch (e) {
+      debugLogMediaPick('upload', e);
+      PremiumTopBannerController.dismiss();
+      if (mounted) {
+        // Retry aynı dosyayla; başarısızlıkta hiç mesaj eklenmedi (kayıp yok).
+        PremiumTopBannerController.show(
+          context,
+          message: AppStrings.chatMediaSendError,
+          tone: PremiumTopBannerTone.danger,
+          actionLabel: AppStrings.messagingRetryCta,
+          duration: const Duration(seconds: 6),
+          onAction: () => _uploadAndPost(file),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_effectiveCanWrite) {
@@ -1549,6 +1762,13 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     }
     return Row(
       children: [
+        // Sprint G — medya (resim) ekle.
+        IconButton(
+          onPressed: _sending ? null : _attach,
+          icon: const Icon(Icons.add_photo_alternate_rounded),
+          color: AppColors.copper,
+          tooltip: AppStrings.chatMediaSheetTitle,
+        ),
         Expanded(
           child: TextField(
             controller: _ctrl,

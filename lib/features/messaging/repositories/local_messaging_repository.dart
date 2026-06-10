@@ -197,6 +197,44 @@ class LocalMessagingRepository implements MessagingRepository {
   }
 
   @override
+  Future<Message> sendImageMessage({
+    required String conversationId,
+    required Map<String, dynamic> attachments,
+    String? caption,
+  }) async {
+    final inConv = _participants.any(
+      (p) => p.conversationId == conversationId && p.userId == _meId,
+    );
+    if (!inConv) {
+      throw StateError('not a participant');
+    }
+    // Local'de signed URL yok; render için url = storage_path fallback.
+    final enriched = Map<String, dynamic>.from(attachments);
+    enriched['url'] ??= attachments['storage_path'];
+    final msg = Message(
+      id: _genId('msg'),
+      conversationId: conversationId,
+      senderId: _meId,
+      content: (caption != null && caption.trim().isNotEmpty)
+          ? caption.trim()
+          : '📷 Fotoğraf',
+      messageType: 'text',
+      attachments: enriched,
+      createdAt: DateTime.now(),
+    );
+    _messages.add(msg);
+    final idx = _conversations.indexWhere((c) => c.id == conversationId);
+    if (idx >= 0) {
+      _conversations[idx] =
+          _conversations[idx].copyWith(updatedAt: msg.createdAt);
+    }
+    final ch = _watchers[conversationId];
+    if (ch != null && !ch.isClosed) ch.add(msg);
+    _notify();
+    return msg;
+  }
+
+  @override
   Future<void> markAsRead(String conversationId) async {
     final idx = _participants.indexWhere(
       (p) => p.conversationId == conversationId && p.userId == _meId,

@@ -15,6 +15,7 @@ class GroupMessage {
     required this.createdAt,
     this.isPinned = false,
     this.reactionCount = 0,
+    this.attachments,
   });
 
   final String id;
@@ -25,4 +26,13 @@ class GroupMessage {
   final DateTime createdAt;
   final bool isPinned;
   final int reactionCount;
+
+  /// Sprint G — opsiyonel resim eki metadata (jsonb):
+  /// `{media_type:image, storage_path, width, height, size_bytes, url}`.
+  /// `url` repo tarafından signed URL ile doldurulur.
+  final Map<String, dynamic>? attachments;
+
+  bool get hasImage => (attachments?['media_type'] as String?) == 'image';
+  String? get imageUrl => attachments?['url'] as String?;
+  String? get imageStoragePath => attachments?['storage_path'] as String?;
 }

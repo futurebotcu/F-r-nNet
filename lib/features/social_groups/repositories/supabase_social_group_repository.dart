@@ -53,7 +53,9 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
 
   static const String _messageColumns =
       'id, group_id, owner_id, text, author_name, author_role, '
-      'is_deleted, created_at';
+      'is_deleted, attachments, created_at';
+
+  static const String _chatMediaBucket = 'chat-media';
 
   // ─────────────────────────────────────── Mapping
 
@@ -91,7 +93,35 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
       // V1'de pinned/reaction sütunları DB'de yok; ileride eklenebilir.
       isPinned: false,
       reactionCount: 0,
+      attachments: row['attachments'] as Map<String, dynamic>?,
     );
+  }
+
+  /// Sprint G — grup resim mesajının storage_path'i için signed URL üretip
+  /// attachments['url']'e gömer (chat-media private). Hatada url'siz döner.
+  Future<GroupMessage> _enrichImage(GroupMessage m) async {
+    final path = m.imageStoragePath;
+    if (!m.hasImage || path == null) return m;
+    try {
+      final url = await _client.storage
+          .from(_chatMediaBucket)
+          .createSignedUrl(path, 3600);
+      final next = Map<String, dynamic>.from(m.attachments ?? const {});
+      next['url'] = url;
+      return GroupMessage(
+        id: m.id,
+        groupId: m.groupId,
+        authorName: m.authorName,
+        authorRole: m.authorRole,
+        text: m.text,
+        createdAt: m.createdAt,
+        isPinned: m.isPinned,
+        reactionCount: m.reactionCount,
+        attachments: next,
+      );
+    } catch (_) {
+      return m;
+    }
   }
 
   /// Mevcut kullanıcının üye olduğu grup id'lerini çekip cache'ler.
@@ -343,10 +373,13 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
         .eq('is_deleted', false)
         .order('created_at', ascending: false)
         .limit(200);
-    return (rows as List)
+    final list = (rows as List)
         .cast<Map<String, dynamic>>()
         .map(_messageFromRow)
-        .toList(growable: false);
+        .toList();
+    // Sprint G — resim mesajlarını signed URL ile zenginleştir.
+    final enriched = await Future.wait(list.map(_enrichImage));
+    return List<GroupMessage>.unmodifiable(enriched);
   }
 
   @override
@@ -359,6 +392,8 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
       'group_id': m.groupId,
       'owner_id': userId,
       'text': m.text,
+      // Sprint G — opsiyonel resim eki (media_type:image, storage_path, ...).
+      if (m.attachments != null) 'attachments': m.attachments,
       // author_name / author_role server-side trigger ile.
     });
     _notify();

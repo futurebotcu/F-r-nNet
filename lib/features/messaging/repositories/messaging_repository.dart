@@ -39,6 +39,17 @@ abstract class MessagingRepository {
     required String content,
   });
 
+  /// Sprint G — resim mesajı. message_type 'text' KALIR (hardened insert
+  /// RLS'e dokunulmaz); resim [attachments] (media_type:image, storage_path,
+  /// width/height/size_bytes) ile taşınır. [caption] boşsa content'e kısa
+  /// placeholder yazılır (messages.content 1..4000 CHECK). Dönen
+  /// Message.attachments['url'] signed URL ile doldurulur (bucket private).
+  Future<Message> sendImageMessage({
+    required String conversationId,
+    required Map<String, dynamic> attachments,
+    String? caption,
+  });
+
   /// `mark_conversation_read` RPC — `last_read_at = now()`.
   Future<void> markAsRead(String conversationId);
 

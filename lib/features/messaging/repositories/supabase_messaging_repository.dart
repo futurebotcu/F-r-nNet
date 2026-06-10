@@ -15,6 +15,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../models/conversation.dart';
 import '../models/message.dart';
 import 'messaging_repository.dart';
@@ -23,6 +24,8 @@ class SupabaseMessagingRepository implements MessagingRepository {
   SupabaseMessagingRepository(this._client);
 
   final SupabaseClient _client;
+
+  static const String _chatMediaBucket = 'chat-media';
 
   final StreamController<void> _tick = StreamController<void>.broadcast();
 
@@ -34,6 +37,23 @@ class SupabaseMessagingRepository implements MessagingRepository {
 
   void _notify() {
     if (!_tick.isClosed) _tick.add(null);
+  }
+
+  /// Sprint G — resim mesajının storage_path'i için signed URL üretip
+  /// attachments['url']'e gömer (bucket private). Hata olursa url'siz döner.
+  Future<Message> _enrichImage(Message m) async {
+    final path = m.imageStoragePath;
+    if (!m.hasImage || path == null) return m;
+    try {
+      final url =
+          await _client.storage.from(_chatMediaBucket).createSignedUrl(path, 3600);
+      final next = Map<String, dynamic>.from(m.attachments ?? const {});
+      next['url'] = url;
+      return m.copyWith(attachments: next);
+    } catch (e) {
+      debugPrint('[FirinNet][ChatMedia] signed url fail: $e');
+      return m;
+    }
   }
 
   // ─── Conversations ──────────────────────────────────────────────
@@ -261,10 +281,13 @@ class SupabaseMessagingRepository implements MessagingRepository {
         .isFilter('deleted_at', null)
         .order('created_at', ascending: true)
         .limit(limit);
-    return (rows as List)
+    final list = (rows as List)
         .cast<Map<String, dynamic>>()
         .map(Message.fromRow)
-        .toList(growable: false);
+        .toList();
+    // Sprint G — resim mesajlarını signed URL ile zenginleştir.
+    final enriched = await Future.wait(list.map(_enrichImage));
+    return List<Message>.unmodifiable(enriched);
   }
 
   @override
@@ -294,6 +317,40 @@ class SupabaseMessagingRepository implements MessagingRepository {
     }
     _notify();
     return Message.fromRow(list.first);
+  }
+
+  @override
+  Future<Message> sendImageMessage({
+    required String conversationId,
+    required Map<String, dynamic> attachments,
+    String? caption,
+  }) async {
+    final meId = _requireUserId();
+    final content = (caption != null && caption.trim().isNotEmpty)
+        ? caption.trim()
+        : AppStrings.messagingImageFallback;
+    if (content.length > 4000) {
+      throw ArgumentError('caption length must be <= 4000');
+    }
+    final inserted = await _client
+        .from('messages')
+        .insert(<String, dynamic>{
+          'conversation_id': conversationId,
+          'sender_id': meId,
+          'content': content,
+          // Hardened messages_insert_sender policy: message_type 'text' kalır.
+          'message_type': 'text',
+          'attachments': attachments,
+        })
+        .select(
+          'id, conversation_id, sender_id, content, message_type, attachments, created_at, edited_at, deleted_at',
+        );
+    final rows = (inserted as List).cast<Map<String, dynamic>>();
+    if (rows.isEmpty) {
+      throw StateError('image message insert returned no row');
+    }
+    _notify();
+    return _enrichImage(Message.fromRow(rows.first));
   }
 
   @override
