@@ -570,11 +570,17 @@ GoRouter createRouter() {
         ),
       ),
 
-      // V1 — Job messaging
+      // V1 — Messaging routes
       // M1.2: /messages → MessagesListScreen (generic conversations).
-      // /messages/:id → ChatScreen (generic). Eski JobConversationScreen
-      // legacy ekran olarak korunur ve job offer/seek detail içinde ayrı
-      // /messages/legacy/:id route'tan ulaşılabilir kalır.
+      // /messages/:id → ChatScreen (generic).
+      //
+      // Sprint C audit (docs/audits/GROUPS_MESSAGING_UX_AUDIT.md):
+      //   * /messages/legacy/:id → JobConversationScreen şu an KORUNUR ama
+      //     in-app navigasyonu YOK (ölü route). job_conversations verisini
+      //     okuyan tek ekran olduğu için Sprint D kararına dek silinmez.
+      //   * Bilinen uyumsuzluk (C-1, P0): StartJobConversationSheet bir
+      //     job_conversation yaratıp generic /messages/:id'ye push ediyor;
+      //     konsolidasyon Sprint D'ye planlandı. Burada davranış değişmedi.
       GoRoute(
         path: AppRoutes.messages,
         builder: (_, __) => const MessagesListScreen(),

@@ -259,3 +259,62 @@ Commit: `refactor(social): add group liveness and messaging feedback polish`.
 - **P1:** M-8/M-2 (legacy job chat emekliye ayırma + `messaging/` vs `messages/` klasör ikiliği — dikkatli refactor gerekir).
 - **P2:** G-2/G-3/G-4 (liste boş state CTA, arama sonuç feedback, popüler/aktif vurgu), G-9 (reaksiyon/yanıt/pin aksiyonu), M-3 (presence/typing/okundu çift-tik), M-9 (tarih ayraçları), grup kuralları alanı (şema/`group rules` verisi gerektirir).
 - **Data source note:** Gerçek-zamanlı unread artışı için `messagingChangesProvider` tick'i konuşma listesini tazeler; anlık (push'suz) güncel kalır. Push/badge OS entegrasyonu kapsam dışı (P1+).
+
+---
+
+## Sprint C — Messaging Consolidation Review (2026-06-10)
+
+Commit: `docs(ux): audit messaging consolidation path`.
+**Tür: AUDIT + düşük riskli cleanup.** Bu sprintte mesajlaşma backend/route/send/read/unread davranışı değiştirilmedi; legacy silinmedi; folder rename yapılmadı. Yalnız: bu doküman, yanıltıcı bir router yorumunun düzeltilmesi ve audit edilmiş gerçeği kilitleyen contract testleri eklendi.
+
+### Aktif (canlı) messaging sistemi
+`lib/features/messaging/` — **generic** sistem. Tablolar: `conversations` / `conversation_participants` / `messages`. Repo: `SupabaseMessagingRepository` (gerçek) / `LocalMessagingRepository` (demo), `GuardedMessagingRepository` ile sarılı. Ekran: `ChatScreen` (`/messages/:id`, flutter_chat_ui, Sprint A/B'de markalandı). `contextType` zaten `profile_direct` / `market_listing` / `job_offer` / `job_seek` destekler.
+
+### Legacy / job messaging sistemi
+`lib/features/messages/` — **karma klasör**:
+- **Generic'e ait:** `MessagesListScreen` (`/messages`) — aslında `conversationsListProvider` (generic) okur. (Klasör adı yanıltıcı: generic liste `messages/`'ta, generic chat `messaging/`'te.)
+- **Job'a ait (legacy):** `job_messaging_providers/repositories/models`, `JobConversationScreen` (`/messages/legacy/:id`), `StartJobConversationSheet`. Tablolar: `job_conversations` / `job_messages`. Repo: `SupabaseJobMessagingRepository` (gerçek) / `LocalJobMessagingRepository` (demo).
+
+### Route haritası
+| Route | Ekran | Sistem | Durum | Navigasyon kaynağı |
+|-------|-------|--------|-------|--------------------|
+| `/messages` | `MessagesListScreen` | generic (liste) | **Canlı** | Panel "Mesajlar" kartı |
+| `/messages/:id` | `ChatScreen` | generic | **Canlı** | Liste tap, Market detay, Profil DM, **(+ job sheet — yanlış)** |
+| `/messages/legacy/:id` | `JobConversationScreen` | job (legacy) | **Ölü route** | **Hiçbir yerden push yok** |
+
+### Kullanıcı giriş noktaları
+- **Panel → Mesajlar kartı** → `/messages` (generic liste). ✅ Tutarlı.
+- **Market detay → "Satıcıya mesaj"** → `findOrCreateDirectConversation` (generic) → `/messages/:id`. ✅
+- **Profil → "Mesaj"** → generic `findOrCreate` → `/messages/:id`. ✅
+- **İlanlar (Jobs) → "İletişime geç"** (offer & seek) → `StartJobConversationSheet` → **job** `startForJobOffer/Seek` (job_conversations'a yazar) → ama `/messages/:id` (**generic**) ekranına push. ❌ **Uyumsuz.**
+
+### Kod klasörü karmaşası
+`messaging/` = generic; `messages/` = generic liste + job sistemi karışık. Generic LİSTE `messages/`'ta, generic CHAT `messaging/`'te → dev için kafa karıştırıcı (kullanıcı görmez).
+
+### Risk tablosu
+| ID | Alan | Problem | Risk | Önerilen Aksiyon | Bu Sprintte Yapılsın mı? |
+|----|------|---------|------|------------------|--------------------------|
+| C-1 | Job mesaj akışı | `StartJobConversationSheet` job_conversation yaratır ama **generic** `/messages/:id`'ye gider; ilk mesaj `job_messages`'ta kalır, kullanıcı **boş generic sohbete** düşer. İkinci mesaj generic `messages`'a FK ile düşebilir → gönderim hatası. | **P0 — veri/UX tutarsızlığı; job mesajları kullanıcıya görünmez.** | Sprint D: tercihen job sheet'i generic `findOrCreateDirectConversation(contextType:'job_offer'/'job_seek')`'e migrate et (generic zaten bu context'i destekliyor). Test kapsamıyla. | ❌ (raporlandı; davranış değişikliği audit kapsamı dışı) |
+| C-2 | Legacy route | `/messages/legacy/:id`'ye in-app navigasyon yok → ölü route. | Düşük (kullanıcı erişemez) ama yanıltıcı router yorumu vardı. | Yanıltıcı yorum düzeltildi; route Sprint D'ye kadar korunur (job okuyucusu). | ✅ (yalnız yorum) |
+| C-3 | Job conversation list | `myJobConversationsProvider` yalnız (ölü) `JobConversationScreen` + start sheet invalidate tarafından kullanılır; **hiçbir liste ekranı job konuşmalarını göstermez.** | P1 — job konuşmaları tamamen orphan. | C-1 migrate çözünce ortadan kalkar. | ❌ (C-1'e bağlı) |
+| C-4 | Klasör ikiliği | Generic liste `messages/`'ta, generic chat `messaging/`'te. | Düşük (kozmetik, dev-facing). | C-1 sonrası job sistemi emekliye ayrılınca `MessagesListScreen`'i `messaging/`'e taşı. | ❌ (kozmetik; refactor riski) |
+
+### Riskli dosyalar
+`start_job_conversation_sheet.dart` (C-1 routing), `job_conversation_screen.dart` + `job_messaging_*` (orphan legacy), `messages_list_screen.dart` (klasör konumu).
+
+### Güvenli cleanup adayları (bu sprint yapıldı)
+- ✅ Audit (bu bölüm).
+- ✅ `app_router.dart` yanıltıcı yorum düzeltmesi: legacy route'a in-app push olmadığı + job sheet'in şu an generic route'a gittiği (C-1) açıkça not edildi. **Route/builder satırları değişmedi.**
+- ✅ `test/messaging_consolidation_audit_test.dart`: audit edilmiş mevcut gerçeği (route map, generic liste, job sheet mismatch) contract olarak kilitler → Sprint D bunu bilinçli değiştirir.
+
+### Silinmemesi gerekenler
+- `JobConversationScreen` + `job_messaging` repo/model/provider + `/messages/legacy/:id` route → C-1 kararı verilmeden silinmemeli (job_conversations gerçek veri yolunu okuyan tek ekran).
+- `MessagesListScreen` (generic liste) — canlı.
+
+### Önerilen konsolidasyon sırası (Sprint D+)
+1. **C-1 (P0):** Job sheet'i generic `findOrCreateDirectConversation(otherUserId, contextType:'job_offer'/'job_seek', contextId: postId)`'e migrate et → job konuşmaları generic liste + chat'te görünür; ilk mesaj `sendTextMessage` ile generic'e yazılır. Market/Profil deseniyle aynı. Tam test.
+2. C-1 doğrulandıktan sonra: `job_messaging` providers/repos/models + `JobConversationScreen` + `/messages/legacy/:id` route'u emekliye ayır/sil. (`job_conversations`/`job_messages` tablo/RLS dokunuşu ayrı, dikkatli bir DB sprintidir.)
+3. Kozmetik (C-4): `MessagesListScreen`'i `messaging/` altına taşı.
+
+### Sprint C kod değişikliği özeti
+- **Davranış değişikliği yok.** `app_router.dart` yalnız **yorum** düzeltmesi (route/builder aynı). Yeni contract testi eklendi. Supabase/schema/RLS değişmedi.
