@@ -398,3 +398,75 @@ Ayrı, dikkatli bir **DB sprinti**: eski veri arşiv/taşıma kararı verildikte
 - 8 legacy dosya silindi + app_router legacy route/import/yorum temizlendi.
 - 3 test güncellendi (legacy "korunur" → "kaldırıldı" contract'ı; job_messaging_v1 dead-code grupları çıkarıldı). Toplam test 1274 → **1261** (silinen dead-code testleri; regresyon değil).
 - Supabase/schema/RLS değişmedi; DB tabloları korundu.
+
+---
+
+## Sprint F — Group Chat Media & Community Richness Review (2026-06-10)
+
+Commit: `docs(ux): audit group chat media and community richness`.
+**Tür: AUDIT.** Medya implementasyonu yapılmadı; schema/RLS/storage/route/nav değişmedi; yeni dependency eklenmedi; "medya yakında" gibi ürün sözü verilmedi.
+
+### Group Chat Media Current State
+Grup sohbeti **tamamen metin tabanlı** — hiçbir katmanda medya yok:
+- **Model** (`group_message.dart`): `id, groupId, authorName, authorRole, text, createdAt, isPinned, reactionCount`. **mediaUrl/mediaType/attachments YOK.**
+- **DB** (`group_messages`, Supabase MCP ile salt-okuma doğrulandı): `id, group_id, owner_id, text, author_name, author_role, is_deleted, created_at, updated_at`. **Medya kolonu YOK.** (`is_pinned`/`reaction_count` kolonu bile yok; model'deki `isPinned` daima `false` map'lenir.)
+- **Repository** (`supabase_social_group_repository`): insert yalnız `group_id/owner_id/text`; `_messageColumns` medya içermez.
+- **Composer** (`GroupComposer`): tek satır `TextField` + gönder butonu. **Attach (📎/🖼️) butonu YOK.**
+- **UI** (`_ChatBubble`): yalnız metin + avatar + timestamp + (atıl) pin rozeti. Image/video render YOK.
+- **Local repo**: medya alanı yok.
+
+**Mevcut medya altyapısı (BAŞKA modüllerde, gruba bağlı değil):** `image_picker ^1.1.2`, `cached_network_image ^3.4.1`, `video_player ^2.9.2`, `chewie ^1.8.5` zaten dependency. Upload/render: `avatar_upload_service`, `feed_media` + `supabase_feed_repository` (storage upload), `social_stories`, `market_listing_media`. **Hepsi feed/market/stories/avatar için; grup chat bunların hiçbirine bağlı değil.** Grup chat ayrıca `flutter_chat_ui` **kullanmaz** (custom liste) → paketin `ImageMessage`/`VideoMessage` builder'ları gruba uygulanamaz (yalnız generic `/messages` DM'i için geçerli).
+
+### Image Support Verdict — **HAYIR (desteklenmiyor)**
+Resim göndermek için gerekenler (hepsi bu sprintte yasak kapsamda):
+1. **Schema:** `group_messages`'a medya kolonları (`media_url`, `media_type`, `media_width/height`) **veya** ayrı `group_message_media` tablosu (feed_media deseni).
+2. **Storage:** grup-kapsamlı bir bucket + **RLS policy** (yalnız grup üyesi okur/yazar; private grup gating'i).
+3. **Repository:** insert/read medya alanı + upload akışı.
+4. **Composer:** attach butonu (`image_picker` reuse).
+5. **UI:** image bubble (`cached_network_image` reuse) + full-screen viewer.
+- **Dependency: YENİ GEREKMEZ** (picker/cached image/video zaten var). Asıl blocker **schema + storage + RLS**.
+- **Closed-beta blocker mı?** Hayır — metin sohbeti çalışıyor. **P1** (FırınNet için ürün foto'su/ekmek görseli paylaşımı topluluk değerini ciddi artırır; sektörel bir community için image en yüksek getirili eksik).
+
+### Video Support Verdict — **HAYIR (desteklenmiyor); image'dan sonra**
+- Image'ın tüm gereksinimleri + ek maliyet: video upload (büyük dosya), thumbnail üretimi, playback (`video_player`/`chewie` var ama gruba bağlı değil), bellek/akış maliyeti, storage kotası.
+- **Öneri:** önce image; video **P2** (image altyapısı oturduktan sonra). İlk etapta video implement edilmemeli.
+
+### Storage / Schema / RLS Requirements (ayrı sprint)
+| Gereksinim | Detay | Risk |
+|-----------|-------|------|
+| Schema | `group_messages` medya kolonları **veya** `group_message_media` tablosu | Migration; geri-uyumluluk dikkatli |
+| Storage | Grup medya bucket + path düzeni (`group/<id>/...`) | Yeni bucket |
+| RLS | Bucket policy: grup üyeliği + private gating; tablo medya kolonu RLS'i mevcut mesaj policy'leriyle hizalı | Yanlış policy = sızıntı riski → titiz review |
+| Cleanup | Mesaj/ grup silininca medya orphan temizliği | Storage lifecycle |
+
+### UI Requirements
+- Composer: attach ikonu + seçili medya önizleme + gönderim sırasında progress (mevcut `image_picker` + Sprint A/B sending-state deseni reuse).
+- Bubble: image için `cached_network_image` + tap → full-screen viewer (feed viewer deseni reuse).
+- Empty/error: yükleme hatası state'i (Sprint A/B failed-retry deseniyle hizalı).
+
+### Community Richness Gaps (audit)
+| ID | Alan | Öncelik | Mevcut Durum | Risk | Önerilen Aksiyon |
+|----|------|---------|--------------|------|------------------|
+| F-1 | Grup chat **medya (image)** | P1 | Yok (model/DB/UI/composer hiçbiri desteklemiyor) | Schema+storage+RLS gerekir | Ayrı "Group Media V1 (image)" sprinti; dependency yok, RLS titiz |
+| F-2 | Grup chat **video** | P2 | Yok | Yüksek maliyet | Image'dan sonra ayrı sprint |
+| F-3 | **Grup kuralları / "neler paylaşılır?"** | P2 | Yok (veri/şema yok) | Şema gerekir (groups.rules kolonu) | Group Community V2; sahte kural üretme |
+| F-4 | **Pinned duyuru** | P2 | Model'de `isPinned` var ama **DB kolonu yok**, pin aksiyonu/UI yok (atıl) | Schema (`is_pinned`) + RPC | Group Community V2 |
+| F-5 | Grup detay **topluluk hissi** | P1→kısmen kapalı | Sprint B header (açıklama + üye avatar) var; aktivite/son-hareket hissi sınırlı | Düşük | Son mesaj zamanı/aktif üye göstergesi (gerçek veriyle) |
+| F-6 | Empty state / **ilk paylaşım CTA** | — | "İlk mesajı sen yaz" + "Sohbet şu anda boş" mevcut (test'le kilitli) | — | Yeterli; medya gelince "fotoğraf paylaş" eklenebilir |
+| F-7 | Grup arama/filtre | — | Liste: arama + kategori chip + üye olduğum carousel mevcut | — | Yeterli; P2 sonuç-sayısı/popüler vurgu (G-3/G-4) |
+| F-8 | Reaksiyon / yanıt | P2 | Yok (`reactionCount` atıl) | Schema | Group Community V2 |
+
+### Open-source / mevcut komponent değerlendirmesi
+- **Yeni paket gerekmez.** `image_picker` (seçim), `cached_network_image` (render), `video_player`+`chewie` (video) zaten dependency.
+- **Reuse:** Feed/stories upload pipeline (`supabase_feed_repository` storage upload, `avatar_upload_service`) **pattern** olarak reuse edilebilir; ama grup medyası **kendi bucket'ı + grup-kapsamlı RLS'i** ister (feed bucket'ı erişim kapsamı farklı, körlemesine reuse edilmez).
+- **flutter_chat_ui media:** yalnız generic `/messages` DM'i için geçerli (grup chat custom). Grup için **kendi hafif image bubble** component'i (cached_network_image ile) en güvenlisi.
+- **Fork gerekmez.**
+
+### Recommended Sprint Order
+1. **Group Media V1 — Image (P1):** schema (medya kolonları/tablo) + grup-kapsamlı storage bucket + RLS → repository → composer attach → image bubble + viewer. Yeni dependency yok. (RLS review kritik.)
+2. **Group Community V2 (P2):** grup kuralları (`groups.rules`), pinned duyuru (`is_pinned` + RPC), reaksiyon. Schema gerektirir.
+3. **Group Media V2 — Video (P2):** image oturduktan sonra; thumbnail + playback + storage kotası planıyla.
+4. **Cosmetic (C-4):** `MessagesListScreen` → `messaging/` klasörü.
+
+### Sprint F kod değişikliği özeti
+- **Kod/davranış değişikliği YOK** (audit-only). Grup empty/first-post copy'leri `groups_v1_ux_reset_test` ile kilitli olduğundan ve net bir gereksinim doğmadığından dokunulmadı (gereksiz risk alınmadı). Supabase/schema/RLS/storage değişmedi; yeni dependency yok.
