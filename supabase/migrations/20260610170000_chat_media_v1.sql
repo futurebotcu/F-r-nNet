@@ -55,6 +55,11 @@ on conflict (id) do nothing;
 -- ─── 3. storage.objects RLS — membership/participant gated ───────────────────
 -- SELECT: yalnız ilgili conversation participant'ı / grup üyesi görebilir.
 -- (createSignedUrl SELECT yetkisi ister → signed URL yalnız yetkiliye üretilir.)
+-- NOT: grup SELECT mantığı `group_messages_select_visible` ile birebir
+-- hizalı — medya, mesaj görünürlüğüyle aynı kuralı izler: public grup →
+-- authenticated görür; private grup → owner/üye. Böylece public grupta
+-- üye-olmayan da resmi görebilir (text ile tutarlı). Generic conversation
+-- için `is_in_conversation` (yalnız participant).
 drop policy if exists chat_media_storage_select on storage.objects;
 create policy chat_media_storage_select
   on storage.objects
@@ -69,9 +74,14 @@ create policy chat_media_storage_select
       or (
         (storage.foldername(name))[1] = 'groups'
         and exists (
-          select 1 from public.group_members gm
-          where gm.group_id = ((storage.foldername(name))[2])::uuid
-            and gm.owner_id = auth.uid()
+          select 1 from public.social_groups g
+          where g.id = ((storage.foldername(name))[2])::uuid
+            and g.is_deleted = false
+            and (
+              g.is_private = false
+              or g.owner_id = auth.uid()
+              or public.is_group_member(g.id, auth.uid())
+            )
         )
       )
     )

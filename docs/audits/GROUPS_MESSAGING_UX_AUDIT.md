@@ -516,3 +516,39 @@ Kullanıcı kararları: **private bucket + signed URL**, **migration dosyası (p
 ### Sprint G kod değişikliği özeti
 - Eklenen: migration, `ChatMediaUploadService`, `ChatMediaPickerSheet`, Message/GroupMessage image getter'ları, generic+grup repo image yolu, ChatScreen + GroupComposer medya UI, `_GroupImageBubble`, AppStrings, `chat_media_v1_test.dart`.
 - Supabase **schema/RLS/storage CANLI'ya uygulanmadı** (migration dosyası). Generic text send/read/unread davranışı değişmedi. Yeni dependency yok.
+
+---
+
+## Media V1 Deploy & RLS Verification (2026-06-10)
+
+Commit: `chore(media): verify chat image storage and rls deployment`.
+
+### Migration review sonucu — GÜVENLİ
+- `messages.attachments` reuse: kolon mevcut, nullable, `message_type='text'` korunur → eski text mesajlar bozulmaz, veri migration gerekmez.
+- `group_messages.attachments`: `add column if not exists ... jsonb` — nullable, default/CHECK yok → eski satırlar NULL, tam geriye uyumlu.
+- Risky constraint yok; idempotent (`if not exists` / `drop policy if exists` / `on conflict do nothing`).
+- **RLS düzeltmesi:** grup SELECT policy, `group_messages_select_visible` ile birebir hizalandı (public→authenticated, private→owner/üye) → medya görünürlüğü mesaj görünürlüğüyle tutarlı (public grupta üye-olmayan da görür). Generic = `is_in_conversation` (participant). INSERT = owner segment (`foldername[3]=auth.uid()`) + üyelik/participant. UPDATE/DELETE = owner. Guest (anon) → policy yok → deny.
+- chat-media'yı açan catch-all storage policy **yok** (mevcut policy'ler bucket-scoped) → private bucket default-deny.
+
+### Bucket / policy sonucu
+- Bucket `chat-media`: **public=false** (private). ✓
+- Storage policies: `chat_media_storage_{select,insert,update_owner,delete_owner}` oluştu. ✓
+- Path-parsing: `storage.foldername` → `[scope, scopeId, ownerId]`, policy [1]/[2]/[3] indexlemesiyle birebir (SQL ile doğrulandı). `is_in_conversation` + `is_group_member` helper'ları mevcut. ✓
+
+### Apply edildi mi? Hangi project?
+- **Evet — apply edildi.** Project: **`sjeqwiqgwzagengdukye`** (`https://sjeqwiqgwzagengdukye.supabase.co`, FırınNet production; MCP'de bağlı tek proje, apply öncesi doğrulandı). MCP `apply_migration` (`chat_media_v1`) → `{success:true}`.
+- Apply sonrası readonly doğrulama: bucket private ✓, `group_messages.attachments jsonb` ✓, 4 storage policy ✓.
+
+### Generic chat upload smoke sonucu
+- **End-to-end (gerçek foto seç/çek → upload → render) otomatize EDİLEMEDİ:** `image_picker` native galeri/kamera Flutter view'ı dışında; Patrol/otomatik test native picker'ı süremiyor → **manuel QA adımı**. Backend (bucket+RLS+kolon) + kod yolu + path-parsing doğrulandı; gerçek upload manuel test gerektirir.
+
+### Group chat upload smoke sonucu
+- Aynı: backend + kod hazır ve doğrulandı; gerçek foto seçimi manuel QA. Non-member upload yolu storage INSERT RLS + composer guard (yalnız owner/üye) ile çift kapalı.
+
+### Kalan riskler
+- **Manuel upload smoke yapılmadı** (native picker otomasyon dışı) → ilk gerçek QA'da generic + grup için galeri/kamera upload + signed-URL render + fail/retry doğrulanmalı.
+- Live çok-kullanıcılı RLS smoke (participant okur / non-member okuyamaz) servis-rolü MCP ile yapılamaz → policy tanımı + statik review ile doğrulandı; canlı doğrulama manuel QA.
+- Signed URL 1 saat expiry; orphan storage (upload-ok/insert-fail) → cleanup job (P2).
+
+### Video V1.1 notları
+- Bu sprintte video **yok** (kural). V1.1: picker sheet'e video seç/çek + `video_player`/`chewie` playback + boyut limiti; `attachments.media_type='video'` + thumbnail (opsiyonel). Mevcut storage RLS/bucket video için de geçerli (media_type ayrımı UI'da).
