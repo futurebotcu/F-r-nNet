@@ -849,6 +849,11 @@ class AppStrings {
       'Mesaj gönderilemedi. Bağlantını kontrol edip tekrar dene.';
   static const String messagingStartError =
       'Sohbet başlatılamadı. Yeniden dene.';
+  // Sprint A — chat empty state + failed-send retry.
+  static const String messagingEmptyTitle = 'İlk mesajı sen yaz';
+  static const String messagingEmptySubtitle =
+      'Mesajını yaz, sohbet burada başlasın.';
+  static const String messagingRetryCta = 'Tekrar dene';
   static const String messagingMessageCtaProfile = 'Mesaj';
   static const String messagingMessageCtaMarket = 'Satıcıya mesaj gönder';
   static const String messagingAuthRequiredMarketReason =

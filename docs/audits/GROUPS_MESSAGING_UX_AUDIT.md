@@ -217,3 +217,24 @@ Canlı `ChatScreen` bunu kullanıyor (vendor kopya yok, backend bizim Supabase r
 10. **G-9 / M-3 / M-9** Reaksiyon/pin, presence, tarih ayraçları (V2).
 
 > Tüm bu işler **yeni dependency olmadan** yapılabilir. En yüksek getiri/risk oranı: M-4 (tema), G-5 (yazar adı), M-5 (mesaj kaybı).
+
+---
+
+## Sprint A Sonucu — Trust, Identity, Branded Chat (2026-06-10)
+
+Commit: `refactor(social): improve group identity and branded messaging quality`.
+**Yeni dependency yok. Supabase schema/RLS/migration/route mimarisi değişmedi.** Mevcut `flutter_chat_ui` / `flutter_chat_core` paketlerinin tema + builder yüzeyi kullanıldı.
+
+| ID | Önce | Sonra | Durum |
+|----|------|-------|-------|
+| **G-5** | `GroupComposer` mesajı `authorName: 'Misafir'` hardcoded ile gönderiyordu. | Yazar adı `profileControllerProvider` → profil `display_name`'inden gelir; boşsa `PublicProfile.fallbackName` ("FırınNet Kullanıcısı"). Owner mesajında rol "Kurucu". Guest yazma yolu zaten guard'lı, değişmedi. (Not: Supabase yolunda `author_name` zaten server-side trigger ile dolar; bu fix local/optimistic gösterim sözleşmesini düzeltir ve kör "Misafir"i kaldırır.) | ✅ **Kapandı** |
+| **M-4** | Canlı `ChatScreen` flutter_chat_ui varsayılan (mavi/gri) temasıyla. | `_brandChatTheme()` — `ChatTheme.light()` üzerinden lemon-white-brandInk: gönderen bubble = `brandLemon` + `brandInk` metin, yüzey = beyaz, karşı taraf bubble = açık gri, köşe = `AppRadius.l`. | ✅ **Kapandı** (kontrollü tema; ağır redesign yapılmadı) |
+| **M-5** | Hata → geçici snackbar, mesaj kaybolma hissi, retry yok. | Optimistic gönderim: `sending` → `sent`/`error`. Hatada bubble `error` durumunda kalır (**metin kaybolmaz**), üst şerit (`PremiumTopBanner` danger) "Tekrar dene" sunar; ayrıca error bubble'a dokununca resend. `_pendingText` ile metin saklanır. | ✅ **Kapandı** (UI feedback + retry). İlişkili **M-6** (gönderiliyor/gönderildi göstergesi) paket `MessageStatus` ile büyük ölçüde geldi. |
+| **M-7** | Canlı chat boş state'i yoktu. | `emptyChatListBuilder` → marka-uyumlu `_ChatEmptyState`: "İlk mesajı sen yaz" + bağlam etiketi + lemon ikon. | ✅ **Kapandı** |
+
+**Sprint A testleri:** `test/groups_messaging_sprint_a_test.dart` (source-contract) eklendi; mevcut `messaging_m1_2_ui_test.dart` sözleşmesi (`onMessageSend: _onSend`, `_toUiMessage`, `_seenMessageIds`, `markAsRead`, ...) korunarak doğrulandı. Toplam test 1241 → **1252**.
+
+### Sprint A sonrası kalan işler
+- **P1:** M-10 (global unread nav badge), G-6/G-7 (grup detay topluluk başlığı + üye avatar önizleme), G-8 (grup composer optimistic gönderim feedback'i — chat'teki desen grup composer'a da taşınabilir), M-8/M-2 (legacy job chat emekliye ayırma + klasör ikiliği).
+- **P2:** G-2/G-3/G-4 (liste boş state CTA, arama feedback, popüler vurgu), G-9 (reaksiyon/pin/yanıt), M-3 (presence/typing/okundu), M-9 (tarih ayraçları).
+- **Not (M-5 derinleştirme adayı):** Üst şerit retry 6 sn sonra kapanır; error bubble'a dokunarak retry kalıcıdır. İstenirse failed bubble'a kalıcı görünür "Tekrar dene" etiketi özel `textMessageBuilder` ile eklenebilir (ayrı P1).

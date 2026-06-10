@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../models/group_join_request.dart';
 import '../models/group_member.dart';
 import '../models/group_message.dart';
@@ -1345,13 +1346,21 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     }
     final repo = ref.read(socialGroupRepositoryProvider);
     final now = DateTime.now();
+    // G-5 — Yazar adı artık kör "Misafir" değil: oturum açmış kullanıcının
+    // profil display_name'i. Boşsa güvenli "FırınNet Kullanıcısı" fallback.
+    // (Supabase yolunda author_name zaten server-side trigger ile profiles'tan
+    // doldurulur; bu değer local/optimistic gösterim sözleşmesini düzeltir.)
+    final profile = ref.read(profileControllerProvider);
+    final displayName = profile?.displayName.trim() ?? '';
+    final authorName =
+        displayName.isNotEmpty ? displayName : PublicProfile.fallbackName;
     try {
       await repo.postMessage(
         GroupMessage(
           id: 'gm_${now.microsecondsSinceEpoch}',
           groupId: widget.group.id,
-          authorName: 'Misafir',
-          authorRole: 'Üye',
+          authorName: authorName,
+          authorRole: widget.isOwner ? AppStrings.groupFounder : 'Üye',
           text: t,
           createdAt: now,
         ),

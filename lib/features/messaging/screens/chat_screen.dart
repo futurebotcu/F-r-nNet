@@ -3,11 +3,19 @@
 // Donor: flutter_chat_ui ^2.11.1 (Apache-2.0) — Chat widget; backend
 // olarak Supabase repository katmanımız bağlıdır. Vendor kopya yok.
 //
+// Sprint A polish:
+//   * M-4 — Marka teması: paketin ChatTheme yüzeyi lemon-white-brandInk
+//     token'larına bağlandı (generic paket görünümünden çıktı).
+//   * M-5 — Failed send / retry: gönderim optimistic "sending" bubble ile
+//     başlar; başarıda "sent", hatada "error" + üst şerit "Tekrar dene".
+//     Mesaj metni kaybolmaz (failed bubble'a dokunma veya banner ile resend).
+//   * M-7 — Boş sohbet için marka-uyumlu "İlk mesajı sen yaz" empty state.
+//
 // Akış:
 //   1. initState → mesaj listesini repo.listMessages ile çek, controller'a yükle.
 //   2. messagesStreamProvider listen → yeni INSERT geldiğinde controller'a ekle.
-//   3. onMessageSend → repo.sendTextMessage; başarılı INSERT realtime stream
-//      üzerinden zaten geri dönecek (kendi mesajı dahil).
+//   3. onMessageSend → optimistic insert + repo.sendTextMessage; başarılı INSERT
+//      realtime stream üzerinden zaten geri dönecek (kendi mesajı dahil; dedupe).
 //   4. open'da markAsRead RPC çağrısı + invalidate.
 
 import 'dart:async';
@@ -18,7 +26,9 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart' as fcu;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/conversation.dart' as our;
 import '../models/message.dart' as our;
@@ -36,9 +46,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final fcc.InMemoryChatController _chatController =
       fcc.InMemoryChatController();
   final Set<String> _seenMessageIds = <String>{};
+
+  // M-5 — Optimistic gönderim defteri. Geçici (local) id → en son bubble
+  // nesnesi ve özgün metin. Retry ve fail→sending geçişinde kullanılır.
+  final Map<String, fcc.Message> _optimistic = <String, fcc.Message>{};
+  final Map<String, String> _pendingText = <String, String>{};
+  int _localSeq = 0;
+
   ProviderSubscription<AsyncValue<our.Message>>? _realtimeSub;
   bool _initialized = false;
-  bool _sending = false;
 
   @override
   void initState() {
@@ -58,8 +74,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       // markAsRead — guarded (guest reddi sessizce yutar).
       try {
         await repo.markAsRead(widget.conversationId);
-        if (mounted)
+        if (mounted) {
           ref.invalidate(messagesListProvider(widget.conversationId));
+        }
         if (mounted) ref.invalidate(conversationsListProvider);
       } catch (e) {
         debugPrint('[FirinNet][Chat] markAsRead skip: $e');
@@ -88,34 +105,105 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       authorId: m.senderId,
       text: m.content,
       createdAt: m.createdAt,
+      status: fcc.MessageStatus.sent,
     );
   }
 
+  /// onMessageSend callback — boş değilse optimistic gönderim başlatır.
   Future<void> _onSend(String text) async {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty || _sending) return;
-    setState(() => _sending = true);
+    await _trySend(text.trim());
+  }
+
+  /// M-5 — Optimistic gönderim + başarı/başarısızlık geçişleri.
+  ///
+  /// [tempId] verilirse mevcut (failed) bubble retry edilir; verilmezse yeni
+  /// bir local bubble eklenir. Hata hâlinde mesaj **silinmez**: error
+  /// durumuna geçer, metin saklanır ve üst şerit "Tekrar dene" sunar.
+  Future<void> _trySend(String trimmed, {String? tempId}) async {
+    if (trimmed.isEmpty) return;
     final repo = ref.read(messagingRepositoryProvider);
+    final meId = ref.read(currentAuthUserProvider)?.id ?? 'local-user-me';
+    final id =
+        tempId ?? 'local_${_localSeq++}_${DateTime.now().microsecondsSinceEpoch}';
+
+    final sending = fcc.TextMessage(
+      id: id,
+      authorId: meId,
+      text: trimmed,
+      createdAt: DateTime.now(),
+      status: fcc.MessageStatus.sending,
+    );
+    _pendingText[id] = trimmed;
+    final prev = _optimistic[id];
+    if (prev == null) {
+      await _chatController.insertMessage(sending);
+    } else {
+      await _chatController.updateMessage(prev, sending);
+    }
+    _optimistic[id] = sending;
+
     try {
       final saved = await repo.sendTextMessage(
         conversationId: widget.conversationId,
         content: trimmed,
       );
-      // Realtime kendi INSERT'imizi de geri verecek; ama gecikme olursa
-      // optimistic insert. Dedupe için _seenMessageIds kontrol edilir.
-      if (!_seenMessageIds.contains(saved.id)) {
+      _pendingText.remove(id);
+      final current = _optimistic.remove(id);
+      if (_seenMessageIds.contains(saved.id)) {
+        // Realtime kendi INSERT'imizi zaten ekledi → optimistic bubble'ı kaldır.
+        if (current != null) await _chatController.removeMessage(current);
+      } else {
         _seenMessageIds.add(saved.id);
-        await _chatController.insertMessage(_toUiMessage(saved));
+        final sent = fcc.TextMessage(
+          id: saved.id,
+          authorId: saved.senderId,
+          text: saved.content,
+          createdAt: saved.createdAt,
+          status: fcc.MessageStatus.sent,
+        );
+        if (current != null) {
+          await _chatController.updateMessage(current, sent);
+        } else {
+          await _chatController.insertMessage(sent);
+        }
       }
     } catch (e) {
       debugPrint('[FirinNet][Chat] send error: $e');
+      final failed = fcc.TextMessage(
+        id: id,
+        authorId: meId,
+        text: trimmed,
+        createdAt: DateTime.now(),
+        status: fcc.MessageStatus.error,
+      );
+      final current = _optimistic[id];
+      if (current != null) {
+        await _chatController.updateMessage(current, failed);
+        _optimistic[id] = failed;
+      }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.messagingSendError)),
+        PremiumTopBannerController.show(
+          context,
+          message: AppStrings.messagingSendError,
+          tone: PremiumTopBannerTone.danger,
+          actionLabel: AppStrings.messagingRetryCta,
+          duration: const Duration(seconds: 6),
+          onAction: () => _trySend(trimmed, tempId: id),
         );
       }
-    } finally {
-      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  /// Hatalı (error) bir bubble'a dokununca aynı mesajı yeniden dene.
+  void _onMessageTap(
+    BuildContext context,
+    fcc.Message message, {
+    required int index,
+    required TapUpDetails details,
+  }) {
+    if (message.resolvedStatus == fcc.MessageStatus.error) {
+      final text = _pendingText[message.id];
+      if (text != null) _trySend(text, tempId: message.id);
     }
   }
 
@@ -139,6 +227,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       default:
         return '';
     }
+  }
+
+  /// M-4 — Marka teması: paket varsayılan mavi/gri yerine lemon-white-brandInk.
+  /// Gönderen bubble = lemon + koyu metin; karşı taraf = açık gri yüzey.
+  fcc.ChatTheme _brandChatTheme() {
+    final base = fcc.ChatTheme.light();
+    return base.copyWith(
+      colors: base.colors.copyWith(
+        primary: AppColors.brandLemon,
+        onPrimary: AppColors.brandInk,
+        surface: AppColors.background,
+        onSurface: AppColors.textPrimary,
+        surfaceContainer: AppColors.surfaceLine,
+      ),
+      shape: BorderRadius.circular(AppRadius.l),
+    );
   }
 
   @override
@@ -205,6 +309,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           : fcu.Chat(
               chatController: _chatController,
               currentUserId: meId,
+              theme: _brandChatTheme(),
+              builders: fcc.Builders(
+                emptyChatListBuilder: (_) =>
+                    _ChatEmptyState(contextLabel: subtitle),
+              ),
               resolveUser: (id) async {
                 // V1: bilinen 2 katılımcı — direct DM. Detail için sadece
                 // id'ye göre dummy User döner; UI bubble'da author adı
@@ -212,7 +321,74 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 return fcc.User(id: id);
               },
               onMessageSend: _onSend,
+              onMessageTap: _onMessageTap,
             ),
+    );
+  }
+}
+
+/// M-7 — Boş sohbet için marka-uyumlu yönlendirici empty state.
+class _ChatEmptyState extends StatelessWidget {
+  const _ChatEmptyState({required this.contextLabel});
+
+  final String contextLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.xl,
+          AppSpacing.xl,
+          120,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.brandLemonPale,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.brandLemonPressed.withValues(alpha: 0.45),
+                  width: 0.8,
+                ),
+              ),
+              child: const Icon(
+                Icons.forum_rounded,
+                size: 32,
+                color: AppColors.brandInk,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.m),
+            const Text(
+              AppStrings.messagingEmptyTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              contextLabel.isNotEmpty
+                  ? '$contextLabel · ${AppStrings.messagingEmptySubtitle}'
+                  : AppStrings.messagingEmptySubtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13.5,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
