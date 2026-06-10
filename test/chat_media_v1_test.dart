@@ -161,6 +161,17 @@ void main() {
       expect(src.contains('sendImageMessage'), isTrue);
     });
 
+    test('ChatScreen: imageMessageBuilder kayıtlı (resimli sohbet kırmızı '
+        'ekran P0 regresyonu)', () {
+      final src = File('lib/features/messaging/screens/chat_screen.dart')
+          .readAsStringSync();
+      // flutter_chat_ui ImageMessage render etmek için builder ZORUNLU tutar;
+      // builder verilmeyince exception fırlatıp resim içeren sohbetin tüm
+      // listesini ErrorWidget'a çeviriyordu.
+      expect(src.contains('imageMessageBuilder: _buildImageMessage'), isTrue);
+      expect(src.contains('Widget _buildImageMessage('), isTrue);
+    });
+
     test('GroupComposer: medya butonu + _attach + image bubble', () {
       final src =
           File('lib/features/social_groups/screens/group_detail_screen.dart')

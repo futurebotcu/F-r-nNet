@@ -419,6 +419,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  /// P0 — Resim mesajı bubble'ı. Paket builder verilmeyince exception
+  /// fırlatıyor (resimli sohbet açılınca tüm liste kırmızı ErrorWidget).
+  /// Görüntüleme CachedNetworkImage; tam ekran viewer mevcut _onMessageTap
+  /// üzerinden açılır.
+  Widget _buildImageMessage(
+    BuildContext context,
+    fcc.ImageMessage message,
+    int index, {
+    required bool isSentByMe,
+    fcc.MessageGroupStatus? groupStatus,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.l),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 240, maxHeight: 300),
+        child: CachedNetworkImage(
+          imageUrl: message.source,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => Container(
+            width: 240,
+            height: 180,
+            color: AppColors.surfaceLine,
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+          errorWidget: (_, __, ___) => Container(
+            width: 240,
+            height: 180,
+            color: AppColors.surfaceLine,
+            child: const Icon(
+              Icons.broken_image_rounded,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Resim bubble → fullscreen viewer; hatalı (error) text bubble → retry.
   void _onMessageTap(
     BuildContext context,
@@ -548,6 +592,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 // dene" eklenir. chatMessageBuilder override EDİLMEZ → hizalama
                 // ve animasyon paketin varsayılanından gelir (güvenli).
                 textMessageBuilder: _buildTextMessage,
+                // P0 — paket ImageMessage için builder ZORUNLU: builder yoksa
+                // Chat widget exception fırlatır ve resimli sohbetin tüm
+                // listesi ErrorWidget'a (kırmızı ekran) döner.
+                imageMessageBuilder: _buildImageMessage,
               ),
               resolveUser: (id) async {
                 // V1: bilinen 2 katılımcı — direct DM. Detail için sadece
