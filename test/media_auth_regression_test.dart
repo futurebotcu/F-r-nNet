@@ -54,49 +54,57 @@ void main() {
     });
   });
 
-  group('Guard wiring — CANLI session okunur (cache değil)', () {
-    test('canWriteCheckProvider authRepository.currentUser okur', () {
+  group('Global guard — cached currentAuthUserProvider okur (text korunur)', () {
+    test('canWriteCheckProvider currentAuthUserProvider okur (canlı getter değil)',
+        () {
       final src = File(
         'lib/features/auth/providers/can_write_check_provider.dart',
       ).readAsStringSync();
-      expect(src.contains('authRepositoryProvider'), isTrue);
-      expect(src.contains('.currentUser'), isTrue);
       expect(
         src.contains('currentUser: ref.read(currentAuthUserProvider)'),
+        isTrue,
+        reason: 'Text dahil tüm yazımlar kanıtlı cached provider\'ı kullanır',
+      );
+      expect(
+        src.contains('currentUser: ref.read(authRepositoryProvider)?.currentUser'),
         isFalse,
-        reason: 'Cache\'li stream provider yerine canlı getter okunmalı',
+        reason: 'Global guard canlı getter\'a genişletilmemeli (P0 regresyon)',
       );
     });
 
-    test('canWriteWithRef authRepository.currentUser okur', () {
+    test('canWriteWithRef currentAuthUserProvider okur (global, dar değil)', () {
       final src = File(
         'lib/features/auth/services/auth_required_guard.dart',
       ).readAsStringSync();
       expect(
-        src.contains('currentUser: ref.read(authRepositoryProvider)?.currentUser'),
+        src.contains('currentUser: ref.read(currentAuthUserProvider)'),
         isTrue,
       );
     });
   });
 
-  group('Upload path — canlı uid + signOut yok', () {
-    test('ChatScreen upload owner uid canlı session\'dan; signOut yok', () {
+  group('Media upload path — narrow live fix + signOut yok', () {
+    test('ChatScreen: invalidate + canlı fallback uid, local-user-me yok', () {
       final src = File('lib/features/messaging/screens/chat_screen.dart')
           .readAsStringSync();
+      // Narrow: picker resume sonrası cache tazelenir + canlı fallback.
+      expect(src.contains('ref.invalidate(currentAuthUserProvider)'), isTrue);
       expect(
         src.contains('ref.read(authRepositoryProvider)?.currentUser?.id'),
         isTrue,
       );
-      expect(src.contains('signOut('), isFalse,
-          reason: 'Upload path kullanıcıyı signOut etmemeli');
-      // Storage/network hatası auth-required değil, chatMediaSendError olur.
+      // Upload owner uid'si conversation scope'unda gönderilir.
+      expect(src.contains("scope: 'conversations'"), isTrue);
+      expect(src.contains('ownerId: meId'), isTrue);
+      expect(src.contains('signOut('), isFalse);
       expect(src.contains('AppStrings.chatMediaSendError'), isTrue);
     });
 
-    test('GroupComposer upload owner uid canlı session\'dan; signOut yok', () {
+    test('GroupComposer: invalidate + canlı fallback uid; signOut yok', () {
       final src =
           File('lib/features/social_groups/screens/group_detail_screen.dart')
               .readAsStringSync();
+      expect(src.contains('ref.invalidate(currentAuthUserProvider)'), isTrue);
       expect(
         src.contains('ref.read(authRepositoryProvider)?.currentUser?.id'),
         isTrue,

@@ -171,10 +171,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final svc = ref.read(chatMediaUploadServiceProvider);
     final repo = ref.read(messagingRepositoryProvider);
     if (svc == null) return;
-    // P0 fix: owner path segmenti CANLI session uid'siyle (auth.uid ile
-    // tutarlı) kurulur; cache'li provider'a güvenilmez. Gerçekten oturum
-    // yoksa (live currentUser null) → guest guard, signOut yok.
-    final meId = ref.read(authRepositoryProvider)?.currentUser?.id;
+    // Medyaya özel (narrow) auth dayanıklılığı — global guard'a dokunulmaz:
+    // native picker resume'unda cache'li currentAuthUserProvider stale-null
+    // kalmış olabilir → invalidate ile persist session'dan tazele; böylece
+    // guarded sendImageMessage'ın canWriteCheck'i logged-in'i guest sanmaz.
+    ref.invalidate(currentAuthUserProvider);
+    // Owner path segmenti gerçek uid olmalı (storage RLS auth.uid). Tazelenmiş
+    // cache → canlı fallback; local-user-me fallback YOK. İkisi de null ise
+    // gerçek oturum yok → guest guard (signOut yok).
+    final meId = ref.read(currentAuthUserProvider)?.id ??
+        ref.read(authRepositoryProvider)?.currentUser?.id;
     if (meId == null) {
       if (mounted) await showAuthRequiredSheet(context, ref);
       return;

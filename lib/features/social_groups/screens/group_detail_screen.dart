@@ -1665,9 +1665,14 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     final svc = ref.read(chatMediaUploadServiceProvider);
     final repo = ref.read(socialGroupRepositoryProvider);
     if (svc == null) return;
-    // P0 fix: owner path segmenti CANLI session uid'siyle kurulur (auth.uid
-    // ile tutarlı). Gerçekten oturum yoksa → guest guard, signOut yok.
-    final meId = ref.read(authRepositoryProvider)?.currentUser?.id;
+    // Medyaya özel (narrow) auth dayanıklılığı — global guard'a dokunulmaz.
+    // Native picker resume'unda stale-null cache'i persist session'dan tazele.
+    ref.invalidate(currentAuthUserProvider);
+    // Owner path segmenti gerçek uid olmalı (storage RLS auth.uid). Tazelenmiş
+    // cache → canlı fallback; local-user-me/'' fallback YOK. İkisi de null ise
+    // gerçek oturum yok → guest guard (signOut yok).
+    final meId = ref.read(currentAuthUserProvider)?.id ??
+        ref.read(authRepositoryProvider)?.currentUser?.id;
     if (meId == null) {
       if (mounted) await showAuthRequiredSheet(context, ref);
       return;

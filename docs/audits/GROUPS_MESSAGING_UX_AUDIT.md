@@ -578,3 +578,31 @@ Guard'lar (`canWriteCheckProvider`, `AuthRequiredGuard.canWriteWithRef`) yazma y
 
 ### Değişen dosyalar
 `can_write_check_provider.dart`, `auth_required_guard.dart`, `messaging/screens/chat_screen.dart`, `social_groups/screens/group_detail_screen.dart` + `test/media_auth_regression_test.dart`. **Supabase schema/RLS/migration/production data değişmedi.**
+
+---
+
+## Media V1 — P0 Regression-of-Regression Fix: narrow the auth guard (2026-06-10)
+
+Commit: `fix(media): scope live-session auth check to media upload paths only`.
+
+### Sorun
+`f9be952` guard'ı **global** olarak (`canWriteCheckProvider` + `canWriteWithRef`) cache'li `currentAuthUserProvider` yerine canlı `authRepository.currentUser` getter'ına çevirmişti. Bu, **normal text mesaj gönderimini** de etkiledi: logged-in kullanıcı text gönderirken "hesap gerekli" guard'ı aldı.
+
+### Kök neden (hangi satır)
+`f9be952` iki satırı değiştirmişti:
+- `can_write_check_provider.dart`: `currentUser: ref.read(currentAuthUserProvider)` → `ref.read(authRepositoryProvider)?.currentUser`. **Text gönderimini bozan tam satır budur** (text → `GuardedMessagingRepository.sendTextMessage` → `canWriteCheck()` → bu provider).
+- `auth_required_guard.dart::canWriteWithRef`: aynı değişiklik.
+
+Mekanizma: soğuk başlangıçta `client.auth.currentUser` getter'ı session storage'dan async restore tamamlanana dek **geçici null** dönebilir; oysa stream-tabanlı `currentAuthUserProvider` `initialSession` event'iyle doğru değeri tutar. Yani canlı getter'ı global guard'a koymak genel yazımlar için (text dahil) daha kırılgandı.
+
+### Fix — global geri alındı, canlı kontrol yalnız medyaya daraltıldı
+- **Global guard geri alındı:** `canWriteCheckProvider` + `canWriteWithRef` yeniden cache'li `currentAuthUserProvider` okur → **text gönderimi son kanıtlı davranışa döndü** (tüm guarded yazımlar: text, grup mesajı, join, vb.).
+- **Medya path'leri (yalnız `_uploadAndSend` + `_uploadAndPost`):** native picker resume'unda stale cache'i `ref.invalidate(currentAuthUserProvider)` ile persist session'dan tazele; owner uid'si `currentAuthUserProvider?.id ?? authRepository.currentUser?.id` (robust, **`local-user-me`/`''` fallback YOK**); ikisi de null ise → auth sheet (signOut yok). Guarded send tazelenmiş cache ile geçer.
+- Fix **tüm yazımlara genişletilmedi**; yalnız iki medya metodu.
+
+### Doğrulanan davranış
+- Logged-in: generic chat **text** gönderir ✓ · grup **text** gönderir ✓ · generic chat **image** ✓ · grup **image** ✓ (kod yolu + guard mantığı; gerçek native upload manuel QA).
+- Guest → auth guard ✓ · signOut yok ✓ · text davranışı değişmedi ✓ · schema/RLS değişmedi ✓.
+
+### Değişen dosyalar (bu fix)
+`can_write_check_provider.dart` (geri), `auth_required_guard.dart` (geri), `messaging/screens/chat_screen.dart` (medya: invalidate + robust uid), `social_groups/screens/group_detail_screen.dart` (medya: invalidate + robust uid), `test/media_auth_regression_test.dart` (güncellendi). **Onboarding/profile/createProfile/session redirect'e dokunulmadı.**

@@ -54,14 +54,14 @@ class AuthRequiredGuard {
 
   /// WidgetRef üzerinden hızlı kontrol — ekranların kullandığı sürüm.
   ///
-  /// P0 fix: cache'li `currentAuthUserProvider` yerine canlı
-  /// `authRepository.currentUser` (persist session) okunur — native picker
-  /// resume'unda geçici stream null'ı logged-in kullanıcıyı guest yapmasın.
+  /// NOT: `currentAuthUserProvider` (stream + initialSession) tüm yazımlar
+  /// için kanıtlı kaynaktır; global guard buradan okur. Medyaya özel geçici
+  /// auth durumu yalnız medya upload path'lerinde ele alınır.
   static bool canWriteWithRef(WidgetRef ref) {
     return canWrite(
       isGuest: ref.read(guestModeProvider),
       supabaseEnabled: AppConfig.supabaseEnabled,
-      currentUser: ref.read(authRepositoryProvider)?.currentUser,
+      currentUser: ref.read(currentAuthUserProvider),
       profile: ref.read(profileControllerProvider),
     );
   }

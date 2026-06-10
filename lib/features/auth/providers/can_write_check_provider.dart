@@ -11,20 +11,22 @@ import 'guest_mode_provider.dart';
 /// Wrapper write metodunda `canWriteCheck()` çağırır → guest/unauthenticated
 /// durumda `false` döner → wrapper [GuestActionRequiredException] atar.
 ///
-/// Her çağrıda **canlı** Supabase session'ı (persist edilmiş) okur.
+/// Her çağrıda Riverpod state'inden taze değer okur; oturum değişikliklerinde
+/// otomatik güncel kalır.
 ///
-/// P0 fix (media auth regression): Eskiden `currentAuthUserProvider`
-/// (onAuthStateChange stream'ine bağlı, emitler arası cache'li) okunuyordu.
-/// Native image picker app'i arka plana atıp resume'da geçici bir null-session
-/// emit ettiğinde, bu cache stale `null` kalıp logged-in kullanıcıyı guest
-/// gibi gösteriyordu. `authRepository.currentUser` getter'ı her çağrıda
-/// `client.auth.currentUser` (persist session) okur → geçici stream
-/// durumlarına dayanıklı.
+/// NOT (P0 regresyon dersi): `currentAuthUserProvider` (onAuthStateChange
+/// stream'inden, `initialSession` dahil) TÜM yazımlar için kanıtlı/dengeli
+/// kaynaktır — soğuk başlangıçta `client.auth.currentUser` getter'ı session
+/// restore tamamlanana dek geçici null dönebilirken bu provider initialSession
+/// ile doğru değeri tutar. Bu yüzden global guard burayı okur. Native image
+/// picker'a özel geçici cache durumu YALNIZ medya upload path'lerinde
+/// (provider invalidate + canlı fallback) ele alınır; global guard
+/// genişletilmez.
 final canWriteCheckProvider = Provider<bool Function()>((ref) {
   return () => AuthRequiredGuard.canWrite(
         isGuest: ref.read(guestModeProvider),
         supabaseEnabled: AppConfig.supabaseEnabled,
-        currentUser: ref.read(authRepositoryProvider)?.currentUser,
+        currentUser: ref.read(currentAuthUserProvider),
         profile: ref.read(profileControllerProvider),
       );
 });
