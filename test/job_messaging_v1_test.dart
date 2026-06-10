@@ -1,283 +1,21 @@
-// V1 — Job messaging sprint testleri.
+// Job messaging — Sprint E sonrası.
 //
-// Kapsam:
-//   1. JobConversation / JobMessage model fromRow + toInsertRow mapping.
-//   2. LocalJobMessagingRepository:
-//      - startForJobOffer (yeni + dedup mevcut conversation reuse).
-//      - sendMessage updates lastMessageAt.
-//      - softDeleteMessage sender-only.
-//      - closeConversation status='closed'.
-//      - kendi ilanına başvuru reddedilir.
-//   3. GuardedJobMessagingRepository:
-//      - guest start/send/softDelete/close → GuestActionRequiredException.
-//      - listMyConversations / listMessages pass-through.
-//   4. UI source smoke:
-//      - JobsScreen kaynak kodunda StartJobConversationSheet import edilmiş.
-//      - JobOpportunityCard kaynak kodunda 'jobsApplyComingSoon' artık snackbar
-//        fallback olarak kullanılmıyor (snackbar default davranışı kaldırıldı).
-//      - role_panel_cards Mesajlar kartı route'lu (comingSoon değil).
-//      - Router /messages + /messages/:id route'larına sahip.
-//   5. Migration SQL string-smoke:
-//      - RLS enabled.
-//      - participant-only select policy.
-//      - cross-owner insert policy (recipient = post.owner_id + is_active).
-//      - status='open' check on message insert policy.
-//      - no `with check (true)` / `using (true)`.
+// Legacy job_messaging Dart katmanı (JobConversation/JobMessage modelleri,
+// Local/Guarded/Supabase JobMessagingRepository, JobConversationScreen,
+// /messages/legacy/:id route) Sprint E'de emekliye ayrıldı. Job/İlan
+// mesajlaşması Sprint D'den beri GENERIC messaging sisteminden geçer.
+//
+// Bu dosya artık:
+//   1. UI wiring smoke — JobsScreen sheet'i kullanır, generic route, panel.
+//   2. Migration SQL smoke — `job_messaging_v1` migration dosyası KORUNUR
+//      (DB tabloları drop edilmedi); historical migration sözleşmesi.
 
 import 'dart:io';
 
-import 'package:firin_defter/features/auth/services/auth_required_guard.dart';
-import 'package:firin_defter/features/jobs/models/job_offer_post.dart';
-import 'package:firin_defter/features/messages/models/job_conversation.dart';
-import 'package:firin_defter/features/messages/models/job_message.dart';
-import 'package:firin_defter/features/messages/repositories/guarded_job_messaging_repository.dart';
-import 'package:firin_defter/features/messages/repositories/local_job_messaging_repository.dart';
-import 'package:firin_defter/features/worker/models/job_seek_post.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('JobConversation model', () {
-    test('fromRow mapping', () {
-      final c = JobConversation.fromRow(<String, dynamic>{
-        'id': 'c1',
-        'related_type': 'job_offer',
-        'job_offer_id': 'jo1',
-        'initiator_id': 'u_b',
-        'recipient_id': 'u_a',
-        'status': 'open',
-        'last_message_at': '2026-05-16T20:00:00Z',
-        'created_at': '2026-05-16T19:55:00Z',
-        'updated_at': '2026-05-16T20:00:00Z',
-      });
-      expect(c.id, 'c1');
-      expect(c.relatedType, 'job_offer');
-      expect(c.jobOfferId, 'jo1');
-      expect(c.jobSeekPostId, isNull);
-      expect(c.initiatorId, 'u_b');
-      expect(c.recipientId, 'u_a');
-      expect(c.isOpen, isTrue);
-      expect(c.isClosed, isFalse);
-      expect(c.otherPartyId('u_b'), 'u_a');
-      expect(c.otherPartyId('u_a'), 'u_b');
-      expect(c.lastMessageAt, isNotNull);
-    });
-
-    test('toInsertRow yalnız set alanları içerir', () {
-      const c = JobConversation(
-        relatedType: 'job_seek',
-        jobSeekPostId: 'js1',
-        initiatorId: 'u_a',
-        recipientId: 'u_b',
-      );
-      final row = c.toInsertRow();
-      expect(row['related_type'], 'job_seek');
-      expect(row['job_seek_post_id'], 'js1');
-      expect(row.containsKey('job_offer_id'), isFalse);
-      expect(row['initiator_id'], 'u_a');
-      expect(row['recipient_id'], 'u_b');
-      expect(row['status'], 'open');
-    });
-  });
-
-  group('JobMessage model', () {
-    test('fromRow mapping', () {
-      final m = JobMessage.fromRow(<String, dynamic>{
-        'id': 'm1',
-        'conversation_id': 'c1',
-        'sender_id': 'u_b',
-        'body': 'Merhaba',
-        'is_deleted': false,
-        'created_at': '2026-05-16T20:00:00Z',
-      });
-      expect(m.id, 'm1');
-      expect(m.conversationId, 'c1');
-      expect(m.senderId, 'u_b');
-      expect(m.body, 'Merhaba');
-      expect(m.displayBody, 'Merhaba');
-      expect(m.isDeleted, isFalse);
-    });
-
-    test('isDeleted → displayBody placeholder', () {
-      final m = JobMessage.fromRow(<String, dynamic>{
-        'id': 'm1',
-        'conversation_id': 'c1',
-        'sender_id': 'u_b',
-        'body': 'silinen mesaj',
-        'is_deleted': true,
-      });
-      expect(m.isDeleted, isTrue);
-      expect(m.displayBody, '[Mesaj silindi]');
-    });
-  });
-
-  group('LocalJobMessagingRepository', () {
-    const offer = JobOfferPost(
-      id: 'jo1',
-      ownerId: 'u_a',
-      title: 'Taş Fırın Ustası',
-      roleTitle: 'Ekmek Ustası',
-    );
-    const seek = JobSeekPost(
-      id: 'js1',
-      ownerId: 'u_a',
-      title: 'İş arıyorum',
-    );
-
-    test('startForJobOffer yeni convo açar + first message ekler', () async {
-      final repo = LocalJobMessagingRepository(selfId: 'u_b');
-      final c = await repo.startForJobOffer(
-        offer: offer,
-        firstMessage: 'Merhaba, başvurmak istiyorum.',
-      );
-      expect(c.id, isNotNull);
-      expect(c.relatedType, 'job_offer');
-      expect(c.jobOfferId, 'jo1');
-      expect(c.initiatorId, 'u_b');
-      expect(c.recipientId, 'u_a');
-      final msgs = await repo.listMessages(c.id!);
-      expect(msgs.length, 1);
-      expect(msgs.first.body, 'Merhaba, başvurmak istiyorum.');
-    });
-
-    test('startForJobOffer dedup: aynı offer + aynı initiator → reuse',
-        () async {
-      final repo = LocalJobMessagingRepository(selfId: 'u_b');
-      final c1 = await repo.startForJobOffer(
-        offer: offer,
-        firstMessage: 'İlk',
-      );
-      final c2 = await repo.startForJobOffer(
-        offer: offer,
-        firstMessage: 'İkinci',
-      );
-      expect(c2.id, c1.id);
-      final msgs = await repo.listMessages(c1.id!);
-      expect(msgs.length, 2);
-      expect(msgs.map((m) => m.body), ['İlk', 'İkinci']);
-    });
-
-    test('startForJobOffer kendi ilanına → throws', () async {
-      final repo = LocalJobMessagingRepository(selfId: 'u_a');
-      expect(
-        () => repo.startForJobOffer(offer: offer, firstMessage: 'Ben kendim'),
-        throwsStateError,
-      );
-    });
-
-    test('startForJobSeek aynı pattern', () async {
-      final repo = LocalJobMessagingRepository(selfId: 'u_b');
-      final c = await repo.startForJobSeek(
-        post: seek,
-        firstMessage: 'Sana iş teklifim var',
-      );
-      expect(c.relatedType, 'job_seek');
-      expect(c.jobSeekPostId, 'js1');
-    });
-
-    test('sendMessage updates last_message_at', () async {
-      final repo = LocalJobMessagingRepository(selfId: 'u_b');
-      final c = await repo.startForJobOffer(
-        offer: offer,
-        firstMessage: 'İlk mesaj',
-      );
-      await repo.sendMessage(conversationId: c.id!, body: 'ikinci');
-      final list = await repo.listMyConversations();
-      expect(list.first.lastMessageAt, isNotNull);
-    });
-
-    test('softDeleteMessage sender-only', () async {
-      final repoB = LocalJobMessagingRepository(selfId: 'u_b');
-      final c = await repoB.startForJobOffer(
-        offer: offer,
-        firstMessage: 'B yazdı',
-      );
-      final msgs = await repoB.listMessages(c.id!);
-      // B kendi mesajını siler — OK.
-      await repoB.softDeleteMessage(msgs.first.id!);
-      final after = await repoB.listMessages(c.id!);
-      expect(after.first.isDeleted, isTrue);
-    });
-
-    test('closeConversation → status=closed → send throws', () async {
-      final repo = LocalJobMessagingRepository(selfId: 'u_b');
-      final c = await repo.startForJobOffer(
-        offer: offer,
-        firstMessage: 'mesaj',
-      );
-      await repo.closeConversation(c.id!);
-      expect(
-        () => repo.sendMessage(conversationId: c.id!, body: 'kapanan'),
-        throwsStateError,
-      );
-    });
-  });
-
-  group('GuardedJobMessagingRepository', () {
-    const offer = JobOfferPost(
-      id: 'jo1',
-      ownerId: 'u_a',
-      title: 'Ustaaa',
-      roleTitle: 'Ekmek',
-    );
-    const seek = JobSeekPost(id: 'js1', ownerId: 'u_a', title: 'iş arıyorum');
-
-    test('guest → start/send/softDelete/close throws GuestActionRequiredException',
-        () async {
-      final inner = LocalJobMessagingRepository(selfId: 'u_b');
-      final guarded = GuardedJobMessagingRepository(
-        inner: inner,
-        canWriteCheck: () => false, // guest
-      );
-      expect(
-        () => guarded.startForJobOffer(offer: offer, firstMessage: 'x'),
-        throwsA(isA<GuestActionRequiredException>()),
-      );
-      expect(
-        () => guarded.startForJobSeek(post: seek, firstMessage: 'x'),
-        throwsA(isA<GuestActionRequiredException>()),
-      );
-      expect(
-        () => guarded.sendMessage(conversationId: 'c1', body: 'x'),
-        throwsA(isA<GuestActionRequiredException>()),
-      );
-      expect(
-        () => guarded.softDeleteMessage('m1'),
-        throwsA(isA<GuestActionRequiredException>()),
-      );
-      expect(
-        () => guarded.closeConversation('c1'),
-        throwsA(isA<GuestActionRequiredException>()),
-      );
-    });
-
-    test('list/read pass-through (no auth required)', () async {
-      final inner = LocalJobMessagingRepository(selfId: 'u_b');
-      final guarded = GuardedJobMessagingRepository(
-        inner: inner,
-        canWriteCheck: () => false, // guest
-      );
-      // Liste/read guest için izin verilir, sadece boş döner.
-      final list = await guarded.listMyConversations();
-      expect(list, isEmpty);
-      final msgs = await guarded.listMessages('non-existent');
-      expect(msgs, isEmpty);
-    });
-
-    test('auth user → start passes through', () async {
-      final inner = LocalJobMessagingRepository(selfId: 'u_b');
-      final guarded = GuardedJobMessagingRepository(
-        inner: inner,
-        canWriteCheck: () => true,
-      );
-      final c = await guarded.startForJobOffer(
-        offer: offer,
-        firstMessage: 'merhaba',
-      );
-      expect(c.id, isNotNull);
-    });
-  });
-
-  group('UI source smoke — job messaging wiring', () {
+  group('UI source smoke — job messaging wiring (generic)', () {
     test('JobsScreen imports StartJobConversationSheet + uses it', () {
       final src =
           File('lib/features/jobs/screens/jobs_screen.dart').readAsStringSync();
@@ -289,13 +27,20 @@ void main() {
           reason: 'JobsScreen seek kartı sheet açmalı');
     });
 
+    test('StartJobConversationSheet generic messaging kullanır', () {
+      final src = File(
+        'lib/features/messages/widgets/start_job_conversation_sheet.dart',
+      ).readAsStringSync();
+      expect(src.contains('messagingRepositoryProvider'), isTrue);
+      expect(src.contains('findOrCreateDirectConversation'), isTrue);
+      expect(src.contains('jobMessagingRepositoryProvider'), isFalse,
+          reason: 'Sprint D/E: legacy job repo artık kullanılmıyor');
+    });
+
     test('JobOpportunityCard artık jobsApplyComingSoon snackbar göstermiyor',
         () {
-      final src =
-          File('lib/core/widgets/premium/job_opportunity_card.dart')
-              .readAsStringSync();
-      // onApply parent'tan geçilmezse CTA hiç render edilmez; eski snackbar
-      // fallback kaldırıldı.
+      final src = File('lib/core/widgets/premium/job_opportunity_card.dart')
+          .readAsStringSync();
       expect(src.contains('jobsApplyComingSoon'), isFalse,
           reason: 'Snackbar fallback kaldırılmış olmalı');
       expect(src.contains('if (onApply != null)'), isTrue,
@@ -303,24 +48,26 @@ void main() {
     });
 
     test('role_panel_cards Mesajlar route bağlı (comingSoon değil)', () {
-      final src =
-          File('lib/features/dashboard/services/role_panel_cards.dart')
-              .readAsStringSync();
-      // cardMessages tile artık route='/messages' kullanmalı.
+      final src = File(
+        'lib/features/dashboard/services/role_panel_cards.dart',
+      ).readAsStringSync();
       expect(src.contains('route: AppRoutes.messages'), isTrue);
     });
 
-    test('Router /messages + /messages/:id route\'larına sahip', () {
-      final src =
-          File('lib/app/router/app_router.dart').readAsStringSync();
+    test('Router: generic /messages route\'ları var; legacy kaldırıldı', () {
+      final src = File('lib/app/router/app_router.dart').readAsStringSync();
       expect(src.contains("messages = '/messages'"), isTrue);
       expect(src.contains("'/messages/:id'"), isTrue);
       expect(src.contains('MessagesListScreen()'), isTrue);
-      expect(src.contains('JobConversationScreen('), isTrue);
+      // Sprint E — legacy ekran/route kaldırıldı.
+      expect(src.contains('JobConversationScreen'), isFalse,
+          reason: 'Legacy ekran route\'tan kaldırıldı');
+      expect(src.contains('/messages/legacy/'), isFalse,
+          reason: 'Legacy route kaldırıldı');
     });
   });
 
-  group('Migration SQL — job_messaging_v1 smoke', () {
+  group('Migration SQL — job_messaging_v1 smoke (DB tabloları korunur)', () {
     late String sql;
     setUpAll(() {
       sql = File('supabase/migrations/20260516200000_job_messaging_v1.sql')
@@ -341,17 +88,12 @@ void main() {
 
     test('participant select policy + initiator insert + cross-owner check',
         () {
-      // job_conversations select: participant only.
-      expect(
-          sql.contains('job_conversations_select_participant'), isTrue);
-      // insert: initiator = auth.uid(), recipient farklı, post owner check.
+      expect(sql.contains('job_conversations_select_participant'), isTrue);
       expect(sql.contains('initiator_id = auth.uid()'), isTrue);
       expect(sql.contains('recipient_id <> auth.uid()'), isTrue);
       expect(sql.contains('p.owner_id = recipient_id'), isTrue);
-      // job_offer + job_seek branch'leri kontrol.
       expect(sql.contains("related_type = 'job_offer'"), isTrue);
       expect(sql.contains("related_type = 'job_seek'"), isTrue);
-      // Aktiflik kontrol.
       expect(sql.contains('p.is_active = true'), isTrue);
     });
 

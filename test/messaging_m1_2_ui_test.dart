@@ -30,9 +30,10 @@ void main() {
       expect(src.contains('ChatScreen('), isTrue);
     });
 
-    test('Legacy /messages/legacy/:id korunur (job_conversation_screen)', () {
-      expect(src.contains("'/messages/legacy/:id'"), isTrue);
-      expect(src.contains('JobConversationScreen('), isTrue);
+    test('Legacy /messages/legacy/:id ve JobConversationScreen kaldırıldı '
+        '(Sprint E)', () {
+      expect(src.contains("'/messages/legacy/:id'"), isFalse);
+      expect(src.contains('JobConversationScreen'), isFalse);
     });
   });
 

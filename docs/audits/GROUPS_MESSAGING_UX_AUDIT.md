@@ -358,3 +358,43 @@ Commit: `refactor(messaging): route job conversations through generic messaging`
 - `start_job_conversation_sheet.dart`: generic messaging'e bağlandı (import + `_onSendPressed` + doc).
 - `messaging_consolidation_audit_test.dart`: C-1 contract'ı "FIXED" olarak güncellendi (generic wiring kilitlendi).
 - **Generic send/read/unread davranışı değişmedi** (mevcut `findOrCreateDirectConversation` + `sendTextMessage` kullanıldı). Supabase/schema/RLS değişmedi.
+
+---
+
+## Sprint E Sonucu — Safe Legacy Job Chat Retirement (2026-06-10)
+
+Commit: `refactor(messaging): retire legacy job chat surface`.
+**Yalnız kod temizliği. Supabase schema/RLS/migration değişmedi; `job_conversations`/`job_messages` DB tabloları DROP EDİLMEDİ. Panel/bottom nav/navigation redesign yapılmadı. Yeni dependency yok.**
+
+### Legacy kullanım analizi (silmeden önce)
+- `/messages/legacy/:id` route'una **hiçbir in-app navigasyon yoktu** (Sprint C/D'de doğrulandı; Sprint D sonrası job sheet generic'e geçti).
+- Legacy küme **kendine kapalıydı**: `app_router`(route+import) → `JobConversationScreen` → `job_messaging_providers` → `{job,local,supabase,guarded}_job_messaging_repository` → `{job_conversation, job_message}` modelleri. Hiçbir canlı UI/provider okumuyordu (sheet ve jobs_screen yalnız `StartJobConversationSheet` adını paylaşıyordu — generic giriş widget'ı).
+- `flutter analyze` silme sonrası temiz → dangling referans yok (kümenin izole olduğunu doğruladı).
+
+### Kaldırılanlar (kod)
+| Tür | Dosya |
+|-----|-------|
+| Route | `/messages/legacy/:id` (app_router.dart) + `job_conversation_screen.dart` import |
+| Ekran | `lib/features/messages/screens/job_conversation_screen.dart` |
+| Provider | `lib/features/messages/providers/job_messaging_providers.dart` |
+| Repository | `job_messaging_repository.dart`, `local_job_messaging_repository.dart`, `supabase_job_messaging_repository.dart`, `guarded_job_messaging_repository.dart` |
+| Model | `job_conversation.dart`, `job_message.dart` |
+| Test | `job_messaging_v1_test.dart` — silinen Dart koduna bağlı model/repo grupları kaldırıldı; **Migration-SQL smoke + UI wiring smoke korundu/güncellendi** |
+
+### Korunanlar (silinmedi) ve nedeni
+- **`job_conversations` / `job_messages` DB tabloları + RLS + `supabase/migrations/...job_messaging_v1.sql`** → backend/veri etkisi; kural gereği drop edilmedi. `job_messaging_v1_test.dart` migration-SQL smoke testleri bu dosyayı hâlâ doğruluyor.
+- **`StartJobConversationSheet`, `JobOfferPost`, `JobSeekPost`, `MessagesListScreen`, `ChatScreen`** → canlı generic sistemin parçası.
+
+### Generic sistem tek canlı sistem mi?
+✅ **Evet.** Tüm kullanıcı-açık mesajlaşma artık generic: Profil DM, Market ilanı, Job offer, Job seek → hepsi `findOrCreateDirectConversation` + `sendTextMessage` + `/messages/:id` `ChatScreen`. Legacy yüzey koddan kalktı. Doğrulanan akışlar (regresyon yok): liste, chat, unread badge, failed retry, empty state.
+
+### `job_conversations`/`job_messages` DB tabloları için sonraki karar
+Ayrı, dikkatli bir **DB sprinti**: eski veri arşiv/taşıma kararı verildikten sonra tablo+RLS emekliliği. Bu sprintte/Flutter tarafında yapılmaz.
+
+### Panel / bottom nav
+**Değiştirilmedi** (kural gereği). Mesajlar girişi Panel kartı olarak kalıyor; nav redesign sonraya bırakıldı.
+
+### Sprint E kod değişikliği özeti
+- 8 legacy dosya silindi + app_router legacy route/import/yorum temizlendi.
+- 3 test güncellendi (legacy "korunur" → "kaldırıldı" contract'ı; job_messaging_v1 dead-code grupları çıkarıldı). Toplam test 1274 → **1261** (silinen dead-code testleri; regresyon değil).
+- Supabase/schema/RLS değişmedi; DB tabloları korundu.

@@ -23,30 +23,22 @@ void main() {
       expect(src.contains('ChatScreen('), isTrue);
     });
 
-    test('Legacy: /messages/legacy/:id → JobConversationScreen (korunur)', () {
-      expect(src.contains("'/messages/legacy/:id'"), isTrue);
-      expect(src.contains('JobConversationScreen('), isTrue);
+    test('Sprint E: legacy route + JobConversationScreen tamamen kaldırıldı',
+        () {
+      expect(src.contains("'/messages/legacy/:id'"), isFalse);
+      expect(src.contains('JobConversationScreen'), isFalse);
     });
 
-    test('Legacy route in-app push YOK (ölü route)', () {
-      // Router tanımı dışında hiçbir lib dosyası /messages/legacy/ push etmemeli.
+    test('Hiçbir lib dosyasında /messages/legacy/ kalmadı', () {
       final hits = <String>[];
       final dir = Directory('lib');
       for (final f in dir.listSync(recursive: true)) {
         if (f is! File || !f.path.endsWith('.dart')) continue;
-        if (f.path.replaceAll('\\', '/').endsWith('app/router/app_router.dart')) {
-          continue;
-        }
         if (f.readAsStringSync().contains('/messages/legacy/')) {
           hits.add(f.path);
         }
       }
-      expect(
-        hits,
-        isEmpty,
-        reason: 'Legacy route yalnız router tanımında olmalı; '
-            'navigasyon kaynağı bulundu: $hits',
-      );
+      expect(hits, isEmpty, reason: 'Legacy route izi bulundu: $hits');
     });
   });
 

@@ -48,7 +48,6 @@ import '../../features/jobs/screens/jobs_screen.dart';
 import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_detail_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
-import '../../features/messages/screens/job_conversation_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
 import '../../features/messaging/screens/chat_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
@@ -570,26 +569,18 @@ GoRouter createRouter() {
         ),
       ),
 
-      // V1 — Messaging routes
-      // M1.2: /messages → MessagesListScreen (generic conversations).
-      // /messages/:id → ChatScreen (generic).
+      // V1 — Messaging routes (tek canlı sistem: generic conversations).
+      // /messages -> MessagesListScreen, /messages/:id -> ChatScreen.
       //
-      // Sprint C audit (docs/audits/GROUPS_MESSAGING_UX_AUDIT.md):
-      //   * /messages/legacy/:id → JobConversationScreen şu an KORUNUR ama
-      //     in-app navigasyonu YOK (ölü route). job_conversations verisini
-      //     okuyan tek ekran olduğu için Sprint D kararına dek silinmez.
-      //   * Bilinen uyumsuzluk (C-1, P0): StartJobConversationSheet bir
-      //     job_conversation yaratıp generic /messages/:id'ye push ediyor;
-      //     konsolidasyon Sprint D'ye planlandı. Burada davranış değişmedi.
+      // Sprint E: legacy job-chat yuzeyi (eski job sohbet ekrani + eski
+      // legacy route + job-messaging repo/model/provider) emekliye ayrildi.
+      // Job/Ilan mesajlasmasi Sprint D'den beri generic sistemden gecer
+      // (StartJobConversationSheet -> findOrCreateDirectConversation).
+      // job_conversations / job_messages DB tablolari KORUNUR (drop edilmedi);
+      // tablo emekliligi ayri bir DB sprintine birakildi.
       GoRoute(
         path: AppRoutes.messages,
         builder: (_, __) => const MessagesListScreen(),
-      ),
-      GoRoute(
-        path: '/messages/legacy/:id',
-        builder: (_, state) => JobConversationScreen(
-          conversationId: state.pathParameters['id']!,
-        ),
       ),
       GoRoute(
         path: '/messages/:id',
