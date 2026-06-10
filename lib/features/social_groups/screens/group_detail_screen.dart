@@ -9,6 +9,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -166,6 +167,9 @@ class _GroupBody extends ConsumerWidget {
       top: false,
       child: Column(
         children: [
+          // G-6/G-7 — Topluluk başlığı: açıklama + üye avatar önizleme.
+          // Kompakt; chat ön planda kalır (büyük hero değil).
+          _GroupCommunityHeader(group: group),
           // Owner için kompakt pending istek uyarısı — sadece count > 0.
           if (isOwner) _OwnerPendingAlert(group: group),
           if (group.isFull && !joined && !isOwner)
@@ -199,6 +203,130 @@ class _GroupBody extends ConsumerWidget {
           // Footer: composer (üye/owner) veya "Sohbete katıl" (non-member public).
           _GroupFooter(group: group, isJoined: joined, isOwner: isOwner),
         ],
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// G-6/G-7 — Topluluk başlığı (compact community header)
+// ═════════════════════════════════════════════════════════════════════════
+
+/// Sohbetin üstünde sabit, kompakt topluluk şeridi: grup açıklaması +
+/// üye avatar önizlemesi. Gerçek veri kullanır; veri yoksa hiç render
+/// edilmez (boş kutu yok, sahte avatar/aktivite yok).
+class _GroupCommunityHeader extends ConsumerWidget {
+  const _GroupCommunityHeader({required this.group});
+  final SocialGroup group;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final desc = group.description.trim();
+    final membersAsync = ref.watch(groupMembersProvider(group.id));
+    final members = membersAsync.maybeWhen(
+      data: (m) => m,
+      orElse: () => const <GroupMemberProfile>[],
+    );
+
+    // Gösterilecek anlamlı içerik yoksa şeridi hiç çizme.
+    if (desc.isEmpty && members.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.s,
+        AppSpacing.pageH,
+        0,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(color: AppColors.borderHairline, width: 0.8),
+        boxShadow: AppShadow.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (desc.isNotEmpty)
+            Text(
+              desc,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.35,
+              ),
+            ),
+          if (members.isNotEmpty) ...[
+            SizedBox(height: desc.isNotEmpty ? AppSpacing.s : 0),
+            Row(
+              children: [
+                _GroupAvatarStack(members: members),
+                const SizedBox(width: AppSpacing.s),
+                Text(
+                  AppStrings.groupInfoMembers(group.currentMemberCount),
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Üst üste binmiş üye avatarları (ilk 5). İçerik gerçek üye snapshot'ından.
+class _GroupAvatarStack extends StatelessWidget {
+  const _GroupAvatarStack({required this.members});
+  final List<GroupMemberProfile> members;
+
+  @override
+  Widget build(BuildContext context) {
+    const double size = 24;
+    const double step = 16;
+    final shown = members.take(5).toList(growable: false);
+    if (shown.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      width: step * (shown.length - 1) + size,
+      height: size,
+      child: Stack(
+        children: [
+          for (var i = 0; i < shown.length; i++)
+            Positioned(
+              left: i * step,
+              child: _avatarCircle(shown[i].displayName, size),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _avatarCircle(String name, double size) {
+    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.brandLemonPale,
+        border: Border.all(color: AppColors.surface, width: 1.4),
+      ),
+      child: Text(
+        initial,
+        style: const TextStyle(
+          color: AppColors.brandInk,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -1329,6 +1457,10 @@ class GroupComposer extends ConsumerStatefulWidget {
 class _ComposerState extends ConsumerState<GroupComposer> {
   final _ctrl = TextEditingController();
 
+  // G-8 — Gönderim sırasında buton loading + tekrar tıklamayı engelle
+  // (duplicate post riskini düşürür).
+  bool _sending = false;
+
   bool get _effectiveCanWrite => widget.isOwner || widget.isJoined;
 
   @override
@@ -1339,7 +1471,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
 
   Future<void> _send() async {
     final t = _ctrl.text.trim();
-    if (t.isEmpty || !_effectiveCanWrite) return;
+    if (t.isEmpty || !_effectiveCanWrite || _sending) return;
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
       return;
@@ -1354,6 +1486,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     final displayName = profile?.displayName.trim() ?? '';
     final authorName =
         displayName.isNotEmpty ? displayName : PublicProfile.fallbackName;
+    setState(() => _sending = true);
     try {
       await repo.postMessage(
         GroupMessage(
@@ -1366,15 +1499,24 @@ class _ComposerState extends ConsumerState<GroupComposer> {
         ),
       );
       if (!mounted) return;
+      // Başarı → input temizlenir (mesaj listesi refresh ile gelir).
       _ctrl.clear();
     } on GuestActionRequiredException {
       if (!mounted) return;
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.groupMessageSendError)),
+      // G-8 — Hata: metin KORUNUR (temizlenmez), üst şerit "Tekrar dene" sunar.
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.groupMessageSendError,
+        tone: PremiumTopBannerTone.danger,
+        actionLabel: AppStrings.messagingRetryCta,
+        duration: const Duration(seconds: 6),
+        onAction: _send,
       );
+    } finally {
+      if (mounted) setState(() => _sending = false);
     }
   }
 
@@ -1428,10 +1570,12 @@ class _ComposerState extends ConsumerState<GroupComposer> {
           height: 48,
           width: 48,
           child: FilledButton(
-            onPressed: _send,
+            onPressed: _sending ? null : _send,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.copper,
               foregroundColor: AppColors.surface,
+              disabledBackgroundColor: AppColors.copper.withValues(alpha: 0.6),
+              disabledForegroundColor: AppColors.surface,
               padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.m),
@@ -1441,7 +1585,16 @@ class _ComposerState extends ConsumerState<GroupComposer> {
                 letterSpacing: 1.2,
               ),
             ),
-            child: const Icon(Icons.send_rounded),
+            child: _sending
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.8,
+                      valueColor: AlwaysStoppedAnimation(AppColors.surface),
+                    ),
+                  )
+                : const Icon(Icons.send_rounded),
           ),
         ),
       ],

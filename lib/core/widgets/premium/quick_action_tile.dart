@@ -14,6 +14,7 @@ class QuickActionTile extends StatelessWidget {
     this.subtitle,
     this.accent = AppColors.softGold,
     this.featured = false,
+    this.badgeCount = 0,
   });
 
   final String label;
@@ -22,6 +23,10 @@ class QuickActionTile extends StatelessWidget {
   final VoidCallback onTap;
   final Color accent;
   final bool featured;
+
+  /// M-10 — > 0 ise trailing chevron öncesinde premium okunmamış rozeti
+  /// gösterir (lemon zemin + brandInk sayı). 0 ise hiç render edilmez.
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +118,36 @@ class QuickActionTile extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (badgeCount > 0) ...[
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandLemon,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        border: Border.all(
+                          color: AppColors.brandLemonPressed.withValues(
+                            alpha: 0.45,
+                          ),
+                          width: 0.6,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        badgeCount > 9 ? '9+' : '$badgeCount',
+                        style: const TextStyle(
+                          color: AppColors.brandInk,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                  ],
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: featured ? 16 : 14,

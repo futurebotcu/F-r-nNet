@@ -10,6 +10,7 @@ import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/quick_action_tile.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../messaging/providers/messaging_providers.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../services/role_panel_cards.dart';
@@ -28,6 +29,8 @@ class RoleDashboardScreen extends ConsumerWidget {
     final profile = ref.watch(profileControllerProvider);
     final account = profile?.accountType ?? AccountType.individual;
     final cards = RolePanelCards.forAccount(account);
+    // M-10 — Panel "Mesajlar" kartı için gerçek okunmamış toplamı.
+    final unread = ref.watch(totalUnreadMessagesProvider);
     final greeting = profile?.displayName.isNotEmpty == true
         ? '${AppStrings.panelGreetingPrefix}, ${profile!.displayName}'
         : AppStrings.panelTitle;
@@ -58,6 +61,8 @@ class RoleDashboardScreen extends ConsumerWidget {
                       subtitle: cards[i].subtitle,
                       icon: cards[i].icon,
                       featured: i == 0,
+                      badgeCount:
+                          cards[i].route == AppRoutes.messages ? unread : 0,
                       onTap: () => _onTap(context, cards[i]),
                     ),
                     if (i != cards.length - 1)

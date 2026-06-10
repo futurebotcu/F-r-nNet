@@ -194,6 +194,57 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  /// M-5 deepening — Text bubble builder. Non-error → default SimpleTextMessage.
+  /// Error → bubble + görünür satır-içi "Tekrar dene" (aynı local mesajı
+  /// resend eder; başarıda error temizlenir, başarısızlıkta error kalır →
+  /// duplicate riski yok).
+  Widget _buildTextMessage(
+    BuildContext context,
+    fcc.TextMessage message,
+    int index, {
+    required bool isSentByMe,
+    fcc.MessageGroupStatus? groupStatus,
+  }) {
+    final bubble = fcu.SimpleTextMessage(message: message, index: index);
+    if (message.resolvedStatus != fcc.MessageStatus.error) return bubble;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        bubble,
+        Padding(
+          padding: const EdgeInsets.only(top: 3, right: 4, bottom: 2),
+          child: InkWell(
+            onTap: () {
+              final t = _pendingText[message.id];
+              if (t != null) _trySend(t, tempId: message.id);
+            },
+            borderRadius: BorderRadius.circular(AppRadius.s),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.refresh_rounded,
+                  size: 13,
+                  color: AppColors.danger,
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  AppStrings.messagingRetryCta,
+                  style: const TextStyle(
+                    color: AppColors.danger,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Hatalı (error) bir bubble'a dokununca aynı mesajı yeniden dene.
   void _onMessageTap(
     BuildContext context,
@@ -313,6 +364,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               builders: fcc.Builders(
                 emptyChatListBuilder: (_) =>
                     _ChatEmptyState(contextLabel: subtitle),
+                // M-5 deepening — Default bubble (SimpleTextMessage) korunur;
+                // yalnız error durumundaki bubble'ın altına görünür "Tekrar
+                // dene" eklenir. chatMessageBuilder override EDİLMEZ → hizalama
+                // ve animasyon paketin varsayılanından gelir (güvenli).
+                textMessageBuilder: _buildTextMessage,
               ),
               resolveUser: (id) async {
                 // V1: bilinen 2 katılımcı — direct DM. Detail için sadece

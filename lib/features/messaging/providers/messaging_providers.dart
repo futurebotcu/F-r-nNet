@@ -73,3 +73,18 @@ final conversationUnreadProvider = FutureProvider.family
   ref.watch(messagingChangesProvider);
   return ref.watch(messagingRepositoryProvider).unreadCount(conversationId);
 });
+
+/// M-10 — Toplam okunmamış mesaj sayısı.
+///
+/// `conversationsListProvider`'daki her conversation'ın `unreadCount`
+/// alanının toplamıdır. **Gerçek veriden türetilir** (ek Supabase sorgusu
+/// yok); liste henüz yüklenmemiş/hatalıysa 0 döner — sahte/demo sayı
+/// üretilmez. Panel "Mesajlar" kartı badge'i bunu kullanır.
+final totalUnreadMessagesProvider = Provider.autoDispose<int>((ref) {
+  final async = ref.watch(conversationsListProvider);
+  return async.maybeWhen(
+    data: (list) =>
+        list.fold<int>(0, (sum, c) => sum + (c.unreadCount > 0 ? c.unreadCount : 0)),
+    orElse: () => 0,
+  );
+});

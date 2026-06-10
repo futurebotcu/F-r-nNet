@@ -237,4 +237,25 @@ Commit: `refactor(social): improve group identity and branded messaging quality`
 ### Sprint A sonrası kalan işler
 - **P1:** M-10 (global unread nav badge), G-6/G-7 (grup detay topluluk başlığı + üye avatar önizleme), G-8 (grup composer optimistic gönderim feedback'i — chat'teki desen grup composer'a da taşınabilir), M-8/M-2 (legacy job chat emekliye ayırma + klasör ikiliği).
 - **P2:** G-2/G-3/G-4 (liste boş state CTA, arama feedback, popüler vurgu), G-9 (reaksiyon/pin/yanıt), M-3 (presence/typing/okundu), M-9 (tarih ayraçları).
-- **Not (M-5 derinleştirme adayı):** Üst şerit retry 6 sn sonra kapanır; error bubble'a dokunarak retry kalıcıdır. İstenirse failed bubble'a kalıcı görünür "Tekrar dene" etiketi özel `textMessageBuilder` ile eklenebilir (ayrı P1).
+- **Not (M-5 derinleştirme adayı):** Üst şerit retry 6 sn sonra kapanır; error bubble'a dokunarak retry kalıcıdır. İstenirse failed bubble'a kalıcı görünür "Tekrar dene" etiketi özel `textMessageBuilder` ile eklenebilir (ayrı P1). → **Sprint B'de yapıldı.**
+
+---
+
+## Sprint B Sonucu — Liveness, Unread Badges, Community Feel (2026-06-10)
+
+Commit: `refactor(social): add group liveness and messaging feedback polish`.
+**Yeni dependency yok. Supabase schema/RLS/migration/route mimarisi/membership logic değişmedi.** Sahte unread/üye/aktivite verisi üretilmedi.
+
+| ID | Önce | Sonra | Durum |
+|----|------|-------|-------|
+| **M-10** | Okunmamış farkındalığı yalnız konuşma listesi kartında. (Not: alt nav'da **Mesajlar sekmesi yok**; giriş Panel kartından.) | `totalUnreadMessagesProvider` — `conversationsListProvider`'daki `unreadCount` toplamı (gerçek veri; yüklenmemişse 0, sahte sayı yok). `QuickActionTile`'a `badgeCount` desteği eklendi; Panel "Mesajlar" kartı premium lemon/brandInk badge gösterir ("9+" cap). | ✅ **Kapandı** (doğru yüzey = Panel kartı; nav sekmesi olmadığı için badge oraya bağlandı) |
+| **G-6/G-7** | Grup detayı sade sohbet; açıklama/üye hissi yok. | Sohbetin üstünde kompakt `_GroupCommunityHeader`: grup **açıklaması** + gerçek **üye avatar önizlemesi** (`groupMembersProvider`, `_GroupAvatarStack`, ilk 5 + üye sayısı). Veri yoksa hiç çizilmez (boş kutu/sahte avatar yok). Chat ön planda kalır (büyük hero değil; UX-reset sözleşmesi korundu). | ✅ **Kapandı** (rules alanı için veri/şema yok → dürüstçe eklenmedi, P2 not) |
+| **G-8** | Grup composer'da gönderim feedback yok; hata snackbar. | `_sending` state → buton spinner + disabled (duplicate guard). Hata → `PremiumTopBanner` (danger) "Tekrar dene" + **metin korunur** (temizlenmez). | ✅ **Kapandı** |
+| **M-5 deepening** | Error sadece status indikatörü + üst şerit + tap-retry. | `textMessageBuilder` ile error bubble'ın altına **görünür satır-içi "Tekrar dene"** eklendi. `chatMessageBuilder` override edilmedi → hizalama/animasyon paket varsayılanından; default bubble `fcu.SimpleTextMessage` ile korunur (güvenli, layout riski yok). Aynı local mesaj üzerinden resend → duplicate riski yok. | ✅ **Kapandı** |
+
+**Sprint B testleri:** `test/groups_messaging_sprint_b_test.dart` — QuickActionTile badge **widget testi** (görünür/gizli/9+) + source-contract. Mevcut `groups_v1_ux_reset_test.dart` / `groups_sprint1_owner_state_test.dart` / `messaging_m1_2_ui_test.dart` sözleşmeleri korundu. Toplam test 1252 → **1265**.
+
+### Sprint B sonrası kalan işler
+- **P1:** M-8/M-2 (legacy job chat emekliye ayırma + `messaging/` vs `messages/` klasör ikiliği — dikkatli refactor gerekir).
+- **P2:** G-2/G-3/G-4 (liste boş state CTA, arama sonuç feedback, popüler/aktif vurgu), G-9 (reaksiyon/yanıt/pin aksiyonu), M-3 (presence/typing/okundu çift-tik), M-9 (tarih ayraçları), grup kuralları alanı (şema/`group rules` verisi gerektirir).
+- **Data source note:** Gerçek-zamanlı unread artışı için `messagingChangesProvider` tick'i konuşma listesini tazeler; anlık (push'suz) güncel kalır. Push/badge OS entegrasyonu kapsam dışı (P1+).
