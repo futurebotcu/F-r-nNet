@@ -318,3 +318,43 @@ Commit: `docs(ux): audit messaging consolidation path`.
 
 ### Sprint C kod değişikliği özeti
 - **Davranış değişikliği yok.** `app_router.dart` yalnız **yorum** düzeltmesi (route/builder aynı). Yeni contract testi eklendi. Supabase/schema/RLS değişmedi.
+
+---
+
+## Sprint D Sonucu — C-1 Fix: Job Conversations → Generic Messaging (2026-06-10)
+
+Commit: `refactor(messaging): route job conversations through generic messaging`.
+**Supabase schema/RLS/migration/route mimarisi değişmedi. Yeni tablo/dependency yok. Legacy silinmedi.**
+
+### C-1 (P0) — KAPANDI ✅
+`StartJobConversationSheet` artık **generic** messaging sistemini kullanır:
+- `messagingRepositoryProvider` (legacy `jobMessagingRepositoryProvider` bırakıldı).
+- `findOrCreateDirectConversation(otherUserId: ilan sahibi, contextType: 'job_offer'|'job_seek', contextId: ilan id)` → **generic `conversations`** satırı açar/yeniden bulur (idempotent; RPC advisory-lock + dedup → duplicate yok).
+- İlk mesaj **generic `sendTextMessage`** ile **`messages`** tablosuna yazılır (kaybolmaz).
+- Kullanıcı **generic `/messages/:id` ChatScreen**'e gider → conversation tanınır, mesaj görünür.
+- `MessagesListScreen` (generic `conversationsListProvider`) bu conversation'ı **artık gösterir**; Panel unread badge generic count ile uyumlu kalır.
+- Self/own-post ve eksik-id erken kontrol edilir; guest → `AuthRequiredSheet`; hata → snackbar + sheet açık kalır (metin korunur, tekrar denenebilir).
+
+**Doğrulama (Supabase MCP ile, schema değiştirmeden okundu):** `find_or_create_direct_conversation` RPC whitelist'i `('market_listing','profile_direct','job_offer','job_seek')` — job tipleri için `context_id` zorunlu, self-DM + eksik profil server-side reddedilir. Yani migration mevcut şemayla tam destekli.
+
+### Davranış / risk tablosu
+| ID | Önce | Sonra | Durum |
+|----|------|-------|-------|
+| C-1 | Job sheet job_conversation yaratıp generic boş sohbete düşürüyordu | Generic conversation + generic ilk mesaj + generic chat | ✅ Kapandı |
+| C-3 | Job konuşmaları hiçbir listede görünmüyordu | Generic `MessagesListScreen` artık gösterir | ✅ (C-1 ile çözüldü) |
+
+### Legacy sistem (bu sprintte korundu)
+- `/messages/legacy/:id` route + `JobConversationScreen` + `features/messages/job_*` (repo/model/provider) **silinmedi** (kural gereği). `job_messaging_v1_test.dart` legacy repo testleri hâlâ geçiyor.
+- Artık **hiçbir kullanıcı-açık akış** legacy job sistemine yazmıyor (sheet generic'e taşındı). Legacy tamamen atıl.
+
+### Sprint E için legacy emeklilik planı (öneri)
+1. (İzleme) Yeni job konuşmalarının generic'te açıldığını prod'da doğrula.
+2. `StartJobConversationSheet` dışında legacy job_messaging'e referans kalmadığını teyit et (zaten yok).
+3. `JobConversationScreen` + `/messages/legacy/:id` route + `job_messaging_*` (repo/model/provider) + ilgili testleri kaldır.
+4. (Ayrı, dikkatli DB sprinti) `job_conversations` / `job_messages` tablo + RLS emekliliği — eski veri taşıma/arşiv kararıyla.
+5. Kozmetik (C-4): `MessagesListScreen`'i `messaging/` altına taşı.
+
+### Sprint D kod değişikliği özeti
+- `start_job_conversation_sheet.dart`: generic messaging'e bağlandı (import + `_onSendPressed` + doc).
+- `messaging_consolidation_audit_test.dart`: C-1 contract'ı "FIXED" olarak güncellendi (generic wiring kilitlendi).
+- **Generic send/read/unread davranışı değişmedi** (mevcut `findOrCreateDirectConversation` + `sendTextMessage` kullanıldı). Supabase/schema/RLS değişmedi.

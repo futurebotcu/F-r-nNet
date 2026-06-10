@@ -5,20 +5,24 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../jobs/models/job_offer_post.dart';
+import '../../messaging/providers/messaging_providers.dart';
 import '../../worker/models/job_seek_post.dart';
-import '../providers/job_messaging_providers.dart';
 
 /// V1 — Job ilanına başvurmak / iş arayanla iletişime geçmek için
 /// ilk mesajı yazdıran bottom sheet.
 ///
-/// Akış:
-/// 1. Auth yoksa AuthRequiredSheet (caller pre-check yapıyor olsa bile
-///    inner repo guarded; sheet build edilirse user authenticated kabul edilir).
+/// Sprint D (C-1) — Artık LEGACY job_conversations değil, GENERIC messaging
+/// sistemi kullanılır. Akış:
+/// 1. Auth yoksa AuthRequiredSheet (inner repo guarded;
+///    GuestActionRequiredException yakalanır).
 /// 2. Trim'li body 1..1000 karakter.
-/// 3. `startForJobOffer` / `startForJobSeek` çağrılır, conversation döner.
-/// 4. Conversation screen'e push edilir; başarı snackbar'ı gösterilir.
+/// 3. Generic `findOrCreateDirectConversation` (contextType job_offer/job_seek,
+///    contextId = ilan id) ile conversation açılır/yeniden bulunur.
+/// 4. İlk mesaj generic `sendTextMessage` ile yazılır.
+/// 5. /messages/:id (generic ChatScreen) ekranına push + başarı snackbar'ı.
 class StartJobConversationSheet extends ConsumerStatefulWidget {
   const StartJobConversationSheet._({this.offer, this.seekPost})
     : assert(
@@ -81,27 +85,47 @@ class _StartJobConversationSheetState
       );
       return;
     }
+
+    // C-1 (Sprint D) — Job mesajlaşması artık LEGACY job_conversations değil,
+    // GENERIC conversations/messages sistemine bağlı. İlgili ilan id'si
+    // contextId, tip job_offer/job_seek olarak generic RPC'ye gider; ilk
+    // mesaj generic sendTextMessage ile yazılır ve kullanıcı /messages/:id
+    // (generic ChatScreen) ekranına gider — boş/yanlış sohbete düşmez.
+    final ownerId = _isOffer ? widget.offer!.ownerId : widget.seekPost!.ownerId;
+    final postId = _isOffer ? widget.offer!.id : widget.seekPost!.id;
+    final contextType = _isOffer ? 'job_offer' : 'job_seek';
+    final me = ref.read(currentAuthUserProvider)?.id;
+
+    if (postId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.startConvoGenericError)),
+      );
+      return;
+    }
+    // Kendi ilanı / eksik sahip → mesaj başlatma (generic RPC de reddeder;
+    // burada erken ve net feedback ver).
+    if (ownerId == null || ownerId == me) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.startConvoOwnPostError)),
+      );
+      return;
+    }
+
     setState(() => _sending = true);
-    final repo = ref.read(jobMessagingRepositoryProvider);
+    final repo = ref.read(messagingRepositoryProvider);
     try {
-      final convo = _isOffer
-          ? await repo.startForJobOffer(
-              offer: widget.offer!,
-              firstMessage: body,
-            )
-          : await repo.startForJobSeek(
-              post: widget.seekPost!,
-              firstMessage: body,
-            );
-      ref.invalidate(myJobConversationsProvider);
-      if (convo.id != null) {
-        ref.invalidate(jobMessagesProvider(convo.id!));
-      }
+      final convId = await repo.findOrCreateDirectConversation(
+        otherUserId: ownerId,
+        contextType: contextType,
+        contextId: postId,
+      );
+      // İlk mesaj generic messages akışına yazılır (kaybolmaz).
+      await repo.sendTextMessage(conversationId: convId, content: body);
+      ref.invalidate(conversationsListProvider);
+      ref.invalidate(messagesListProvider(convId));
       if (!mounted) return;
       Navigator.of(context).pop();
-      if (convo.id != null) {
-        context.push('/messages/${convo.id}');
-      }
+      context.push('/messages/$convId');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.startConvoOpenedSnack)),
       );
@@ -110,16 +134,8 @@ class _StartJobConversationSheetState
         Navigator.of(context).pop();
         await showAuthRequiredSheet(context, ref);
       }
-    } on StateError catch (e) {
-      if (mounted) {
-        final msg = e.message.contains('Kendi ilanına')
-            ? AppStrings.startConvoOwnPostError
-            : AppStrings.startConvoGenericError;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-      }
     } catch (_) {
+      // Hata → sheet açık kalır, metin korunur, kullanıcı tekrar deneyebilir.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(AppStrings.startConvoGenericError)),

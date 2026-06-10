@@ -63,39 +63,42 @@ void main() {
     });
   });
 
-  group('Sprint C — C-1 uyumsuzluğu (job sheet → generic route)', () {
+  group('Sprint D — C-1 FIXED: job sheet generic messaging kullanır', () {
     late String src;
     setUpAll(() {
       src = File('lib/features/messages/widgets/start_job_conversation_sheet.dart')
           .readAsStringSync();
     });
 
-    test('Job repo ile job_conversation yaratır', () {
-      expect(src.contains('jobMessagingRepositoryProvider'), isTrue);
+    test('Generic messagingRepositoryProvider kullanır (legacy job repo değil)',
+        () {
+      expect(src.contains('messagingRepositoryProvider'), isTrue);
       expect(
-        src.contains('startForJobOffer') || src.contains('startForJobSeek'),
-        isTrue,
+        src.contains('jobMessagingRepositoryProvider'),
+        isFalse,
+        reason: 'C-1 fix: artık legacy job repo kullanılmıyor',
       );
+      expect(src.contains('startForJobOffer'), isFalse);
+      expect(src.contains('startForJobSeek'), isFalse);
     });
 
-    test(
-      'C-1: şu an GENERIC /messages/:id\'ye push ediyor (Sprint D düzeltir)',
-      () {
-        // Bu, bilinen P0 uyumsuzluğun mevcut sözleşmesidir. Sprint D job
-        // akışını generic findOrCreate\'e taşıyınca bu beklenti bilinçli
-        // güncellenecek (örn. generic conversation id ile).
-        expect(
-          src.contains(r"context.push('/messages/${convo.id}')"),
-          isTrue,
-          reason: 'C-1 audit kaydı: job sheet generic route kullanıyor',
-        );
-        expect(
-          src.contains('/messages/legacy/'),
-          isFalse,
-          reason: 'Job sheet legacy route\'a gitmiyor (C-1 uyumsuzluğun özü)',
-        );
-      },
-    );
+    test('findOrCreateDirectConversation + job_offer/job_seek context', () {
+      expect(src.contains('findOrCreateDirectConversation'), isTrue);
+      expect(src.contains("'job_offer'"), isTrue);
+      expect(src.contains("'job_seek'"), isTrue);
+      expect(src.contains('contextId: postId'), isTrue);
+    });
+
+    test('İlk mesaj generic sendTextMessage; generic /messages/:id\'ye push',
+        () {
+      expect(src.contains('sendTextMessage(conversationId: convId'), isTrue);
+      expect(src.contains(r"context.push('/messages/$convId')"), isTrue);
+      expect(
+        src.contains('/messages/legacy/'),
+        isFalse,
+        reason: 'Job akışı generic chat ekranına gider, legacy değil',
+      );
+    });
   });
 
   group('Sprint C — Panel Mesajlar girişi generic listeye gider', () {
