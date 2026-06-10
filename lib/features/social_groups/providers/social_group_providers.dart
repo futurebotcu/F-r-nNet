@@ -23,9 +23,15 @@ import '../services/group_validator.dart';
 /// Guarded wrapper guest yazma aksiyonlarını bloklar.
 final socialGroupRepositoryProvider =
     Provider<SocialGroupRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 — yalnız userId izlenir (select). AuthUser'da == override'ı yok;
+  // token refresh / app resume her emisyonda yeni instance üretir. Obje
+  // izlenince repo (ve içindeki sync joined cache) AYNI kullanıcı için bile
+  // sıfırlanıyordu → grup detayı açıkken üye kullanıcının isJoined'ı false'a
+  // düşüp composer yerine "Sohbete katıl" görünüyordu. userId değişmeden
+  // repo instance'ı stabil kalır; gerçek login/logout'ta yine yenilenir.
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final SocialGroupRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseSocialGroupRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalSocialGroupRepository(seed: true);

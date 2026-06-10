@@ -328,8 +328,14 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
           msg.contains('group_deleted')) {
         return GroupJoinResult.notFound;
       }
-      // duplicate key (composite PK) → zaten üye.
-      if (e.code == '23505') return GroupJoinResult.alreadyJoined;
+      // duplicate key (composite PK) → zaten üye. P0: DB üyeliği doğruladı;
+      // stale cache onarılır + notify edilir ki isJoinedProvider true'ya
+      // dönüp footer "Sohbete katıl" yerine composer'a geçsin.
+      if (e.code == '23505') {
+        _joinedCache.add(id);
+        _notify();
+        return GroupJoinResult.alreadyJoined;
+      }
       rethrow;
     }
     _joinedCache.add(id);
