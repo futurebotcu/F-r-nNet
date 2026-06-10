@@ -1664,8 +1664,14 @@ class _ComposerState extends ConsumerState<GroupComposer> {
   Future<void> _uploadAndPost(XFile file) async {
     final svc = ref.read(chatMediaUploadServiceProvider);
     final repo = ref.read(socialGroupRepositoryProvider);
-    final meId = ref.read(currentAuthUserProvider)?.id ?? '';
     if (svc == null) return;
+    // P0 fix: owner path segmenti CANLI session uid'siyle kurulur (auth.uid
+    // ile tutarlı). Gerçekten oturum yoksa → guest guard, signOut yok.
+    final meId = ref.read(authRepositoryProvider)?.currentUser?.id;
+    if (meId == null) {
+      if (mounted) await showAuthRequiredSheet(context, ref);
+      return;
+    }
     final profile = ref.read(profileControllerProvider);
     final displayName = profile?.displayName.trim() ?? '';
     final authorName =

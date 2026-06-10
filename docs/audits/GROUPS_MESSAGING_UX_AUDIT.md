@@ -552,3 +552,29 @@ Commit: `chore(media): verify chat image storage and rls deployment`.
 
 ### Video V1.1 notları
 - Bu sprintte video **yok** (kural). V1.1: picker sheet'e video seç/çek + `video_player`/`chewie` playback + boyut limiti; `attachments.media_type='video'` + thumbnail (opsiyonel). Mevcut storage RLS/bucket video için de geçerli (media_type ayrımı UI'da).
+
+---
+
+## Media V1 — P0 Auth Regression Fix (logged-in treated as guest) (2026-06-10)
+
+Commit: `fix(media): preserve authenticated session during image upload failures`.
+
+### Root cause
+Guard'lar (`canWriteCheckProvider`, `AuthRequiredGuard.canWriteWithRef`) yazma yetkisini **cache'li `currentAuthUserProvider`** üzerinden ölçüyordu. Bu provider `authUserStreamProvider` (`onAuthStateChange`) emit'lerine bağlı; **emitler arası değeri cache'li**. Native image picker (galeri/kamera) FlutterActivity'yi arka plana atıp resume ettiğinde supabase_flutter geçici bir null-session/tokenRefresh event'i emit edebiliyor → cache `null` oluyor (oysa persist edilmiş session sağlam: `client.auth.currentUser` dolu). Sonuç: logged-in kullanıcı upload anında **guest** sanılıyor → guarded `sendImageMessage`/`postMessage` `GuestActionRequiredException` → `showAuthRequiredSheet` ("hesap gerekli") → sheet CTA login/role-select'e push → kullanıcı "signOut oldum / atıldım" hissi.
+
+**Önemli:** Upload/profile-hydrate path'inde **gerçek `signOut()` çağrısı YOK**. signOut yalnız auth_actions, create_profile "misafir devam et" (Senaryo 2) ve hesap silme akışlarında — hiçbiri upload tarafından tetiklenmiyor. "signOut" tamamen yanlış-guard'ın downstream yan etkisiydi.
+
+### Fix (minimal, auth refactor yok, schema/RLS değişmedi)
+1. `canWriteCheckProvider` → `currentUser: ref.read(authRepositoryProvider)?.currentUser` (her çağrıda **canlı** `client.auth.currentUser` getter'ı; persist session). Tüm guarded write'lar (text dahil) artık geçici stream null'ına dayanıklı.
+2. `AuthRequiredGuard.canWriteWithRef` → aynı canlı getter.
+3. Upload path'leri (`chat_screen._uploadAndSend`, `group_detail._uploadAndPost`): owner uid'si canlı session'dan (`authRepository.currentUser.id` = `auth.uid` ile tutarlı → storage owner-segment RLS uyumlu). Live uid **gerçekten null** ise → `showAuthRequiredSheet` (case C); **signOut yok**.
+
+### Davranış matrisi (sonuç)
+- currentUser var + upload başarılı → resim gönderilir. ✓
+- currentUser var + storage/RLS/network hatası → `chatMediaSendError` retry banner; session korunur; auth-required'a map EDİLMEZ; signOut yok. ✓
+- currentUser yok → AuthRequiredSheet; signOut çağrılmaz. ✓
+- Guest (guestMode) → guard hâlâ çalışır. ✓
+- Text mesaj davranışı değişmedi (aynı guard daha dayanıklı). ✓
+
+### Değişen dosyalar
+`can_write_check_provider.dart`, `auth_required_guard.dart`, `messaging/screens/chat_screen.dart`, `social_groups/screens/group_detail_screen.dart` + `test/media_auth_regression_test.dart`. **Supabase schema/RLS/migration/production data değişmedi.**

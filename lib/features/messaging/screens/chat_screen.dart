@@ -170,8 +170,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _uploadAndSend(XFile file) async {
     final svc = ref.read(chatMediaUploadServiceProvider);
     final repo = ref.read(messagingRepositoryProvider);
-    final meId = ref.read(currentAuthUserProvider)?.id ?? 'local-user-me';
     if (svc == null) return;
+    // P0 fix: owner path segmenti CANLI session uid'siyle (auth.uid ile
+    // tutarlı) kurulur; cache'li provider'a güvenilmez. Gerçekten oturum
+    // yoksa (live currentUser null) → guest guard, signOut yok.
+    final meId = ref.read(authRepositoryProvider)?.currentUser?.id;
+    if (meId == null) {
+      if (mounted) await showAuthRequiredSheet(context, ref);
+      return;
+    }
     // Persistan "gönderiliyor" şeridi (upload + insert boyunca).
     PremiumTopBannerController.show(
       context,
