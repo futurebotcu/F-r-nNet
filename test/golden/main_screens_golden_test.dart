@@ -1,3 +1,9 @@
+// Golden baseline'lar Windows'ta üretildi; font rasterization platforma
+// bağlı olduğu için Linux CI'da piksel eşleşmesi beklenemez. CI 'golden'
+// tag'ini hariç tutar (yerel doğrulamada koşmaya devam eder).
+@Tags(['golden'])
+library;
+
 import 'package:firin_defter/app/app.dart';
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/auth/services/guest_mode_storage.dart';

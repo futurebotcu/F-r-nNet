@@ -29,8 +29,11 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      # Golden'lar Windows'ta üretilen platform-bağımlı baseline'lar;
+      # Linux runner'da piksel eşleşmesi mümkün değil → tag ile hariç.
+      # Yerel doğrulama checklist'i golden'ları çalıştırmaya devam eder.
       - name: Test
-        run: flutter test
+        run: flutter test --exclude-tags golden
 
       - name: Build debug APK
         run: flutter build apk --debug

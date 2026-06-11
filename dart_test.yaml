@@ -1,0 +1,7 @@
+# Test tag tanımları.
+#
+# golden: Windows'ta üretilmiş piksel baseline'larıyla görsel regresyon.
+# Platforma bağlı font rasterization nedeniyle yalnız yerel (Windows)
+# doğrulamada koşar; Linux CI `--exclude-tags golden` ile hariç tutar.
+tags:
+  golden:
