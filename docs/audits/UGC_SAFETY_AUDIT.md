@@ -68,7 +68,7 @@ Migration `20260611013000_ugc_safety_v1.sql` (production'a uygulandı, repo'da a
 ## P1 Improvements
 
 - Server-side feed filtresi (`owner_id not.in (blocked)`) — performans
-- "Engellediğim kullanıcılar" listesi (Settings) — şu an unblock yalnız profil menüsünde
+- ~~"Engellediğim kullanıcılar" listesi (Settings)~~ → **V1'de eklendi** (`/settings/blocked`, `BlockedUsersScreen`): manuel smoke'ta engellenen kullanıcının içerikleri her yerde gizlendiği için profiline (ve unblock menüsüne) ulaşılamadığı görüldü; Settings listesi tek garantili unblock yüzeyi oldu
 - Grup mesajı + DM'de engellenen kullanıcıdan gelen YENİ mesaj bildirimlerinin bastırılması
 - Report sonrası içeriği lokal gizleme opsiyonu ("şikayet ettin, gizlemek ister misin?")
 

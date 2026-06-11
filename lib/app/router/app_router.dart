@@ -58,6 +58,7 @@ import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/professional_cv_screen.dart';
 import '../../features/social/profile/profile_page.dart';
 import '../../features/social/profile/user_list_page.dart';
+import '../../features/safety/screens/blocked_users_screen.dart';
 import '../../features/settings/screens/about_screen.dart';
 import '../../features/settings/screens/data_info_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -81,6 +82,8 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String settingsAbout = '/settings/about';
   static const String settingsDataInfo = '/settings/data-info';
+  // UGC Safety V1 — engellenen kullanıcılar (tek toplu unblock yüzeyi).
+  static const String settingsBlocked = '/settings/blocked';
 
   // V1 P1-D — Uygulama içi bildirimler.
   static const String notifications = '/notifications';
@@ -356,6 +359,10 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.settingsDataInfo,
         builder: (_, __) => const DataInfoScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsBlocked,
+        builder: (_, __) => const BlockedUsersScreen(),
       ),
 
       // V1 P1-D — Bildirimler ekranı.

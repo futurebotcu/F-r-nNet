@@ -326,6 +326,22 @@ void main() {
       expect(s.contains('AppStrings.reportDuplicateBanner'), isTrue);
     });
 
+    test('Engellediğim kullanıcılar ekranı: route + tile + unblock', () {
+      // Engellenen kullanıcının içerikleri her yerde gizlendiği için
+      // engeli kaldırmanın tek garantili yüzeyi Settings listesi.
+      final router = src('lib/app/router/app_router.dart');
+      expect(router.contains("settingsBlocked = '/settings/blocked'"), isTrue);
+      expect(router.contains('BlockedUsersScreen'), isTrue);
+      final settings =
+          src('lib/features/settings/screens/settings_screen.dart');
+      expect(settings.contains('AppRoutes.settingsBlocked'), isTrue);
+      final screen =
+          src('lib/features/safety/screens/blocked_users_screen.dart');
+      expect(screen.contains('blockedUserIdsProvider'), isTrue);
+      expect(screen.contains('unblockUser'), isTrue);
+      expect(screen.contains('AppStrings.blockedUsersEmptyTitle'), isTrue);
+    });
+
     test('AppStrings safety sabitleri tanımlı ve dolu', () {
       expect(AppStrings.reportSheetTitle, 'İçeriği şikayet et');
       expect(AppStrings.reportSuccessBanner,

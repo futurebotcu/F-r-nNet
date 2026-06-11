@@ -915,6 +915,13 @@ class AppStrings {
   static const String blockedMessageStartBanner =
       'Engellediğin bir kullanıcıya mesaj başlatamazsın.';
   static const String safetyCancel = 'Vazgeç';
+  static const String blockedUsersTitle = 'Engellediğim kullanıcılar';
+  static const String blockedUsersTileSubtitle =
+      'Engellediklerini gör ve engeli kaldır';
+  static const String blockedUsersEmptyTitle = 'Engellediğin kullanıcı yok';
+  static const String blockedUsersEmptyBody =
+      'Bir kullanıcıyı engellersen burada listelenir ve engeli buradan '
+      'kaldırabilirsin.';
   // Video mesajında caption yoksa content placeholder'ı.
   static const String messagingVideoFallback = '🎬 Video';
   static const String messagingMessageCtaProfile = 'Mesaj';

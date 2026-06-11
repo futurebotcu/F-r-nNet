@@ -118,6 +118,16 @@ class SettingsScreen extends ConsumerWidget {
                       subtitle: AppStrings.settingsDataInfoSubtitle,
                       onTap: () => context.push(AppRoutes.settingsDataInfo),
                     ),
+                    const _TileDivider(),
+                    // UGC Safety V1 — engellenenler listesi: içerikleri her
+                    // yerde gizlendiği için engeli kaldırmanın tek garantili
+                    // yüzeyi burası.
+                    SettingsTile(
+                      icon: Icons.block_rounded,
+                      title: AppStrings.blockedUsersTitle,
+                      subtitle: AppStrings.blockedUsersTileSubtitle,
+                      onTap: () => context.push(AppRoutes.settingsBlocked),
+                    ),
                   ],
                 ),
               ),
