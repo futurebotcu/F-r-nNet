@@ -31,6 +31,8 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/feed_post.dart';
 import '../../feed/providers/feed_providers.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
+import '../../feed/services/feed_boundary_classifier.dart';
 import '../../safety/models/report_models.dart';
 import '../../safety/providers/safety_providers.dart';
 import '../../safety/widgets/block_user_dialog.dart';
@@ -752,6 +754,17 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       debugPrint('[FirinNet][Comments] send blocked: guest guard');
       await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    // Feed Boundary V1 — yorumlarda DAR kural: yalnız küfür/scam/link-spam
+    // engellenir; ticari yönlendirme yorumlarda uygulanmaz (bağlam sohbet).
+    final boundary = FeedBoundaryClassifier.classifyComment(text);
+    if (!boundary.allowed) {
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.boundaryCommentBlocked,
+        tone: PremiumTopBannerTone.warning,
+      );
       return;
     }
     setState(() {

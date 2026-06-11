@@ -922,6 +922,57 @@ class AppStrings {
   static const String blockedUsersEmptyBody =
       'Bir kullanıcıyı engellersen burada listelenir ve engeli buradan '
       'kaldırabilirsin.';
+
+  // Feed Boundary V1 — composer guard copy'leri.
+  static const String boundaryEditCta = 'Metni düzenle';
+  static const String boundaryCancelCta = 'Vazgeç';
+  static const String boundaryCommercialTitle =
+      'Bu paylaşım Pazar için daha uygun';
+  static const String boundaryCommercialBody =
+      'Feed, fırıncıların sohbet ve deneyim paylaşım alanı. Ürün, hizmet ve '
+      'kampanya tanıtımlarını Pazar\'da yayınlayarak doğru alıcıya daha '
+      'düzenli şekilde ulaştırabilirsin.';
+  static const String boundaryCommercialCta = 'Pazar\'a git';
+  static const String boundaryJobTitle =
+      'Bu içerik İş İlanları için daha uygun';
+  static const String boundaryJobBody =
+      'Eleman arama ve iş ilanları Feed\'de kaybolmasın. İlanlar bölümünde '
+      'daha doğru kişilere ulaşır ve başvurular daha düzenli takip edilir.';
+  static const String boundaryJobCta = 'İş ilanı oluştur';
+  static const String boundaryJobSeekTitle =
+      'İş arıyorsan sana özel bir alan var';
+  static const String boundaryJobSeekBody =
+      '"İş Arıyorum" ilanın Feed\'de kaybolmaz; İlanlar bölümünde işverenler '
+      'seni doğrudan bulur ve iletişime geçer.';
+  static const String boundaryJobSeekCta = 'İş Arıyorum ilanı ver';
+  static const String boundaryWorkplaceTitle =
+      'İşyeri satış/devir ilanı ayrı alanda yayınlanmalı';
+  static const String boundaryWorkplaceBody =
+      'Fırın veya işyeri satış/devir paylaşımları Feed yerine İş yeri '
+      'ilanlarında daha doğru kişilere ulaşır.';
+  static const String boundaryWorkplaceCta = 'İş yeri ilanına git';
+  static const String boundaryEquipmentTitle =
+      'Makine ve ekipman ilanları ayrı alanda';
+  static const String boundaryEquipmentBody =
+      'İkinci el ekipman ve makine satışlarını ilgili ilan alanında '
+      'paylaşabilirsin. Böylece alıcılar ilanını daha kolay bulur.';
+  static const String boundaryEquipmentCta = 'Ekipman ilanına git';
+  static const String boundaryProfanityTitle = 'Paylaşımı biraz yumuşatalım';
+  static const String boundaryProfanityBody =
+      'FırınNet\'te tartışma ve eleştiri serbest; hakaret, tehdit ve ağır '
+      'küfür içeren paylaşımları yayınlayamıyoruz.';
+  static const String boundaryScamTitle = 'Bu içerik yayınlanamaz';
+  static const String boundaryScamBody =
+      'Güvenlik kurallarımız gereği kaçak ürün, sahte belge veya yasa dışı '
+      'hizmet içeren paylaşımlar FırınNet\'te yer alamaz.';
+  static const String boundaryWhyLabel = 'Neden Feed\'de değil?';
+  static const String boundaryWhyBody =
+      'Feed; sohbet, soru, deneyim ve gündem için ayrıldı. İlan ve '
+      'tanıtımlar kendi alanlarında hem daha görünür olur hem de Feed '
+      'herkes için keyifli kalır.';
+  static const String boundaryCommentBlocked =
+      'Bu yorum topluluk kurallarına uymuyor. Daha yapıcı bir dille '
+      'tekrar yazmayı dene.';
   // Video mesajında caption yoksa content placeholder'ı.
   static const String messagingVideoFallback = '🎬 Video';
   static const String messagingMessageCtaProfile = 'Mesaj';

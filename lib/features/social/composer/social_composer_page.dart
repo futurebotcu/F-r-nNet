@@ -31,6 +31,8 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
+import '../../feed/services/feed_boundary_classifier.dart';
+import '../../feed/widgets/feed_boundary_sheet.dart';
 
 /// Feed Premium Sprint — composer'a feed panelinden hangi medya aksiyonuyla
 /// girildiğini taşır. `null` = klasik manuel akış (picker otomatik açılmaz).
@@ -302,6 +304,14 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    // Feed Boundary V1 — auth guard'dan SONRA, publish'ten ÖNCE.
+    // Net ticari/ilan/satış/küfür sinyali → kaliteli yönlendirme sheet'i;
+    // post oluşturulmaz, composer metni korunur. Normal sohbet etkilenmez.
+    final boundary = FeedBoundaryClassifier.classifyPost(text);
+    if (!boundary.allowed) {
+      await showFeedBoundarySheet(context, boundary);
       return;
     }
     setState(() {
