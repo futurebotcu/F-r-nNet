@@ -35,4 +35,9 @@ class GroupMessage {
   bool get hasImage => (attachments?['media_type'] as String?) == 'image';
   String? get imageUrl => attachments?['url'] as String?;
   String? get imageStoragePath => attachments?['storage_path'] as String?;
+
+  // Chat Media V1.1 — video eki (media_type=video). Bilinmeyen media_type
+  // iki getter'da da false → text bubble fallback, eski mesajlar bozulmaz.
+  bool get hasVideo => (attachments?['media_type'] as String?) == 'video';
+  String? get videoUrl => attachments?['url'] as String?;
 }

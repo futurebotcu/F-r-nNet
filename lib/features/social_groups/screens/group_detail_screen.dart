@@ -17,6 +17,7 @@ import '../../../core/widgets/premium/chat_media_picker_sheet.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../messaging/services/chat_media_upload_service.dart';
+import '../../messaging/widgets/chat_video_viewer.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/group_join_request.dart';
 import '../models/group_member.dart';
@@ -650,11 +651,20 @@ class _ChatBubble extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 // Sprint G — resim eki varsa image bubble; caption placeholder
-                // değilse altında metin gösterilir.
+                // değilse altında metin gösterilir. V1.1 — video eki varsa
+                // video bubble; bilinmeyen media_type text fallback'e düşer.
                 if (message.hasImage && (message.imageUrl ?? '').isNotEmpty)
                   _GroupImageBubble(
                     url: message.imageUrl!,
                     caption: message.text == AppStrings.messagingImageFallback
+                        ? null
+                        : message.text,
+                  )
+                else if (message.hasVideo &&
+                    (message.videoUrl ?? '').isNotEmpty)
+                  _GroupVideoBubble(
+                    url: message.videoUrl!,
+                    caption: message.text == AppStrings.messagingVideoFallback
                         ? null
                         : message.text,
                   )
@@ -768,6 +778,91 @@ class _GroupImageBubble extends StatelessWidget {
                   child: const Icon(Icons.broken_image_rounded,
                       color: AppColors.textMuted),
                 ),
+              ),
+            ),
+          ),
+        ),
+        if (caption != null && caption!.trim().isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            caption!,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 13.5,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// V1.1 — grup sohbeti video bubble'ı: koyu yüzey + play overlay + "Video"
+/// etiketi (thumbnail P2). Tap → showChatVideoViewer (chewie player dialog).
+class _GroupVideoBubble extends StatelessWidget {
+  const _GroupVideoBubble({required this.url, this.caption});
+  final String url;
+  final String? caption;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: () => showChatVideoViewer(context, url),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            child: Container(
+              width: 240,
+              height: 160,
+              color: AppColors.imageScrimDark,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.22),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.surface.withValues(alpha: 0.6),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      color: AppColors.surface,
+                      size: 34,
+                    ),
+                  ),
+                  Positioned(
+                    left: 10,
+                    bottom: 8,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.videocam_rounded,
+                          color: AppColors.surface,
+                          size: 14,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          AppStrings.chatMediaVideoLabel,
+                          style: TextStyle(
+                            color: AppColors.surface,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1637,20 +1732,23 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     }
   }
 
-  // Sprint G — resim eki: medya ikonu → sheet → seç/çek → yükle → postMessage.
+  // Sprint G + V1.1 — medya eki (image/video): ikon → sheet → seç/çek →
+  // yükle → postMessage.
   Future<void> _attach() async {
     if (!_effectiveCanWrite || _sending) return;
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    final source = await ChatMediaPickerSheet.show(context);
-    if (source == null || !mounted) return;
+    final pick = await ChatMediaPickerSheet.show(context);
+    if (pick == null || !mounted) return;
     final svc = ref.read(chatMediaUploadServiceProvider);
     if (svc == null) return;
     XFile? file;
     try {
-      file = await svc.pickImage(source);
+      file = pick.isVideo
+          ? await svc.pickVideo(pick.source)
+          : await svc.pickImage(pick.source);
     } catch (e) {
       debugLogMediaPick('pick', e);
       if (mounted) {
@@ -1663,10 +1761,14 @@ class _ComposerState extends ConsumerState<GroupComposer> {
       return;
     }
     if (file == null || !mounted) return;
-    await _uploadAndPost(file);
+    await _uploadAndPost(file, kind: pick.kind);
   }
 
-  Future<void> _uploadAndPost(XFile file) async {
+  Future<void> _uploadAndPost(
+    XFile file, {
+    ChatMediaKind kind = ChatMediaKind.image,
+  }) async {
+    final isVideo = kind == ChatMediaKind.video;
     final svc = ref.read(chatMediaUploadServiceProvider);
     final repo = ref.read(socialGroupRepositoryProvider);
     if (svc == null) return;
@@ -1689,7 +1791,9 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     setState(() => _sending = true);
     PremiumTopBannerController.show(
       context,
-      message: AppStrings.chatMediaUploading,
+      message: isVideo
+          ? AppStrings.chatMediaVideoUploading
+          : AppStrings.chatMediaUploading,
       tone: PremiumTopBannerTone.info,
       duration: Duration.zero,
     );
@@ -1699,6 +1803,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
         scopeId: widget.group.id,
         ownerId: meId,
         file: file,
+        kind: kind,
       );
       await repo.postMessage(
         GroupMessage(
@@ -1706,7 +1811,9 @@ class _ComposerState extends ConsumerState<GroupComposer> {
           groupId: widget.group.id,
           authorName: authorName,
           authorRole: widget.isOwner ? AppStrings.groupFounder : 'Üye',
-          text: AppStrings.messagingImageFallback,
+          text: isVideo
+              ? AppStrings.messagingVideoFallback
+              : AppStrings.messagingImageFallback,
           createdAt: DateTime.now(),
           attachments: res.toAttachments(),
         ),
@@ -1717,14 +1824,18 @@ class _ComposerState extends ConsumerState<GroupComposer> {
       PremiumTopBannerController.dismiss();
       if (mounted) {
         PremiumTopBannerController.show(context,
-            message: AppStrings.chatMediaTooLarge,
+            message: isVideo
+                ? AppStrings.chatMediaVideoTooLarge
+                : AppStrings.chatMediaTooLarge,
             tone: PremiumTopBannerTone.warning);
       }
     } on ChatMediaUnsupportedException {
       PremiumTopBannerController.dismiss();
       if (mounted) {
         PremiumTopBannerController.show(context,
-            message: AppStrings.chatMediaUnsupported,
+            message: isVideo
+                ? AppStrings.chatMediaVideoUnsupported
+                : AppStrings.chatMediaUnsupported,
             tone: PremiumTopBannerTone.warning);
       }
     } on GuestActionRequiredException {
@@ -1737,11 +1848,13 @@ class _ComposerState extends ConsumerState<GroupComposer> {
         // Retry aynı dosyayla; başarısızlıkta hiç mesaj eklenmedi (kayıp yok).
         PremiumTopBannerController.show(
           context,
-          message: AppStrings.chatMediaSendError,
+          message: isVideo
+              ? AppStrings.chatMediaVideoSendError
+              : AppStrings.chatMediaSendError,
           tone: PremiumTopBannerTone.danger,
           actionLabel: AppStrings.messagingRetryCta,
           duration: const Duration(seconds: 6),
-          onAction: () => _uploadAndPost(file),
+          onAction: () => _uploadAndPost(file, kind: kind),
         );
       }
     } finally {

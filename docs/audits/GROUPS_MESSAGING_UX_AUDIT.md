@@ -606,3 +606,59 @@ Mekanizma: soğuk başlangıçta `client.auth.currentUser` getter'ı session sto
 
 ### Değişen dosyalar (bu fix)
 `can_write_check_provider.dart` (geri), `auth_required_guard.dart` (geri), `messaging/screens/chat_screen.dart` (medya: invalidate + robust uid), `social_groups/screens/group_detail_screen.dart` (medya: invalidate + robust uid), `test/media_auth_regression_test.dart` (güncellendi). **Onboarding/profile/createProfile/session redirect'e dokunulmadı.**
+
+---
+
+## Chat Media V1.1 — Video Attachments (2026-06-11)
+
+Commit: `feat(media): add video attachments to chats`.
+
+### Video picker seçenekleri
+`ChatMediaPickerSheet` artık 4 seçenek döner (`ChatMediaPick {source, kind}`):
+Galeriden seç / Fotoğraf çek (image) + Video seç / Video çek (video).
+Video picker `image_picker.pickVideo` (galeri + kamera; kamera kaydı 60 sn
+`maxDuration` ile sınırlı). Yeni dependency YOK — mevcut image_picker,
+video_player ^2.9.2 ve chewie ^1.8.5 kullanıldı.
+
+### Generic + Group video desteği
+- Generic ChatScreen: `_uploadAndSend(file, kind)` → `chat-media` private
+  bucket'a aynı path şemasıyla yükler; mesaj `media_type: video` attachments
+  ile `sendImageMessage` üzerinden yazılır (message_type `text` kalır,
+  content fallback `🎬 Video`). Render: `fcc.VideoMessage` +
+  `videoMessageBuilder` (koyu yüzey + play overlay + "Video" etiketi);
+  tap → `showChatVideoViewer` (SocialPostVideo/chewie dialog).
+- Group chat: `_uploadAndPost(file, kind)` aynı akış; `_GroupVideoBubble`
+  + aynı viewer. Üye gönderebilir, non-member/guest guard aynen geçerli
+  (GuardedRepository + canWriteCheck değişmedi).
+- Signed URL enrich her iki repo'da `hasImage || hasVideo` için çalışır.
+- Bilinmeyen `media_type` → her iki yüzeyde text bubble fallback; eski
+  image/text mesajlar değişmedi.
+
+### Storage / schema / RLS
+DEĞİŞMEDİ. Mevcut `chat-media` private bucket + `messages.attachments` /
+`group_messages.attachments` jsonb + membership-gated storage RLS aynen
+kullanıldı; migration yok.
+
+### Video limitleri
+- Boyut: **25 MB** (image 10 MB değişmedi). Gerekçe: free-tier storage +
+  mobil veri dengesi; 50 MB upload süresi açısından riskli görüldü.
+- Tür: mp4 (`video/mp4`) + mov (`video/quicktime`).
+- Aşımda `ChatMediaTooLargeException` → "Video çok büyük (en fazla 25 MB)"
+  banner'ı; desteklenmeyen türde "MP4 veya MOV seç" banner'ı. Mesaj
+  kaybolmaz; genel hata banner'ında aynı dosyayla Tekrar dene var.
+- Duration kontrolü P2 (yalnız kamera kaydı 60 sn ile sınırlı).
+
+### Thumbnail / compression
+P2'ye bırakıldı (yeni dependency eklenmemesi kuralı). Bubble: brand koyu
+yüzey + play icon + "Video" etiketi. Compression yok; 25 MB limit koruyor.
+
+### Kalan riskler
+- Thumbnail olmadığı için bubble içerik önizlemesi vermiyor (P2).
+- Çok yavaş bağlantıda 25 MB upload uzun sürebilir; banner persistent ama
+  progress yüzdesi yok (P2).
+- Video oynatma signed URL 1 saat geçerli; uzun açık kalan ekranda süre
+  dolarsa "Video oynatılamadı" hata kutusu (yeniden açınca tazelenir).
+
+### Manual smoke
+Emülatörde kullanıcı tarafından doğrulanacak (text/image/video × generic/
+group + background-foreground). Sonuç bu bölüme işlenecek.

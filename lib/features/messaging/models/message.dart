@@ -50,6 +50,12 @@ class Message {
   String? get imageUrl => attachments?['url'] as String?;
   String? get imageStoragePath => attachments?['storage_path'] as String?;
 
+  // Chat Media V1.1 — video eki. Aynı attachments şeması, media_type=video.
+  // Bilinmeyen media_type değerleri her iki getter'da da false kalır →
+  // mesaj text bubble olarak güvenli render edilir (fallback).
+  bool get hasVideo => (attachments?['media_type'] as String?) == 'video';
+  String? get videoUrl => attachments?['url'] as String?;
+
   Message copyWith({
     String? content,
     String? messageType,

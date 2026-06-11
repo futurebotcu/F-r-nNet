@@ -98,11 +98,12 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
     );
   }
 
-  /// Sprint G — grup resim mesajının storage_path'i için signed URL üretip
-  /// attachments['url']'e gömer (chat-media private). Hatada url'siz döner.
+  /// Sprint G — grup medya mesajının (image V1 / video V1.1) storage_path'i
+  /// için signed URL üretip attachments['url']'e gömer (chat-media private).
+  /// Hatada url'siz döner.
   Future<GroupMessage> _enrichImage(GroupMessage m) async {
     final path = m.imageStoragePath;
-    if (!m.hasImage || path == null) return m;
+    if (!(m.hasImage || m.hasVideo) || path == null) return m;
     try {
       final url = await _client.storage
           .from(_chatMediaBucket)

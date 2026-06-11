@@ -855,8 +855,8 @@ class AppStrings {
       'Mesajını yaz, sohbet burada başlasın.';
   static const String messagingRetryCta = 'Tekrar dene';
 
-  // Sprint G — chat media (image V1).
-  static const String chatMediaSheetTitle = 'Fotoğraf ekle';
+  // Sprint G — chat media (image V1). V1.1 ile sheet videoyu da kapsıyor.
+  static const String chatMediaSheetTitle = 'Medya ekle';
   static const String chatMediaPickGallery = 'Galeriden seç';
   static const String chatMediaTakePhoto = 'Fotoğraf çek';
   static const String chatMediaUploading = 'Fotoğraf gönderiliyor…';
@@ -871,6 +871,20 @@ class AppStrings {
   // Resim mesajında caption yoksa content alanına yazılan kısa placeholder
   // (messages.content 1..4000 CHECK'ini karşılar; UI resmi render eder).
   static const String messagingImageFallback = '📷 Fotoğraf';
+
+  // Chat Media V1.1 — video attachment.
+  static const String chatMediaPickVideoGallery = 'Video seç';
+  static const String chatMediaRecordVideo = 'Video çek';
+  static const String chatMediaVideoUploading = 'Video gönderiliyor…';
+  static const String chatMediaVideoSendError =
+      'Video gönderilemedi. Bağlantını kontrol edip tekrar dene.';
+  static const String chatMediaVideoTooLarge =
+      'Video çok büyük (en fazla 25 MB).';
+  static const String chatMediaVideoUnsupported =
+      'Bu video türü desteklenmiyor. MP4 veya MOV seç.';
+  static const String chatMediaVideoLabel = 'Video';
+  // Video mesajında caption yoksa content placeholder'ı.
+  static const String messagingVideoFallback = '🎬 Video';
   static const String messagingMessageCtaProfile = 'Mesaj';
   static const String messagingMessageCtaMarket = 'Satıcıya mesaj gönder';
   static const String messagingAuthRequiredMarketReason =

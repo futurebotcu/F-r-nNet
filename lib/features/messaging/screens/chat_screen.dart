@@ -38,6 +38,7 @@ import '../models/conversation.dart' as our;
 import '../models/message.dart' as our;
 import '../providers/messaging_providers.dart';
 import '../services/chat_media_upload_service.dart';
+import '../widgets/chat_video_viewer.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.conversationId});
@@ -117,6 +118,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         status: fcc.MessageStatus.sent,
       );
     }
+    // V1.1 — video mesajı: signed URL varsa VideoMessage. URL yoksa veya
+    // media_type bilinmiyorsa text bubble fallback (eski mesajlar bozulmaz).
+    if (m.hasVideo && (m.videoUrl ?? '').isNotEmpty) {
+      return fcc.VideoMessage(
+        id: m.id,
+        authorId: m.senderId,
+        source: m.videoUrl!,
+        createdAt: m.createdAt,
+        status: fcc.MessageStatus.sent,
+      );
+    }
     return fcc.TextMessage(
       id: m.id,
       authorId: m.senderId,
@@ -126,10 +138,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  /// Realtime/ham image mesajına signed URL gömer (bootstrap'ta repo zaten
-  /// enrich eder; bu yol yalnız stream arrival içindir).
+  /// Realtime/ham medya mesajına (image/video) signed URL gömer (bootstrap'ta
+  /// repo zaten enrich eder; bu yol yalnız stream arrival içindir).
   Future<our.Message> _enrichForUi(our.Message m) async {
-    if (!m.hasImage || (m.imageUrl ?? '').isNotEmpty) return m;
+    if (!(m.hasImage || m.hasVideo) || (m.imageUrl ?? '').isNotEmpty) return m;
     final svc = ref.read(chatMediaUploadServiceProvider);
     final path = m.imageStoragePath;
     if (svc == null || path == null) return m;
@@ -143,16 +155,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  // ── Sprint G — image attachment flow ─────────────────────────────
+  // ── Sprint G + V1.1 — media attachment flow (image + video) ──────
   /// Medya ikonu (flutter_chat_ui onAttachmentTap) → sheet → seç/çek → yükle.
   Future<void> _onAttach() async {
-    final source = await ChatMediaPickerSheet.show(context);
-    if (source == null || !mounted) return;
+    final pick = await ChatMediaPickerSheet.show(context);
+    if (pick == null || !mounted) return;
     final svc = ref.read(chatMediaUploadServiceProvider);
     if (svc == null) return;
     XFile? file;
     try {
-      file = await svc.pickImage(source);
+      file = pick.isVideo
+          ? await svc.pickVideo(pick.source)
+          : await svc.pickImage(pick.source);
     } catch (e) {
       debugLogMediaPick('pick', e);
       if (mounted) {
@@ -164,10 +178,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return;
     }
     if (file == null || !mounted) return;
-    await _uploadAndSend(file);
+    await _uploadAndSend(file, kind: pick.kind);
   }
 
-  Future<void> _uploadAndSend(XFile file) async {
+  Future<void> _uploadAndSend(
+    XFile file, {
+    ChatMediaKind kind = ChatMediaKind.image,
+  }) async {
+    final isVideo = kind == ChatMediaKind.video;
     final svc = ref.read(chatMediaUploadServiceProvider);
     final repo = ref.read(messagingRepositoryProvider);
     if (svc == null) return;
@@ -188,7 +206,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Persistan "gönderiliyor" şeridi (upload + insert boyunca).
     PremiumTopBannerController.show(
       context,
-      message: AppStrings.chatMediaUploading,
+      message: isVideo
+          ? AppStrings.chatMediaVideoUploading
+          : AppStrings.chatMediaUploading,
       tone: PremiumTopBannerTone.info,
       duration: Duration.zero,
     );
@@ -198,6 +218,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         scopeId: widget.conversationId,
         ownerId: meId,
         file: file,
+        kind: kind,
       );
       final saved = await repo.sendImageMessage(
         conversationId: widget.conversationId,
@@ -212,13 +233,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } on ChatMediaTooLargeException {
       PremiumTopBannerController.dismiss();
       if (mounted) {
-        _showMediaBanner(AppStrings.chatMediaTooLarge,
+        _showMediaBanner(
+            isVideo
+                ? AppStrings.chatMediaVideoTooLarge
+                : AppStrings.chatMediaTooLarge,
             PremiumTopBannerTone.warning);
       }
     } on ChatMediaUnsupportedException {
       PremiumTopBannerController.dismiss();
       if (mounted) {
-        _showMediaBanner(AppStrings.chatMediaUnsupported,
+        _showMediaBanner(
+            isVideo
+                ? AppStrings.chatMediaVideoUnsupported
+                : AppStrings.chatMediaUnsupported,
             PremiumTopBannerTone.warning);
       }
     } on GuestActionRequiredException {
@@ -231,11 +258,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         // Aynı dosyayla retry; başarısızlıkta hiçbir mesaj eklenmedi (kayıp yok).
         PremiumTopBannerController.show(
           context,
-          message: AppStrings.chatMediaSendError,
+          message: isVideo
+              ? AppStrings.chatMediaVideoSendError
+              : AppStrings.chatMediaSendError,
           tone: PremiumTopBannerTone.danger,
           actionLabel: AppStrings.messagingRetryCta,
           duration: const Duration(seconds: 6),
-          onAction: () => _uploadAndSend(file),
+          onAction: () => _uploadAndSend(file, kind: kind),
         );
       }
     }
@@ -463,7 +492,73 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  /// Resim bubble → fullscreen viewer; hatalı (error) text bubble → retry.
+  /// V1.1 — Video mesajı bubble'ı: koyu yüzey + play overlay + "Video"
+  /// etiketi (thumbnail P2 — yeni dependency eklenmedi). Tap _onMessageTap
+  /// üzerinden showChatVideoViewer açar.
+  Widget _buildVideoMessage(
+    BuildContext context,
+    fcc.VideoMessage message,
+    int index, {
+    required bool isSentByMe,
+    fcc.MessageGroupStatus? groupStatus,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.l),
+      child: Container(
+        width: 240,
+        height: 160,
+        color: AppColors.imageScrimDark,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.22),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.surface.withValues(alpha: 0.6),
+                  width: 1,
+                ),
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                color: AppColors.surface,
+                size: 34,
+              ),
+            ),
+            Positioned(
+              left: 10,
+              bottom: 8,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.videocam_rounded,
+                    color: AppColors.surface,
+                    size: 14,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    AppStrings.chatMediaVideoLabel,
+                    style: TextStyle(
+                      color: AppColors.surface,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Resim bubble → fullscreen viewer; video bubble → player dialog;
+  /// hatalı (error) text bubble → retry.
   void _onMessageTap(
     BuildContext context,
     fcc.Message message, {
@@ -473,6 +568,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (message is fcc.ImageMessage) {
       final src = message.source;
       if (src.isNotEmpty) _openImageViewer(src);
+      return;
+    }
+    if (message is fcc.VideoMessage) {
+      final src = message.source;
+      if (src.isNotEmpty) showChatVideoViewer(context, src);
       return;
     }
     if (message.resolvedStatus == fcc.MessageStatus.error) {
@@ -596,6 +696,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 // Chat widget exception fırlatır ve resimli sohbetin tüm
                 // listesi ErrorWidget'a (kırmızı ekran) döner.
                 imageMessageBuilder: _buildImageMessage,
+                // V1.1 — VideoMessage için de builder zorunlu (aynı sebep).
+                videoMessageBuilder: _buildVideoMessage,
               ),
               resolveUser: (id) async {
                 // V1: bilinen 2 katılımcı — direct DM. Detail için sadece

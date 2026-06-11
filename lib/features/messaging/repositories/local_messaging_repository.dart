@@ -211,13 +211,15 @@ class LocalMessagingRepository implements MessagingRepository {
     // Local'de signed URL yok; render için url = storage_path fallback.
     final enriched = Map<String, dynamic>.from(attachments);
     enriched['url'] ??= attachments['storage_path'];
+    // V1.1 — fallback content media_type'a göre (📷 Fotoğraf / 🎬 Video).
+    final isVideo = attachments['media_type'] == 'video';
     final msg = Message(
       id: _genId('msg'),
       conversationId: conversationId,
       senderId: _meId,
       content: (caption != null && caption.trim().isNotEmpty)
           ? caption.trim()
-          : '📷 Fotoğraf',
+          : (isVideo ? '🎬 Video' : '📷 Fotoğraf'),
       messageType: 'text',
       attachments: enriched,
       createdAt: DateTime.now(),

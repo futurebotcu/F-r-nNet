@@ -39,11 +39,12 @@ class SupabaseMessagingRepository implements MessagingRepository {
     if (!_tick.isClosed) _tick.add(null);
   }
 
-  /// Sprint G — resim mesajının storage_path'i için signed URL üretip
-  /// attachments['url']'e gömer (bucket private). Hata olursa url'siz döner.
+  /// Sprint G — medya mesajının (image V1 / video V1.1) storage_path'i için
+  /// signed URL üretip attachments['url']'e gömer (bucket private).
+  /// Hata olursa url'siz döner.
   Future<Message> _enrichImage(Message m) async {
     final path = m.imageStoragePath;
-    if (!m.hasImage || path == null) return m;
+    if (!(m.hasImage || m.hasVideo) || path == null) return m;
     try {
       final url =
           await _client.storage.from(_chatMediaBucket).createSignedUrl(path, 3600);
@@ -326,9 +327,13 @@ class SupabaseMessagingRepository implements MessagingRepository {
     String? caption,
   }) async {
     final meId = _requireUserId();
+    // V1.1 — fallback content media_type'a göre (📷 Fotoğraf / 🎬 Video).
+    final isVideo = attachments['media_type'] == 'video';
     final content = (caption != null && caption.trim().isNotEmpty)
         ? caption.trim()
-        : AppStrings.messagingImageFallback;
+        : (isVideo
+            ? AppStrings.messagingVideoFallback
+            : AppStrings.messagingImageFallback);
     if (content.length > 4000) {
       throw ArgumentError('caption length must be <= 4000');
     }
