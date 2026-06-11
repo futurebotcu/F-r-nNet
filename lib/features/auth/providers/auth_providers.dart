@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -40,5 +41,11 @@ final currentAuthUserProvider = Provider<AuthUser?>((ref) {
   // bu provider rebuild olur. Watch edilen değer kullanılmıyor; yalnız
   // dependency oluşturmak için gerekli.
   ref.watch(authUserStreamProvider);
-  return repo.currentUser;
+  final user = repo.currentUser;
+  // P0 teşhis — her emisyonda uid loglanır: transient null blip'leri ve
+  // rebuild fırtınalarını görünür kılar (davranış değişikliği yok).
+  if (kDebugMode) {
+    debugPrint('[FirinNet][Auth] currentAuthUser rebuild uid=${user?.id}');
+  }
+  return user;
 });

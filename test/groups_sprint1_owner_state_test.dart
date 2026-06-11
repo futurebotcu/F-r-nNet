@@ -277,10 +277,14 @@ void main() {
           reason: 'Cache fill sonrası _notify() çağrısı yok — '
               'isJoinedProvider stale kalır (GB-2)');
       // Diff-check zorunlu: aksi halde listJoined sonsuz döngü riski.
-      // Önceki state snapshot'ı + karşılaştırma var:
-      expect(body.contains('previous'), isTrue,
-          reason: 'Diff-check için önceki cache snapshot tutulmalı '
-              '(listJoined ↔ notify döngüsünü engellemek için)');
+      // P0 atomik swap sonrası diff, yeni set (`next`) swap'tan ÖNCE mevcut
+      // cache ile karşılaştırılarak yapılır (await sırasında boş ara
+      // pencere yok — composer "Sohbete katıl"a düşme regresyonu).
+      expect(body.contains('final changed'), isTrue,
+          reason: 'Diff-check korunmalı (listJoined ↔ notify döngüsünü '
+              'engellemek için)');
+      expect(body.contains('if (changed) _notify();'), isTrue,
+          reason: 'Notify yalnız gerçek cache değişikliğinde tetiklenmeli');
     });
   });
 

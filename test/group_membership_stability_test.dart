@@ -239,6 +239,39 @@ void main() {
       );
     });
 
+    test(
+        '_refreshJoinedCache ATOMİK SWAP: await sırasında cache boşalmaz '
+        '(composer "Sohbete katıl"a düşme P0 regresyonu)', () {
+      final src = File(
+        'lib/features/social_groups/repositories/'
+        'supabase_social_group_repository.dart',
+      ).readAsStringSync();
+      final start = src.indexOf('Future<void> _refreshJoinedCache()');
+      final end = src.indexOf('Future<void> _ensureJoinedCache()');
+      expect(start, greaterThan(-1));
+      final body = src.substring(start, end);
+
+      // Eski buggy pattern geri gelmesin: await'ten ÖNCE genel clear.
+      expect(
+        body.contains('final previous = Set<String>.from(_joinedCache);'),
+        isFalse,
+        reason: 'Refresh canlı seti kopyalayıp await öncesi temizliyordu; '
+            'boş pencerede isJoined false okunup notify de bastırılınca '
+            'üye kullanıcı composer yerine "Sohbete katıl"da kilitleniyordu.',
+      );
+
+      // Yeni atomik pattern: kenarda set kur → await SONRASI senkron swap.
+      expect(body.contains('final next = <String>{'), isTrue);
+      final awaitIdx = body.indexOf('await _client');
+      final swapIdx = body.indexOf('..addAll(next)');
+      expect(awaitIdx, greaterThan(-1));
+      expect(
+        swapIdx,
+        greaterThan(awaitIdx),
+        reason: 'Swap network fetch tamamlandıktan sonra senkron yapılmalı',
+      );
+    });
+
     test('joinGroup 23505 (zaten üye) branch cache onarır + notify eder', () {
       final src = File(
         'lib/features/social_groups/repositories/'

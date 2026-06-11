@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/group_category.dart';
@@ -130,25 +131,41 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
   /// ki `isJoinedProvider` (sync, `groupChangesProvider` watch'lar) stale
   /// kalmasın. Diff-check zorunlu: aksi halde `listJoined` her çağrıda
   /// refresh → notify → tick → listJoined sonsuz döngüsüne girer.
+  ///
+  /// P0 — ATOMİK SWAP zorunlu: eski sürüm önce `_joinedCache.clear()` yapıp
+  /// SONRA network'ü await ediyordu. O boş pencerede tetiklenen herhangi bir
+  /// rebuild `isJoined`'ı false okuyor (üye kullanıcıda composer →
+  /// "Sohbete katıl"), refresh aynı set ile bitince diff-check notify'ı da
+  /// bastırıyor ve UI false'ta KİLİTLİ kalıyordu. Yeni set kenarda kurulur,
+  /// await'ten sonra senkron swap edilir — okuyucular ya eski ya yeni seti
+  /// görür, asla boş ara durumu görmez.
   Future<void> _refreshJoinedCache() async {
     final userId = _currentUserId;
-    final previous = Set<String>.from(_joinedCache);
-    _joinedCache.clear();
     if (userId == null) {
+      final hadAny = _joinedCache.isNotEmpty;
+      _joinedCache.clear();
       _joinedLoaded = true;
-      if (previous.isNotEmpty) _notify();
+      if (hadAny) _notify();
       return;
     }
     final rows = await _client
         .from('group_members')
         .select('group_id')
         .eq('owner_id', userId);
-    for (final r in (rows as List)) {
-      _joinedCache.add((r as Map<String, dynamic>)['group_id'] as String);
-    }
+    final next = <String>{
+      for (final r in (rows as List))
+        (r as Map<String, dynamic>)['group_id'] as String,
+    };
+    final changed = next.length != _joinedCache.length ||
+        !next.containsAll(_joinedCache);
+    _joinedCache
+      ..clear()
+      ..addAll(next);
     _joinedLoaded = true;
-    final changed = previous.length != _joinedCache.length ||
-        !previous.containsAll(_joinedCache);
+    if (kDebugMode) {
+      debugPrint('[FirinNet][Groups] joinedCache REFRESH uid=$userId '
+          'count=${_joinedCache.length} repo=#${identityHashCode(this)}');
+    }
     if (changed) _notify();
   }
 

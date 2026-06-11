@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -151,6 +152,10 @@ class _GroupBody extends ConsumerWidget {
     final user = ref.watch(currentAuthUserProvider);
     final isOwner = user != null && group.ownerId == user.id;
     final joined = ref.watch(isJoinedProvider(group.id));
+    if (kDebugMode) {
+      debugPrint('[FirinNet][Groups] body BUILD group=${group.id} '
+          'uid=${user?.id} owner=$isOwner joined=$joined');
+    }
     // contentVisible = chat'i göstermeye yetkili miyim?
     // - Public grup: herkes görür.
     // - Private grup: yalnız üye veya owner görür; non-member gated.

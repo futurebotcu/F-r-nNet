@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -35,6 +36,10 @@ final socialGroupRepositoryProvider =
     inner = SupabaseSocialGroupRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalSocialGroupRepository(seed: true);
+  }
+  if (kDebugMode) {
+    debugPrint('[FirinNet][Groups] repo REBUILD uid=$userId '
+        'inner=${inner.runtimeType}#${identityHashCode(inner)}');
   }
   final canWrite = ref.watch(canWriteCheckProvider);
   return GuardedSocialGroupRepository(inner: inner, canWriteCheck: canWrite);
