@@ -124,6 +124,42 @@ void main() {
     });
   });
 
+  group('Boundary V1 — saha bypass regresyonları (emülatör kanıtlı)', () {
+    test('"eleman aranyor" (yazım hatası) → jobAd yakalanır', () {
+      final r = post('eleman aranyor');
+      expect(r.allowed, isFalse,
+          reason: 'Saha kanıtı: aranıyor yazım hatasıyla bypass edilmişti');
+      expect(r.category, FeedBoundaryCategory.jobAd);
+    });
+
+    test('ASCII yazım: "eleman araniyor" / "satilik makine" yakalanır', () {
+      expect(post('eleman araniyor acil').category,
+          FeedBoundaryCategory.jobAd);
+      expect(post('satilik hamur makinesi temiz').category,
+          FeedBoundaryCategory.equipmentSale);
+    });
+
+    test('sesli-düşürülmüş küfür ("skeym") → profanity yakalanır', () {
+      final r = post('hepnzn anas n skeym toptan sat');
+      expect(r.allowed, isFalse,
+          reason: 'Saha kanıtı: obfuscated küfür bypass edilmişti');
+      expect(r.category, FeedBoundaryCategory.profanity);
+    });
+
+    test('"toptan sat" prefix → commercialAd', () {
+      final r = post('un toptan sat elimde bol var');
+      expect(r.allowed, isFalse);
+      expect(r.category, FeedBoundaryCategory.commercialAd);
+    });
+
+    test('İSKELET ÇAKIŞMA GUARD: "sektör" küfür DEĞİL', () {
+      // sektör→sktr iskeleti siktir ile çakışır; ağır sesli-düşürme şartı
+      // (uzunluk farkı ≤1) normal kelimeyi korur.
+      expect(post('Sektörde eleman bulmak çok zor').allowed, isTrue);
+      expect(post('sektor genel olarak durgun bu ay').allowed, isTrue);
+    });
+  });
+
   group('Boundary V1 — yorum DAR kuralı', () {
     test('yorumda küfür engellenir', () {
       final r = comment('amk ne biçim ekmek bu');

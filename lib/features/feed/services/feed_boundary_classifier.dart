@@ -64,20 +64,57 @@ class FeedBoundaryClassifier {
   const FeedBoundaryClassifier._();
 
   // ── Normalizasyon ─────────────────────────────────────────────────
-  /// Türkçe-güvenli lowercase + noktalama → boşluk + tek boşluk.
+  /// Türkçe-güvenli lowercase + ASCII-fold + noktalama → boşluk.
+  ///
+  /// ASCII-fold (ı→i, ş→s, ç→c, ğ→g, ö→o, ü→u) hem metne hem sinyallere
+  /// uygulanır: "satilik", "araniyor" gibi ASCII yazımlar ve ı/i farkları
+  /// sinyali ıskalamaz. (Saha kanıtı: "eleman aranyor" tipi yazımlar.)
+  static String _asciiFold(String s) => s
+      .replaceAll('ı', 'i')
+      .replaceAll('ş', 's')
+      .replaceAll('ç', 'c')
+      .replaceAll('ğ', 'g')
+      .replaceAll('ö', 'o')
+      .replaceAll('ü', 'u');
+
   static String _normalize(String input) {
-    final lowered = input
-        .replaceAll('İ', 'i')
-        .replaceAll('I', 'ı')
-        .toLowerCase();
-    return ' ${lowered.replaceAll(RegExp(r'[^a-zçğıöşü0-9?%]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim()} ';
+    final lowered = _asciiFold(
+      input.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase(),
+    );
+    return ' ${lowered.replaceAll(RegExp(r'[^a-z0-9?%]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim()} ';
   }
 
-  static bool _hasWord(String norm, String word) =>
-      norm.contains(' $word ') || norm.contains(' $word?');
+  // Küfür sesli-harf iskeleti — "skeym" gibi sesli düşürülmüş yazımları
+  // yakalar. ÇAKIŞMA GUARD'I: kelime gerçekten ağır sesli-düşürmeli olmalı
+  // (uzunluk farkı ≤1) — aksi halde "sektör"→'sktr' gibi normal kelimeler
+  // yanlış pozitif verir (saha riski; testle kilitli).
+  static const Set<String> _profanitySkeletons = {
+    'sktr', // siktir → sktr
+    'skym', // sikeyim → skeym
+    'skrm', // sikerim → skerm
+    'yrrk', // yarrak
+  };
+
+  static bool _hasProfanitySkeleton(String norm) {
+    for (final word in norm.trim().split(' ')) {
+      if (word.length < 4) continue;
+      final skeleton = word.replaceAll(RegExp('[aeiou]'), '');
+      if (skeleton.length >= 4 &&
+          word.length - skeleton.length <= 1 &&
+          _profanitySkeletons.contains(skeleton)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static bool _hasWord(String norm, String word) {
+    final w = _asciiFold(word);
+    return norm.contains(' $w ') || norm.contains(' $w?');
+  }
 
   static bool _hasAny(String norm, List<String> words) =>
-      words.any((w) => norm.contains(w));
+      words.any((w) => norm.contains(_asciiFold(w)));
 
   // ── Sinyal listeleri ──────────────────────────────────────────────
   // Profanity — yalnız tartışmasız token'lar (false-positive riski düşük).
@@ -122,6 +159,8 @@ class FeedBoundaryClassifier {
   static const List<String> _hiringIntent = [
     'aranıyor', 'alınacak', 'alınacaktır', 'arıyoruz', 'aramaktayız',
     'işe alım', 'başvuru için',
+    // Saha kanıtlı yaygın yazım varyantları ("eleman aranyor" bypass'ı).
+    'aranyor', 'araniyo', 'aranıyo', 'ariyoz', 'arıyoz', 'araniyor',
   ];
   static const List<String> _hiringStrongExtras = [
     'maaş', 'yatılı', 'sigortalı', 'acil eleman', 'dolgun',
@@ -136,7 +175,9 @@ class FeedBoundaryClassifier {
   // Ticari reklam/spam niyeti.
   static const List<String> _adStrong = [
     'reklamdır', 'fiyat listesi', 'sipariş için', 'sipariş almak',
-    'siparişleriniz', 'toptan satış', 'toptan fiyat', 'ürünlerimiz',
+    'siparişleriniz',
+    // 'toptan sat' prefix'i satış/satıyoruz/sat yazımlarının hepsini kapsar.
+    'toptan sat', 'toptan fiyat', 'ürünlerimiz',
     'kampanyamız', 'kampanya', 'indirim', 'stoklarla sınırlı',
     'bayilik verilecektir', 'bayilik veriyoruz', 'bayi alınacak',
     'dm den ulaş', 'dmden ulaş', 'whatsapptan sipariş', 'numaradan sipariş',
@@ -164,8 +205,9 @@ class FeedBoundaryClassifier {
     final discussion = _hasAny(norm, _discussionMarkers);
 
     // 1) Güvenlik: profanity / scam — her zaman önce, tartışma işareti
-    // engeli kaldırmaz.
-    if (_profanityWords.any((w) => _hasWord(norm, w))) {
+    // engeli kaldırmaz. Sesli-harf iskeleti obfuscation'ı da yakalar.
+    if (_profanityWords.any((w) => _hasWord(norm, w)) ||
+        _hasProfanitySkeleton(norm)) {
       return const FeedBoundaryResult(
         allowed: false,
         category: FeedBoundaryCategory.profanity,
@@ -246,7 +288,7 @@ class FeedBoundaryClassifier {
       const weakAdTokens = ['kampanya', 'indirim'];
       final onlyWeak = !_adStrong
           .where((t) => !weakAdTokens.contains(t))
-          .any((t) => norm.contains(t));
+          .any((t) => norm.contains(_asciiFold(t)));
       if (onlyWeak && discussion) return FeedBoundaryResult.ok;
       return FeedBoundaryResult(
         allowed: false,
@@ -271,7 +313,8 @@ class FeedBoundaryClassifier {
     if (raw.isEmpty) return FeedBoundaryResult.ok;
     final norm = _normalize(raw);
 
-    if (_profanityWords.any((w) => _hasWord(norm, w))) {
+    if (_profanityWords.any((w) => _hasWord(norm, w)) ||
+        _hasProfanitySkeleton(norm)) {
       return const FeedBoundaryResult(
         allowed: false,
         category: FeedBoundaryCategory.profanity,
