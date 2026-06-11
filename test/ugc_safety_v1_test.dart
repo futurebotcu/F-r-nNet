@@ -10,7 +10,6 @@
 //   6. Source contracts: migration RLS + tüm UI yüzey entegrasyonları +
 //      feed render filtresi + mesaj başlatma engeli.
 
-import 'dart:async';
 import 'dart:io';
 
 import 'package:firin_defter/core/constants/app_strings.dart';

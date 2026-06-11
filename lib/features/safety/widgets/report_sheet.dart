@@ -158,23 +158,42 @@ class _ReportSheetState extends State<_ReportSheet> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // RadioListTile.groupValue yeni Flutter'da deprecated;
+                    // sürüm-bağımsız özel seçim satırı kullanılır.
                     for (final reason in ReportReason.values)
-                      RadioListTile<ReportReason>(
-                        value: reason,
-                        groupValue: _reason,
-                        onChanged: _submitting
+                      InkWell(
+                        onTap: _submitting
                             ? null
-                            : (v) => setState(() => _reason = v),
-                        dense: true,
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 4),
-                        activeColor: AppColors.copper,
-                        title: Text(
-                          reason.label,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
+                            : () => setState(() => _reason = reason),
+                        borderRadius: BorderRadius.circular(AppRadius.s),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 9,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _reason == reason
+                                    ? Icons.radio_button_checked_rounded
+                                    : Icons.radio_button_off_rounded,
+                                size: 20,
+                                color: _reason == reason
+                                    ? AppColors.copper
+                                    : AppColors.textMuted,
+                              ),
+                              const SizedBox(width: AppSpacing.m),
+                              Expanded(
+                                child: Text(
+                                  reason.label,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
