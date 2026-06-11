@@ -86,6 +86,9 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
     return GroupMessage(
       id: row['id'] as String,
       groupId: row['group_id'] as String,
+      // UGC Safety V1 — owner_id zaten SELECT'te vardı; artık parse edilir
+      // (şikayet/engelleme + kendi mesajı ayrımı).
+      ownerId: row['owner_id'] as String?,
       authorName:
           (row['author_name'] as String?) ?? 'FırınNet Kullanıcısı',
       authorRole: (row['author_role'] as String?) ?? 'Üye',
@@ -113,6 +116,7 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
       return GroupMessage(
         id: m.id,
         groupId: m.groupId,
+        ownerId: m.ownerId,
         authorName: m.authorName,
         authorRole: m.authorRole,
         text: m.text,

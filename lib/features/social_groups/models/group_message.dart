@@ -13,6 +13,7 @@ class GroupMessage {
     required this.authorRole,
     required this.text,
     required this.createdAt,
+    this.ownerId,
     this.isPinned = false,
     this.reactionCount = 0,
     this.attachments,
@@ -20,6 +21,11 @@ class GroupMessage {
 
   final String id;
   final String groupId;
+
+  /// UGC Safety V1 — yazarın user id'si (DB `owner_id`, eskiden parse
+  /// edilmiyordu). Şikayet/engelleme ve "kendi mesajı" ayrımı için.
+  /// Eski local/optimistic kayıtlarda null olabilir.
+  final String? ownerId;
   final String authorName;
   final String authorRole;
   final String text;

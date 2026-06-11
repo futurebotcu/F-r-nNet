@@ -35,6 +35,9 @@ import '../../feed/models/feed_post.dart';
 import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../feed/repositories/feed_repository.dart';
+import '../../safety/models/report_models.dart';
+import '../../safety/widgets/block_user_dialog.dart';
+import '../../safety/widgets/report_sheet.dart';
 import '../comments/comments_page.dart';
 import 'widgets/social_post_video.dart';
 
@@ -273,6 +276,20 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             onGoToGroup: post.groupId == null
                 ? null
                 : () => context.push('${AppRoutes.groups}/${post.groupId}'),
+            // UGC Safety V1 — kendi gönderisi şikayet/engel SUNULMAZ.
+            onReport: (isOwner || post.ownerId.isEmpty)
+                ? null
+                : () => showReportSheet(
+                      context,
+                      ref,
+                      targetType: ReportTargetType.feedPost,
+                      targetId: post.id,
+                      reportedUserId: post.ownerId,
+                    ),
+            onBlock: (isOwner || post.ownerId.isEmpty)
+                ? null
+                : () =>
+                    confirmAndBlockUser(context, ref, userId: post.ownerId),
           ),
           _Caption(author: post.author, text: post.text),
           if (post.tags.isNotEmpty) _TagsRow(tags: post.tags),
@@ -324,6 +341,8 @@ class _Header extends StatelessWidget {
     required this.onDelete,
     required this.onEdit,
     required this.onGoToGroup,
+    required this.onReport,
+    required this.onBlock,
   });
 
   final FeedPost post;
@@ -333,6 +352,8 @@ class _Header extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
   final VoidCallback? onGoToGroup;
+  final VoidCallback? onReport;
+  final VoidCallback? onBlock;
 
   @override
   Widget build(BuildContext context) {
@@ -448,7 +469,11 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          if (onDelete != null || onEdit != null || onGoToGroup != null)
+          if (onDelete != null ||
+              onEdit != null ||
+              onGoToGroup != null ||
+              onReport != null ||
+              onBlock != null)
             PopupMenuButton<String>(
               icon: const Icon(
                 Icons.more_horiz_rounded,
@@ -460,6 +485,8 @@ class _Header extends StatelessWidget {
                 if (v == 'edit') onEdit?.call();
                 if (v == 'delete') onDelete?.call();
                 if (v == 'group') onGoToGroup?.call();
+                if (v == 'report') onReport?.call();
+                if (v == 'block') onBlock?.call();
               },
               itemBuilder: (_) => [
                 if (onEdit != null)
@@ -489,6 +516,39 @@ class _Header extends StatelessWidget {
                         ),
                         SizedBox(width: 8),
                         Text(AppStrings.feedActionGoToGroup),
+                      ],
+                    ),
+                  ),
+                if (onReport != null)
+                  const PopupMenuItem(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.flag_outlined,
+                          size: 18,
+                          color: AppColors.textPrimary,
+                        ),
+                        SizedBox(width: 8),
+                        Text(AppStrings.safetyActionReport),
+                      ],
+                    ),
+                  ),
+                if (onBlock != null)
+                  const PopupMenuItem(
+                    value: 'block',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.block_rounded,
+                          size: 18,
+                          color: AppColors.danger,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          AppStrings.safetyActionBlock,
+                          style: TextStyle(color: AppColors.danger),
+                        ),
                       ],
                     ),
                   ),

@@ -18,6 +18,9 @@ import '../../auth/services/auth_required_guard.dart';
 import '../../messages/widgets/start_job_conversation_sheet.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../safety/models/report_models.dart';
+import '../../safety/widgets/block_user_dialog.dart';
+import '../../safety/widgets/report_sheet.dart';
 import '../../worker/models/job_seek_post.dart';
 import '../../worker/providers/worker_providers.dart';
 import '../models/job_offer_post.dart';
@@ -160,6 +163,71 @@ class _LookingList extends ConsumerWidget {
   }
 }
 
+/// UGC Safety V1 — ilan kartına uzun basma: şikayet et / sahibini engelle.
+/// Kendi ilanında veya id/owner bilinmiyorsa sarmalamaz.
+Widget _withJobSafetyActions(
+  BuildContext context,
+  WidgetRef ref, {
+  required Widget child,
+  required bool isOwn,
+  required String? targetId,
+  required String? ownerId,
+}) {
+  if (isOwn ||
+      targetId == null ||
+      targetId.isEmpty ||
+      ownerId == null ||
+      ownerId.isEmpty) {
+    return child;
+  }
+  return GestureDetector(
+    onLongPress: () => showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.flag_outlined,
+                  color: AppColors.textPrimary),
+              title: const Text(AppStrings.safetyActionReport),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                showReportSheet(
+                  context,
+                  ref,
+                  targetType: ReportTargetType.jobListing,
+                  targetId: targetId,
+                  reportedUserId: ownerId,
+                );
+              },
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.block_rounded, color: AppColors.danger),
+              title: const Text(
+                AppStrings.safetyActionBlock,
+                style: TextStyle(color: AppColors.danger),
+              ),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                confirmAndBlockUser(context, ref, userId: ownerId);
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+    child: child,
+  );
+}
+
 class _JobSeekCard extends ConsumerWidget {
   const _JobSeekCard({required this.post});
   final JobSeekPost post;
@@ -225,23 +293,33 @@ class _JobSeekCard extends ConsumerWidget {
       applyIcon: Icons.chat_bubble_outline_rounded,
     );
     // Listing Contact Phone Sprint — sahibi telefon paylaştıysa Ara CTA.
+    final Widget result;
     if (!ListingPhoneCta.hasPhone(post.contactPhone) || isOwn) {
-      return card;
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        card,
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.pageH,
-            0,
-            AppSpacing.pageH,
-            AppSpacing.s,
+      result = card;
+    } else {
+      result = Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          card,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pageH,
+              0,
+              AppSpacing.pageH,
+              AppSpacing.s,
+            ),
+            child: ListingPhoneCta(phone: post.contactPhone, compact: true),
           ),
-          child: ListingPhoneCta(phone: post.contactPhone, compact: true),
-        ),
-      ],
+        ],
+      );
+    }
+    return _withJobSafetyActions(
+      context,
+      ref,
+      child: result,
+      isOwn: isOwn,
+      targetId: post.id,
+      ownerId: post.ownerId,
     );
   }
 }
@@ -418,23 +496,33 @@ class _JobOfferCard extends ConsumerWidget {
       applyIcon: Icons.send_rounded,
     );
     // Listing Contact Phone Sprint — sahibi telefon paylaştıysa Ara CTA.
+    final Widget result;
     if (!ListingPhoneCta.hasPhone(offer.contactPhone) || isOwn) {
-      return card;
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        card,
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.pageH,
-            0,
-            AppSpacing.pageH,
-            AppSpacing.s,
+      result = card;
+    } else {
+      result = Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          card,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pageH,
+              0,
+              AppSpacing.pageH,
+              AppSpacing.s,
+            ),
+            child: ListingPhoneCta(phone: offer.contactPhone, compact: true),
           ),
-          child: ListingPhoneCta(phone: offer.contactPhone, compact: true),
-        ),
-      ],
+        ],
+      );
+    }
+    return _withJobSafetyActions(
+      context,
+      ref,
+      child: result,
+      isOwn: isOwn,
+      targetId: offer.id,
+      ownerId: offer.ownerId,
     );
   }
 }

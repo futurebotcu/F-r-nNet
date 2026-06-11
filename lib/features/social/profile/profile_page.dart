@@ -30,6 +30,7 @@ import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../worker/models/job_seek_post.dart';
 import '../../worker/providers/worker_providers.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -43,6 +44,10 @@ import '../../profile/providers/follow_providers.dart';
 import '../../profile/providers/public_profile_detail_provider.dart';
 import '../../profile/widgets/follow_button.dart';
 import '../../profile/widgets/profile_edit_sheet.dart';
+import '../../safety/models/report_models.dart';
+import '../../safety/providers/safety_providers.dart';
+import '../../safety/widgets/block_user_dialog.dart';
+import '../../safety/widgets/report_sheet.dart';
 import '../post/social_post_card.dart';
 import '../providers/social_providers.dart';
 import 'widgets/profile_about_section.dart';
@@ -92,6 +97,53 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
               icon: const Icon(Icons.settings_outlined),
               tooltip: AppStrings.settingsTooltip,
               onPressed: () => context.push(AppRoutes.settings),
+            )
+          // UGC Safety V1 — ziyaretçi: profili şikayet et + engelle/kaldır.
+          else
+            Consumer(
+              builder: (context, ref, _) {
+                final blocked = ref.watch(blockedUserIdsSyncProvider);
+                final isBlocked = blocked.contains(userId);
+                return PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_horiz_rounded),
+                  onSelected: (v) {
+                    if (v == 'report') {
+                      showReportSheet(
+                        context,
+                        ref,
+                        targetType: ReportTargetType.profile,
+                        targetId: userId,
+                        reportedUserId: userId,
+                      );
+                    }
+                    if (v == 'block') {
+                      confirmAndBlockUser(context, ref, userId: userId);
+                    }
+                    if (v == 'unblock') {
+                      unblockUser(context, ref, userId: userId);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Text(AppStrings.safetyActionReport),
+                    ),
+                    if (isBlocked)
+                      const PopupMenuItem(
+                        value: 'unblock',
+                        child: Text(AppStrings.safetyActionUnblock),
+                      )
+                    else
+                      const PopupMenuItem(
+                        value: 'block',
+                        child: Text(
+                          AppStrings.safetyActionBlock,
+                          style: TextStyle(color: AppColors.danger),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
         ],
       ),
@@ -305,6 +357,15 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
   ) async {
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    // UGC Safety V1 — engellediğin kullanıcıya mesaj başlatamazsın.
+    if (ref.read(blockedUserIdsSyncProvider).contains(otherUserId)) {
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.blockedMessageStartBanner,
+        tone: PremiumTopBannerTone.warning,
+      );
       return;
     }
     try {

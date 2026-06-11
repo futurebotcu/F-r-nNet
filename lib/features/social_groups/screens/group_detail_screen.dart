@@ -18,6 +18,10 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../messaging/services/chat_media_upload_service.dart';
 import '../../messaging/widgets/chat_video_viewer.dart';
+import '../../safety/models/report_models.dart';
+import '../../safety/providers/safety_providers.dart';
+import '../../safety/widgets/block_user_dialog.dart';
+import '../../safety/widgets/report_sheet.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/group_join_request.dart';
 import '../models/group_member.dart';
@@ -584,14 +588,76 @@ class _ChatMessageList extends StatelessWidget {
   }
 }
 
-class _ChatBubble extends StatelessWidget {
+class _ChatBubble extends ConsumerWidget {
   const _ChatBubble({required this.message, required this.dt});
   final GroupMessage message;
   final DateFormat dt;
 
+  /// UGC Safety V1 — uzun basma: şikayet et / kullanıcıyı engelle.
+  void _showSafetyActions(BuildContext context, WidgetRef ref) {
+    final ownerId = message.ownerId;
+    if (ownerId == null) return;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.flag_outlined,
+                  color: AppColors.textPrimary),
+              title: const Text(AppStrings.safetyActionReport),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                showReportSheet(
+                  context,
+                  ref,
+                  targetType: ReportTargetType.groupMessage,
+                  targetId: message.id,
+                  reportedUserId: ownerId,
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.block_rounded,
+                  color: AppColors.danger),
+              title: const Text(
+                AppStrings.safetyActionBlock,
+                style: TextStyle(color: AppColors.danger),
+              ),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                confirmAndBlockUser(context, ref, userId: ownerId);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return Padding(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownerId = message.ownerId;
+    // UGC Safety V1 — engellenen kullanıcının mesajı: konuşma akışı kopmasın
+    // diye placeholder gösterilir (içerik gizli).
+    final blocked = ref.watch(blockedUserIdsSyncProvider);
+    if (ownerId != null && blocked.contains(ownerId)) {
+      return const _BlockedMessagePlaceholder();
+    }
+    final me = ref.watch(currentAuthUserProvider);
+    final isOwn = me != null && ownerId == me.id;
+    return GestureDetector(
+      onLongPress: (ownerId == null || isOwn)
+          ? null
+          : () => _showSafetyActions(context, ref),
+      child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,6 +765,48 @@ class _ChatBubble extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      ),
+    );
+  }
+}
+
+/// UGC Safety V1 — engellenen kullanıcının grup mesajı placeholder'ı.
+/// Akış kopmaz; içerik ve yazar adı gizlenir.
+class _BlockedMessagePlaceholder extends StatelessWidget {
+  const _BlockedMessagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.m,
+          vertical: AppSpacing.s,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
+        child: Row(
+          children: const [
+            Icon(Icons.block_rounded, size: 16, color: AppColors.textMuted),
+            SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Text(
+                AppStrings.blockedContentPlaceholder,
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12.5,
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

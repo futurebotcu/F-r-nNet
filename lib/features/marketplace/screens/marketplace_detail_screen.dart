@@ -21,6 +21,9 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../messaging/providers/messaging_providers.dart';
+import '../../safety/models/report_models.dart';
+import '../../safety/widgets/block_user_dialog.dart';
+import '../../safety/widgets/report_sheet.dart';
 import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
@@ -79,10 +82,58 @@ class MarketplaceDetailScreen extends ConsumerWidget {
               if (l == null) return const SizedBox.shrink();
               final isOwner = me != null && me.id == l.ownerId;
               if (!isOwner) {
-                return IconButton(
-                  icon: const Icon(Icons.ios_share_rounded),
-                  color: AppColors.textPrimary,
-                  onPressed: () => shareListing(l),
+                // UGC Safety V1 — ziyaretçi: paylaş + şikayet et + engelle.
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.ios_share_rounded),
+                      color: AppColors.textPrimary,
+                      onPressed: () => shareListing(l),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(
+                        Icons.more_horiz_rounded,
+                        color: AppColors.textPrimary,
+                      ),
+                      color: AppColors.surface,
+                      onSelected: (v) {
+                        final id = l.id;
+                        final ownerId = l.ownerId;
+                        if (id == null) return;
+                        if (v == 'report') {
+                          showReportSheet(
+                            context,
+                            ref,
+                            targetType: ReportTargetType.marketListing,
+                            targetId: id,
+                            reportedUserId:
+                                (ownerId == null || ownerId.isEmpty)
+                                    ? null
+                                    : ownerId,
+                          );
+                        }
+                        if (v == 'block' &&
+                            ownerId != null &&
+                            ownerId.isNotEmpty) {
+                          confirmAndBlockUser(context, ref, userId: ownerId);
+                        }
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(
+                          value: 'report',
+                          child: Text(AppStrings.safetyActionReport),
+                        ),
+                        PopupMenuItem(
+                          value: 'block',
+                          child: Text(
+                            AppStrings.safetyActionBlock,
+                            style: TextStyle(color: AppColors.danger),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 );
               }
               return PopupMenuButton<String>(

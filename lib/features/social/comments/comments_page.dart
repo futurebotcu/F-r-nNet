@@ -31,6 +31,10 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/feed_post.dart';
 import '../../feed/providers/feed_providers.dart';
+import '../../safety/models/report_models.dart';
+import '../../safety/providers/safety_providers.dart';
+import '../../safety/widgets/block_user_dialog.dart';
+import '../../safety/widgets/report_sheet.dart';
 import '../models/social_comment.dart';
 import '../providers/social_providers.dart';
 
@@ -163,7 +167,7 @@ class _ScrollableShell extends StatelessWidget {
 
 /// Veri geldiğinde — Twitter post detail mantığı: üstte post kartı +
 /// "Yorumlar (N)" başlığı + altında yorumlar.
-class _PostDetailScroll extends StatelessWidget {
+class _PostDetailScroll extends ConsumerWidget {
   const _PostDetailScroll({
     required this.postAsync,
     required this.items,
@@ -177,7 +181,9 @@ class _PostDetailScroll extends StatelessWidget {
   final String postId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // UGC Safety V1 — engellenen kullanıcıların yorumları placeholder olur.
+    final blocked = ref.watch(blockedUserIdsSyncProvider);
     if (items.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(
@@ -202,7 +208,11 @@ class _PostDetailScroll extends StatelessWidget {
         final isOwn = user != null && c.ownerId == user.id;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-          child: _CommentItem(comment: c, isOwn: isOwn, postId: postId),
+          // UGC Safety V1 — engellenen kullanıcının yorumu placeholder olur
+          // (konuşma akışı kopmaz, içerik gizlenir).
+          child: blocked.contains(c.ownerId)
+              ? const _BlockedCommentPlaceholder()
+              : _CommentItem(comment: c, isOwn: isOwn, postId: postId),
         );
       },
     );
@@ -458,6 +468,47 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+/// UGC Safety V1 — engellenen kullanıcının yorumu yerine gösterilen
+/// placeholder (akış kopmaz; yazar adı ve içerik gizli).
+class _BlockedCommentPlaceholder extends StatelessWidget {
+  const _BlockedCommentPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.m,
+          vertical: AppSpacing.s,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
+        child: Row(
+          children: const [
+            Icon(Icons.block_rounded, size: 16, color: AppColors.textMuted),
+            SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Text(
+                AppStrings.blockedContentPlaceholder,
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12.5,
+                  fontStyle: FontStyle.italic,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CommentItem extends ConsumerWidget {
   const _CommentItem({
     required this.comment,
@@ -555,6 +606,46 @@ class _CommentItem extends ConsumerWidget {
                               color: AppColors.textMuted,
                             ),
                           ),
+                        )
+                      // UGC Safety V1 — başkasının yorumu: şikayet + engelle.
+                      else if (comment.ownerId.isNotEmpty)
+                        PopupMenuButton<String>(
+                          icon: const Icon(
+                            Icons.more_horiz_rounded,
+                            size: 20,
+                            color: AppColors.textMuted,
+                          ),
+                          onSelected: (v) {
+                            if (v == 'report') {
+                              showReportSheet(
+                                context,
+                                ref,
+                                targetType: ReportTargetType.comment,
+                                targetId: comment.id,
+                                reportedUserId: comment.ownerId,
+                              );
+                            }
+                            if (v == 'block') {
+                              confirmAndBlockUser(
+                                context,
+                                ref,
+                                userId: comment.ownerId,
+                              );
+                            }
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: 'report',
+                              child: Text(AppStrings.safetyActionReport),
+                            ),
+                            PopupMenuItem(
+                              value: 'block',
+                              child: Text(
+                                AppStrings.safetyActionBlock,
+                                style: TextStyle(color: AppColors.danger),
+                              ),
+                            ),
+                          ],
                         ),
                     ],
                   ),

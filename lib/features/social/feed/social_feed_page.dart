@@ -32,6 +32,7 @@ import '../../feed/models/feed_post.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../notifications/widgets/notifications_header_action.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../safety/providers/safety_providers.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../composer/inline_composer_card.dart';
 import '../post/social_post_card.dart';
@@ -107,6 +108,11 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
     final pagedAsync = segment == 0
         ? ref.watch(feedPagedNotifierProvider)
         : ref.watch(feedFollowingPagedNotifierProvider);
+    // UGC Safety V1 — engellenen kullanıcıların postları render'da gizlenir.
+    // Render-level filter bilinçli tercih: sayfalama offset'i RAW listeden
+    // hesaplanmaya devam eder (duplicate/atlama riski yok). Çok engellide
+    // sayfa görünür içeriği kısalabilir — server-side not.in P1 notu.
+    final blocked = ref.watch(blockedUserIdsSyncProvider);
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -122,7 +128,11 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
                   loading: () => const _FeedLoading(),
                   error: (e, _) => _FeedError(onRetry: _onRefresh),
                   data: (state) => _FeedList(
-                    posts: state.posts,
+                    posts: blocked.isEmpty
+                        ? state.posts
+                        : state.posts
+                            .where((p) => !blocked.contains(p.ownerId))
+                            .toList(),
                     isLoadingMore: state.isLoadingMore,
                     hasMore: state.hasMore,
                     scrollController: _scrollController,

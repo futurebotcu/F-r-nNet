@@ -885,6 +885,36 @@ class AppStrings {
   static const String chatMediaVideoLabel = 'Video';
   // Signed URL üretilemezse (geçici yetki/ağ sorunu) bubble fallback metni.
   static const String chatMediaUnavailable = 'Medya yüklenemedi';
+
+  // UGC Safety V1 — şikayet + engelleme.
+  static const String reportSheetTitle = 'İçeriği şikayet et';
+  static const String reportDetailsHint = 'Açıklama (opsiyonel)';
+  static const String reportSubmit = 'Gönder';
+  static const String reportSuccessBanner =
+      'Şikayetin alındı. Ekibimiz inceleyecek.';
+  static const String reportDuplicateBanner =
+      'Bu içeriği zaten şikayet ettin.';
+  static const String reportErrorBanner =
+      'Şikayet gönderilemedi. Bağlantını kontrol edip tekrar dene.';
+  static const String safetyActionReport = 'Şikayet et';
+  static const String safetyActionBlock = 'Kullanıcıyı engelle';
+  static const String safetyActionUnblock = 'Engeli kaldır';
+  static const String blockConfirmTitle = 'Bu kullanıcıyı engelle?';
+  static const String blockConfirmBody =
+      'Bu kişinin içeriklerini daha az görürsün ve seninle etkileşimi '
+      'sınırlanır.';
+  static const String blockConfirmCta = 'Engelle';
+  static const String blockSuccessBanner = 'Kullanıcı engellendi.';
+  static const String blockAlreadyBanner = 'Bu kullanıcı zaten engelli.';
+  static const String unblockSuccessBanner = 'Engel kaldırıldı.';
+  static const String safetyErrorBanner =
+      'İşlem tamamlanamadı. Tekrar dene.';
+  // Engellenen kullanıcının yorum/grup mesajı yerine gösterilen placeholder.
+  static const String blockedContentPlaceholder =
+      'Engellediğin kullanıcıdan içerik';
+  static const String blockedMessageStartBanner =
+      'Engellediğin bir kullanıcıya mesaj başlatamazsın.';
+  static const String safetyCancel = 'Vazgeç';
   // Video mesajında caption yoksa content placeholder'ı.
   static const String messagingVideoFallback = '🎬 Video';
   static const String messagingMessageCtaProfile = 'Mesaj';
