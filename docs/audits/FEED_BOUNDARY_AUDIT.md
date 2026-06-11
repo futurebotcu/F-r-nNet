@@ -50,11 +50,27 @@ Feed = sektör sohbeti, bilgi paylaşımı, gündem, deneyim, foto/video, soru-c
 - [x] Metin korunur, post oluşturulmaz, guest guard çakışmaz
 - [x] Yorum dar güvenlik guard'ı
 
+## Gerçekçilik Modeli (V1.1 sertleştirme sonrası)
+
+**Dürüst tespit:** kararlı bir kullanıcı HER client-side sözcük filtresini aşar — bu kabul edilmiş bir kısıttır, hedef değildir. Katmanlı savunma:
+
+1. **Composer guard (bu katman) = dürüst kullanıcı yönlendirmesi.** Kullanıcıların büyük çoğunluğu kasıtlı atlatmaz; doğru alana nazikçe itmek ürün/monetizasyon hedefinin büyük kısmını karşılar.
+2. **Kasıtlı atlatma = report/block + moderasyon kuyruğu** (UGC Safety V1, canlı). Feed'e sızan ilan/reklam topluluk tarafından şikayet edilir, kuyruğa düşer.
+3. **Server-side enforcement P1:** aynı classifier'ın Edge Function olarak insert path'inde koşması client bypass'ını kapatır. N-report → otomatik gizleme eşiği P2.
+
+**V1.1'de eklenen ucuz-numara dirençleri** (hepsi saha kanıtlı bypass'lardan, birebir regresyon testli):
+- ASCII-fold + **leet-map** (s1kt1r, ar@nıyor) + **tekrar harf sıkıştırma** (aranııııyor)
+- **Parça birleştirme** ("s-keym" → "skeym"; yalnız küfür kontrolünde — "iş" gibi legit kısa kelimeler bozulmaz)
+- **Sesli-harf iskeleti** (skeym→skym) — "sektör"→sktr çakışması ağır-sesli-düşürme şartıyla (uzunluk farkı ≤1) guard'lı
+- **Edit-distance ≤1 fuzzy** kritik niyet kelimelerinde (aranyor/aranıyo/satlik) — varyant listesi yarışı kapandı; "arıyorum"(arayan)/"arıyoruz"(işveren) tek harf farkı, jobSeek kontrolünün öne alınmasıyla korunur
+- **Çıplak satış niyeti → Pazar** ("satilik araba" gibi domain-dışı satışlar); soru bağlamı ("satılık mikser arıyorum, öneri?") alıcı sayılır, izinli
+
 ## P1
 
+- **Server-side classifier (Edge Function)** — kasıtlı bypass'ın gerçek kapanışı; client guard yalnız UX katmanı
 - Market form deep-preselect (`listing_type=bakery_transfer|equipment_sale` query param) — şu an form genel açılıyor
 - Grup composer'a dar profanity guard'ı
-- Sinyal listelerinin saha verisiyle genişletilmesi (yanlış negatifler beklenir; rapor edilen kaçaklar listeye eklenir)
+- Sinyal listelerinin saha verisiyle beslenmesi (rapor edilen kaçaklar regresyon test + sinyal olarak eklenir — bu sprintte 4 saha bypass'ı böyle kapatıldı)
 - Kelime yakınlığı (noun↔intent mesafe) — şu an aynı-metin eşleşmesi
 
 ## P2 / Future Paywall Notu

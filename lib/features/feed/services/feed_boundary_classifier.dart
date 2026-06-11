@@ -77,11 +77,93 @@ class FeedBoundaryClassifier {
       .replaceAll('ö', 'o')
       .replaceAll('ü', 'u');
 
+  // Leet/dekorasyon haritası — s1kt1r, ar@nıyor, sat0lık gibi yazımlar.
+  static const Map<String, String> _leetMap = {
+    '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't',
+    '@': 'a', r'$': 's', '!': 'i',
+  };
+
   static String _normalize(String input) {
-    final lowered = _asciiFold(
+    var lowered = _asciiFold(
       input.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase(),
     );
-    return ' ${lowered.replaceAll(RegExp(r'[^a-z0-9?%]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim()} ';
+    _leetMap.forEach((k, v) => lowered = lowered.replaceAll(k, v));
+    var cleaned = lowered
+        .replaceAll(RegExp(r'[^a-z?%]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    // Tekrarlanan harf sıkıştırma: "aranııııyor" → "aranıyor" (fold sonrası
+    // "araniiiiyor" → "araniyor"). 2+ tekrar → tek harf.
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'([a-z])\1{2,}'),
+      (m) => m.group(1)!,
+    );
+    return ' $cleaned ';
+  }
+
+  /// Parça birleştirilmiş form — YALNIZ küfür kontrolünde kullanılır:
+  /// "s-keym"/"s keym" → "skeym". Düz formda kullanılmaz çünkü legit kısa
+  /// kelimeleri ("iş", "bu") komşusuna yapıştırıp faz eşleşmesini bozar.
+  static String _glued(String norm) {
+    final tokens = norm.trim().split(' ');
+    final out = <String>[];
+    var i = 0;
+    while (i < tokens.length) {
+      var t = tokens[i];
+      while (t.length <= 2 && i + 1 < tokens.length) {
+        i++;
+        t = '$t${tokens[i]}';
+      }
+      out.add(t);
+      i++;
+    }
+    return ' ${out.join(' ')} ';
+  }
+
+  // ── Fuzzy eşleşme (edit distance ≤1) ──────────────────────────────
+  // Kritik niyet kelimeleri için yazım hatası toleransı — varyant listesi
+  // tutma yarışına son ("aranyor", "satlik", "siparş"... hepsi yakalanır).
+  static bool _editDistanceLe1(String a, String b) {
+    final la = a.length, lb = b.length;
+    if ((la - lb).abs() > 1) return false;
+    if (a == b) return true;
+    var ia = 0, ib = 0, edits = 0;
+    while (ia < la && ib < lb) {
+      if (a[ia] == b[ib]) {
+        ia++;
+        ib++;
+        continue;
+      }
+      if (++edits > 1) return false;
+      if (la == lb) {
+        ia++;
+        ib++; // substitution
+      } else if (la > lb) {
+        ia++; // deletion in b
+      } else {
+        ib++; // insertion in b
+      }
+    }
+    return edits + (la - ia) + (lb - ib) <= 1;
+  }
+
+  /// Metindeki herhangi bir token, [signals]'tan birine edit-distance ≤1
+  /// uzaklıkta mı? Yalnız ≥6 harfli sinyallerde fuzzy (kısa kelimede
+  /// false-positive riski yüksek); kısa sinyaller exact substring kalır.
+  static bool _fuzzyHasAny(String norm, List<String> signals) {
+    final tokens = norm.trim().split(' ');
+    for (final sig in signals) {
+      final s = _asciiFold(sig).replaceAll(' ', '');
+      if (s.length < 6) {
+        if (norm.contains(_asciiFold(sig))) return true;
+        continue;
+      }
+      for (final t in tokens) {
+        if (_editDistanceLe1(t, s)) return true;
+      }
+      if (norm.contains(_asciiFold(sig))) return true;
+    }
+    return false;
   }
 
   // Küfür sesli-harf iskeleti — "skeym" gibi sesli düşürülmüş yazımları
@@ -156,11 +238,11 @@ class FeedBoundaryClassifier {
     'eleman', 'usta', 'personel', 'işçi', 'çırak', 'tezgahtar', 'kalfa',
     'pastacı', 'hamurkar', 'hamurkâr', 'şoför', 'kurye',
   ];
+  // Yazım varyantları artık fuzzy (edit-distance ≤1) ile yakalanır —
+  // varyant listesi tutulmaz ("aranyor", "aranıyo", "alnacak"...).
   static const List<String> _hiringIntent = [
     'aranıyor', 'alınacak', 'alınacaktır', 'arıyoruz', 'aramaktayız',
     'işe alım', 'başvuru için',
-    // Saha kanıtlı yaygın yazım varyantları ("eleman aranyor" bypass'ı).
-    'aranyor', 'araniyo', 'aranıyo', 'ariyoz', 'arıyoz', 'araniyor',
   ];
   static const List<String> _hiringStrongExtras = [
     'maaş', 'yatılı', 'sigortalı', 'acil eleman', 'dolgun',
@@ -191,9 +273,10 @@ class FeedBoundaryClassifier {
   ];
 
   /// İki kelime listesinin aynı metinde yakın geçmesi (kaba yakınlık V1:
-  /// aynı metinde ikisi de var; kelime mesafesi P2).
+  /// aynı metinde ikisi de var; kelime mesafesi P2). Niyet tarafı fuzzy —
+  /// yazım hatası niyeti gizleyemez.
   static bool _pairs(String norm, List<String> nouns, List<String> intents) {
-    return _hasAny(norm, nouns) && _hasAny(norm, intents);
+    return _hasAny(norm, nouns) && _fuzzyHasAny(norm, intents);
   }
 
   // ── Ana sınıflandırma — feed post ─────────────────────────────────
@@ -202,12 +285,16 @@ class FeedBoundaryClassifier {
     // Boş text (yalnız medya) → serbest; medya tek başına engellenmez.
     if (raw.isEmpty) return FeedBoundaryResult.ok;
     final norm = _normalize(raw);
+    final glued = _glued(norm);
     final discussion = _hasAny(norm, _discussionMarkers);
 
     // 1) Güvenlik: profanity / scam — her zaman önce, tartışma işareti
-    // engeli kaldırmaz. Sesli-harf iskeleti obfuscation'ı da yakalar.
-    if (_profanityWords.any((w) => _hasWord(norm, w)) ||
-        _hasProfanitySkeleton(norm)) {
+    // engeli kaldırmaz. Glued form ("s-keym"→"skeym") + sesli-harf iskeleti
+    // obfuscation'ı da yakalar.
+    if (_profanityWords
+            .any((w) => _hasWord(norm, w) || _hasWord(glued, w)) ||
+        _hasProfanitySkeleton(norm) ||
+        _hasProfanitySkeleton(glued)) {
       return const FeedBoundaryResult(
         allowed: false,
         category: FeedBoundaryCategory.profanity,
@@ -227,10 +314,13 @@ class FeedBoundaryClassifier {
     }
 
     // 2) İşyeri satış/devir — "fırın satılık" dahil (yalın fırın = işyeri).
-    if (_hasAny(norm, _workplacePhrases) ||
-        (_hasWord(norm, 'fırın') &&
-            _hasAny(norm, _saleIntent) &&
-            !_hasAny(norm, _equipmentNouns))) {
+    // Soru/tartışma bağlamı ("devren fırın bakıyorum, neye dikkat?") alıcı
+    // sorusudur → izinli.
+    if (!discussion &&
+        (_hasAny(norm, _workplacePhrases) ||
+            (_hasWord(norm, 'fırın') &&
+                _fuzzyHasAny(norm, _saleIntent) &&
+                !_hasAny(norm, _equipmentNouns)))) {
       return const FeedBoundaryResult(
         allowed: false,
         category: FeedBoundaryCategory.workplaceSale,
@@ -241,7 +331,8 @@ class FeedBoundaryClassifier {
     }
 
     // 3) Ekipman/makine satışı — ekipman ismi + satış niyeti birlikte.
-    if (_pairs(norm, _equipmentNouns, _saleIntent)) {
+    // Soru bağlamı ("satılık mikser arıyorum, öneri?") alıcıdır → izinli.
+    if (!discussion && _pairs(norm, _equipmentNouns, _saleIntent)) {
       return const FeedBoundaryResult(
         allowed: false,
         category: FeedBoundaryCategory.equipmentSale,
@@ -251,7 +342,21 @@ class FeedBoundaryClassifier {
       );
     }
 
-    // 4) İşveren eleman ilanı — isim + niyet birlikte (GÜÇLÜ kalıp).
+    // 4) İş arayan birey — İŞVEREN kontrolünden ÖNCE: "iş arıyorum"
+    // (arayan) ile "usta arıyoruz" (işveren) tek harf farkta; fuzzy bu
+    // ikisini karıştırmasın diye arayan kalıbı önce ve EXACT kontrol edilir.
+    if (_hasAny(norm, _jobSeekPhrases)) {
+      return const FeedBoundaryResult(
+        allowed: false,
+        category: FeedBoundaryCategory.jobSeek,
+        confidence: FeedBoundaryConfidence.medium,
+        destination: FeedBoundaryDestination.jobSeekListing,
+        reason: 'job-seek',
+      );
+    }
+
+    // 5) İşveren eleman ilanı — isim + niyet birlikte (niyet fuzzy:
+    // "aranyor"/"aranıyo" yazımları yakalanır).
     if (_pairs(norm, _hiringNouns, _hiringIntent)) {
       final strong = _hasAny(norm, _hiringStrongExtras) || !discussion;
       if (strong) {
@@ -268,19 +373,20 @@ class FeedBoundaryClassifier {
       return FeedBoundaryResult.ok;
     }
 
-    // 5) İş arayan birey — yumuşak yönlendirme (İş Arıyorum ilanı ücretsiz
-    // ve doğru alan; Feed'de kaybolmasın).
-    if (_hasAny(norm, _jobSeekPhrases)) {
+    // 6) Çıplak satış niyeti — domain ismi geçmese bile "satılık X" bir
+    // satıştır (saha kanıtı: "satilik araba"). Soru/tartışma bağlamı
+    // ("satılık mikser arıyorum, öneri?") alıcı sorusudur → izinli.
+    if (_fuzzyHasAny(norm, _saleIntent) && !discussion) {
       return const FeedBoundaryResult(
         allowed: false,
-        category: FeedBoundaryCategory.jobSeek,
+        category: FeedBoundaryCategory.commercialAd,
         confidence: FeedBoundaryConfidence.medium,
-        destination: FeedBoundaryDestination.jobSeekListing,
-        reason: 'job-seek',
+        destination: FeedBoundaryDestination.market,
+        reason: 'bare-sale-intent',
       );
     }
 
-    // 6) Ticari reklam/spam — güçlü reklam kalıbı tek başına yeterli.
+    // 7) Ticari reklam/spam — güçlü reklam kalıbı tek başına yeterli.
     if (_hasAny(norm, _adStrong)) {
       // "kampanya"/"indirim" sohbet içinde de geçebilir ("indirim yapsam mı?")
       // → soru/tartışma işaretiyle yumuşat; diğer kalıplar (fiyat listesi,
@@ -312,9 +418,12 @@ class FeedBoundaryClassifier {
     final raw = text.trim();
     if (raw.isEmpty) return FeedBoundaryResult.ok;
     final norm = _normalize(raw);
+    final glued = _glued(norm);
 
-    if (_profanityWords.any((w) => _hasWord(norm, w)) ||
-        _hasProfanitySkeleton(norm)) {
+    if (_profanityWords
+            .any((w) => _hasWord(norm, w) || _hasWord(glued, w)) ||
+        _hasProfanitySkeleton(norm) ||
+        _hasProfanitySkeleton(glued)) {
       return const FeedBoundaryResult(
         allowed: false,
         category: FeedBoundaryCategory.profanity,

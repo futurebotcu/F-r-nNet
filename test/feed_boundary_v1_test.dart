@@ -158,6 +158,41 @@ void main() {
       expect(post('Sektörde eleman bulmak çok zor').allowed, isTrue);
       expect(post('sektor genel olarak durgun bu ay').allowed, isTrue);
     });
+
+    test('"satilik araba" — domain dışı çıplak satış → Pazar', () {
+      final r = post('satilik araba');
+      expect(r.allowed, isFalse,
+          reason: 'Saha kanıtı: domain ismi olmayan satış bypass edilmişti');
+      expect(r.category, FeedBoundaryCategory.commercialAd);
+      expect(r.destination, FeedBoundaryDestination.market);
+    });
+
+    test('"anan s-keym ya" — tire ile bölünmüş küfür yakalanır', () {
+      final r = post('anan s-keym ya');
+      expect(r.allowed, isFalse,
+          reason: 'Saha kanıtı: parçalanmış küfür bypass edilmişti');
+      expect(r.category, FeedBoundaryCategory.profanity);
+    });
+
+    test('fuzzy niyet: "aranıyo"/"satlik" yazımları yakalanır', () {
+      expect(post('usta aranıyo acil').category, FeedBoundaryCategory.jobAd);
+      expect(post('mikser satlik temiz').category,
+          FeedBoundaryCategory.equipmentSale);
+    });
+
+    test('leet/tekrar: "s1kt1r" ve "aranııııyor" yakalanır', () {
+      expect(post('s1kt1r git').category, FeedBoundaryCategory.profanity);
+      expect(
+          post('eleman aranııııyor').category, FeedBoundaryCategory.jobAd);
+    });
+
+    test('alıcı sorusu serbest: "satılık mikser arıyorum, öneri?"', () {
+      expect(
+        post('Satılık mikser arıyorum, önerisi olan var mı?').allowed,
+        isTrue,
+        reason: 'Soru bağlamındaki satılık = alıcı; engellenmemeli',
+      );
+    });
   });
 
   group('Boundary V1 — yorum DAR kuralı', () {
