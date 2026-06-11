@@ -883,6 +883,8 @@ class AppStrings {
   static const String chatMediaVideoUnsupported =
       'Bu video türü desteklenmiyor. MP4 veya MOV seç.';
   static const String chatMediaVideoLabel = 'Video';
+  // Signed URL üretilemezse (geçici yetki/ağ sorunu) bubble fallback metni.
+  static const String chatMediaUnavailable = 'Medya yüklenemedi';
   // Video mesajında caption yoksa content placeholder'ı.
   static const String messagingVideoFallback = '🎬 Video';
   static const String messagingMessageCtaProfile = 'Mesaj';

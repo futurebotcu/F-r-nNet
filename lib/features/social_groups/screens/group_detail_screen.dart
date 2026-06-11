@@ -668,6 +668,10 @@ class _ChatBubble extends StatelessWidget {
                         ? null
                         : message.text,
                   )
+                // Medya eki var ama signed URL üretilememiş (geçici yetki/ağ
+                // sorunu) → emoji-text yerine açık "Medya yüklenemedi" durumu.
+                else if (message.hasImage || message.hasVideo)
+                  const _GroupMediaUnavailable()
                 else
                   Container(
                     width: double.infinity,
@@ -794,6 +798,46 @@ class _GroupImageBubble extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// V1.1 — medya eki var ama URL çözülememiş (signed URL hatası) fallback'i.
+/// Emoji-text yerine açık durum: ikon + "Medya yüklenemedi". Liste yeniden
+/// yüklendiğinde (gruba tekrar giriş) enrich yeniden denenir.
+class _GroupMediaUnavailable extends StatelessWidget {
+  const _GroupMediaUnavailable();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.m,
+        vertical: AppSpacing.s,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(
+            Icons.broken_image_rounded,
+            color: AppColors.textMuted,
+            size: 18,
+          ),
+          SizedBox(width: AppSpacing.s),
+          Text(
+            AppStrings.chatMediaUnavailable,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

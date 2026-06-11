@@ -256,6 +256,46 @@ void main() {
       expect(src.contains('SocialPostVideo'), isTrue);
     });
 
+    test(
+        'P0 fix migration: groups SELECT policy objects.name niteler '
+        '(kolon gölgeleme regresyonu)', () {
+      final src = File(
+        'supabase/migrations/'
+        '20260611010000_chat_media_v1_1_fix_group_select_policy.sql',
+      ).readAsStringSync();
+      // EXISTS subquery'de çıplak `name` social_groups.name'e bağlanıyordu;
+      // tüm groups/* objelerinde SELECT reddi → signed URL üretilemiyor →
+      // grup medyası emoji-text fallback'te kalıyordu.
+      expect(
+        src.contains('(storage.foldername(objects.name))[2]'),
+        isTrue,
+        reason: 'Policy objects.name ile nitelenmiş olmalı',
+      );
+      expect(src.contains('chat_media_storage_select'), isTrue);
+      final existsIdx = src.indexOf('exists (');
+      final tail = src.substring(existsIdx);
+      expect(
+        tail.contains('storage.foldername(name)'),
+        isFalse,
+        reason: 'EXISTS içinde niteliksiz name kalmamalı (g.name gölgeler)',
+      );
+    });
+
+    test('group bubble: URL\'siz medya "Medya yüklenemedi" fallback gösterir',
+        () {
+      final src =
+          File('lib/features/social_groups/screens/group_detail_screen.dart')
+              .readAsStringSync();
+      expect(src.contains('class _GroupMediaUnavailable'), isTrue);
+      expect(
+        src.contains('else if (message.hasImage || message.hasVideo)'),
+        isTrue,
+        reason: 'Medya eki olup URL çözülemeyen mesaj emoji-text yerine '
+            'açık fallback durumuna düşmeli',
+      );
+      expect(src.contains('AppStrings.chatMediaUnavailable'), isTrue);
+    });
+
     test('AppStrings V1.1 sabitleri tanımlı ve dolu', () {
       expect(AppStrings.chatMediaPickVideoGallery, isNotEmpty);
       expect(AppStrings.chatMediaRecordVideo, isNotEmpty);
@@ -264,6 +304,7 @@ void main() {
       expect(AppStrings.chatMediaVideoTooLarge, isNotEmpty);
       expect(AppStrings.chatMediaVideoUnsupported, isNotEmpty);
       expect(AppStrings.messagingVideoFallback, isNotEmpty);
+      expect(AppStrings.chatMediaUnavailable, isNotEmpty);
     });
   });
 }
