@@ -307,8 +307,9 @@ class MarketplaceContactPanel extends StatelessWidget {
       );
     }
     if ((wantsInApp || hasWhatsapp) && hasPhone) {
-      if (children.isNotEmpty)
+      if (children.isNotEmpty) {
         children.add(const SizedBox(width: AppSpacing.s));
+      }
       children.add(
         Expanded(
           child: OutlinedButton.icon(

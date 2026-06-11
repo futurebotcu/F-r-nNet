@@ -120,7 +120,6 @@ class _RoleBadgeStrip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
-    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.m,

@@ -612,7 +612,6 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(boxShadow: const []),
       padding: const EdgeInsets.symmetric(

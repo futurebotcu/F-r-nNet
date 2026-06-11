@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'app_colors.dart';
-
 /// Boşluk skalası — editorial ritim için 4px tabanlı.
 class AppSpacing {
   const AppSpacing._();

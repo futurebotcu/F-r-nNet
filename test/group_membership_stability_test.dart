@@ -24,7 +24,6 @@ import 'package:firin_defter/features/auth/models/sign_up_result.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
 import 'package:firin_defter/features/auth/providers/can_write_check_provider.dart';
 import 'package:firin_defter/features/auth/repositories/auth_repository.dart';
-import 'package:firin_defter/features/social_groups/models/group_category.dart';
 import 'package:firin_defter/features/social_groups/providers/social_group_providers.dart';
 import 'package:firin_defter/features/social_groups/repositories/local_social_group_repository.dart';
 import 'package:firin_defter/features/social_groups/screens/group_detail_screen.dart';
