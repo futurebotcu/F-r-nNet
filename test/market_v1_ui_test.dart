@@ -252,11 +252,19 @@ void main() {
       src = File('lib/features/dashboard/screens/app_shell.dart')
           .readAsStringSync();
     });
-    test('Market AppShell._tabs içinde ve label "Market"', () {
-      expect(src.contains('AppRoutes.market'), isTrue,
-          reason: 'Market tab ana bottom nav\'da görünmeli');
-      expect(src.contains("label: 'Market'"), isTrue);
+    test('Marketplace İlanlar tab altında; alt nav İlanlar + storefront Pazar',
+        () {
+      // Navigation IA Sprint — bağımsız Market tab kaldırıldı; marketplace
+      // İlanlar sekmesinin İş yeri/Ekipman segmentlerinde gömülü. Alt nav'da
+      // İlanlar tab'ı var; storefront ikonu Pazar (Yakında) tab'ında.
+      expect(src.contains('AppRoutes.listings'), isTrue,
+          reason: 'İlanlar tab ana bottom nav\'da görünmeli');
       expect(src.contains('Icons.storefront_outlined'), isTrue);
+      final listings = File(
+        'lib/features/listings/screens/listings_screen.dart',
+      ).readAsStringSync();
+      expect(listings.contains('MarketplaceScreen'), isTrue,
+          reason: 'Marketplace İlanlar segmentlerinde gömülü');
     });
   });
 

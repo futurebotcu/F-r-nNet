@@ -538,6 +538,47 @@ class AppStrings {
   // Insight cards
   static const String feedInsightSectionLabel = 'Sektör pulse';
 
+  // ─────────────────────── Navigation IA Sprint — alt nav + sekme başlıkları
+  // Alt nav: Topluluk · Pazar · İlanlar · Mesajlar · Panel
+  static const String navCommunity = 'Topluluk';
+  static const String navPazar = 'Pazar';
+  static const String navListings = 'İlanlar';
+  static const String navMessages = 'Mesajlar';
+  static const String navPanel = 'Panel';
+  static const String navComingSoonBadge = 'Yakında';
+
+  // Topluluk sekmesi (Feed + Gruplar)
+  static const String communityTitle = 'Topluluk';
+  static const String communitySubtitle =
+      'Fırıncıların gündemi, paylaşımları ve grupları';
+  static const String communitySegFeed = 'Genel Akış';
+  static const String communitySegGroups = 'Gruplar';
+
+  // İlanlar sekmesi (Eleman + İş yeri + Ekipman)
+  static const String listingsTitle = 'İlanlar';
+  static const String listingsSubtitle = 'Eleman, iş yeri ve ekipman ilanları';
+  static const String listingsSegStaff = 'Eleman';
+  static const String listingsSegWorkplace = 'İş yeri';
+  static const String listingsSegEquipment = 'Ekipman';
+
+  // Pazar — "Yakında" (B2B / tedarikçi / teklif ağı)
+  static const String pazarComingTitle = 'Pazar yakında';
+  static const String pazarComingSubtitle =
+      'Fırıncının B2B tedarik ve teklif ağı çok yakında burada.';
+  static const String pazarComingBadge = 'Yakında';
+  static const String pazarBulletSuppliersTitle = 'Tedarikçileri keşfet';
+  static const String pazarBulletSuppliersBody =
+      'Un, maya, ekipman ve hizmet tedarikçilerini tek yerden bul.';
+  static const String pazarBulletOffersTitle = 'Teklif al';
+  static const String pazarBulletOffersBody =
+      'İhtiyacını yaz, tedarikçilerden rekabetçi teklifler topla.';
+  static const String pazarBulletCampaignsTitle =
+      'Ürün ve kampanyaları takip et';
+  static const String pazarBulletCampaignsBody =
+      'Toptancı fiyatları, kampanyalar ve yeni ürünlerden haberdar ol.';
+  static const String pazarComingFootnote =
+      'Bu alan hazır olduğunda burada görünecek; şimdilik bir şey yapman gerekmiyor.';
+
   // Market
   static const String marketTitle = 'Market';
   static const String marketSubtitle = 'Fırıncının B2B pazarı';

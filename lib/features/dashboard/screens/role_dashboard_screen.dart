@@ -99,12 +99,23 @@ class RoleDashboardScreen extends ConsumerWidget {
       return;
     }
     final route = card.route!;
-    // Shell içindeki ana tab'lara go ile geç (alt tab'a hop);
-    // diğer ekranlara push ile derinleş.
-    if (route == AppRoutes.jobs ||
-        route == AppRoutes.market ||
-        route == AppRoutes.feed ||
-        route == AppRoutes.groups) {
+    // Shell içindeki ana tab'lara go ile geç (alt tab'a hop, nested shell
+    // push'u önlenir); diğer ekranlara push ile derinleş. Navigation IA
+    // Sprint: yeni tab'lar (Topluluk/Pazar/İlanlar/Mesajlar) + legacy redirect
+    // route'ları (feed/groups/jobs/market → yeni tab'a yönlenir) dahil.
+    const tabRoutes = <String>{
+      AppRoutes.community,
+      AppRoutes.pazar,
+      AppRoutes.listings,
+      AppRoutes.messages,
+      AppRoutes.panel,
+      // Legacy → redirect ile tab'a gider; yine go ile geç.
+      AppRoutes.feed,
+      AppRoutes.groups,
+      AppRoutes.jobs,
+      AppRoutes.market,
+    };
+    if (tabRoutes.contains(route)) {
       context.go(route);
     } else {
       context.push(route);

@@ -20,7 +20,12 @@ import '../services/group_join_result.dart';
 import '../widgets/group_card.dart';
 
 class GroupsListScreen extends ConsumerStatefulWidget {
-  const GroupsListScreen({super.key});
+  const GroupsListScreen({super.key, this.embedded = false});
+
+  /// Topluluk sekmesi altında "Gruplar" segmenti olarak gömüldüğünde true:
+  /// kendi FırınNetHeader'ını çizmez (üst kapsayıcı tek başlık + "+" sağlar).
+  /// Standalone /groups → false, davranış aynen korunur.
+  final bool embedded;
 
   @override
   ConsumerState<GroupsListScreen> createState() => _GroupsListScreenState();
@@ -64,28 +69,30 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
               ),
               padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
               children: [
-                FirinNetHeader(
-                  title: AppStrings.groupsTitle,
-                  subtitle: 'Sektör konuşmaları, bölgesel ağlar',
-                  showLogo: false,
-                  actions: [
-                    // G.N1 — Gruplar header'da bildirim bell + badge. Owner
-                    // grup detayına girmeden pending istekleri fark etsin.
-                    const NotificationsHeaderAction(),
-                    const SizedBox(width: 8),
-                    HeaderActionButton(
-                      icon: Icons.add_rounded,
-                      tooltip: AppStrings.groupsCreateTooltip,
-                      onTap: () => context.push(AppRoutes.groupCreate),
-                    ),
-                  ],
-                ),
-                // Görsel kalite — header ile içerik arası çok hafif ayraç.
-                const Divider(
-                  height: 1,
-                  thickness: 0.6,
-                  color: AppColors.borderHairline,
-                ),
+                if (!widget.embedded) ...[
+                  FirinNetHeader(
+                    title: AppStrings.groupsTitle,
+                    subtitle: 'Sektör konuşmaları, bölgesel ağlar',
+                    showLogo: false,
+                    actions: [
+                      // G.N1 — Gruplar header'da bildirim bell + badge. Owner
+                      // grup detayına girmeden pending istekleri fark etsin.
+                      const NotificationsHeaderAction(),
+                      const SizedBox(width: 8),
+                      HeaderActionButton(
+                        icon: Icons.add_rounded,
+                        tooltip: AppStrings.groupsCreateTooltip,
+                        onTap: () => context.push(AppRoutes.groupCreate),
+                      ),
+                    ],
+                  ),
+                  // Görsel kalite — header ile içerik arası çok hafif ayraç.
+                  const Divider(
+                    height: 1,
+                    thickness: 0.6,
+                    color: AppColors.borderHairline,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.s),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(

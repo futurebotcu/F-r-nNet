@@ -29,14 +29,29 @@ import '../widgets/marketplace_filters_sheet.dart';
 import '../widgets/marketplace_listing_card.dart';
 
 class MarketplaceScreen extends ConsumerStatefulWidget {
-  const MarketplaceScreen({super.key});
+  const MarketplaceScreen({
+    super.key,
+    this.embedded = false,
+    this.forceListingType,
+  });
+
+  /// İlanlar sekmesi altında "İş yeri" / "Ekipman" segmenti olarak gömüldüğünde
+  /// true: kendi FırınNetHeader'ını ve listing-type chip satırını çizmez
+  /// (üst kapsayıcı başlık + segment sağlar). Standalone /market → false.
+  final bool embedded;
+
+  /// Gömülü segmentte listing_type kilidi ('bakery_transfer' = İş yeri,
+  /// 'equipment_sale' = Ekipman). null → tüm tipler (standalone Market).
+  final String? forceListingType;
 
   @override
   ConsumerState<MarketplaceScreen> createState() => _MarketplaceScreenState();
 }
 
 class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
-  MarketFilters _filters = const MarketFilters();
+  late MarketFilters _filters = widget.forceListingType == null
+      ? const MarketFilters()
+      : MarketFilters(listingType: widget.forceListingType);
 
   Future<void> _onAddPressed() async {
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -95,41 +110,47 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            SliverToBoxAdapter(
-              child: FirinNetHeader(
-                title: AppStrings.marketTitle,
-                subtitle: AppStrings.marketSubtitle,
-                actions: [
-                  HeaderActionButton(
-                    icon: Icons.tune_rounded,
-                    tooltip: AppStrings.marketFilterCta,
-                    onTap: _openFilters,
-                  ),
-                  const SizedBox(width: 6),
-                  HeaderActionButton(
-                    icon: Icons.add_rounded,
-                    tooltip: AppStrings.marketListingAddCta,
-                    onTap: _onAddPressed,
-                  ),
-                ],
+            if (!widget.embedded) ...[
+              SliverToBoxAdapter(
+                child: FirinNetHeader(
+                  title: AppStrings.marketTitle,
+                  subtitle: AppStrings.marketSubtitle,
+                  actions: [
+                    HeaderActionButton(
+                      icon: Icons.tune_rounded,
+                      tooltip: AppStrings.marketFilterCta,
+                      onTap: _openFilters,
+                    ),
+                    const SizedBox(width: 6),
+                    HeaderActionButton(
+                      icon: Icons.add_rounded,
+                      tooltip: AppStrings.marketListingAddCta,
+                      onTap: _onAddPressed,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // Görsel kalite — header ile içerik arası çok hafif ayraç.
-            const SliverToBoxAdapter(
-              child: Divider(
-                height: 1,
-                thickness: 0.6,
-                color: AppColors.borderHairline,
+              // Görsel kalite — header ile içerik arası çok hafif ayraç.
+              const SliverToBoxAdapter(
+                child: Divider(
+                  height: 1,
+                  thickness: 0.6,
+                  color: AppColors.borderHairline,
+                ),
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.s)),
-            SliverToBoxAdapter(
-              child: _ListingTypeChipRow(
-                selected: _filters.listingType,
-                onSelect: _setListingType,
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.s)),
+              SliverToBoxAdapter(
+                child: _ListingTypeChipRow(
+                  selected: _filters.listingType,
+                  onSelect: _setListingType,
+                ),
               ),
-            ),
-            if (_filters.activeCount > 0)
+            ],
+            // Gömülü segmentte listing_type kilitli → type chip satırı yok;
+            // üstte küçük bir nefes boşluğu bırak.
+            if (widget.embedded)
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.s)),
+            if (!widget.embedded && _filters.activeCount > 0)
               SliverToBoxAdapter(
                 child: _ActiveFilterChipRow(
                   filters: _filters,
@@ -187,13 +208,23 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                 if (items.isEmpty) {
                   // M3 polish (C): filtre aktifse farklı mesaj + clear CTA;
                   // boş listede ise "İlk ilanı oluştur" CTA.
-                  final filterActive = _filters.activeCount > 0;
+                  // Navigation IA: gömülü segmentte forceListingType bir aktif
+                  // filtre sayılır; segmentin kendisi boşsa "filtreli" değil
+                  // sade boş-state göster (activeCount>1 → gerçek ek filtre).
+                  final filterActive = widget.embedded
+                      ? _filters.activeCount > 1
+                      : _filters.activeCount > 0;
                   return SliverToBoxAdapter(
                     child: _MarketEmptyState(
                       filterActive: filterActive,
                       onAddPressed: _onAddPressed,
-                      onClearFilters: () =>
-                          setState(() => _filters = const MarketFilters()),
+                      // Gömülüde "temizle" forced tipi KORUR (segment kilidi
+                      // kırılmasın); standalone'da tüm filtreleri sıfırlar.
+                      onClearFilters: () => setState(
+                        () => _filters = widget.forceListingType == null
+                            ? const MarketFilters()
+                            : MarketFilters(listingType: widget.forceListingType),
+                      ),
                     ),
                   );
                 }

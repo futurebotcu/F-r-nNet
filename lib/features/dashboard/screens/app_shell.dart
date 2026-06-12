@@ -1,65 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_bottom_nav.dart';
+import '../../messaging/providers/messaging_providers.dart';
 
-class AppShell extends StatelessWidget {
+/// Navigation IA Sprint — alt nav: Topluluk · Pazar · İlanlar · Mesajlar · Panel
+///
+/// * Topluluk = Feed (Genel Akış) + Gruplar segmentli sosyal alan.
+/// * Pazar    = "Yakında" B2B/teklif ağı yüzeyi (mini nokta rozet).
+/// * İlanlar  = Eleman + İş yeri + Ekipman segmentli ilan merkezi.
+/// * Mesajlar = tüm konuşmalar (okunmamış sayaç rozeti).
+/// * Panel    = işletme araçları merkezi.
+class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child});
 
   final Widget child;
 
-  // V Nav-Marketplace-Restore (V1 Market M2 sonrası):
-  // Market tab geri eklendi. Önceki P0 cleanup'ta mock ürünler dürüst değil
-  // diye gizlenmişti; V1 Market M1+M2 ile gerçek market_listings backend
-  // (RLS + media + saves + classified marketplace UI) tamamlandı, V2 ön
-  // koşulu karşılandı. Sıra: Feed → Gruplar → Market (orta) → İlanlar →
-  // Panel. Market 3. konum (Twitter/X "explore"-benzeri orta vurgu).
-  //
-  // V Nav-Profile-To-Jobs:
-  // Profil ana tab'dan çıkarıldı (Feed header avatar üzerinden erişilir);
-  // ProfileScreen ve /profile route geriye dönük kalır.
   static const _tabs = <_TabSpec>[
     _TabSpec(
-      AppRoutes.feed,
-      PremiumNavItem(
-        icon: Icons.dynamic_feed_outlined,
-        activeIcon: Icons.dynamic_feed_rounded,
-        label: 'Feed',
-      ),
+      AppRoutes.community,
+      icon: Icons.forum_outlined,
+      activeIcon: Icons.forum_rounded,
+      label: AppStrings.navCommunity,
     ),
     _TabSpec(
-      AppRoutes.groups,
-      PremiumNavItem(
-        icon: Icons.groups_2_outlined,
-        activeIcon: Icons.groups_2_rounded,
-        label: 'Gruplar',
-      ),
+      AppRoutes.pazar,
+      icon: Icons.storefront_outlined,
+      activeIcon: Icons.storefront_rounded,
+      label: AppStrings.navPazar,
+      comingSoon: true,
     ),
     _TabSpec(
-      AppRoutes.market,
-      PremiumNavItem(
-        icon: Icons.storefront_outlined,
-        activeIcon: Icons.storefront_rounded,
-        label: 'Market',
-      ),
+      AppRoutes.listings,
+      icon: Icons.work_outline_rounded,
+      activeIcon: Icons.work_rounded,
+      label: AppStrings.navListings,
     ),
     _TabSpec(
-      AppRoutes.jobs,
-      PremiumNavItem(
-        icon: Icons.work_outline_rounded,
-        activeIcon: Icons.work_rounded,
-        label: 'İlanlar',
-      ),
+      AppRoutes.messages,
+      icon: Icons.chat_bubble_outline_rounded,
+      activeIcon: Icons.chat_bubble_rounded,
+      label: AppStrings.navMessages,
     ),
     _TabSpec(
       AppRoutes.panel,
-      PremiumNavItem(
-        icon: Icons.dashboard_customize_outlined,
-        activeIcon: Icons.dashboard_customize_rounded,
-        label: 'Panel',
-      ),
+      icon: Icons.dashboard_customize_outlined,
+      activeIcon: Icons.dashboard_customize_rounded,
+      label: AppStrings.navPanel,
     ),
   ];
 
@@ -71,14 +62,25 @@ class AppShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.path;
     final index = _indexFor(location);
+    // Mesajlar sekmesi okunmamış rozeti — mevcut provider korunur.
+    final unread = ref.watch(totalUnreadMessagesProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: child,
       bottomNavigationBar: PremiumBottomNav(
-        items: [for (final t in _tabs) t.item],
+        items: [
+          for (final t in _tabs)
+            PremiumNavItem(
+              icon: t.icon,
+              activeIcon: t.activeIcon,
+              label: t.label,
+              comingSoon: t.comingSoon,
+              badgeCount: t.route == AppRoutes.messages ? unread : 0,
+            ),
+        ],
         selectedIndex: index,
         onSelect: (i) => context.go(_tabs[i].route),
       ),
@@ -87,7 +89,17 @@ class AppShell extends StatelessWidget {
 }
 
 class _TabSpec {
-  const _TabSpec(this.route, this.item);
+  const _TabSpec(
+    this.route, {
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    this.comingSoon = false,
+  });
+
   final String route;
-  final PremiumNavItem item;
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final bool comingSoon;
 }

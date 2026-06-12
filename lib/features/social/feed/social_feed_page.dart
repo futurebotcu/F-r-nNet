@@ -50,7 +50,12 @@ import 'feed_segment_provider.dart';
 ///           └ ListView (Stories carousel + Post list)
 /// ```
 class SocialFeedPage extends ConsumerStatefulWidget {
-  const SocialFeedPage({super.key});
+  const SocialFeedPage({super.key, this.embedded = false});
+
+  /// Topluluk sekmesi altında segment gövdesi olarak gömüldüğünde true:
+  /// kendi PremiumScaffold + FırınNetHeader'ını çizmez (üst kapsayıcı sağlar).
+  /// Standalone /feed route'unda false → davranış aynen korunur.
+  final bool embedded;
 
   @override
   ConsumerState<SocialFeedPage> createState() => _SocialFeedPageState();
@@ -113,6 +118,31 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
     // hesaplanmaya devam eder (duplicate/atlama riski yok). Çok engellide
     // sayfa görünür içeriği kısalabilir — server-side not.in P1 notu.
     final blocked = ref.watch(blockedUserIdsSyncProvider);
+    final body = RefreshIndicator.adaptive(
+      color: AppColors.brandLemonPressed,
+      onRefresh: _onRefresh,
+      child: pagedAsync.when(
+        // Perf: post oluşturma/like/block tick'i feed'i yeniden yüklerken
+        // eski liste görünür kalır (full-screen spinner flash yok); spinner
+        // yalnız ilk açılışta.
+        skipLoadingOnReload: true,
+        loading: () => const _FeedLoading(),
+        error: (e, _) => _FeedError(onRetry: _onRefresh),
+        data: (state) => _FeedList(
+          posts: blocked.isEmpty
+              ? state.posts
+              : state.posts
+                  .where((p) => !blocked.contains(p.ownerId))
+                  .toList(),
+          isLoadingMore: state.isLoadingMore,
+          hasMore: state.hasMore,
+          scrollController: _scrollController,
+          segment: segment,
+        ),
+      ),
+    );
+    // Topluluk sekmesinde gömülü: üst kapsayıcı scaffold + header sağlar.
+    if (widget.embedded) return body;
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -120,31 +150,7 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
           children: [
             _SocialFeedHeader(),
             const Divider(height: 1, color: AppColors.borderHairline),
-            Expanded(
-              child: RefreshIndicator.adaptive(
-                color: AppColors.brandLemonPressed,
-                onRefresh: _onRefresh,
-                child: pagedAsync.when(
-                  // Perf: post oluşturma/like/block tick'i feed'i yeniden
-                  // yüklerken eski liste görünür kalır (full-screen spinner
-                  // flash yok); spinner yalnız ilk açılışta.
-                  skipLoadingOnReload: true,
-                  loading: () => const _FeedLoading(),
-                  error: (e, _) => _FeedError(onRetry: _onRefresh),
-                  data: (state) => _FeedList(
-                    posts: blocked.isEmpty
-                        ? state.posts
-                        : state.posts
-                            .where((p) => !blocked.contains(p.ownerId))
-                            .toList(),
-                    isLoadingMore: state.isLoadingMore,
-                    hasMore: state.hasMore,
-                    scrollController: _scrollController,
-                    segment: segment,
-                  ),
-                ),
-              ),
-            ),
+            Expanded(child: body),
           ],
         ),
       ),
@@ -161,15 +167,16 @@ class _SocialFeedHeader extends ConsumerWidget {
       actions: [
         const NotificationsHeaderAction(),
         const SizedBox(width: 4),
-        const _ProfileAvatarAction(),
+        const ProfileAvatarAction(),
       ],
     );
   }
 }
 
 /// Header sağ ucu — kendi profiline push (donor: avatar tap → user_profile).
-class _ProfileAvatarAction extends ConsumerWidget {
-  const _ProfileAvatarAction();
+/// Navigation IA Sprint — Topluluk başlığında da kullanılmak üzere public.
+class ProfileAvatarAction extends ConsumerWidget {
+  const ProfileAvatarAction({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

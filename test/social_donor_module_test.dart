@@ -50,27 +50,29 @@ void main() {
     final rawSrc = File('lib/app/router/app_router.dart').readAsStringSync();
     final src = _strip(rawSrc);
 
-    test('SocialFeedPage import ediliyor, FeedScreen import edilmiyor', () {
-      expect(src.contains('SocialFeedPage'), isTrue);
+    test('Feed Topluluk (CommunityScreen) üzerinden, legacy FeedScreen yok', () {
+      // Navigation IA Sprint — /feed artık /community'ye redirect; SocialFeedPage
+      // CommunityScreen içinde embedded render edilir. Legacy FeedScreen yok.
+      expect(src.contains('community_screen.dart'), isTrue);
       expect(
         src.contains("import '../../features/feed/screens/feed_screen.dart'"),
         isFalse,
         reason: 'Legacy FeedScreen import removed from router',
       );
+      final community = File(
+        'lib/features/community/screens/community_screen.dart',
+      ).readAsStringSync();
+      expect(community.contains('SocialFeedPage'), isTrue,
+          reason: 'SocialFeedPage Topluluk kapsayıcısında kullanılır');
     });
 
-    test('AppRoutes.feed pageBuilder returns SocialFeedPage', () {
+    test('AppRoutes.feed /community redirect eder (legacy uyumluluk)', () {
       final start = src.indexOf('path: AppRoutes.feed,');
       expect(start, greaterThan(0));
       final end = src.indexOf('GoRoute(', start + 20);
-      expect(end, greaterThan(start));
-      final body = src.substring(start, end);
-      expect(body.contains('SocialFeedPage()'), isTrue);
-      expect(
-        body.contains('FeedScreen()'),
-        isFalse,
-        reason: '/feed no longer uses legacy FeedScreen',
-      );
+      final body = src.substring(start, end > start ? end : src.length);
+      expect(body.contains('redirect'), isTrue);
+      expect(body.contains('AppRoutes.community'), isTrue);
     });
 
     test('AppRoutes.socialComposer route registered', () {

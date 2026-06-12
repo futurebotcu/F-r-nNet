@@ -60,11 +60,82 @@ class PremiumNavItem {
     required this.icon,
     required this.activeIcon,
     required this.label,
+    this.badgeCount = 0,
+    this.comingSoon = false,
   });
 
   final IconData icon;
   final IconData activeIcon;
   final String label;
+
+  /// Okunmamış sayaç (Mesajlar). 0 → rozet gösterilmez.
+  final int badgeCount;
+
+  /// "Yakında" mini rozeti (Pazar tab'ı).
+  final bool comingSoon;
+}
+
+/// İkonun sağ-üstüne okunmamış sayaç rozeti veya "Yakında" noktası yerleştirir.
+class _IconWithBadge extends StatelessWidget {
+  const _IconWithBadge({
+    super.key,
+    required this.icon,
+    required this.badgeCount,
+    required this.comingSoon,
+  });
+
+  final Widget icon;
+  final int badgeCount;
+  final bool comingSoon;
+
+  @override
+  Widget build(BuildContext context) {
+    if (badgeCount <= 0 && !comingSoon) return icon;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        icon,
+        if (badgeCount > 0)
+          Positioned(
+            top: -5,
+            right: -8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 16),
+              decoration: BoxDecoration(
+                color: AppColors.danger,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
+              child: Text(
+                badgeCount > 99 ? '99+' : '$badgeCount',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          )
+        else if (comingSoon)
+          Positioned(
+            top: -4,
+            right: -6,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: AppColors.brandLemonPressed,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class _NavTile extends StatelessWidget {
@@ -114,11 +185,15 @@ class _NavTile extends StatelessWidget {
                     duration: AppDuration.fast,
                     transitionBuilder: (c, a) =>
                         ScaleTransition(scale: a, child: c),
-                    child: Icon(
-                      selected ? item.activeIcon : item.icon,
+                    child: _IconWithBadge(
                       key: ValueKey(selected),
-                      color: color,
-                      size: 24,
+                      icon: Icon(
+                        selected ? item.activeIcon : item.icon,
+                        color: color,
+                        size: 24,
+                      ),
+                      badgeCount: item.badgeCount,
+                      comingSoon: item.comingSoon,
                     ),
                   ),
                   const SizedBox(height: 4),

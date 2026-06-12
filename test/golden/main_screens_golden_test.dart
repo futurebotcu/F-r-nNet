@@ -71,7 +71,8 @@ Future<void> _pumpGuestApp(WidgetTester tester) async {
   );
   await tester.pump(const Duration(milliseconds: 800));
   await tester.pumpAndSettle();
-  expect(find.text(AppStrings.feedTitle), findsOneWidget);
+  // Navigation IA Sprint — boot Topluluk sekmesine düşer (Feed embedded).
+  expect(find.text(AppStrings.communitySubtitle), findsOneWidget);
 }
 
 Future<void> _capture(WidgetTester tester, String name) async {
@@ -87,25 +88,34 @@ void main() {
   testWidgets('main screen visual regression baselines', (tester) async {
     await _pumpGuestApp(tester);
 
-    await _capture(tester, 'feed');
+    // Topluluk (Genel Akış) — boot ekranı.
+    await _capture(tester, 'community_feed');
 
-    await tester.tap(find.text('Gruplar'));
+    // Topluluk > Gruplar segmenti (alt nav değil, sekme-içi segment).
+    await tester.tap(find.text(AppStrings.communitySegGroups));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.groupsTitle), findsOneWidget);
-    await _capture(tester, 'groups');
+    await _capture(tester, 'community_groups');
 
-    await tester.tap(find.text('Market'));
+    // Pazar — "Yakında" yüzeyi. (Sıralı alt nav tap'i: sonraki etiket yalnız
+    // nav'da var → tekil.)
+    await tester.tap(find.text(AppStrings.navPazar));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.marketEmptyTitle), findsOneWidget);
-    await _capture(tester, 'market_empty');
+    expect(find.text(AppStrings.pazarComingTitle), findsOneWidget);
+    await _capture(tester, 'pazar_coming_soon');
 
-    await tester.tap(find.text('İlanlar'));
+    // İlanlar — Eleman segmenti (varsayılan).
+    await tester.tap(find.text(AppStrings.navListings));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.jobsTitle), findsOneWidget);
-    expect(find.text(AppStrings.jobOfferEmptyGuest), findsOneWidget);
-    await _capture(tester, 'jobs_empty');
+    expect(find.text(AppStrings.listingsSubtitle), findsOneWidget);
+    await _capture(tester, 'listings');
 
-    await tester.tap(find.text('Panel'));
+    // Mesajlar — konuşma listesi.
+    await tester.tap(find.text(AppStrings.navMessages));
+    await tester.pumpAndSettle();
+    await _capture(tester, 'messages');
+
+    // Panel — işletme araçları.
+    await tester.tap(find.text(AppStrings.navPanel));
     await tester.pumpAndSettle();
     expect(find.textContaining(AppStrings.panelGreetingPrefix), findsOneWidget);
     await _capture(tester, 'panel');

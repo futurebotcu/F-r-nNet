@@ -35,19 +35,18 @@ import '../../features/worker/screens/worker_experiences_screen.dart';
 import '../../features/worker/screens/worker_profile_screen.dart';
 import '../../features/dealers/models/dealer.dart' as dealer_models;
 import '../../features/feed/models/post_type.dart';
+import '../../features/community/screens/community_screen.dart';
+import '../../features/listings/screens/listings_screen.dart';
 import '../../features/social/composer/social_composer_page.dart';
-import '../../features/social/feed/social_feed_page.dart';
 import '../../features/social/post/social_post_edit_page.dart';
 import '../../features/social/stories/story_create_page.dart';
 import '../../features/social/stories/story_viewer_page.dart';
 import '../../features/social_groups/screens/group_create_screen.dart';
 import '../../features/social_groups/screens/group_detail_screen.dart';
-import '../../features/social_groups/screens/groups_list_screen.dart';
 import '../../features/jobs/screens/job_offer_form_screen.dart';
-import '../../features/jobs/screens/jobs_screen.dart';
 import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_detail_screen.dart';
-import '../../features/marketplace/screens/marketplace_screen.dart';
+import '../../features/marketplace/screens/pazar_coming_soon_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
 import '../../features/messaging/screens/chat_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
@@ -88,12 +87,23 @@ class AppRoutes {
   // V1 P1-D — Uygulama içi bildirimler.
   static const String notifications = '/notifications';
 
-  // Ana tablar
+  // Ana tablar (Navigation IA Sprint sonrası):
+  // Topluluk · Pazar · İlanlar · Mesajlar · Panel
+  static const String community = '/community';
+  static const String pazar = '/pazar';
+  static const String listings = '/ilanlar';
+  static const String panel = '/panel';
+  static const String profile = '/profile';
+
+  // Legacy tab route'ları — geriye dönük uyumluluk için redirect olarak
+  // korunur (eski deeplink / iç çağrı kırılmaz):
+  //   /feed   → /community
+  //   /groups → /community?seg=groups
+  //   /jobs   → /ilanlar
+  //   /market → /ilanlar?seg=isyeri  (marketplace İlanlar altında İş yeri/Ekipman)
   static const String feed = '/feed';
   static const String market = '/market';
-  static const String panel = '/panel';
   static const String jobs = '/jobs';
-  static const String profile = '/profile';
 
   /// Unified Professional CV Center — profil içinde tek mesleki CV düzenleme
   /// merkezi (bio + son durum + CV kayıtları + görünürlük + CV'den ilan).
@@ -228,33 +238,49 @@ GoRouter createRouter() {
         },
       ),
 
-      // Ana shell + tab'lar.
+      // Ana shell + tab'lar (Topluluk · Pazar · İlanlar · Mesajlar · Panel).
       ShellRoute(
         builder: (_, __, child) => AppShell(child: child),
         routes: <RouteBase>[
           GoRoute(
-            // V2 Commit 4 cleanup — Legacy FeedScreen tamamen silindi.
-            // SocialFeedPage donor-first sosyal akış.
-            path: AppRoutes.feed,
-            pageBuilder: (_, state) =>
-                _noTransition(state, const SocialFeedPage()),
+            // Topluluk = Feed (Genel Akış) + Gruplar segmentli.
+            path: AppRoutes.community,
+            pageBuilder: (_, state) {
+              final seg = state.uri.queryParameters['seg'];
+              return _noTransition(
+                state,
+                CommunityScreen(initialSegment: seg == 'groups' ? 1 : 0),
+              );
+            },
           ),
           GoRoute(
-            // Sosyal Gruplar — bottom nav 2. tab (V Nav-Social-Priority-Fix).
-            path: AppRoutes.groups,
+            // Pazar = "Yakında" B2B/teklif ağı yüzeyi.
+            path: AppRoutes.pazar,
             pageBuilder: (_, state) =>
-                _noTransition(state, const GroupsListScreen()),
+                _noTransition(state, const PazarComingSoonScreen()),
           ),
           GoRoute(
-            path: AppRoutes.market,
-            pageBuilder: (_, state) =>
-                _noTransition(state, const MarketplaceScreen()),
+            // İlanlar = Eleman (jobs) + İş yeri + Ekipman (marketplace).
+            path: AppRoutes.listings,
+            pageBuilder: (_, state) {
+              final seg = state.uri.queryParameters['seg'];
+              final initial = seg == 'isyeri'
+                  ? 1
+                  : seg == 'ekipman'
+                      ? 2
+                      : 0;
+              return _noTransition(
+                state,
+                ListingsScreen(initialSegment: initial),
+              );
+            },
           ),
           GoRoute(
-            // İlanlar — bottom nav 4. tab (V Nav-Profile-To-Jobs).
-            path: AppRoutes.jobs,
+            // Mesajlar — alt nav'a çıktı (eskiden Panel içinden full-screen).
+            // /messages/:id (ChatScreen) shell DIŞINDA full-screen kalır.
+            path: AppRoutes.messages,
             pageBuilder: (_, state) =>
-                _noTransition(state, const JobsScreen()),
+                _noTransition(state, const MessagesListScreen()),
           ),
           GoRoute(
             path: AppRoutes.panel,
@@ -262,6 +288,26 @@ GoRouter createRouter() {
                 _noTransition(state, const RoleDashboardScreen()),
           ),
         ],
+      ),
+
+      // Legacy tab route'ları → yeni kapsayıcılara redirect (geriye dönük
+      // uyumluluk; eski deeplink/iç çağrı kırılmaz). /market/listings/:id gibi
+      // alt route'lar AYRI GoRoute'lardır, bu redirect'lerden etkilenmez.
+      GoRoute(
+        path: AppRoutes.feed,
+        redirect: (_, __) => AppRoutes.community,
+      ),
+      GoRoute(
+        path: AppRoutes.groups,
+        redirect: (_, __) => '${AppRoutes.community}?seg=groups',
+      ),
+      GoRoute(
+        path: AppRoutes.jobs,
+        redirect: (_, __) => AppRoutes.listings,
+      ),
+      GoRoute(
+        path: AppRoutes.market,
+        redirect: (_, __) => '${AppRoutes.listings}?seg=isyeri',
       ),
 
       // Fırın Paneli — Ticari kart push'u; shell üstünde tam ekran.
@@ -585,10 +631,9 @@ GoRouter createRouter() {
       // (StartJobConversationSheet -> findOrCreateDirectConversation).
       // job_conversations / job_messages DB tablolari KORUNUR (drop edilmedi);
       // tablo emekliligi ayri bir DB sprintine birakildi.
-      GoRoute(
-        path: AppRoutes.messages,
-        builder: (_, __) => const MessagesListScreen(),
-      ),
+      //
+      // Navigation IA Sprint — /messages artik shell TAB'i (yukarida). Burada
+      // yalniz /messages/:id (ChatScreen) full-screen push olarak kalir.
       GoRoute(
         path: '/messages/:id',
         builder: (_, state) => ChatScreen(

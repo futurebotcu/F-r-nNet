@@ -35,7 +35,13 @@ import '../providers/job_offer_providers.dart';
 /// "+" CTA segmente göre yönlendirir; role-aware (commercial/wholesaler ↔
 /// individual).
 class JobsScreen extends ConsumerStatefulWidget {
-  const JobsScreen({super.key});
+  const JobsScreen({super.key, this.embedded = false});
+
+  /// İlanlar sekmesi altında "Eleman" segmenti olarak gömüldüğünde true:
+  /// kendi FırınNetHeader'ını çizmez (üst kapsayıcı "İlanlar" başlığı + segmente
+  /// duyarlı "+" sağlar). İç "Usta Arıyor / İş Arıyor" alt-segmenti korunur.
+  /// Standalone /jobs → false, davranış aynen korunur.
+  final bool embedded;
 
   @override
   ConsumerState<JobsScreen> createState() => _JobsScreenState();
@@ -84,17 +90,19 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
           ),
           padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
           children: [
-            FirinNetHeader(
-              title: AppStrings.jobsTitle,
-              subtitle: AppStrings.jobsSubtitle,
-              actions: [
-                HeaderActionButton(
-                  icon: Icons.add_rounded,
-                  onTap: _onAddPressed,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
+            if (!widget.embedded) ...[
+              FirinNetHeader(
+                title: AppStrings.jobsTitle,
+                subtitle: AppStrings.jobsSubtitle,
+                actions: [
+                  HeaderActionButton(
+                    icon: Icons.add_rounded,
+                    onTap: _onAddPressed,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+            ],
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: _Segment(

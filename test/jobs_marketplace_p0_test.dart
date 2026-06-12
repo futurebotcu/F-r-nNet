@@ -115,24 +115,28 @@ void main() {
           .readAsStringSync();
     });
 
-    // V Nav-Marketplace-Restore (V1 Market M2 sonrası):
-    // P0 cleanup zamanında Market tab gizlenmişti (mock ürünler dürüst değil
-    // gerekçesi). V1 Market M1+M2 ile gerçek market_listings backend (RLS +
-    // media + saves + classified marketplace UI) tamamlandı; tab geri eklendi.
-    test('5 tab tanımlı: Feed, Gruplar, Market, İlanlar, Panel', () {
-      expect(src.contains('AppRoutes.feed'), isTrue);
-      expect(src.contains('AppRoutes.groups'), isTrue);
-      expect(src.contains('AppRoutes.market'), isTrue,
-          reason:
-              'V2 backend açıldı; Market tab AppShell._tabs içinde olmalı');
-      expect(src.contains('AppRoutes.jobs'), isTrue);
+    // Navigation IA Sprint — alt nav: Topluluk · Pazar · İlanlar · Mesajlar ·
+    // Panel. Feed+Gruplar → Topluluk; jobs+marketplace → İlanlar; marketplace
+    // (B2B) → Pazar "Yakında"; Mesajlar alt nav'a çıktı.
+    test('5 tab tanımlı: Topluluk, Pazar, İlanlar, Mesajlar, Panel', () {
+      expect(src.contains('AppRoutes.community'), isTrue);
+      expect(src.contains('AppRoutes.pazar'), isTrue);
+      expect(src.contains('AppRoutes.listings'), isTrue);
+      expect(src.contains('AppRoutes.messages'), isTrue,
+          reason: 'Mesajlar alt nav tab oldu');
       expect(src.contains('AppRoutes.panel'), isTrue);
     });
 
-    test('Market tab label "Market" + storefront ikonu', () {
-      expect(src.contains("label: 'Market'"), isTrue);
+    test('Pazar tab storefront ikonu + "Yakında" rozeti', () {
       expect(src.contains('Icons.storefront_outlined'), isTrue);
       expect(src.contains('Icons.storefront_rounded'), isTrue);
+      expect(src.contains('comingSoon: true'), isTrue,
+          reason: 'Pazar tab Yakında rozeti taşır');
+    });
+
+    test('Mesajlar tab okunmamış sayaç rozetini besler', () {
+      expect(src.contains('totalUnreadMessagesProvider'), isTrue);
+      expect(src.contains('badgeCount'), isTrue);
     });
   });
 
