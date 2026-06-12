@@ -871,6 +871,7 @@ class _GroupImageBubble extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.cover,
+                memCacheWidth: 480, // Perf: bubble ~280px; tam-res decode'u önle.
                 placeholder: (_, __) => Container(
                   height: 160,
                   width: 220,

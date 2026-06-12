@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../messaging/services/chat_media_signed_url_cache.dart';
 import '../models/group_category.dart';
 import '../models/group_join_request.dart';
 import '../models/group_member.dart';
@@ -108,9 +109,9 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
     final path = m.imageStoragePath;
     if (!(m.hasImage || m.hasVideo) || path == null) return m;
     try {
-      final url = await _client.storage
-          .from(_chatMediaBucket)
-          .createSignedUrl(path, 3600);
+      // Perf: aynı oturumda aynı path yeniden imzalanmaz (signed URL cache).
+      final url = await ChatMediaSignedUrlCache.instance
+          .resolveWith(_client, _chatMediaBucket, path);
       final next = Map<String, dynamic>.from(m.attachments ?? const {});
       next['url'] = url;
       return GroupMessage(

@@ -93,6 +93,7 @@ class MarketplaceListingCard extends StatelessWidget {
                       CachedNetworkImage(
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
+                        memCacheWidth: 720, // Perf: kart görseli; decode sınırı.
                         placeholder: (_, __) => Container(
                           color: AppColors.surface,
                           alignment: Alignment.center,

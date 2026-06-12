@@ -17,6 +17,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
+import 'chat_media_signed_url_cache.dart';
 
 /// Seçilen dosya boyut sınırını aşarsa (image 10 MB / video 25 MB).
 class ChatMediaTooLargeException implements Exception {
@@ -154,9 +155,11 @@ class ChatMediaUploadService {
     );
   }
 
-  /// Private bucket → render için signed URL üret (varsayılan 1 saat).
-  Future<String> signedUrl(String storagePath, {int expiresIn = 3600}) {
-    return _client.storage.from(bucket).createSignedUrl(storagePath, expiresIn);
+  /// Private bucket → render için signed URL üret. Perf: aynı oturumda aynı
+  /// path yeniden imzalanmaz (signed URL cache; realtime medya enrich yolu).
+  Future<String> signedUrl(String storagePath) {
+    return ChatMediaSignedUrlCache.instance
+        .resolveWith(_client, bucket, storagePath);
   }
 
   static String _extensionOf(String name) {

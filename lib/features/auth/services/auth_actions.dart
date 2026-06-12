@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../messaging/services/chat_media_signed_url_cache.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/auth_providers.dart';
 import '../providers/guest_mode_provider.dart';
@@ -28,6 +29,8 @@ Future<void> performSignOut(BuildContext context, WidgetRef ref) async {
       // Ağ kopuksa bile local state'i temizle.
     }
   }
+  // Perf/güvenlik: bayat signed URL'ler sonraki kullanıcıya taşınmasın.
+  ChatMediaSignedUrlCache.instance.clear();
   await ref.read(guestModeProvider.notifier).setGuest(false);
   if (!context.mounted) return;
   ref.read(profileControllerProvider.notifier).clear();

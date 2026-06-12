@@ -195,7 +195,9 @@ void main() {
         'lib/features/messaging/services/chat_media_upload_service.dart',
       ).readAsStringSync();
       expect(src.contains("bucket = 'chat-media'"), isTrue);
-      expect(src.contains('createSignedUrl'), isTrue);
+      // Perf: signed URL üretimi ChatMediaSignedUrlCache'e taşındı (aynı
+      // oturumda yeniden imza yok); URL hâlâ private bucket için signed.
+      expect(src.contains('ChatMediaSignedUrlCache.instance'), isTrue);
       expect(src.contains(r"'$scope/$scopeId/$ownerId/m_$ts.$ext'"), isTrue);
       expect(src.contains('uploadBinary'), isTrue);
     });

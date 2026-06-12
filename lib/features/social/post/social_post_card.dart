@@ -625,6 +625,9 @@ class _PostMedia extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
+        // Perf: feed full-width görseli telefon ekranı için decode edilir;
+        // tam çözünürlük decode (bellek spike) yerine 720px üst sınır.
+        memCacheWidth: 720,
         placeholder: (_, __) => Container(
           color: AppColors.surface,
           alignment: Alignment.center,

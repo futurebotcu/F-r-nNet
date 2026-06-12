@@ -18,6 +18,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/conversation.dart';
 import '../models/message.dart';
+import '../services/chat_media_signed_url_cache.dart';
 import 'messaging_repository.dart';
 
 class SupabaseMessagingRepository implements MessagingRepository {
@@ -46,8 +47,9 @@ class SupabaseMessagingRepository implements MessagingRepository {
     final path = m.imageStoragePath;
     if (!(m.hasImage || m.hasVideo) || path == null) return m;
     try {
-      final url =
-          await _client.storage.from(_chatMediaBucket).createSignedUrl(path, 3600);
+      // Perf: aynı oturumda aynı path yeniden imzalanmaz (signed URL cache).
+      final url = await ChatMediaSignedUrlCache.instance
+          .resolveWith(_client, _chatMediaBucket, path);
       final next = Map<String, dynamic>.from(m.attachments ?? const {});
       next['url'] = url;
       return m.copyWith(attachments: next);
@@ -145,19 +147,17 @@ class SupabaseMessagingRepository implements MessagingRepository {
       }
     }
 
-    // 4) Last message snapshot — V1 için her conv için son 1 mesaj.
-    //    (N+1 ama V1'de küçük; V1.1 view ile optimize.)
+    // 4) Last message snapshot — Perf: N+1 döngüsü kaldırıldı. Tek RPC
+    //    (messages_last_per_conversation, DISTINCT ON, SECURITY INVOKER →
+    //    RLS korunur) tüm konuşmaların son mesajını tek sorguda döner.
     final lastMsgByConv = <String, Map<String, dynamic>>{};
-    for (final cid in myConvIds) {
-      final rows = await _client
-          .from('messages')
-          .select('content, sender_id, created_at')
-          .eq('conversation_id', cid)
-          .isFilter('deleted_at', null)
-          .order('created_at', ascending: false)
-          .limit(1);
-      final list = (rows as List).cast<Map<String, dynamic>>();
-      if (list.isNotEmpty) lastMsgByConv[cid] = list.first;
+    final lastRows = await _client.rpc<dynamic>(
+      'messages_last_per_conversation',
+      params: <String, dynamic>{'p_conv_ids': myConvIds},
+    );
+    for (final r in (lastRows as List? ?? const [])
+        .cast<Map<String, dynamic>>()) {
+      lastMsgByConv[r['conversation_id'] as String] = r;
     }
 
     // 5) lastReadAt mine batch.

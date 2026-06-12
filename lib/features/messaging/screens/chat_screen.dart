@@ -471,6 +471,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: CachedNetworkImage(
           imageUrl: message.source,
           fit: BoxFit.cover,
+          memCacheWidth: 480, // Perf: bubble ~240px; tam-res decode'u önle.
           placeholder: (_, __) => Container(
             width: 240,
             height: 180,
