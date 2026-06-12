@@ -162,7 +162,12 @@ class _RowDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: AppSpacing.s),
-      child: Divider(height: 0.5, thickness: 0.5, color: Color(0xFFEFE6DB)),
+      // Faz 2 P2 — eski sıcak bej divider yerine temiz hairline.
+      child: Divider(
+        height: 0.5,
+        thickness: 0.5,
+        color: AppColors.borderHairline,
+      ),
     );
   }
 }

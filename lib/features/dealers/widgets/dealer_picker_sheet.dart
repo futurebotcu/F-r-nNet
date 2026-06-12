@@ -6,6 +6,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
 
@@ -156,11 +157,8 @@ class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
     if (dealersAsync.isLoading || txsAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (dealersAsync.hasError) {
-      return Center(child: Text('Hata: ${dealersAsync.error}'));
-    }
-    if (txsAsync.hasError) {
-      return Center(child: Text('Hata: ${txsAsync.error}'));
+    if (dealersAsync.hasError || txsAsync.hasError) {
+      return const ErrorRetryState(compact: true);
     }
 
     final all = dealersAsync.value ?? const [];

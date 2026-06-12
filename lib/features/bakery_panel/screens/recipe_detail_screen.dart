@@ -8,6 +8,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
@@ -63,12 +64,9 @@ class RecipeDetailScreen extends ConsumerWidget {
           skipLoadingOnReload: true,
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
-          error: (e, _) => Padding(
-            padding: const EdgeInsets.all(AppSpacing.l),
-            child: Text(
-              'Reçete okunamadı: $e',
-              style: const TextStyle(color: AppColors.danger),
-            ),
+          error: (e, _) => ErrorRetryState(
+            title: 'Reçete açılamadı',
+            onRetry: () => ref.invalidate(recipesListProvider),
           ),
           data: (items) {
             final recipe = items.where((r) => r.id == recipeId).firstOrNull;

@@ -69,7 +69,10 @@ void main() {
       expect(text.style?.color, AppColors.textMuted);
     });
 
-    testWidgets('copper palette → copper rengi', (tester) async {
+    testWidgets('copper palette → okunur ink harf (pale lemon zemin)',
+        (tester) async {
+      // Faz 2 P2 — eskiden foreground=copper (lemon) idi → pale lemon zeminde
+      // okunmuyordu. Artık ink harf (kontrast + lemon aksan çerçeve).
       await tester.pumpWidget(_wrap(
         DealerAvatar(
           dealer: _dealer(),
@@ -77,7 +80,7 @@ void main() {
         ),
       ));
       final text = tester.widget<Text>(find.text('H'));
-      expect(text.style?.color, AppColors.copper);
+      expect(text.style?.color, AppColors.brandInk);
     });
   });
 }

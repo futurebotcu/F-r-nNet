@@ -110,10 +110,13 @@ _AvatarColors _resolveColors(DealerAvatarPalette palette, bool isActive) {
         foreground: AppColors.textMuted,
       );
     case DealerAvatarPalette.copper:
+      // Faz 2 P2 — eskiden foreground=copper (lemon) idi → pale lemon zemin
+      // üstünde lemon harf okunmuyordu (düşük kontrast). İnk harf + ince lemon
+      // çerçeve: hem okunur hem lemon aksanlı.
       return _AvatarColors(
-        background: AppColors.copper.withValues(alpha: 0.10),
-        foreground: AppColors.copper,
-        border: AppColors.copper.withValues(alpha: 0.25),
+        background: AppColors.brandLemonPale,
+        foreground: AppColors.brandInk,
+        border: AppColors.brandLemonPressed.withValues(alpha: 0.35),
       );
     case DealerAvatarPalette.softGold:
       return _AvatarColors(

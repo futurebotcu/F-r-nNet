@@ -22,6 +22,11 @@ class AppTheme {
       onPrimary: AppColors.brandInk,
       secondary: AppColors.brandLemonPressed,
       onSecondary: AppColors.brandInk,
+      // Faz 2 P2 — secondaryContainer açıkça PALE LEMON. Eskiden boş bırakılınca
+      // M3 default'u (lavanta) veya secondary'nin mat altın tonu (E6C84A)
+      // segment/chip seçili zeminlerinde "eski/kahverengi" his veriyordu.
+      secondaryContainer: AppColors.brandLemonPale,
+      onSecondaryContainer: AppColors.brandInk,
       surface: AppColors.surface,
       onSurface: AppColors.brandInk,
       outline: AppColors.borderHairline,
@@ -191,6 +196,40 @@ class AppTheme {
             fontSize: 14,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.2,
+          ),
+        ),
+      ),
+      // Faz 2 P2 — SegmentedButton tek tip: seçili = parlak lemon + ink,
+      // pasif = beyaz + ikincil metin. Eskiden tema default'u mat altın/lavanta
+      // veriyordu (bayi "Çalışma tipi", düzeltme yönü vb. eski his). Artık
+      // birincil buton ile aynı parlak lemon.
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.brandLemon
+                : AppColors.surface,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.brandInk
+                : AppColors.textSecondary,
+          ),
+          iconColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.brandInk
+                : AppColors.textSecondary,
+          ),
+          side: WidgetStateProperty.all(
+            const BorderSide(color: AppColors.borderHairline, width: 0.8),
+          ),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+            ),
+          ),
+          textStyle: WidgetStateProperty.all(
+            const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
           ),
         ),
       ),
