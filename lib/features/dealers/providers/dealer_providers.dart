@@ -42,7 +42,7 @@ final dealerShellPrefilterDebtOnlyProvider = StateProvider<bool>((_) => false);
 /// tarafında sıralı; burada yalnız üstten kesilir.
 final recentActivityProvider =
     FutureProvider.autoDispose<List<DealerTransaction>>((ref) async {
-  ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   final all = await repo.listAllTransactions();
   return all.take(5).toList();
@@ -51,7 +51,7 @@ final recentActivityProvider =
 /// Tüm tx listesi (Sprint 6B picker per-dealer balance hesabı için).
 final allTransactionsProvider =
     FutureProvider.autoDispose<List<DealerTransaction>>((ref) async {
-  ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.listAllTransactions();
 });
@@ -82,7 +82,11 @@ final dealerRepositoryProvider = Provider<DealerRepository>((ref) {
     inner = LocalDealerRepository(seed: true);
   }
   final canWrite = ref.watch(canWriteCheckProvider);
-  return GuardedDealerRepository(inner: inner, canWriteCheck: canWrite);
+  final repo = GuardedDealerRepository(inner: inner, canWriteCheck: canWrite);
+  // Provider rebuild'inde (login/logout → userId değişir) eski repo'nun
+  // broadcast controller'larını kapat (küçük leak önlenir).
+  ref.onDispose(repo.dispose);
+  return repo;
 });
 
 final dealerBalanceServiceProvider = Provider<DealerBalanceService>((ref) {
@@ -97,10 +101,18 @@ final dealerPdfBuilderProvider = Provider<DealerPdfBuilder>((ref) {
   return const DealerPdfBuilder();
 });
 
-/// Repository değişikliklerini dinleyen tick.
+/// Repository YAPISAL değişiklik tick'i (bayi ekle/düzenle/aktif-pasif).
 final dealerChangesProvider = StreamProvider<void>((ref) {
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.watch();
+});
+
+/// Perf — yalnız İÇERİK (hareket/fiyat/not) değişim tick'i. Bir hareket
+/// eklendiğinde SADECE ilgili bayinin tx/bakiye/aktivite slice'ı tazelenir;
+/// tüm bayi listesi + diğer bayilerin bakiyesi recompute olmaz (storm önlenir).
+final dealerContentChangesProvider = StreamProvider<void>((ref) {
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.watchContent();
 });
 
 /// Tüm bayiler (default tüm; aktif filtresi UI tarafında uygulanır).
@@ -137,21 +149,21 @@ final dealerByIdProvider =
 
 final transactionsByDealerProvider = FutureProvider.autoDispose
     .family<List<DealerTransaction>, String>((ref, id) async {
-  ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.listTransactions(id);
 });
 
 final pricesByDealerProvider = FutureProvider.autoDispose
     .family<List<DealerPrice>, String>((ref, id) async {
-  ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.listPrices(id);
 });
 
 final notesByDealerProvider = FutureProvider.autoDispose
     .family<List<DealerNote>, String>((ref, id) async {
-  ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.listNotes(id);
 });
@@ -159,7 +171,9 @@ final notesByDealerProvider = FutureProvider.autoDispose
 /// Bayi bakiye özeti (transactions üzerinden hesaplanır).
 final balanceSummaryProvider = FutureProvider.autoDispose
     .family<DealerBalanceSummary, String>((ref, id) async {
-  ref.watch(dealerChangesProvider);
+  // Bakiye = f(transactions) → içerik tick'ini izler; hareket eklenince
+  // anında günceller, dealer metadata düzenlemesinde gereksiz recompute yok.
+  ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   final svc = ref.watch(dealerBalanceServiceProvider);
   final txs = await repo.listTransactions(id);
@@ -282,7 +296,10 @@ class DealerOverview {
 
 final dealersOverviewProvider =
     FutureProvider.autoDispose<DealerOverview>((ref) async {
+  // Panel hero: hem dealer SAYISI (yapısal: ekle/aktif-pasif) hem de tüm
+  // hareket toplamı (içerik) değişince güncellenmeli → iki tick birden.
   ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   final svc = ref.watch(dealerBalanceServiceProvider);
 

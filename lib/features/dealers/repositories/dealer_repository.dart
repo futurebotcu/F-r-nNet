@@ -42,6 +42,16 @@ abstract class DealerRepository {
   Future<List<DealerNote>> listNotes(String dealerId);
   Future<void> addNote(DealerNote note);
 
-  /// Repository içeriği değiştiğinde yayın.
+  /// Repository YAPISAL değişiklik yayını (bayi ekle/düzenle/aktif-pasif).
   Stream<void> watch();
+
+  /// İÇERİK değişiklik yayını (hareket/fiyat/not). Yapısal tick'ten ayrı:
+  /// bir hareket eklenince yalnız ilgili bayinin tx/bakiye slice'ı tazelenir,
+  /// tüm bayi listesi recompute olmaz. (`implements` default body devralmaz —
+  /// her impl override eder.)
+  Stream<void> watchContent() => watch();
+
+  /// Repo instance atıldığında (provider rebuild) controller'ları kapatma
+  /// kancası. Default no-op; Supabase impl broadcast controller'larını kapatır.
+  void dispose() {}
 }

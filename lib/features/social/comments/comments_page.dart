@@ -785,6 +785,14 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
           .timeout(const Duration(seconds: 30));
       debugPrint('[FirinNet][Comments] sent ok id=${c.id}');
       if (!mounted) return;
+      // Dar sayaç güncellemesi: paged feed'i yeniden çekmeden kart sayacını
+      // anında +1 yap. basis = o an bilinen gerçek sayaç.
+      final basis =
+          ref.read(feedPostByIdProvider(widget.postId)).valueOrNull?.commentCount ??
+              0;
+      ref
+          .read(feedCommentCountOverrideProvider.notifier)
+          .increment(widget.postId, basis);
       _ctrl.clear();
       _focus.unfocus();
     } on GuestActionRequiredException {

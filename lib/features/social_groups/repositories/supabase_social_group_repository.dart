@@ -670,4 +670,10 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
 
   @override
   Stream<void> watchMessages() => _messageChanges.stream;
+
+  @override
+  void dispose() {
+    _changes.close();
+    _messageChanges.close();
+  }
 }

@@ -56,6 +56,12 @@ class GuardedDealerRepository implements DealerRepository {
   @override
   Stream<void> watch() => inner.watch();
 
+  @override
+  Stream<void> watchContent() => inner.watchContent();
+
+  @override
+  void dispose() => inner.dispose();
+
   // ── Write (guarded) ────────────────────────────────
 
   @override

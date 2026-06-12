@@ -24,11 +24,18 @@ class SupabaseDealerRepository implements DealerRepository {
   SupabaseDealerRepository(this._client);
 
   final sb.SupabaseClient _client;
+  // Yapısal tick: bayi ekle/düzenle/aktif-pasif → liste/detay metadata.
   final StreamController<void> _changes = StreamController<void>.broadcast();
+  // İçerik tick'i: hareket/fiyat/not → yalnız ilgili bayinin tx/bakiye slice'ı.
+  // Bir hareket eklendiğinde TÜM bayi listesi + diğer bayilerin bakiyesi
+  // recompute olmasın diye yapısaldan ayrıldı (grup modülü kalıbı).
+  final StreamController<void> _contentChanges =
+      StreamController<void>.broadcast();
 
   String? _cachedBakeryId;
 
   void _notify() => _changes.add(null);
+  void _notifyContent() => _contentChanges.add(null);
 
   String _requireUserId() {
     final id = _client.auth.currentUser?.id;
@@ -264,7 +271,7 @@ class SupabaseDealerRepository implements DealerRepository {
       'valid_from': _date(price.validFrom),
       if (price.note.isNotEmpty) 'note': price.note,
     });
-    _notify();
+    _notifyContent();
   }
 
   // ───────────────────────────────────────────────── Transactions
@@ -365,7 +372,7 @@ class SupabaseDealerRepository implements DealerRepository {
     } else {
       await _addExtraToSupabase(tx);
     }
-    _notify();
+    _notifyContent();
   }
 
   Future<void> _addDeliveryToSupabase(DealerTransaction tx) async {
@@ -447,9 +454,20 @@ class SupabaseDealerRepository implements DealerRepository {
       'dealer_id': note.dealerId,
       'note': note.note,
     });
-    _notify();
+    _notifyContent();
   }
 
   @override
   Stream<void> watch() => _changes.stream;
+
+  @override
+  Stream<void> watchContent() => _contentChanges.stream;
+
+  /// Provider rebuild'inde (ör. login/logout → userId değişir) eski repo
+  /// instance'ı atılır; broadcast controller'ları kapat (küçük leak önlenir).
+  @override
+  void dispose() {
+    _changes.close();
+    _contentChanges.close();
+  }
 }

@@ -42,7 +42,11 @@ final socialGroupRepositoryProvider =
         'inner=${inner.runtimeType}#${identityHashCode(inner)}');
   }
   final canWrite = ref.watch(canWriteCheckProvider);
-  return GuardedSocialGroupRepository(inner: inner, canWriteCheck: canWrite);
+  final repo = GuardedSocialGroupRepository(inner: inner, canWriteCheck: canWrite);
+  // Provider rebuild'inde (login/logout) eski repo'nun iki broadcast
+  // controller'ını kapat (önceki sprint P2: controller close).
+  ref.onDispose(repo.dispose);
+  return repo;
 });
 
 final groupValidatorProvider = Provider<GroupValidator>((ref) {

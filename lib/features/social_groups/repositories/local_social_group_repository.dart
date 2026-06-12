@@ -435,6 +435,9 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
   @override
   Stream<void> watchMessages() => _changes.stream;
 
+  @override
+  void dispose() => _changes.close();
+
   // ─────────────────────────────────────── Demo seed
 
   void _seed() {

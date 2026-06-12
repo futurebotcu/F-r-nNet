@@ -349,6 +349,13 @@ class LocalFeedRepository implements FeedRepository {
   @override
   Stream<void> watch() => _changes.stream;
 
+  // Local'de storm yok; içerik tick'i yapısalla aynı stream (guest/demo).
+  @override
+  Stream<void> watchContent() => _changes.stream;
+
+  @override
+  void dispose() => _changes.close();
+
   // ─────────────────────────────────────── Seed
 
   static const List<List<Color>> _gradients = <List<Color>>[

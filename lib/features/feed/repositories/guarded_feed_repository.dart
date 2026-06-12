@@ -72,6 +72,12 @@ class GuardedFeedRepository implements FeedRepository {
   @override
   Stream<void> watch() => inner.watch();
 
+  @override
+  Stream<void> watchContent() => inner.watchContent();
+
+  @override
+  void dispose() => inner.dispose();
+
   // ── Write (guarded) ───────────────────────────────────────────
 
   @override

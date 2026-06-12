@@ -36,14 +36,56 @@ final feedRepositoryProvider = Provider<FeedRepository>((ref) {
     inner = LocalFeedRepository(seed: true);
   }
   final canWrite = ref.watch(canWriteCheckProvider);
-  return GuardedFeedRepository(inner: inner, canWriteCheck: canWrite);
+  final repo = GuardedFeedRepository(inner: inner, canWriteCheck: canWrite);
+  // Provider rebuild'inde (login/logout) eski repo controller'larını kapat.
+  ref.onDispose(repo.dispose);
+  return repo;
 });
 
-/// Repository değişikliklerini dinleyen tick.
+/// Repository YAPISAL değişiklik tick'i (post oluştur/sil/düzenle/medya).
 final feedChangesProvider = StreamProvider<void>((ref) {
   final repo = ref.watch(feedRepositoryProvider);
   return repo.watch();
 });
+
+/// Perf — yalnız İÇERİK (like/save/yorum) değişim tick'i. Beğeni/yorum artık
+/// tüm paged feed'i yeniden çekmez; yalnız o post'un detay/yorum slice'ı
+/// tazelenir (kart sayaçları optimistik override + dar güncelleme ile gelir).
+final feedContentChangesProvider = StreamProvider<void>((ref) {
+  final repo = ref.watch(feedRepositoryProvider);
+  return repo.watchContent();
+});
+
+/// Dar yorum-sayacı override'ı (perf).
+///
+/// Yorum eklendiğinde içerik tick'i paged feed'i KOMPLE yeniden çekmez
+/// (storm önlenir). Kart sayacı bu override ile anında artar. Mutlak "bilinen
+/// sayı" tutulur; kart `max(post.commentCount, override)` gösterir → feed
+/// gerçek sayıyla tazelendiğinde override no-op olur (çift sayım yok).
+/// V1'de yorum silme kullanıcıya pratikte kapalı → monotonik artış güvenli.
+/// keepAlive (autoDispose değil): yorum sayfasından feed'e dönüşte korunur.
+class FeedCommentCountOverride extends Notifier<Map<String, int>> {
+  @override
+  Map<String, int> build() => const <String, int>{};
+
+  /// [postId] için bilinen sayacı [basis]'e göre 1 artırır.
+  void increment(String postId, int basis) {
+    final current = state[postId] ?? basis;
+    state = <String, int>{...state, postId: current + 1};
+  }
+
+  /// Kartın göstereceği sayaç: model ile override'ın büyüğü.
+  int resolve(String postId, int modelCount) {
+    final o = state[postId];
+    if (o == null || o <= modelCount) return modelCount;
+    return o;
+  }
+}
+
+final feedCommentCountOverrideProvider =
+    NotifierProvider<FeedCommentCountOverride, Map<String, int>>(
+  FeedCommentCountOverride.new,
+);
 
 /// Ana feed postları (newest first), opsiyonel tip filtresi.
 final feedPostsProvider = FutureProvider.autoDispose
@@ -64,6 +106,9 @@ final feedInsightsProvider =
 /// V1 P1-B — Bir post için yorumlar (eski tarih önce).
 final feedCommentsProvider = FutureProvider.autoDispose
     .family<List<FeedComment>, String>((ref, postId) async {
+  // Yorum ekle/sil içerik tick'idir → bu liste yalnız o tick'te tazelenir,
+  // paged feed komple yeniden çekilmez.
+  ref.watch(feedContentChangesProvider);
   ref.watch(feedChangesProvider);
   final repo = ref.watch(feedRepositoryProvider);
   return repo.listComments(postId);
@@ -368,7 +413,10 @@ final userPostsPagedNotifierProvider = AsyncNotifierProvider.family<
 /// dedicated `feed_post_by_id` RPC eklenebilir.
 final feedPostByIdProvider = FutureProvider.autoDispose
     .family<FeedPost?, String>((ref, postId) async {
+  // Tek post lookup: yapısal (düzenle/sil) + içerik (like/yorum sayacı)
+  // ikisini de izler → yorum sayfası header'ı güncel kalır.
   ref.watch(feedChangesProvider);
+  ref.watch(feedContentChangesProvider);
   final repo = ref.watch(feedRepositoryProvider);
   final posts = await repo.listPosts();
   for (final p in posts) {

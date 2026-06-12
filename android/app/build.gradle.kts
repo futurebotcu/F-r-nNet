@@ -77,6 +77,19 @@ android {
             // key.properties eksikse release task taskGraph hook'unda fail
             // eder; bu sayede yanlışlıkla debug imzalı release çıkmaz.
             signingConfig = signingConfigs.getByName("release")
+
+            // Release minify/shrink: host Kotlin/Java katmanını küçültür
+            // (Dart AOT libapp.so'su R8'den etkilenmez). proguard-rules.pro
+            // reflection kullanan plugin/SDK katmanlarını korur.
+            // NOT: İmza anahtarı bu ortamda yok → release build burada
+            // doğrulanamadı; ilk release build signing makinesinde cihaz
+            // smoke'u ile teyit edilmeli (bkz. release raporu).
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

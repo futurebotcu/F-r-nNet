@@ -34,9 +34,16 @@ class SupabaseFeedRepository implements FeedRepository {
   SupabaseFeedRepository(this._client);
 
   final sb.SupabaseClient _client;
+  // Yapısal tick: post oluştur/sil/düzenle/medya → liste kompozisyonu değişir.
   final StreamController<void> _changes = StreamController<void>.broadcast();
+  // İçerik tick'i: like/save/yorum → post SAYAÇLARI değişir, liste
+  // kompozisyonu DEĞİL. Beğeni/yorum artık tüm paged feed'i yeniden çekmez
+  // (kart optimistik override + dar sayaç güncellemesi yeterli).
+  final StreamController<void> _contentChanges =
+      StreamController<void>.broadcast();
 
   void _notify() => _changes.add(null);
+  void _notifyContent() => _contentChanges.add(null);
 
   String? get _currentUserId => _client.auth.currentUser?.id;
 
@@ -612,7 +619,7 @@ class SupabaseFeedRepository implements FeedRepository {
       // Race: çift tap ardı ardına INSERT → ikinci 23505. Idempotent yutma.
       if (e.code != '23505') rethrow;
     }
-    _notify();
+    _notifyContent();
 
     // Güncel post satırını döndür (like_count trigger ile güncellendi).
     final row = await _client
@@ -654,7 +661,7 @@ class SupabaseFeedRepository implements FeedRepository {
     } on sb.PostgrestException catch (e) {
       if (e.code != '23505') rethrow;
     }
-    _notify();
+    _notifyContent();
 
     final row = await _client
         .from('feed_posts')
@@ -715,7 +722,7 @@ class SupabaseFeedRepository implements FeedRepository {
         })
         .select(_commentColumns)
         .single();
-    _notify();
+    _notifyContent();
     return FeedComment.fromRow(row);
   }
 
@@ -732,9 +739,18 @@ class SupabaseFeedRepository implements FeedRepository {
         .update(<String, dynamic>{'is_deleted': true})
         .eq('id', commentId)
         .eq('owner_id', userId);
-    _notify();
+    _notifyContent();
   }
 
   @override
   Stream<void> watch() => _changes.stream;
+
+  @override
+  Stream<void> watchContent() => _contentChanges.stream;
+
+  @override
+  void dispose() {
+    _changes.close();
+    _contentChanges.close();
+  }
 }

@@ -135,6 +135,14 @@ abstract class FeedRepository {
   /// Soft delete — yalnız `is_deleted=true` (yorumlar V1'de geri silinmez).
   Future<void> deleteComment(String commentId);
 
-  /// Repository içeriği değiştiğinde yayın.
+  /// Repository YAPISAL değişiklik yayını (post oluştur/sil/düzenle/medya).
   Stream<void> watch();
+
+  /// İÇERİK değişiklik yayını (like/save/yorum). Liste kompozisyonunu
+  /// değiştirmeyen sayaç güncellemeleri; paged feed bunu izlemez. (`implements`
+  /// default body devralmaz — her impl override eder.)
+  Stream<void> watchContent() => watch();
+
+  /// Repo instance atıldığında controller'ları kapatma kancası (default no-op).
+  void dispose() {}
 }

@@ -142,6 +142,14 @@ class LocalDealerRepository implements DealerRepository {
   @override
   Stream<void> watch() => _changes.stream;
 
+  // Local in-memory'de storm yok; içerik tick'i yapısalla aynı stream'i
+  // paylaşır (guest/demo). Provider'lar yine ayrı izler, davranış korunur.
+  @override
+  Stream<void> watchContent() => _changes.stream;
+
+  @override
+  void dispose() => _changes.close();
+
   // ─────────────────────────────────────── Demo seed
 
   void _seed() {

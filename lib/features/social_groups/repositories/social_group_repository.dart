@@ -96,4 +96,7 @@ abstract class SocialGroupRepository {
   /// metadata/üye/liste provider'larını değil, SADECE mesaj listesini
   /// tazeler (invalidation storm önlenir). Default: [watch] (geri uyumlu).
   Stream<void> watchMessages() => watch();
+
+  /// Repo instance atıldığında controller'ları kapatma kancası (default no-op).
+  void dispose() {}
 }

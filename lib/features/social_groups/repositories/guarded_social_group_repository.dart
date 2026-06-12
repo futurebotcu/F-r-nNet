@@ -52,6 +52,9 @@ class GuardedSocialGroupRepository implements SocialGroupRepository {
   @override
   Stream<void> watchMessages() => inner.watchMessages();
 
+  @override
+  void dispose() => inner.dispose();
+
   // ── Write (guarded) ────────────────────────────────
 
   @override

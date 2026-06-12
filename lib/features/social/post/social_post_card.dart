@@ -66,6 +66,15 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   bool get _displaySaved => _savedOverride ?? post.isSaved;
   int get _displayLikeCount => _likeCountOverride ?? post.likeCount;
 
+  // Dar yorum-sayacı: yorum eklenince paged feed yeniden çekilmeden kart
+  // sayacı override ile anında artar (max(model, override)).
+  int get _displayCommentCount {
+    ref.watch(feedCommentCountOverrideProvider);
+    return ref
+        .read(feedCommentCountOverrideProvider.notifier)
+        .resolve(post.id, post.commentCount);
+  }
+
   bool _isOwner() {
     final user = ref.watch(currentAuthUserProvider);
     return user != null && user.id == post.ownerId;
@@ -300,10 +309,10 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
           // Feed Premium Sprint — etkileşim özeti: action row'dan ÖNCE,
           // sayılar burada (ince/şık), action row sade kalır. Hiç etkileşim
           // yoksa satır tamamen gizli.
-          if (_displayLikeCount > 0 || post.commentCount > 0)
+          if (_displayLikeCount > 0 || _displayCommentCount > 0)
             _PostEngagementSummary(
               likeCount: _displayLikeCount,
-              commentCount: post.commentCount,
+              commentCount: _displayCommentCount,
               onTapComments: () {
                 debugPrint(
                   '[FirinNet][PostCard] summary comments tap postId=${post.id}',
