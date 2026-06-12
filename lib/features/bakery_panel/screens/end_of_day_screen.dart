@@ -9,6 +9,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../models/daily_summary.dart';
@@ -27,7 +28,9 @@ class EndOfDayScreen extends ConsumerWidget {
       body: SafeArea(
         child: summary.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (e, _) => ErrorRetryState(
+            onRetry: () => ref.invalidate(todaySummaryProvider),
+          ),
           data: (DailySummary s) {
             if (s.isEmpty) {
               return EmptyState(

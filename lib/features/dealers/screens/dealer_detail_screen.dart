@@ -128,7 +128,7 @@ class DealerDetailScreen extends ConsumerWidget {
                   child: balanceAsync.when(
                     skipLoadingOnReload: true,
                     loading: () => const _HeroLoading(),
-                    error: (e, _) => Text('Bakiye: $e'),
+                    error: (e, _) => const _SectionError('Bakiye yüklenemedi'),
                     data: (s) => FadeSlideIn(
                       child: _BalanceHero(dealer: d, summary: s),
                     ),
@@ -155,7 +155,7 @@ class DealerDetailScreen extends ConsumerWidget {
                   child: pricesAsync.when(
                     skipLoadingOnReload: true,
                     loading: () => const _MiniLoading(),
-                    error: (e, _) => Text('Fiyat: $e'),
+                    error: (e, _) => const _SectionError('Fiyatlar yüklenemedi'),
                     data: (p) => _PricesCard(prices: p),
                   ),
                 ),
@@ -167,7 +167,7 @@ class DealerDetailScreen extends ConsumerWidget {
                   child: txAsync.when(
                     skipLoadingOnReload: true,
                     loading: () => const _MiniLoading(),
-                    error: (e, _) => Text('İşlem: $e'),
+                    error: (e, _) => const _SectionError('İşlemler yüklenemedi'),
                     data: (txs) => _TxList(txs: txs),
                   ),
                 ),
@@ -179,7 +179,7 @@ class DealerDetailScreen extends ConsumerWidget {
                   child: notesAsync.when(
                     skipLoadingOnReload: true,
                     loading: () => const _MiniLoading(),
-                    error: (e, _) => Text('Not: $e'),
+                    error: (e, _) => const _SectionError('Notlar yüklenemedi'),
                     data: (notes) => NotesCard(dealerId: d.id, notes: notes),
                   ),
                 ),
@@ -603,6 +603,35 @@ class _MiniLoading extends StatelessWidget {
         height: 18,
         child: CircularProgressIndicator(strokeWidth: 1.6),
       ),
+    ),
+  );
+}
+
+/// Faz 2 UI — bölüm içi kompakt hata satırı (ham exception sızdırmaz).
+class _SectionError extends StatelessWidget {
+  const _SectionError(this.message);
+  final String message;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.error_outline_rounded,
+          size: 16,
+          color: AppColors.textMuted,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          message,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     ),
   );
 }

@@ -411,25 +411,13 @@ class _FeedEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xxl),
-      child: Center(
-        child: Column(
-          children: [
-            const Icon(
-              Icons.feed_outlined,
-              color: AppColors.textMuted,
-              size: 36,
-            ),
-            const SizedBox(height: AppSpacing.s),
-            Text(
-              AppStrings.feedEmpty,
-              style: const TextStyle(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    // Faz 2 UI — sade ikon+metin yerine premium EmptyState (Takip Edilenler
+    // boş-state'iyle tutarlı). Liste içinde olduğu için compact.
+    return const EmptyState(
+      icon: Icons.dynamic_feed_rounded,
+      title: AppStrings.feedEmptyTitle,
+      subtitle: AppStrings.feedEmptySubtitle,
+      compact: true,
     );
   }
 }

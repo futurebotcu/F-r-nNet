@@ -9,6 +9,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer.dart';
@@ -38,17 +39,19 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
       body: SafeArea(
         child: dealerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (e, _) => ErrorRetryState(
+            onRetry: () => ref.invalidate(dealerByIdProvider(widget.dealerId)),
+          ),
           data: (dealer) {
             if (dealer == null) {
               return const Center(child: Text('Bayi bulunamadı'));
             }
             return balanceAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Bakiye hatası: $e')),
+              error: (e, _) => const ErrorRetryState(),
               data: (summary) => txAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('İşlem hatası: $e')),
+                error: (e, _) => const ErrorRetryState(),
                 data: (txs) {
                   final shareBuilder = ref.read(dealerShareBuilderProvider);
                   final recent = txs.take(8).toList();

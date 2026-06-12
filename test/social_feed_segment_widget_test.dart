@@ -62,7 +62,9 @@ void main() {
 
   group('AppStrings — Social UI Polish Sprint 2A tanımları', () {
     test('feedSegmentAll + feedSegmentFollowing', () {
-      expect(AppStrings.feedSegmentAll, 'Genel Akış');
+      // Faz 2 UI — feed iç filtresi "Tümü" (eskiden "Genel Akış"); Topluluk
+      // üst segmentiyle çift-etiket karmaşası giderildi.
+      expect(AppStrings.feedSegmentAll, 'Tümü');
       expect(AppStrings.feedSegmentFollowing, 'Takip Edilenler');
     });
 

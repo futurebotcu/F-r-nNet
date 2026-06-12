@@ -190,6 +190,10 @@ class AppStrings {
       'Akış yüklenemedi. Bağlantını kontrol edip yeniden dener misin?';
   static const String feedEmpty =
       'Henüz paylaşım yok. İlk gönderiyi sen at — ağ buradan büyür.';
+  // Faz 2 UI — premium boş-state başlık/alt metin ayrımı.
+  static const String feedEmptyTitle = 'Akış henüz boş';
+  static const String feedEmptySubtitle =
+      'İlk gönderiyi sen paylaş — sektörün gündemi buradan büyür.';
   static const String feedComposerNewPostCta = 'Paylaş';
   // Social UI Polish Sprint 1 — inline composer card.
   static const String feedComposerInlinePlaceholder =
@@ -215,7 +219,11 @@ class AppStrings {
   static const String mediaSheetPickVideo = 'Galeriden video seç';
   static const String mediaSheetCancel = 'Vazgeç';
   // Social UI Polish Sprint 2A — Feed segmentation (Genel Akış / Takip Edilenler)
-  static const String feedSegmentAll = 'Genel Akış';
+  // Faz 2 UI — feed iç filtresi "Tümü / Takip Edilenler". Eskiden "Genel Akış"
+  // idi; Topluluk üst segmenti zaten "Genel Akış | Gruplar" olduğu için
+  // çift-etiket karmaşası oluşuyordu. "Tümü" hem ayrışır hem de All/Following
+  // filtresini daha net anlatır.
+  static const String feedSegmentAll = 'Tümü';
   static const String feedSegmentFollowing = 'Takip Edilenler';
   static const String feedFollowingEmptyNoFollows =
       'Henüz kimseyi takip etmiyorsun.';
@@ -227,6 +235,10 @@ class AppStrings {
       'Takip Edilenler akışını görmek için giriş yap.';
   static const String feedFollowingBackToAll = 'Tüm akışa dön';
   static const String retry = 'Yeniden dene';
+  // Faz 2 UI — ortak hata durumu (ham exception kullanıcıya gösterilmez).
+  static const String errorGenericTitle = 'Bir şeyler ters gitti';
+  static const String errorGenericSubtitle =
+      'İçerik şu an yüklenemedi. Bağlantını kontrol edip tekrar dene.';
   static const String storiesMyStoryLabel = 'Senin Hikayen';
   static const String storiesEmptyHint = 'Hikaye akışı yakında.';
 

@@ -768,7 +768,7 @@ class _ActionButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 20),
+            Icon(icon, color: color, size: 18),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
@@ -776,7 +776,7 @@ class _ActionButton extends StatelessWidget {
                 style: TextStyle(
                   color: onTap == null ? AppColors.textMuted : color,
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   height: 1.0,
                 ),
                 maxLines: 1,

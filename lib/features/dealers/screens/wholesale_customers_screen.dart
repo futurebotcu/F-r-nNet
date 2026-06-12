@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
@@ -63,7 +64,11 @@ class _WholesaleCustomersScreenState
           skipLoadingOnReload: true,
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
-          error: (e, _) => Center(child: Text('Hata: $e')),
+          error: (e, _) => ErrorRetryState(
+            onRetry: () => ref.invalidate(
+              dealersByTypeProvider(DealerCustomerType.wholesaleCustomer),
+            ),
+          ),
           data: (all) {
             if (all.isEmpty) {
               return EmptyState(

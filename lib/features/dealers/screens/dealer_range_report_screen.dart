@@ -7,6 +7,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_range_metrics.dart';
@@ -116,9 +117,9 @@ class _DealerRangeReportScreenState
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                  child: Center(child: Text('Hata: $e')),
+                error: (e, _) => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
+                  child: ErrorRetryState(compact: true),
                 ),
                 data: (m) => m.txCount == 0
                     ? const Padding(
