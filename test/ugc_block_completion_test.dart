@@ -11,7 +11,6 @@ import 'dart:io';
 
 import 'package:firin_defter/features/messaging/models/conversation.dart';
 import 'package:firin_defter/features/messaging/models/message.dart';
-import 'package:firin_defter/features/messaging/repositories/messaging_repository.dart';
 import 'package:firin_defter/features/notifications/models/app_notification.dart';
 import 'package:flutter_test/flutter_test.dart';
 
