@@ -247,7 +247,8 @@ class _MiniChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        // Faz 2 Pass 4 — metin çipi için pill (999) fazla yuvarlaktı; soft m.
+        borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

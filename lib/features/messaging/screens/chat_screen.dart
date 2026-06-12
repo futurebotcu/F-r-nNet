@@ -521,11 +521,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.22),
+                // Faz 2 Pass 4 — daha net "oynat" affordansı.
+                color: AppColors.surface.withValues(alpha: 0.32),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.surface.withValues(alpha: 0.6),
-                  width: 1,
+                  color: AppColors.surface.withValues(alpha: 0.85),
+                  width: 1.2,
                 ),
               ),
               child: const Icon(

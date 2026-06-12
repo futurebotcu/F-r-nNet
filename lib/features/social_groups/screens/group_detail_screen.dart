@@ -749,14 +749,24 @@ class _ChatBubble extends ConsumerWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.m),
+                    // Faz 2 Pass 4 — kendi mesajın hafif lemon tint + lemon
+                    // hairline; başkalarınınki beyaz. Grup feed'inde "benim
+                    // mesajım" ayrımı netleşir (tam genişlik layout korunur).
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: isOwn ? AppColors.brandLemonPale : AppColors.surface,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(AppRadius.m),
                         topRight: const Radius.circular(AppRadius.m),
                         bottomLeft: const Radius.circular(AppRadius.m),
                         bottomRight: const Radius.circular(AppRadius.s),
                       ),
+                      border: isOwn
+                          ? Border.all(
+                              color: AppColors.brandLemonPressed
+                                  .withValues(alpha: 0.22),
+                              width: 0.6,
+                            )
+                          : null,
                       boxShadow: AppShadow.card,
                     ),
                     child: Text(
@@ -986,11 +996,12 @@ class _GroupVideoBubble extends StatelessWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.22),
+                      // Faz 2 Pass 4 — daha net "oynat" affordansı.
+                      color: AppColors.surface.withValues(alpha: 0.32),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppColors.surface.withValues(alpha: 0.6),
-                        width: 1,
+                        color: AppColors.surface.withValues(alpha: 0.85),
+                        width: 1.2,
                       ),
                     ),
                     child: const Icon(

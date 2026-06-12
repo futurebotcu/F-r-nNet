@@ -72,22 +72,29 @@ class QuickActionTile extends StatelessWidget {
                   Container(
                     width: featured ? 38 : 36,
                     height: featured ? 38 : 36,
+                    // Faz 2 Pass 4 — eskiden ink accent @0.08 ile çip neredeyse
+                    // görünmez (donuk gri) idi. Artık sıcak pale-lemon çip + ink
+                    // ikon: premium, marka, okunur.
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: featured ? 0.10 : 0.08),
+                      color: AppColors.brandLemonPale,
                       borderRadius: BorderRadius.circular(AppRadius.m),
                       border: Border.all(
-                        color: accent.withValues(alpha: 0.18),
-                        width: 0.6,
+                        color: AppColors.brandLemonPressed.withValues(alpha: 0.28),
+                        width: 0.7,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: accent.withValues(alpha: 0.06),
+                          color: AppColors.brandLemonPressed.withValues(alpha: 0.10),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                    child: Icon(icon, color: accent, size: featured ? 19 : 18),
+                    child: Icon(
+                      icon,
+                      color: AppColors.brandInk,
+                      size: featured ? 19 : 18,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.s),
                   Expanded(

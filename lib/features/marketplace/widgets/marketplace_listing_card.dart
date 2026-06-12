@@ -146,11 +146,12 @@ class MarketplaceListingCard extends StatelessWidget {
               ),
               // ── Title + price + location ──
               Padding(
+                // Faz 2 Pass 4 — ferah dikey ritim (kart sıkışık görünmesin).
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.l,
-                  AppSpacing.s,
+                  AppSpacing.m,
                   AppSpacing.l,
-                  AppSpacing.s,
+                  AppSpacing.m,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,11 +163,12 @@ class MarketplaceListingCard extends StatelessWidget {
                         fontSize: 16.5,
                         letterSpacing: -0.2,
                         color: AppColors.textPrimary,
+                        height: 1.25,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.s),
                     Text(
                       _priceLabel(),
                       style: const TextStyle(
@@ -175,7 +177,7 @@ class MarketplaceListingCard extends StatelessWidget {
                         fontSize: 15.5,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.s),
                     Row(
                       children: [
                         const Icon(

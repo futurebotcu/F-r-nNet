@@ -363,7 +363,7 @@ class _DealerCard extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 5),
                     Text(
                       [
                         if (dealer.area.isNotEmpty) dealer.area,
