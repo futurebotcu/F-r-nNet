@@ -14,6 +14,7 @@ import '../../auth/providers/guest_mode_provider.dart';
 import '../../auth/services/guest_mode_storage.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../profile/repositories/profile_repository.dart';
+import '../services/onboarding_seen_storage.dart';
 
 /// V1.3 — Splash boot decision.
 ///
@@ -52,6 +53,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     super.dispose();
   }
 
+  /// İlk açılış kararı: intro onboarding görülmediyse `/intro`, görüldüyse
+  /// doğrudan `/auth`. (Yalnız oturum YOK + guest DEĞİL durumunda çağrılır;
+  /// guest/login akışı bu yoldan geçmez, korunur.)
+  Future<void> _goAuthOrIntro() async {
+    final seen = await OnboardingSeenStorage.instance.read();
+    if (!mounted) return;
+    context.go(seen ? AppRoutes.authEntry : AppRoutes.intro);
+  }
+
   Future<void> _route() async {
     if (!mounted || _routed) return;
     _routed = true;
@@ -65,7 +75,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         ref.read(profileControllerProvider.notifier).useGuest();
         context.go(AppRoutes.feed);
       } else {
-        context.go(AppRoutes.authEntry);
+        await _goAuthOrIntro();
       }
       return;
     }
@@ -96,7 +106,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         ref.read(profileControllerProvider.notifier).useGuest();
         context.go(AppRoutes.feed);
       } else {
-        context.go(AppRoutes.authEntry);
+        await _goAuthOrIntro();
       }
       return;
     }

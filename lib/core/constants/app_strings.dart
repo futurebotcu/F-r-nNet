@@ -550,6 +550,21 @@ class AppStrings {
   // Insight cards
   static const String feedInsightSectionLabel = 'Sektör pulse';
 
+  // ─────────────────────── Faz 2 Pass 3 — 3 sayfalık intro onboarding
+  static const String introSkip = 'Atla';
+  static const String introNext = 'Devam';
+  static const String introStart = 'Başla';
+  static const String introP1Title = 'Fırıncıların topluluk alanı';
+  static const String introP1Body =
+      'Gündemi takip et, deneyim paylaş, gruplarda meslektaşlarınla konuş.';
+  static const String introP2Title = 'İlanlar ve görüşmeler tek yerde';
+  static const String introP2Body =
+      'Eleman, iş yeri ve ekipman ilanlarını takip et. İlgilendiğin kişilerle '
+      'hızlıca mesajlaş.';
+  static const String introP3Title = 'İşletme araçların cebinde';
+  static const String introP3Body =
+      'Bayi hareketlerini, gün sonunu ve reçetelerini daha düzenli yönet.';
+
   // ─────────────────────── Navigation IA Sprint — alt nav + sekme başlıkları
   // Alt nav: Topluluk · Pazar · İlanlar · Mesajlar · Panel
   static const String navCommunity = 'Topluluk';

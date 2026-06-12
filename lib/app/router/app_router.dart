@@ -50,6 +50,7 @@ import '../../features/marketplace/screens/pazar_coming_soon_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
 import '../../features/messaging/screens/chat_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/onboarding/screens/onboarding_intro_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
@@ -67,6 +68,8 @@ class AppRoutes {
 
   static const String splash = '/';
   static const String onboarding = '/onboarding'; // legacy alias — Splash artık /auth'a gider
+  // Faz 2 Pass 3 — 3 sayfalık intro onboarding (ilk açılış değer anlatımı).
+  static const String intro = '/intro';
   static const String authEntry = '/auth';
   static const String roleSelect = '/auth/role-select';
   static const String forgotPassword = '/auth/forgot';
@@ -204,6 +207,11 @@ GoRouter createRouter() {
         // splash artık /auth'a gidiyor; bu route hâlâ tanımlı kalıyor).
         path: AppRoutes.onboarding,
         builder: (_, __) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        // Faz 2 Pass 3 — 3 sayfalık intro onboarding (Splash ilk açılışta yönlendirir).
+        path: AppRoutes.intro,
+        builder: (_, __) => const OnboardingIntroScreen(),
       ),
       GoRoute(
         path: AppRoutes.authEntry,
