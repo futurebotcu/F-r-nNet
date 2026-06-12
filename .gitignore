@@ -109,3 +109,6 @@ MCP_*.txt
 .smoke-shots/
 *.patch
 
+
+# Flutter golden test failure diff artifacts
+test/**/failures/
