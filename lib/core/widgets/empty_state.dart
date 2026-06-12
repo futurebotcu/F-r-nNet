@@ -28,23 +28,34 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconBox = Container(
-      width: compact ? 60 : 68,
-      height: compact ? 60 : 68,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.elevatedCard, AppColors.card],
-        ),
-        borderRadius: BorderRadius.circular(
-          compact ? AppRadius.l : AppRadius.xl,
-        ),
-        border: Border.all(color: AppColors.borderHairline, width: 0.8),
-        boxShadow: AppShadow.subtle,
+    // Faz 2 Pass 3 — ikon kutusuna hafif tek-seferlik giriş (scale+fade);
+    // loop yok, jank yok.
+    final iconBox = TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: AppDuration.normal,
+      curve: Curves.easeOutBack,
+      builder: (context, t, child) => Transform.scale(
+        scale: 0.7 + 0.3 * t.clamp(0.0, 1.0),
+        child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
       ),
-      child: Icon(icon, size: compact ? 24 : 27, color: AppColors.softGold),
+      child: Container(
+        width: compact ? 60 : 68,
+        height: compact ? 60 : 68,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.elevatedCard, AppColors.card],
+          ),
+          borderRadius: BorderRadius.circular(
+            compact ? AppRadius.l : AppRadius.xl,
+          ),
+          border: Border.all(color: AppColors.borderHairline, width: 0.8),
+          boxShadow: AppShadow.subtle,
+        ),
+        child: Icon(icon, size: compact ? 24 : 27, color: AppColors.softGold),
+      ),
     );
 
     final body = ConstrainedBox(

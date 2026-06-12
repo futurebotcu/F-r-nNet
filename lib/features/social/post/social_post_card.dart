@@ -768,7 +768,16 @@ class _ActionButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 18),
+            // Faz 2 Pass 3 — ikon değişiminde (beğen/kaydet toggle) zarif
+            // scale+fade pop; sürekli/loop animasyon yok, jank'sız.
+            AnimatedSwitcher(
+              duration: AppDuration.fast,
+              transitionBuilder: (child, anim) => ScaleTransition(
+                scale: Tween<double>(begin: 0.82, end: 1.0).animate(anim),
+                child: FadeTransition(opacity: anim, child: child),
+              ),
+              child: Icon(icon, key: ValueKey(icon), color: color, size: 18),
+            ),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
