@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_products.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/product_choice_chips.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 
@@ -141,6 +143,8 @@ class _DealerDeliveryFormScreenState
   @override
   Widget build(BuildContext context) {
     final dealerAsync = ref.watch(dealerByIdProvider(widget.dealerId));
+    // Rol bazlı ürün preset'i: toptancı → tedarik ürünleri, diğer → fırın.
+    final accountType = ref.watch(profileControllerProvider)?.accountType;
 
     return PremiumScaffold(
       appBar: AppBar(title: const Text(AppStrings.dealerDeliveryTitle)),
@@ -155,7 +159,7 @@ class _DealerDeliveryFormScreenState
           children: [
             dealerAsync.when(
               loading: () => const SizedBox(height: 18),
-              error: (e, _) => Text('Bayi: $e'),
+              error: (e, _) => const SizedBox(height: 18),
               data: (d) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.l),
                 child: _DealerStrip(
@@ -168,6 +172,7 @@ class _DealerDeliveryFormScreenState
             ProductChoiceChips(
               selected: _product,
               onSelected: _onProductChanged,
+              products: AppProducts.forAccountType(accountType),
             ),
             const SizedBox(height: AppSpacing.l),
             Row(

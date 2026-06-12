@@ -1280,9 +1280,9 @@ class AppStrings {
   static const String cardWorkerProfileSub = 'Meslek, tecrübe, beceri';
   static const String cardWorkerExperiences = 'Çalışma Geçmişim';
   static const String cardWorkerExperiencesSub = 'Önceki iş yerleri ve roller';
-  static const String cardWholesaleCustomers = 'Müşteriler / Bayiler';
+  static const String cardWholesaleCustomers = 'Fırın Müşterileri';
   static const String cardWholesaleCustomersSub =
-      'Teslimat, tahsilat, hesap özeti';
+      'Fırın müşterilerini, satışlarını ve tahsilatlarını takip et';
   static const String cardWholesalePriceList = 'Fiyat Listesi';
   static const String cardWholesalePriceListSub = 'Toptan fiyatları yönet';
 

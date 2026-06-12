@@ -9,9 +9,17 @@ import '../data/firinnet_taxonomy.dart';
 import '../../features/profile/models/bakery_profile.dart';
 
 /// Hazır ürün isimleri — chip seçimi için.
+///
+/// Final Functional Sprint — rol/bağlam bazlı preset:
+/// * Fırın (bireysel/ticari) satışı/üretimi: ekmek, simit, pide…
+/// * Toptancı: fırın tedarik ürünleri (un, maya, yağ, ambalaj…).
+/// Her iki listede de [ProductChoiceChips] sonuna otomatik "Diğer" eklenir;
+/// kullanıcı preset dışı ürünü manuel yazabilir (ürün adı serbest text;
+/// şema/CHECK kısıtı yok, mevcut manuel akış zaten bunu kanıtlıyor).
 class AppProducts {
   const AppProducts._();
 
+  /// Fırın ürünleri (bireysel/ticari satış + üretim/fire).
   static const List<String> defaults = <String>[
     'Ekmek',
     'Simit',
@@ -20,6 +28,33 @@ class AppProducts {
     'Açma',
     'Börek',
   ];
+
+  /// Toptancı tedarik ürünleri (fırına satılan hammadde/sarf).
+  static const List<String> supplier = <String>[
+    'Un',
+    'Ekmeklik un',
+    'Pastalık un',
+    'Yaş maya',
+    'Kuru maya',
+    'Tuz',
+    'Şeker',
+    'Sıvı yağ',
+    'Margarin',
+    'Susam',
+    'Çörek otu',
+    'Tahin',
+    'Pekmez',
+    'Ambalaj',
+    'Poşet',
+    'Kutu',
+    'Katkı maddesi',
+  ];
+
+  /// Hesap tipine göre uygun preset listesi. Toptancı → tedarik ürünleri;
+  /// diğer (ticari/bireysel/null) → fırın ürünleri. ("Diğer" chip'i
+  /// [ProductChoiceChips] tarafından her durumda eklenir.)
+  static List<String> forAccountType(AccountType? type) =>
+      type == AccountType.wholesaler ? supplier : defaults;
 }
 
 /// Meslek rozeti seçenekleri.

@@ -17,6 +17,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../../core/widgets/product_choice_chips.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_note.dart';
@@ -1065,7 +1066,9 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
             ),
             const SizedBox(height: 8),
             ProductChoiceChips(
-              products: AppProducts.defaults,
+              products: AppProducts.forAccountType(
+                ref.watch(profileControllerProvider)?.accountType,
+              ),
               selected: _product,
               onSelected: (v) => setState(() => _product = v),
             ),
