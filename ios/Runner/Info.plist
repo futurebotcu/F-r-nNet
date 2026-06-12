@@ -67,7 +67,9 @@
 	     iOS izin açıklamaları. Eksik olursa iOS'ta foto/kamera erişiminde
 	     crash + App Store privacy reddi olur. video_player ek string istemez. -->
 	<key>NSCameraUsageDescription</key>
-	<string>FırınNet uses the camera to let you add photos to posts, stories, marketplace listings, and your profile.</string>
+	<string>FırınNet uses the camera to let you add photos and videos to posts, stories, marketplace listings, chats, and your profile.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FırınNet uses the microphone to record audio when you capture a video to share in chats and groups.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FırınNet uses your photo library so you can choose images for posts, stories, marketplace listings, and your profile.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

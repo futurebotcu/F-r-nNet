@@ -21,12 +21,13 @@ import '../repositories/messaging_repository.dart';
 import '../repositories/supabase_messaging_repository.dart';
 
 final messagingRepositoryProvider = Provider<MessagingRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı: yalnız userId izlenir (token refresh repo resetlemesin).
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final MessagingRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseMessagingRepository(sb.Supabase.instance.client);
   } else {
-    inner = LocalMessagingRepository(meId: user?.id);
+    inner = LocalMessagingRepository(meId: userId);
   }
   final canWrite = ref.watch(canWriteCheckProvider);
   return GuardedMessagingRepository(inner: inner, canWriteCheck: canWrite);

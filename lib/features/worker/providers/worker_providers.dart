@@ -13,9 +13,10 @@ import '../repositories/worker_repository.dart';
 
 /// V1.3.3 — Guarded wrapper ile sarılı worker repository.
 final workerRepositoryProvider = Provider<WorkerRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı: yalnız userId izlenir (token refresh repo resetlemesin).
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final WorkerRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseWorkerRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalWorkerRepository();

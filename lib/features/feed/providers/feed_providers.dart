@@ -26,9 +26,11 @@ import '../repositories/supabase_feed_repository.dart';
 /// `canWriteCheckProvider` guest durumlarda `GuestActionRequiredException`
 /// fırlatılmasını garantiler.
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı (grup composer dersi): yalnız userId izlenir — token refresh /
+  // app resume'da AuthUser yeni instance üretip repo+cache'i resetlemesin.
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final FeedRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseFeedRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalFeedRepository(seed: true);

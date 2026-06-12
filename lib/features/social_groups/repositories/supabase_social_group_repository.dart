@@ -191,7 +191,9 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
     if (category != null) {
       q = q.eq('category', category.persistKey);
     }
-    final rows = await q.order('created_at', ascending: false);
+    // Hardening: defansif üst sınır (grup dizini büyüse de RAM korunur).
+    final rows =
+        await q.order('created_at', ascending: false).limit(500);
     return (rows as List)
         .cast<Map<String, dynamic>>()
         .map(_groupFromRow)

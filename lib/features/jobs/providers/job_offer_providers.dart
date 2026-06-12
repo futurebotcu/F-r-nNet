@@ -11,9 +11,10 @@ import '../repositories/local_job_offer_repository.dart';
 import '../repositories/supabase_job_offer_repository.dart';
 
 final jobOfferRepositoryProvider = Provider<JobOfferRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı: yalnız userId izlenir (token refresh repo resetlemesin).
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final JobOfferRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseJobOfferRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalJobOfferRepository();

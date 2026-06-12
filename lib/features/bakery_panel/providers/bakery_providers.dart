@@ -20,9 +20,10 @@ import '../services/report_builder.dart';
 
 /// V1.3.3 — Guarded wrapper ile sarılı bakery repository.
 final bakeryRepositoryProvider = Provider<BakeryRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı: yalnız userId izlenir (token refresh repo resetlemesin).
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final BakeryRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseBakeryRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalBakeryRepository();
@@ -41,9 +42,10 @@ final recipeShareTextBuilderProvider = Provider<RecipeShareTextBuilder>((ref) {
 
 /// V1.3.3 — Guarded wrapper ile sarılı recipe repository.
 final recipeRepositoryProvider = Provider<RecipeRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı: yalnız userId izlenir (token refresh repo resetlemesin).
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final RecipeRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseRecipeRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalRecipeRepository();

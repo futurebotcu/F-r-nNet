@@ -50,7 +50,8 @@ class SupabaseJobOfferRepository implements JobOfferRepository {
         .from('job_offer_posts')
         .select(_columns)
         .eq('owner_id', ownerId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(500); // Hardening: defansif üst sınır.
     return (rows as List)
         .cast<Map<String, dynamic>>()
         .map(JobOfferPost.fromRow)

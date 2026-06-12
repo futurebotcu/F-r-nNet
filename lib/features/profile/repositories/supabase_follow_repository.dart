@@ -106,13 +106,18 @@ class SupabaseFollowRepository implements FollowRepository {
     }
   }
 
+  // Hardening: defansif üst sınır — feed segment filtresi ve sosyal grafik
+  // için yeterli; çok yüksek takip sayısında RAM/ANR riskini sınırlar.
+  static const int _followIdsCap = 2000;
+
   @override
   Future<List<String>> listFollowerIds(String userId) async {
     final rows = await _client
         .from('profile_follows')
         .select('follower_id')
         .eq('following_id', userId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(_followIdsCap);
     return (rows as List)
         .map((r) => (r as Map<String, dynamic>)['follower_id'] as String)
         .toList(growable: false);
@@ -124,7 +129,8 @@ class SupabaseFollowRepository implements FollowRepository {
         .from('profile_follows')
         .select('following_id')
         .eq('follower_id', userId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(_followIdsCap);
     return (rows as List)
         .map((r) => (r as Map<String, dynamic>)['following_id'] as String)
         .toList(growable: false);

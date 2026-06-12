@@ -73,9 +73,10 @@ final dealerPulseProvider =
 
 /// V1.3.3 — Guarded wrapper ile sarılı dealer repository.
 final dealerRepositoryProvider = Provider<DealerRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı: yalnız userId izlenir (token refresh repo resetlemesin).
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final DealerRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseDealerRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalDealerRepository(seed: true);

@@ -13,9 +13,10 @@ import '../repositories/supabase_market_listing_repository.dart';
 
 final marketListingRepositoryProvider =
     Provider<MarketListingRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // P0 kalıbı: yalnız userId izlenir (token refresh repo resetlemesin).
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final MarketListingRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseMarketListingRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalMarketListingRepository();

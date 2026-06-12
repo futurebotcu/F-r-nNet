@@ -85,7 +85,8 @@ class SupabaseSocialStoriesRepository implements SocialStoriesRepository {
         .eq('owner_id', ownerId)
         .eq('is_deleted', false)
         .gt('expires_at', nowIso)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(100); // Hardening: 24h içinde tek kullanıcı için defansif sınır.
     return (rows as List)
         .cast<Map<String, dynamic>>()
         .map(SocialStory.fromRow)

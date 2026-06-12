@@ -224,7 +224,8 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
         .from('market_listings')
         .select(_columns)
         .eq('owner_id', ownerId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(500); // Hardening: tek kullanıcının ilanları için defansif üst sınır.
     final list = (rows as List).cast<Map<String, dynamic>>();
     final ids =
         list.map((r) => r['id'] as String).toList(growable: false);
