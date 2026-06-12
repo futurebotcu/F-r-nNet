@@ -217,6 +217,9 @@ class MarketplaceDetailScreen extends ConsumerWidget {
         ),
       ),
       body: async.when(
+        // Perf: ilan sahibi aksiyonu (kaydet/duraklat) sonrası detay eski
+        // içeriğini korur, spinner flash yok.
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(
           child: Padding(

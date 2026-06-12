@@ -28,6 +28,8 @@ class _DealerPaymentFormScreenState
   final _amount = TextEditingController();
   final _note = TextEditingController();
   DealerPaymentMethod _method = DealerPaymentMethod.cash;
+  // Çift-gönderim koruması: hızlı çift tıkta mükerrer ödeme oluşmasın.
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -37,6 +39,7 @@ class _DealerPaymentFormScreenState
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final amount = NumberFormatter.parseLoose(_amount.text);
     if (amount <= 0) {
       _err(AppStrings.dealerErrAmountPositive);
@@ -48,6 +51,7 @@ class _DealerPaymentFormScreenState
     }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
+    setState(() => _saving = true);
     try {
       await repo.addTransaction(
         DealerTransaction(
@@ -82,6 +86,8 @@ class _DealerPaymentFormScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.dealerPaymentSaveError)),
       );
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -169,7 +175,7 @@ class _DealerPaymentFormScreenState
             AppPrimaryButton(
               label: 'Kaydet',
               icon: Icons.check_rounded,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
             ),
           ],
         ),

@@ -31,6 +31,9 @@ class _DealerDeliveryFormScreenState
   final _unitPrice = TextEditingController();
   final _note = TextEditingController();
   bool _autoFilledFromPrice = false;
+  // Çift-gönderim koruması: hızlı çift tıklamada iki teslimat (mükerrer
+  // finansal hareket) oluşmasını engeller.
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -64,6 +67,7 @@ class _DealerDeliveryFormScreenState
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final productName = _product?.trim() ?? '';
     if (productName.isEmpty) {
       _err(AppStrings.dealerErrPickProduct);
@@ -85,6 +89,7 @@ class _DealerDeliveryFormScreenState
     }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
+    setState(() => _saving = true);
     try {
       await repo.addTransaction(
         DealerTransaction(
@@ -122,6 +127,10 @@ class _DealerDeliveryFormScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.dealerDeliverySaveError)),
       );
+    } finally {
+      // Başarıda pop edildi (mounted=false); hata/guest'te buton yeniden
+      // aktifleşir.
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -251,7 +260,7 @@ class _DealerDeliveryFormScreenState
             AppPrimaryButton(
               label: 'Kaydet',
               icon: Icons.check_rounded,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
             ),
           ],
         ),

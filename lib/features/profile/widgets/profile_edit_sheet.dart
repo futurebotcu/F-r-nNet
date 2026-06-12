@@ -489,6 +489,8 @@ class _AvatarTile extends StatelessWidget {
                   child: CachedNetworkImage(
                     imageUrl: avatarUrl!,
                     fit: BoxFit.cover,
+                    // Perf: avatar ekran boyutunda decode edilir.
+                    memCacheWidth: (size * 2).round(),
                     placeholder: (_, __) => fallback,
                     errorWidget: (_, __, ___) => fallback,
                   ),

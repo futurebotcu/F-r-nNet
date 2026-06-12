@@ -40,6 +40,9 @@ class RecipesListScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: async.when(
+          // Perf: reçete kaydedilince liste eski içeriğini korur, spinner
+          // flash yok; spinner yalnız ilk yüklemede.
+          skipLoadingOnReload: true,
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
           error: (e, _) => _ErrorBox(message: '$e'),

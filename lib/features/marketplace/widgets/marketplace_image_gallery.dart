@@ -73,6 +73,8 @@ class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
                 child: CachedNetworkImage(
                   imageUrl: url,
                   fit: BoxFit.cover,
+                  // Perf: carousel görseli ekran boyutunda decode edilir.
+                  memCacheWidth: 720,
                   placeholder: (_, __) => Container(
                     color: AppColors.surface,
                     alignment: Alignment.center,

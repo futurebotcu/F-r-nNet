@@ -1,7 +1,6 @@
 // FırınNet Runtime Jank Hardening — mesaj gönderim sonrası invalidation
 // storm + loading-flash davranış sözleşmeleri.
 
-import 'dart:async';
 import 'dart:io';
 
 import 'package:firin_defter/features/social_groups/models/group_category.dart';

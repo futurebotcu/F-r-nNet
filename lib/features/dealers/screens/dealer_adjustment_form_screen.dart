@@ -34,6 +34,8 @@ class _DealerAdjustmentFormScreenState
   final _note = TextEditingController();
   _AdjustDirection _direction = _AdjustDirection.add;
   bool _noteErr = false;
+  // Çift-gönderim koruması: hızlı çift tıkta mükerrer düzeltme oluşmasın.
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -43,6 +45,7 @@ class _DealerAdjustmentFormScreenState
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final raw = NumberFormatter.parseLoose(_amount.text);
     final note = _note.text.trim();
     setState(() => _noteErr = note.isEmpty);
@@ -61,6 +64,7 @@ class _DealerAdjustmentFormScreenState
     }
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
+    setState(() => _saving = true);
     try {
       await repo.addTransaction(
         DealerTransaction(
@@ -95,6 +99,8 @@ class _DealerAdjustmentFormScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.dealerAdjustmentSaveError)),
       );
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -202,7 +208,7 @@ class _DealerAdjustmentFormScreenState
             AppPrimaryButton(
               label: 'Kaydet',
               icon: Icons.check_rounded,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
             ),
           ],
         ),

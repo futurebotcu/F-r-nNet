@@ -46,6 +46,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
       body: SafeArea(
         top: false,
         child: txsAsync.when(
+          skipLoadingOnReload: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) =>
               const Center(child: Text(AppStrings.dealersErrorLoad)),

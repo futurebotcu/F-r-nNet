@@ -96,6 +96,9 @@ class SocialCommentsPage extends ConsumerWidget {
           children: [
             Expanded(
               child: commentsAsync.when(
+                // Perf: yorum gönderildiğinde liste eski yorumları korur,
+                // spinner flash yok; yeni yorum sessiz reload ile eklenir.
+                skipLoadingOnReload: true,
                 loading: () => _ScrollableShell(
                   postAsync: postAsync,
                   child: const Padding(

@@ -58,6 +58,9 @@ class RecipeDetailScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: async.when(
+          // Perf: reçete düzenlenince detay eski içeriğini korur, spinner
+          // flash yok.
+          skipLoadingOnReload: true,
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
           error: (e, _) => Padding(

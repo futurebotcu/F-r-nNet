@@ -73,6 +73,7 @@ class DealerEndOfDayTabScreen extends ConsumerWidget {
               _Header(now: ref0),
               const SizedBox(height: AppSpacing.l),
               metricsAsync.when(
+                skipLoadingOnReload: true,
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                   child: Center(child: CircularProgressIndicator()),

@@ -60,6 +60,7 @@ class _WholesaleCustomersScreenState
       body: SafeArea(
         top: false,
         child: async.when(
+          skipLoadingOnReload: true,
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
           error: (e, _) => Center(child: Text('Hata: $e')),

@@ -125,6 +125,10 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
                 color: AppColors.brandLemonPressed,
                 onRefresh: _onRefresh,
                 child: pagedAsync.when(
+                  // Perf: post oluşturma/like/block tick'i feed'i yeniden
+                  // yüklerken eski liste görünür kalır (full-screen spinner
+                  // flash yok); spinner yalnız ilk açılışta.
+                  skipLoadingOnReload: true,
                   loading: () => const _FeedLoading(),
                   error: (e, _) => _FeedError(onRetry: _onRefresh),
                   data: (state) => _FeedList(

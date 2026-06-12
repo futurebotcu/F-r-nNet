@@ -407,6 +407,8 @@ class _DealerSummaryCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.l),
                   overviewAsync.when(
+                    // Perf: panel KPI'ları mutasyon sonrası eski değeri korur.
+                    skipLoadingOnReload: true,
                     loading: () => const SizedBox(
                       height: 80,
                       child: Center(

@@ -111,6 +111,7 @@ class _DealerRangeReportScreenState
               _DateRangeLabel(start: range.start, end: range.end),
               const SizedBox(height: AppSpacing.l),
               metricsAsync.when(
+                skipLoadingOnReload: true,
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
                   child: Center(child: CircularProgressIndicator()),

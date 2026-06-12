@@ -38,6 +38,8 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
   DealerWorkingType _wt = DealerWorkingType.mixed;
   Dealer? _editingDealer;
   String? _hydratedDealerId;
+  // Çift-gönderim koruması: hızlı çift tıkta mükerrer bayi/kayıt oluşmasın.
+  bool _saving = false;
 
   /// M6B — eski `_area` TextField yerine il + ilçe picker.
   TurkeyProvince? _selectedProvince;
@@ -53,6 +55,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     if (!_formKey.currentState!.validate()) return;
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
@@ -65,6 +68,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
     // M6B — dual-write: label + code.
     final province = _selectedProvince;
     final district = _selectedDistrict;
+    setState(() => _saving = true);
     try {
       await repo.upsertDealer(
         Dealer(
@@ -85,6 +89,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -353,7 +358,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                     ? AppStrings.dealerUpdateButton
                     : AppStrings.dealerSaveButton,
                 icon: Icons.check_rounded,
-                onPressed: _save,
+                onPressed: _saving ? null : _save,
               ),
             ],
           ),

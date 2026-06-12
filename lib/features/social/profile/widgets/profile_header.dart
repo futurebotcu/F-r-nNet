@@ -185,6 +185,9 @@ class _Avatar extends StatelessWidget {
               width: size,
               height: size,
               fit: BoxFit.cover,
+              // Perf: avatar ekran boyutunda decode edilir (full-res decode
+              // + bellek spike yok). 2x display, retina için yeterli.
+              memCacheWidth: (size * 2).round(),
               placeholder: (_, __) => fallback,
               errorWidget: (_, __, ___) => fallback,
             ),

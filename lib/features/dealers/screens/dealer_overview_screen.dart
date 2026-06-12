@@ -37,6 +37,9 @@ class DealerOverviewScreen extends ConsumerWidget {
       body: SafeArea(
         top: false,
         child: overviewAsync.when(
+          // Perf: hareket/bayi mutasyonu sonrası panel KPI'ları eski değeri
+          // korur, spinner flash yok.
+          skipLoadingOnReload: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) =>
               const Center(child: Text(AppStrings.dealersErrorLoad)),
@@ -227,6 +230,7 @@ class _RecentActivitySection extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         recentAsync.when(
+          skipLoadingOnReload: true,
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
             child: Center(child: CircularProgressIndicator()),

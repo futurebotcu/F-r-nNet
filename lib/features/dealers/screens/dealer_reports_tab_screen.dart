@@ -69,6 +69,7 @@ class _DealerReportsTabScreenState
               ),
               const SizedBox(height: AppSpacing.l),
               metricsAsync.when(
+                skipLoadingOnReload: true,
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                   child: Center(child: CircularProgressIndicator()),
@@ -81,6 +82,7 @@ class _DealerReportsTabScreenState
               ),
               const SizedBox(height: AppSpacing.l),
               dealersAsync.when(
+                skipLoadingOnReload: true,
                 loading: () => const SizedBox.shrink(),
                 error: (e, _) => const Text(AppStrings.dealersErrorLoad),
                 data: (dealers) => _ByDealerSection(

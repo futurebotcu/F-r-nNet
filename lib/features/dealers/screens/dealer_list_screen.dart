@@ -85,6 +85,9 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
       body: SafeArea(
         top: false,
         child: dealersAsync.when(
+          // Perf: yeni bayi eklenince/düzenlenince liste eski içeriğini korur
+          // (spinner flash yok); spinner yalnız ilk yüklemede.
+          skipLoadingOnReload: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) =>
               const Center(child: Text(AppStrings.dealersErrorLoad)),

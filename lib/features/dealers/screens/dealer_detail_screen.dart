@@ -90,6 +90,10 @@ class DealerDetailScreen extends ConsumerWidget {
       body: SafeArea(
         top: false,
         child: dealerAsync.when(
+          // Perf: mutation (edit/aktif-pasif/hareket) sonrası tick bu
+          // provider'ı tazeler; eski veri korunur, full-screen spinner flash
+          // yok. Spinner yalnız ilk yüklemede görünür.
+          skipLoadingOnReload: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => _DealerDetailLoadError(
             onRetry: () => ref.invalidate(dealerByIdProvider(dealerId)),
@@ -122,6 +126,7 @@ class DealerDetailScreen extends ConsumerWidget {
                     0,
                   ),
                   child: balanceAsync.when(
+                    skipLoadingOnReload: true,
                     loading: () => const _HeroLoading(),
                     error: (e, _) => Text('Bakiye: $e'),
                     data: (s) => FadeSlideIn(
@@ -148,6 +153,7 @@ class DealerDetailScreen extends ConsumerWidget {
                     horizontal: AppSpacing.pageH,
                   ),
                   child: pricesAsync.when(
+                    skipLoadingOnReload: true,
                     loading: () => const _MiniLoading(),
                     error: (e, _) => Text('Fiyat: $e'),
                     data: (p) => _PricesCard(prices: p),
@@ -159,6 +165,7 @@ class DealerDetailScreen extends ConsumerWidget {
                     horizontal: AppSpacing.pageH,
                   ),
                   child: txAsync.when(
+                    skipLoadingOnReload: true,
                     loading: () => const _MiniLoading(),
                     error: (e, _) => Text('İşlem: $e'),
                     data: (txs) => _TxList(txs: txs),
@@ -170,6 +177,7 @@ class DealerDetailScreen extends ConsumerWidget {
                     horizontal: AppSpacing.pageH,
                   ),
                   child: notesAsync.when(
+                    skipLoadingOnReload: true,
                     loading: () => const _MiniLoading(),
                     error: (e, _) => Text('Not: $e'),
                     data: (notes) => NotesCard(dealerId: d.id, notes: notes),

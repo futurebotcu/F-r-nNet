@@ -124,6 +124,9 @@ class _LookingList extends ConsumerWidget {
       children: [
         const SectionLabel(title: AppStrings.jobsListLooking),
         async.when(
+          // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
+          // korur, spinner flash yok.
+          skipLoadingOnReload: true,
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
             child: Center(child: CircularProgressIndicator()),
@@ -342,6 +345,9 @@ class _HiringList extends ConsumerWidget {
       children: [
         const SectionLabel(title: AppStrings.jobsListHiring),
         async.when(
+          // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
+          // korur, spinner flash yok.
+          skipLoadingOnReload: true,
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
             child: Center(child: CircularProgressIndicator()),

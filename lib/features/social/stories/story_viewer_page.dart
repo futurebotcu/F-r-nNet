@@ -196,6 +196,9 @@ class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
                     child: CachedNetworkImage(
                       imageUrl: story.contentUrl,
                       fit: BoxFit.contain,
+                      // Perf: tam ekran story görseli ekran genişliğinde
+                      // decode edilir (çok büyük orijinaller için bellek kalkanı).
+                      memCacheWidth: 1080,
                       placeholder: (_, __) => const Center(
                         child: CircularProgressIndicator(
                           color: AppColors.surface,

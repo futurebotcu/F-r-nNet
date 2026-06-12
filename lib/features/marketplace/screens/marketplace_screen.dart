@@ -164,6 +164,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                 ),
               ),
             async.when(
+              // Perf: ilan oluşturma/kaydet-toggle sonrası liste eski
+              // içeriğini korur, spinner flash yok.
+              skipLoadingOnReload: true,
               loading: () => const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
