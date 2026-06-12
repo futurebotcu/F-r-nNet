@@ -150,23 +150,24 @@ class _ConversationTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Avatar (initial)
+              // Avatar (initial) — Faz 2 P2: gri ink-tint yerine sıcak pale
+              // lemon + ink harf + ince lemon aksan çerçeve (premium, marka).
               Container(
-                width: 44,
-                height: 44,
+                width: 46,
+                height: 46,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.softGold.withValues(alpha: 0.18),
+                  color: AppColors.brandLemonPale,
                   border: Border.all(
-                    color: AppColors.softGold.withValues(alpha: 0.32),
+                    color: AppColors.brandLemonPressed.withValues(alpha: 0.35),
                     width: 0.8,
                   ),
                 ),
                 child: Text(
                   initial,
                   style: const TextStyle(
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     fontWeight: FontWeight.w800,
                     fontSize: 17,
                   ),
@@ -261,15 +262,21 @@ class _ConversationTile extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.copper,
+                    color: AppColors.brandLemon,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(
+                      color: AppColors.brandLemonPressed.withValues(alpha: 0.45),
+                      width: 0.6,
+                    ),
                   ),
+                  // Faz 2 P2 — beyaz-on-lemon (düşük kontrast) yerine ink-on-lemon
+                  // (panel rozetiyle tutarlı, okunur).
                   child: Text(
                     conversation.unreadCount > 99
                         ? '99+'
                         : '${conversation.unreadCount}',
                     style: const TextStyle(
-                      color: AppColors.surface,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 11,
                     ),

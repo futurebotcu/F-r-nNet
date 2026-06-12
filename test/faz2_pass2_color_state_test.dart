@@ -51,6 +51,29 @@ void main() {
     });
   });
 
+  group('Mesajlar listesi — okunur rozet + sıcak avatar', () {
+    test('unread rozet ink-on-lemon (beyaz-on-lemon değil); avatar pale lemon',
+        () {
+      final src =
+          _read('lib/features/messages/screens/messages_list_screen.dart');
+      // Rozet artık brandLemon zemin + brandInk metin.
+      expect(src.contains('color: AppColors.brandLemon'), isTrue);
+      expect(src.contains('color: AppColors.brandInk'), isTrue);
+      // Avatar sıcak pale lemon zemin.
+      expect(src.contains('color: AppColors.brandLemonPale'), isTrue);
+    });
+  });
+
+  group('Gruplar liste hata durumu ortak component', () {
+    test('groups_list ErrorRetryState kullanır (ad-hoc _GroupsErrorState yok)',
+        () {
+      final src = _read(
+          'lib/features/social_groups/screens/groups_list_screen.dart');
+      expect(src.contains('ErrorRetryState'), isTrue);
+      expect(src.contains('class _GroupsErrorState'), isFalse);
+    });
+  });
+
   group('Hata standardı — ham exception app genelinde sızmaz', () {
     test('recipe_detail + dealer_picker_sheet ErrorRetryState kullanır', () {
       expect(

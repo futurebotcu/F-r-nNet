@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -48,8 +49,10 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
         bottom: false,
         child: allAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) =>
-              const _GroupsErrorState(message: AppStrings.groupsErrorGeneric),
+          error: (_, __) => ErrorRetryState(
+            title: AppStrings.groupsErrorGeneric,
+            onRetry: () => ref.invalidate(groupsListProvider(_category)),
+          ),
           data: (all) {
             final filtered = _applySearch(all);
             final isDefaultView = _query.isEmpty && _category == null;
@@ -467,37 +470,3 @@ class _MiniLoading extends StatelessWidget {
   );
 }
 
-/// Sosyal Omurga V1 — gruplar listesi hata durumunda gösterilen sade
-/// placeholder. Ham exception mesajı kullanıcıya yansıtılmaz.
-class _GroupsErrorState extends StatelessWidget {
-  const _GroupsErrorState({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.cloud_off_rounded,
-            color: AppColors.softGold,
-            size: 32,
-          ),
-          const SizedBox(height: AppSpacing.s),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13.5,
-              height: 1.45,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
