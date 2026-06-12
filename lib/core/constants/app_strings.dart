@@ -620,6 +620,12 @@ class AppStrings {
       'sohbetler burada görünür.';
   static const String messagesEmptyGuest =
       'Mesajları görmek için önce giriş yap.';
+  // Faz 2 P2 — premium EmptyState için başlık + alt metin ayrımı.
+  static const String messagesEmptyTitle = 'Henüz mesajın yok';
+  static const String messagesEmptySubtitle =
+      'Bir ilana başvurduğunda veya iletişime geçtiğinde sohbetler burada '
+      'görünür.';
+  static const String messagesEmptyGuestTitle = 'Mesajlar için giriş yap';
   static const String messagesErrorGeneric =
       'Mesajlar yüklenemedi. Yeniden dener misin?';
   static const String messagesRelatedJobOffer = 'Usta arayan ilan';

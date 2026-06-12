@@ -17,6 +17,8 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -56,20 +58,23 @@ class MessagesListScreen extends ConsumerWidget {
                   child: Center(child: CircularProgressIndicator()),
                 ),
               ),
-              error: (_, __) => const SliverToBoxAdapter(
-                child: _SimpleEmpty(
-                  icon: Icons.cloud_off_outlined,
-                  message: AppStrings.messagesErrorGeneric,
+              error: (_, __) => SliverToBoxAdapter(
+                child: ErrorRetryState(
+                  title: AppStrings.messagesErrorGeneric,
+                  onRetry: () => ref.invalidate(conversationsListProvider),
                 ),
               ),
               data: (items) {
                 if (items.isEmpty) {
                   return SliverToBoxAdapter(
-                    child: _SimpleEmpty(
-                      icon: Icons.forum_outlined,
-                      message: user == null
+                    child: EmptyState(
+                      icon: Icons.forum_rounded,
+                      title: user == null
+                          ? AppStrings.messagesEmptyGuestTitle
+                          : AppStrings.messagesEmptyTitle,
+                      subtitle: user == null
                           ? AppStrings.messagesEmptyGuest
-                          : AppStrings.messagesEmpty,
+                          : AppStrings.messagesEmptySubtitle,
                     ),
                   );
                 }
@@ -300,50 +305,3 @@ class _ConversationTile extends StatelessWidget {
   }
 }
 
-class _SimpleEmpty extends StatelessWidget {
-  const _SimpleEmpty({required this.icon, required this.message});
-  final IconData icon;
-  final String message;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageH,
-        AppSpacing.xxxl,
-        AppSpacing.pageH,
-        AppSpacing.xxl,
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.softGold.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.softGold.withValues(alpha: 0.28),
-                  width: 0.8,
-                ),
-              ),
-              child: Icon(icon, size: 32, color: AppColors.softGold),
-            ),
-            const SizedBox(height: AppSpacing.m),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
