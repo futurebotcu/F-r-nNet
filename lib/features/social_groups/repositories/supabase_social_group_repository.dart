@@ -38,6 +38,10 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
 
   final sb.SupabaseClient _client;
   final StreamController<void> _changes = StreamController<void>.broadcast();
+  // Perf — mesaj-değişimi yapısal-değişimden ayrı yayın: postMessage yalnız
+  // mesaj listesini tazeler, üye/metadata/grup-listesi provider'larını DEĞİL.
+  final StreamController<void> _messageChanges =
+      StreamController<void>.broadcast();
 
   /// Sync `isJoined` için lazy cache. listGroups/listJoined/joinGroup/leaveGroup
   /// sonrası güncellenir.
@@ -45,6 +49,7 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
   bool _joinedLoaded = false;
 
   void _notify() => _changes.add(null);
+  void _notifyMessages() => _messageChanges.add(null);
 
   String? get _currentUserId => _client.auth.currentUser?.id;
 
@@ -427,7 +432,8 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
       if (m.attachments != null) 'attachments': m.attachments,
       // author_name / author_role server-side trigger ile.
     });
-    _notify();
+    // Perf: yalnız mesaj listesi tazelenir (grup metadata/üye/liste DEĞİL).
+    _notifyMessages();
   }
 
   // ─────────────────────────────────────── Private join requests (V1 P1-D)
@@ -661,4 +667,7 @@ class SupabaseSocialGroupRepository implements SocialGroupRepository {
 
   @override
   Stream<void> watch() => _changes.stream;
+
+  @override
+  Stream<void> watchMessages() => _messageChanges.stream;
 }

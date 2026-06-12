@@ -431,6 +431,10 @@ class LocalSocialGroupRepository implements SocialGroupRepository {
   @override
   Stream<void> watch() => _changes.stream;
 
+  // Local'de split yok; mesaj tick'i combined stream'e düşer (guest/test).
+  @override
+  Stream<void> watchMessages() => _changes.stream;
+
   // ─────────────────────────────────────── Demo seed
 
   void _seed() {

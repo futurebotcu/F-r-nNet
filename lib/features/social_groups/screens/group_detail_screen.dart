@@ -198,6 +198,12 @@ class _GroupBody extends ConsumerWidget {
             ),
           Expanded(
             child: messagesAsync.when(
+              // Perf (jank): mesaj gönderince groupChangesProvider tick'i
+              // groupMessagesProvider'ı recompute ediyordu → liste her
+              // gönderimde spinner'a FLASH atıyordu. skipLoadingOnReload ile
+              // mevcut mesajlar görünür kalır, yeni veri arka planda gelince
+              // pürüzsüz güncellenir.
+              skipLoadingOnReload: true,
               loading: () => const _MiniLoading(),
               error: (_, __) => const Padding(
                 padding: EdgeInsets.all(AppSpacing.l),
@@ -237,10 +243,11 @@ class _GroupCommunityHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final desc = group.description.trim();
     final membersAsync = ref.watch(groupMembersProvider(group.id));
-    final members = membersAsync.maybeWhen(
-      data: (m) => m,
-      orElse: () => const <GroupMemberProfile>[],
-    );
+    // Perf (jank): mesaj gönderim tick'i bu provider'ı recompute edince
+    // maybeWhen(orElse:[]) üye avatarlarını ANLIK kaybediyordu (flicker).
+    // valueOrNull reload sırasında son veriyi korur → flicker yok.
+    final members =
+        membersAsync.valueOrNull ?? const <GroupMemberProfile>[];
 
     // Gösterilecek anlamlı içerik yoksa şeridi hiç çizme.
     if (desc.isEmpty && members.isEmpty) return const SizedBox.shrink();

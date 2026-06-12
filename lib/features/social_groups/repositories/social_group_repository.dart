@@ -91,4 +91,9 @@ abstract class SocialGroupRepository {
 
   /// Repository içeriği değiştiğinde yayın.
   Stream<void> watch();
+
+  /// Perf — yalnız MESAJ değişimi tick'i (post). Mesaj gönderimi tüm grup
+  /// metadata/üye/liste provider'larını değil, SADECE mesaj listesini
+  /// tazeler (invalidation storm önlenir). Default: [watch] (geri uyumlu).
+  Stream<void> watchMessages() => watch();
 }

@@ -49,10 +49,18 @@ final groupValidatorProvider = Provider<GroupValidator>((ref) {
   return const GroupValidator();
 });
 
-/// Repository değişikliklerini dinleyen tick.
+/// Repository YAPISAL değişiklik tick'i (join/leave/create/cache).
 final groupChangesProvider = StreamProvider<void>((ref) {
   final repo = ref.watch(socialGroupRepositoryProvider);
   return repo.watch();
+});
+
+/// Perf — yalnız MESAJ değişimi tick'i. groupMessagesProvider bunu izler;
+/// mesaj gönderimi grup metadata/üye/liste provider'larını recompute etmez
+/// (invalidation storm önlenir, mesaj sonrası jank azalır).
+final groupMessageChangesProvider = StreamProvider<void>((ref) {
+  final repo = ref.watch(socialGroupRepositoryProvider);
+  return repo.watchMessages();
 });
 
 /// Tüm gruplar veya filtreli liste.
@@ -88,6 +96,9 @@ final groupByIdProvider =
 
 final groupMessagesProvider = FutureProvider.autoDispose
     .family<List<GroupMessage>, String>((ref, groupId) async {
+  // Perf: yalnız mesaj tick'i + yapısal tick (grup silinince temizlensin).
+  // Mesaj gönderiminde SADECE bu provider recompute olur.
+  ref.watch(groupMessageChangesProvider);
   ref.watch(groupChangesProvider);
   final repo = ref.watch(socialGroupRepositoryProvider);
   return repo.listMessages(groupId);

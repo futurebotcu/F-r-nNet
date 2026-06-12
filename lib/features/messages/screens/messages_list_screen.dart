@@ -47,6 +47,9 @@ class MessagesListScreen extends ConsumerWidget {
               ),
             ),
             async.when(
+              // Perf (jank): yeni mesaj/okundu tick'i conversationsListProvider'ı
+              // recompute ediyordu → liste spinner'a flash atıyordu.
+              skipLoadingOnReload: true,
               loading: () => const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
