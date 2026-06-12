@@ -9,6 +9,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../jobs/models/job_offer_post.dart';
 import '../../messaging/providers/messaging_providers.dart';
+import '../../messaging/repositories/messaging_repository.dart';
 import '../../worker/models/job_seek_post.dart';
 
 /// V1 — Job ilanına başvurmak / iş arayanla iletişime geçmek için
@@ -133,6 +134,15 @@ class _StartJobConversationSheetState
       if (mounted) {
         Navigator.of(context).pop();
         await showAuthRequiredSheet(context, ref);
+      }
+    } on BlockedConversationException {
+      // UGC Safety V1.1 — çift yön engel: engellenenle DM açılamaz.
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(AppStrings.blockedMessageStartBanner)),
+        );
       }
     } catch (_) {
       // Hata → sheet açık kalır, metin korunur, kullanıcı tekrar deneyebilir.

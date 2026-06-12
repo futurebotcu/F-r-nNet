@@ -336,7 +336,13 @@ void main() {
     });
 
     test('findOrCreate RPC çağrısı + null guard', () {
-      expect(src.contains("rpc<dynamic>(\n      'find_or_create_direct_conversation'"), isTrue);
+      // Boşluk-toleranslı: RPC çağrısı V1.1'de try/catch ile sarıldı (çift
+      // yön block map'i), girinti değişti ama sözleşme aynı.
+      expect(src.contains('rpc<dynamic>('), isTrue);
+      expect(
+        src.contains("'find_or_create_direct_conversation'"),
+        isTrue,
+      );
       expect(
         src.contains('find_or_create_direct_conversation returned null'),
         isTrue,

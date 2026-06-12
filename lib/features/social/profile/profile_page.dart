@@ -39,6 +39,7 @@ import '../../bakery_panel/models/recipe_record.dart';
 import '../../bakery_panel/providers/bakery_providers.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../messaging/providers/messaging_providers.dart';
+import '../../messaging/repositories/messaging_repository.dart';
 import '../../profile/models/public_profile_detail.dart';
 import '../../profile/providers/follow_providers.dart';
 import '../../profile/providers/public_profile_detail_provider.dart';
@@ -379,6 +380,14 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
       context.push('/messages/$convId');
     } on GuestActionRequiredException {
       if (context.mounted) await showAuthRequiredSheet(context, ref);
+    } on BlockedConversationException {
+      if (context.mounted) {
+        PremiumTopBannerController.show(
+          context,
+          message: AppStrings.blockedMessageStartBanner,
+          tone: PremiumTopBannerTone.warning,
+        );
+      }
     } catch (e) {
       debugPrint('[FirinNet][Profile] open chat error: $e');
       if (context.mounted) {

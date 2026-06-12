@@ -18,9 +18,11 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../messaging/providers/messaging_providers.dart';
+import '../../messaging/repositories/messaging_repository.dart';
 import '../../safety/models/report_models.dart';
 import '../../safety/widgets/block_user_dialog.dart';
 import '../../safety/widgets/report_sheet.dart';
@@ -299,6 +301,14 @@ class MarketplaceDetailScreen extends ConsumerWidget {
       context.push('/messages/$convId');
     } on GuestActionRequiredException {
       if (context.mounted) await showAuthRequiredSheet(context, ref);
+    } on BlockedConversationException {
+      if (context.mounted) {
+        PremiumTopBannerController.show(
+          context,
+          message: AppStrings.blockedMessageStartBanner,
+          tone: PremiumTopBannerTone.warning,
+        );
+      }
     } catch (e) {
       debugPrint('[FirinNet][Market] open chat error: $e');
       if (context.mounted) {

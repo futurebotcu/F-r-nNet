@@ -13,6 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
+import '../../safety/providers/safety_providers.dart';
 import '../models/conversation.dart';
 import '../models/message.dart';
 import '../repositories/guarded_messaging_repository.dart';
@@ -43,7 +44,14 @@ final messagingChangesProvider = StreamProvider<void>((ref) {
 final conversationsListProvider =
     FutureProvider.autoDispose<List<Conversation>>((ref) async {
   ref.watch(messagingChangesProvider);
-  return ref.watch(messagingRepositoryProvider).listConversations();
+  // UGC Safety — engellenen kullanıcıyla olan DM thread'leri listede gizlenir.
+  final blocked = await ref.watch(blockedUserIdsProvider.future);
+  final list =
+      await ref.watch(messagingRepositoryProvider).listConversations();
+  if (blocked.isEmpty) return list;
+  return list
+      .where((c) => c.otherUserId == null || !blocked.contains(c.otherUserId))
+      .toList();
 });
 
 final conversationByIdProvider = FutureProvider.family
@@ -55,9 +63,14 @@ final conversationByIdProvider = FutureProvider.family
 final messagesListProvider = FutureProvider.family
     .autoDispose<List<Message>, String>((ref, conversationId) async {
   ref.watch(messagingChangesProvider);
-  return ref
+  // UGC Safety — engellenen göndericinin mesajları sohbette de gizlenir
+  // (thread zaten listede gizli; bu doğrudan açılışa karşı savunma).
+  final blocked = await ref.watch(blockedUserIdsProvider.future);
+  final list = await ref
       .watch(messagingRepositoryProvider)
       .listMessages(conversationId);
+  if (blocked.isEmpty) return list;
+  return list.where((m) => !blocked.contains(m.senderId)).toList();
 });
 
 /// Realtime INSERT stream — UI ChatScreen subscribe edip yeni mesajları

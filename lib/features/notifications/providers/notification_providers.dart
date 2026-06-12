@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../safety/providers/safety_providers.dart';
 import '../models/app_notification.dart';
 import '../repositories/local_notification_repository.dart';
 import '../repositories/notification_repository.dart';
@@ -27,17 +28,25 @@ final notificationChangesProvider = StreamProvider<void>((ref) {
 });
 
 /// Tüm bildirimler (created_at desc).
+///
+/// UGC Safety — engellenen kullanıcının tetiklediği (beğeni/yorum/takip)
+/// bildirimleri gizlenir; actor'ı blocked set'te olan satırlar düşürülür.
 final notificationsProvider =
     FutureProvider.autoDispose<List<AppNotification>>((ref) async {
   ref.watch(notificationChangesProvider);
+  final blocked = await ref.watch(blockedUserIdsProvider.future);
   final repo = ref.watch(notificationRepositoryProvider);
-  return repo.list();
+  final list = await repo.list();
+  if (blocked.isEmpty) return list;
+  return list
+      .where((n) => n.actorId == null || !blocked.contains(n.actorId))
+      .toList();
 });
 
-/// Okunmamış sayısı.
+/// Okunmamış sayısı — engellenen actor'lı bildirimler hariç (liste ile
+/// tutarlı; badge engellenenleri saymaz).
 final unreadNotificationsCountProvider =
     FutureProvider.autoDispose<int>((ref) async {
-  ref.watch(notificationChangesProvider);
-  final repo = ref.watch(notificationRepositoryProvider);
-  return repo.unreadCount();
+  final list = await ref.watch(notificationsProvider.future);
+  return list.where((n) => !n.isRead).length;
 });

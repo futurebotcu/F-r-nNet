@@ -6,6 +6,13 @@
 import '../models/conversation.dart';
 import '../models/message.dart';
 
+/// UGC Safety V1.1 — iki kullanıcı arasında (her iki yönde) block varsa
+/// `findOrCreateDirectConversation` bunu fırlatır. UI dostça banner gösterir
+/// (engellenen kullanıcı engelleyene mesaj başlatamaz; çift yön).
+class BlockedConversationException implements Exception {
+  const BlockedConversationException();
+}
+
 abstract class MessagingRepository {
   // ─── Conversations ──────────────────────────────────────────────
 

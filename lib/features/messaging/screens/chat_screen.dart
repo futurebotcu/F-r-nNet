@@ -36,6 +36,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/conversation.dart' as our;
 import '../models/message.dart' as our;
+import '../../safety/providers/safety_providers.dart';
 import '../providers/messaging_providers.dart';
 import '../services/chat_media_upload_service.dart';
 import '../widgets/chat_video_viewer.dart';
@@ -94,6 +95,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         (prev, next) {
           next.whenData((m) async {
             if (_seenMessageIds.contains(m.id)) return;
+            // UGC Safety — engellenen göndericinin canlı mesajı eklenmez.
+            if (ref.read(blockedUserIdsSyncProvider).contains(m.senderId)) {
+              return;
+            }
             _seenMessageIds.add(m.id);
             // Realtime image mesajı ham gelir (signed url yok) → zenginleştir.
             final enriched = await _enrichForUi(m);

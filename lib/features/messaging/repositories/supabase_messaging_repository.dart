@@ -66,14 +66,23 @@ class SupabaseMessagingRepository implements MessagingRepository {
     String? contextId,
   }) async {
     _requireUserId();
-    final raw = await _client.rpc<dynamic>(
-      'find_or_create_direct_conversation',
-      params: <String, dynamic>{
-        'p_other_user': otherUserId,
-        'p_context_type': contextType,
-        'p_context_id': contextId,
-      },
-    );
+    final dynamic raw;
+    try {
+      raw = await _client.rpc<dynamic>(
+        'find_or_create_direct_conversation',
+        params: <String, dynamic>{
+          'p_other_user': otherUserId,
+          'p_context_type': contextType,
+          'p_context_id': contextId,
+        },
+      );
+    } on PostgrestException catch (e) {
+      // UGC Safety V1.1 — çift yön engel: RPC 'blocked between users' atar.
+      if ((e.message).contains('blocked between users')) {
+        throw const BlockedConversationException();
+      }
+      rethrow;
+    }
     if (raw == null) {
       throw StateError(
         'find_or_create_direct_conversation returned null',
