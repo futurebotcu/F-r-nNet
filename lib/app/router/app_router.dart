@@ -21,6 +21,7 @@ import '../../features/dealers/screens/dealer_range_report_screen.dart';
 import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
 import '../../features/dealers/screens/dealer_shell_screen.dart';
+import '../../features/debt_expense/screens/debt_expense_shell_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
 import '../../features/auth/screens/auth_entry_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
@@ -128,6 +129,9 @@ class AppRoutes {
   static const String waste = '/panel/waste';
   static const String endOfDay = '/panel/end-of-day';
   static const String report = '/panel/report';
+
+  // Borç & Gider Defteri mini-app (ticari/fırın kullanıcı).
+  static const String debtExpense = '/debt-expense';
 
   // Bayi Yönetimi sub-routes
   static const String dealers = '/dealers';
@@ -480,6 +484,11 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.dealers,
         builder: (_, __) => const DealerShellScreen(),
+      ),
+      GoRoute(
+        // Borç & Gider Defteri mini-app (shell + 5 tab, full-screen).
+        path: AppRoutes.debtExpense,
+        builder: (_, __) => const DebtExpenseShellScreen(),
       ),
       GoRoute(
         path: AppRoutes.dealerNew,

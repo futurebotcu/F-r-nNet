@@ -56,6 +56,13 @@ class RolePanelCards {
             icon: Icons.storefront_rounded,
             route: AppRoutes.dealers,
           ),
+          // Borç & Gider Defteri — ticari/fırın işletme aracı.
+          PanelCard(
+            label: AppStrings.debtExpenseTitle,
+            subtitle: AppStrings.debtExpenseCardSub,
+            icon: Icons.account_balance_wallet_rounded,
+            route: AppRoutes.debtExpense,
+          ),
           // Araçlar
           PanelCard(
             label: AppStrings.cardCalculator,
