@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Release/main manifest izni: Supabase auth/DB/storage + ağ görselleri
+         için zorunlu. (Flutter şablonu INTERNET'i yalnız debug/profile'a
+         koyar; release AAB'de bu satır olmadan uygulama ağ-ölü olur.) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="FırınNet"
         android:name="${applicationName}"
