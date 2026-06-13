@@ -80,6 +80,26 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   patrol: ^4.6.1
 
+  # Branded launcher icon üretimi (build-time, runtime'a dahil DEĞİL).
+  # Kaynak: assets/branding/firinnet_app_icon*.png. Üretmek için:
+  #   flutter pub get && dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.14.4
+
+# FırınNet marka launcher icon yapılandırması.
+# - image_path: iOS + legacy Android (opak, alpha'sız master).
+# - adaptive_icon_foreground: motif safe-zone'a inset edilmiş şeffaf katman
+#   (Android 8+ mask'ında alev/buğday motifi kesilmesin diye %80 inset).
+# - adaptive_icon_background: FırınNet sarısına uyumlu çok açık sıcak ton
+#   (brandLemonPale #FFFCE8); white-first kimliğe yakın.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/branding/firinnet_app_icon.png"
+  adaptive_icon_foreground: "assets/branding/firinnet_app_icon_foreground.png"
+  adaptive_icon_background: "#FFFCE8"
+  min_sdk_android: 24
+  remove_alpha_ios: true
+
 patrol:
   app_name: FırınNet
   android:
@@ -95,3 +115,5 @@ flutter:
   assets:
     - assets/fonts/Roboto-Regular.ttf
     - assets/fonts/Roboto-Bold.ttf
+    # Marka ikonu — onboarding ilk sayfasında brand hero olarak kullanılır.
+    - assets/branding/firinnet_app_icon.png
