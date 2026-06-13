@@ -71,8 +71,17 @@ app.*.map.json
 *.p12
 *.jks
 *.keystore
+*.p8
 google-services.json
 GoogleService-Info.plist
+# Service-account / credential JSON'ları (örn. Play/Firebase service hesapları).
+*credentials*.json
+*service*.json
+
+# Android release signing — keystore şifrelerini taşıyan key.properties
+# (örnek `key.properties.example` tracked kalır; aşağıdaki pattern onu etkilemez).
+key.properties
+**/key.properties
 
 # Geçici scratch klasörü (path quoting hatasından oluşmuş)
 C:devfirinnetqa-screenshotsredesign-pass-1*/

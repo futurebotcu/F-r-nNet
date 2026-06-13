@@ -1,4 +1,4 @@
-// Faz 2 UI Pass 3 — 3 sayfalık intro onboarding render + akış + seen-flag.
+// 4 sayfalık premium intro onboarding render + akış + seen-flag.
 
 import 'dart:io';
 
@@ -34,7 +34,7 @@ void main() {
     OnboardingSeenStorage.resetForTest();
   });
 
-  testWidgets('İlk sayfa Topluluk değer mesajını + Atla/Devam gösterir',
+  testWidgets('İlk sayfa değer mesajını + Atla/İleri gösterir',
       (tester) async {
     await tester.pumpWidget(ProviderScope(
       child: MaterialApp.router(routerConfig: _router()),
@@ -49,24 +49,24 @@ void main() {
     expect(btn.label, AppStrings.introNext);
   });
 
-  testWidgets('Devam ile son sayfaya gelince Başla görünür + /auth\'a gider',
+  testWidgets('İleri ile 4. (son) sayfaya gelince başla CTA + /auth\'a gider',
       (tester) async {
     await tester.pumpWidget(ProviderScope(
       child: MaterialApp.router(routerConfig: _router()),
     ));
     await tester.pumpAndSettle();
 
-    // 2 kez Devam → 3. sayfa (primary button widget'ı).
-    await tester.tap(find.byType(AppPrimaryButton));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(AppPrimaryButton));
-    await tester.pumpAndSettle();
+    // 3 kez İleri → 4. (son) sayfa.
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byType(AppPrimaryButton));
+      await tester.pumpAndSettle();
+    }
 
-    expect(find.text(AppStrings.introP3Title), findsOneWidget);
+    expect(find.text(AppStrings.introP4Title), findsOneWidget);
     final btn = tester.widget<AppPrimaryButton>(find.byType(AppPrimaryButton));
     expect(btn.label, AppStrings.introStart);
 
-    // Başla → seen flag + /auth.
+    // FırınNet'e Başla → seen flag + /auth.
     await tester.tap(find.byType(AppPrimaryButton));
     await tester.pumpAndSettle();
     expect(find.text('AUTH_REACHED'), findsOneWidget);

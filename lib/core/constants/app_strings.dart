@@ -583,20 +583,22 @@ class AppStrings {
   static const String deCustomCategoryHint = 'Örn. özel un, katkı karışımı';
   static const String deCustomCategoryLabel = 'Kategori adını yaz';
 
-  // ─────────────────────── Faz 2 Pass 3 — 3 sayfalık intro onboarding
+  // ─────────────────────── 4 sayfalık premium intro onboarding
   static const String introSkip = 'Atla';
-  static const String introNext = 'Devam';
-  static const String introStart = 'Başla';
-  static const String introP1Title = 'Fırıncıların topluluk alanı';
+  static const String introNext = 'İleri';
+  static const String introStart = 'FırınNet\'e Başla';
+  static const String introP1Title = 'Fırıncıların yeni ağı';
   static const String introP1Body =
-      'Gündemi takip et, deneyim paylaş, gruplarda meslektaşlarınla konuş.';
-  static const String introP2Title = 'İlanlar ve görüşmeler tek yerde';
+      'Fırınlar, bayiler ve tedarikçiler aynı sektörel ağda buluşur.';
+  static const String introP2Title = 'Paylaş, keşfet, bağlantı kur';
   static const String introP2Body =
-      'Eleman, iş yeri ve ekipman ilanlarını takip et. İlgilendiğin kişilerle '
-      'hızlıca mesajlaş.';
-  static const String introP3Title = 'İşletme araçların cebinde';
+      'Sektörden paylaşımları takip et, yorum yap, doğru kişilerle temas kur.';
+  static const String introP3Title = 'Pazar ve teklif ağı';
   static const String introP3Body =
-      'Bayi hareketlerini, gün sonunu ve reçetelerini daha düzenli yönet.';
+      'Ürün, hizmet ve talepler için daha düzenli bir ticaret alanı.';
+  static const String introP4Title = 'İşini daha düzenli yönet';
+  static const String introP4Body =
+      'Bayi defteri ve pratik araçlarla günlük işlerini daha kontrollü takip et.';
 
   // ─────────────────────── Navigation IA Sprint — alt nav + sekme başlıkları
   // Alt nav: Topluluk · Pazar · İlanlar · Mesajlar · Panel
