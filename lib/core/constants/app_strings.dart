@@ -550,6 +550,39 @@ class AppStrings {
   // Insight cards
   static const String feedInsightSectionLabel = 'Sektör pulse';
 
+  // ─────────────────────── Borç & Gider Defteri (Final Functional Sprint)
+  static const String debtExpenseTitle = 'Borç & Gider';
+  static const String debtExpenseCardSub =
+      'Borçlarını, giderlerini ve personel ödemelerini takip et';
+  static const String deTabOverview = 'Genel Bakış';
+  static const String deTabDebts = 'Borçlar';
+  static const String deTabExpenses = 'Giderler';
+  static const String deTabStaff = 'Personel';
+  static const String deTabReports = 'Raporlar';
+  static const String deAddDebt = 'Borç ekle';
+  static const String deAddExpense = 'Gider ekle';
+  static const String deAddStaff = 'Personel ödemesi';
+  static const String deAddPayment = 'Ödeme ekle';
+  static const String deEmptyTitle = 'Henüz borç veya gider eklenmedi';
+  static const String deEmptySub =
+      'İlk kaydını ekleyerek ödemelerini düzenli takip etmeye başla.';
+  static const String deOpenDebt = 'Açık borç';
+  static const String deThisMonthExpense = 'Bu ay gider';
+  static const String deStaffPayable = 'Ödenecek personel';
+  static const String deUpcoming = 'Bu hafta vade';
+  static const String deOverdue = 'Geciken';
+  static const String deRemaining = 'Kalan';
+  static const String deClosed = 'Kapandı';
+  static const String deStatusOpen = 'Açık';
+  static const String deStatusPartial = 'Kısmi';
+  static const String deStatusPaid = 'Kapandı';
+  static const String deStatusOverdue = 'Gecikti';
+  static const String deMarkPaid = 'Kapandı işaretle';
+  static const String deDueDate = 'Vade tarihi';
+  static const String deNoDueDate = 'Vade yok';
+  static const String deCustomCategoryHint = 'Örn. özel un, katkı karışımı';
+  static const String deCustomCategoryLabel = 'Kategori adını yaz';
+
   // ─────────────────────── Faz 2 Pass 3 — 3 sayfalık intro onboarding
   static const String introSkip = 'Atla';
   static const String introNext = 'Devam';
