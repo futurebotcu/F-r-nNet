@@ -75,6 +75,13 @@ void main() {
         );
 
     testWidgets('4 section başlığı doğru sırada görünür', (tester) async {
+      // Settings içerik arttı (Yasal 4 tile + Destek); tüm bölümler lazy
+      // ListView'de buildlensin diye uzun viewport ver.
+      tester.view.physicalSize = const Size(1000, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(wrap(const SettingsScreen()));
       await tester.pumpAndSettle();
 
@@ -94,6 +101,11 @@ void main() {
     });
 
     testWidgets('Beklenen tile başlıkları görünür', (tester) async {
+      tester.view.physicalSize = const Size(1000, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(wrap(const SettingsScreen()));
       await tester.pumpAndSettle();
 
@@ -104,6 +116,9 @@ void main() {
         AppStrings.settingsDataInfo,
         AppStrings.settingsPrivacy,
         AppStrings.settingsTerms,
+        AppStrings.settingsCommunity,
+        AppStrings.settingsAccountDeletion,
+        AppStrings.settingsSupport,
         AppStrings.settingsAbout,
       ]) {
         expect(find.text(s, skipOffstage: false), findsWidgets,

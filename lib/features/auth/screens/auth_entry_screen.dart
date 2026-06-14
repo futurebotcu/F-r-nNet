@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
-import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/auth_user.dart';
@@ -14,14 +14,13 @@ import '../providers/guest_mode_provider.dart';
 import '../widgets/legal_footer.dart';
 import '../widgets/social_auth_buttons.dart';
 
-/// V1.3 boot landing - gives the user three clear choices.
+/// Boot landing — Google-only auth.
 ///
-/// 1. Giriş Yap -> `/auth/login`
-/// 2. Hesabım yok, üye ol -> `/auth/role-select`
-/// 3. Kayıtsız devam et -> guest flag set + `/feed`
+/// 1. "Google ile devam et" (SocialAuthButtons) — primary, secure sign-in.
+/// 2. "Misafir olarak keşfet" — guest flag + `/feed`.
 ///
-/// When Supabase is off, (1) and (2) appear disabled with a warning banner;
-/// "Kayıtsız devam et" remains active.
+/// E-posta/şifre giriş-kayıt akışı UI'dan kaldırıldı (Google + misafir).
+/// Backend Supabase kapalıyken Google pasifleşir, misafir aktif kalır.
 class AuthEntryScreen extends ConsumerStatefulWidget {
   const AuthEntryScreen({super.key});
 
@@ -86,33 +85,14 @@ class _AuthEntryScreenState extends ConsumerState<AuthEntryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: AppSpacing.xs),
-                  Center(
-                    child: Container(
-                      width: 84,
-                      height: 84,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.l),
-                        border: Border.all(
-                          color: AppColors.borderHairline,
-                          width: 0.6,
-                        ),
-                        boxShadow: AppShadow.card,
-                      ),
-                      child: const Icon(
-                        Icons.local_fire_department_rounded,
-                        color: AppColors.primary,
-                        size: 44,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: AppSpacing.s),
+                  const Center(child: _BrandMark()),
                   const SizedBox(height: AppSpacing.xl),
                   Text(
-                    'FırınNet\'e hoş geldin',
+                    AppStrings.authEntryHeroTitle,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineLarge?.copyWith(
-                      fontSize: 32,
+                      fontSize: 31,
                       fontWeight: FontWeight.w800,
                       height: 1.1,
                       letterSpacing: -0.6,
@@ -120,55 +100,26 @@ class _AuthEntryScreenState extends ConsumerState<AuthEntryScreen> {
                   ),
                   const SizedBox(height: AppSpacing.m),
                   Text(
-                    'Fırıncılar, ustalar ve tedarikçiler için akış, grup, ilan ve bayi takibi.',
+                    AppStrings.authEntryHeroSubtitle,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: AppColors.textSecondary,
                       height: 1.55,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.l),
+                  const SizedBox(height: AppSpacing.xxl),
+                  // Birincil: Google ile güvenli giriş.
                   const SocialAuthButtons(),
                   const SizedBox(height: AppSpacing.s),
-                  AppPrimaryButton(
-                    label: 'Giriş Yap',
-                    icon: Icons.login_rounded,
-                    onPressed: supabaseOn
-                        ? () => context.push(AppRoutes.login)
-                        : null,
-                  ),
-                  const SizedBox(height: AppSpacing.s),
+                  // İkincil: misafir olarak keşfet.
                   SizedBox(
-                    height: 56,
-                    child: OutlinedButton.icon(
-                      onPressed: supabaseOn
-                          ? () => context.push(AppRoutes.roleSelect)
-                          : null,
-                      icon: const Icon(Icons.person_add_alt_1_rounded),
-                      label: const Text('Hesap oluştur'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: BorderSide(
-                          color: AppColors.primary.withValues(alpha: 0.35),
-                          width: 0.8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.m),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.s),
-                  SizedBox(
-                    height: 56,
+                    height: 54,
                     child: TextButton(
                       onPressed: () async {
-                        await ref.read(guestModeProvider.notifier).setGuest(true);
+                        await ref
+                            .read(guestModeProvider.notifier)
+                            .setGuest(true);
                         ref.read(profileControllerProvider.notifier).useGuest();
                         if (!context.mounted) return;
                         context.go(AppRoutes.feed);
@@ -177,11 +128,11 @@ class _AuthEntryScreenState extends ConsumerState<AuthEntryScreen> {
                         foregroundColor: AppColors.textSecondary,
                       ),
                       child: const Text(
-                        'Kayıtsız devam et',
+                        AppStrings.authEntryGuestExplore,
                         style: TextStyle(
                           fontSize: 14.5,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.8,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ),
@@ -192,6 +143,44 @@ class _AuthEntryScreenState extends ConsumerState<AuthEntryScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// FırınNet marka ikonu — premium yuvarlatılmış kart, pale-lemon halo.
+/// Asset yüklenemezse (test/eksik) sade lemon flame ikona düşer.
+class _BrandMark extends StatelessWidget {
+  const _BrandMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 96,
+      height: 96,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        boxShadow: AppShadow.soft,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        child: Image.asset(
+          'assets/branding/firinnet_app_icon.png',
+          width: 96,
+          height: 96,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            width: 96,
+            height: 96,
+            alignment: Alignment.center,
+            color: AppColors.brandLemonPale,
+            child: const Icon(
+              Icons.local_fire_department_rounded,
+              color: AppColors.brandLemonPressed,
+              size: 46,
+            ),
+          ),
         ),
       ),
     );

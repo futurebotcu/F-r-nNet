@@ -27,6 +27,8 @@ import '../../features/auth/screens/auth_entry_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/role_select_screen.dart';
+import '../../features/legal/screens/account_deletion_screen.dart';
+import '../../features/legal/screens/community_guidelines_screen.dart';
 import '../../features/legal/screens/privacy_screen.dart';
 import '../../features/legal/screens/terms_screen.dart';
 import '../../features/profile/models/bakery_profile.dart' as profile_models;
@@ -62,6 +64,7 @@ import '../../features/social/profile/user_list_page.dart';
 import '../../features/safety/screens/blocked_users_screen.dart';
 import '../../features/settings/screens/about_screen.dart';
 import '../../features/settings/screens/data_info_screen.dart';
+import '../../features/settings/screens/support_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 
 class AppRoutes {
@@ -80,6 +83,9 @@ class AppRoutes {
   // V1.3.5 — Yasal metin route'ları
   static const String legalTerms = '/legal/terms';
   static const String legalPrivacy = '/legal/privacy';
+  // Google-only auth + legal/support batch — yeni yasal ekranlar.
+  static const String legalCommunity = '/legal/community';
+  static const String legalAccountDeletion = '/legal/account-deletion';
 
   // V1.4 — Ayarlar menüsü (gear icon → /settings)
   static const String settings = '/settings';
@@ -87,6 +93,8 @@ class AppRoutes {
   static const String settingsDataInfo = '/settings/data-info';
   // UGC Safety V1 — engellenen kullanıcılar (tek toplu unblock yüzeyi).
   static const String settingsBlocked = '/settings/blocked';
+  // Destek ve Yardım (SSS + mailto).
+  static const String settingsSupport = '/settings/support';
 
   // V1 P1-D — Uygulama içi bildirimler.
   static const String notifications = '/notifications';
@@ -236,6 +244,14 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.legalPrivacy,
         builder: (_, __) => const PrivacyScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.legalCommunity,
+        builder: (_, __) => const CommunityGuidelinesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.legalAccountDeletion,
+        builder: (_, __) => const AccountDeletionScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
@@ -413,6 +429,10 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.settingsAbout,
         builder: (_, __) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settingsSupport,
+        builder: (_, __) => const SupportScreen(),
       ),
       GoRoute(
         path: AppRoutes.settingsDataInfo,

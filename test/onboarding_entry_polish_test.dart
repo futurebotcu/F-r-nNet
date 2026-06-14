@@ -1,5 +1,4 @@
 import 'package:firin_defter/core/constants/app_strings.dart';
-import 'package:firin_defter/core/widgets/app_primary_button.dart';
 import 'package:firin_defter/core/widgets/premium/premium_top_banner.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
 import 'package:firin_defter/features/auth/screens/auth_entry_screen.dart';
@@ -50,30 +49,28 @@ void main() {
       expect(find.text('Kayıtsız Devam Et'), findsOneWidget);
     });
 
-    testWidgets('Auth entry top banner ve yeni copy görünür', (tester) async {
+    testWidgets('Auth entry Google-only copy + misafir + backend banner', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const AuthEntryScreen()));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 350));
 
-      expect(find.text('FırınNet\'e hoş geldin'), findsOneWidget);
-      expect(
-        find.text(
-          'Fırıncılar, ustalar ve tedarikçiler için akış, grup, ilan ve bayi takibi.',
-        ),
-        findsOneWidget,
-      );
+      // Yeni Google-only hero copy.
+      expect(find.text(AppStrings.authEntryHeroTitle), findsOneWidget);
+      expect(find.text(AppStrings.authEntryHeroSubtitle), findsOneWidget);
       expect(
         find.text(
           'Sunucu bağlantısı kapalı. Yine de kayıtsız keşfe devam edebilirsin.',
         ),
         findsOneWidget,
       );
-      final primaryButton = tester.widget<AppPrimaryButton>(
-        find.byType(AppPrimaryButton),
-      );
-      expect(primaryButton.label, 'Giriş Yap');
-      expect(find.text('Hesap oluştur'), findsOneWidget);
-      expect(find.text('Kayıtsız devam et'), findsOneWidget);
+      // Google birincil + misafir ikincil.
+      expect(find.text(AppStrings.authContinueWithGoogle), findsOneWidget);
+      expect(find.text(AppStrings.authEntryGuestExplore), findsOneWidget);
+      // E-posta/şifre giriş-kayıt UI'dan kaldırıldı.
+      expect(find.text('Giriş Yap'), findsNothing);
+      expect(find.text('Hesap oluştur'), findsNothing);
 
       await tester.pump(const Duration(seconds: 4));
       await tester.pumpAndSettle();
