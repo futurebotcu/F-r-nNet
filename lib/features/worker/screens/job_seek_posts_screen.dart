@@ -31,7 +31,7 @@ class JobSeekPostsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni ilan'),
         backgroundColor: AppColors.copper,
-        foregroundColor: AppColors.surface,
+        foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
         child: async.when(

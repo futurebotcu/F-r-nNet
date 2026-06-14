@@ -28,7 +28,7 @@ class WorkerExperiencesScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Tecrübe ekle'),
         backgroundColor: AppColors.copper,
-        foregroundColor: AppColors.surface,
+        foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
         child: async.when(

@@ -82,7 +82,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go(AppRoutes.login);
+              // Google-only: email login yerine auth giriş ekranına dön.
+              context.go(AppRoutes.authEntry);
             }
           },
         ),

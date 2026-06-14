@@ -411,7 +411,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
           onPressed: _saving ? null : () => context.pop(),
         ),
         title: const Text(
-          'Yeni Gönderi',
+          AppStrings.composerNewPostTitle,
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
@@ -810,7 +810,7 @@ class _VideoPickedPreview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Video seçildi',
+                  AppStrings.feedComposerVideoSelected,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w800,

@@ -1166,7 +1166,7 @@ class _JoinFooterCta extends ConsumerWidget {
         ),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: AppColors.surface,
+          foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surfaceLine,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -1433,7 +1433,7 @@ class _RequestButton extends ConsumerWidget {
         label: Text(label),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: AppColors.surface,
+          foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surface,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -1798,7 +1798,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                   onPressed: _busy ? null : () => _decide(true),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: AppColors.surface,
+                    foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
@@ -2093,7 +2093,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
             onPressed: _sending ? null : _send,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.copper,
-              foregroundColor: AppColors.surface,
+              foregroundColor: AppColors.brandInk,
               disabledBackgroundColor: AppColors.copper.withValues(alpha: 0.6),
               disabledForegroundColor: AppColors.surface,
               padding: EdgeInsets.zero,

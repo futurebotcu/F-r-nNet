@@ -305,7 +305,7 @@ class _DealerRow extends StatelessWidget {
                   child: Text(
                     NumberFormatter.currency(balance),
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: AppColors.copper,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),

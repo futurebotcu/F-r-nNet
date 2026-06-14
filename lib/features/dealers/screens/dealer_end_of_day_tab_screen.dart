@@ -599,7 +599,8 @@ class _ShareCta extends StatelessWidget {
         label: const Text(AppStrings.dealerEndOfDayShareCta),
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.copper,
+          // Beyaz zemin üzerinde okunur koyu ink metin; lemon yalnız kenarda.
+          foregroundColor: AppColors.brandInk,
           side: const BorderSide(color: AppColors.copper, width: 1.0),
         ),
       ),

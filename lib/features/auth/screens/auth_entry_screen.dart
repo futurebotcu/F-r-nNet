@@ -109,8 +109,9 @@ class _AuthEntryScreenState extends ConsumerState<AuthEntryScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
-                  // Birincil: Google ile güvenli giriş.
-                  const SocialAuthButtons(),
+                  // Birincil: Google ile güvenli giriş. compact=true →
+                  // tek buton altında sahipsiz "veya" ayracı gösterilmez.
+                  const SocialAuthButtons(compact: true),
                   const SizedBox(height: AppSpacing.s),
                   // İkincil: misafir olarak keşfet.
                   SizedBox(

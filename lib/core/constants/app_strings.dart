@@ -100,6 +100,9 @@ class AppStrings {
   // ver + submit'i bloke et.
   static const String profileStillLoadingError =
       'Profil bilgilerin hazırlanıyor. Lütfen birkaç saniye sonra tekrar dene.';
+  // Profil tamamlama — completion modunda kilitli e-posta açıklaması.
+  static const String profileEmailLockedHelper =
+      'Google hesabından alındı, değiştirilemez.';
 
   // Profile
   static const String accountType = 'Hesap türü';
@@ -324,7 +327,10 @@ class AppStrings {
   static const String feedComposerSavedSnack = 'Akışa eklendi.';
   static const String feedComposerCancel = 'Vazgeç';
   static const String feedComposerYouAuthor = 'Sen';
-  static const String feedComposerYouRole = 'Misafir · FırınNet';
+  static const String feedComposerYouRole = 'FırınNet';
+  // Composer — tam ekran başlık + video-seçildi etiketi (hardcoded'dan taşındı).
+  static const String composerNewPostTitle = 'Yeni Gönderi';
+  static const String feedComposerVideoSelected = 'Video seçildi';
   // V1.4 P0.1 — addPost exception olursa kullanıcıya ham İngilizce hata
   // sızmasın; composer expanded kalır, kullanıcı tekrar deneyebilir.
   static const String feedPostCreateError =

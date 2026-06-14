@@ -247,7 +247,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       label: const Text('Paylaş'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.copper,
-                        foregroundColor: AppColors.surface,
+                        foregroundColor: AppColors.brandInk,
                         minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.m),

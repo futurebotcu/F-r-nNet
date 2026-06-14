@@ -415,9 +415,9 @@ class _DealerSummaryCard extends ConsumerWidget {
                         child: CircularProgressIndicator(strokeWidth: 1.6),
                       ),
                     ),
-                    error: (e, _) => Text(
-                      'Özet okunamadı: $e',
-                      style: const TextStyle(color: AppColors.danger),
+                    error: (_, __) => const Text(
+                      'Özet şu an okunamadı.',
+                      style: TextStyle(color: AppColors.danger),
                     ),
                     data: (o) => Column(
                       children: [
@@ -475,9 +475,9 @@ class _DealerSummaryCard extends ConsumerWidget {
                       label: const Text('Bayi Yönetimine Git'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.copper,
-                        // P0 hijyen — copper zemin üstünde beyaz yazı (standart);
-                        // koyu textPrimary kontrastı ~1.5:1 idi, okunmuyordu.
-                        foregroundColor: AppColors.surface,
+                        // Limon zemin üzerinde koyu ink yazı (okunabilir);
+                        // beyaz foreground ~1.25:1 ile okunmuyordu.
+                        foregroundColor: AppColors.brandInk,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.m),
                         ),

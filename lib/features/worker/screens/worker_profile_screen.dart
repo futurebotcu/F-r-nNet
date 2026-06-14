@@ -723,7 +723,7 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: AppColors.surface,
+                    foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),

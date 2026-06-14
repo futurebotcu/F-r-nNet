@@ -274,7 +274,7 @@ class _StartJobConversationSheetState
                   label: const Text(AppStrings.startConvoSendCta),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: AppColors.surface,
+                    foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),

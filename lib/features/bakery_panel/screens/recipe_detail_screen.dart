@@ -211,7 +211,7 @@ class _Body extends ConsumerWidget {
           label: const Text('Reçeteyi Paylaş'),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.surface,
+            foregroundColor: AppColors.brandInk,
             minimumSize: const Size.fromHeight(52),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.m),
@@ -849,12 +849,14 @@ class _ShareSheet extends ConsumerWidget {
           context,
         ).showSnackBar(const SnackBar(content: Text('Reçete akışa eklendi.')));
       }
-    } catch (e) {
+    } catch (_) {
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Feed paylaşımı başarısız: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Paylaşım başarısız. Lütfen tekrar dene.'),
+          ),
+        );
       }
     }
   }

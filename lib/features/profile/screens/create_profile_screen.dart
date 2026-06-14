@@ -485,10 +485,13 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                   !_isCompletion, // signed-in iken email değişimi auth update gerektirir
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppStrings.email,
                 hintText: AppStrings.authEmailHint,
-                suffixIcon: Icon(
+                helperText: _isCompletion
+                    ? AppStrings.profileEmailLockedHelper
+                    : null,
+                suffixIcon: const Icon(
                   Icons.mark_email_unread_outlined,
                   color: AppColors.textMuted,
                 ),

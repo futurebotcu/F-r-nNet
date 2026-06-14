@@ -131,14 +131,14 @@ class _FollowButtonShell extends StatelessWidget {
               height: 12,
               child: CircularProgressIndicator(
                 strokeWidth: 1.6,
-                valueColor: AlwaysStoppedAnimation(AppColors.surface),
+                valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
               ),
             )
           : const Icon(Icons.person_add_alt_1_rounded, size: 16),
       label: Text(label),
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.copper,
-        foregroundColor: AppColors.surface,
+        foregroundColor: AppColors.brandInk,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),

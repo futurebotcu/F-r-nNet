@@ -111,9 +111,10 @@ const List<_Faq> _ledgerFaqs = [
   ),
   _Faq(
     'Rapor/PDF nasıl oluşturulur ve paylaşılır?',
-    'Bayi detayı veya Raporlar ekranından özet çıkarırsın; panoya kopyalar, '
-        'düz metin (WhatsApp/SMS) ya da PDF olarak paylaşabilirsin. PDF dosya '
-        'adı bayi adı ve tarihle oluşur, WhatsApp\'tan doğrudan gönderebilirsin.',
+    'Bir bayinin hesap özetini, bayi detayındaki "Hesap Paylaş" ekranından '
+        'PDF olarak çıkarıp WhatsApp\'tan gönderebilirsin (dosya adı bayi adı '
+        've tarihle oluşur). Gün Sonu ve toplu özetler düz metin (WhatsApp/SMS) '
+        'olarak paylaşılır.',
   ),
 ];
 
