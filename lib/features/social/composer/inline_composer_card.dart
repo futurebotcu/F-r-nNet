@@ -136,7 +136,7 @@ class InlineComposerCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           _ComposerAction(
-                            icon: Icons.menu_book_rounded,
+                            icon: Icons.bakery_dining_rounded,
                             label: AppStrings.feedComposerActionRecipe,
                             onTap: () => _openComposer(
                               context,
@@ -146,7 +146,7 @@ class InlineComposerCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           _ComposerAction(
-                            icon: Icons.campaign_outlined,
+                            icon: Icons.local_shipping_outlined,
                             label: AppStrings.feedComposerActionAnnouncement,
                             onTap: () => _openComposer(
                               context,

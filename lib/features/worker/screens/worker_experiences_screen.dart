@@ -34,11 +34,11 @@ class WorkerExperiencesScreen extends ConsumerWidget {
         child: async.when(
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
-          error: (e, _) => Padding(
-            padding: const EdgeInsets.all(AppSpacing.l),
+          error: (_, __) => const Padding(
+            padding: EdgeInsets.all(AppSpacing.l),
             child: Text(
-              'Okunamadı: $e',
-              style: const TextStyle(color: AppColors.danger),
+              'Bilgiler şu anda yüklenemedi.',
+              style: TextStyle(color: AppColors.danger),
             ),
           ),
           data: (items) {
@@ -338,11 +338,11 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kaydedilemedi. Lütfen tekrar dene.')),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

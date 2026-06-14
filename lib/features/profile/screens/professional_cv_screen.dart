@@ -78,11 +78,11 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text(AppStrings.cvBioSaved)));
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kaydedilemedi. Lütfen tekrar dene.')),
+      );
     } finally {
       if (mounted) setState(() => _savingBio = false);
     }
@@ -185,7 +185,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                   child: Text(
                     status,
                     style: const TextStyle(
-                      color: AppColors.copper,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 12.5,
                     ),
@@ -235,9 +235,9 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                   child: CircularProgressIndicator(strokeWidth: 1.6),
                 ),
               ),
-              error: (e, _) => Text(
-                'Okunamadı: $e',
-                style: const TextStyle(color: AppColors.danger),
+              error: (_, __) => const Text(
+                'Bilgiler şu anda yüklenemedi.',
+                style: TextStyle(color: AppColors.danger),
               ),
               data: (items) {
                 if (items.isEmpty) {
@@ -556,11 +556,11 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kaydedilemedi. Lütfen tekrar dene.')),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

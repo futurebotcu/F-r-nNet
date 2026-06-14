@@ -241,11 +241,11 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
         const SnackBar(content: Text('Ustalık bilgilerin kaydedildi.')),
       );
       Navigator.of(context).maybePop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kaydedilemedi. Lütfen tekrar dene.')),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

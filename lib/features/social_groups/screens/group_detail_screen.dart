@@ -505,7 +505,7 @@ class _OwnerPendingAlert extends ConsumerWidget {
                   child: Text(
                     AppStrings.groupJoinRequestsCompact(count),
                     style: const TextStyle(
-                      color: AppColors.copper,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
                       letterSpacing: 1.2,
@@ -2419,7 +2419,7 @@ class _MemberRow extends StatelessWidget {
               child: const Text(
                 AppStrings.groupFounder,
                 style: TextStyle(
-                  color: AppColors.copper,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,
                   fontSize: 10,
                   letterSpacing: 0.8,

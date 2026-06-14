@@ -217,8 +217,10 @@ class AppStrings {
       'Üretimini, tarifini, sorunu veya duyurunu paylaş.';
   static const String feedComposerActionMedia = 'Medya';
   static const String feedComposerActionQuestion = 'Soru';
-  static const String feedComposerActionRecipe = 'Tarif';
-  static const String feedComposerActionAnnouncement = 'Duyuru';
+  // Inline composer kategorileri PostType.label ile aynı (Üretim/Tedarik) —
+  // composer chip'leriyle birebir eşleşir (kullanıcı aynı kelimeyi görür).
+  static const String feedComposerActionRecipe = 'Üretim';
+  static const String feedComposerActionAnnouncement = 'Tedarik';
   static const String feedComposerActionShare = 'Paylaş';
   // Medya aksiyonu → modal action sheet (4 mevcut işlev).
   static const String mediaSheetTitle = 'Medya ekle';

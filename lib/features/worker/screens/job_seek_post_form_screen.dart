@@ -209,11 +209,11 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
         ),
       );
       Navigator.of(context).pop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kaydedilemedi. Lütfen tekrar dene.')),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

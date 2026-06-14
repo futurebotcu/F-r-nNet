@@ -45,7 +45,7 @@ class RecipesListScreen extends ConsumerWidget {
           skipLoadingOnReload: true,
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
-          error: (e, _) => _ErrorBox(message: '$e'),
+          error: (_, __) => const _ErrorBox(),
           data: (items) {
             if (items.isEmpty) return const _EmptyState();
             return RefreshIndicator(
@@ -339,16 +339,15 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ErrorBox extends StatelessWidget {
-  const _ErrorBox({required this.message});
-  final String message;
+  const _ErrorBox();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.l),
+    return const Padding(
+      padding: EdgeInsets.all(AppSpacing.l),
       child: Text(
-        'Reçeteler okunamadı: $message',
-        style: const TextStyle(color: AppColors.danger),
+        'Reçeteler şu anda yüklenemedi.',
+        style: TextStyle(color: AppColors.danger),
       ),
     );
   }
