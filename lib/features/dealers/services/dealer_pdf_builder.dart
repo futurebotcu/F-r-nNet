@@ -161,7 +161,8 @@ class DealerPdfBuilder {
                   child: pw.Text(
                     'F',
                     style: pw.TextStyle(
-                      color: PdfColors.white,
+                      // Limon zemin üzerinde koyu ink — beyaz okunmuyordu.
+                      color: ink,
                       fontWeight: pw.FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -187,7 +188,7 @@ class DealerPdfBuilder {
                 ),
                 pw.Spacer(),
                 pw.Text(
-                  df.format(ref),
+                  'Rapor tarihi: ${df.format(ref)}',
                   style: const pw.TextStyle(color: muted, fontSize: 10),
                 ),
               ],
@@ -254,10 +255,11 @@ class DealerPdfBuilder {
             pw.Divider(color: line, thickness: 0.6),
             pw.SizedBox(height: 4),
             kv(
-              'Güncel bakiye  ($balanceTag)',
+              'Güncel açık bakiye  ($balanceTag)',
               NumberFormatter.currency(summary.currentBalance),
               vStyle: pw.TextStyle(
-                color: lemon,
+                // Kritik rakam — yazdırınca okunabilir koyu ink.
+                color: ink,
                 fontSize: 18,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -271,7 +273,7 @@ class DealerPdfBuilder {
             pw.Text(
               'SON HAREKETLER',
               style: pw.TextStyle(
-                color: lemon,
+                color: ink,
                 fontSize: 10,
                 fontWeight: pw.FontWeight.bold,
                 letterSpacing: 1.2,

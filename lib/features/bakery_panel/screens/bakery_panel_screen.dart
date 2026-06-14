@@ -760,13 +760,13 @@ class _CommunityTips extends StatelessWidget {
           'fermantasyon süresini uzatmak hamur kontrolünü artırır.',
     ),
     _TipCard(
-      icon: Icons.trending_up_rounded,
+      icon: Icons.receipt_long_rounded,
       accent: AppColors.success,
-      label: 'Topluluktan',
-      title: 'Bu hafta öne çıkan tedarikçi',
+      label: 'İpucu',
+      title: 'Tahsilatı aynı gün işle',
       body:
-          'Konya Değirmen yeni hasat ekstra unu için 25 kg paketlerde '
-          'avantajlı toplu alım açtı — Market\'ten inceleyebilirsin.',
+          'Teslimat ve tahsilatları aynı gün Bayi Defteri\'ne girersen '
+          'her bayinin açık bakiyesi her zaman güncel kalır.',
     ),
     _TipCard(
       icon: Icons.event_note_outlined,

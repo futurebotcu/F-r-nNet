@@ -29,7 +29,8 @@ class DealerPulseCard extends ConsumerWidget {
     final pulseAsync = ref.watch(dealerPulseProvider);
     return pulseAsync.when(
       loading: () => const _PulseLoadingCard(),
-      error: (e, _) => _PulseErrorCard(message: '$e'),
+      error: (_, __) =>
+          const _PulseErrorCard(message: AppStrings.dealerPulseError),
       data: (snap) => _PulseCard(snapshot: snap),
     );
   }
@@ -92,13 +93,13 @@ class _PulseCard extends StatelessWidget {
               const Icon(
                 Icons.show_chart_rounded,
                 size: 18,
-                color: AppColors.copper,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: AppSpacing.s),
               Text(
                 AppStrings.dealerPulseTitle,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.copper,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.6,
                 ),
@@ -121,7 +122,7 @@ class _PulseCard extends StatelessWidget {
               label: AppStrings.dealerPulseMetricDelivery,
               today: snapshot.todayDelivery,
               baseline: snapshot.baselineDelivery,
-              accent: AppColors.copper,
+              accent: AppColors.textPrimary,
             ),
             const _RowDivider(),
             _PulseRow(
@@ -142,7 +143,7 @@ class _PulseCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: Text(
-                '${snapshot.baselineDays} günlük baseline',
+                '${snapshot.baselineDays} günlük ortalama',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.textMuted,
                   fontStyle: FontStyle.italic,
@@ -351,9 +352,9 @@ enum _Direction {
   Color get color {
     switch (this) {
       case _Direction.up:
-        return Color(0xFF10B981);
+        return AppColors.success;
       case _Direction.down:
-        return Color(0xFFEF4444);
+        return AppColors.danger;
       case _Direction.flat:
         return AppColors.textMuted;
     }

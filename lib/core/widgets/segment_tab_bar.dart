@@ -87,7 +87,8 @@ class _Segment extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? AppColors.surface : AppColors.textSecondary,
+            // Sarı/limon zemin üzerinde daima koyu ink metin (okunabilirlik).
+            color: selected ? AppColors.brandInk : AppColors.textSecondary,
             fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
             fontSize: 13,
             letterSpacing: -0.1,

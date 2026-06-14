@@ -40,6 +40,18 @@ const List<_Faq> _faqs = [
         'kişisel veri saklama gibi işlemler için Google ile giriş gerekir.',
   ),
   _Faq(
+    'Profilimi nasıl tamamlarım?',
+    'Google ile giriş yaptıktan sonra hesap türünü (Fırın / Bireysel / '
+        'Toptancı), adını, şehrini ve meslek rozetini seçersin. Bu bilgiler '
+        'profilinde görünür ve sana uygun araçların açılmasını sağlar.',
+  ),
+  _Faq(
+    'Paylaşım, beğeni ve yorum nasıl çalışır?',
+    'Toplulukta gönderi paylaşır, başkalarının paylaşımlarını beğenir ve '
+        'yorum yazarsın. Paylaşım için Google ile giriş gerekir; misafir modda '
+        'akışı görüntüleyebilirsin.',
+  ),
+  _Faq(
     'İçerik nasıl bildirilir?',
     'Bir gönderi, yorum veya profilin sağ üst menüsünden "Şikayet et" '
         'seçeneğiyle bildirebilirsin. Bildirimler incelenir ve gerektiğinde '
@@ -58,8 +70,50 @@ const List<_Faq> _faqs = [
   ),
   _Faq(
     'Verilerim nasıl korunur?',
-    'Verilerin yalnızca sana görünür şekilde, satır-bazlı erişim kurallarıyla '
-        'saklanır. Ayrıntılar için Gizlilik Politikası bölümüne bakabilirsin.',
+    'Verilerin yalnızca sana görünür şekilde, hesabına özel olarak saklanır. '
+        'Ayrıntılar için Gizlilik Politikası bölümüne bakabilirsin.',
+  ),
+];
+
+/// Bayi Defteri / uygulama kullanımı how-to başlıkları (ikinci SSS kartı).
+const List<_Faq> _ledgerFaqs = [
+  _Faq(
+    'Bayi Defteri nedir?',
+    'Bayi Defteri; teslimat, iade, tahsilat ve açık bakiyeni telefondan '
+        'takip etmen için hazırlanmış bir araçtır. Panel sekmesinden açılır. '
+        'Kayıtlar yalnızca sana görünür; resmi muhasebe yerine geçmez, takip '
+        'amaçlıdır.',
+  ),
+  _Faq(
+    'Bayi nasıl eklenir?',
+    'Bayi Defteri → Bayiler sekmesinde "İlk bayiyi ekle" ile bayinin adını '
+        '(istersen bölge, telefon, çalışma tipini) girersin. Sonra o bayiye '
+        'teslimat ve tahsilat işleyebilirsin.',
+  ),
+  _Faq(
+    'Hareket nasıl eklenir?',
+    'Bayi detayında "Ürün Ver" (teslimat), "Ödeme Al" (tahsilat) veya '
+        '"İade Al" ile işlem girersin. Tutar ve tarihi yazarsın; açık bakiye '
+        'otomatik güncellenir. Çift kayıt olmaması için kaydet anında buton '
+        'kilitlenir.',
+  ),
+  _Faq(
+    'Teslimat, tahsilat ve iade ne demek?',
+    'Teslimat bayinin borcunu artırır (ürün verdin), tahsilat borcu azaltır '
+        '(ödeme aldın), iade ise verdiğin üründen geri geleni düşer. Açık '
+        'bakiye bu üçünün sonucudur.',
+  ),
+  _Faq(
+    'Günlük Özet / Gün Sonu ne işe yarar?',
+    'Gün Sonu, o günün teslimat ve tahsilat toplamını gösteren bir özettir. '
+        'Ayrıca kapatman gereken bir şey yok; yeni gün açıldığında o günün '
+        'verisi otomatik gelir.',
+  ),
+  _Faq(
+    'Rapor/PDF nasıl oluşturulur ve paylaşılır?',
+    'Bayi detayı veya Raporlar ekranından özet çıkarırsın; panoya kopyalar, '
+        'düz metin (WhatsApp/SMS) ya da PDF olarak paylaşabilirsin. PDF dosya '
+        'adı bayi adı ve tarihle oluşur, WhatsApp\'tan doğrudan gönderebilirsin.',
   ),
 ];
 
@@ -140,6 +194,36 @@ class SupportScreen extends StatelessWidget {
                             color: AppColors.borderHairline,
                           ),
                         _FaqItem(faq: _faqs[i]),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ───── Bayi Defteri ve kullanım
+            const SectionLabel(title: 'Bayi Defteri ve kullanım'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: PremiumCard(
+                padding: EdgeInsets.zero,
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    dividerColor: Colors.transparent,
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                  ),
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < _ledgerFaqs.length; i++) ...[
+                        if (i > 0)
+                          const Divider(
+                            height: 0,
+                            indent: AppSpacing.l,
+                            endIndent: AppSpacing.l,
+                            color: AppColors.borderHairline,
+                          ),
+                        _FaqItem(faq: _ledgerFaqs[i]),
                       ],
                     ],
                   ),

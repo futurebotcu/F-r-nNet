@@ -428,8 +428,21 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
             AppSpacing.xxl,
           ),
           children: [
-            Text(AppStrings.accountType, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 10),
+            Text(
+              'Hangi tür hesap kullanıyorsun?',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Rolünü seç — panel ve araçlar buna göre düzenlenir.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
             _AccountTypePicker(
               selected: _accountType,
               onChanged: (t) => setState(() {
@@ -572,33 +585,30 @@ class _AccountTypePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _AccountTypeChip(
-            icon: Icons.storefront_rounded,
-            label: AppStrings.accountCommercial,
-            isSelected: selected == AccountType.commercial,
-            onTap: () => onChanged(AccountType.commercial),
-          ),
+        _AccountTypeCard(
+          icon: Icons.storefront_rounded,
+          title: 'Fırın / İşletme',
+          subtitle: AppStrings.roleCommercialSub,
+          isSelected: selected == AccountType.commercial,
+          onTap: () => onChanged(AccountType.commercial),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _AccountTypeChip(
-            icon: Icons.person_rounded,
-            label: AppStrings.accountIndividual,
-            isSelected: selected == AccountType.individual,
-            onTap: () => onChanged(AccountType.individual),
-          ),
+        const SizedBox(height: 8),
+        _AccountTypeCard(
+          icon: Icons.person_rounded,
+          title: 'Bireysel / Usta',
+          subtitle: AppStrings.roleIndividualSub,
+          isSelected: selected == AccountType.individual,
+          onTap: () => onChanged(AccountType.individual),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _AccountTypeChip(
-            icon: Icons.local_shipping_rounded,
-            label: AppStrings.accountWholesaler,
-            isSelected: selected == AccountType.wholesaler,
-            onTap: () => onChanged(AccountType.wholesaler),
-          ),
+        const SizedBox(height: 8),
+        _AccountTypeCard(
+          icon: Icons.local_shipping_rounded,
+          title: 'Toptancı / Tedarikçi',
+          subtitle: AppStrings.roleWholesalerSub,
+          isSelected: selected == AccountType.wholesaler,
+          onTap: () => onChanged(AccountType.wholesaler),
         ),
       ],
     );
@@ -711,61 +721,92 @@ class _LegalAcceptCheckbox extends StatelessWidget {
   }
 }
 
-class _AccountTypeChip extends StatelessWidget {
-  const _AccountTypeChip({
+/// Profil oluşturma rol seçimi — dikey, açıklamalı, belirgin seçili durum.
+/// Varsayılan yanlılığı azaltmak için seçim büyük ve net görünür.
+class _AccountTypeCard extends StatelessWidget {
+  const _AccountTypeCard({
     required this.icon,
-    required this.label,
+    required this.title,
+    required this.subtitle,
     required this.isSelected,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
+  final String title;
+  final String subtitle;
   final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    const accent = AppColors.softGold;
     return Material(
-      color: isSelected ? accent.withValues(alpha: 0.12) : AppColors.card,
+      color: isSelected ? AppColors.brandLemonPale : AppColors.card,
       borderRadius: BorderRadius.circular(AppRadius.m),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.m),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: AppSpacing.m,
-          ),
+          padding: const EdgeInsets.all(AppSpacing.m),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.m),
             border: Border.all(
               color: isSelected
-                  ? accent.withValues(alpha: 0.55)
+                  ? AppColors.brandLemonPressed
                   : AppColors.borderHairline,
-              width: isSelected ? 1.0 : 0.6,
+              width: isSelected ? 1.2 : 0.6,
             ),
           ),
-          child: Column(
+          child: Row(
             children: [
-              Icon(
-                icon,
-                color: isSelected ? accent : AppColors.textMuted,
-                size: 22,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  letterSpacing: 0.1,
+                      ? AppColors.brandLemon.withValues(alpha: 0.35)
+                      : AppColors.surfaceLine,
+                  borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: AppColors.textPrimary, size: 24),
+              ),
+              const SizedBox(width: AppSpacing.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.5,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.5,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Icon(
+                isSelected
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: isSelected
+                    ? AppColors.brandLemonPressed
+                    : AppColors.textMuted,
+                size: 22,
               ),
             ],
           ),

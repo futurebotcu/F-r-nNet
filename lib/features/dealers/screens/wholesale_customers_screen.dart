@@ -249,9 +249,9 @@ class _CustomerCard extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (e, _) => Text(
-              'Bakiye okunamadı: $e',
-              style: const TextStyle(color: AppColors.danger, fontSize: 12),
+            error: (_, __) => const Text(
+              'Bakiye bilgisi şu anda okunamadı.',
+              style: TextStyle(color: AppColors.danger, fontSize: 12),
             ),
             data: (s) {
               final balanceColor = s.currentBalance > 0

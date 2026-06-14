@@ -88,21 +88,6 @@ class ReportScreen extends ConsumerWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: AppSpacing.s),
-                SizedBox(
-                  height: 54,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.picture_as_pdf_rounded),
-                    label: const Text(AppStrings.pdfReport),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('PDF V2\'de aktif olacak.'),
-                        ),
-                      );
-                    },
-                  ),
-                ),
               ],
             );
           },

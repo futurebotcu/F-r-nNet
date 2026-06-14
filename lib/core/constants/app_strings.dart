@@ -5,7 +5,7 @@ class AppStrings {
 
   // Marka
   static const String appName = 'FırınNet';
-  static const String appTagline = 'Fırıncının cep defteri';
+  static const String appTagline = 'Fırıncının dijital ağı';
   static const String appPitch = 'Fırıncının dijital ağı';
   static const String appLongPitch =
       'Atölyenden tedariğine, sektöründen müşterine — bir ağa bağlı.';
@@ -577,7 +577,7 @@ class AppStrings {
   static const String deStatusPartial = 'Kısmi';
   static const String deStatusPaid = 'Kapandı';
   static const String deStatusOverdue = 'Gecikti';
-  static const String deMarkPaid = 'Kapandı işaretle';
+  static const String deMarkPaid = 'Kapandı olarak işaretle';
   static const String deDueDate = 'Vade tarihi';
   static const String deNoDueDate = 'Vade yok';
   static const String deCustomCategoryHint = 'Örn. özel un, katkı karışımı';
@@ -1323,7 +1323,7 @@ class AppStrings {
   // Ticari kartlar
   static const String cardBakeryPanel = 'Fırın Paneli';
   static const String cardBakeryPanelSub = 'Üretim, fire, gün sonu';
-  static const String cardDealerPanel = 'Bayi Paneli';
+  static const String cardDealerPanel = 'Bayi Defteri';
   static const String cardDealerPanelSub = 'Teslimat, tahsilat, hesap';
   static const String cardMyListings = 'İlanlarım';
   static const String cardMyListingsSub = 'Yayında olan iş ilanların';
@@ -1445,7 +1445,7 @@ class AppStrings {
       'Bayilerini ekledikçe teslimat, iade ve tahsilatları '
       'tek yerden yöneteceksin.';
   static const String dealerListEmptyCta = 'İlk bayiyi ekle';
-  static const String dealerCardBalanceLabel = 'Bakiye';
+  static const String dealerCardBalanceLabel = 'Açık bakiye';
   static const String dealerCardCreditLabel = 'Alacak';
   static const String dealerCardClosedLabel = 'Kapalı';
   static const String dealerCardLastTxLabel = 'Son hareket';
@@ -1513,7 +1513,7 @@ class AppStrings {
   static const String dealerDetailLoadError =
       'Bayi bilgileri yüklenemedi. Bağlantını kontrol edip tekrar dene.';
   static const String dealerRetry = 'Tekrar dene';
-  static const String dealerDetailHeroLabel = 'Cari bakiye';
+  static const String dealerDetailHeroLabel = 'Güncel açık bakiye';
   static const String dealerDetailHeroDebt = 'BORÇ';
   static const String dealerDetailHeroCredit = 'ALACAK';
   static const String dealerDetailHeroClosed = 'KAPALI';
@@ -1537,6 +1537,15 @@ class AppStrings {
   static const String dealerActionAddPrice = 'Fiyat ekle';
   static const String dealerActionReport = 'Rapor';
   static const String dealerActionQuickPayment = 'Hızlı Tahsilat';
+  // Bayi detayı aksiyon sadeleştirme — ikincil aksiyonlar "Diğer" sheet'inde.
+  static const String dealerActionMore = 'Diğer';
+  static const String dealerActionMoreSheetTitle = 'Diğer işlemler';
+  static const String dealerActionQuickPaymentHint =
+      'Tüm borcu tek dokunuşla kapat';
+  static const String dealerActionAdjustmentHint =
+      'Bakiyeyi elle düzelt (devir, sayım farkı)';
+  static const String dealerActionShareHint =
+      'Hesap özetini metin veya PDF olarak paylaş';
 
   // Cash tendered calculator (Sprint 6C donor lift)
   static const String cashCalcLabelPaid = 'Verilen';
@@ -1553,7 +1562,7 @@ class AppStrings {
 
   // Bayi Defteri Genel Bakış (Sprint 6B)
   static const String dealerOverviewActiveDealersLabel = 'AKTİF BAYİ';
-  static const String dealerOverviewKpiOpenBalance = 'Açık Alacaklar';
+  static const String dealerOverviewKpiOpenBalance = 'Açık Bakiye';
   static const String dealerOverviewKpiTodayDelivery = 'Bugün Teslimat';
   static const String dealerOverviewKpiTodayPayment = 'Bugün Tahsilat';
   static const String dealerOverviewKpiMonthTxCount = 'Bu Ay İşlem';
@@ -1575,8 +1584,10 @@ class AppStrings {
   static const String dealerPulseMetricDelivery = 'Teslimat';
   static const String dealerPulseMetricPayment = 'Tahsilat';
   static const String dealerPulseMetricNetChange = 'Net Değişim';
-  static const String dealerPulseBaselineSuffix = 'baseline';
-  static const String dealerPulseInsufficientTitle = 'Pulse hesaplanamıyor';
+  static const String dealerPulseBaselineSuffix = 'ortalama';
+  static const String dealerPulseInsufficientTitle = 'Nabız hesaplanamıyor';
+  // Nabız verisi okunamazsa (repo/ağ hatası) gösterilen kullanıcı dostu metin.
+  static const String dealerPulseError = 'Nabız bilgisi hesaplanamadı.';
   static const String dealerPulseInsufficientBody =
       'En az 3 günlük geçmiş hareket olduğunda nabız bilgisi gelir.';
   static const String dealerPulseFlat = 'normalde';
@@ -1863,5 +1874,6 @@ class AppStrings {
   static const String dealerSharePdfBuilding = 'PDF hazırlanıyor…';
   static const String dealerSharePdfButton = 'PDF Oluştur ve Paylaş';
   static const String dealerSharePdfSuffix = ' ve paylaşım açıldı.';
-  static const String dealerSharePdfErr = 'PDF oluşturulamadı: ';
+  static const String dealerSharePdfErr =
+      'PDF oluşturulamadı. Lütfen tekrar dene.';
 }

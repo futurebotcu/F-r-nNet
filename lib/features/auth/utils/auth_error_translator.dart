@@ -51,7 +51,7 @@ String translateAuthError(Object error) {
     if (msg.contains('rate limit') || code == 'over_request_rate_limit') {
       return 'Çok fazla deneme. Birkaç dakika sonra tekrar dene.';
     }
-    return 'Sunucu hatası: ${error.message}';
+    return 'Sunucu hatası. Lütfen biraz sonra tekrar dene.';
   }
   // 5xx veya geçici fetch hatası: gotrue retryable olarak işaretler.
   if (error is AuthRetryableFetchException) {
@@ -63,7 +63,7 @@ String translateAuthError(Object error) {
     return 'Sunucu bağlantısı yapılandırılamadı. Lütfen daha sonra tekrar dene.';
   }
   if (error is AuthException) {
-    return error.message.isEmpty ? 'Kimlik doğrulama hatası.' : error.message;
+    return 'Kimlik doğrulama hatası. Lütfen tekrar dene.';
   }
   final s = error.toString();
   if (s.contains('SocketException') || s.contains('Failed host lookup')) {

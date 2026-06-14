@@ -729,6 +729,9 @@ class _ActionsRow extends ConsumerWidget {
       orElse: () => 0.0,
     );
 
+    // Ana aksiyonlar önde (Ürün Ver / Ödeme Al / İade Al / Rapor); ikincil
+    // aksiyonlar (Hızlı Tahsilat / Düzeltme / Hesap Paylaş) "Diğer" sheet'inde.
+    // Küçük ekranda 7 chip kalabalığı azaldı; en önemli işlemler ilk bakışta.
     return Wrap(
       spacing: AppSpacing.s,
       runSpacing: AppSpacing.s,
@@ -739,35 +742,16 @@ class _ActionsRow extends ConsumerWidget {
           onTap: () => context.push('${AppRoutes.dealers}/$dealerId/delivery'),
         ),
         _ActionChip(
-          icon: Icons.assignment_returned_rounded,
-          label: AppStrings.dealerActionReturn,
-          accent: AppColors.info,
-          onTap: () => context.push('${AppRoutes.dealers}/$dealerId/return'),
-        ),
-        _ActionChip(
           icon: Icons.payments_rounded,
           label: AppStrings.dealerActionPayment,
           accent: AppColors.success,
           onTap: () => context.push('${AppRoutes.dealers}/$dealerId/payment'),
         ),
-        if (hasDebt)
-          _ActionChip(
-            icon: Icons.flash_on_rounded,
-            label: AppStrings.dealerActionQuickPayment,
-            accent: AppColors.success,
-            onTap: () => QuickPaymentSheet.show(
-              context: context,
-              dealerId: dealerId,
-              dealerName: dealerName,
-              currentBalance: currentBalance,
-            ),
-          ),
         _ActionChip(
-          icon: Icons.tune_rounded,
-          label: AppStrings.dealerActionAdjustment,
-          accent: AppColors.copper,
-          onTap: () =>
-              context.push('${AppRoutes.dealers}/$dealerId/adjustment'),
+          icon: Icons.assignment_returned_rounded,
+          label: AppStrings.dealerActionReturn,
+          accent: AppColors.info,
+          onTap: () => context.push('${AppRoutes.dealers}/$dealerId/return'),
         ),
         _ActionChip(
           icon: Icons.analytics_outlined,
@@ -776,12 +760,55 @@ class _ActionsRow extends ConsumerWidget {
           onTap: () => context.push(AppRoutes.dealerReport(dealerId)),
         ),
         _ActionChip(
-          icon: Icons.ios_share_rounded,
-          label: AppStrings.dealerActionShare,
-          accent: AppColors.copper,
-          onTap: () => context.push('${AppRoutes.dealers}/$dealerId/share'),
+          icon: Icons.more_horiz_rounded,
+          label: AppStrings.dealerActionMore,
+          onTap: () => _showMoreActions(
+            context,
+            dealerId: dealerId,
+            hasDebt: hasDebt,
+            dealerName: dealerName,
+            currentBalance: currentBalance,
+          ),
         ),
       ],
+    );
+  }
+
+  /// İkincil aksiyonları premium bottom sheet'te toplar — route/davranış
+  /// değişmez, yalnız yerleşim. "Diğer" chip'inden açılır.
+  void _showMoreActions(
+    BuildContext context, {
+    required String dealerId,
+    required bool hasDebt,
+    required String dealerName,
+    required double currentBalance,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (sheetCtx) => _MoreActionsSheet(
+        hasDebt: hasDebt,
+        onQuickPayment: () {
+          Navigator.of(sheetCtx).pop();
+          QuickPaymentSheet.show(
+            context: context,
+            dealerId: dealerId,
+            dealerName: dealerName,
+            currentBalance: currentBalance,
+          );
+        },
+        onAdjustment: () {
+          Navigator.of(sheetCtx).pop();
+          context.push('${AppRoutes.dealers}/$dealerId/adjustment');
+        },
+        onShare: () {
+          Navigator.of(sheetCtx).pop();
+          context.push('${AppRoutes.dealers}/$dealerId/share');
+        },
+      ),
     );
   }
 }
@@ -825,6 +852,173 @@ class _ActionChip extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────── "Diğer" actions sheet
+
+/// İkincil bayi aksiyonları için premium bottom sheet (açıklamalı satırlar).
+/// Yalnız bu dosyada `_showMoreActions` ile construct edilir.
+class _MoreActionsSheet extends StatelessWidget {
+  const _MoreActionsSheet({
+    required this.hasDebt,
+    required this.onQuickPayment,
+    required this.onAdjustment,
+    required this.onShare,
+  });
+
+  final bool hasDebt;
+  final VoidCallback onQuickPayment;
+  final VoidCallback onAdjustment;
+  final VoidCallback onShare;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pageH,
+          AppSpacing.m,
+          AppSpacing.pageH,
+          AppSpacing.l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppSpacing.m),
+                decoration: BoxDecoration(
+                  color: AppColors.borderHairline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              AppStrings.dealerActionMoreSheetTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.m),
+            // Hızlı Tahsilat yalnız borçlu bayide — "Ödeme Al" formundan farkı
+            // alt metinde net: tüm borcu tek dokunuşla kapatır.
+            if (hasDebt) ...[
+              _MoreActionTile(
+                icon: Icons.flash_on_rounded,
+                accent: AppColors.success,
+                title: AppStrings.dealerActionQuickPayment,
+                subtitle: AppStrings.dealerActionQuickPaymentHint,
+                onTap: onQuickPayment,
+              ),
+              const SizedBox(height: AppSpacing.s),
+            ],
+            _MoreActionTile(
+              icon: Icons.tune_rounded,
+              accent: AppColors.info,
+              title: AppStrings.dealerActionAdjustment,
+              subtitle: AppStrings.dealerActionAdjustmentHint,
+              onTap: onAdjustment,
+            ),
+            const SizedBox(height: AppSpacing.s),
+            _MoreActionTile(
+              icon: Icons.ios_share_rounded,
+              accent: AppColors.softGold,
+              title: AppStrings.dealerActionShare,
+              subtitle: AppStrings.dealerActionShareHint,
+              onTap: onShare,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MoreActionTile extends StatelessWidget {
+  const _MoreActionTile({
+    required this.icon,
+    required this.accent,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color accent;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(AppRadius.m),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.m),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            border: Border.all(color: AppColors.borderHairline, width: 0.6),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: accent, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14.5,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+                size: 20,
               ),
             ],
           ),

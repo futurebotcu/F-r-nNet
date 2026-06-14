@@ -15,6 +15,25 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
 
+/// PDF dosya adı için Türkçe karakterleri ASCII'ye çevirip slug üretir
+/// (ş→s, ğ→g, ı→i, ö→o, ü→u, ç→c). Eski regex Türkçe harfleri siliyordu
+/// ("Şahin Fırın" → "ahin_f_r_n"); WhatsApp'ta okunur dosya adı için.
+String _asciiSlug(String input) {
+  const map = <String, String>{
+    'ş': 's', 'Ş': 's', 'ğ': 'g', 'Ğ': 'g', 'ı': 'i', 'İ': 'i',
+    'ö': 'o', 'Ö': 'o', 'ü': 'u', 'Ü': 'u', 'ç': 'c', 'Ç': 'c',
+  };
+  final buf = StringBuffer();
+  for (final ch in input.split('')) {
+    buf.write(map[ch] ?? ch);
+  }
+  return buf
+      .toString()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+      .replaceAll(RegExp(r'^_+|_+$'), '');
+}
+
 class DealerShareScreen extends ConsumerStatefulWidget {
   const DealerShareScreen({super.key, required this.dealerId});
 
@@ -187,8 +206,13 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
         regularFont: regular,
         boldFont: bold,
       );
-      final fileName =
-          'firinnet_${dealer.name.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), "_")}_hesap_ozeti.pdf';
+      final slug = _asciiSlug(dealer.name);
+      final namePart = slug.isEmpty ? 'bayi' : slug;
+      final now = DateTime.now();
+      final datePart = '${now.year}-'
+          '${now.month.toString().padLeft(2, '0')}-'
+          '${now.day.toString().padLeft(2, '0')}';
+      final fileName = 'firinnet_${namePart}_hesap_ozeti_$datePart.pdf';
       await Share.shareXFiles([
         XFile.fromData(bytes, name: fileName, mimeType: 'application/pdf'),
       ], subject: 'FırınNet — ${dealer.name} hesap özeti');
@@ -198,10 +222,10 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
             'PDF hazırlandı (${(bytes.length / 1024).toStringAsFixed(1)} KB)'
             '${AppStrings.dealerSharePdfSuffix}',
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppStrings.dealerSharePdfErr}$e')),
+        const SnackBar(content: Text(AppStrings.dealerSharePdfErr)),
       );
     } finally {
       if (mounted) setState(() => _pdfBusy = false);
@@ -222,7 +246,7 @@ class _Header extends StatelessWidget {
         ? 'ALACAK'
         : 'KAPALI';
     final color = balance > 0
-        ? AppColors.copper
+        ? AppColors.textPrimary
         : balance < 0
         ? AppColors.success
         : AppColors.softGold;

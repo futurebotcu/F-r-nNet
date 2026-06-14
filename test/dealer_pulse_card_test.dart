@@ -138,8 +138,8 @@ void main() {
       // NABIZ başlığı
       expect(find.text(AppStrings.dealerPulseTitle), findsOneWidget);
 
-      // "5 günlük baseline" satırı
-      expect(find.text('5 günlük baseline'), findsOneWidget);
+      // "5 günlük ortalama" satırı
+      expect(find.text('5 günlük ortalama'), findsOneWidget);
     });
 
     testWidgets('today > baseline → yukarı arrow + pozitif yüzde',

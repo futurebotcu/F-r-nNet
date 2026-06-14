@@ -32,6 +32,8 @@ class _DealerReturnFormScreenState
   final _quantity = TextEditingController();
   final _unitPrice = TextEditingController();
   final _note = TextEditingController();
+  // Çift gönderim guard'ı — diğer dealer formlarıyla aynı pattern.
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -74,6 +76,8 @@ class _DealerReturnFormScreenState
       await showAuthRequiredSheet(context, ref);
       return;
     }
+    if (_saving) return;
+    setState(() => _saving = true);
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
     try {
@@ -105,11 +109,13 @@ class _DealerReturnFormScreenState
       // V1.4 P1.7 — Defense-in-depth: pre-check sonrası repo katmanı yine
       // guest exception atarsa auth sheet aç.
       if (!mounted) return;
+      setState(() => _saving = false);
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       // V1.4 P1.7 — Ham PostgrestException/network UI'a sızmaz. Form AÇIK
       // kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin.
       if (!mounted) return;
+      setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.dealerReturnSaveError)),
       );
@@ -205,9 +211,9 @@ class _DealerReturnFormScreenState
             ),
             const SizedBox(height: AppSpacing.l),
             AppPrimaryButton(
-              label: 'Kaydet',
+              label: _saving ? 'Kaydediliyor…' : 'Kaydet',
               icon: Icons.check_rounded,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
             ),
           ],
         ),
