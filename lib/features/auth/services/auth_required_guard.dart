@@ -246,12 +246,16 @@ class _AuthRequiredSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.l),
+            // Google-only auth: tek birincil aksiyon — "Google ile devam et".
+            // Eski "Hesap oluştur" (roleSelect → e-posta/şifre signup) ve
+            // "Giriş yap" (login → e-posta/şifre) yolları kaldırıldı; guest
+            // write-gate artık yalnız Google girişine (AuthEntry) yönlendirir.
             SizedBox(
-              height: 52,
+              height: 54,
               child: FilledButton.icon(
-                onPressed: () => _goRoleSelect(context),
-                icon: const Icon(Icons.person_add_alt_1_rounded),
-                label: const Text(AppStrings.authRequiredCreate),
+                onPressed: () => _goGoogleAuth(context),
+                icon: const Icon(Icons.account_circle_rounded),
+                label: const Text(AppStrings.authContinueWithGoogle),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
                   foregroundColor: AppColors.surface,
@@ -261,29 +265,6 @@ class _AuthRequiredSheet extends StatelessWidget {
                   textStyle: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.s),
-            SizedBox(
-              height: 52,
-              child: OutlinedButton.icon(
-                onPressed: () => _goLogin(context),
-                icon: const Icon(Icons.login_rounded),
-                label: const Text(AppStrings.authRequiredSignIn),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.softGold,
-                  side: BorderSide(
-                    color: AppColors.copper.withValues(alpha: 0.55),
-                    width: 0.8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -308,18 +289,15 @@ class _AuthRequiredSheet extends StatelessWidget {
     );
   }
 
-  Future<void> _goRoleSelect(BuildContext context) async {
-    // Hesap oluştur seçilirse guest flag temizlenir.
+  /// Google-only auth — guest write-gate'ten Google giriş ekranına yönlendir.
+  /// AuthEntry'de "Google ile devam et" başarılı olursa session gelir ve
+  /// kullanıcı engellenen write aksiyonunu tekrar deneyebilir. Misafir kalmak
+  /// isterse AuthEntry'deki "Misafir olarak keşfet" guest flag'ini geri açar.
+  Future<void> _goGoogleAuth(BuildContext context) async {
+    // Giriş yolu seçildi → guest flag temizlenir.
     await parentRef.read(guestModeProvider.notifier).setGuest(false);
     if (!context.mounted) return;
     Navigator.of(context).pop();
-    context.push(AppRoutes.roleSelect);
-  }
-
-  Future<void> _goLogin(BuildContext context) async {
-    await parentRef.read(guestModeProvider.notifier).setGuest(false);
-    if (!context.mounted) return;
-    Navigator.of(context).pop();
-    context.push(AppRoutes.login);
+    context.push(AppRoutes.authEntry);
   }
 }

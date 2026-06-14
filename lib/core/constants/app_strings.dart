@@ -777,6 +777,46 @@ class AppStrings {
       'Apple ile giriş yakında eklenecek.';
   static const String aboutVersionLabel = 'Sürüm';
 
+  // ─────────────────────── Google-only auth + legal/support polish
+  // Auth giriş ekranı (Google birincil): hero copy + misafir CTA.
+  static const String authEntryHeroTitle = 'Fırıncının dijital ağı';
+  static const String authEntryHeroSubtitle =
+      'İşini takip et, sektörle bağlantıda kal.';
+  static const String authEntryGoogleHint =
+      'FırınNet\'e Google hesabınla güvenli şekilde devam et.';
+  static const String authEntryGuestExplore = 'Misafir olarak keşfet';
+
+  // Topluluk Kuralları (yasal ekran + ayarlar tile)
+  static const String legalCommunityTitle = 'Topluluk Kuralları';
+  static const String settingsCommunity = 'Topluluk Kuralları';
+  static const String settingsCommunitySubtitle =
+      'FırınNet\'i güvenli ve faydalı tutan ilkeler.';
+
+  // Hesap ve Veri Silme (yasal bilgilendirme ekranı + ayarlar tile)
+  static const String legalAccountDeletionTitle = 'Hesap ve Veri Silme';
+  static const String settingsAccountDeletion = 'Hesap ve veri silme';
+  static const String settingsAccountDeletionSubtitle =
+      'Hesabını ve verilerini nasıl silersin?';
+
+  // Destek ve Yardım
+  static const String supportTitle = 'Destek ve Yardım';
+  static const String supportSubtitle =
+      'FırınNet kullanımı, hesap işlemleri ve geri bildirimlerin için '
+      'buradan destek alabilirsin.';
+  static const String settingsSupport = 'Destek ve Yardım';
+  static const String settingsSupportSubtitle =
+      'Sık sorulan sorular ve bize ulaşma.';
+  static const String supportFaqSection = 'Sık sorulan sorular';
+  static const String supportContactSection = 'Bize ulaşın';
+  static const String supportContactDesc =
+      'Sorun, öneri veya geri bildirimin için e-posta gönderebilirsin. '
+      'Genelde 1-2 iş günü içinde dönüş yapılır.';
+  static const String supportContactCta = 'Destek e-postası gönder';
+  static const String supportEmail = 'fatihkartal75@gmail.com';
+  static const String supportEmailSubject = 'FırınNet Destek Talebi';
+  static const String supportMailError =
+      'E-posta uygulaması açılamadı. Destek adresi: ';
+
   // V1 — Jobs gerçek veri durumları (P0 mock temizliği)
   static const String jobsLookingEmpty =
       'Henüz aktif iş arayan ilanı yok. İlk ilanı sen ver veya daha sonra tekrar bak.';

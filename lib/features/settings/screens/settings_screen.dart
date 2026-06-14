@@ -14,11 +14,12 @@ import '../../auth/services/auth_actions.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../widgets/settings_tile.dart';
 
-/// V1.4 — Sade ve gerçek Settings ekranı.
+/// Sade ve gerçek Settings ekranı.
 ///
-/// 4 section: Hesap, Güvenlik ve Veri, Yasal, Uygulama. Sahte/çalışmayan
-/// (bildirim, tema, dil, destek, yardım merkezi, Apple ayarı) tile EKLENMEZ.
-/// Destek/help URL ve hesap silme web URL kararı yokken Phase 2'ye ertelendi.
+/// 4 section: Hesap, Güvenlik ve Veri, Yasal, Uygulama. Yasal bölümünde
+/// Gizlilik / Kullanım Şartları / Topluluk Kuralları / Hesap & Veri Silme;
+/// Uygulama bölümünde gerçek (mailto) Destek ve Yardım + Hakkında. Sahte/
+/// çalışmayan tile (bildirim/tema/dil) eklenmez.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -152,6 +153,21 @@ class SettingsScreen extends ConsumerWidget {
                       title: AppStrings.settingsTerms,
                       onTap: () => context.push(AppRoutes.legalTerms),
                     ),
+                    const _TileDivider(),
+                    SettingsTile(
+                      icon: Icons.groups_2_outlined,
+                      title: AppStrings.settingsCommunity,
+                      subtitle: AppStrings.settingsCommunitySubtitle,
+                      onTap: () => context.push(AppRoutes.legalCommunity),
+                    ),
+                    const _TileDivider(),
+                    SettingsTile(
+                      icon: Icons.auto_delete_outlined,
+                      title: AppStrings.settingsAccountDeletion,
+                      subtitle: AppStrings.settingsAccountDeletionSubtitle,
+                      onTap: () =>
+                          context.push(AppRoutes.legalAccountDeletion),
+                    ),
                   ],
                 ),
               ),
@@ -163,11 +179,22 @@ class SettingsScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: PremiumCard(
                 padding: EdgeInsets.zero,
-                child: SettingsTile(
-                  icon: Icons.local_fire_department_outlined,
-                  title: AppStrings.settingsAbout,
-                  subtitle: AppStrings.settingsAboutSubtitle,
-                  onTap: () => context.push(AppRoutes.settingsAbout),
+                child: Column(
+                  children: [
+                    SettingsTile(
+                      icon: Icons.help_outline_rounded,
+                      title: AppStrings.settingsSupport,
+                      subtitle: AppStrings.settingsSupportSubtitle,
+                      onTap: () => context.push(AppRoutes.settingsSupport),
+                    ),
+                    const _TileDivider(),
+                    SettingsTile(
+                      icon: Icons.local_fire_department_outlined,
+                      title: AppStrings.settingsAbout,
+                      subtitle: AppStrings.settingsAboutSubtitle,
+                      onTap: () => context.push(AppRoutes.settingsAbout),
+                    ),
+                  ],
                 ),
               ),
             ),
