@@ -35,13 +35,13 @@ class AppStrings {
   static const String roleSelectTitle = 'Hangi rol senin için?';
   static const String roleSelectSubtitle =
       'Sektördeki yerini seç — formdaki alanları rolüne göre düzenleriz.';
-  static const String roleCommercialTitle = 'Ticari';
+  static const String roleCommercialTitle = accountCommercial;
   static const String roleCommercialSub =
       'Fırın işletmesi, bayi ve üretim yönetimi';
-  static const String roleIndividualTitle = 'Bireysel';
+  static const String roleIndividualTitle = accountIndividual;
   static const String roleIndividualSub =
       'Usta profili, iş arama ve reçeteler';
-  static const String roleWholesalerTitle = 'Toptancı';
+  static const String roleWholesalerTitle = accountWholesaler;
   static const String roleWholesalerSub =
       'Müşteri, ürün, fiyat ve teslimat yönetimi';
 
@@ -106,9 +106,15 @@ class AppStrings {
 
   // Profile
   static const String accountType = 'Hesap türü';
-  static const String accountCommercial = 'Ticari';
-  static const String accountIndividual = 'Bireysel';
-  static const String accountWholesaler = 'Toptancı';
+  // ── Rol / hesap türü etiketleri — TEK KAYNAK. Picker, profil düzenleme,
+  // rozet, CV merkezi, role-select ve AccountType.label hepsi buradan beslenir.
+  static const String accountCommercial = 'Fırın / İşletme';
+  static const String accountIndividual = 'Bireysel / Usta';
+  static const String accountWholesaler = 'Toptancı / Tedarikçi';
+  // Dar alanlar (panel eyebrow, kompakt rozet) için kısa varyant.
+  static const String accountCommercialShort = 'Fırın';
+  static const String accountIndividualShort = 'Bireysel';
+  static const String accountWholesalerShort = 'Toptancı';
   static const String displayName = 'Profil adı';
   static const String city = 'Şehir';
   static const String roleBadge = 'Meslek rozeti';
@@ -899,9 +905,9 @@ class AppStrings {
   static const String profileWorkerCitiesLabel = 'Tercih edilen şehirler';
   static const String profileWorkerShiftLabel = 'Vardiya tercihi';
   static const Map<String, String> profileAccountTypeLabels = <String, String>{
-    'commercial': 'Ticari',
-    'individual': 'Bireysel',
-    'wholesaler': 'Toptancı',
+    'commercial': accountCommercial,
+    'individual': accountIndividual,
+    'wholesaler': accountWholesaler,
   };
 
   // Professional Profile Center Sprint 1 — çalışma geçmişi + iş arama + durum.
@@ -949,9 +955,9 @@ class AppStrings {
   static const String cvOpenJobSeekCta = 'CV\'den İş Arıyorum ilanı aç';
   static const String cvUpdateJobSeekCta = 'Aktif iş ilanını düzenle';
   static const Map<String, String> cvEntryTypeLabels = <String, String>{
-    'individual': 'Bireysel / Usta',
-    'commercial': 'Ticari / İşletme',
-    'wholesaler': 'Toptancı',
+    'individual': accountIndividual,
+    'commercial': accountCommercial,
+    'wholesaler': accountWholesaler,
     'other': 'Diğer',
   };
   static const String profileStatusSeeking = 'İş arıyor';

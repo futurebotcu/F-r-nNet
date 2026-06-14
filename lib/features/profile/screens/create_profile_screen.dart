@@ -592,7 +592,7 @@ class _AccountTypePicker extends StatelessWidget {
       children: [
         _AccountTypeCard(
           icon: Icons.storefront_rounded,
-          title: 'Fırın / İşletme',
+          title: AppStrings.accountCommercial,
           subtitle: AppStrings.roleCommercialSub,
           isSelected: selected == AccountType.commercial,
           onTap: () => onChanged(AccountType.commercial),
@@ -600,7 +600,7 @@ class _AccountTypePicker extends StatelessWidget {
         const SizedBox(height: 8),
         _AccountTypeCard(
           icon: Icons.person_rounded,
-          title: 'Bireysel / Usta',
+          title: AppStrings.accountIndividual,
           subtitle: AppStrings.roleIndividualSub,
           isSelected: selected == AccountType.individual,
           onTap: () => onChanged(AccountType.individual),
@@ -608,7 +608,7 @@ class _AccountTypePicker extends StatelessWidget {
         const SizedBox(height: 8),
         _AccountTypeCard(
           icon: Icons.local_shipping_rounded,
-          title: 'Toptancı / Tedarikçi',
+          title: AppStrings.accountWholesaler,
           subtitle: AppStrings.roleWholesalerSub,
           isSelected: selected == AccountType.wholesaler,
           onTap: () => onChanged(AccountType.wholesaler),

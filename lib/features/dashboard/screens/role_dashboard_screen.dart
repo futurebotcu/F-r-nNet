@@ -165,7 +165,7 @@ class _RoleBadgeStrip extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  account.label.toUpperCase(),
+                  account.shortLabel.toUpperCase(),
                   style: const TextStyle(
                     color: AppColors.softGold,
                     fontWeight: FontWeight.w800,

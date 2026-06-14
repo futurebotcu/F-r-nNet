@@ -1,3 +1,5 @@
+import '../../../core/constants/app_strings.dart';
+
 /// Kullanıcı hesap türü. Aynı uygulamayı paylaşan üç farklı rolün
 /// dashboard kartları bu enum üzerinden ayrışır.
 ///
@@ -6,15 +8,27 @@
 enum AccountType { commercial, individual, wholesaler }
 
 extension AccountTypeLabel on AccountType {
-  /// Profil ekranı ve onboarding chip'lerinde gösterilen Türkçe etiket.
+  /// Kullanıcıya görünen rol etiketi — TEK KAYNAK (AppStrings).
   String get label {
     switch (this) {
       case AccountType.commercial:
-        return 'Ticari';
+        return AppStrings.accountCommercial;
       case AccountType.individual:
-        return 'Bireysel';
+        return AppStrings.accountIndividual;
       case AccountType.wholesaler:
-        return 'Toptancı';
+        return AppStrings.accountWholesaler;
+    }
+  }
+
+  /// Dar alanlar (panel eyebrow, kompakt rozet) için kısa varyant.
+  String get shortLabel {
+    switch (this) {
+      case AccountType.commercial:
+        return AppStrings.accountCommercialShort;
+      case AccountType.individual:
+        return AppStrings.accountIndividualShort;
+      case AccountType.wholesaler:
+        return AppStrings.accountWholesalerShort;
     }
   }
 }

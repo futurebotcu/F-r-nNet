@@ -166,11 +166,11 @@ void main() {
     });
 
     test('Role select rol açıklamaları mevcut', () {
-      expect(AppStrings.roleCommercialTitle, 'Ticari');
+      expect(AppStrings.roleCommercialTitle, 'Fırın / İşletme');
       expect(AppStrings.roleCommercialSub, contains('Fırın'));
-      expect(AppStrings.roleIndividualTitle, 'Bireysel');
+      expect(AppStrings.roleIndividualTitle, 'Bireysel / Usta');
       expect(AppStrings.roleIndividualSub, contains('Usta'));
-      expect(AppStrings.roleWholesalerTitle, 'Toptancı');
+      expect(AppStrings.roleWholesalerTitle, 'Toptancı / Tedarikçi');
       expect(AppStrings.roleWholesalerSub, contains('Müşteri'));
     });
   });
