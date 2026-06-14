@@ -218,8 +218,9 @@ class _AuthRequiredSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                   child: const Icon(
+                    // Limon gradient zemin üzerinde koyu ink (beyaz okunmuyordu).
                     Icons.local_fire_department_rounded,
-                    color: AppColors.surface,
+                    color: AppColors.brandInk,
                     size: 26,
                   ),
                 ),
@@ -257,8 +258,10 @@ class _AuthRequiredSheet extends StatelessWidget {
                 icon: const Icon(Icons.account_circle_rounded),
                 label: const Text(AppStrings.authContinueWithGoogle),
                 style: FilledButton.styleFrom(
+                  // Limon zemin üzerinde koyu ink yazı/ikon (sarı-üstü-beyaz
+                  // okunmuyordu); AppPrimaryButton ile aynı dark-on-lemon dili.
                   backgroundColor: AppColors.copper,
-                  foregroundColor: AppColors.surface,
+                  foregroundColor: AppColors.brandInk,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),

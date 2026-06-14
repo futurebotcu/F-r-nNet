@@ -96,9 +96,12 @@ void main() {
 
     test('authenticated → /u/:id vitrin profiline yönlenir', () {
       expect(
-        src.contains("context.go('\${AppRoutes.userPublicProfile}/\${user.id}')"),
+        src.contains(
+          "context.pushReplacement('\${AppRoutes.userPublicProfile}/\${user.id}')",
+        ),
         isTrue,
-        reason: '/profile kendi vitrin profiline (SocialProfilePage) yönlenir',
+        reason: '/profile kendi vitrin profiline (SocialProfilePage) '
+            'pushReplacement ile yönlenir (back-stack korunur)',
       );
     });
 

@@ -185,15 +185,21 @@ void main() {
           .readAsStringSync();
     });
 
-    test('ProfileScreen kendi /u/<id> route\'una go eder', () {
+    test('ProfileScreen kendi /u/<id> route\'una pushReplacement eder '
+        '(back-stack korunur)', () {
       expect(
-        src.contains(r"context.go('${AppRoutes.userPublicProfile}/${user.id}')"),
+        src.contains(
+          r"context.pushReplacement('${AppRoutes.userPublicProfile}/${user.id}')",
+        ),
         isTrue,
       );
     });
 
-    test('Guest ise /auth\'a yönlendirir', () {
-      expect(src.contains('context.go(AppRoutes.authEntry)'), isTrue);
+    test('Guest ise /auth\'a yönlendirir (pushReplacement)', () {
+      expect(
+        src.contains('context.pushReplacement(AppRoutes.authEntry)'),
+        isTrue,
+      );
     });
 
     test('Eski public görünüm kodu kaldırıldı', () {

@@ -762,7 +762,8 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        // Dokunma hedefi ~44px (önce ~34): dikey padding 8 → 11.
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,

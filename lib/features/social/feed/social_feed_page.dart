@@ -193,29 +193,39 @@ class ProfileAvatarAction extends ConsumerWidget {
       }
     }
 
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(
-        side: BorderSide(color: AppColors.borderHairline, width: 0.6),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          height: 30,
-          width: 30,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.brandLemonPale,
-          ),
-          child: Text(
-            initial,
-            style: const TextStyle(
-              color: AppColors.brandInk,
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
+    // Görsel avatar 30px korunur; dokunma alanı 44px'e genişletildi
+    // (erişilebilirlik). Hairline border Material şeklinden iç daireye taşındı.
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Center(
+            child: Container(
+              height: 30,
+              width: 30,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.brandLemonPale,
+                border: Border.all(
+                  color: AppColors.borderHairline,
+                  width: 0.6,
+                ),
+              ),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: AppColors.brandInk,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ),
         ),

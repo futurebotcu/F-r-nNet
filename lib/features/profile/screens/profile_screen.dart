@@ -39,13 +39,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (_redirected) return;
     final user = ref.read(currentAuthUserProvider);
     if (!mounted) return;
+    // pushReplacement (go DEĞİL): bu ekran bir redirector; `/profile` genelde
+    // Panel kartından / Feed avatarından PUSH ile açılır. `context.go` tüm
+    // back-stack'i sıfırlardı → hedef ekranda geri tuşu uygulamadan çıkarırdı.
+    // pushReplacement yalnız bu redirector sayfasını değiştirir; altındaki
+    // shell/Panel korunur → AppBar + sistem geri tuşu önceki ekrana döner.
     if (user == null) {
       _redirected = true;
-      context.go(AppRoutes.authEntry);
+      context.pushReplacement(AppRoutes.authEntry);
       return;
     }
     _redirected = true;
-    context.go('${AppRoutes.userPublicProfile}/${user.id}');
+    context.pushReplacement('${AppRoutes.userPublicProfile}/${user.id}');
   }
 
   @override
