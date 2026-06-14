@@ -804,10 +804,6 @@ class _ActionsRow extends ConsumerWidget {
           Navigator.of(sheetCtx).pop();
           context.push('${AppRoutes.dealers}/$dealerId/adjustment');
         },
-        onShare: () {
-          Navigator.of(sheetCtx).pop();
-          context.push('${AppRoutes.dealers}/$dealerId/share');
-        },
       ),
     );
   }
@@ -870,13 +866,11 @@ class _MoreActionsSheet extends StatelessWidget {
     required this.hasDebt,
     required this.onQuickPayment,
     required this.onAdjustment,
-    required this.onShare,
   });
 
   final bool hasDebt;
   final VoidCallback onQuickPayment;
   final VoidCallback onAdjustment;
-  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -931,14 +925,6 @@ class _MoreActionsSheet extends StatelessWidget {
               title: AppStrings.dealerActionAdjustment,
               subtitle: AppStrings.dealerActionAdjustmentHint,
               onTap: onAdjustment,
-            ),
-            const SizedBox(height: AppSpacing.s),
-            _MoreActionTile(
-              icon: Icons.ios_share_rounded,
-              accent: AppColors.softGold,
-              title: AppStrings.dealerActionShare,
-              subtitle: AppStrings.dealerActionShareHint,
-              onTap: onShare,
             ),
           ],
         ),
@@ -1136,6 +1122,8 @@ class DealerPriceSheet extends ConsumerStatefulWidget {
 class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
   String? _product;
   final _price = TextEditingController();
+  // G-01 — çift gönderim guard'ı (iade/quick-payment formlarıyla aynı pattern).
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -1158,6 +1146,8 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
+    if (_saving) return;
+    setState(() => _saving = true);
     final repo = ref.read(dealerRepositoryProvider);
     final now = DateTime.now();
     try {
@@ -1184,9 +1174,11 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
       // Defense-in-depth: pre-check geçtikten sonra repo katmanı guest
       // exception atarsa sessizce yutmayalım — auth sheet aç.
       if (!mounted) return;
+      setState(() => _saving = false);
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!mounted) return;
+      setState(() => _saving = false);
       // Sheet AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tek tıkla
       // tekrar deneyebilsin. Ham exception UI'a sızmaz.
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1274,9 +1266,9 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
             ),
             const SizedBox(height: AppSpacing.l),
             AppPrimaryButton(
-              label: AppStrings.dealerPriceSheetSave,
+              label: _saving ? 'Kaydediliyor…' : AppStrings.dealerPriceSheetSave,
               icon: Icons.check_rounded,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
             ),
             const SizedBox(height: AppSpacing.s),
           ],

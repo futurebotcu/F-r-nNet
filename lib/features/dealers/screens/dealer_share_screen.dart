@@ -218,9 +218,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
       ], subject: 'FırınNet — ${dealer.name} hesap özeti');
       if (!mounted) return;
       setState(
-        () => _pdfStatus =
-            'PDF hazırlandı (${(bytes.length / 1024).toStringAsFixed(1)} KB)'
-            '${AppStrings.dealerSharePdfSuffix}',
+        () => _pdfStatus = 'PDF hazırlandı${AppStrings.dealerSharePdfSuffix}',
       );
     } catch (_) {
       if (!mounted) return;

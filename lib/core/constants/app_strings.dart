@@ -1519,7 +1519,7 @@ class AppStrings {
   static const String dealerDetailHeroClosed = 'KAPALI';
   static const String dealerDetailMetricDelivery = 'Teslim';
   static const String dealerDetailMetricReturn = 'İade';
-  static const String dealerDetailMetricPayment = 'Ödeme';
+  static const String dealerDetailMetricPayment = 'Tahsilat';
   static const String dealerDetailChipWeek = 'Bu hafta';
   static const String dealerDetailChipMonth = 'Bu ay';
   static const String dealerDetailChipLastPayment = 'Son ödeme';

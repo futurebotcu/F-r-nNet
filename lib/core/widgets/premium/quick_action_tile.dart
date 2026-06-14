@@ -15,6 +15,7 @@ class QuickActionTile extends StatelessWidget {
     this.accent = AppColors.softGold,
     this.featured = false,
     this.badgeCount = 0,
+    this.comingSoon = false,
   });
 
   final String label;
@@ -27,6 +28,11 @@ class QuickActionTile extends StatelessWidget {
   /// M-10 — > 0 ise trailing chevron öncesinde premium okunmamış rozeti
   /// gösterir (lemon zemin + brandInk sayı). 0 ise hiç render edilmez.
   final int badgeCount;
+
+  /// G-07 — `true` ise tile yol-haritası/pasif görünür: trailing "Yakında"
+  /// rozeti + soluk etiket; chevron gizlenir. Tıklama caller'a kalır
+  /// (panel snackbar gösterir).
+  final bool comingSoon;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +114,9 @@ class QuickActionTile extends StatelessWidget {
                             fontWeight: featured
                                 ? FontWeight.w800
                                 : FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: comingSoon
+                                ? AppColors.textSecondary
+                                : AppColors.textPrimary,
                             fontSize: featured ? 15.5 : 15,
                             letterSpacing: -0.1,
                           ),
@@ -125,7 +133,34 @@ class QuickActionTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (badgeCount > 0) ...[
+                  // G-07 — "Yakında" tile: pasif rozet, chevron gizli.
+                  if (comingSoon)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandLemonPale,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        border: Border.all(
+                          color: AppColors.brandLemonPressed.withValues(
+                            alpha: 0.35,
+                          ),
+                          width: 0.6,
+                        ),
+                      ),
+                      child: const Text(
+                        'Yakında',
+                        style: TextStyle(
+                          color: AppColors.brandInk,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  if (!comingSoon && badgeCount > 0) ...[
                     Container(
                       constraints: const BoxConstraints(minWidth: 20),
                       padding: const EdgeInsets.symmetric(
@@ -155,11 +190,14 @@ class QuickActionTile extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.s),
                   ],
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: featured ? 16 : 14,
-                    color: featured ? AppColors.softGold : AppColors.textMuted,
-                  ),
+                  if (!comingSoon)
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: featured ? 16 : 14,
+                      color: featured
+                          ? AppColors.softGold
+                          : AppColors.textMuted,
+                    ),
                 ],
               ),
             ),

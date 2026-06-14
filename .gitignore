@@ -34,6 +34,12 @@ migrate_working_dir/
 /coverage/
 patrol_test/test_bundle.dart
 
+# Debug/test APK kopyalari (repo kokunde biriken) — repo'ya alinmamali.
+# (build/ altindaki ciktilar zaten /build/ ile ignore'lu; bu kural kok kopyalar icin.)
+*.apk
+*.aab
+firinnet-debug-latest.apk
+
 # Symbolication related
 app.*.symbols
 

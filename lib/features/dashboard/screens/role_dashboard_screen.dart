@@ -61,6 +61,7 @@ class RoleDashboardScreen extends ConsumerWidget {
                       subtitle: cards[i].subtitle,
                       icon: cards[i].icon,
                       featured: i == 0,
+                      comingSoon: cards[i].comingSoon,
                       badgeCount:
                           cards[i].route == AppRoutes.messages ? unread : 0,
                       onTap: () => _onTap(context, cards[i]),
