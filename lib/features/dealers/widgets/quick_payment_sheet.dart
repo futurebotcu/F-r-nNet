@@ -6,6 +6,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
@@ -126,9 +127,11 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
                 '${AppStrings.quickPaymentChangeReturn} '
                 '${NumberFormatter.currency(change)}'
           : AppStrings.quickPaymentSuccess;
-      ScaffoldMessenger.of(
+      PremiumTopBannerController.show(
         context,
-      ).showSnackBar(SnackBar(content: Text(successMsg)));
+        message: successMsg,
+        tone: PremiumTopBannerTone.success,
+      );
     } on GuestActionRequiredException {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -136,8 +139,10 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerPaymentSaveError)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.dealerPaymentSaveError,
+        tone: PremiumTopBannerTone.danger,
       );
     }
   }

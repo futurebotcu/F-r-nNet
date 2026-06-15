@@ -115,6 +115,16 @@ class AppStrings {
   static const String accountCommercialShort = 'Fırın';
   static const String accountIndividualShort = 'Bireysel';
   static const String accountWholesalerShort = 'Toptancı';
+  // Profil tamamlama sonrası rol bazlı sıcak karşılama (üst banner). Kısa,
+  // sakin, kurumsal — büyük onboarding değil. Başlık ada göre kodda üretilir.
+  static const String roleWelcomeTitle = 'Aramıza hoş geldin';
+  static const String roleWelcomeCommercial =
+      'Fırınını, bayilerini ve sektör bağlantılarını tek yerden yönetmeye '
+      'başlayabilirsin.';
+  static const String roleWelcomeIndividual =
+      'Paylaşımları keşfet, profilini güçlendir ve sektörde görünür ol.';
+  static const String roleWelcomeWholesaler =
+      'Fırınlarla bağlantı kurmak ve ürünlerini görünür kılmak için hazırsın.';
   static const String displayName = 'Profil adı';
   static const String city = 'Şehir';
   static const String roleBadge = 'Meslek rozeti';
@@ -215,6 +225,22 @@ class AppStrings {
       'Bugün ne paylaşmak istersin?';
   static const String feedComposerPanelSubtitle =
       'Üretimini, tarifini, sorunu veya duyurunu paylaş.';
+  // Rol bazlı, daha insani composer placeholder/subtitle (inline composer).
+  // Hesap türü yoksa (misafir) yukarıdaki genel varyant kullanılır.
+  static const String composerPlaceholderCommercial =
+      'Bugün fırında neler oluyor?';
+  static const String composerSubtitleCommercial =
+      'Bugünkü üretimden, tezgahtan veya sektörden bir not paylaş.';
+  static const String composerPlaceholderIndividual = 'Bugün neler yaptın?';
+  static const String composerSubtitleIndividual =
+      'Deneyimini, fikrini veya gördüğün bir detayı paylaş.';
+  static const String composerPlaceholderWholesaler =
+      'Bugün hangi ürünler var?';
+  static const String composerSubtitleWholesaler =
+      'Sektörle ilgili duyuru, gözlem veya faydalı bir bilgi paylaş.';
+  // Gönderi paylaşıldı — premium üst banner (başlık + açıklama).
+  static const String feedPostSharedBannerTitle = 'Paylaşıldı';
+  static const String feedPostSharedBannerBody = 'Gönderin akışta yayında.';
   static const String feedComposerActionMedia = 'Medya';
   static const String feedComposerActionQuestion = 'Soru';
   // Inline composer kategorileri PostType.label ile aynı (Üretim/Tedarik) —
@@ -799,6 +825,11 @@ class AppStrings {
   static const String authEntryGoogleHint =
       'FırınNet\'e Google hesabınla güvenli şekilde devam et.';
   static const String authEntryGuestExplore = 'Misafir olarak keşfet';
+  // Misafir modunu güven verici biçimde açıklar — "bu bozuk mu?" hissi yerine
+  // net sınır: neyin giriş gerektirdiğini söyler.
+  static const String authEntryGuestHint =
+      'Kayıt olmadan keşfedebilirsin. Paylaşım yapmak, bayi defteri kullanmak '
+      've profil oluşturmak için giriş gerekir.';
 
   // Topluluk Kuralları (yasal ekran + ayarlar tile)
   static const String legalCommunityTitle = 'Topluluk Kuralları';
@@ -1456,8 +1487,8 @@ class AppStrings {
       'Aramayı temizle veya filtreyi değiştirerek tekrar dene.';
   static const String dealerListEmptyTitle = 'Henüz bayi yok';
   static const String dealerListEmptySub =
-      'Bayilerini ekledikçe teslimat, iade ve tahsilatları '
-      'tek yerden yöneteceksin.';
+      'İlk bayini ekledikten sonra teslimat, tahsilat ve açık bakiye '
+      'takibini buradan göreceksin.';
   static const String dealerListEmptyCta = 'İlk bayiyi ekle';
   static const String dealerCardBalanceLabel = 'Açık bakiye';
   static const String dealerCardCreditLabel = 'Alacak';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -36,6 +37,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
         final repo = ref.read(followRepositoryProvider);
         try {
           await repo.toggleFollow(widget.userId);
+          HapticFeedback.lightImpact();
           // followChangesProvider tick'i isFollowingProvider'ı invalidate
           // eder; ek bir invalidate gereksiz ama defansif olarak çağırılır.
           ref.invalidate(isFollowingProvider(widget.userId));

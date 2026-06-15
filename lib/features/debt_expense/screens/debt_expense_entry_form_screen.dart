@@ -11,6 +11,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../core/widgets/product_choice_chips.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../data/debt_expense_categories.dart';
@@ -143,16 +144,20 @@ class _DebtExpenseEntryFormScreenState
       await ref.read(debtExpenseRepositoryProvider).addEntry(entry);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kayıt eklendi.')),
+      PremiumTopBannerController.show(
+        context,
+        message: 'Kayıt eklendi.',
+        tone: PremiumTopBannerTone.success,
       );
     } on GuestActionRequiredException {
       if (!mounted) return;
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kayıt eklenemedi. Tekrar dene.')),
+      PremiumTopBannerController.show(
+        context,
+        message: 'Kayıt eklenemedi. Tekrar dene.',
+        tone: PremiumTopBannerTone.danger,
       );
     } finally {
       if (mounted) setState(() => _saving = false);

@@ -82,7 +82,7 @@ void main() {
 
       // Placeholder
       expect(
-        find.text(AppStrings.feedComposerPanelPlaceholder),
+        find.text(AppStrings.composerPlaceholderIndividual),
         findsOneWidget,
       );
       // Tek "Medya" aksiyonu — 4 ayrı foto/video butonu DEĞİL.
@@ -131,7 +131,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(AppStrings.feedComposerPanelPlaceholder));
+      await tester.tap(find.text(AppStrings.composerPlaceholderIndividual));
       await tester.pumpAndSettle();
 
       expect(find.text('COMPOSER-STUB'), findsOneWidget);
@@ -185,7 +185,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(AppStrings.feedComposerPanelPlaceholder));
+      await tester.tap(find.text(AppStrings.composerPlaceholderIndividual));
       await tester.pumpAndSettle();
 
       // Auth required sheet açılır; composer stub'a yönlenmez.

@@ -14,6 +14,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../../core/widgets/product_choice_chips.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -239,16 +240,20 @@ class DealerDetailScreen extends ConsumerWidget {
           .read(dealerRepositoryProvider)
           .setActive(dealer.id, active: nextActive);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerStatusUpdated)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.dealerStatusUpdated,
+        tone: PremiumTopBannerTone.success,
       );
     } on GuestActionRequiredException {
       if (!context.mounted) return;
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerStatusUpdateError)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.dealerStatusUpdateError,
+        tone: PremiumTopBannerTone.danger,
       );
     }
   }
@@ -1162,13 +1167,12 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
       );
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      PremiumTopBannerController.show(
+        context,
+        message:
             '${AppStrings.dealerPriceSheetSaved}'
             '$productName · ${NumberFormatter.currency(price)}',
-          ),
-        ),
+        tone: PremiumTopBannerTone.success,
       );
     } on GuestActionRequiredException {
       // Defense-in-depth: pre-check geçtikten sonra repo katmanı guest
@@ -1181,8 +1185,10 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
       setState(() => _saving = false);
       // Sheet AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tek tıkla
       // tekrar deneyebilsin. Ham exception UI'a sızmaz.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerPriceSaveError)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.dealerPriceSaveError,
+        tone: PremiumTopBannerTone.danger,
       );
     }
   }

@@ -9,6 +9,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
@@ -87,17 +88,15 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
           createdAt: editing?.createdAt ?? now,
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isEditing
-                ? AppStrings.dealerUpdateError
-                : AppStrings.dealerSaveError,
-          ),
-        ),
+      PremiumTopBannerController.show(
+        context,
+        message: isEditing
+            ? AppStrings.dealerUpdateError
+            : AppStrings.dealerSaveError,
+        tone: PremiumTopBannerTone.danger,
       );
       return;
     }
@@ -108,9 +107,11 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
         : widget.customerType == DealerCustomerType.wholesaleCustomer
         ? 'Müşteri eklendi: '
         : AppStrings.dealerSaveSnack;
-    ScaffoldMessenger.of(
+    PremiumTopBannerController.show(
       context,
-    ).showSnackBar(SnackBar(content: Text('$what${_name.text.trim()}')));
+      message: '$what${_name.text.trim()}',
+      tone: PremiumTopBannerTone.success,
+    );
   }
 
   String? _validatePhone(String? value) {

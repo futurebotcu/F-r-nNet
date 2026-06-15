@@ -19,6 +19,7 @@
 //   * Donor `UserStoriesAvatar` yerine basit FırınNet avatar (V5'te story).
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -90,6 +91,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
+    HapticFeedback.lightImpact();
     final wasLiked = _displayLiked;
     final wasCount = _displayLikeCount;
     final newLiked = !wasLiked;
@@ -136,6 +138,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
+    HapticFeedback.lightImpact();
     final wasSaved = _displaySaved;
     setState(() {
       _saveBusy = true;
@@ -163,6 +166,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   }
 
   Future<void> _onShareTap() async {
+    HapticFeedback.lightImpact();
     setState(() => _shareBusy = true);
     try {
       final buf = StringBuffer()

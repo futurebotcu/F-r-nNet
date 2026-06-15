@@ -12,6 +12,7 @@ import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/guest_mode_provider.dart';
 import '../../auth/utils/email_validator.dart';
@@ -237,6 +238,28 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     context.go(AppRoutes.feed);
   }
 
+  /// Profil tamamlandığında rol bazlı, sıcak bir karşılama üst banner'ı.
+  /// Büyük onboarding değil; tek seferlik (bu akış zaten bir kez çalışır)
+  /// kısa hoş geldin. Mesaj kullanıcının seçtiği hesap türüne göre değişir.
+  void _showRoleWelcome() {
+    final String message;
+    switch (_accountType) {
+      case AccountType.commercial:
+        message = AppStrings.roleWelcomeCommercial;
+      case AccountType.individual:
+        message = AppStrings.roleWelcomeIndividual;
+      case AccountType.wholesaler:
+        message = AppStrings.roleWelcomeWholesaler;
+    }
+    PremiumTopBannerController.show(
+      context,
+      title: AppStrings.roleWelcomeTitle,
+      message: message,
+      tone: PremiumTopBannerTone.success,
+      duration: const Duration(seconds: 5),
+    );
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_submitting) return;
@@ -301,9 +324,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
             ),
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.authProfileSavedSnack)),
-      );
+      _showRoleWelcome();
       // Splash redirect mantığını yeniden tetikle (rol bazlı panel).
       context.go(AppRoutes.splash);
       return;
@@ -328,9 +349,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               ),
             );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.authProfileSavedSnack)),
-        );
+        _showRoleWelcome();
         context.go(AppRoutes.splash);
         return;
       }
@@ -376,9 +395,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       }
 
       // Auto-confirm AÇIK ya da provider doğrudan session verdi: normal akış.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.authProfileCreatedSnack)),
-      );
+      _showRoleWelcome();
       context.go(AppRoutes.splash);
     } catch (e) {
       if (!mounted) return;

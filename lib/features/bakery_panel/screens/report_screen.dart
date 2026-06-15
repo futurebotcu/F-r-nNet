@@ -13,6 +13,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../providers/bakery_providers.dart';
 
 class ReportScreen extends ConsumerWidget {
@@ -72,8 +73,10 @@ class ReportScreen extends ConsumerWidget {
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: text));
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Metin panoya kopyalandı.')),
+                    PremiumTopBannerController.show(
+                      context,
+                      message: 'Metin panoya kopyalandı.',
+                      tone: PremiumTopBannerTone.success,
                     );
                   },
                 ),

@@ -12,6 +12,7 @@
 
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/core/widgets/app_primary_button.dart';
+import 'package:firin_defter/core/widgets/premium/premium_top_banner.dart';
 import 'package:firin_defter/features/dealers/models/dealer_transaction.dart';
 import 'package:firin_defter/features/dealers/providers/dealer_providers.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
@@ -104,6 +105,9 @@ void main() {
     );
     // Form input "10" hâlâ görünür (Navigator.pop yapılmadı).
     expect(find.text('10'), findsOneWidget);
+    // Hata artık premium üst banner'da; statik auto-dismiss timer'ı test
+    // sonunda pending kalmasın diye iptal et.
+    PremiumTopBannerController.dismiss();
   });
 
   testWidgets('P1.7 Payment — addTransaction throws → '
@@ -131,6 +135,7 @@ void main() {
       findsNothing,
     );
     expect(find.text('100'), findsOneWidget);
+    PremiumTopBannerController.dismiss();
   });
 
   testWidgets('P1.7 Return — addTransaction throws → '
@@ -160,6 +165,7 @@ void main() {
     );
     expect(find.textContaining(AppStrings.dealerSaveSnackReturn), findsNothing);
     expect(find.text('5'), findsOneWidget);
+    PremiumTopBannerController.dismiss();
   });
 
   testWidgets('P1.7 Adjustment — addTransaction throws → '
@@ -189,6 +195,7 @@ void main() {
     );
     // Not metni korunmuş.
     expect(find.text('Eski hesap düzeltme'), findsOneWidget);
+    PremiumTopBannerController.dismiss();
   });
 
   testWidgets(
@@ -210,6 +217,8 @@ void main() {
 
       // Hata snackbar'ı görünmemeli (success path break etmedi).
       expect(find.text(AppStrings.dealerPaymentSaveError), findsNothing);
+      // Başarı premium üst banner'ına taşındı; pending timer'ı temizle.
+      PremiumTopBannerController.dismiss();
     },
   );
 }

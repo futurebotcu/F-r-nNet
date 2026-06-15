@@ -10,6 +10,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/debt_expense_entry.dart';
 import '../providers/debt_expense_providers.dart';
@@ -73,17 +74,20 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           .addPayment(widget.entry.id, amount);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${NumberFormatter.currency(amount)} ödeme '
-            'eklendi.')),
+      PremiumTopBannerController.show(
+        context,
+        message: '${NumberFormatter.currency(amount)} ödeme eklendi.',
+        tone: PremiumTopBannerTone.success,
       );
     } on GuestActionRequiredException {
       if (!mounted) return;
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ödeme eklenemedi. Tekrar dene.')),
+      PremiumTopBannerController.show(
+        context,
+        message: 'Ödeme eklenemedi. Tekrar dene.',
+        tone: PremiumTopBannerTone.danger,
       );
     } finally {
       if (mounted) setState(() => _saving = false);

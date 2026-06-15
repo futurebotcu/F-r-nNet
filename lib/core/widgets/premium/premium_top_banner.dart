@@ -11,6 +11,7 @@ class PremiumTopBanner extends StatelessWidget {
   const PremiumTopBanner({
     super.key,
     required this.message,
+    this.title,
     this.tone = PremiumTopBannerTone.info,
     this.icon,
     this.actionLabel,
@@ -18,6 +19,10 @@ class PremiumTopBanner extends StatelessWidget {
     this.onClose,
   });
 
+  /// Opsiyonel kısa başlık. Verilirse iki satırlı premium format:
+  /// kalın başlık + altında açıklama (`message`). Boş/null ise yalnız
+  /// `message` tek satır gösterilir (mevcut çağrı yerleri korunur).
+  final String? title;
   final String message;
   final PremiumTopBannerTone tone;
   final IconData? icon;
@@ -29,6 +34,7 @@ class PremiumTopBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = _BannerColors.fromTone(tone);
     final resolvedIcon = icon ?? colors.defaultIcon;
+    final hasTitle = (title ?? '').trim().isNotEmpty;
 
     return Material(
       color: Colors.transparent,
@@ -62,14 +68,40 @@ class PremiumTopBanner extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 1),
-                child: Text(
-                  message,
-                  style: TextStyle(
-                    color: colors.text,
-                    fontSize: 13.75,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (hasTitle) ...[
+                      Text(
+                        title!.trim(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.text,
+                          fontSize: 14,
+                          height: 1.25,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                    ],
+                    Text(
+                      message,
+                      // Çok uzun mesaj taşıp düzeni bozmasın.
+                      maxLines: hasTitle ? 3 : 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.text,
+                        fontSize: hasTitle ? 13 : 13.75,
+                        height: 1.35,
+                        fontWeight: hasTitle
+                            ? FontWeight.w500
+                            : FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -102,7 +134,11 @@ class PremiumTopBanner extends StatelessWidget {
               splashRadius: 18,
               padding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
-              icon: Icon(Icons.close_rounded, size: 18, color: colors.iconColor),
+              icon: Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: colors.iconColor,
+              ),
             ),
           ],
         ),
@@ -181,17 +217,35 @@ class PremiumTopBannerController {
 
   static OverlayEntry? _entry;
   static Timer? _timer;
+  // Her show() bir nesil alır. Banner host'u (overlay entry) yok edildiğinde
+  // yalnız kendi nesli güncelse timer'ı iptal eder — böylece widget-test
+  // teardown'unda pending timer kalmaz, ama arka arkaya banner'da eski host'un
+  // dispose'u yeni banner'ın timer'ını iptal etmez.
+  static int _gen = 0;
 
   static void dismiss() {
     _timer?.cancel();
     _timer = null;
-    _entry?.remove();
+    final entry = _entry;
     _entry = null;
+    // Yalnız hâlâ ağaçta ise kaldır — çift dismiss / widget-test teardown'da
+    // "not mounted" assertion'ını önler.
+    if (entry != null && entry.mounted) entry.remove();
+  }
+
+  /// Banner host widget'ı yok edilince çağrılır. Yalnız hâlâ aktif nesil ise
+  /// statik auto-dismiss timer'ını iptal eder.
+  static void _handleHostDisposed(int gen) {
+    if (gen == _gen) {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   static void show(
     BuildContext context, {
     required String message,
+    String? title,
     PremiumTopBannerTone tone = PremiumTopBannerTone.info,
     IconData? icon,
     String? actionLabel,
@@ -202,40 +256,45 @@ class PremiumTopBannerController {
     if (overlay == null) return;
 
     dismiss();
+    final gen = ++_gen;
 
     late final OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) {
-        return SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.s),
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0, end: 1),
-                duration: AppDuration.normal,
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - value) * -12),
-                      child: child,
-                    ),
-                  );
-                },
-                child: PremiumTopBanner(
-                  message: message,
-                  tone: tone,
-                  icon: icon,
-                  actionLabel: actionLabel,
-                  onAction: onAction == null
-                      ? null
-                      : () {
-                          onAction();
-                          dismiss();
-                        },
-                  onClose: dismiss,
+        return _BannerHost(
+          gen: gen,
+          child: SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.s),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0, end: 1),
+                  duration: AppDuration.normal,
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, (1 - value) * -12),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: PremiumTopBanner(
+                    message: message,
+                    title: title,
+                    tone: tone,
+                    icon: icon,
+                    actionLabel: actionLabel,
+                    onAction: onAction == null
+                        ? null
+                        : () {
+                            onAction();
+                            dismiss();
+                          },
+                    onClose: dismiss,
+                  ),
                 ),
               ),
             ),
@@ -251,4 +310,28 @@ class PremiumTopBannerController {
       _timer = Timer(duration, dismiss);
     }
   }
+}
+
+/// Banner overlay entry'sini saran küçük lifecycle widget'ı. Host yok
+/// edildiğinde (örn. widget-test ağaç teardown'u) statik auto-dismiss
+/// timer'ı pending kalmasın diye iptalini tetikler.
+class _BannerHost extends StatefulWidget {
+  const _BannerHost({required this.gen, required this.child});
+
+  final int gen;
+  final Widget child;
+
+  @override
+  State<_BannerHost> createState() => _BannerHostState();
+}
+
+class _BannerHostState extends State<_BannerHost> {
+  @override
+  void dispose() {
+    PremiumTopBannerController._handleHostDisposed(widget.gen);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

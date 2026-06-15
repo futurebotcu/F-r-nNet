@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
+import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import 'social_composer_page.dart';
 
@@ -29,6 +30,21 @@ class InlineComposerCard extends ConsumerWidget {
     final initial = (profile?.displayName.isNotEmpty ?? false)
         ? profile!.displayName[0].toUpperCase()
         : 'M';
+    // Rol bazlı, daha insani placeholder/subtitle. Hesap türü yoksa (misafir)
+    // genel varyant. Soğuk form hissini azaltır.
+    final accountType = profile?.accountType;
+    final placeholder = switch (accountType) {
+      AccountType.commercial => AppStrings.composerPlaceholderCommercial,
+      AccountType.individual => AppStrings.composerPlaceholderIndividual,
+      AccountType.wholesaler => AppStrings.composerPlaceholderWholesaler,
+      null => AppStrings.feedComposerPanelPlaceholder,
+    };
+    final subtitle = switch (accountType) {
+      AccountType.commercial => AppStrings.composerSubtitleCommercial,
+      AccountType.individual => AppStrings.composerSubtitleIndividual,
+      AccountType.wholesaler => AppStrings.composerSubtitleWholesaler,
+      null => AppStrings.feedComposerPanelSubtitle,
+    };
 
     return Column(
       children: [
@@ -76,25 +92,25 @@ class InlineComposerCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.m),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                AppStrings.feedComposerPanelPlaceholder,
-                                style: TextStyle(
+                                placeholder,
+                                style: const TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              const SizedBox(height: 2),
                               Text(
-                                AppStrings.feedComposerPanelSubtitle,
+                                subtitle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppColors.textMuted,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w400,

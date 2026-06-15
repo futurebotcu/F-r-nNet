@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'
-    show Clipboard, ClipboardData, rootBundle;
+    show Clipboard, ClipboardData, HapticFeedback, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -12,6 +12,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
 
@@ -111,10 +112,10 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                         onPressed: () async {
                           await Clipboard.setData(ClipboardData(text: text));
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(AppStrings.dealerShareCopiedSnack),
-                            ),
+                          PremiumTopBannerController.show(
+                            context,
+                            message: AppStrings.dealerShareCopiedSnack,
+                            tone: PremiumTopBannerTone.success,
                           );
                         },
                       ),
@@ -213,6 +214,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
           '${now.month.toString().padLeft(2, '0')}-'
           '${now.day.toString().padLeft(2, '0')}';
       final fileName = 'firinnet_${namePart}_hesap_ozeti_$datePart.pdf';
+      HapticFeedback.lightImpact();
       await Share.shareXFiles([
         XFile.fromData(bytes, name: fileName, mimeType: 'application/pdf'),
       ], subject: 'FırınNet — ${dealer.name} hesap özeti');
@@ -222,8 +224,10 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerSharePdfErr)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.dealerSharePdfErr,
+        tone: PremiumTopBannerTone.danger,
       );
     } finally {
       if (mounted) setState(() => _pdfBusy = false);

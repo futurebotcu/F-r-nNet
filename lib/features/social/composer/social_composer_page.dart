@@ -19,6 +19,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,6 +29,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
@@ -297,8 +299,10 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   Future<void> _submit() async {
     final text = _textCtrl.text.trim();
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedComposerEmptyErr)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.feedComposerEmptyErr,
+        tone: PremiumTopBannerTone.warning,
       );
       return;
     }
@@ -376,8 +380,12 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
         }
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedComposerSavedSnack)),
+      HapticFeedback.lightImpact();
+      PremiumTopBannerController.show(
+        context,
+        title: AppStrings.feedPostSharedBannerTitle,
+        message: AppStrings.feedPostSharedBannerBody,
+        tone: PremiumTopBannerTone.success,
       );
       context.pop();
     } catch (_) {

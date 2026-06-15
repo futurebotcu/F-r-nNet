@@ -9,6 +9,7 @@ import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
@@ -79,13 +80,12 @@ class _DealerAdjustmentFormScreenState
       if (!mounted) return;
       Navigator.of(context).pop();
       final sign = signed >= 0 ? '+' : '−';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      PremiumTopBannerController.show(
+        context,
+        message:
             '${AppStrings.dealerSaveSnackAdjustment}'
             '$sign${NumberFormatter.currency(signed.abs())}',
-          ),
-        ),
+        tone: PremiumTopBannerTone.success,
       );
     } on GuestActionRequiredException {
       // V1.4 P1.7 — Defense-in-depth: pre-check sonrası repo katmanı yine
@@ -96,8 +96,10 @@ class _DealerAdjustmentFormScreenState
       // V1.4 P1.7 — Ham PostgrestException/network UI'a sızmaz. Form AÇIK
       // kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerAdjustmentSaveError)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.dealerAdjustmentSaveError,
+        tone: PremiumTopBannerTone.danger,
       );
     } finally {
       if (mounted) setState(() => _saving = false);

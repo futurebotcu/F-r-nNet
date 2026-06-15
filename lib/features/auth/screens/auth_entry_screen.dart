@@ -138,6 +138,21 @@ class _AuthEntryScreenState extends ConsumerState<AuthEntryScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.s),
+                  // Misafir modunu güven verici biçimde açıklayan ince ipucu.
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.m),
+                    child: Text(
+                      AppStrings.authEntryGuestHint,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.l),
                   const LegalFooter(),
                 ],

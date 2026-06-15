@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../core/widgets/premium/quick_action_tile.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../messaging/providers/messaging_providers.dart';
@@ -91,11 +92,11 @@ class RoleDashboardScreen extends ConsumerWidget {
 
   void _onTap(BuildContext context, PanelCard card) {
     if (card.comingSoon || card.route == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${card.label} — ${AppStrings.comingSoon}'),
-          duration: const Duration(seconds: 2),
-        ),
+      PremiumTopBannerController.show(
+        context,
+        message: '${card.label} — ${AppStrings.comingSoon}',
+        tone: PremiumTopBannerTone.info,
+        duration: const Duration(seconds: 2),
       );
       return;
     }

@@ -27,6 +27,7 @@ import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
+import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/bakery_profile.dart';
@@ -220,14 +221,18 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       }
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileEditSaveSuccess)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.profileEditSaveSuccess,
+        tone: PremiumTopBannerTone.success,
       );
     } catch (e) {
       debugPrint('[FirinNet][ProfileEdit] save error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileEditSaveError)),
+      PremiumTopBannerController.show(
+        context,
+        message: AppStrings.profileEditSaveError,
+        tone: PremiumTopBannerTone.danger,
       );
     } finally {
       if (mounted) setState(() => _saving = false);
