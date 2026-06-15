@@ -208,7 +208,7 @@ class _DealerAdjustmentFormScreenState
             ),
             const SizedBox(height: AppSpacing.l),
             AppPrimaryButton(
-              label: 'Kaydet',
+              label: _saving ? 'Kaydediliyor…' : 'Kaydet',
               icon: Icons.check_rounded,
               onPressed: _saving ? null : _save,
             ),

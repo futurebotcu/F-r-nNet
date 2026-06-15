@@ -161,6 +161,8 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   }
 
   Future<void> _save() async {
+    // Çift-submit guard: kaydetme sürerken ikinci dokunuş yeni kayıt başlatmasın.
+    if (_saving) return;
     final name = _name.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

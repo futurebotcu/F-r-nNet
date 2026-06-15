@@ -640,7 +640,9 @@ class _PostMedia extends StatelessWidget {
         fit: BoxFit.cover,
         // Perf: feed full-width görseli telefon ekranı için decode edilir;
         // tam çözünürlük decode (bellek spike) yerine 720px üst sınır.
+        // 4:3 oranına uygun yükseklik sınırı uzun ekranlarda decode'u kısar.
         memCacheWidth: 720,
+        memCacheHeight: 540,
         placeholder: (_, __) => Container(
           color: AppColors.surface,
           alignment: Alignment.center,

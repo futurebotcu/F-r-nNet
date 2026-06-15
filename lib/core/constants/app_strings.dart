@@ -125,6 +125,12 @@ class AppStrings {
       'Paylaşımları keşfet, profilini güçlendir ve sektörde görünür ol.';
   static const String roleWelcomeWholesaler =
       'Fırınlarla bağlantı kurmak ve ürünlerini görünür kılmak için hazırsın.';
+  // Panel (RoleDashboard) bölüm başlıkları + profil yok durumu CTA'sı.
+  static const String panelSectionCommercial = 'Atölye yönetimi';
+  static const String panelSectionIndividual = 'Sektör ağı';
+  static const String panelSectionWholesaler = 'Toptan ağ';
+  static const String panelProfileNotCreated = 'Profil oluşturmadın';
+  static const String panelCreateProfileCta = 'Oluştur';
   static const String displayName = 'Profil adı';
   static const String city = 'Şehir';
   static const String roleBadge = 'Meslek rozeti';

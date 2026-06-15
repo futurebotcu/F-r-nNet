@@ -383,6 +383,9 @@ class _PostContextHeader extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
+                // Perf: post detay başlık görseli için decode üst sınırı
+                // (tam çözünürlük bellek spike'ını önler).
+                memCacheWidth: 600,
                 placeholder: (_, __) => Container(color: AppColors.surface),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.surface,

@@ -82,11 +82,11 @@ class RoleDashboardScreen extends ConsumerWidget {
   String _sectionTitleFor(AccountType type) {
     switch (type) {
       case AccountType.commercial:
-        return 'Atölye yönetimi';
+        return AppStrings.panelSectionCommercial;
       case AccountType.individual:
-        return 'Sektör ağı';
+        return AppStrings.panelSectionIndividual;
       case AccountType.wholesaler:
-        return 'Toptan ağ';
+        return AppStrings.panelSectionWholesaler;
     }
   }
 
@@ -178,7 +178,7 @@ class _RoleBadgeStrip extends ConsumerWidget {
                 Text(
                   profile?.roleBadge.isNotEmpty == true
                       ? profile!.roleBadge
-                      : 'Profil oluşturmadın',
+                      : AppStrings.panelProfileNotCreated,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
@@ -192,7 +192,7 @@ class _RoleBadgeStrip extends ConsumerWidget {
           if (profile == null)
             TextButton(
               onPressed: () => context.push(AppRoutes.createProfile),
-              child: const Text('Oluştur'),
+              child: const Text(AppStrings.panelCreateProfileCta),
             ),
         ],
       ),
