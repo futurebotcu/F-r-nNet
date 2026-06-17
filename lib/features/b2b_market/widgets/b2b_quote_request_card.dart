@@ -29,6 +29,14 @@ class B2bQuoteRequestCard extends StatelessWidget {
   /// Dolu ise "Teklif Ver" gösterilir (tedarikçi / Teklif Ağı).
   final VoidCallback? onReply;
 
+  /// İl/ilçe etiketi — boş alanları atlar (form talepleri ilçesiz olabilir).
+  String get _locationLabel {
+    final c = request.city;
+    final d = request.district;
+    if (c.isNotEmpty && d.isNotEmpty) return '$c / $d';
+    return c.isNotEmpty ? c : d;
+  }
+
   @override
   Widget build(BuildContext context) {
     return PremiumCard(
@@ -59,22 +67,26 @@ class B2bQuoteRequestCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              B2bMetaPill(
-                icon: Icons.scale_outlined,
-                label: request.quantity,
-              ),
-              B2bMetaPill(
-                icon: Icons.place_outlined,
-                label: '${request.city} / ${request.district}',
-              ),
-              B2bMetaPill(
-                icon: Icons.badge_outlined,
-                label: request.buyerType,
-              ),
-              B2bMetaPill(
-                icon: Icons.schedule_rounded,
-                label: request.deliveryTime,
-              ),
+              if (request.quantity.isNotEmpty)
+                B2bMetaPill(
+                  icon: Icons.scale_outlined,
+                  label: request.quantity,
+                ),
+              if (_locationLabel.isNotEmpty)
+                B2bMetaPill(
+                  icon: Icons.place_outlined,
+                  label: _locationLabel,
+                ),
+              if (request.buyerType.isNotEmpty)
+                B2bMetaPill(
+                  icon: Icons.badge_outlined,
+                  label: request.buyerType,
+                ),
+              if (request.deliveryTime.isNotEmpty)
+                B2bMetaPill(
+                  icon: Icons.schedule_rounded,
+                  label: request.deliveryTime,
+                ),
             ],
           ),
           if (request.note.isNotEmpty) ...[

@@ -46,6 +46,7 @@ class SupplierOfferNetworkTab extends ConsumerWidget {
                   context,
                   kind: B2bOfferKind.giveOffer,
                   contextLine: '${r.productOrCategory} · ${r.city}',
+                  quoteRequestId: r.id,
                 ),
       ),
     );

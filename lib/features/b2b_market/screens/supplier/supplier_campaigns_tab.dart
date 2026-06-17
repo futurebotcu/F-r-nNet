@@ -59,6 +59,9 @@ class _SupplierCampaignsTabState extends ConsumerState<SupplierCampaignsTab> {
                 context,
                 kind: B2bOfferKind.requestQuote,
                 contextLine: '${c.supplierName} · ${c.title}',
+                targetType: 'campaign',
+                targetId: c.id,
+                presetCategory: c.category,
               ),
               onEdit: () => context.push(AppRoutes.b2bCampaignEdit(c.id)),
               onTogglePublish: () => ref

@@ -19,11 +19,16 @@ class LocalB2bRepository implements B2bRepository {
   LocalB2bRepository()
       : _stores = List<B2bStore>.of(B2bMockSeed.stores),
         _products = List<B2bProduct>.of(B2bMockSeed.products),
-        _campaigns = List<B2bCampaign>.of(B2bMockSeed.campaigns);
+        _campaigns = List<B2bCampaign>.of(B2bMockSeed.campaigns),
+        _myQuoteRequests =
+            List<B2bQuoteRequest>.of(B2bMockSeed.myQuoteRequests),
+        _replies = List<B2bQuoteReply>.of(B2bMockSeed.replies);
 
   final List<B2bStore> _stores;
   final List<B2bProduct> _products;
   final List<B2bCampaign> _campaigns;
+  final List<B2bQuoteRequest> _myQuoteRequests;
+  final List<B2bQuoteReply> _replies;
 
   int _seq = 0;
 
@@ -87,13 +92,12 @@ class LocalB2bRepository implements B2bRepository {
 
   @override
   Future<List<B2bQuoteRequest>> listMyQuoteRequests() async =>
-      List<B2bQuoteRequest>.unmodifiable(B2bMockSeed.myQuoteRequests);
+      List<B2bQuoteRequest>.unmodifiable(_myQuoteRequests);
 
   @override
-  Future<List<B2bQuoteReply>> repliesFor(String requestId) async =>
-      B2bMockSeed.replies
-          .where((r) => r.requestId == requestId)
-          .toList(growable: false);
+  Future<List<B2bQuoteReply>> repliesFor(String requestId) async => _replies
+      .where((r) => r.requestId == requestId)
+      .toList(growable: false);
 
   // ---- Write ----
 
@@ -272,6 +276,54 @@ class LocalB2bRepository implements B2bRepository {
   Future<void> setCampaignPublished(String id, bool published) async {
     final i = _campaigns.indexWhere((c) => c.id == id);
     if (i >= 0) _campaigns[i] = _campaigns[i].copyWith(published: published);
+  }
+
+  @override
+  Future<B2bQuoteRequest> addQuoteRequest({
+    required String targetType,
+    String? targetId,
+    required String category,
+    required String quantity,
+    required String city,
+    String district = '',
+    String buyerType = '',
+    String deliveryTime = '',
+    String note = '',
+  }) async {
+    final req = B2bQuoteRequest(
+      id: 'q_user_${++_seq}',
+      productOrCategory: category,
+      quantity: quantity,
+      city: city,
+      district: district,
+      buyerType: buyerType,
+      deliveryTime: deliveryTime,
+      note: note,
+      status: B2bQuoteStatus.waiting,
+      createdByMe: true,
+    );
+    _myQuoteRequests.insert(0, req);
+    return req;
+  }
+
+  @override
+  Future<void> addQuoteReply({
+    required String quoteRequestId,
+    required String message,
+    String? priceNote,
+    String? deliveryNote,
+  }) async {
+    _replies.insert(
+      0,
+      B2bQuoteReply(
+        id: 'r_user_${++_seq}',
+        requestId: quoteRequestId,
+        supplierName: _stores[_myStoreIndex()].name,
+        message: message,
+        createdAtLabel: 'Az önce',
+        priceHint: (priceNote == null || priceNote.isEmpty) ? null : priceNote,
+      ),
+    );
   }
 
   static String _monogramFor(String name, {required String fallback}) {

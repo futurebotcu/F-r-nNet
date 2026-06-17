@@ -183,6 +183,46 @@ class B2bMarketController extends Notifier<int> {
     await _repo.setCampaignPublished(id, published);
     state++;
   }
+
+  Future<void> addQuoteRequest({
+    required String targetType,
+    String? targetId,
+    required String category,
+    required String quantity,
+    required String city,
+    String district = '',
+    String buyerType = '',
+    String deliveryTime = '',
+    String note = '',
+  }) async {
+    await _repo.addQuoteRequest(
+      targetType: targetType,
+      targetId: targetId,
+      category: category,
+      quantity: quantity,
+      city: city,
+      district: district,
+      buyerType: buyerType,
+      deliveryTime: deliveryTime,
+      note: note,
+    );
+    state++;
+  }
+
+  Future<void> addQuoteReply({
+    required String quoteRequestId,
+    required String message,
+    String? priceNote,
+    String? deliveryNote,
+  }) async {
+    await _repo.addQuoteReply(
+      quoteRequestId: quoteRequestId,
+      message: message,
+      priceNote: priceNote,
+      deliveryNote: deliveryNote,
+    );
+    state++;
+  }
 }
 
 // ---- Okuma FutureProvider'ları (write revizyonunu izler → otomatik yenilenir) ----

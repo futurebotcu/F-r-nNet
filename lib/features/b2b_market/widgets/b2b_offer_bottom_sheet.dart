@@ -1,34 +1,52 @@
-// B2B Pazar — teklif / fiyat aksiyonu bottom sheet (mock preview).
+// B2B Pazar — teklif / fiyat aksiyonu bottom sheet.
 //
-// Tek yüzey, dört kip: Teklif İste · Fiyat Sor · Teklif Ver · Yeni Teklif.
-// Mock: bu sürümde talep backend'e yazılmaz (Supabase yok). Gönderince sheet
-// kapanır, çağıran taraf PremiumTopBanner ile geri bildirim gösterir.
-// Sepet / ödeme / checkout YOK.
+// Tek yüzey, dört kip:
+//   * Teklif İste / Fiyat Sor / Yeni Teklif (ALICI) → addQuoteRequest
+//   * Teklif Ver (TEDARİKÇİ)                         → addQuoteReply
+// Repository write controller üzerinden yapılır (UI doğrudan Supabase görmez).
+// Gönderim sırasında buton loading/disabled; hata sheet içinde kısa metinle
+// gösterilir (ekran çökmez). Sepet / ödeme / checkout YOK.
+//
+// ANONİMLİK: bu yüzey alıcı kimliği (buyer_id/telefon/adres/kişi) TOPLAMAZ ve
+// GÖSTERMEZ. addQuoteRequest yalnız güvenli alanları yollar; buyer_id repo
+// içinde auth.uid()'den set edilir.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
+import '../providers/b2b_providers.dart';
 
 enum B2bOfferKind { requestQuote, askPrice, giveOffer, newRequest }
 
-/// Sheet'i açar, gönderilirse premium banner ile geri bildirim gösterir.
+/// Sheet'i açar; gönderilirse premium banner ile geri bildirim gösterir.
 /// Tüm tab'lar tek bu akışı çağırır.
 Future<void> showB2bOfferFlow(
   BuildContext context, {
   required B2bOfferKind kind,
   String? contextLine,
+  String targetType = 'category',
+  String? targetId,
+  String? presetCategory,
+  String? quoteRequestId,
 }) async {
   final submitted = await B2bOfferBottomSheet.show(
     context,
     kind: kind,
     contextLine: contextLine,
+    targetType: targetType,
+    targetId: targetId,
+    presetCategory: presetCategory,
+    quoteRequestId: quoteRequestId,
   );
   if (!submitted || !context.mounted) return;
   PremiumTopBannerController.show(
     context,
-    message: '${kind.title} gönderildi. Yanıtlar "Tekliflerim" altında görünür.',
+    message: kind == B2bOfferKind.giveOffer
+        ? 'Teklifin gönderildi.'
+        : 'Talebin alındı. Yanıtlar "Tekliflerim" altında görünür.',
     tone: PremiumTopBannerTone.success,
     duration: const Duration(seconds: 2),
   );
@@ -61,19 +79,6 @@ extension _B2bOfferKindMeta on B2bOfferKind {
     }
   }
 
-  String get noteHint {
-    switch (this) {
-      case B2bOfferKind.requestQuote:
-        return 'Miktar, teslimat bölgesi ve notunuz…';
-      case B2bOfferKind.askPrice:
-        return 'Fiyat hakkında sormak istediğiniz…';
-      case B2bOfferKind.giveOffer:
-        return 'Fiyat ve teklif detayınız…';
-      case B2bOfferKind.newRequest:
-        return 'Kısa not (opsiyonel)…';
-    }
-  }
-
   IconData get icon {
     switch (this) {
       case B2bOfferKind.requestQuote:
@@ -88,52 +93,126 @@ extension _B2bOfferKindMeta on B2bOfferKind {
   }
 }
 
-class B2bOfferBottomSheet extends StatefulWidget {
+class B2bOfferBottomSheet extends ConsumerStatefulWidget {
   const B2bOfferBottomSheet({
     super.key,
     required this.kind,
     this.contextLine,
+    this.targetType = 'category',
+    this.targetId,
+    this.presetCategory,
+    this.quoteRequestId,
   });
 
   final B2bOfferKind kind;
-
-  /// Bağlam satırı (ör. "Anadolu Un & Maya · Tam Buğday Unu").
   final String? contextLine;
+  final String targetType;
+  final String? targetId;
+  final String? presetCategory;
+  final String? quoteRequestId;
 
-  /// Sheet'i açar; gönderildiyse `true` döner (çağıran banner gösterir).
+  /// Sheet'i açar; başarıyla gönderildiyse `true` döner.
   static Future<bool> show(
     BuildContext context, {
     required B2bOfferKind kind,
     String? contextLine,
+    String targetType = 'category',
+    String? targetId,
+    String? presetCategory,
+    String? quoteRequestId,
   }) async {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => B2bOfferBottomSheet(kind: kind, contextLine: contextLine),
+      builder: (_) => B2bOfferBottomSheet(
+        kind: kind,
+        contextLine: contextLine,
+        targetType: targetType,
+        targetId: targetId,
+        presetCategory: presetCategory,
+        quoteRequestId: quoteRequestId,
+      ),
     );
     return result ?? false;
   }
 
   @override
-  State<B2bOfferBottomSheet> createState() => _B2bOfferBottomSheetState();
+  ConsumerState<B2bOfferBottomSheet> createState() =>
+      _B2bOfferBottomSheetState();
 }
 
-class _B2bOfferBottomSheetState extends State<B2bOfferBottomSheet> {
-  final _product = TextEditingController();
+class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
+  // Alıcı talebi alanları.
+  late final TextEditingController _category =
+      TextEditingController(text: widget.presetCategory ?? '');
   final _quantity = TextEditingController();
   final _city = TextEditingController();
   final _note = TextEditingController();
+  // Tedarikçi cevap alanları.
+  final _message = TextEditingController();
+  final _priceNote = TextEditingController();
 
-  bool get _isNewRequest => widget.kind == B2bOfferKind.newRequest;
+  bool _submitting = false;
+  String? _error;
+
+  bool get _isReply => widget.kind == B2bOfferKind.giveOffer;
 
   @override
   void dispose() {
-    _product.dispose();
+    _category.dispose();
     _quantity.dispose();
     _city.dispose();
     _note.dispose();
+    _message.dispose();
+    _priceNote.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    // Basit zorunlu alan kontrolü.
+    final missing = _isReply
+        ? _message.text.trim().isEmpty
+        : (_category.text.trim().isEmpty ||
+            _quantity.text.trim().isEmpty ||
+            _city.text.trim().isEmpty);
+    if (missing) {
+      setState(() => _error = 'Lütfen gerekli alanları doldurun.');
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      final ctrl = ref.read(b2bMarketControllerProvider.notifier);
+      if (_isReply) {
+        await ctrl.addQuoteReply(
+          quoteRequestId: widget.quoteRequestId ?? '',
+          message: _message.text.trim(),
+          priceNote: _priceNote.text.trim().isEmpty
+              ? null
+              : _priceNote.text.trim(),
+        );
+      } else {
+        await ctrl.addQuoteRequest(
+          targetType: widget.targetType,
+          targetId: widget.targetId,
+          category: _category.text.trim(),
+          quantity: _quantity.text.trim(),
+          city: _city.text.trim(),
+          note: _note.text.trim(),
+        );
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = 'Gönderilemedi. Lütfen tekrar deneyin.';
+      });
+    }
   }
 
   @override
@@ -144,9 +223,7 @@ class _B2bOfferBottomSheetState extends State<B2bOfferBottomSheet> {
       child: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppRadius.xl),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.l,
@@ -156,121 +233,153 @@ class _B2bOfferBottomSheetState extends State<B2bOfferBottomSheet> {
         ),
         child: SafeArea(
           top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.borderHairline,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.borderHairline,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.l),
-              Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.brandLemonPale,
-                      borderRadius: BorderRadius.circular(AppRadius.m),
-                      border: Border.all(
-                        color: AppColors.brandLemonSoft,
-                        width: 0.8,
+                const SizedBox(height: AppSpacing.l),
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.brandLemonPale,
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                        border: Border.all(
+                          color: AppColors.brandLemonSoft,
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Icon(
+                        widget.kind.icon,
+                        size: 20,
+                        color: AppColors.brandLemonPressed,
                       ),
                     ),
-                    child: Icon(
-                      widget.kind.icon,
-                      size: 20,
-                      color: AppColors.brandLemonPressed,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.m),
-                  Expanded(
-                    child: Text(
-                      widget.kind.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.2,
+                    const SizedBox(width: AppSpacing.m),
+                    Expanded(
+                      child: Text(
+                        widget.kind.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.2,
+                        ),
                       ),
+                    ),
+                  ],
+                ),
+                if (widget.contextLine != null) ...[
+                  const SizedBox(height: AppSpacing.s),
+                  Text(
+                    widget.contextLine!,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
                     ),
                   ),
                 ],
-              ),
-              if (widget.contextLine != null) ...[
+                const SizedBox(height: AppSpacing.l),
+                if (_isReply) ...[
+                  _Field(
+                    controller: _message,
+                    label: 'Mesaj',
+                    hint: 'Teklif detayınız…',
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: AppSpacing.m),
+                  _Field(
+                    controller: _priceNote,
+                    label: 'Fiyat notu (opsiyonel)',
+                    hint: 'Ör. ≈ ₺640 / çuval',
+                  ),
+                ] else ...[
+                  _Field(
+                    controller: _category,
+                    label: 'Ürün / kategori',
+                    hint: 'Ör. Ekmeklik Un',
+                  ),
+                  const SizedBox(height: AppSpacing.m),
+                  _Field(
+                    controller: _quantity,
+                    label: 'Miktar',
+                    hint: 'Ör. 150 çuval',
+                  ),
+                  const SizedBox(height: AppSpacing.m),
+                  _Field(controller: _city, label: 'İl', hint: 'Ör. İstanbul'),
+                  const SizedBox(height: AppSpacing.m),
+                  _Field(
+                    controller: _note,
+                    label: 'Not (opsiyonel)',
+                    hint: 'Teslimat zamanı, ek istekler…',
+                    maxLines: 2,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.s),
-                Text(
-                  widget.contextLine!,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.l),
-              if (_isNewRequest) ...[
-                _Field(
-                  controller: _product,
-                  label: 'Ürün / kategori',
-                  hint: 'Ör. Ekmeklik Un',
-                ),
-                const SizedBox(height: AppSpacing.m),
-                _Field(
-                  controller: _quantity,
-                  label: 'Miktar',
-                  hint: 'Ör. 150 çuval',
-                ),
-                const SizedBox(height: AppSpacing.m),
-                _Field(
-                  controller: _city,
-                  label: 'İl',
-                  hint: 'Ör. İstanbul',
-                ),
-                const SizedBox(height: AppSpacing.m),
-              ],
-              _Field(
-                controller: _note,
-                label: 'Not',
-                hint: widget.kind.noteHint,
-                maxLines: 3,
-              ),
-              const SizedBox(height: AppSpacing.s),
-              const _PrivacyHint(),
-              const SizedBox(height: AppSpacing.l),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  icon: const Icon(Icons.send_rounded, size: 18),
-                  label: Text(
-                    widget.kind.submitLabel,
+                const _PrivacyHint(),
+                if (_error != null) ...[
+                  const SizedBox(height: AppSpacing.s),
+                  Text(
+                    _error!,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                      letterSpacing: 0.2,
+                      fontSize: 12.5,
+                      color: AppColors.danger,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandLemon,
-                    foregroundColor: AppColors.brandInk,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.m),
+                ],
+                const SizedBox(height: AppSpacing.l),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: _submitting ? null : _submit,
+                    icon: _submitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.brandInk,
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded, size: 18),
+                    label: Text(
+                      _submitting ? 'Gönderiliyor…' : widget.kind.submitLabel,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.brandLemon,
+                      foregroundColor: AppColors.brandInk,
+                      disabledBackgroundColor: AppColors.brandLemonSoft,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -110,4 +110,30 @@ abstract class B2bRepository {
   /// Ürünü/kampanyayı yayına alır veya taslağa çeker (publish toggle).
   Future<void> setProductPublished(String id, bool published);
   Future<void> setCampaignPublished(String id, bool published);
+
+  // ---- Teklif akışları ----
+
+  /// Alıcı yeni teklif talebi açar (Teklif İste / Fiyat Sor / Yeni teklif).
+  /// Supabase'de buyer_id = auth.uid() (repo içinde), status='open'. Eklenen
+  /// talebi döner. ANONİM: kimlik alanı yok.
+  Future<B2bQuoteRequest> addQuoteRequest({
+    required String targetType,
+    String? targetId,
+    required String category,
+    required String quantity,
+    required String city,
+    String district = '',
+    String buyerType = '',
+    String deliveryTime = '',
+    String note = '',
+  });
+
+  /// Tedarikçi bir talebe cevap (teklif) verir. supplier_shop_id repo içinde
+  /// giriş yapan kullanıcının mağazasından çözülür; status='sent'.
+  Future<void> addQuoteReply({
+    required String quoteRequestId,
+    required String message,
+    String? priceNote,
+    String? deliveryNote,
+  });
 }

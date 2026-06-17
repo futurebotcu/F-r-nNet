@@ -67,6 +67,9 @@ class _SupplierProductsTabState extends ConsumerState<SupplierProductsTab> {
                 context,
                 kind: B2bOfferKind.requestQuote,
                 contextLine: '${p.supplierName} · ${p.name}',
+                targetType: 'product',
+                targetId: p.id,
+                presetCategory: p.category,
               ),
               // Kendi ürünlerinde yönetim menüsü (başka tedarikçide
               // _isMine=false → menü gösterilmez).

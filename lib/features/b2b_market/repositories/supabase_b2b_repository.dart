@@ -517,6 +517,108 @@ class SupabaseB2bRepository implements B2bRepository {
     return rows.map(quoteReplyFromRow).toList(growable: false);
   }
 
+  // ---- Teklif yazma ----
+
+  /// b2b_quote_requests insert payload (test edilebilir). buyer_id INSERT
+  /// için gereklidir (RLS with_check buyer_id=auth.uid()); READ tarafında ASLA
+  /// expose edilmez (RPC + mapper). status daima 'open'.
+  static Map<String, dynamic> quoteRequestInsert({
+    required String buyerId,
+    required String targetType,
+    String? targetId,
+    required String category,
+    required String quantity,
+    required String city,
+    String district = '',
+    String buyerType = '',
+    String deliveryTime = '',
+    String note = '',
+  }) =>
+      {
+        'buyer_id': buyerId,
+        'target_type': targetType,
+        'target_id': targetId,
+        'category': category,
+        'quantity': quantity,
+        'city': city,
+        'district': district,
+        'buyer_type': buyerType,
+        'delivery_time': deliveryTime,
+        'note': note,
+        'status': 'open',
+      };
+
+  /// b2b_quote_replies insert payload (test edilebilir). status daima 'sent'.
+  static Map<String, dynamic> quoteReplyInsert({
+    required String quoteRequestId,
+    required String supplierShopId,
+    required String message,
+    String? priceNote,
+    String? deliveryNote,
+  }) =>
+      {
+        'quote_request_id': quoteRequestId,
+        'supplier_shop_id': supplierShopId,
+        'message': message,
+        'price_note': priceNote,
+        'delivery_note': deliveryNote,
+        'status': 'sent',
+      };
+
+  @override
+  Future<B2bQuoteRequest> addQuoteRequest({
+    required String targetType,
+    String? targetId,
+    required String category,
+    required String quantity,
+    required String city,
+    String district = '',
+    String buyerType = '',
+    String deliveryTime = '',
+    String note = '',
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw StateError('Oturum bulunamadı.');
+    final row = await _client
+        .from('b2b_quote_requests')
+        .insert(quoteRequestInsert(
+          buyerId: uid,
+          targetType: targetType,
+          targetId: targetId,
+          category: category,
+          quantity: quantity,
+          city: city,
+          district: district,
+          buyerType: buyerType,
+          deliveryTime: deliveryTime,
+          note: note,
+        ))
+        .select(
+          'id, target_type, target_id, category, quantity, city, district, '
+          'buyer_type, delivery_time, note, status, created_at',
+        )
+        .single();
+    return quoteRequestFromRow(row, createdByMe: true);
+  }
+
+  @override
+  Future<void> addQuoteReply({
+    required String quoteRequestId,
+    required String message,
+    String? priceNote,
+    String? deliveryNote,
+  }) async {
+    final shopId = await _myShopId();
+    if (shopId == null) throw StateError('Önce mağaza oluşturun.');
+    await _client.from('b2b_quote_replies').insert(quoteReplyInsert(
+          quoteRequestId: quoteRequestId,
+          supplierShopId: shopId,
+          message: message,
+          priceNote: priceNote,
+          deliveryNote: deliveryNote,
+        ));
+  }
+
   // ---- Yardımcılar ----
 
   static List<String> _splitRegions(String joined) => joined

@@ -44,6 +44,9 @@ class BuyerSuppliersTab extends ConsumerWidget {
           context,
           kind: B2bOfferKind.requestQuote,
           contextLine: s.name,
+          targetType: 'shop',
+          targetId: s.id,
+          presetCategory: s.categories.isNotEmpty ? s.categories.first : null,
         ),
       ),
     );
