@@ -1,11 +1,11 @@
 // B2B Pazar — repository sözleşmesi.
 //
-// UI doğrudan mock seed görmesin diye soyutlama katmanı (marketplace
-// feature'ındaki Repository deseninin sade hâli). Bu sprintte tek implementasyon
-// LocalB2bRepository (mock). İleride Supabase implementasyonu aynı arayüzü
-// uygular; UI/değişmez.
+// UI doğrudan veri kaynağını görmesin diye soyutlama katmanı. İki implementasyon:
+//   • LocalB2bRepository  — in-memory mock (varsayılan, guest/offline fallback)
+//   • SupabaseB2bRepository — gerçek backend (auth + Supabase hazırsa)
 //
-// Tüm metotlar senkron: yerel mock, IO yok → loading/spinner durumu yok.
+// Veri çeken/yazan metotlar ASYNC (Future). Yalnız sabit referans listeleri
+// (productCategories/serviceRegions) senkron kalır — DB tablosu değil.
 
 import '../models/b2b_campaign.dart';
 import '../models/b2b_product.dart';
@@ -14,44 +14,43 @@ import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
 
 abstract class B2bRepository {
-  /// Preview tedarikçinin kendi mağaza vitrini.
-  B2bStore myStore();
+  /// Aktif kullanıcının kendi mağaza vitrini.
+  Future<B2bStore> myStore();
 
-  /// Tüm tedarikçi mağazaları (Bireysel → "Tedarikçiler" sekmesi).
-  List<B2bStore> listStores();
+  /// Tüm tedarikçi mağazaları (Alıcı → "Tedarikçiler" sekmesi).
+  Future<List<B2bStore>> listStores();
 
-  /// Ürün kategorileri (filtre chip kaynağı).
+  /// Ürün kategorileri (filtre chip kaynağı) — sabit referans, senkron.
   List<String> productCategories();
 
-  /// Hizmet/teslimat bölgeleri (mağaza + ürün formlarında çok seçimli).
+  /// Hizmet/teslimat bölgeleri (form çok-seçimli) — sabit referans, senkron.
   List<String> serviceRegions();
 
   /// Genel B2B ürün pazarı; opsiyonel kategori + serbest metin arama.
-  List<B2bProduct> listProducts({String? category, String? query});
+  Future<List<B2bProduct>> listProducts({String? category, String? query});
 
-  /// Preview tedarikçinin kendi ürünleri.
-  List<B2bProduct> listMyProducts();
+  /// Aktif kullanıcının kendi ürünleri (taslak dahil).
+  Future<List<B2bProduct>> listMyProducts();
 
   /// Tüm kampanyalar; opsiyonel kategori filtresi.
-  List<B2bCampaign> listCampaigns({String? category});
+  Future<List<B2bCampaign>> listCampaigns({String? category});
 
-  /// Preview tedarikçinin kendi kampanyaları.
-  List<B2bCampaign> listMyCampaigns();
+  /// Aktif kullanıcının kendi kampanyaları (taslak dahil).
+  Future<List<B2bCampaign>> listMyCampaigns();
 
-  /// Teklif Ağı — alıcıların açtığı anonim açık talepler (tedarikçi görür).
-  List<B2bQuoteRequest> listOpenQuoteRequests();
+  /// Teklif Ağı — alıcıların açtığı ANONİM açık talepler (tedarikçi görür).
+  Future<List<B2bQuoteRequest>> listOpenQuoteRequests();
 
-  /// Tekliflerim — preview alıcının kendi açtığı talepler.
-  List<B2bQuoteRequest> listMyQuoteRequests();
+  /// Tekliflerim — aktif kullanıcının (alıcı) kendi açtığı talepler.
+  Future<List<B2bQuoteRequest>> listMyQuoteRequests();
 
-  /// Bir talebe gelen teklif cevapları (mock özet).
-  List<B2bQuoteReply> repliesFor(String requestId);
+  /// Bir talebe gelen teklif cevapları.
+  Future<List<B2bQuoteReply>> repliesFor(String requestId);
 
-  // ---- Mock write (in-memory; backend/persist YOK) ----
+  // ---- Write ----
 
-  /// Preview tedarikçi adına yeni ürün ekler ve eklenen ürünü döner.
-  /// supplierId/supplierName/isMine repo tarafından kendi mağazaya bağlanır.
-  B2bProduct addProduct({
+  /// Yeni ürün ekler; eklenen ürünü döner.
+  Future<B2bProduct> addProduct({
     required String name,
     required String category,
     required String minOrder,
@@ -60,8 +59,8 @@ abstract class B2bRepository {
     bool published = true,
   });
 
-  /// Preview tedarikçi adına yeni kampanya ekler ve eklenen kampanyayı döner.
-  B2bCampaign addCampaign({
+  /// Yeni kampanya ekler; eklenen kampanyayı döner.
+  Future<B2bCampaign> addCampaign({
     required String title,
     required String category,
     required String region,
@@ -72,9 +71,8 @@ abstract class B2bRepository {
     bool published = true,
   });
 
-  /// Preview tedarikçinin mağaza vitrinini günceller (id/sayaçlar korunur,
-  /// monogram addan türetilir) ve güncel mağazayı döner.
-  B2bStore updateStore({
+  /// Mağaza vitrinini günceller; güncel mağazayı döner.
+  Future<B2bStore> updateStore({
     required String name,
     required String description,
     required List<String> serviceRegions,
@@ -82,11 +80,11 @@ abstract class B2bRepository {
   });
 
   /// Id ile ürün/kampanya bul (form prefill için). Yoksa null.
-  B2bProduct? productById(String id);
-  B2bCampaign? campaignById(String id);
+  Future<B2bProduct?> productById(String id);
+  Future<B2bCampaign?> campaignById(String id);
 
-  /// Mevcut ürünü düzenler (sahiplik/id korunur). Güncel ürünü döner.
-  B2bProduct updateProduct({
+  /// Mevcut ürünü düzenler; güncel ürünü döner.
+  Future<B2bProduct> updateProduct({
     required String id,
     required String name,
     required String category,
@@ -96,8 +94,8 @@ abstract class B2bRepository {
     bool published = true,
   });
 
-  /// Mevcut kampanyayı düzenler (sahiplik/id korunur). Güncel kampanyayı döner.
-  B2bCampaign updateCampaign({
+  /// Mevcut kampanyayı düzenler; güncel kampanyayı döner.
+  Future<B2bCampaign> updateCampaign({
     required String id,
     required String title,
     required String category,
@@ -110,6 +108,6 @@ abstract class B2bRepository {
   });
 
   /// Ürünü/kampanyayı yayına alır veya taslağa çeker (publish toggle).
-  void setProductPublished(String id, bool published);
-  void setCampaignPublished(String id, bool published);
+  Future<void> setProductPublished(String id, bool published);
+  Future<void> setCampaignPublished(String id, bool published);
 }

@@ -25,20 +25,31 @@ class SupplierStoreEditScreen extends ConsumerStatefulWidget {
 class _SupplierStoreEditScreenState
     extends ConsumerState<SupplierStoreEditScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _name;
-  late final TextEditingController _description;
-  late final Set<String> _regions;
-  late final Set<String> _categories;
+  final _name = TextEditingController();
+  final _description = TextEditingController();
+  final Set<String> _regions = <String>{};
+  final Set<String> _categories = <String>{};
   String? _coverKey;
 
   @override
   void initState() {
     super.initState();
-    final store = ref.read(b2bRepositoryProvider).myStore();
-    _name = TextEditingController(text: store.name);
-    _description = TextEditingController(text: store.description);
-    _regions = <String>{...store.serviceRegions};
-    _categories = <String>{...store.categories};
+    _prefill();
+  }
+
+  Future<void> _prefill() async {
+    final store = await ref.read(b2bRepositoryProvider).myStore();
+    if (!mounted) return;
+    setState(() {
+      _name.text = store.name;
+      _description.text = store.description;
+      _regions
+        ..clear()
+        ..addAll(store.serviceRegions);
+      _categories
+        ..clear()
+        ..addAll(store.categories);
+    });
   }
 
   @override
@@ -48,15 +59,16 @@ class _SupplierStoreEditScreenState
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    ref.read(b2bMarketControllerProvider.notifier).updateStore(
+    await ref.read(b2bMarketControllerProvider.notifier).updateStore(
           name: _name.text.trim(),
           description: _description.text.trim(),
           serviceRegions: _regions.toList(),
           categories: _categories.toList(),
         );
 
+    if (!mounted) return;
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,

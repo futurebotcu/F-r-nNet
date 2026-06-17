@@ -1,8 +1,8 @@
-// B2B Pazar — yerel mock repository.
+// B2B Pazar — yerel mock repository (varsayılan + guest/offline fallback).
 //
-// In-memory mutable: seed veriler başlangıçta kopyalanır; form submit'leri
-// bu kopyaları günceller. Backend/persist YOK — uygulama kapatılınca eklenen
-// veriler kaybolur (mock preview kabul).
+// In-memory mutable: seed veriler başlangıçta kopyalanır; write'lar bu kopyaları
+// günceller. Backend/persist YOK — uygulama kapatılınca eklenenler kaybolur.
+// Async interface'e uyumludur (IO yoktur; gövdeler senkron tamamlanır).
 //
 // Yayın kuralı: Taslak (published=false) ürün/kampanyalar genel pazarda
 // görünmez; yalnız sahibinin Mağazam listelerinde görünür.
@@ -25,7 +25,6 @@ class LocalB2bRepository implements B2bRepository {
   final List<B2bProduct> _products;
   final List<B2bCampaign> _campaigns;
 
-  /// Yeni eklenen mock kayıtlara deterministik id üretici.
   int _seq = 0;
 
   String get _mySupplierId => B2bMockSeed.mySupplierId;
@@ -36,10 +35,11 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  B2bStore myStore() => _stores[_myStoreIndex()];
+  Future<B2bStore> myStore() async => _stores[_myStoreIndex()];
 
   @override
-  List<B2bStore> listStores() => List<B2bStore>.unmodifiable(_stores);
+  Future<List<B2bStore>> listStores() async =>
+      List<B2bStore>.unmodifiable(_stores);
 
   @override
   List<String> productCategories() =>
@@ -50,10 +50,9 @@ class LocalB2bRepository implements B2bRepository {
       List<String>.unmodifiable(B2bMockSeed.serviceRegions);
 
   @override
-  List<B2bProduct> listProducts({String? category, String? query}) {
+  Future<List<B2bProduct>> listProducts({String? category, String? query}) async {
     final q = (query ?? '').trim().toLowerCase();
     return _products.where((p) {
-      // Genel pazar: yalnız yayında olanlar.
       if (!p.published) return false;
       final categoryOk = category == null || p.category == category;
       final queryOk = q.isEmpty ||
@@ -65,13 +64,12 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  List<B2bProduct> listMyProducts() => _products
-      // Sahibinin Mağazam'ı: taslaklar dahil tüm kendi ürünleri.
+  Future<List<B2bProduct>> listMyProducts() async => _products
       .where((p) => p.supplierId == _mySupplierId)
       .toList(growable: false);
 
   @override
-  List<B2bCampaign> listCampaigns({String? category}) {
+  Future<List<B2bCampaign>> listCampaigns({String? category}) async {
     return _campaigns
         .where((c) =>
             c.published && (category == null || c.category == category))
@@ -79,35 +77,36 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  List<B2bCampaign> listMyCampaigns() => _campaigns
+  Future<List<B2bCampaign>> listMyCampaigns() async => _campaigns
       .where((c) => c.supplierId == _mySupplierId)
       .toList(growable: false);
 
   @override
-  List<B2bQuoteRequest> listOpenQuoteRequests() =>
+  Future<List<B2bQuoteRequest>> listOpenQuoteRequests() async =>
       List<B2bQuoteRequest>.unmodifiable(B2bMockSeed.openQuoteRequests);
 
   @override
-  List<B2bQuoteRequest> listMyQuoteRequests() =>
+  Future<List<B2bQuoteRequest>> listMyQuoteRequests() async =>
       List<B2bQuoteRequest>.unmodifiable(B2bMockSeed.myQuoteRequests);
 
   @override
-  List<B2bQuoteReply> repliesFor(String requestId) => B2bMockSeed.replies
-      .where((r) => r.requestId == requestId)
-      .toList(growable: false);
+  Future<List<B2bQuoteReply>> repliesFor(String requestId) async =>
+      B2bMockSeed.replies
+          .where((r) => r.requestId == requestId)
+          .toList(growable: false);
 
-  // ---- Mock write ----
+  // ---- Write ----
 
   @override
-  B2bProduct addProduct({
+  Future<B2bProduct> addProduct({
     required String name,
     required String category,
     required String minOrder,
     required String deliveryRegion,
     String description = '',
     bool published = true,
-  }) {
-    final store = myStore();
+  }) async {
+    final store = _stores[_myStoreIndex()];
     final product = B2bProduct(
       id: 'p_user_${++_seq}',
       name: name,
@@ -125,7 +124,7 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  B2bCampaign addCampaign({
+  Future<B2bCampaign> addCampaign({
     required String title,
     required String category,
     required String region,
@@ -134,8 +133,8 @@ class LocalB2bRepository implements B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
-  }) {
-    final store = myStore();
+  }) async {
+    final store = _stores[_myStoreIndex()];
     final campaign = B2bCampaign(
       id: 'c_user_${++_seq}',
       title: title,
@@ -155,12 +154,12 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  B2bStore updateStore({
+  Future<B2bStore> updateStore({
     required String name,
     required String description,
     required List<String> serviceRegions,
     required List<String> categories,
-  }) {
+  }) async {
     final i = _myStoreIndex();
     final old = _stores[i];
     final updated = B2bStore(
@@ -180,19 +179,19 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  B2bProduct? productById(String id) {
+  Future<B2bProduct?> productById(String id) async {
     final i = _products.indexWhere((p) => p.id == id);
     return i >= 0 ? _products[i] : null;
   }
 
   @override
-  B2bCampaign? campaignById(String id) {
+  Future<B2bCampaign?> campaignById(String id) async {
     final i = _campaigns.indexWhere((c) => c.id == id);
     return i >= 0 ? _campaigns[i] : null;
   }
 
   @override
-  B2bProduct updateProduct({
+  Future<B2bProduct> updateProduct({
     required String id,
     required String name,
     required String category,
@@ -200,10 +199,9 @@ class LocalB2bRepository implements B2bRepository {
     required String deliveryRegion,
     String description = '',
     bool published = true,
-  }) {
+  }) async {
     final i = _products.indexWhere((p) => p.id == id);
     if (i < 0) {
-      // Bulunamazsa yeni ekleme davranışına düşmek yerine ekle.
       return addProduct(
         name: name,
         category: category,
@@ -226,7 +224,7 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  B2bCampaign updateCampaign({
+  Future<B2bCampaign> updateCampaign({
     required String id,
     required String title,
     required String category,
@@ -236,7 +234,7 @@ class LocalB2bRepository implements B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
-  }) {
+  }) async {
     final i = _campaigns.indexWhere((c) => c.id == id);
     if (i < 0) {
       return addCampaign(
@@ -265,18 +263,17 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  void setProductPublished(String id, bool published) {
+  Future<void> setProductPublished(String id, bool published) async {
     final i = _products.indexWhere((p) => p.id == id);
     if (i >= 0) _products[i] = _products[i].copyWith(published: published);
   }
 
   @override
-  void setCampaignPublished(String id, bool published) {
+  Future<void> setCampaignPublished(String id, bool published) async {
     final i = _campaigns.indexWhere((c) => c.id == id);
     if (i >= 0) _campaigns[i] = _campaigns[i].copyWith(published: published);
   }
 
-  /// Mağaza adından 1–2 harfli monogram türetir (logo yerine).
   static String _monogramFor(String name, {required String fallback}) {
     final words = name
         .trim()

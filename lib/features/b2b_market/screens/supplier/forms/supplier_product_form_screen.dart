@@ -45,19 +45,29 @@ class _SupplierProductFormScreenState
   void initState() {
     super.initState();
     final id = widget.productId;
-    if (id == null) return;
-    final p = ref.read(b2bRepositoryProvider).productById(id);
-    if (p == null) return;
-    _editing = true;
-    _name.text = p.name;
-    _minOrder.text = p.minOrder == 'Belirtilmedi' ? '' : p.minOrder;
-    _description.text = p.description;
-    _category = p.category;
-    _published = p.published;
-    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
-    for (final r in p.deliveryRegion.split(', ')) {
-      if (known.contains(r.trim())) _regions.add(r.trim());
+    if (id != null) {
+      _editing = true;
+      _prefill(id);
     }
+  }
+
+  Future<void> _prefill(String id) async {
+    final p = await ref.read(b2bRepositoryProvider).productById(id);
+    if (p == null || !mounted) return;
+    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
+    setState(() {
+      _name.text = p.name;
+      _minOrder.text = p.minOrder == 'Belirtilmedi' ? '' : p.minOrder;
+      _description.text = p.description;
+      _category = p.category;
+      _published = p.published;
+      _regions
+        ..clear()
+        ..addAll(p.deliveryRegion
+            .split(', ')
+            .map((e) => e.trim())
+            .where(known.contains));
+    });
   }
 
   @override
@@ -68,7 +78,7 @@ class _SupplierProductFormScreenState
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final formOk = _formKey.currentState?.validate() ?? false;
     final categoryOk = _category != null;
     if (!categoryOk) setState(() => _categoryTouched = true);
@@ -79,7 +89,7 @@ class _SupplierProductFormScreenState
         _minOrder.text.trim().isEmpty ? 'Belirtilmedi' : _minOrder.text.trim();
     final controller = ref.read(b2bMarketControllerProvider.notifier);
     if (_editing) {
-      controller.updateProduct(
+      await controller.updateProduct(
         id: widget.productId!,
         name: _name.text.trim(),
         category: _category!,
@@ -89,7 +99,7 @@ class _SupplierProductFormScreenState
         published: _published,
       );
     } else {
-      controller.addProduct(
+      await controller.addProduct(
         name: _name.text.trim(),
         category: _category!,
         minOrder: minOrder,
@@ -99,6 +109,7 @@ class _SupplierProductFormScreenState
       );
     }
 
+    if (!mounted) return;
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,

@@ -1,9 +1,8 @@
 // B2B Pazar — Fırıncı > Tekliflerim.
 //
-// Kullanıcının açtığı (mock) teklif talepleri ve durumları
-// (Bekliyor / Cevap geldi / Kapandı). "Yeni teklif aç" sade bottom sheet
-// ile açılır (mock; persist yok). Teklif Ver butonu YOK (bunlar kendi
-// taleplerimiz).
+// Kullanıcının açtığı teklif talepleri ve durumları (Bekliyor / Cevap geldi /
+// Kapandı). "Yeni teklif aç" bottom sheet ile açılır. Teklif Ver butonu YOK.
+// Veri repository'den FutureProvider ile gelir (loading/error/empty/data).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../models/b2b_quote_request.dart';
 import '../../providers/b2b_providers.dart';
+import '../../widgets/b2b_async_list.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
 import '../../widgets/b2b_quote_request_card.dart';
 
@@ -20,7 +21,7 @@ class BuyerQuotesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requests = ref.watch(b2bRepositoryProvider).listMyQuoteRequests();
+    final async = ref.watch(b2bMyQuoteRequestsProvider);
 
     return Column(
       children: [
@@ -56,30 +57,17 @@ class BuyerQuotesTab extends ConsumerWidget {
           ),
         ),
         Expanded(
-          child: requests.isEmpty
-              ? const EmptyState(
-                  icon: Icons.request_quote_outlined,
-                  title: 'Henüz teklif talebin yok',
-                  subtitle:
-                      '"Yeni teklif aç" ile tedarikçilerden fiyat iste.',
-                  compact: true,
-                )
-              : ListView.separated(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageH,
-                    AppSpacing.s,
-                    AppSpacing.pageH,
-                    AppSpacing.xxl,
-                  ),
-                  itemCount: requests.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSpacing.m),
-                  itemBuilder: (_, i) =>
-                      B2bQuoteRequestCard(request: requests[i]),
-                ),
+          child: B2bAsyncList<B2bQuoteRequest>(
+            async: async,
+            onRetry: () => ref.invalidate(b2bMyQuoteRequestsProvider),
+            empty: const EmptyState(
+              icon: Icons.request_quote_outlined,
+              title: 'Henüz teklif talebin yok',
+              subtitle: '"Yeni teklif aç" ile tedarikçilerden fiyat iste.',
+              compact: true,
+            ),
+            itemBuilder: (context, r) => B2bQuoteRequestCard(request: r),
+          ),
         ),
       ],
     );

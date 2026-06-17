@@ -18,20 +18,20 @@ void main() {
   group('LocalB2bRepository — mock veri', () {
     final repo = LocalB2bRepository();
 
-    test('myStore preview tedarikçinin mağazası (isMine)', () {
-      final s = repo.myStore();
+    test('myStore tedarikçinin mağazası (isMine)', () async {
+      final s = await repo.myStore();
       expect(s.isMine, isTrue);
       expect(s.id, 's1');
     });
 
-    test('listProducts kategori filtresi yalnız o kategoriyi döner', () {
-      final un = repo.listProducts(category: 'Un');
+    test('listProducts kategori filtresi yalnız o kategoriyi döner', () async {
+      final un = await repo.listProducts(category: 'Un');
       expect(un, isNotEmpty);
       expect(un.every((p) => p.category == 'Un'), isTrue);
     });
 
-    test('listProducts arama tedarikçi/ürün adında çalışır', () {
-      final r = repo.listProducts(query: 'ege');
+    test('listProducts arama tedarikçi/ürün adında çalışır', () async {
+      final r = await repo.listProducts(query: 'ege');
       expect(r, isNotEmpty);
       expect(
         r.every((p) =>
@@ -42,23 +42,24 @@ void main() {
       );
     });
 
-    test('listMyProducts yalnız preview tedarikçinin ürünleri (isMine)', () {
-      final mine = repo.listMyProducts();
+    test('listMyProducts yalnız tedarikçinin ürünleri (isMine)', () async {
+      final mine = await repo.listMyProducts();
       expect(mine, isNotEmpty);
       expect(mine.every((p) => p.isMine), isTrue);
     });
 
-    test('listMyCampaigns yalnız preview tedarikçinin kampanyaları', () {
-      final mine = repo.listMyCampaigns();
+    test('listMyCampaigns yalnız tedarikçinin kampanyaları', () async {
+      final mine = await repo.listMyCampaigns();
       expect(mine, isNotEmpty);
       expect(mine.every((c) => c.isMine), isTrue);
     });
 
-    test('Teklif Ağı: izinli alanlar dolu (anonimlik modelle garantili)', () {
+    test('Teklif Ağı: izinli alanlar dolu (anonimlik modelle garantili)',
+        () async {
       // B2bQuoteRequest'te işletme adı/telefon/adres/kişi alanı YOKTUR;
       // anonimlik tip düzeyinde garanti edilir. Burada izinli alanların
       // geldiğini doğrularız.
-      final open = repo.listOpenQuoteRequests();
+      final open = await repo.listOpenQuoteRequests();
       expect(open, isNotEmpty);
       final q = open.first;
       expect(q.productOrCategory, isNotEmpty);
@@ -66,8 +67,8 @@ void main() {
       expect(q.buyerType, isNotEmpty);
     });
 
-    test('Tekliflerim hepsi createdByMe', () {
-      final mine = repo.listMyQuoteRequests();
+    test('Tekliflerim hepsi createdByMe', () async {
+      final mine = await repo.listMyQuoteRequests();
       expect(mine, isNotEmpty);
       expect(mine.every((q) => q.createdByMe), isTrue);
     });
@@ -190,28 +191,30 @@ void main() {
   });
 
   group('Mock write akışı — Mağazam\'a yansıma', () {
-    test('addProduct (yayında) → Mağazam + genel Ürünler\'de görünür', () {
+    test('addProduct (yayında) → Mağazam + genel Ürünler\'de görünür', () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
-      final before = c.read(b2bRepositoryProvider).listMyProducts().length;
-      c.read(b2bMarketControllerProvider.notifier).addProduct(
+      final repo = c.read(b2bRepositoryProvider);
+      final before = (await repo.listMyProducts()).length;
+      await c.read(b2bMarketControllerProvider.notifier).addProduct(
             name: 'Test Unu',
             category: 'Un',
             minOrder: '10 çuval',
             deliveryRegion: 'Ege',
           );
-      final repo = c.read(b2bRepositoryProvider);
-      expect(repo.listMyProducts().length, before + 1);
-      expect(repo.listMyProducts().any((p) => p.name == 'Test Unu'), isTrue);
+      expect((await repo.listMyProducts()).length, before + 1);
+      expect((await repo.listMyProducts()).any((p) => p.name == 'Test Unu'),
+          isTrue);
       // Yayında → genel pazarda da görünür.
-      expect(repo.listProducts().any((p) => p.name == 'Test Unu'), isTrue);
+      expect((await repo.listProducts()).any((p) => p.name == 'Test Unu'),
+          isTrue);
     });
 
     test('addProduct (taslak) → genel Ürünler\'de görünmez, Mağazam\'da görünür',
-        () {
+        () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
-      c.read(b2bMarketControllerProvider.notifier).addProduct(
+      await c.read(b2bMarketControllerProvider.notifier).addProduct(
             name: 'Taslak Ürün',
             category: 'Maya',
             minOrder: '5 koli',
@@ -219,39 +222,42 @@ void main() {
             published: false,
           );
       final repo = c.read(b2bRepositoryProvider);
-      expect(repo.listMyProducts().any((p) => p.name == 'Taslak Ürün'), isTrue);
-      expect(repo.listProducts().any((p) => p.name == 'Taslak Ürün'), isFalse);
+      expect((await repo.listMyProducts()).any((p) => p.name == 'Taslak Ürün'),
+          isTrue);
+      expect((await repo.listProducts()).any((p) => p.name == 'Taslak Ürün'),
+          isFalse);
     });
 
-    test('addCampaign → Mağazam kampanyalarında görünür', () {
+    test('addCampaign → Mağazam kampanyalarında görünür', () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
-      final before = c.read(b2bRepositoryProvider).listMyCampaigns().length;
-      c.read(b2bMarketControllerProvider.notifier).addCampaign(
+      final repo = c.read(b2bRepositoryProvider);
+      final before = (await repo.listMyCampaigns()).length;
+      await c.read(b2bMarketControllerProvider.notifier).addCampaign(
             title: 'Test Kampanya',
             category: 'Un',
             region: 'Ege',
             minPurchase: '100 çuval',
             validUntil: '30 Haziran 2026',
           );
-      final repo = c.read(b2bRepositoryProvider);
-      expect(repo.listMyCampaigns().length, before + 1);
+      expect((await repo.listMyCampaigns()).length, before + 1);
       expect(
-        repo.listMyCampaigns().any((c) => c.title == 'Test Kampanya'),
+        (await repo.listMyCampaigns()).any((c) => c.title == 'Test Kampanya'),
         isTrue,
       );
     });
 
-    test('updateStore → Mağazam bilgisi güncellenir (monogram türetilir)', () {
+    test('updateStore → Mağazam bilgisi güncellenir (monogram türetilir)',
+        () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
-      c.read(b2bMarketControllerProvider.notifier).updateStore(
+      await c.read(b2bMarketControllerProvider.notifier).updateStore(
             name: 'Yeni Ticaret',
             description: 'Güncellenmiş açıklama',
             serviceRegions: ['Ege', 'Akdeniz'],
             categories: ['Un'],
           );
-      final store = c.read(b2bRepositoryProvider).myStore();
+      final store = await c.read(b2bRepositoryProvider).myStore();
       expect(store.name, 'Yeni Ticaret');
       expect(store.description, 'Güncellenmiş açıklama');
       expect(store.serviceRegions, ['Ege', 'Akdeniz']);
@@ -259,11 +265,11 @@ void main() {
       expect(store.monogram, 'YT');
     });
 
-    test('write sonrası controller revizyonu artar (reaktivite)', () {
+    test('write sonrası controller revizyonu artar (reaktivite)', () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       final r0 = c.read(b2bMarketControllerProvider);
-      c.read(b2bMarketControllerProvider.notifier).addProduct(
+      await c.read(b2bMarketControllerProvider.notifier).addProduct(
             name: 'X',
             category: 'Un',
             minOrder: '1',
@@ -346,34 +352,36 @@ void main() {
   });
 
   group('Publish toggle — genel liste vs Mağazam', () {
-    test('Ürün: taslağa al → genel düşer, Mağazam kalır; yayına al → geri', () {
+    test('Ürün: taslağa al → genel düşer, Mağazam kalır; yayına al → geri',
+        () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       final ctrl = c.read(b2bMarketControllerProvider.notifier);
-      ctrl.addProduct(
+      await ctrl.addProduct(
         name: 'Toggle Ürün',
         category: 'Un',
         minOrder: '1',
         deliveryRegion: 'Ege',
       );
       final repo = c.read(b2bRepositoryProvider);
-      final id =
-          repo.listMyProducts().firstWhere((p) => p.name == 'Toggle Ürün').id;
+      final id = (await repo.listMyProducts())
+          .firstWhere((p) => p.name == 'Toggle Ürün')
+          .id;
 
-      ctrl.setProductPublished(id, false);
-      expect(repo.listProducts().any((p) => p.id == id), isFalse);
-      expect(repo.listMyProducts().any((p) => p.id == id), isTrue);
+      await ctrl.setProductPublished(id, false);
+      expect((await repo.listProducts()).any((p) => p.id == id), isFalse);
+      expect((await repo.listMyProducts()).any((p) => p.id == id), isTrue);
 
-      ctrl.setProductPublished(id, true);
-      expect(repo.listProducts().any((p) => p.id == id), isTrue);
+      await ctrl.setProductPublished(id, true);
+      expect((await repo.listProducts()).any((p) => p.id == id), isTrue);
     });
 
     test('Kampanya: taslağa al → genel düşer, Mağazam kalır; yayına al → geri',
-        () {
+        () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       final ctrl = c.read(b2bMarketControllerProvider.notifier);
-      ctrl.addCampaign(
+      await ctrl.addCampaign(
         title: 'Toggle Kampanya',
         category: 'Un',
         region: 'Ege',
@@ -381,39 +389,40 @@ void main() {
         validUntil: 'Süresiz',
       );
       final repo = c.read(b2bRepositoryProvider);
-      final id = repo
-          .listMyCampaigns()
+      final id = (await repo.listMyCampaigns())
           .firstWhere((c) => c.title == 'Toggle Kampanya')
           .id;
 
-      ctrl.setCampaignPublished(id, false);
-      expect(repo.listCampaigns().any((c) => c.id == id), isFalse);
-      expect(repo.listMyCampaigns().any((c) => c.id == id), isTrue);
+      await ctrl.setCampaignPublished(id, false);
+      expect((await repo.listCampaigns()).any((c) => c.id == id), isFalse);
+      expect((await repo.listMyCampaigns()).any((c) => c.id == id), isTrue);
 
-      ctrl.setCampaignPublished(id, true);
-      expect(repo.listCampaigns().any((c) => c.id == id), isTrue);
+      await ctrl.setCampaignPublished(id, true);
+      expect((await repo.listCampaigns()).any((c) => c.id == id), isTrue);
     });
 
-    test('updateProduct: ad/kategori güncellenir, id + sahiplik korunur', () {
+    test('updateProduct: ad/kategori güncellenir, id + sahiplik korunur',
+        () async {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       final ctrl = c.read(b2bMarketControllerProvider.notifier);
-      ctrl.addProduct(
+      await ctrl.addProduct(
         name: 'Eski Ad',
         category: 'Un',
         minOrder: '1',
         deliveryRegion: 'Ege',
       );
       final repo = c.read(b2bRepositoryProvider);
-      final p = repo.listMyProducts().firstWhere((p) => p.name == 'Eski Ad');
-      ctrl.updateProduct(
+      final p =
+          (await repo.listMyProducts()).firstWhere((p) => p.name == 'Eski Ad');
+      await ctrl.updateProduct(
         id: p.id,
         name: 'Yeni Ad',
         category: 'Maya',
         minOrder: '5',
         deliveryRegion: 'Marmara',
       );
-      final updated = repo.productById(p.id)!;
+      final updated = (await repo.productById(p.id))!;
       expect(updated.name, 'Yeni Ad');
       expect(updated.category, 'Maya');
       expect(updated.id, p.id);

@@ -2,13 +2,16 @@
 //
 // Genel kampanya alanı (ticari fırsatlar). Kampanya oluşturma/düzenleme YOK.
 // "Teklif İste". (ownerContext: false → "Benim kampanyam" rozeti yok.)
+// Veri repository'den FutureProvider ile gelir (loading/error/empty/data).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../models/b2b_campaign.dart';
 import '../../providers/b2b_providers.dart';
+import '../../widgets/b2b_async_list.dart';
 import '../../widgets/b2b_campaign_card.dart';
 import '../../widgets/b2b_category_chip_row.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
@@ -25,10 +28,8 @@ class _BuyerCampaignsTabState extends ConsumerState<BuyerCampaignsTab> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(b2bMarketControllerProvider); // tedarikçi yeni kampanya ekleyince yenilen
-    final repo = ref.watch(b2bRepositoryProvider);
-    final categories = repo.productCategories();
-    final campaigns = repo.listCampaigns(category: _category);
+    final categories = ref.watch(b2bRepositoryProvider).productCategories();
+    final async = ref.watch(b2bCampaignsProvider(_category));
 
     return Column(
       children: [
@@ -39,39 +40,25 @@ class _BuyerCampaignsTabState extends ConsumerState<BuyerCampaignsTab> {
           onSelect: (c) => setState(() => _category = c),
         ),
         Expanded(
-          child: campaigns.isEmpty
-              ? const EmptyState(
-                  icon: Icons.campaign_outlined,
-                  title: 'Kampanya bulunamadı',
-                  subtitle: 'Bu kategoride aktif kampanya yok.',
-                  compact: true,
-                )
-              : ListView.separated(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageH,
-                    AppSpacing.s,
-                    AppSpacing.pageH,
-                    AppSpacing.xxl,
-                  ),
-                  itemCount: campaigns.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSpacing.m),
-                  itemBuilder: (_, i) {
-                    final c = campaigns[i];
-                    return B2bCampaignCard(
-                      campaign: c,
-                      ownerContext: false,
-                      onRequestQuote: () => showB2bOfferFlow(
-                        context,
-                        kind: B2bOfferKind.requestQuote,
-                        contextLine: '${c.supplierName} · ${c.title}',
-                      ),
-                    );
-                  },
-                ),
+          child: B2bAsyncList<B2bCampaign>(
+            async: async,
+            onRetry: () => ref.invalidate(b2bCampaignsProvider(_category)),
+            empty: const EmptyState(
+              icon: Icons.campaign_outlined,
+              title: 'Kampanya bulunamadı',
+              subtitle: 'Bu kategoride aktif kampanya yok.',
+              compact: true,
+            ),
+            itemBuilder: (context, c) => B2bCampaignCard(
+              campaign: c,
+              ownerContext: false,
+              onRequestQuote: () => showB2bOfferFlow(
+                context,
+                kind: B2bOfferKind.requestQuote,
+                contextLine: '${c.supplierName} · ${c.title}',
+              ),
+            ),
+          ),
         ),
       ],
     );

@@ -44,21 +44,31 @@ class _SupplierCampaignFormScreenState
   void initState() {
     super.initState();
     final id = widget.campaignId;
-    if (id == null) return;
-    final c = ref.read(b2bRepositoryProvider).campaignById(id);
-    if (c == null) return;
-    _editing = true;
-    _title.text = c.title;
-    _linkedProduct.text = c.linkedProduct ?? '';
-    _minPurchase.text = c.minPurchase == 'Belirtilmedi' ? '' : c.minPurchase;
-    _validUntil.text = c.validUntil == 'Süresiz' ? '' : c.validUntil;
-    _description.text = c.description;
-    _category = c.category;
-    _published = c.published;
-    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
-    for (final r in c.region.split(', ')) {
-      if (known.contains(r.trim())) _regions.add(r.trim());
+    if (id != null) {
+      _editing = true;
+      _prefill(id);
     }
+  }
+
+  Future<void> _prefill(String id) async {
+    final c = await ref.read(b2bRepositoryProvider).campaignById(id);
+    if (c == null || !mounted) return;
+    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
+    setState(() {
+      _title.text = c.title;
+      _linkedProduct.text = c.linkedProduct ?? '';
+      _minPurchase.text = c.minPurchase == 'Belirtilmedi' ? '' : c.minPurchase;
+      _validUntil.text = c.validUntil == 'Süresiz' ? '' : c.validUntil;
+      _description.text = c.description;
+      _category = c.category;
+      _published = c.published;
+      _regions
+        ..clear()
+        ..addAll(c.region
+            .split(', ')
+            .map((e) => e.trim())
+            .where(known.contains));
+    });
   }
 
   @override
@@ -71,7 +81,7 @@ class _SupplierCampaignFormScreenState
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final formOk = _formKey.currentState?.validate() ?? false;
     final categoryOk = _category != null;
     if (!categoryOk) setState(() => _categoryTouched = true);
@@ -86,7 +96,7 @@ class _SupplierCampaignFormScreenState
         _validUntil.text.trim().isEmpty ? 'Süresiz' : _validUntil.text.trim();
     final controller = ref.read(b2bMarketControllerProvider.notifier);
     if (_editing) {
-      controller.updateCampaign(
+      await controller.updateCampaign(
         id: widget.campaignId!,
         title: _title.text.trim(),
         category: _category!,
@@ -98,7 +108,7 @@ class _SupplierCampaignFormScreenState
         published: _published,
       );
     } else {
-      controller.addCampaign(
+      await controller.addCampaign(
         title: _title.text.trim(),
         category: _category!,
         region: region,
@@ -110,6 +120,7 @@ class _SupplierCampaignFormScreenState
       );
     }
 
+    if (!mounted) return;
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,
