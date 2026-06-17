@@ -19,6 +19,7 @@ class BuyerSuppliersTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(b2bMarketControllerProvider); // mağaza güncellenince yenilen
     final stores = ref.watch(b2bRepositoryProvider).listStores();
 
     if (stores.isEmpty) {

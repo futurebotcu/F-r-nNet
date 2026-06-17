@@ -19,11 +19,17 @@ class B2bProductCard extends StatelessWidget {
     this.onRequestQuote,
     this.onAskPrice,
     this.ownerContext = true,
+    this.onEdit,
+    this.onTogglePublish,
   });
 
   final B2bProduct product;
   final VoidCallback? onRequestQuote;
   final VoidCallback? onAskPrice;
+
+  /// Sahiplik yönetim aksiyonları (yalnız kendi ürününde + supplier bağlamı).
+  final VoidCallback? onEdit;
+  final VoidCallback? onTogglePublish;
 
   /// Tedarikçi önizlemesinde true → kendi ürününde "Benim ürünüm" rozeti +
   /// aksiyon gizli. Fırıncı (alıcı) görünümünde false → sahiplik yok sayılır
@@ -31,6 +37,8 @@ class B2bProductCard extends StatelessWidget {
   final bool ownerContext;
 
   bool get _isMine => product.isMine && ownerContext;
+  bool get _canManage =>
+      _isMine && (onEdit != null || onTogglePublish != null);
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +61,21 @@ class B2bProductCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (!product.published && ownerContext) ...[
+                const SizedBox(width: 6),
+                const B2bDraftBadge(),
+              ],
               if (_isMine) ...[
                 const SizedBox(width: AppSpacing.s),
                 const B2bOwnerBadge(label: 'Benim ürünüm'),
+              ],
+              if (_canManage) ...[
+                const SizedBox(width: 2),
+                B2bManageMenu(
+                  published: product.published,
+                  onEdit: onEdit,
+                  onTogglePublish: onTogglePublish,
+                ),
               ],
             ],
           ),
@@ -82,6 +102,20 @@ class B2bProductCard extends StatelessWidget {
               ),
             ],
           ),
+          if (product.description.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              product.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: AppColors.textSecondary,
+                height: 1.35,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.m),
           Wrap(
             spacing: 6,

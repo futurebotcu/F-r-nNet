@@ -29,6 +29,18 @@ class B2bMockSeed {
     'Ekipman',
   ];
 
+  // ---- Hizmet/teslimat bölgeleri (mağaza + ürün formlarında çok seçimli) ----
+  static const List<String> serviceRegions = <String>[
+    'Marmara',
+    'Ege',
+    'İç Anadolu',
+    'Akdeniz',
+    'Karadeniz',
+    'Doğu Anadolu',
+    'Güneydoğu',
+    'Tüm Türkiye',
+  ];
+
   // ---- Mağazalar (tedarikçi vitrinleri) ----
   static const List<B2bStore> stores = <B2bStore>[
     B2bStore(

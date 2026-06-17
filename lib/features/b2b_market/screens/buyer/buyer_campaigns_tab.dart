@@ -25,6 +25,7 @@ class _BuyerCampaignsTabState extends ConsumerState<BuyerCampaignsTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(b2bMarketControllerProvider); // tedarikçi yeni kampanya ekleyince yenilen
     final repo = ref.watch(b2bRepositoryProvider);
     final categories = repo.productCategories();
     final campaigns = repo.listCampaigns(category: _category);
