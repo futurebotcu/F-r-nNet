@@ -11,7 +11,10 @@
 // wholesaler → tedarikçi, diğerleri/guest → alıcı). AccountType DEĞİŞTİRİLMEZ.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../core/config/app_config.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/b2b_campaign.dart';
@@ -20,10 +23,41 @@ import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
 import '../repositories/b2b_repository.dart';
 import '../repositories/local_b2b_repository.dart';
+import '../repositories/supabase_b2b_repository.dart';
 
-/// B2B repository sağlayıcısı. Şimdilik Local (mock); Supabase seçimi Adım C.
+/// Repository seçim mantığı — saf ve test edilebilir.
+///
+/// Supabase yapılandırılmış VE oturum (userId) varsa → Supabase; aksi halde
+/// (guest / Supabase kapalı / oturum yok) → Local. Supabase örneği
+/// oluşturulurken hata olursa (client hazır değil) güvenli şekilde Local'a
+/// düşer → Pazar boş kalmaz/çökmez.
+B2bRepository b2bRepositoryFor({
+  required bool supabaseEnabled,
+  required String? userId,
+  required B2bRepository Function() makeSupabase,
+  required B2bRepository Function() makeLocal,
+}) {
+  if (supabaseEnabled && userId != null) {
+    try {
+      return makeSupabase();
+    } catch (_) {
+      return makeLocal();
+    }
+  }
+  return makeLocal();
+}
+
+/// B2B repository sağlayıcısı. Auth + Supabase hazırsa SupabaseB2bRepository,
+/// yoksa LocalB2bRepository (guest/offline fallback). Yalnız userId izlenir
+/// (token refresh repo'yu gereksiz resetlemesin — marketplace P0 kalıbı).
 final b2bRepositoryProvider = Provider<B2bRepository>((ref) {
-  return LocalB2bRepository();
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
+  return b2bRepositoryFor(
+    supabaseEnabled: AppConfig.supabaseEnabled,
+    userId: userId,
+    makeSupabase: () => SupabaseB2bRepository(sb.Supabase.instance.client),
+    makeLocal: LocalB2bRepository.new,
+  );
 });
 
 /// Mağaza yönetim write akışlarının tek giriş noktası + reaktif sinyal.
