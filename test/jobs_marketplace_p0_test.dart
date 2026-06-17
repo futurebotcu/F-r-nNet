@@ -117,7 +117,7 @@ void main() {
 
     // Navigation IA Sprint — alt nav: Topluluk · Pazar · İlanlar · Mesajlar ·
     // Panel. Feed+Gruplar → Topluluk; jobs+marketplace → İlanlar; marketplace
-    // (B2B) → Pazar "Yakında"; Mesajlar alt nav'a çıktı.
+    // İlanlar; Pazar → B2B tedarik modülü; Mesajlar alt nav'a çıktı.
     test('5 tab tanımlı: Topluluk, Pazar, İlanlar, Mesajlar, Panel', () {
       expect(src.contains('AppRoutes.community'), isTrue);
       expect(src.contains('AppRoutes.pazar'), isTrue);
@@ -127,11 +127,11 @@ void main() {
       expect(src.contains('AppRoutes.panel'), isTrue);
     });
 
-    test('Pazar tab storefront ikonu + "Yakında" rozeti', () {
+    test('Pazar tab storefront ikonu (B2B canlı → Yakında rozeti yok)', () {
       expect(src.contains('Icons.storefront_outlined'), isTrue);
       expect(src.contains('Icons.storefront_rounded'), isTrue);
-      expect(src.contains('comingSoon: true'), isTrue,
-          reason: 'Pazar tab Yakında rozeti taşır');
+      expect(src.contains('comingSoon'), isFalse,
+          reason: 'B2B Pazar\'a bağlandı; Yakında rozeti kaldırıldı');
     });
 
     test('Mesajlar tab okunmamış sayaç rozetini besler', () {

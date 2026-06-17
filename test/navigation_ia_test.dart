@@ -49,9 +49,9 @@ void main() {
       expect(shell.contains('badgeCount'), isTrue);
     });
 
-    test('Pazar comingSoon rozeti', () {
-      expect(shell.contains('comingSoon: t.comingSoon'), isTrue);
-      expect(shell.contains('comingSoon: true'), isTrue);
+    test('Pazar artık canlı B2B modülü → comingSoon rozeti yok', () {
+      // B2B Pazar'a bağlandı: alt nav'da hiçbir tab "Yakında" rozeti taşımaz.
+      expect(shell.contains('comingSoon'), isFalse);
     });
   });
 
@@ -64,7 +64,8 @@ void main() {
     test('Shell yeni kapsayıcıları kullanır', () {
       expect(router.contains('CommunityScreen('), isTrue);
       expect(router.contains('ListingsScreen('), isTrue);
-      expect(router.contains('PazarComingSoonScreen()'), isTrue);
+      // Pazar artık B2B native modül shell'i (PazarComingSoonScreen yerine).
+      expect(router.contains('B2bShellScreen()'), isTrue);
       expect(router.contains('MessagesListScreen()'), isTrue);
     });
 

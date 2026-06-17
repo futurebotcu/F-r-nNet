@@ -96,12 +96,12 @@ void main() {
     await tester.pumpAndSettle();
     await _capture(tester, 'community_groups');
 
-    // Pazar — "Yakında" yüzeyi. (Sıralı alt nav tap'i: sonraki etiket yalnız
-    // nav'da var → tekil.)
+    // Pazar — B2B native modül. Misafir (profil yok) → alıcı görünümü:
+    // Ürünler · Kampanyalar · Tedarikçiler · Tekliflerim. Rol toggle YOK.
     await tester.tap(find.text(AppStrings.navPazar));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.pazarComingTitle), findsOneWidget);
-    await _capture(tester, 'pazar_coming_soon');
+    expect(find.text('Tekliflerim'), findsOneWidget);
+    await _capture(tester, 'pazar_b2b');
 
     // İlanlar — Eleman segmenti (varsayılan).
     await tester.tap(find.text(AppStrings.navListings));
