@@ -49,7 +49,7 @@ import '../../features/social_groups/screens/group_detail_screen.dart';
 import '../../features/jobs/screens/job_offer_form_screen.dart';
 import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_detail_screen.dart';
-import '../../features/marketplace/screens/pazar_coming_soon_screen.dart';
+import '../../features/b2b_market/screens/b2b_shell_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
 import '../../features/messaging/screens/chat_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
@@ -282,10 +282,13 @@ GoRouter createRouter() {
             },
           ),
           GoRoute(
-            // Pazar = "Yakında" B2B/teklif ağı yüzeyi.
+            // Pazar = B2B native modül (preview): Tedarikçi/Fırıncı toggle +
+            // 4+4 sekme, mock veri. (Eski PazarComingSoonScreen yerine geçti;
+            // dosya rollback için korunur. Nav sekmesindeki comingSoon rozeti
+            // ayrı bir adımda kaldırılacak.)
             path: AppRoutes.pazar,
             pageBuilder: (_, state) =>
-                _noTransition(state, const PazarComingSoonScreen()),
+                _noTransition(state, const B2bShellScreen()),
           ),
           GoRoute(
             // İlanlar = Eleman (jobs) + İş yeri + Ekipman (marketplace).
