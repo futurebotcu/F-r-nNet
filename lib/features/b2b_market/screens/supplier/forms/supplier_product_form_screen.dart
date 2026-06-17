@@ -102,10 +102,9 @@ class _SupplierProductFormScreenState
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,
-      title: _editing ? 'Ürün güncellendi' : 'Ürün eklendi',
       message: _published
-          ? 'Ürün yayında; Mağazam ve Ürünler\'de görünür.'
-          : 'Ürün taslak; yalnız Mağazam\'da görünür.',
+          ? '${_editing ? 'Ürün güncellendi' : 'Ürün eklendi'} — Mağazam ve Ürünler\'de görünür.'
+          : '${_editing ? 'Ürün güncellendi' : 'Ürün eklendi'} — taslak; yalnız Mağazam\'da görünür.',
       tone: PremiumTopBannerTone.success,
       duration: const Duration(seconds: 2),
     );

@@ -113,10 +113,9 @@ class _SupplierCampaignFormScreenState
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,
-      title: _editing ? 'Kampanya güncellendi' : 'Kampanya oluşturuldu',
       message: _published
-          ? 'Kampanya yayında; Mağazam ve Kampanyalar\'da görünür.'
-          : 'Kampanya taslak; yalnız Mağazam\'da görünür.',
+          ? '${_editing ? 'Kampanya güncellendi' : 'Kampanya oluşturuldu'} — Mağazam ve Kampanyalar\'da görünür.'
+          : '${_editing ? 'Kampanya güncellendi' : 'Kampanya oluşturuldu'} — taslak; yalnız Mağazam\'da görünür.',
       tone: PremiumTopBannerTone.success,
       duration: const Duration(seconds: 2),
     );

@@ -61,8 +61,7 @@ class BuyerSuppliersTab extends ConsumerWidget {
   void _openStoreProfile(BuildContext context, B2bStore store) {
     PremiumTopBannerController.show(
       context,
-      title: store.name,
-      message: 'Mağaza detay sayfası yakında.',
+      message: '${store.name}: Mağaza detay sayfası yakında.',
       tone: PremiumTopBannerTone.info,
       duration: const Duration(seconds: 2),
     );

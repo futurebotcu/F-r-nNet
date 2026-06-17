@@ -60,8 +60,7 @@ class _SupplierStoreEditScreenState
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,
-      title: 'Mağaza güncellendi',
-      message: 'Vitrin bilgilerin Mağazam\'da güncellendi.',
+      message: 'Mağaza güncellendi. Vitrin bilgilerin Mağazam\'da yenilendi.',
       tone: PremiumTopBannerTone.success,
       duration: const Duration(seconds: 2),
     );

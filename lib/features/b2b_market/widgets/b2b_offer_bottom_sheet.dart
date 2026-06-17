@@ -28,8 +28,7 @@ Future<void> showB2bOfferFlow(
   if (!submitted || !context.mounted) return;
   PremiumTopBannerController.show(
     context,
-    title: '${kind.title} gönderildi',
-    message: 'Talebin alındı. Yanıtlar "Tekliflerim" altında görünür.',
+    message: '${kind.title} gönderildi. Yanıtlar "Tekliflerim" altında görünür.',
     tone: PremiumTopBannerTone.success,
     duration: const Duration(seconds: 2),
   );
