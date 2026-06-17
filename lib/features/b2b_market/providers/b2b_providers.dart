@@ -19,10 +19,139 @@ import '../../profile/providers/profile_provider.dart';
 import '../repositories/b2b_repository.dart';
 import '../repositories/local_b2b_repository.dart';
 
-/// B2B mock repository sağlayıcısı.
+/// B2B mock repository sağlayıcısı. In-memory mutable tek örnek (oturum
+/// boyunca korunur); write'lar [b2bMarketControllerProvider] üzerinden yapılır.
 final b2bRepositoryProvider = Provider<B2bRepository>((ref) {
-  return const LocalB2bRepository();
+  return LocalB2bRepository();
 });
+
+/// Mağaza yönetim write akışlarının tek giriş noktası + reaktif sinyal.
+///
+/// State bir revizyon sayacıdır: her write sonrası artar → ürün/kampanya/
+/// mağaza gösteren tab'lar bu provider'ı izleyerek yeniden çizilir.
+/// Backend/persist YOK (mock, in-memory).
+final b2bMarketControllerProvider =
+    NotifierProvider<B2bMarketController, int>(B2bMarketController.new);
+
+class B2bMarketController extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  B2bRepository get _repo => ref.read(b2bRepositoryProvider);
+
+  void addProduct({
+    required String name,
+    required String category,
+    required String minOrder,
+    required String deliveryRegion,
+    String description = '',
+    bool published = true,
+  }) {
+    _repo.addProduct(
+      name: name,
+      category: category,
+      minOrder: minOrder,
+      deliveryRegion: deliveryRegion,
+      description: description,
+      published: published,
+    );
+    state++;
+  }
+
+  void addCampaign({
+    required String title,
+    required String category,
+    required String region,
+    required String minPurchase,
+    required String validUntil,
+    String? linkedProduct,
+    String description = '',
+    bool published = true,
+  }) {
+    _repo.addCampaign(
+      title: title,
+      category: category,
+      region: region,
+      minPurchase: minPurchase,
+      validUntil: validUntil,
+      linkedProduct: linkedProduct,
+      description: description,
+      published: published,
+    );
+    state++;
+  }
+
+  void updateStore({
+    required String name,
+    required String description,
+    required List<String> serviceRegions,
+    required List<String> categories,
+  }) {
+    _repo.updateStore(
+      name: name,
+      description: description,
+      serviceRegions: serviceRegions,
+      categories: categories,
+    );
+    state++;
+  }
+
+  void updateProduct({
+    required String id,
+    required String name,
+    required String category,
+    required String minOrder,
+    required String deliveryRegion,
+    String description = '',
+    bool published = true,
+  }) {
+    _repo.updateProduct(
+      id: id,
+      name: name,
+      category: category,
+      minOrder: minOrder,
+      deliveryRegion: deliveryRegion,
+      description: description,
+      published: published,
+    );
+    state++;
+  }
+
+  void updateCampaign({
+    required String id,
+    required String title,
+    required String category,
+    required String region,
+    required String minPurchase,
+    required String validUntil,
+    String? linkedProduct,
+    String description = '',
+    bool published = true,
+  }) {
+    _repo.updateCampaign(
+      id: id,
+      title: title,
+      category: category,
+      region: region,
+      minPurchase: minPurchase,
+      validUntil: validUntil,
+      linkedProduct: linkedProduct,
+      description: description,
+      published: published,
+    );
+    state++;
+  }
+
+  void setProductPublished(String id, bool published) {
+    _repo.setProductPublished(id, published);
+    state++;
+  }
+
+  void setCampaignPublished(String id, bool published) {
+    _repo.setCampaignPublished(id, published);
+    state++;
+  }
+}
 
 /// Pazar'a giren kullanıcının B2B görünüm rolü.
 enum B2bRole { supplier, buyer }

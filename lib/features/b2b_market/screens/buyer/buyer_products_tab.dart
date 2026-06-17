@@ -28,6 +28,7 @@ class _BuyerProductsTabState extends ConsumerState<BuyerProductsTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(b2bMarketControllerProvider); // tedarikçi yeni ürün ekleyince yenilen
     final repo = ref.watch(b2bRepositoryProvider);
     final categories = repo.productCategories();
     final products = repo.listProducts(category: _category, query: _query);

@@ -2,12 +2,15 @@
 //
 // B2B mağaza vitrini gibi görünür (FırınNet profilinin kopyası DEĞİL):
 // monogram + kapak hissi, hizmet bölgeleri, kategoriler, kısa açıklama,
-// öne çıkan ürünler, aktif kampanyalar. Dashboard/istatistik ile başlamaz;
-// "fırıncılar mağazanı böyle görüyor" bakış açısını verir.
+// öne çıkan ürünler, aktif kampanyalar. Ayrıca tedarikçiye özel YÖNETİM
+// aksiyonları: Mağazanı düzenle · Ürün ekle · Kampanya oluştur. Bu tab yalnız
+// tedarikçi rolünde shell tarafından oluşturulur → alıcı asla görmez.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
@@ -21,6 +24,8 @@ class SupplierStoreTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Write sonrası (ürün/kampanya/mağaza) yeniden çiz.
+    ref.watch(b2bMarketControllerProvider);
     final repo = ref.watch(b2bRepositoryProvider);
     final store = repo.myStore();
     final products = repo.listMyProducts();
@@ -40,30 +45,52 @@ class SupplierStoreTab extends ConsumerWidget {
         const _ViewpointStrip(),
         const SizedBox(height: AppSpacing.m),
         _StoreHero(store: store),
-        if (products.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.l),
-          const _SectionHeader(
-            icon: Icons.star_outline_rounded,
-            title: 'Öne çıkan ürünler',
-          ),
-          const SizedBox(height: AppSpacing.s),
+        const SizedBox(height: AppSpacing.s),
+        _EditStoreButton(
+          onTap: () => context.push(AppRoutes.b2bStoreEdit),
+        ),
+        const SizedBox(height: AppSpacing.l),
+        _SectionHeader(
+          icon: Icons.star_outline_rounded,
+          title: 'Öne çıkan ürünler',
+          addLabel: 'Ürün ekle',
+          onAdd: () => context.push(AppRoutes.b2bProductNew),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        if (products.isEmpty)
+          const _EmptyHint(text: 'Henüz ürün eklemedin.')
+        else
           for (final p in products) ...[
-            B2bProductCard(product: p),
+            B2bProductCard(
+              product: p,
+              onEdit: () => context.push(AppRoutes.b2bProductEdit(p.id)),
+              onTogglePublish: () => ref
+                  .read(b2bMarketControllerProvider.notifier)
+                  .setProductPublished(p.id, !p.published),
+            ),
             const SizedBox(height: AppSpacing.m),
           ],
-        ],
-        if (campaigns.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.s),
-          const _SectionHeader(
-            icon: Icons.campaign_outlined,
-            title: 'Aktif kampanyalar',
-          ),
-          const SizedBox(height: AppSpacing.s),
+        const SizedBox(height: AppSpacing.m),
+        _SectionHeader(
+          icon: Icons.campaign_outlined,
+          title: 'Aktif kampanyalar',
+          addLabel: 'Kampanya oluştur',
+          onAdd: () => context.push(AppRoutes.b2bCampaignNew),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        if (campaigns.isEmpty)
+          const _EmptyHint(text: 'Henüz kampanya oluşturmadın.')
+        else
           for (final c in campaigns) ...[
-            B2bCampaignCard(campaign: c),
+            B2bCampaignCard(
+              campaign: c,
+              onEdit: () => context.push(AppRoutes.b2bCampaignEdit(c.id)),
+              onTogglePublish: () => ref
+                  .read(b2bMarketControllerProvider.notifier)
+                  .setCampaignPublished(c.id, !c.published),
+            ),
             const SizedBox(height: AppSpacing.m),
           ],
-        ],
       ],
     );
   }
@@ -203,6 +230,32 @@ class _StoreHero extends StatelessWidget {
   }
 }
 
+class _EditStoreButton extends StatelessWidget {
+  const _EditStoreButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: const Icon(Icons.edit_outlined, size: 17),
+        label: const Text('Mağazanı düzenle'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textPrimary,
+          side: const BorderSide(color: AppColors.borderHairline, width: 0.8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+        ),
+      ),
+    );
+  }
+}
+
 class _LabeledChips extends StatelessWidget {
   const _LabeledChips({
     required this.icon,
@@ -267,9 +320,16 @@ class _LabeledChips extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title});
+  const _SectionHeader({
+    required this.icon,
+    required this.title,
+    required this.addLabel,
+    required this.onAdd,
+  });
   final IconData icon;
   final String title;
+  final String addLabel;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -277,16 +337,59 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 17, color: AppColors.brandLemonPressed),
         const SizedBox(width: 6),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.2,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: onAdd,
+          icon: const Icon(Icons.add_rounded, size: 16),
+          label: Text(addLabel),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.brandInk,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            minimumSize: const Size(0, 34),
+            textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _EmptyHint extends StatelessWidget {
+  const _EmptyHint({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.m,
+        vertical: AppSpacing.l,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.borderHairline, width: 0.8),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 13,
+          color: AppColors.textMuted,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

@@ -14,6 +14,8 @@ class B2bProduct {
     required this.deliveryRegion,
     this.priceType = 'Teklif al',
     this.isMine = false,
+    this.description = '',
+    this.published = true,
   });
 
   final String id;
@@ -31,6 +33,36 @@ class B2bProduct {
   /// Fiyat tipi etiketi. Mock'ta daima "Teklif al".
   final String priceType;
 
-  /// Preview tedarikçinin kendi ürünü mü (mock sahiplik).
+  /// Tedarikçinin kendi ürünü mü (mock sahiplik).
   final bool isMine;
+
+  /// Kısa açıklama (opsiyonel — formdan girilir).
+  final String description;
+
+  /// Yayında mı (false → Taslak). Taslaklar genel ürün pazarında
+  /// görünmez; yalnız sahibinin Mağazam'ında listelenir.
+  final bool published;
+
+  B2bProduct copyWith({
+    String? name,
+    String? category,
+    String? minOrder,
+    String? deliveryRegion,
+    String? description,
+    bool? published,
+  }) {
+    return B2bProduct(
+      id: id,
+      name: name ?? this.name,
+      supplierId: supplierId,
+      supplierName: supplierName,
+      category: category ?? this.category,
+      minOrder: minOrder ?? this.minOrder,
+      deliveryRegion: deliveryRegion ?? this.deliveryRegion,
+      priceType: priceType,
+      isMine: isMine,
+      description: description ?? this.description,
+      published: published ?? this.published,
+    );
+  }
 }

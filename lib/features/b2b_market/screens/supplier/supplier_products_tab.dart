@@ -6,7 +6,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../providers/b2b_providers.dart';
@@ -29,6 +31,7 @@ class _SupplierProductsTabState extends ConsumerState<SupplierProductsTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(b2bMarketControllerProvider); // yeni ürün eklenince yenilen
     final repo = ref.watch(b2bRepositoryProvider);
     final categories = repo.productCategories();
     final products = repo.listProducts(category: _category, query: _query);
@@ -76,6 +79,12 @@ class _SupplierProductsTabState extends ConsumerState<SupplierProductsTab> {
                         kind: B2bOfferKind.requestQuote,
                         contextLine: '${p.supplierName} · ${p.name}',
                       ),
+                      // Kendi ürünlerinde yönetim menüsü (başka tedarikçide
+                      // _isMine=false → menü gösterilmez).
+                      onEdit: () => context.push(AppRoutes.b2bProductEdit(p.id)),
+                      onTogglePublish: () => ref
+                          .read(b2bMarketControllerProvider.notifier)
+                          .setProductPublished(p.id, !p.published),
                     );
                   },
                 ),

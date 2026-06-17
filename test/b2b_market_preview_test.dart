@@ -1,18 +1,22 @@
-// B2B Pazar — native modül preview sprint testleri.
+// B2B Pazar — native modül testleri.
 //
-// Kapsam: mock repository davranışı, anonimlik sözleşmesi, B2bShellScreen
-// preview toggle (Tedarikçi/Fırıncı) ve 4+4 segment.
+// Kapsam: mock repository davranışı (okuma + write), anonimlik sözleşmesi,
+// role resolution + 4+4 segment, Mağazam yönetim aksiyonları ve ürün
+// ekleme formu validasyonu.
 
+import 'package:firin_defter/features/b2b_market/models/b2b_product.dart';
 import 'package:firin_defter/features/b2b_market/providers/b2b_providers.dart';
 import 'package:firin_defter/features/b2b_market/repositories/local_b2b_repository.dart';
 import 'package:firin_defter/features/b2b_market/screens/b2b_shell_screen.dart';
+import 'package:firin_defter/features/b2b_market/screens/supplier/forms/supplier_product_form_screen.dart';
+import 'package:firin_defter/features/b2b_market/widgets/b2b_product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('LocalB2bRepository — mock veri', () {
-    const repo = LocalB2bRepository();
+    final repo = LocalB2bRepository();
 
     test('myStore preview tedarikçinin mağazası (isMine)', () {
       final s = repo.myStore();
@@ -126,6 +130,294 @@ void main() {
       await t.tap(find.text('Teklif Ağı'));
       await t.pumpAndSettle();
       expect(find.textContaining('anonim'), findsWidgets);
+    });
+  });
+
+  group('Mağazam yönetim aksiyonları — rol ayrımı', () {
+    testWidgets('Tedarikçi Mağazam: Düzenle / Ürün ekle / Kampanya oluştur',
+        (t) async {
+      // Mağazam uzun bir liste; tüm bölümlerin build olması için yüksek yüzey.
+      t.view.physicalSize = const Size(1080, 3400);
+      t.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        t.view.resetPhysicalSize();
+        t.view.resetDevicePixelRatio();
+      });
+      await t.pumpWidget(ProviderScope(
+        overrides: [
+          b2bRoleOverrideProvider.overrideWith((ref) => B2bRole.supplier),
+        ],
+        child: const MaterialApp(home: B2bShellScreen()),
+      ));
+      await t.pump();
+      expect(find.text('Mağazanı düzenle'), findsOneWidget);
+      expect(find.text('Ürün ekle'), findsOneWidget);
+      expect(find.text('Kampanya oluştur'), findsOneWidget);
+    });
+
+    testWidgets('Alıcı bu yönetim aksiyonlarını GÖRMEZ', (t) async {
+      await t.pumpWidget(ProviderScope(
+        overrides: [
+          b2bRoleOverrideProvider.overrideWith((ref) => B2bRole.buyer),
+        ],
+        child: const MaterialApp(home: B2bShellScreen()),
+      ));
+      await t.pump();
+      expect(find.text('Mağazanı düzenle'), findsNothing);
+      expect(find.text('Ürün ekle'), findsNothing);
+      expect(find.text('Kampanya oluştur'), findsNothing);
+    });
+  });
+
+  group('Ürün ekleme formu — validasyon', () {
+    testWidgets('Boş ürün adı + kategori reddedilir', (t) async {
+      // Form uzun; "Ürünü kaydet" butonu build olsun diye yüksek yüzey.
+      t.view.physicalSize = const Size(1080, 3400);
+      t.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        t.view.resetPhysicalSize();
+        t.view.resetDevicePixelRatio();
+      });
+      await t.pumpWidget(const ProviderScope(
+        child: MaterialApp(home: SupplierProductFormScreen()),
+      ));
+      await t.pump();
+      await t.tap(find.text('Ürünü kaydet'));
+      await t.pump();
+      expect(find.text('Ürün adı gerekli'), findsOneWidget);
+      expect(find.text('Kategori seçin'), findsOneWidget);
+    });
+  });
+
+  group('Mock write akışı — Mağazam\'a yansıma', () {
+    test('addProduct (yayında) → Mağazam + genel Ürünler\'de görünür', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final before = c.read(b2bRepositoryProvider).listMyProducts().length;
+      c.read(b2bMarketControllerProvider.notifier).addProduct(
+            name: 'Test Unu',
+            category: 'Un',
+            minOrder: '10 çuval',
+            deliveryRegion: 'Ege',
+          );
+      final repo = c.read(b2bRepositoryProvider);
+      expect(repo.listMyProducts().length, before + 1);
+      expect(repo.listMyProducts().any((p) => p.name == 'Test Unu'), isTrue);
+      // Yayında → genel pazarda da görünür.
+      expect(repo.listProducts().any((p) => p.name == 'Test Unu'), isTrue);
+    });
+
+    test('addProduct (taslak) → genel Ürünler\'de görünmez, Mağazam\'da görünür',
+        () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      c.read(b2bMarketControllerProvider.notifier).addProduct(
+            name: 'Taslak Ürün',
+            category: 'Maya',
+            minOrder: '5 koli',
+            deliveryRegion: 'Marmara',
+            published: false,
+          );
+      final repo = c.read(b2bRepositoryProvider);
+      expect(repo.listMyProducts().any((p) => p.name == 'Taslak Ürün'), isTrue);
+      expect(repo.listProducts().any((p) => p.name == 'Taslak Ürün'), isFalse);
+    });
+
+    test('addCampaign → Mağazam kampanyalarında görünür', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final before = c.read(b2bRepositoryProvider).listMyCampaigns().length;
+      c.read(b2bMarketControllerProvider.notifier).addCampaign(
+            title: 'Test Kampanya',
+            category: 'Un',
+            region: 'Ege',
+            minPurchase: '100 çuval',
+            validUntil: '30 Haziran 2026',
+          );
+      final repo = c.read(b2bRepositoryProvider);
+      expect(repo.listMyCampaigns().length, before + 1);
+      expect(
+        repo.listMyCampaigns().any((c) => c.title == 'Test Kampanya'),
+        isTrue,
+      );
+    });
+
+    test('updateStore → Mağazam bilgisi güncellenir (monogram türetilir)', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      c.read(b2bMarketControllerProvider.notifier).updateStore(
+            name: 'Yeni Ticaret',
+            description: 'Güncellenmiş açıklama',
+            serviceRegions: ['Ege', 'Akdeniz'],
+            categories: ['Un'],
+          );
+      final store = c.read(b2bRepositoryProvider).myStore();
+      expect(store.name, 'Yeni Ticaret');
+      expect(store.description, 'Güncellenmiş açıklama');
+      expect(store.serviceRegions, ['Ege', 'Akdeniz']);
+      expect(store.categories, ['Un']);
+      expect(store.monogram, 'YT');
+    });
+
+    test('write sonrası controller revizyonu artar (reaktivite)', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final r0 = c.read(b2bMarketControllerProvider);
+      c.read(b2bMarketControllerProvider.notifier).addProduct(
+            name: 'X',
+            category: 'Un',
+            minOrder: '1',
+            deliveryRegion: 'Ege',
+          );
+      expect(c.read(b2bMarketControllerProvider), greaterThan(r0));
+    });
+  });
+
+  group('Kendi kartında yönetim menüsü — rol/sahiplik ayrımı', () {
+    const mine = B2bProduct(
+      id: 'x',
+      name: 'Benim Ürünüm',
+      supplierId: 's1',
+      supplierName: 'Benim Mağaza',
+      category: 'Un',
+      minOrder: '10 çuval',
+      deliveryRegion: 'Ege',
+      isMine: true,
+      published: true,
+    );
+
+    Widget host(Widget child) =>
+        MaterialApp(home: Scaffold(body: child));
+
+    testWidgets('Supplier kendi (yayında) ürününde Düzenle + Taslağa al',
+        (t) async {
+      await t.pumpWidget(host(B2bProductCard(
+        product: mine,
+        onEdit: () {},
+        onTogglePublish: () {},
+      )));
+      expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
+      await t.tap(find.byIcon(Icons.more_vert_rounded));
+      await t.pumpAndSettle();
+      expect(find.text('Düzenle'), findsOneWidget);
+      expect(find.text('Taslağa al'), findsOneWidget);
+    });
+
+    testWidgets('Kendi taslak ürününde menüde "Yayına al"', (t) async {
+      await t.pumpWidget(host(B2bProductCard(
+        product: mine.copyWith(published: false),
+        onEdit: () {},
+        onTogglePublish: () {},
+      )));
+      await t.tap(find.byIcon(Icons.more_vert_rounded));
+      await t.pumpAndSettle();
+      expect(find.text('Yayına al'), findsOneWidget);
+    });
+
+    testWidgets('Alıcı (ownerContext:false) yönetim menüsü GÖRMEZ', (t) async {
+      await t.pumpWidget(host(B2bProductCard(
+        product: mine,
+        ownerContext: false,
+        onEdit: () {},
+        onTogglePublish: () {},
+      )));
+      expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
+    });
+
+    testWidgets('Başka tedarikçinin ürününde menü GÖRÜNMEZ', (t) async {
+      const other = B2bProduct(
+        id: 'y',
+        name: 'Başka Ürün',
+        supplierId: 's2',
+        supplierName: 'Başka Tedarik',
+        category: 'Un',
+        minOrder: '10',
+        deliveryRegion: 'Ege',
+        isMine: false,
+        published: true,
+      );
+      await t.pumpWidget(host(B2bProductCard(
+        product: other,
+        onEdit: () {},
+        onTogglePublish: () {},
+      )));
+      expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
+    });
+  });
+
+  group('Publish toggle — genel liste vs Mağazam', () {
+    test('Ürün: taslağa al → genel düşer, Mağazam kalır; yayına al → geri', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final ctrl = c.read(b2bMarketControllerProvider.notifier);
+      ctrl.addProduct(
+        name: 'Toggle Ürün',
+        category: 'Un',
+        minOrder: '1',
+        deliveryRegion: 'Ege',
+      );
+      final repo = c.read(b2bRepositoryProvider);
+      final id =
+          repo.listMyProducts().firstWhere((p) => p.name == 'Toggle Ürün').id;
+
+      ctrl.setProductPublished(id, false);
+      expect(repo.listProducts().any((p) => p.id == id), isFalse);
+      expect(repo.listMyProducts().any((p) => p.id == id), isTrue);
+
+      ctrl.setProductPublished(id, true);
+      expect(repo.listProducts().any((p) => p.id == id), isTrue);
+    });
+
+    test('Kampanya: taslağa al → genel düşer, Mağazam kalır; yayına al → geri',
+        () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final ctrl = c.read(b2bMarketControllerProvider.notifier);
+      ctrl.addCampaign(
+        title: 'Toggle Kampanya',
+        category: 'Un',
+        region: 'Ege',
+        minPurchase: '100',
+        validUntil: 'Süresiz',
+      );
+      final repo = c.read(b2bRepositoryProvider);
+      final id = repo
+          .listMyCampaigns()
+          .firstWhere((c) => c.title == 'Toggle Kampanya')
+          .id;
+
+      ctrl.setCampaignPublished(id, false);
+      expect(repo.listCampaigns().any((c) => c.id == id), isFalse);
+      expect(repo.listMyCampaigns().any((c) => c.id == id), isTrue);
+
+      ctrl.setCampaignPublished(id, true);
+      expect(repo.listCampaigns().any((c) => c.id == id), isTrue);
+    });
+
+    test('updateProduct: ad/kategori güncellenir, id + sahiplik korunur', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final ctrl = c.read(b2bMarketControllerProvider.notifier);
+      ctrl.addProduct(
+        name: 'Eski Ad',
+        category: 'Un',
+        minOrder: '1',
+        deliveryRegion: 'Ege',
+      );
+      final repo = c.read(b2bRepositoryProvider);
+      final p = repo.listMyProducts().firstWhere((p) => p.name == 'Eski Ad');
+      ctrl.updateProduct(
+        id: p.id,
+        name: 'Yeni Ad',
+        category: 'Maya',
+        minOrder: '5',
+        deliveryRegion: 'Marmara',
+      );
+      final updated = repo.productById(p.id)!;
+      expect(updated.name, 'Yeni Ad');
+      expect(updated.category, 'Maya');
+      expect(updated.id, p.id);
+      expect(updated.isMine, isTrue);
     });
   });
 }

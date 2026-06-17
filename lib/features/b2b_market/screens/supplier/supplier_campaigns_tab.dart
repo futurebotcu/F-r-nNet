@@ -6,7 +6,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../providers/b2b_providers.dart';
@@ -27,6 +29,7 @@ class _SupplierCampaignsTabState extends ConsumerState<SupplierCampaignsTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(b2bMarketControllerProvider); // yeni kampanya eklenince yenilen
     final repo = ref.watch(b2bRepositoryProvider);
     final categories = repo.productCategories();
     final campaigns = repo.listCampaigns(category: _category);
@@ -69,6 +72,10 @@ class _SupplierCampaignsTabState extends ConsumerState<SupplierCampaignsTab> {
                         kind: B2bOfferKind.requestQuote,
                         contextLine: '${c.supplierName} · ${c.title}',
                       ),
+                      onEdit: () => context.push(AppRoutes.b2bCampaignEdit(c.id)),
+                      onTogglePublish: () => ref
+                          .read(b2bMarketControllerProvider.notifier)
+                          .setCampaignPublished(c.id, !c.published),
                     );
                   },
                 ),

@@ -18,16 +18,24 @@ class B2bCampaignCard extends StatelessWidget {
     required this.campaign,
     this.onRequestQuote,
     this.ownerContext = true,
+    this.onEdit,
+    this.onTogglePublish,
   });
 
   final B2bCampaign campaign;
   final VoidCallback? onRequestQuote;
+
+  /// Sahiplik yönetim aksiyonları (yalnız kendi kampanyasında + supplier).
+  final VoidCallback? onEdit;
+  final VoidCallback? onTogglePublish;
 
   /// Tedarikçi önizlemesinde true → kendi kampanyasında "Benim kampanyam"
   /// rozeti + aksiyon gizli. Fırıncı görünümünde false → sahiplik yok sayılır.
   final bool ownerContext;
 
   bool get _isMine => campaign.isMine && ownerContext;
+  bool get _canManage =>
+      _isMine && (onEdit != null || onTogglePublish != null);
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +83,21 @@ class B2bCampaignCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (!campaign.published && ownerContext) ...[
+                          const SizedBox(width: 6),
+                          const B2bDraftBadge(),
+                        ],
                         if (_isMine) ...[
                           const SizedBox(width: AppSpacing.s),
                           const B2bOwnerBadge(label: 'Benim kampanyam'),
+                        ],
+                        if (_canManage) ...[
+                          const SizedBox(width: 2),
+                          B2bManageMenu(
+                            published: campaign.published,
+                            onEdit: onEdit,
+                            onTogglePublish: onTogglePublish,
+                          ),
                         ],
                       ],
                     ),
@@ -104,6 +124,20 @@ class B2bCampaignCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (campaign.description.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.s),
+                      Text(
+                        campaign.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textSecondary,
+                          height: 1.35,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.m),
                     Wrap(
                       spacing: 6,

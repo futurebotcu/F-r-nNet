@@ -15,6 +15,8 @@ class B2bCampaign {
     required this.validUntil,
     this.linkedProduct,
     this.isMine = false,
+    this.description = '',
+    this.published = true,
   });
 
   final String id;
@@ -35,6 +37,39 @@ class B2bCampaign {
   /// Bağlı ürün adı (opsiyonel).
   final String? linkedProduct;
 
-  /// Preview tedarikçinin kendi kampanyası mı (mock sahiplik).
+  /// Tedarikçinin kendi kampanyası mı (mock sahiplik).
   final bool isMine;
+
+  /// Kısa açıklama (opsiyonel — formdan girilir).
+  final String description;
+
+  /// Yayında mı (false → Taslak). Taslaklar genel kampanya alanında
+  /// görünmez; yalnız sahibinin Mağazam'ında listelenir.
+  final bool published;
+
+  B2bCampaign copyWith({
+    String? title,
+    String? category,
+    String? region,
+    String? minPurchase,
+    String? validUntil,
+    String? linkedProduct,
+    String? description,
+    bool? published,
+  }) {
+    return B2bCampaign(
+      id: id,
+      title: title ?? this.title,
+      supplierId: supplierId,
+      supplierName: supplierName,
+      category: category ?? this.category,
+      region: region ?? this.region,
+      minPurchase: minPurchase ?? this.minPurchase,
+      validUntil: validUntil ?? this.validUntil,
+      linkedProduct: linkedProduct ?? this.linkedProduct,
+      isMine: isMine,
+      description: description ?? this.description,
+      published: published ?? this.published,
+    );
+  }
 }
