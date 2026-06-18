@@ -47,6 +47,23 @@ class LocalB2bRepository implements B2bRepository {
       List<B2bStore>.unmodifiable(_stores);
 
   @override
+  Future<B2bStore?> storeById(String id) async {
+    final i = _stores.indexWhere((s) => s.id == id);
+    return i >= 0 ? _stores[i] : null;
+  }
+
+  @override
+  Future<List<B2bProduct>> productsForStore(String storeId) async => _products
+      .where((p) => p.supplierId == storeId && p.published)
+      .toList(growable: false);
+
+  @override
+  Future<List<B2bCampaign>> campaignsForStore(String storeId) async =>
+      _campaigns
+          .where((c) => c.supplierId == storeId && c.published)
+          .toList(growable: false);
+
+  @override
   List<String> productCategories() =>
       List<String>.unmodifiable(B2bMockSeed.productCategories);
 
@@ -346,6 +363,7 @@ class LocalB2bRepository implements B2bRepository {
         id: 'r_user_${++_seq}',
         requestId: quoteRequestId,
         supplierName: _stores[_myStoreIndex()].name,
+        supplierShopId: _stores[_myStoreIndex()].id,
         message: message,
         createdAtLabel: 'Az önce',
         priceHint: (priceNote == null || priceNote.isEmpty) ? null : priceNote,

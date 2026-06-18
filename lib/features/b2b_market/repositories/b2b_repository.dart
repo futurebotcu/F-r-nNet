@@ -20,6 +20,15 @@ abstract class B2bRepository {
   /// Tüm tedarikçi mağazaları (Alıcı → "Tedarikçiler" sekmesi).
   Future<List<B2bStore>> listStores();
 
+  /// Tek mağaza (mağaza detay ekranı). Yoksa null.
+  Future<B2bStore?> storeById(String id);
+
+  /// Bir mağazanın yayındaki ürünleri (mağaza detayında listelenir).
+  Future<List<B2bProduct>> productsForStore(String storeId);
+
+  /// Bir mağazanın yayındaki kampanyaları (mağaza detayında listelenir).
+  Future<List<B2bCampaign>> campaignsForStore(String storeId);
+
   /// Ürün kategorileri (filtre chip kaynağı) — sabit referans, senkron.
   List<String> productCategories();
 

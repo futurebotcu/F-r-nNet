@@ -12,11 +12,15 @@ class B2bQuoteReply {
     required this.createdAtLabel,
     this.priceHint,
     this.deliveryNote,
+    this.supplierShopId,
   });
 
   final String id;
   final String requestId;
   final String supplierName;
+
+  /// Cevaplayan tedarikçi mağaza id'si (alıcı → "Mağazayı gör"). Opsiyonel.
+  final String? supplierShopId;
   final String message;
 
   /// İnsan-okur tarih etiketi (ör. "2 saat önce"). Mock sabit string.

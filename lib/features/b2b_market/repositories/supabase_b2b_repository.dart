@@ -189,6 +189,7 @@ class SupabaseB2bRepository implements B2bRepository {
       createdAtLabel: _dateLabel(row['created_at']),
       priceHint: row['price_note'] as String?,
       deliveryNote: row['delivery_note'] as String?,
+      supplierShopId: row['supplier_shop_id']?.toString(),
     );
   }
 
@@ -237,6 +238,44 @@ class SupabaseB2bRepository implements B2bRepository {
     final uid = _uid;
     return rows
         .map((r) => storeFromRow(r, currentUserId: uid))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<B2bStore?> storeById(String id) async {
+    final row = await _client
+        .from('b2b_supplier_shops')
+        .select(_shopCols)
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : storeFromRow(row, currentUserId: _uid);
+  }
+
+  @override
+  Future<List<B2bProduct>> productsForStore(String storeId) async {
+    final rows = await _client
+        .from('b2b_products')
+        .select(_productCols)
+        .eq('shop_id', storeId)
+        .eq('published', true)
+        .order('created_at', ascending: false);
+    final uid = _uid;
+    return rows
+        .map((r) => productFromRow(r, currentUserId: uid))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<B2bCampaign>> campaignsForStore(String storeId) async {
+    final rows = await _client
+        .from('b2b_campaigns')
+        .select(_campaignCols)
+        .eq('shop_id', storeId)
+        .eq('published', true)
+        .order('created_at', ascending: false);
+    final uid = _uid;
+    return rows
+        .map((r) => campaignFromRow(r, currentUserId: uid))
         .toList(growable: false);
   }
 

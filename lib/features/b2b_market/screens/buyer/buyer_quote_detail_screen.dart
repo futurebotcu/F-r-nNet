@@ -7,7 +7,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/error_retry_state.dart';
@@ -316,6 +318,29 @@ class _Replies extends ConsumerWidget {
               _ReplyCard(reply: r),
               const SizedBox(height: AppSpacing.m),
             ],
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.m,
+                vertical: AppSpacing.s,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.brandLemonPale,
+                borderRadius: BorderRadius.circular(AppRadius.m),
+                border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
+              ),
+              child: const Text(
+                'Bu teklif üzerinden ilerlemek için tedarikçi mağazasını '
+                'inceleyin. FırınNet içinde güvenli teklif akışı; iletişim '
+                'bilgileri sonraki sürümde yönetilecek.',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -394,6 +419,31 @@ class _ReplyCard extends StatelessWidget {
                     label: reply.deliveryNote!,
                   ),
               ],
+            ),
+          ],
+          if ((reply.supplierShopId ?? '').isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.m),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => context.push(
+                  AppRoutes.b2bStoreDetail(reply.supplierShopId!),
+                ),
+                icon: const Icon(Icons.storefront_outlined, size: 16),
+                label: const Text('Tedarikçi mağazasını gör'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.borderHairline),
+                  minimumSize: const Size(0, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
             ),
           ],
         ],

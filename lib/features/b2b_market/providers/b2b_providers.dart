@@ -315,6 +315,41 @@ final b2bRepliesProvider = FutureProvider.autoDispose
   return ref.watch(b2bRepositoryProvider).repliesFor(id);
 });
 
+/// Tek ürün detayı.
+final b2bProductDetailProvider =
+    FutureProvider.autoDispose.family<B2bProduct?, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).productById(id);
+});
+
+/// Tek kampanya detayı.
+final b2bCampaignDetailProvider =
+    FutureProvider.autoDispose.family<B2bCampaign?, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).campaignById(id);
+});
+
+/// Tek mağaza detayı.
+final b2bStoreDetailProvider =
+    FutureProvider.autoDispose.family<B2bStore?, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).storeById(id);
+});
+
+/// Mağazanın yayındaki ürünleri (mağaza detayı).
+final b2bStoreProductsProvider =
+    FutureProvider.autoDispose.family<List<B2bProduct>, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).productsForStore(id);
+});
+
+/// Mağazanın yayındaki kampanyaları (mağaza detayı).
+final b2bStoreCampaignsProvider =
+    FutureProvider.autoDispose.family<List<B2bCampaign>, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).campaignsForStore(id);
+});
+
 /// Pazar'a giren kullanıcının B2B görünüm rolü.
 enum B2bRole { supplier, buyer }
 

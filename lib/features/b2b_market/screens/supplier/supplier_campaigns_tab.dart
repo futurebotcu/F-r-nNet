@@ -55,6 +55,7 @@ class _SupplierCampaignsTabState extends ConsumerState<SupplierCampaignsTab> {
             ),
             itemBuilder: (context, c) => B2bCampaignCard(
               campaign: c,
+              onTap: () => context.push(AppRoutes.b2bCampaignDetail(c.id)),
               onRequestQuote: () => showB2bOfferFlow(
                 context,
                 kind: B2bOfferKind.requestQuote,

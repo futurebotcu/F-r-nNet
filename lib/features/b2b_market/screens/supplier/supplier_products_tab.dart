@@ -63,6 +63,7 @@ class _SupplierProductsTabState extends ConsumerState<SupplierProductsTab> {
             ),
             itemBuilder: (context, p) => B2bProductCard(
               product: p,
+              onTap: () => context.push(AppRoutes.b2bProductDetail(p.id)),
               onRequestQuote: () => showB2bOfferFlow(
                 context,
                 kind: B2bOfferKind.requestQuote,

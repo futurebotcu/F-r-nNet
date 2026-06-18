@@ -6,10 +6,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/empty_state.dart';
-import '../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../models/b2b_store.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_async_list.dart';
@@ -39,7 +40,7 @@ class BuyerSuppliersTab extends ConsumerWidget {
       ),
       itemBuilder: (context, s) => B2bStoreCard(
         store: s,
-        onViewProfile: () => _openStoreProfile(context, s),
+        onViewProfile: () => context.push(AppRoutes.b2bStoreDetail(s.id)),
         onRequestQuote: () => showB2bOfferFlow(
           context,
           kind: B2bOfferKind.requestQuote,
@@ -49,15 +50,6 @@ class BuyerSuppliersTab extends ConsumerWidget {
           presetCategory: s.categories.isNotEmpty ? s.categories.first : null,
         ),
       ),
-    );
-  }
-
-  void _openStoreProfile(BuildContext context, B2bStore store) {
-    PremiumTopBannerController.show(
-      context,
-      message: '${store.name}: Mağaza detay sayfası yakında.',
-      tone: PremiumTopBannerTone.info,
-      duration: const Duration(seconds: 2),
     );
   }
 }

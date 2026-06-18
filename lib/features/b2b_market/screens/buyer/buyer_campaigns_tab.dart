@@ -6,7 +6,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../models/b2b_campaign.dart';
@@ -52,6 +54,7 @@ class _BuyerCampaignsTabState extends ConsumerState<BuyerCampaignsTab> {
             itemBuilder: (context, c) => B2bCampaignCard(
               campaign: c,
               ownerContext: false,
+              onTap: () => context.push(AppRoutes.b2bCampaignDetail(c.id)),
               onRequestQuote: () => showB2bOfferFlow(
                 context,
                 kind: B2bOfferKind.requestQuote,
