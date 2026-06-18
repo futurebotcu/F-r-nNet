@@ -48,4 +48,21 @@ class B2bStore {
 
   /// Preview tedarikçinin kendi mağazası mı (mock sahiplik).
   final bool isMine;
+
+  B2bStore copyWith({int? productCount, int? campaignCount}) {
+    return B2bStore(
+      id: id,
+      name: name,
+      monogram: monogram,
+      tagline: tagline,
+      description: description,
+      categories: categories,
+      serviceRegions: serviceRegions,
+      productCount: productCount ?? this.productCount,
+      campaignCount: campaignCount ?? this.campaignCount,
+      isMine: isMine,
+      logoUrl: logoUrl,
+      coverUrl: coverUrl,
+    );
+  }
 }

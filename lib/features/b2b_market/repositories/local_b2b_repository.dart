@@ -357,6 +357,11 @@ class LocalB2bRepository implements B2bRepository {
     String? priceNote,
     String? deliveryNote,
   }) async {
+    // Kapalı/iptal talebe teklif verilemez (DB guard'ının yerel karşılığı).
+    final i = _myQuoteRequests.indexWhere((q) => q.id == quoteRequestId);
+    if (i >= 0 && _myQuoteRequests[i].status.isTerminal) {
+      throw StateError('Kapalı/iptal talebe teklif verilemez.');
+    }
     _replies.insert(
       0,
       B2bQuoteReply(

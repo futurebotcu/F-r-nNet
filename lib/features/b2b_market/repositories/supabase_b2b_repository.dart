@@ -236,9 +236,44 @@ class SupabaseB2bRepository implements B2bRepository {
         .eq('is_active', true)
         .order('created_at', ascending: false);
     final uid = _uid;
-    return rows
-        .map((r) => storeFromRow(r, currentUserId: uid))
+    final stores =
+        rows.map((r) => storeFromRow(r, currentUserId: uid)).toList();
+    if (stores.isEmpty) return stores;
+    // Yayındaki ürün/kampanya sayıları — tek grouped sorgu (kartta doğru sayı).
+    final ids = stores.map((s) => s.id).toList();
+    final counts = await _shopCounts(ids);
+    return stores
+        .map((s) => s.copyWith(
+              productCount: counts.products[s.id] ?? 0,
+              campaignCount: counts.campaigns[s.id] ?? 0,
+            ))
         .toList(growable: false);
+  }
+
+  /// Mağaza id'leri için yayındaki ürün/kampanya sayıları (bellekte say).
+  Future<({Map<String, int> products, Map<String, int> campaigns})>
+      _shopCounts(List<String> shopIds) async {
+    final prod = <String, int>{};
+    final camp = <String, int>{};
+    final pRows = await _client
+        .from('b2b_products')
+        .select('shop_id')
+        .inFilter('shop_id', shopIds)
+        .eq('published', true);
+    for (final r in pRows) {
+      final k = (r['shop_id'] ?? '').toString();
+      prod[k] = (prod[k] ?? 0) + 1;
+    }
+    final cRows = await _client
+        .from('b2b_campaigns')
+        .select('shop_id')
+        .inFilter('shop_id', shopIds)
+        .eq('published', true);
+    for (final r in cRows) {
+      final k = (r['shop_id'] ?? '').toString();
+      camp[k] = (camp[k] ?? 0) + 1;
+    }
+    return (products: prod, campaigns: camp);
   }
 
   @override
