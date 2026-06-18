@@ -15,10 +15,12 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/error_retry_state.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
 import '../../../../core/widgets/premium/premium_scaffold.dart';
+import '../../models/b2b_lead_message.dart';
 import '../../models/b2b_quote_lead.dart';
 import '../../models/b2b_quote_reply.dart';
 import '../../models/b2b_quote_request.dart';
 import '../../providers/b2b_providers.dart';
+import '../../widgets/b2b_lead_message_sheet.dart';
 import '../../widgets/b2b_meta_pill.dart';
 
 class BuyerQuoteDetailScreen extends ConsumerWidget {
@@ -322,6 +324,7 @@ class _Replies extends ConsumerWidget {
             ),
           );
         }
+        final hasAccepted = list.any((r) => r.accepted);
         return Column(
           children: [
             for (final r in list) ...[
@@ -329,6 +332,7 @@ class _Replies extends ConsumerWidget {
                 reply: r,
                 lead: leadByReply[r.id],
                 requestActive: requestActive,
+                requestHasAccepted: hasAccepted,
               ),
               const SizedBox(height: AppSpacing.m),
             ],
@@ -367,10 +371,12 @@ class _ReplyCard extends ConsumerWidget {
     required this.reply,
     required this.lead,
     required this.requestActive,
+    required this.requestHasAccepted,
   });
   final B2bQuoteReply reply;
   final B2bQuoteLead? lead;
   final bool requestActive;
+  final bool requestHasAccepted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -446,6 +452,7 @@ class _ReplyCard extends ConsumerWidget {
             reply: reply,
             lead: lead,
             requestActive: requestActive,
+            requestHasAccepted: requestHasAccepted,
           ),
         ],
       ),
@@ -453,16 +460,18 @@ class _ReplyCard extends ConsumerWidget {
   }
 }
 
-/// Teklif kartının lead (ilgi) aksiyon/durum bölümü.
+/// Teklif kartının aksiyon/durum bölümü: kabul + ilgi + takip mesajı + mağaza.
 class _LeadArea extends ConsumerWidget {
   const _LeadArea({
     required this.reply,
     required this.lead,
     required this.requestActive,
+    required this.requestHasAccepted,
   });
   final B2bQuoteReply reply;
   final B2bQuoteLead? lead;
   final bool requestActive;
+  final bool requestHasAccepted;
 
   Widget _storeButton(BuildContext context) {
     if ((reply.supplierShopId ?? '').isEmpty) return const SizedBox.shrink();
@@ -500,92 +509,144 @@ class _LeadArea extends ConsumerWidget {
     }
   }
 
+  Future<void> _accept(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref
+          .read(b2bMarketControllerProvider.notifier)
+          .acceptQuoteReply(reply.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bu teklifle ilerliyorsun. Tedarikçiye iletildi.'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('İşlem başarısız. Tekrar deneyin.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = lead;
-    if (l != null && l.isInterested) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              const _LeadChip(
-                icon: Icons.check_circle_rounded,
-                label: 'İlgilenildi',
-                tone: _ChipTone.success,
-              ),
-              _LeadChip(
-                icon: l.phoneShared
-                    ? Icons.phone_in_talk_rounded
-                    : Icons.phone_disabled_rounded,
-                label: l.phoneShared ? 'Telefon paylaşıldı' : 'Telefon paylaşılmadı',
-                tone: l.phoneShared ? _ChipTone.success : _ChipTone.muted,
-              ),
-            ],
+    final rows = <Widget>[];
+
+    // 1) Anlaşma / kabul durumu.
+    if (reply.accepted) {
+      rows.add(const _LeadChip(
+        icon: Icons.verified_rounded,
+        label: 'Seçilen teklif',
+        tone: _ChipTone.success,
+      ));
+    } else if (requestHasAccepted) {
+      rows.add(const _LeadChip(
+        icon: Icons.info_outline_rounded,
+        label: 'Başka teklif seçildi',
+        tone: _ChipTone.muted,
+      ));
+    } else if (requestActive) {
+      rows.add(SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: () => _accept(context, ref),
+          icon: const Icon(Icons.handshake_outlined, size: 17),
+          label: const Text('Bu teklifle ilerle'),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.brandLemon,
+            foregroundColor: AppColors.brandInk,
+            minimumSize: const Size(0, 44),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+            ),
+            textStyle:
+                const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
           ),
-          const SizedBox(height: AppSpacing.s),
-          _storeButton(context),
-        ],
-      );
+        ),
+      ));
     }
-    if (l != null && l.isRejected) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+
+    // 2) İlgi durumu / aksiyonları.
+    if (l != null && l.isInterested) {
+      rows.add(Wrap(
+        spacing: 6,
+        runSpacing: 6,
         children: [
           const _LeadChip(
-            icon: Icons.cancel_outlined,
-            label: 'Uygun değil olarak işaretlendi',
-            tone: _ChipTone.muted,
+            icon: Icons.check_circle_rounded,
+            label: 'İlgilenildi',
+            tone: _ChipTone.success,
           ),
-          const SizedBox(height: AppSpacing.s),
-          _storeButton(context),
+          _LeadChip(
+            icon: l.phoneShared
+                ? Icons.phone_in_talk_rounded
+                : Icons.phone_disabled_rounded,
+            label:
+                l.phoneShared ? 'Telefon paylaşıldı' : 'Telefon paylaşılmadı',
+            tone: l.phoneShared ? _ChipTone.success : _ChipTone.muted,
+          ),
         ],
-      );
-    }
-    // Lead yok.
-    if (!requestActive) return _storeButton(context);
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: () => _showInterestDialog(context, reply.id),
-                icon: const Icon(Icons.thumb_up_alt_outlined, size: 16),
-                label: const Text('İlgileniyorum'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brandLemon,
-                  foregroundColor: AppColors.brandInk,
-                  minimumSize: const Size(0, 42),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  textStyle:
-                      const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.s),
-            OutlinedButton(
-              onPressed: () => _reject(context, ref),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textSecondary,
-                side: const BorderSide(color: AppColors.borderHairline),
+      ));
+      // 3) Lead takip mesajı (mini görüşme).
+      rows.add(_LeadThread(leadId: l.id, supplierName: reply.supplierName));
+    } else if (l != null && l.isRejected) {
+      rows.add(const _LeadChip(
+        icon: Icons.cancel_outlined,
+        label: 'Uygun değil olarak işaretlendi',
+        tone: _ChipTone.muted,
+      ));
+    } else if (requestActive) {
+      rows.add(Row(
+        children: [
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: () => _showInterestDialog(context, reply.id),
+              icon: const Icon(Icons.thumb_up_alt_outlined, size: 16),
+              label: const Text('İlgileniyorum'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.brandLemonPale,
+                foregroundColor: AppColors.brandInk,
                 minimumSize: const Size(0, 42),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
                 textStyle:
-                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
               ),
-              child: const Text('Uygun değil'),
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.s),
-        _storeButton(context),
+          ),
+          const SizedBox(width: AppSpacing.s),
+          OutlinedButton(
+            onPressed: () => _reject(context, ref),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              side: const BorderSide(color: AppColors.borderHairline),
+              minimumSize: const Size(0, 42),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+              textStyle:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            child: const Text('Uygun değil'),
+          ),
+        ],
+      ));
+    }
+
+    // 4) Tedarikçi mağazası.
+    rows.add(_storeButton(context));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.s),
+          rows[i],
+        ],
       ],
     );
   }
@@ -895,6 +956,73 @@ class _InterestSheetState extends ConsumerState<_InterestSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Lead takip mesajı: son mesaj önizleme + "görüşmeyi aç". Mini görüşme.
+class _LeadThread extends ConsumerWidget {
+  const _LeadThread({required this.leadId, required this.supplierName});
+  final String leadId;
+  final String supplierName;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final msgs = ref.watch(b2bLeadMessagesProvider(leadId));
+    final list = msgs.valueOrNull ?? const <B2bLeadMessage>[];
+    final last = list.isEmpty ? null : list.last;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.borderHairline, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (last != null) ...[
+            Text(
+              '${last.isBuyer ? 'Sen' : supplierName}: ${last.message}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => showB2bLeadMessageSheet(
+                context,
+                leadId: leadId,
+                title: supplierName,
+                viewerIsBuyer: true,
+              ),
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+              label: Text(last == null
+                  ? 'Takip mesajı gönder'
+                  : 'Görüşmeyi aç (${list.length})'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                side: const BorderSide(color: AppColors.borderHairline),
+                minimumSize: const Size(0, 40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+                textStyle:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -128,6 +128,20 @@ class B2bQuoteRequestCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              if (request.hasAcceptedReply) ...[
+                if (request.replyCount > 0) const SizedBox(width: 8),
+                const Icon(Icons.verified_rounded,
+                    size: 14, color: Color(0xFF166534)),
+                const SizedBox(width: 4),
+                const Text(
+                  'Seçilen teklif',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF166534),
+                  ),
+                ),
+              ],
               const Spacer(),
               if (onReply != null)
                 FilledButton.icon(

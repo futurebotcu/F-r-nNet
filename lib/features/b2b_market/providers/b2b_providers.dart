@@ -18,6 +18,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/b2b_campaign.dart';
+import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
@@ -267,6 +268,19 @@ class B2bMarketController extends Notifier<int> {
     await _repo.rejectQuoteReply(quoteReplyId);
     state++;
   }
+
+  Future<void> acceptQuoteReply(String quoteReplyId) async {
+    await _repo.acceptQuoteReply(quoteReplyId);
+    state++;
+  }
+
+  Future<void> sendLeadMessage({
+    required String leadId,
+    required String message,
+  }) async {
+    await _repo.sendLeadMessage(leadId: leadId, message: message);
+    state++;
+  }
 }
 
 // ---- Okuma FutureProvider'ları (write revizyonunu izler → otomatik yenilenir) ----
@@ -348,6 +362,13 @@ final b2bSupplierLeadsProvider =
     FutureProvider.autoDispose<List<B2bQuoteLead>>((ref) {
   ref.watch(b2bMarketControllerProvider);
   return ref.watch(b2bRepositoryProvider).leadsForMySupplierShop();
+});
+
+/// Bir lead'in takip mesajları (mini görüşme).
+final b2bLeadMessagesProvider = FutureProvider.autoDispose
+    .family<List<B2bLeadMessage>, String>((ref, leadId) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).messagesForLead(leadId);
 });
 
 /// Tek ürün detayı.

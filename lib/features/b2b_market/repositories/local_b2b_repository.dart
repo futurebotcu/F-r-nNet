@@ -9,6 +9,7 @@
 
 import '../data/b2b_mock_seed.dart';
 import '../models/b2b_campaign.dart';
+import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
@@ -31,6 +32,7 @@ class LocalB2bRepository implements B2bRepository {
   final List<B2bQuoteRequest> _myQuoteRequests;
   final List<B2bQuoteReply> _replies;
   final List<B2bQuoteLead> _leads = <B2bQuoteLead>[];
+  final List<B2bLeadMessage> _leadMessages = <B2bLeadMessage>[];
 
   int _seq = 0;
 
@@ -465,10 +467,63 @@ class LocalB2bRepository implements B2bRepository {
   @override
   Future<List<B2bQuoteLead>> leadsForMySupplierShop() async {
     final myShopId = _stores[_myStoreIndex()].id;
-    return _leads
-        .where((l) => l.supplierShopId == myShopId)
-        .toList(growable: false);
+    return _leads.where((l) => l.supplierShopId == myShopId).map((l) {
+      final accepted = _replies.any((r) => r.id == l.quoteReplyId && r.accepted);
+      return l.copyWith(replyAccepted: accepted);
+    }).toList(growable: false);
   }
+
+  @override
+  Future<void> acceptQuoteReply(String quoteReplyId) async {
+    final reply = _replies.firstWhere(
+      (r) => r.id == quoteReplyId,
+      orElse: () => throw StateError('Teklif bulunamadı.'),
+    );
+    final reqIndex =
+        _myQuoteRequests.indexWhere((q) => q.id == reply.requestId);
+    if (reqIndex >= 0 && _myQuoteRequests[reqIndex].status.isTerminal) {
+      throw StateError('Kapalı/iptal talepte teklif kabul edilemez.');
+    }
+    if (reqIndex >= 0) {
+      _myQuoteRequests[reqIndex] =
+          _myQuoteRequests[reqIndex].copyWith(acceptedReplyId: quoteReplyId);
+    }
+    // Aynı talebin tek teklifi seçili olur.
+    for (var i = 0; i < _replies.length; i++) {
+      if (_replies[i].requestId == reply.requestId) {
+        _replies[i] =
+            _replies[i].copyWith(accepted: _replies[i].id == quoteReplyId);
+      }
+    }
+  }
+
+  @override
+  Future<void> sendLeadMessage({
+    required String leadId,
+    required String message,
+  }) async {
+    if (message.trim().isEmpty) {
+      throw StateError('Boş mesaj gönderilemez.');
+    }
+    if (!_leads.any((l) => l.id == leadId)) {
+      throw StateError('Lead bulunamadı.');
+    }
+    // Local (guest/demo): gönderen alıcı kabul edilir (gerçek rol Supabase
+    // RPC'sinde lead üyeliğinden türetilir).
+    _leadMessages.add(B2bLeadMessage(
+      id: 'lmsg_${++_seq}',
+      leadId: leadId,
+      senderRole: B2bLeadSenderRole.buyer,
+      message: message.trim(),
+      createdAtLabel: 'Az önce',
+    ));
+  }
+
+  @override
+  Future<List<B2bLeadMessage>> messagesForLead(String leadId) async =>
+      _leadMessages
+          .where((m) => m.leadId == leadId)
+          .toList(growable: false);
 
   static String _monogramFor(String name, {required String fallback}) {
     final words = name

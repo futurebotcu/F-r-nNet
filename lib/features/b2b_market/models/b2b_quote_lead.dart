@@ -32,6 +32,7 @@ class B2bQuoteLead {
     this.requestCategory = '',
     this.requestQuantity = '',
     this.requestCity = '',
+    this.replyAccepted = false,
   });
 
   final String id;
@@ -56,6 +57,28 @@ class B2bQuoteLead {
   final String requestQuantity;
   final String requestCity;
 
+  /// İlgilenilen teklif alıcı tarafından seçildi mi ("Teklifin seçildi").
+  final bool replyAccepted;
+
   bool get isInterested => status == B2bLeadStatus.interested;
   bool get isRejected => status == B2bLeadStatus.rejected;
+
+  B2bQuoteLead copyWith({bool? replyAccepted}) {
+    return B2bQuoteLead(
+      id: id,
+      quoteRequestId: quoteRequestId,
+      quoteReplyId: quoteReplyId,
+      supplierShopId: supplierShopId,
+      status: status,
+      supplierName: supplierName,
+      buyerMessage: buyerMessage,
+      phoneShared: phoneShared,
+      sharedPhone: sharedPhone,
+      createdAtLabel: createdAtLabel,
+      requestCategory: requestCategory,
+      requestQuantity: requestQuantity,
+      requestCity: requestCity,
+      replyAccepted: replyAccepted ?? this.replyAccepted,
+    );
+  }
 }
