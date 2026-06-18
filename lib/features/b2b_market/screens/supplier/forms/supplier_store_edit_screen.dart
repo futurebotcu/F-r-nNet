@@ -11,8 +11,9 @@ import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
+import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
-import '../../../widgets/b2b_media_picker_field.dart';
+import '../../../widgets/b2b_image_upload_field.dart';
 
 class SupplierStoreEditScreen extends ConsumerStatefulWidget {
   const SupplierStoreEditScreen({super.key});
@@ -29,7 +30,8 @@ class _SupplierStoreEditScreenState
   final _description = TextEditingController();
   final Set<String> _regions = <String>{};
   final Set<String> _categories = <String>{};
-  String? _coverKey;
+  String? _logoUrl;
+  String? _coverUrl;
 
   @override
   void initState() {
@@ -49,6 +51,8 @@ class _SupplierStoreEditScreenState
       _categories
         ..clear()
         ..addAll(store.categories);
+      _logoUrl = store.logoUrl;
+      _coverUrl = store.coverUrl;
     });
   }
 
@@ -66,6 +70,8 @@ class _SupplierStoreEditScreenState
           description: _description.text.trim(),
           serviceRegions: _regions.toList(),
           categories: _categories.toList(),
+          logoUrl: _logoUrl,
+          coverUrl: _coverUrl,
         );
 
     if (!mounted) return;
@@ -133,10 +139,19 @@ class _SupplierStoreEditScreenState
                 }),
               ),
               const SizedBox(height: AppSpacing.l),
-              B2bMediaPickerField(
-                label: 'Kapak / logo',
-                selectedKey: _coverKey,
-                onSelect: (k) => setState(() => _coverKey = k),
+              B2bImageUploadField(
+                kind: B2bMediaKind.shopLogo,
+                label: 'Logo',
+                currentUrl: _logoUrl,
+                height: 120,
+                onChanged: (u) => setState(() => _logoUrl = u),
+              ),
+              const SizedBox(height: AppSpacing.l),
+              B2bImageUploadField(
+                kind: B2bMediaKind.shopCover,
+                label: 'Kapak görseli',
+                currentUrl: _coverUrl,
+                onChanged: (u) => setState(() => _coverUrl = u),
               ),
               const SizedBox(height: AppSpacing.xl),
               B2bSaveButton(label: 'Mağazayı kaydet', onTap: _save),

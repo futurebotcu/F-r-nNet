@@ -17,6 +17,7 @@ class B2bCampaign {
     this.isMine = false,
     this.description = '',
     this.published = true,
+    this.imageUrl,
   });
 
   final String id;
@@ -47,6 +48,9 @@ class B2bCampaign {
   /// görünmez; yalnız sahibinin Mağazam'ında listelenir.
   final bool published;
 
+  /// Kampanya görseli public URL'i (opsiyonel — canlı upload).
+  final String? imageUrl;
+
   B2bCampaign copyWith({
     String? title,
     String? category,
@@ -56,6 +60,7 @@ class B2bCampaign {
     String? linkedProduct,
     String? description,
     bool? published,
+    String? imageUrl,
   }) {
     return B2bCampaign(
       id: id,
@@ -70,6 +75,7 @@ class B2bCampaign {
       isMine: isMine,
       description: description ?? this.description,
       published: published ?? this.published,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

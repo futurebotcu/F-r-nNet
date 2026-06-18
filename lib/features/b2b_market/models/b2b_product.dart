@@ -16,6 +16,7 @@ class B2bProduct {
     this.isMine = false,
     this.description = '',
     this.published = true,
+    this.imageUrl,
   });
 
   final String id;
@@ -43,6 +44,9 @@ class B2bProduct {
   /// görünmez; yalnız sahibinin Mağazam'ında listelenir.
   final bool published;
 
+  /// Ürün görseli public URL'i (opsiyonel — canlı upload).
+  final String? imageUrl;
+
   B2bProduct copyWith({
     String? name,
     String? category,
@@ -50,6 +54,7 @@ class B2bProduct {
     String? deliveryRegion,
     String? description,
     bool? published,
+    String? imageUrl,
   }) {
     return B2bProduct(
       id: id,
@@ -63,6 +68,7 @@ class B2bProduct {
       isMine: isMine,
       description: description ?? this.description,
       published: published ?? this.published,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

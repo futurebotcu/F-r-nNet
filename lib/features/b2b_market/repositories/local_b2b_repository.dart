@@ -122,6 +122,7 @@ class LocalB2bRepository implements B2bRepository {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final store = _stores[_myStoreIndex()];
     final product = B2bProduct(
@@ -135,6 +136,7 @@ class LocalB2bRepository implements B2bRepository {
       description: description,
       published: published,
       isMine: true,
+      imageUrl: imageUrl,
     );
     _products.insert(0, product);
     return product;
@@ -150,6 +152,7 @@ class LocalB2bRepository implements B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final store = _stores[_myStoreIndex()];
     final campaign = B2bCampaign(
@@ -165,6 +168,7 @@ class LocalB2bRepository implements B2bRepository {
       description: description,
       published: published,
       isMine: true,
+      imageUrl: imageUrl,
     );
     _campaigns.insert(0, campaign);
     return campaign;
@@ -176,6 +180,8 @@ class LocalB2bRepository implements B2bRepository {
     required String description,
     required List<String> serviceRegions,
     required List<String> categories,
+    String? logoUrl,
+    String? coverUrl,
   }) async {
     final i = _myStoreIndex();
     final old = _stores[i];
@@ -190,6 +196,8 @@ class LocalB2bRepository implements B2bRepository {
       productCount: old.productCount,
       campaignCount: old.campaignCount,
       isMine: old.isMine,
+      logoUrl: logoUrl ?? old.logoUrl,
+      coverUrl: coverUrl ?? old.coverUrl,
     );
     _stores[i] = updated;
     return updated;
@@ -216,6 +224,7 @@ class LocalB2bRepository implements B2bRepository {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final i = _products.indexWhere((p) => p.id == id);
     if (i < 0) {
@@ -226,6 +235,7 @@ class LocalB2bRepository implements B2bRepository {
         deliveryRegion: deliveryRegion,
         description: description,
         published: published,
+        imageUrl: imageUrl,
       );
     }
     final updated = _products[i].copyWith(
@@ -235,6 +245,7 @@ class LocalB2bRepository implements B2bRepository {
       deliveryRegion: deliveryRegion,
       description: description,
       published: published,
+      imageUrl: imageUrl,
     );
     _products[i] = updated;
     return updated;
@@ -251,6 +262,7 @@ class LocalB2bRepository implements B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final i = _campaigns.indexWhere((c) => c.id == id);
     if (i < 0) {
@@ -263,6 +275,7 @@ class LocalB2bRepository implements B2bRepository {
         linkedProduct: linkedProduct,
         description: description,
         published: published,
+        imageUrl: imageUrl,
       );
     }
     final updated = _campaigns[i].copyWith(
@@ -274,6 +287,7 @@ class LocalB2bRepository implements B2bRepository {
       linkedProduct: linkedProduct,
       description: description,
       published: published,
+      imageUrl: imageUrl,
     );
     _campaigns[i] = updated;
     return updated;
@@ -339,6 +353,23 @@ class LocalB2bRepository implements B2bRepository {
             (deliveryNote == null || deliveryNote.isEmpty) ? null : deliveryNote,
       ),
     );
+  }
+
+  @override
+  Future<void> closeQuoteRequest(String id) async => _setStatus(
+        id,
+        B2bQuoteStatus.closed,
+      );
+
+  @override
+  Future<void> cancelQuoteRequest(String id) async => _setStatus(
+        id,
+        B2bQuoteStatus.cancelled,
+      );
+
+  void _setStatus(String id, B2bQuoteStatus status) {
+    final i = _myQuoteRequests.indexWhere((q) => q.id == id);
+    if (i >= 0) _myQuoteRequests[i] = _myQuoteRequests[i].copyWith(status: status);
   }
 
   static String _monogramFor(String name, {required String fallback}) {

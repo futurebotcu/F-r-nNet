@@ -12,8 +12,9 @@ import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
+import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
-import '../../../widgets/b2b_media_picker_field.dart';
+import '../../../widgets/b2b_image_upload_field.dart';
 
 class SupplierProductFormScreen extends ConsumerStatefulWidget {
   const SupplierProductFormScreen({super.key, this.productId});
@@ -36,7 +37,7 @@ class _SupplierProductFormScreenState
   String? _category;
   final Set<String> _regions = <String>{};
   bool _published = true;
-  String? _mediaKey;
+  String? _imageUrl;
   bool _categoryTouched = false;
 
   bool _editing = false;
@@ -61,6 +62,7 @@ class _SupplierProductFormScreenState
       _description.text = p.description;
       _category = p.category;
       _published = p.published;
+      _imageUrl = p.imageUrl;
       _regions
         ..clear()
         ..addAll(p.deliveryRegion
@@ -97,6 +99,7 @@ class _SupplierProductFormScreenState
         deliveryRegion: regions,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     } else {
       await controller.addProduct(
@@ -106,6 +109,7 @@ class _SupplierProductFormScreenState
         deliveryRegion: regions,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     }
 
@@ -186,10 +190,11 @@ class _SupplierProductFormScreenState
                 maxLines: 3,
               ),
               const SizedBox(height: AppSpacing.l),
-              B2bMediaPickerField(
+              B2bImageUploadField(
+                kind: B2bMediaKind.product,
                 label: 'Ürün görseli',
-                selectedKey: _mediaKey,
-                onSelect: (k) => setState(() => _mediaKey = k),
+                currentUrl: _imageUrl,
+                onChanged: (u) => setState(() => _imageUrl = u),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bStatusField(

@@ -61,6 +61,8 @@ class BuyerQuoteDetailScreen extends ConsumerWidget {
               ),
               children: [
                 _RequestSummary(req: req),
+                const SizedBox(height: AppSpacing.m),
+                _QuoteActions(quoteRequestId: quoteRequestId, status: req.status),
                 const SizedBox(height: AppSpacing.l),
                 _SectionHeader(
                   title: 'Gelen teklifler',
@@ -139,6 +141,128 @@ class _RequestSummary extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _QuoteActions extends ConsumerWidget {
+  const _QuoteActions({required this.quoteRequestId, required this.status});
+
+  final String quoteRequestId;
+  final B2bQuoteStatus status;
+
+  Future<void> _confirm(
+    BuildContext context,
+    WidgetRef ref, {
+    required String title,
+    required String confirmLabel,
+    required Future<void> Function() action,
+    required String done,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: const Text('Bu işlem talebin durumunu değiştirir.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await action();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(done)));
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('İşlem başarısız. Tekrar deneyin.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (status.isTerminal) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.m,
+          vertical: AppSpacing.m,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          border: Border.all(color: AppColors.borderHairline, width: 0.8),
+        ),
+        child: Text(
+          status == B2bQuoteStatus.closed
+              ? 'Bu talep kapatıldı. Yeni teklif kabul edilmiyor.'
+              : 'Bu talep iptal edildi.',
+          style: const TextStyle(
+            fontSize: 12.5,
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+    final ctrl = ref.read(b2bMarketControllerProvider.notifier);
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _confirm(
+              context,
+              ref,
+              title: 'Talebi kapat',
+              confirmLabel: 'Kapat',
+              action: () => ctrl.closeQuoteRequest(quoteRequestId),
+              done: 'Talep kapatıldı.',
+            ),
+            icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
+            label: const Text('Talebi kapat'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              side: const BorderSide(color: AppColors.borderHairline),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.s),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _confirm(
+              context,
+              ref,
+              title: 'Talebi iptal et',
+              confirmLabel: 'İptal et',
+              action: () => ctrl.cancelQuoteRequest(quoteRequestId),
+              done: 'Talep iptal edildi.',
+            ),
+            icon: const Icon(Icons.cancel_outlined, size: 17),
+            label: const Text('İptal et'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF991B1B),
+              side: const BorderSide(color: Color(0x33991B1B)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -79,6 +79,7 @@ class B2bMarketController extends Notifier<int> {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     await _repo.addProduct(
       name: name,
@@ -87,6 +88,7 @@ class B2bMarketController extends Notifier<int> {
       deliveryRegion: deliveryRegion,
       description: description,
       published: published,
+      imageUrl: imageUrl,
     );
     state++;
   }
@@ -100,6 +102,7 @@ class B2bMarketController extends Notifier<int> {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     await _repo.addCampaign(
       title: title,
@@ -110,6 +113,7 @@ class B2bMarketController extends Notifier<int> {
       linkedProduct: linkedProduct,
       description: description,
       published: published,
+      imageUrl: imageUrl,
     );
     state++;
   }
@@ -119,12 +123,16 @@ class B2bMarketController extends Notifier<int> {
     required String description,
     required List<String> serviceRegions,
     required List<String> categories,
+    String? logoUrl,
+    String? coverUrl,
   }) async {
     await _repo.updateStore(
       name: name,
       description: description,
       serviceRegions: serviceRegions,
       categories: categories,
+      logoUrl: logoUrl,
+      coverUrl: coverUrl,
     );
     state++;
   }
@@ -137,6 +145,7 @@ class B2bMarketController extends Notifier<int> {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     await _repo.updateProduct(
       id: id,
@@ -146,6 +155,7 @@ class B2bMarketController extends Notifier<int> {
       deliveryRegion: deliveryRegion,
       description: description,
       published: published,
+      imageUrl: imageUrl,
     );
     state++;
   }
@@ -160,6 +170,7 @@ class B2bMarketController extends Notifier<int> {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     await _repo.updateCampaign(
       id: id,
@@ -171,6 +182,7 @@ class B2bMarketController extends Notifier<int> {
       linkedProduct: linkedProduct,
       description: description,
       published: published,
+      imageUrl: imageUrl,
     );
     state++;
   }
@@ -222,6 +234,16 @@ class B2bMarketController extends Notifier<int> {
       priceNote: priceNote,
       deliveryNote: deliveryNote,
     );
+    state++;
+  }
+
+  Future<void> closeQuoteRequest(String id) async {
+    await _repo.closeQuoteRequest(id);
+    state++;
+  }
+
+  Future<void> cancelQuoteRequest(String id) async {
+    await _repo.cancelQuoteRequest(id);
     state++;
   }
 }

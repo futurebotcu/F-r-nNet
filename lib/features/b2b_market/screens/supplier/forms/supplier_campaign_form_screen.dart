@@ -11,7 +11,9 @@ import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
+import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
+import '../../../widgets/b2b_image_upload_field.dart';
 
 class SupplierCampaignFormScreen extends ConsumerStatefulWidget {
   const SupplierCampaignFormScreen({super.key, this.campaignId});
@@ -37,6 +39,7 @@ class _SupplierCampaignFormScreenState
   final Set<String> _regions = <String>{};
   bool _published = true;
   bool _categoryTouched = false;
+  String? _imageUrl;
 
   bool _editing = false;
 
@@ -62,6 +65,7 @@ class _SupplierCampaignFormScreenState
       _description.text = c.description;
       _category = c.category;
       _published = c.published;
+      _imageUrl = c.imageUrl;
       _regions
         ..clear()
         ..addAll(c.region
@@ -106,6 +110,7 @@ class _SupplierCampaignFormScreenState
         linkedProduct: linked.isEmpty ? null : linked,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     } else {
       await controller.addCampaign(
@@ -117,6 +122,7 @@ class _SupplierCampaignFormScreenState
         linkedProduct: linked.isEmpty ? null : linked,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     }
 
@@ -207,6 +213,13 @@ class _SupplierCampaignFormScreenState
                 controller: _description,
                 hint: 'Kampanya hakkında kısa bilgi (opsiyonel)',
                 maxLines: 3,
+              ),
+              const SizedBox(height: AppSpacing.l),
+              B2bImageUploadField(
+                kind: B2bMediaKind.campaign,
+                label: 'Kampanya görseli',
+                currentUrl: _imageUrl,
+                onChanged: (u) => setState(() => _imageUrl = u),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bStatusField(

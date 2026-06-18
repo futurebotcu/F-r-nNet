@@ -41,7 +41,7 @@ class SupabaseB2bRepository implements B2bRepository {
       'b2b_supplier_shops!inner(shop_name, owner_id)';
   static const _campaignCols =
       'id, shop_id, title, category, linked_product_id, regions, min_order, '
-      'valid_until, description, published, created_at, '
+      'valid_until, description, image_url, published, created_at, '
       'b2b_supplier_shops!inner(shop_name, owner_id)';
 
   // ---- Sabit referans (DB tablosu değil) ----
@@ -77,10 +77,13 @@ class SupabaseB2bRepository implements B2bRepository {
 
   static B2bQuoteStatus statusFromText(String? s) {
     switch (s) {
-      case 'replied':
+      case 'answered':
+      case 'replied': // geriye dönük
         return B2bQuoteStatus.replied;
       case 'closed':
         return B2bQuoteStatus.closed;
+      case 'cancelled':
+        return B2bQuoteStatus.cancelled;
       case 'open':
       default:
         return B2bQuoteStatus.waiting;
@@ -109,6 +112,8 @@ class SupabaseB2bRepository implements B2bRepository {
       productCount: 0, // sayaç DB'de tutulmaz; ileride agregat ile (gap).
       campaignCount: 0,
       isMine: currentUserId != null && row['owner_id'] == currentUserId,
+      logoUrl: row['logo_url'] as String?,
+      coverUrl: row['cover_url'] as String?,
     );
   }
 
@@ -128,6 +133,7 @@ class SupabaseB2bRepository implements B2bRepository {
       description: (row['description'] ?? '').toString(),
       published: (row['published'] as bool?) ?? true,
       isMine: currentUserId != null && shop?['owner_id'] == currentUserId,
+      imageUrl: row['image_url'] as String?,
     );
   }
 
@@ -149,6 +155,7 @@ class SupabaseB2bRepository implements B2bRepository {
       description: (row['description'] ?? '').toString(),
       published: (row['published'] as bool?) ?? true,
       isMine: currentUserId != null && shop?['owner_id'] == currentUserId,
+      imageUrl: row['image_url'] as String?,
     );
   }
 
@@ -239,6 +246,8 @@ class SupabaseB2bRepository implements B2bRepository {
     required String description,
     required List<String> serviceRegions,
     required List<String> categories,
+    String? logoUrl,
+    String? coverUrl,
   }) async {
     final uid = _uid;
     if (uid == null) throw StateError('Oturum bulunamadı.');
@@ -250,6 +259,8 @@ class SupabaseB2bRepository implements B2bRepository {
           'description': description,
           'service_regions': serviceRegions,
           'categories': categories,
+          if (logoUrl != null) 'logo_url': logoUrl,
+          if (coverUrl != null) 'cover_url': coverUrl,
         }, onConflict: 'owner_id')
         .select(_shopCols)
         .single();
@@ -314,6 +325,7 @@ class SupabaseB2bRepository implements B2bRepository {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final shopId = await _myShopId();
     if (shopId == null) throw StateError('Önce mağaza oluşturun.');
@@ -328,6 +340,7 @@ class SupabaseB2bRepository implements B2bRepository {
           'price_type': 'quote',
           'description': description,
           'published': published,
+          if (imageUrl != null) 'image_url': imageUrl,
         })
         .select(_productCols)
         .single();
@@ -343,6 +356,7 @@ class SupabaseB2bRepository implements B2bRepository {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final row = await _client
         .from('b2b_products')
@@ -353,6 +367,7 @@ class SupabaseB2bRepository implements B2bRepository {
           'delivery_regions': _splitRegions(deliveryRegion),
           'description': description,
           'published': published,
+          if (imageUrl != null) 'image_url': imageUrl,
         })
         .eq('id', id)
         .select(_productCols)
@@ -418,6 +433,7 @@ class SupabaseB2bRepository implements B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final shopId = await _myShopId();
     if (shopId == null) throw StateError('Önce mağaza oluşturun.');
@@ -432,6 +448,7 @@ class SupabaseB2bRepository implements B2bRepository {
           'valid_until': _tryDate(validUntil),
           'description': description,
           'published': published,
+          if (imageUrl != null) 'image_url': imageUrl,
         })
         .select(_campaignCols)
         .single();
@@ -449,6 +466,7 @@ class SupabaseB2bRepository implements B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   }) async {
     final row = await _client
         .from('b2b_campaigns')
@@ -460,6 +478,7 @@ class SupabaseB2bRepository implements B2bRepository {
           'valid_until': _tryDate(validUntil),
           'description': description,
           'published': published,
+          if (imageUrl != null) 'image_url': imageUrl,
         })
         .eq('id', id)
         .select(_campaignCols)
@@ -651,6 +670,24 @@ class SupabaseB2bRepository implements B2bRepository {
           priceNote: priceNote,
           deliveryNote: deliveryNote,
         ));
+  }
+
+  @override
+  Future<void> closeQuoteRequest(String id) => _setRequestStatus(id, 'closed');
+
+  @override
+  Future<void> cancelQuoteRequest(String id) =>
+      _setRequestStatus(id, 'cancelled');
+
+  /// Alıcı kendi talebinin durumunu günceller (RLS: buyer_id=auth.uid()).
+  Future<void> _setRequestStatus(String id, String status) async {
+    final uid = _uid;
+    if (uid == null) throw StateError('Oturum bulunamadı.');
+    await _client
+        .from('b2b_quote_requests')
+        .update({'status': status})
+        .eq('id', id)
+        .eq('buyer_id', uid);
   }
 
   // ---- Yardımcılar ----

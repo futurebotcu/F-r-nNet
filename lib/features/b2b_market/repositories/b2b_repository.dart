@@ -60,6 +60,7 @@ abstract class B2bRepository {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   });
 
   /// Yeni kampanya ekler; eklenen kampanyayı döner.
@@ -72,6 +73,7 @@ abstract class B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   });
 
   /// Mağaza vitrinini günceller; güncel mağazayı döner.
@@ -80,6 +82,8 @@ abstract class B2bRepository {
     required String description,
     required List<String> serviceRegions,
     required List<String> categories,
+    String? logoUrl,
+    String? coverUrl,
   });
 
   /// Id ile ürün/kampanya bul (form prefill için). Yoksa null.
@@ -95,6 +99,7 @@ abstract class B2bRepository {
     required String deliveryRegion,
     String description = '',
     bool published = true,
+    String? imageUrl,
   });
 
   /// Mevcut kampanyayı düzenler; güncel kampanyayı döner.
@@ -108,6 +113,7 @@ abstract class B2bRepository {
     String? linkedProduct,
     String description = '',
     bool published = true,
+    String? imageUrl,
   });
 
   /// Ürünü/kampanyayı yayına alır veya taslağa çeker (publish toggle).
@@ -139,4 +145,10 @@ abstract class B2bRepository {
     String? priceNote,
     String? deliveryNote,
   });
+
+  /// Alıcı kendi talebini kapatır (status=closed) — yeni teklif kabul etmez.
+  Future<void> closeQuoteRequest(String id);
+
+  /// Alıcı kendi talebini iptal eder (status=cancelled).
+  Future<void> cancelQuoteRequest(String id);
 }
