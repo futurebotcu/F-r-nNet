@@ -5,8 +5,8 @@
 // hiçbir UI yüzeyinde gösterilmez. Yalnız ürün/kategori, miktar, il/ilçe,
 // alıcı tipi, teslimat zamanı, kısa not ve durum paylaşılır.
 
-/// Teklif talebi durumu.
-enum B2bQuoteStatus { waiting, replied, closed }
+/// Teklif talebi durumu. DB: open / answered / closed / cancelled.
+enum B2bQuoteStatus { waiting, replied, closed, cancelled }
 
 extension B2bQuoteStatusX on B2bQuoteStatus {
   String get label {
@@ -14,9 +14,33 @@ extension B2bQuoteStatusX on B2bQuoteStatus {
       case B2bQuoteStatus.waiting:
         return 'Bekliyor';
       case B2bQuoteStatus.replied:
-        return 'Cevap geldi';
+        return 'Teklif geldi';
       case B2bQuoteStatus.closed:
         return 'Kapandı';
+      case B2bQuoteStatus.cancelled:
+        return 'İptal edildi';
+    }
+  }
+
+  /// Talep aktif mi (yeni teklif kabul eder / kapatılabilir)?
+  bool get isActive =>
+      this == B2bQuoteStatus.waiting || this == B2bQuoteStatus.replied;
+
+  /// Talep sonlandırılmış mı (kapalı/iptal)?
+  bool get isTerminal =>
+      this == B2bQuoteStatus.closed || this == B2bQuoteStatus.cancelled;
+
+  /// DB metni.
+  String get dbValue {
+    switch (this) {
+      case B2bQuoteStatus.waiting:
+        return 'open';
+      case B2bQuoteStatus.replied:
+        return 'answered';
+      case B2bQuoteStatus.closed:
+        return 'closed';
+      case B2bQuoteStatus.cancelled:
+        return 'cancelled';
     }
   }
 }
@@ -66,4 +90,20 @@ class B2bQuoteRequest {
 
   /// Preview kullanıcının (alıcı) kendi açtığı talep mi → "Tekliflerim".
   final bool createdByMe;
+
+  B2bQuoteRequest copyWith({int? replyCount, B2bQuoteStatus? status}) {
+    return B2bQuoteRequest(
+      id: id,
+      productOrCategory: productOrCategory,
+      quantity: quantity,
+      city: city,
+      district: district,
+      buyerType: buyerType,
+      deliveryTime: deliveryTime,
+      note: note,
+      status: status ?? this.status,
+      replyCount: replyCount ?? this.replyCount,
+      createdByMe: createdByMe,
+    );
+  }
 }

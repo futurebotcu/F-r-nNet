@@ -10,6 +10,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/b2b_campaign.dart';
+import 'b2b_media_image.dart';
 import 'b2b_meta_pill.dart';
 
 class B2bCampaignCard extends StatelessWidget {
@@ -20,10 +21,14 @@ class B2bCampaignCard extends StatelessWidget {
     this.ownerContext = true,
     this.onEdit,
     this.onTogglePublish,
+    this.onTap,
   });
 
   final B2bCampaign campaign;
   final VoidCallback? onRequestQuote;
+
+  /// Karta basınca kampanya detayına git.
+  final VoidCallback? onTap;
 
   /// Sahiplik yönetim aksiyonları (yalnız kendi kampanyasında + supplier).
   final VoidCallback? onEdit;
@@ -41,6 +46,7 @@ class B2bCampaignCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return PremiumCard(
       padding: EdgeInsets.zero,
+      onTap: onTap,
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -62,6 +68,17 @@ class B2bCampaignCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (campaign.imageUrl != null &&
+                        campaign.imageUrl!.isNotEmpty) ...[
+                      B2bMediaImage(
+                        url: campaign.imageUrl,
+                        height: 110,
+                        width: double.infinity,
+                        radius: AppRadius.m,
+                        placeholderIcon: Icons.campaign_outlined,
+                      ),
+                      const SizedBox(height: AppSpacing.m),
+                    ],
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

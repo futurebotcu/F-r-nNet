@@ -12,8 +12,9 @@ import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
+import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
-import '../../../widgets/b2b_media_picker_field.dart';
+import '../../../widgets/b2b_image_upload_field.dart';
 
 class SupplierProductFormScreen extends ConsumerStatefulWidget {
   const SupplierProductFormScreen({super.key, this.productId});
@@ -36,7 +37,7 @@ class _SupplierProductFormScreenState
   String? _category;
   final Set<String> _regions = <String>{};
   bool _published = true;
-  String? _mediaKey;
+  String? _imageUrl;
   bool _categoryTouched = false;
 
   bool _editing = false;
@@ -45,19 +46,30 @@ class _SupplierProductFormScreenState
   void initState() {
     super.initState();
     final id = widget.productId;
-    if (id == null) return;
-    final p = ref.read(b2bRepositoryProvider).productById(id);
-    if (p == null) return;
-    _editing = true;
-    _name.text = p.name;
-    _minOrder.text = p.minOrder == 'Belirtilmedi' ? '' : p.minOrder;
-    _description.text = p.description;
-    _category = p.category;
-    _published = p.published;
-    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
-    for (final r in p.deliveryRegion.split(', ')) {
-      if (known.contains(r.trim())) _regions.add(r.trim());
+    if (id != null) {
+      _editing = true;
+      _prefill(id);
     }
+  }
+
+  Future<void> _prefill(String id) async {
+    final p = await ref.read(b2bRepositoryProvider).productById(id);
+    if (p == null || !mounted) return;
+    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
+    setState(() {
+      _name.text = p.name;
+      _minOrder.text = p.minOrder == 'Belirtilmedi' ? '' : p.minOrder;
+      _description.text = p.description;
+      _category = p.category;
+      _published = p.published;
+      _imageUrl = p.imageUrl;
+      _regions
+        ..clear()
+        ..addAll(p.deliveryRegion
+            .split(', ')
+            .map((e) => e.trim())
+            .where(known.contains));
+    });
   }
 
   @override
@@ -68,7 +80,7 @@ class _SupplierProductFormScreenState
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final formOk = _formKey.currentState?.validate() ?? false;
     final categoryOk = _category != null;
     if (!categoryOk) setState(() => _categoryTouched = true);
@@ -79,7 +91,7 @@ class _SupplierProductFormScreenState
         _minOrder.text.trim().isEmpty ? 'Belirtilmedi' : _minOrder.text.trim();
     final controller = ref.read(b2bMarketControllerProvider.notifier);
     if (_editing) {
-      controller.updateProduct(
+      await controller.updateProduct(
         id: widget.productId!,
         name: _name.text.trim(),
         category: _category!,
@@ -87,18 +99,21 @@ class _SupplierProductFormScreenState
         deliveryRegion: regions,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     } else {
-      controller.addProduct(
+      await controller.addProduct(
         name: _name.text.trim(),
         category: _category!,
         minOrder: minOrder,
         deliveryRegion: regions,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     }
 
+    if (!mounted) return;
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,
@@ -175,10 +190,11 @@ class _SupplierProductFormScreenState
                 maxLines: 3,
               ),
               const SizedBox(height: AppSpacing.l),
-              B2bMediaPickerField(
+              B2bImageUploadField(
+                kind: B2bMediaKind.product,
                 label: 'Ürün görseli',
-                selectedKey: _mediaKey,
-                onSelect: (k) => setState(() => _mediaKey = k),
+                currentUrl: _imageUrl,
+                onChanged: (u) => setState(() => _imageUrl = u),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bStatusField(

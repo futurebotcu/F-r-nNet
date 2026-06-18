@@ -15,6 +15,8 @@ class B2bStore {
     required this.productCount,
     required this.campaignCount,
     this.isMine = false,
+    this.logoUrl,
+    this.coverUrl,
   });
 
   final String id;
@@ -38,6 +40,29 @@ class B2bStore {
   final int productCount;
   final int campaignCount;
 
+  /// Mağaza logo görseli public URL'i (opsiyonel — canlı upload).
+  final String? logoUrl;
+
+  /// Mağaza kapak görseli public URL'i (opsiyonel — canlı upload).
+  final String? coverUrl;
+
   /// Preview tedarikçinin kendi mağazası mı (mock sahiplik).
   final bool isMine;
+
+  B2bStore copyWith({int? productCount, int? campaignCount}) {
+    return B2bStore(
+      id: id,
+      name: name,
+      monogram: monogram,
+      tagline: tagline,
+      description: description,
+      categories: categories,
+      serviceRegions: serviceRegions,
+      productCount: productCount ?? this.productCount,
+      campaignCount: campaignCount ?? this.campaignCount,
+      isMine: isMine,
+      logoUrl: logoUrl,
+      coverUrl: coverUrl,
+    );
+  }
 }

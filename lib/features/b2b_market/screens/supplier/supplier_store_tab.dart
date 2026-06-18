@@ -13,7 +13,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/widgets/error_retry_state.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
+import '../../models/b2b_campaign.dart';
+import '../../models/b2b_product.dart';
 import '../../models/b2b_store.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_campaign_card.dart';
@@ -24,25 +27,39 @@ class SupplierStoreTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Write sonrası (ürün/kampanya/mağaza) yeniden çiz.
-    ref.watch(b2bMarketControllerProvider);
-    final repo = ref.watch(b2bRepositoryProvider);
-    final store = repo.myStore();
-    final products = repo.listMyProducts();
-    final campaigns = repo.listMyCampaigns();
+    // Mağaza vitrini async yüklenir; ürün/kampanya bölümleri hazır oldukça
+    // dolar (valueOrNull → yüklenirken boş, write sonrası otomatik yenilenir).
+    final storeAsync = ref.watch(b2bMyStoreProvider);
+    final products =
+        ref.watch(b2bMyProductsProvider).valueOrNull ?? const <B2bProduct>[];
+    final campaigns =
+        ref.watch(b2bMyCampaignsProvider).valueOrNull ?? const <B2bCampaign>[];
 
-    return ListView(
-      physics: const BouncingScrollPhysics(
-        parent: AlwaysScrollableScrollPhysics(),
+    return storeAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.xxl),
+          child: CircularProgressIndicator(),
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageH,
-        AppSpacing.m,
-        AppSpacing.pageH,
-        AppSpacing.xxl,
+      error: (_, __) => ErrorRetryState(
+        compact: true,
+        onRetry: () => ref.invalidate(b2bMyStoreProvider),
       ),
-      children: [
-        const _ViewpointStrip(),
+      data: (store) => ListView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pageH,
+          AppSpacing.m,
+          AppSpacing.pageH,
+          AppSpacing.xxl,
+        ),
+        children: [
+          const _ViewpointStrip(),
         const SizedBox(height: AppSpacing.m),
         _StoreHero(store: store),
         const SizedBox(height: AppSpacing.s),
@@ -91,7 +108,8 @@ class SupplierStoreTab extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.m),
           ],
-      ],
+        ],
+      ),
     );
   }
 }

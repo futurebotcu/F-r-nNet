@@ -11,11 +11,16 @@ class B2bQuoteReply {
     required this.message,
     required this.createdAtLabel,
     this.priceHint,
+    this.deliveryNote,
+    this.supplierShopId,
   });
 
   final String id;
   final String requestId;
   final String supplierName;
+
+  /// Cevaplayan tedarikçi mağaza id'si (alıcı → "Mağazayı gör"). Opsiyonel.
+  final String? supplierShopId;
   final String message;
 
   /// İnsan-okur tarih etiketi (ör. "2 saat önce"). Mock sabit string.
@@ -23,4 +28,7 @@ class B2bQuoteReply {
 
   /// Opsiyonel fiyat ipucu (ör. "≈ ₺640 / çuval").
   final String? priceHint;
+
+  /// Opsiyonel teslimat notu (ör. "Bu hafta teslim").
+  final String? deliveryNote;
 }

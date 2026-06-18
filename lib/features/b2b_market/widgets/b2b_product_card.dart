@@ -10,6 +10,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/b2b_product.dart';
+import 'b2b_media_image.dart';
 import 'b2b_meta_pill.dart';
 
 class B2bProductCard extends StatelessWidget {
@@ -21,11 +22,15 @@ class B2bProductCard extends StatelessWidget {
     this.ownerContext = true,
     this.onEdit,
     this.onTogglePublish,
+    this.onTap,
   });
 
   final B2bProduct product;
   final VoidCallback? onRequestQuote;
   final VoidCallback? onAskPrice;
+
+  /// Karta basınca ürün detayına git.
+  final VoidCallback? onTap;
 
   /// Sahiplik yönetim aksiyonları (yalnız kendi ürününde + supplier bağlamı).
   final VoidCallback? onEdit;
@@ -40,15 +45,29 @@ class B2bProductCard extends StatelessWidget {
   bool get _canManage =>
       _isMine && (onEdit != null || onTogglePublish != null);
 
+  bool get _hasImage =>
+      product.imageUrl != null && product.imageUrl!.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return PremiumCard(
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_hasImage) ...[
+                B2bMediaImage(
+                  url: product.imageUrl,
+                  height: 48,
+                  width: 48,
+                  radius: AppRadius.s,
+                  placeholderIcon: Icons.inventory_2_outlined,
+                ),
+                const SizedBox(width: AppSpacing.m),
+              ],
               Expanded(
                 child: Text(
                   product.name,

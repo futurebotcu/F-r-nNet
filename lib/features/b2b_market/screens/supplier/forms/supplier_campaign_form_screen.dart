@@ -11,7 +11,9 @@ import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
+import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
+import '../../../widgets/b2b_image_upload_field.dart';
 
 class SupplierCampaignFormScreen extends ConsumerStatefulWidget {
   const SupplierCampaignFormScreen({super.key, this.campaignId});
@@ -37,6 +39,7 @@ class _SupplierCampaignFormScreenState
   final Set<String> _regions = <String>{};
   bool _published = true;
   bool _categoryTouched = false;
+  String? _imageUrl;
 
   bool _editing = false;
 
@@ -44,21 +47,32 @@ class _SupplierCampaignFormScreenState
   void initState() {
     super.initState();
     final id = widget.campaignId;
-    if (id == null) return;
-    final c = ref.read(b2bRepositoryProvider).campaignById(id);
-    if (c == null) return;
-    _editing = true;
-    _title.text = c.title;
-    _linkedProduct.text = c.linkedProduct ?? '';
-    _minPurchase.text = c.minPurchase == 'Belirtilmedi' ? '' : c.minPurchase;
-    _validUntil.text = c.validUntil == 'Süresiz' ? '' : c.validUntil;
-    _description.text = c.description;
-    _category = c.category;
-    _published = c.published;
-    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
-    for (final r in c.region.split(', ')) {
-      if (known.contains(r.trim())) _regions.add(r.trim());
+    if (id != null) {
+      _editing = true;
+      _prefill(id);
     }
+  }
+
+  Future<void> _prefill(String id) async {
+    final c = await ref.read(b2bRepositoryProvider).campaignById(id);
+    if (c == null || !mounted) return;
+    final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
+    setState(() {
+      _title.text = c.title;
+      _linkedProduct.text = c.linkedProduct ?? '';
+      _minPurchase.text = c.minPurchase == 'Belirtilmedi' ? '' : c.minPurchase;
+      _validUntil.text = c.validUntil == 'Süresiz' ? '' : c.validUntil;
+      _description.text = c.description;
+      _category = c.category;
+      _published = c.published;
+      _imageUrl = c.imageUrl;
+      _regions
+        ..clear()
+        ..addAll(c.region
+            .split(', ')
+            .map((e) => e.trim())
+            .where(known.contains));
+    });
   }
 
   @override
@@ -71,7 +85,7 @@ class _SupplierCampaignFormScreenState
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final formOk = _formKey.currentState?.validate() ?? false;
     final categoryOk = _category != null;
     if (!categoryOk) setState(() => _categoryTouched = true);
@@ -86,7 +100,7 @@ class _SupplierCampaignFormScreenState
         _validUntil.text.trim().isEmpty ? 'Süresiz' : _validUntil.text.trim();
     final controller = ref.read(b2bMarketControllerProvider.notifier);
     if (_editing) {
-      controller.updateCampaign(
+      await controller.updateCampaign(
         id: widget.campaignId!,
         title: _title.text.trim(),
         category: _category!,
@@ -96,9 +110,10 @@ class _SupplierCampaignFormScreenState
         linkedProduct: linked.isEmpty ? null : linked,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     } else {
-      controller.addCampaign(
+      await controller.addCampaign(
         title: _title.text.trim(),
         category: _category!,
         region: region,
@@ -107,9 +122,11 @@ class _SupplierCampaignFormScreenState
         linkedProduct: linked.isEmpty ? null : linked,
         description: _description.text.trim(),
         published: _published,
+        imageUrl: _imageUrl,
       );
     }
 
+    if (!mounted) return;
     Navigator.of(context).pop();
     PremiumTopBannerController.show(
       context,
@@ -196,6 +213,13 @@ class _SupplierCampaignFormScreenState
                 controller: _description,
                 hint: 'Kampanya hakkında kısa bilgi (opsiyonel)',
                 maxLines: 3,
+              ),
+              const SizedBox(height: AppSpacing.l),
+              B2bImageUploadField(
+                kind: B2bMediaKind.campaign,
+                label: 'Kampanya görseli',
+                currentUrl: _imageUrl,
+                onChanged: (u) => setState(() => _imageUrl = u),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bStatusField(

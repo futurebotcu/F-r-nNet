@@ -208,6 +208,11 @@ class B2bStatusPill extends StatelessWidget {
           AppColors.textMuted,
           Icons.check_circle_outline_rounded,
         ),
+      B2bQuoteStatus.cancelled => (
+          const Color(0xFFFDF2F2),
+          const Color(0xFF991B1B),
+          Icons.cancel_outlined,
+        ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
