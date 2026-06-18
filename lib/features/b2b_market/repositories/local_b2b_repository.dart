@@ -10,6 +10,7 @@
 import '../data/b2b_mock_seed.dart';
 import '../models/b2b_campaign.dart';
 import '../models/b2b_product.dart';
+import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
@@ -29,6 +30,7 @@ class LocalB2bRepository implements B2bRepository {
   final List<B2bCampaign> _campaigns;
   final List<B2bQuoteRequest> _myQuoteRequests;
   final List<B2bQuoteReply> _replies;
+  final List<B2bQuoteLead> _leads = <B2bQuoteLead>[];
 
   int _seq = 0;
 
@@ -393,6 +395,79 @@ class LocalB2bRepository implements B2bRepository {
   void _setStatus(String id, B2bQuoteStatus status) {
     final i = _myQuoteRequests.indexWhere((q) => q.id == id);
     if (i >= 0) _myQuoteRequests[i] = _myQuoteRequests[i].copyWith(status: status);
+  }
+
+  // ---- Lead (ilgi) kanalı ----
+
+  void _addLead({
+    required String quoteReplyId,
+    required B2bLeadStatus status,
+    String message = '',
+    bool phoneShared = false,
+    String? phone,
+  }) {
+    final reply = _replies.firstWhere(
+      (r) => r.id == quoteReplyId,
+      orElse: () => throw StateError('Teklif bulunamadı.'),
+    );
+    final reqIndex =
+        _myQuoteRequests.indexWhere((q) => q.id == reply.requestId);
+    if (reqIndex >= 0 && _myQuoteRequests[reqIndex].status.isTerminal) {
+      throw StateError('Kapalı/iptal talebe ilgi gönderilemez.');
+    }
+    if (_leads.any((l) => l.quoteReplyId == quoteReplyId)) {
+      throw StateError('Bu teklife zaten yanıt verdiniz.');
+    }
+    final req = reqIndex >= 0 ? _myQuoteRequests[reqIndex] : null;
+    _leads.add(B2bQuoteLead(
+      id: 'lead_${++_seq}',
+      quoteRequestId: reply.requestId,
+      quoteReplyId: quoteReplyId,
+      supplierShopId: reply.supplierShopId ?? '',
+      status: status,
+      supplierName: reply.supplierName,
+      buyerMessage: message.isEmpty ? null : message,
+      phoneShared: phoneShared,
+      sharedPhone: phoneShared ? phone : null,
+      createdAtLabel: 'Az önce',
+      requestCategory: req?.productOrCategory ?? '',
+      requestQuantity: req?.quantity ?? '',
+      requestCity: req?.city ?? '',
+    ));
+  }
+
+  @override
+  Future<void> expressInterestInQuoteReply({
+    required String quoteReplyId,
+    String message = '',
+    bool phoneShared = false,
+    String? phone,
+  }) async =>
+      _addLead(
+        quoteReplyId: quoteReplyId,
+        status: B2bLeadStatus.interested,
+        message: message,
+        phoneShared: phoneShared,
+        phone: phone,
+      );
+
+  @override
+  Future<void> rejectQuoteReply(String quoteReplyId) async =>
+      _addLead(quoteReplyId: quoteReplyId, status: B2bLeadStatus.rejected);
+
+  @override
+  Future<List<B2bQuoteLead>> leadsForMyQuoteRequest(
+          String quoteRequestId) async =>
+      _leads
+          .where((l) => l.quoteRequestId == quoteRequestId)
+          .toList(growable: false);
+
+  @override
+  Future<List<B2bQuoteLead>> leadsForMySupplierShop() async {
+    final myShopId = _stores[_myStoreIndex()].id;
+    return _leads
+        .where((l) => l.supplierShopId == myShopId)
+        .toList(growable: false);
   }
 
   static String _monogramFor(String name, {required String fallback}) {

@@ -9,6 +9,7 @@
 
 import '../models/b2b_campaign.dart';
 import '../models/b2b_product.dart';
+import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
@@ -160,4 +161,25 @@ abstract class B2bRepository {
 
   /// Alıcı kendi talebini iptal eder (status=cancelled).
   Future<void> cancelQuoteRequest(String id);
+
+  // ---- Lead (ilgi) kanalı ----
+
+  /// Alıcı bir teklif cevabıyla ilgilendiğini bildirir (lead=interested).
+  /// Telefon YALNIZ [phoneShared] true ise paylaşılır. supplier_shop_id repo/
+  /// RPC içinde reply'den çözülür (UI'dan güvenilmez).
+  Future<void> expressInterestInQuoteReply({
+    required String quoteReplyId,
+    String message = '',
+    bool phoneShared = false,
+    String? phone,
+  });
+
+  /// Alıcı bir teklifi "Uygun değil" işaretler (lead=rejected).
+  Future<void> rejectQuoteReply(String quoteReplyId);
+
+  /// Alıcının kendi talebine ait lead'ler (her reply'in ilgi durumu).
+  Future<List<B2bQuoteLead>> leadsForMyQuoteRequest(String quoteRequestId);
+
+  /// Tedarikçinin kendi mağazasına gelen lead'ler ("İlgilenenler").
+  Future<List<B2bQuoteLead>> leadsForMySupplierShop();
 }

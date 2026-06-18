@@ -15,6 +15,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/error_retry_state.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
 import '../../../../core/widgets/premium/premium_scaffold.dart';
+import '../../models/b2b_quote_lead.dart';
 import '../../models/b2b_quote_reply.dart';
 import '../../models/b2b_quote_request.dart';
 import '../../providers/b2b_providers.dart';
@@ -71,7 +72,10 @@ class BuyerQuoteDetailScreen extends ConsumerWidget {
                   count: req.replyCount,
                 ),
                 const SizedBox(height: AppSpacing.s),
-                _Replies(quoteRequestId: quoteRequestId),
+                _Replies(
+                  quoteRequestId: quoteRequestId,
+                  requestActive: req.status.isActive,
+                ),
               ],
             );
           },
@@ -270,12 +274,18 @@ class _QuoteActions extends ConsumerWidget {
 }
 
 class _Replies extends ConsumerWidget {
-  const _Replies({required this.quoteRequestId});
+  const _Replies({required this.quoteRequestId, required this.requestActive});
   final String quoteRequestId;
+  final bool requestActive;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final replies = ref.watch(b2bRepliesProvider(quoteRequestId));
+    final leadsAsync = ref.watch(b2bRequestLeadsProvider(quoteRequestId));
+    final leadByReply = <String, B2bQuoteLead>{
+      for (final l in (leadsAsync.valueOrNull ?? const <B2bQuoteLead>[]))
+        l.quoteReplyId: l,
+    };
     return replies.when(
       skipLoadingOnReload: true,
       loading: () => const Padding(
@@ -315,7 +325,11 @@ class _Replies extends ConsumerWidget {
         return Column(
           children: [
             for (final r in list) ...[
-              _ReplyCard(reply: r),
+              _ReplyCard(
+                reply: r,
+                lead: leadByReply[r.id],
+                requestActive: requestActive,
+              ),
               const SizedBox(height: AppSpacing.m),
             ],
             Container(
@@ -348,12 +362,18 @@ class _Replies extends ConsumerWidget {
   }
 }
 
-class _ReplyCard extends StatelessWidget {
-  const _ReplyCard({required this.reply});
+class _ReplyCard extends ConsumerWidget {
+  const _ReplyCard({
+    required this.reply,
+    required this.lead,
+    required this.requestActive,
+  });
   final B2bQuoteReply reply;
+  final B2bQuoteLead? lead;
+  final bool requestActive;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return PremiumCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,35 +441,202 @@ class _ReplyCard extends StatelessWidget {
               ],
             ),
           ],
-          if ((reply.supplierShopId ?? '').isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.m),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => context.push(
-                  AppRoutes.b2bStoreDetail(reply.supplierShopId!),
-                ),
-                icon: const Icon(Icons.storefront_outlined, size: 16),
-                label: const Text('Tedarikçi mağazasını gör'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  side: const BorderSide(color: AppColors.borderHairline),
-                  minimumSize: const Size(0, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          const SizedBox(height: AppSpacing.m),
+          _LeadArea(
+            reply: reply,
+            lead: lead,
+            requestActive: requestActive,
+          ),
         ],
       ),
     );
   }
+}
+
+/// Teklif kartının lead (ilgi) aksiyon/durum bölümü.
+class _LeadArea extends ConsumerWidget {
+  const _LeadArea({
+    required this.reply,
+    required this.lead,
+    required this.requestActive,
+  });
+  final B2bQuoteReply reply;
+  final B2bQuoteLead? lead;
+  final bool requestActive;
+
+  Widget _storeButton(BuildContext context) {
+    if ((reply.supplierShopId ?? '').isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () =>
+            context.push(AppRoutes.b2bStoreDetail(reply.supplierShopId!)),
+        icon: const Icon(Icons.storefront_outlined, size: 16),
+        label: const Text('Tedarikçi mağazasını gör'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textPrimary,
+          side: const BorderSide(color: AppColors.borderHairline),
+          minimumSize: const Size(0, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _reject(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref
+          .read(b2bMarketControllerProvider.notifier)
+          .rejectQuoteReply(reply.id);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('İşlem başarısız. Tekrar deneyin.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = lead;
+    if (l != null && l.isInterested) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              const _LeadChip(
+                icon: Icons.check_circle_rounded,
+                label: 'İlgilenildi',
+                tone: _ChipTone.success,
+              ),
+              _LeadChip(
+                icon: l.phoneShared
+                    ? Icons.phone_in_talk_rounded
+                    : Icons.phone_disabled_rounded,
+                label: l.phoneShared ? 'Telefon paylaşıldı' : 'Telefon paylaşılmadı',
+                tone: l.phoneShared ? _ChipTone.success : _ChipTone.muted,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+          _storeButton(context),
+        ],
+      );
+    }
+    if (l != null && l.isRejected) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _LeadChip(
+            icon: Icons.cancel_outlined,
+            label: 'Uygun değil olarak işaretlendi',
+            tone: _ChipTone.muted,
+          ),
+          const SizedBox(height: AppSpacing.s),
+          _storeButton(context),
+        ],
+      );
+    }
+    // Lead yok.
+    if (!requestActive) return _storeButton(context);
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () => _showInterestDialog(context, reply.id),
+                icon: const Icon(Icons.thumb_up_alt_outlined, size: 16),
+                label: const Text('İlgileniyorum'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.brandLemon,
+                  foregroundColor: AppColors.brandInk,
+                  minimumSize: const Size(0, 42),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                  textStyle:
+                      const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s),
+            OutlinedButton(
+              onPressed: () => _reject(context, ref),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                side: const BorderSide(color: AppColors.borderHairline),
+                minimumSize: const Size(0, 42),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+                textStyle:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+              child: const Text('Uygun değil'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.s),
+        _storeButton(context),
+      ],
+    );
+  }
+}
+
+enum _ChipTone { success, muted }
+
+class _LeadChip extends StatelessWidget {
+  const _LeadChip({required this.icon, required this.label, required this.tone});
+  final IconData icon;
+  final String label;
+  final _ChipTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color bg, Color fg) = tone == _ChipTone.success
+        ? (const Color(0xFFF3FBEF), const Color(0xFF166534))
+        : (AppColors.surfaceVariant, AppColors.textMuted);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: fg.withValues(alpha: 0.22), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: fg),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _showInterestDialog(BuildContext context, String replyId) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _InterestSheet(quoteReplyId: replyId),
+  );
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -477,6 +664,238 @@ class _SectionHeader extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "İlgileniyorum" akışı: kısa mesaj + opsiyonel telefon paylaşımı (onaylı).
+class _InterestSheet extends ConsumerStatefulWidget {
+  const _InterestSheet({required this.quoteReplyId});
+  final String quoteReplyId;
+
+  @override
+  ConsumerState<_InterestSheet> createState() => _InterestSheetState();
+}
+
+class _InterestSheetState extends ConsumerState<_InterestSheet> {
+  final _message = TextEditingController(
+    text: 'Bu teklifle ilgileniyorum, görüşmek istiyorum.',
+  );
+  final _phone = TextEditingController();
+  bool _sharePhone = false;
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _message.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_sharePhone && _phone.text.trim().isEmpty) {
+      setState(() => _error = 'Telefon paylaşmayı seçtin; numara gir veya onayı kaldır.');
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref.read(b2bMarketControllerProvider.notifier).expressInterestInQuoteReply(
+            quoteReplyId: widget.quoteReplyId,
+            message: _message.text.trim(),
+            phoneShared: _sharePhone,
+            phone: _sharePhone ? _phone.text.trim() : null,
+          );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _sharePhone
+                ? 'Tedarikçiye ilgilendiğin bildirildi. Telefonun paylaşıldı.'
+                : 'Tedarikçiye ilgilendiğin bildirildi.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = 'Gönderilemedi. Lütfen tekrar deneyin.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: viewInsets),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.l,
+          AppSpacing.l,
+          AppSpacing.l,
+          AppSpacing.l,
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Bu teklifle ilgileniyor musun?',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.s),
+                const Text(
+                  'Tedarikçiye bu teklifle ilgilendiğini ileteceğiz. İstersen '
+                  'telefonunu da paylaşabilirsin.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.35,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.l),
+                TextField(
+                  controller: _message,
+                  maxLines: 3,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Mesaj',
+                    isDense: true,
+                    filled: true,
+                    fillColor: AppColors.surfaceVariant,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                      borderSide: const BorderSide(
+                        color: AppColors.borderHairline,
+                        width: 0.8,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.m),
+                CheckboxListTile(
+                  value: _sharePhone,
+                  onChanged: (v) => setState(() => _sharePhone = v ?? false),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  dense: true,
+                  activeColor: AppColors.brandLemonPressed,
+                  title: const Text(
+                    'Telefonumu bu tedarikçiyle paylaş',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Telefon paylaşmadan da ilgini iletebilirsin.',
+                    style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                  ),
+                ),
+                if (_sharePhone) ...[
+                  const SizedBox(height: AppSpacing.s),
+                  TextField(
+                    controller: _phone,
+                    keyboardType: TextInputType.phone,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Telefon',
+                      hintText: 'Ör. 05xx xxx xx xx',
+                      isDense: true,
+                      filled: true,
+                      fillColor: AppColors.surfaceVariant,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderHairline,
+                          width: 0.8,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (_error != null) ...[
+                  const SizedBox(height: AppSpacing.s),
+                  Text(
+                    _error!,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.danger,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.l),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _submitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          side: const BorderSide(color: AppColors.borderHairline),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                          ),
+                        ),
+                        child: const Text('Vazgeç'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.m),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _submitting ? null : _submit,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.brandLemon,
+                          foregroundColor: AppColors.brandInk,
+                          minimumSize: const Size(0, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        child: Text(_submitting ? 'Gönderiliyor…' : 'Gönder'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -19,6 +19,7 @@ import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/b2b_campaign.dart';
 import '../models/b2b_product.dart';
+import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
@@ -246,6 +247,26 @@ class B2bMarketController extends Notifier<int> {
     await _repo.cancelQuoteRequest(id);
     state++;
   }
+
+  Future<void> expressInterestInQuoteReply({
+    required String quoteReplyId,
+    String message = '',
+    bool phoneShared = false,
+    String? phone,
+  }) async {
+    await _repo.expressInterestInQuoteReply(
+      quoteReplyId: quoteReplyId,
+      message: message,
+      phoneShared: phoneShared,
+      phone: phone,
+    );
+    state++;
+  }
+
+  Future<void> rejectQuoteReply(String quoteReplyId) async {
+    await _repo.rejectQuoteReply(quoteReplyId);
+    state++;
+  }
 }
 
 // ---- Okuma FutureProvider'ları (write revizyonunu izler → otomatik yenilenir) ----
@@ -313,6 +334,20 @@ final b2bRepliesProvider = FutureProvider.autoDispose
     .family<List<B2bQuoteReply>, String>((ref, id) {
   ref.watch(b2bMarketControllerProvider);
   return ref.watch(b2bRepositoryProvider).repliesFor(id);
+});
+
+/// Alıcının kendi talebine ait lead'ler (her reply'in ilgi durumu).
+final b2bRequestLeadsProvider = FutureProvider.autoDispose
+    .family<List<B2bQuoteLead>, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).leadsForMyQuoteRequest(id);
+});
+
+/// Tedarikçinin kendi mağazasına gelen lead'ler ("İlgilenenler").
+final b2bSupplierLeadsProvider =
+    FutureProvider.autoDispose<List<B2bQuoteLead>>((ref) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).leadsForMySupplierShop();
 });
 
 /// Tek ürün detayı.

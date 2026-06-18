@@ -17,6 +17,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/b2b_campaign.dart';
 import '../models/b2b_product.dart';
+import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
@@ -762,6 +763,82 @@ class SupabaseB2bRepository implements B2bRepository {
         .update({'status': status})
         .eq('id', id)
         .eq('buyer_id', uid);
+  }
+
+  // ---- Lead (ilgi) kanalı ----
+
+  static const _leadCols =
+      'id, quote_request_id, quote_reply_id, supplier_shop_id, status, '
+      'buyer_message, phone_shared, shared_phone, request_category, '
+      'request_quantity, request_city, created_at';
+
+  static B2bQuoteLead leadFromRow(Map<String, dynamic> row) {
+    final shop = row['b2b_supplier_shops'] as Map<String, dynamic>?;
+    return B2bQuoteLead(
+      id: (row['id'] ?? '').toString(),
+      quoteRequestId: (row['quote_request_id'] ?? '').toString(),
+      quoteReplyId: (row['quote_reply_id'] ?? '').toString(),
+      supplierShopId: (row['supplier_shop_id'] ?? '').toString(),
+      status: B2bLeadStatusX.fromText(row['status'] as String?),
+      supplierName: (shop?['shop_name'] ?? '').toString(),
+      buyerMessage: row['buyer_message'] as String?,
+      phoneShared: (row['phone_shared'] as bool?) ?? false,
+      sharedPhone: row['shared_phone'] as String?,
+      createdAtLabel: _dateLabel(row['created_at']),
+      requestCategory: (row['request_category'] ?? '').toString(),
+      requestQuantity: (row['request_quantity'] ?? '').toString(),
+      requestCity: (row['request_city'] ?? '').toString(),
+    );
+  }
+
+  @override
+  Future<void> expressInterestInQuoteReply({
+    required String quoteReplyId,
+    String message = '',
+    bool phoneShared = false,
+    String? phone,
+  }) async {
+    await _client.rpc('create_b2b_quote_lead', params: {
+      'p_quote_reply_id': quoteReplyId,
+      'p_status': 'interested',
+      'p_buyer_message': message,
+      'p_phone_shared': phoneShared,
+      'p_shared_phone': phoneShared ? phone : null,
+    });
+  }
+
+  @override
+  Future<void> rejectQuoteReply(String quoteReplyId) async {
+    await _client.rpc('create_b2b_quote_lead', params: {
+      'p_quote_reply_id': quoteReplyId,
+      'p_status': 'rejected',
+      'p_phone_shared': false,
+    });
+  }
+
+  @override
+  Future<List<B2bQuoteLead>> leadsForMyQuoteRequest(
+      String quoteRequestId) async {
+    // Alıcı kendi talebindeki lead'leri görür (RLS buyer_id=auth.uid()).
+    // Mağaza adı için shop embed.
+    final rows = await _client
+        .from('b2b_quote_leads')
+        .select('$_leadCols, b2b_supplier_shops!inner(shop_name)')
+        .eq('quote_request_id', quoteRequestId);
+    return rows.map(leadFromRow).toList(growable: false);
+  }
+
+  @override
+  Future<List<B2bQuoteLead>> leadsForMySupplierShop() async {
+    final shopId = await _myShopId();
+    if (shopId == null) return const [];
+    // RLS yalnız kendi mağazasına ait lead'leri döndürür; ayrıca filtrele.
+    final rows = await _client
+        .from('b2b_quote_leads')
+        .select(_leadCols)
+        .eq('supplier_shop_id', shopId)
+        .order('created_at', ascending: false);
+    return rows.map(leadFromRow).toList(growable: false);
   }
 
   // ---- Yardımcılar ----
