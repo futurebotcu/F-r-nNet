@@ -78,7 +78,8 @@ void main() {
   });
 
   group('Offer sheet wiring → repository', () {
-    testWidgets('Buyer "Yeni teklif" submit → addQuoteRequest (Local)',
+    testWidgets(
+        'Genel talep: istek adı + il dropdown → addQuoteRequest (Local)',
         (t) async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -99,16 +100,80 @@ void main() {
       await t.tap(find.text('aç'));
       await t.pumpAndSettle();
 
+      // Genel kip: TextField sırası requestName(0), miktar(1), ilçe(2), not(3).
       final fields = find.byType(TextField);
-      await t.enterText(fields.at(0), 'Test Kategori'); // ürün/kategori
+      await t.enterText(fields.at(0), 'Test Kategori'); // ürün/istek adı
       await t.enterText(fields.at(1), '50 çuval'); // miktar
-      await t.enterText(fields.at(2), 'Bursa'); // il
-      await t.tap(find.text('Talebi yayınla'));
+
+      // İl: 2. dropdown (Kategori=0, İl=1, Teslimat=2).
+      final ilDropdown = find.byType(DropdownButtonFormField<String>).at(1);
+      await t.ensureVisible(ilDropdown);
+      await t.tap(ilDropdown);
+      await t.pumpAndSettle();
+      await t.tap(find.text('Bursa').last);
+      await t.pumpAndSettle();
+
+      final submit = find.text('Talebi yayınla');
+      await t.ensureVisible(submit);
+      await t.tap(submit);
       await t.pumpAndSettle();
 
       final repo = container.read(b2bRepositoryProvider);
       final mine = await repo.listMyQuoteRequests();
-      expect(mine.any((r) => r.productOrCategory == 'Test Kategori'), isTrue);
+      final created =
+          mine.firstWhere((r) => r.productOrCategory == 'Test Kategori');
+      expect(created.city, 'Bursa');
+    });
+
+    testWidgets('Ürün kartından teklif: kategori SABİT (dropdown yok)',
+        (t) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await t.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => B2bOfferBottomSheet.show(
+                  ctx,
+                  kind: B2bOfferKind.requestQuote,
+                  targetType: 'product',
+                  targetId: 'p1',
+                  presetCategory: 'Ekmeklik Un',
+                  contextLine: 'Anadolu Un & Maya · Ekmeklik Un',
+                ),
+                child: const Text('aç'),
+              ),
+            ),
+          ),
+        ),
+      ));
+      await t.tap(find.text('aç'));
+      await t.pumpAndSettle();
+
+      // Sabit kategori kilitli görünür; "Kategori" seçim alanı YOK.
+      expect(find.text('Kategori'), findsNothing);
+      expect(find.text('Ürün / kategori'), findsOneWidget);
+
+      // Ürün kipi: TextField sırası miktar(0), ilçe(1), not(2). İl dropdown=index1.
+      await t.enterText(find.byType(TextField).at(0), '10 çuval');
+      final ilDropdown = find.byType(DropdownButtonFormField<String>).at(0);
+      await t.ensureVisible(ilDropdown);
+      await t.tap(ilDropdown);
+      await t.pumpAndSettle();
+      await t.tap(find.text('İstanbul').last);
+      await t.pumpAndSettle();
+
+      final submit = find.text('Teklif iste');
+      await t.ensureVisible(submit);
+      await t.tap(submit);
+      await t.pumpAndSettle();
+
+      final repo = container.read(b2bRepositoryProvider);
+      final mine = await repo.listMyQuoteRequests();
+      // Kategori kullanıcıdan değil, presetCategory'den sabit geldi.
+      expect(mine.any((r) => r.productOrCategory == 'Ekmeklik Un'), isTrue);
     });
 
     testWidgets('Supplier "Teklif Ver" submit → addQuoteReply (Local)',
