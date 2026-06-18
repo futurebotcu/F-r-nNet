@@ -49,7 +49,10 @@ import '../../features/social_groups/screens/group_detail_screen.dart';
 import '../../features/jobs/screens/job_offer_form_screen.dart';
 import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_detail_screen.dart';
-import '../../features/marketplace/screens/pazar_coming_soon_screen.dart';
+import '../../features/b2b_market/screens/b2b_shell_screen.dart';
+import '../../features/b2b_market/screens/supplier/forms/supplier_campaign_form_screen.dart';
+import '../../features/b2b_market/screens/supplier/forms/supplier_product_form_screen.dart';
+import '../../features/b2b_market/screens/supplier/forms/supplier_store_edit_screen.dart';
 import '../../features/messages/screens/messages_list_screen.dart';
 import '../../features/messaging/screens/chat_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
@@ -103,6 +106,13 @@ class AppRoutes {
   // Topluluk · Pazar · İlanlar · Mesajlar · Panel
   static const String community = '/community';
   static const String pazar = '/pazar';
+  // B2B Pazar — Tedarikçi Mağazam yönetim formları (shell dışı, full-screen).
+  static const String b2bProductNew = '/pazar/magazam/urun-ekle';
+  static const String b2bCampaignNew = '/pazar/magazam/kampanya-ekle';
+  static const String b2bStoreEdit = '/pazar/magazam/duzenle';
+  static String b2bProductEdit(String id) => '/pazar/magazam/urun/$id/duzenle';
+  static String b2bCampaignEdit(String id) =>
+      '/pazar/magazam/kampanya/$id/duzenle';
   static const String listings = '/ilanlar';
   static const String panel = '/panel';
   static const String profile = '/profile';
@@ -282,10 +292,13 @@ GoRouter createRouter() {
             },
           ),
           GoRoute(
-            // Pazar = "Yakında" B2B/teklif ağı yüzeyi.
+            // Pazar = B2B native modül (preview): Tedarikçi/Fırıncı toggle +
+            // 4+4 sekme, mock veri. (Eski PazarComingSoonScreen yerine geçti;
+            // dosya rollback için korunur. Nav sekmesindeki comingSoon rozeti
+            // ayrı bir adımda kaldırılacak.)
             path: AppRoutes.pazar,
             pageBuilder: (_, state) =>
-                _noTransition(state, const PazarComingSoonScreen()),
+                _noTransition(state, const B2bShellScreen()),
           ),
           GoRoute(
             // İlanlar = Eleman (jobs) + İş yeri + Ekipman (marketplace).
@@ -342,6 +355,32 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.bakeryPanel,
         builder: (_, __) => const BakeryPanelScreen(),
+      ),
+
+      // B2B Pazar — Tedarikçi Mağazam yönetim formları (full-screen push).
+      GoRoute(
+        path: AppRoutes.b2bProductNew,
+        builder: (_, __) => const SupplierProductFormScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.b2bCampaignNew,
+        builder: (_, __) => const SupplierCampaignFormScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.b2bStoreEdit,
+        builder: (_, __) => const SupplierStoreEditScreen(),
+      ),
+      GoRoute(
+        path: '/pazar/magazam/urun/:id/duzenle',
+        builder: (_, state) => SupplierProductFormScreen(
+          productId: state.pathParameters['id'],
+        ),
+      ),
+      GoRoute(
+        path: '/pazar/magazam/kampanya/:id/duzenle',
+        builder: (_, state) => SupplierCampaignFormScreen(
+          campaignId: state.pathParameters['id'],
+        ),
       ),
 
       // Profile — bottom nav'dan çıkarıldı ama route geriye dönük uyumluluk

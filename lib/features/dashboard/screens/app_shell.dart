@@ -11,7 +11,7 @@ import '../../messaging/providers/messaging_providers.dart';
 /// Navigation IA Sprint — alt nav: Topluluk · Pazar · İlanlar · Mesajlar · Panel
 ///
 /// * Topluluk = Feed (Genel Akış) + Gruplar segmentli sosyal alan.
-/// * Pazar    = "Yakında" B2B/teklif ağı yüzeyi (mini nokta rozet).
+/// * Pazar    = B2B tedarik/teklif ağı modülü (role göre tedarikçi/alıcı).
 /// * İlanlar  = Eleman + İş yeri + Ekipman segmentli ilan merkezi.
 /// * Mesajlar = tüm konuşmalar (okunmamış sayaç rozeti).
 /// * Panel    = işletme araçları merkezi.
@@ -32,7 +32,6 @@ class AppShell extends ConsumerWidget {
       icon: Icons.storefront_outlined,
       activeIcon: Icons.storefront_rounded,
       label: AppStrings.navPazar,
-      comingSoon: true,
     ),
     _TabSpec(
       AppRoutes.listings,
@@ -77,7 +76,6 @@ class AppShell extends ConsumerWidget {
               icon: t.icon,
               activeIcon: t.activeIcon,
               label: t.label,
-              comingSoon: t.comingSoon,
               badgeCount: t.route == AppRoutes.messages ? unread : 0,
             ),
         ],
@@ -94,12 +92,10 @@ class _TabSpec {
     required this.icon,
     required this.activeIcon,
     required this.label,
-    this.comingSoon = false,
   });
 
   final String route;
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  final bool comingSoon;
 }
