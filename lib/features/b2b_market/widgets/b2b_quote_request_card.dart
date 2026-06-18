@@ -22,12 +22,16 @@ class B2bQuoteRequestCard extends StatelessWidget {
     super.key,
     required this.request,
     this.onReply,
+    this.onTap,
   });
 
   final B2bQuoteRequest request;
 
   /// Dolu ise "Teklif Ver" gösterilir (tedarikçi / Teklif Ağı).
   final VoidCallback? onReply;
+
+  /// Dolu ise kart tıklanabilir → teklif detayı (alıcı / Tekliflerim).
+  final VoidCallback? onTap;
 
   /// İl/ilçe etiketi — boş alanları atlar (form talepleri ilçesiz olabilir).
   String get _locationLabel {
@@ -39,7 +43,7 @@ class B2bQuoteRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumCard(
+    final card = PremiumCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -144,11 +148,37 @@ class B2bQuoteRequestCard extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
+                )
+              else if (onTap != null)
+                const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Detayı gör',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.brandLemonPressed,
+                      ),
+                    ),
+                    SizedBox(width: 2),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: AppColors.brandLemonPressed,
+                    ),
+                  ],
                 ),
             ],
           ),
         ],
       ),
+    );
+    if (onTap == null) return card;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: card,
     );
   }
 }

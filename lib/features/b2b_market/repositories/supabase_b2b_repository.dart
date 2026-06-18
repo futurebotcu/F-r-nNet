@@ -181,6 +181,7 @@ class SupabaseB2bRepository implements B2bRepository {
       message: (row['message'] ?? '').toString(),
       createdAtLabel: _dateLabel(row['created_at']),
       priceHint: row['price_note'] as String?,
+      deliveryNote: row['delivery_note'] as String?,
     );
   }
 
@@ -487,21 +488,54 @@ class SupabaseB2bRepository implements B2bRepository {
         .toList(growable: false);
   }
 
+  static const _qrCols =
+      'id, target_type, target_id, category, quantity, city, district, '
+      'buyer_type, delivery_time, note, status, created_at';
+
   @override
   Future<List<B2bQuoteRequest>> listMyQuoteRequests() async {
     final uid = _uid;
     if (uid == null) return const [];
     final rows = await _client
         .from('b2b_quote_requests')
-        .select(
-          'id, target_type, target_id, category, quantity, city, district, '
-          'buyer_type, delivery_time, note, status, created_at',
-        )
+        .select(_qrCols)
         .eq('buyer_id', uid)
         .order('created_at', ascending: false);
-    return rows
-        .map((r) => quoteRequestFromRow(r, createdByMe: true))
+    final requests =
+        rows.map((r) => quoteRequestFromRow(r, createdByMe: true)).toList();
+    // Cevap sayıları: alıcı kendi taleplerine gelen cevapları RLS ile görebilir.
+    // Tek sorguda çekip bellekte say (migration/sayaç kolonu gerekmez).
+    final ids = requests.map((q) => q.id).toList();
+    if (ids.isEmpty) return requests;
+    final replyRows = await _client
+        .from('b2b_quote_replies')
+        .select('quote_request_id')
+        .inFilter('quote_request_id', ids);
+    final counts = <String, int>{};
+    for (final r in replyRows) {
+      final k = (r['quote_request_id'] ?? '').toString();
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    return requests
+        .map((q) => q.copyWith(replyCount: counts[q.id] ?? 0))
         .toList(growable: false);
+  }
+
+  @override
+  Future<B2bQuoteRequest?> quoteRequestById(String id) async {
+    // RLS: yalnız buyer_id=auth.uid() satırı döner → başka alıcının detayı okunamaz.
+    final row = await _client
+        .from('b2b_quote_requests')
+        .select(_qrCols)
+        .eq('id', id)
+        .maybeSingle();
+    if (row == null) return null;
+    final base = quoteRequestFromRow(row, createdByMe: true);
+    final replyRows = await _client
+        .from('b2b_quote_replies')
+        .select('id')
+        .eq('quote_request_id', id);
+    return base.copyWith(replyCount: replyRows.length);
   }
 
   @override
@@ -510,7 +544,7 @@ class SupabaseB2bRepository implements B2bRepository {
         .from('b2b_quote_replies')
         .select(
           'id, quote_request_id, supplier_shop_id, message, price_note, '
-          'created_at, b2b_supplier_shops!inner(shop_name)',
+          'delivery_note, created_at, b2b_supplier_shops!inner(shop_name)',
         )
         .eq('quote_request_id', requestId)
         .order('created_at', ascending: false);

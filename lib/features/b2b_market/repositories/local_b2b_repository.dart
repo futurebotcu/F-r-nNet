@@ -91,8 +91,21 @@ class LocalB2bRepository implements B2bRepository {
       List<B2bQuoteRequest>.unmodifiable(B2bMockSeed.openQuoteRequests);
 
   @override
-  Future<List<B2bQuoteRequest>> listMyQuoteRequests() async =>
-      List<B2bQuoteRequest>.unmodifiable(_myQuoteRequests);
+  Future<List<B2bQuoteRequest>> listMyQuoteRequests() async => _myQuoteRequests
+      .map((q) => q.copyWith(
+            replyCount: _replies.where((r) => r.requestId == q.id).length,
+          ))
+      .toList(growable: false);
+
+  @override
+  Future<B2bQuoteRequest?> quoteRequestById(String id) async {
+    final i = _myQuoteRequests.indexWhere((q) => q.id == id);
+    if (i < 0) return null;
+    final q = _myQuoteRequests[i];
+    return q.copyWith(
+      replyCount: _replies.where((r) => r.requestId == q.id).length,
+    );
+  }
 
   @override
   Future<List<B2bQuoteReply>> repliesFor(String requestId) async => _replies
@@ -322,6 +335,8 @@ class LocalB2bRepository implements B2bRepository {
         message: message,
         createdAtLabel: 'Az önce',
         priceHint: (priceNote == null || priceNote.isEmpty) ? null : priceNote,
+        deliveryNote:
+            (deliveryNote == null || deliveryNote.isEmpty) ? null : deliveryNote,
       ),
     );
   }

@@ -19,6 +19,7 @@ import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/b2b_campaign.dart';
 import '../models/b2b_product.dart';
+import '../models/b2b_quote_reply.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
 import '../repositories/b2b_repository.dart';
@@ -276,6 +277,20 @@ final b2bMyQuoteRequestsProvider =
     FutureProvider.autoDispose<List<B2bQuoteRequest>>((ref) {
   ref.watch(b2bMarketControllerProvider);
   return ref.watch(b2bRepositoryProvider).listMyQuoteRequests();
+});
+
+/// Tek teklif talebi detayı (alıcı, kendi talebi).
+final b2bQuoteDetailProvider = FutureProvider.autoDispose
+    .family<B2bQuoteRequest?, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).quoteRequestById(id);
+});
+
+/// Bir talebe gelen teklif cevapları (detay ekranı).
+final b2bRepliesProvider = FutureProvider.autoDispose
+    .family<List<B2bQuoteReply>, String>((ref, id) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).repliesFor(id);
 });
 
 /// Pazar'a giren kullanıcının B2B görünüm rolü.

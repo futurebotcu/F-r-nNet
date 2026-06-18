@@ -66,4 +66,20 @@ class B2bQuoteRequest {
 
   /// Preview kullanıcının (alıcı) kendi açtığı talep mi → "Tekliflerim".
   final bool createdByMe;
+
+  B2bQuoteRequest copyWith({int? replyCount, B2bQuoteStatus? status}) {
+    return B2bQuoteRequest(
+      id: id,
+      productOrCategory: productOrCategory,
+      quantity: quantity,
+      city: city,
+      district: district,
+      buyerType: buyerType,
+      deliveryTime: deliveryTime,
+      note: note,
+      status: status ?? this.status,
+      replyCount: replyCount ?? this.replyCount,
+      createdByMe: createdByMe,
+    );
+  }
 }

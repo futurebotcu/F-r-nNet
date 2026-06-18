@@ -6,7 +6,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/empty_state.dart';
@@ -66,7 +68,10 @@ class BuyerQuotesTab extends ConsumerWidget {
               subtitle: '"Yeni teklif aç" ile tedarikçilerden fiyat iste.',
               compact: true,
             ),
-            itemBuilder: (context, r) => B2bQuoteRequestCard(request: r),
+            itemBuilder: (context, r) => B2bQuoteRequestCard(
+              request: r,
+              onTap: () => context.push(AppRoutes.b2bQuoteDetail(r.id)),
+            ),
           ),
         ),
       ],

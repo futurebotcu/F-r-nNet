@@ -11,6 +11,7 @@ class B2bQuoteReply {
     required this.message,
     required this.createdAtLabel,
     this.priceHint,
+    this.deliveryNote,
   });
 
   final String id;
@@ -23,4 +24,7 @@ class B2bQuoteReply {
 
   /// Opsiyonel fiyat ipucu (ör. "≈ ₺640 / çuval").
   final String? priceHint;
+
+  /// Opsiyonel teslimat notu (ör. "Bu hafta teslim").
+  final String? deliveryNote;
 }

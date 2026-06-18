@@ -44,6 +44,9 @@ abstract class B2bRepository {
   /// Tekliflerim — aktif kullanıcının (alıcı) kendi açtığı talepler.
   Future<List<B2bQuoteRequest>> listMyQuoteRequests();
 
+  /// Tek teklif talebi (detay ekranı; yalnız sahibi RLS ile okur). Yoksa null.
+  Future<B2bQuoteRequest?> quoteRequestById(String id);
+
   /// Bir talebe gelen teklif cevapları.
   Future<List<B2bQuoteReply>> repliesFor(String requestId);
 

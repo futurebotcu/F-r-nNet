@@ -50,6 +50,7 @@ import '../../features/jobs/screens/job_offer_form_screen.dart';
 import '../../features/marketplace/screens/market_listing_form_screen.dart';
 import '../../features/marketplace/screens/marketplace_detail_screen.dart';
 import '../../features/b2b_market/screens/b2b_shell_screen.dart';
+import '../../features/b2b_market/screens/buyer/buyer_quote_detail_screen.dart';
 import '../../features/b2b_market/screens/supplier/forms/supplier_campaign_form_screen.dart';
 import '../../features/b2b_market/screens/supplier/forms/supplier_product_form_screen.dart';
 import '../../features/b2b_market/screens/supplier/forms/supplier_store_edit_screen.dart';
@@ -110,6 +111,7 @@ class AppRoutes {
   static const String b2bProductNew = '/pazar/magazam/urun-ekle';
   static const String b2bCampaignNew = '/pazar/magazam/kampanya-ekle';
   static const String b2bStoreEdit = '/pazar/magazam/duzenle';
+  static String b2bQuoteDetail(String id) => '/pazar/tekliflerim/$id';
   static String b2bProductEdit(String id) => '/pazar/magazam/urun/$id/duzenle';
   static String b2bCampaignEdit(String id) =>
       '/pazar/magazam/kampanya/$id/duzenle';
@@ -355,6 +357,14 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.bakeryPanel,
         builder: (_, __) => const BakeryPanelScreen(),
+      ),
+
+      // B2B Pazar — Alıcı teklif detayı (full-screen push).
+      GoRoute(
+        path: '/pazar/tekliflerim/:id',
+        builder: (_, state) => BuyerQuoteDetailScreen(
+          quoteRequestId: state.pathParameters['id']!,
+        ),
       ),
 
       // B2B Pazar — Tedarikçi Mağazam yönetim formları (full-screen push).
