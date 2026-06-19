@@ -323,6 +323,29 @@ void main() {
     });
   });
 
+  group('Şoför paneli (Faz 1, myDriverIds)', () {
+    test('myDriverIds: kendi aktif driver kayıt id\'leri', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final ids = await repo.myDriverIds();
+      expect(ids.length, 1);
+    });
+
+    test('myDriverIds: şoför olmayan → boş', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'baska');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      expect(await repo.myDriverIds(), isEmpty);
+    });
+
+    test('myDriverIds: pasif şoför → boş', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final drv = (await repo.listDrivers()).first;
+      await repo.updateDriver(drv.copyWith(isActive: false));
+      expect(await repo.myDriverIds(), isEmpty);
+    });
+  });
+
   group('Şoför özeti (Sprint 5, driver_id filtreli tek defter)', () {
     test('şoför işlemi driver_id taşır; eski NULL hareketler kırılıma girmez',
         () async {

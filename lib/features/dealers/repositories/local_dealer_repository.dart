@@ -345,6 +345,15 @@ class LocalDealerRepository implements DealerRepository {
   }
 
   @override
+  Future<List<String>> myDriverIds() async {
+    if (currentUserId == null) return const [];
+    return _drivers
+        .where((d) => d.driverUserId == currentUserId && d.isActive)
+        .map((d) => d.id)
+        .toList(growable: false);
+  }
+
+  @override
   Future<bool> isAssignedDriver() async {
     if (currentUserId == null) return false;
     return _drivers

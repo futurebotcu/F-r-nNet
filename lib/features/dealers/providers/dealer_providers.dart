@@ -187,6 +187,50 @@ final driverByIdProvider =
   return repo.getDriver(id);
 });
 
+/// Faz 1 — mevcut kullanıcının (şoför) aktif dealer_drivers id'leri.
+final myDriverIdsProvider =
+    FutureProvider.autoDispose<List<String>>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.myDriverIds();
+});
+
+/// Faz 1 — şoförün KENDİ yazdığı hareketler (driver_id = kendi kayıtları).
+/// allTransactions RLS ile zaten atanmış bayilere kısıtlı; burada driver_id ile
+/// kendi yazımlarına daraltılır (başka şoför/patron driver_id-null hariç).
+final myDriverTransactionsProvider =
+    FutureProvider.autoDispose<List<DealerTransaction>>((ref) async {
+  ref.watch(dealerContentChangesProvider);
+  final ids = (await ref.watch(myDriverIdsProvider.future)).toSet();
+  if (ids.isEmpty) return const [];
+  final all = await ref.watch(allTransactionsProvider.future);
+  return all
+      .where((t) => t.driverId != null && ids.contains(t.driverId))
+      .toList(growable: false);
+});
+
+/// Faz 1 — şoförün kendi `[start,end)` özeti (Hareketlerim/Raporlarım).
+final myDriverRangeSummaryProvider = FutureProvider.autoDispose
+    .family<DriverRangeSummary, DriverSummaryRange>((ref, rangeKind) async {
+  final txs = await ref.watch(myDriverTransactionsProvider.future);
+  final svc = ref.watch(dealerBalanceServiceProvider);
+  final range = rangeKind.range();
+  final agg = svc.aggregateRange(
+      transactions: txs, start: range.start, end: range.end);
+  return DriverRangeSummary(
+    driverId: 'me',
+    name: '',
+    isActive: true,
+    assignedDealerCount: 0,
+    totalDelivery: agg.totalDelivery,
+    totalReturn: agg.totalReturn,
+    totalPayment: agg.totalPayment,
+    totalAdjustment: agg.totalAdjustment,
+    netChange: agg.netChange,
+    txCount: agg.txCount,
+  );
+});
+
 /// Sprint 6 — patronun bekleyen şoför davetleri.
 final pendingDriverInvitesProvider =
     FutureProvider.autoDispose<List<DealerDriverInvite>>((ref) async {

@@ -25,8 +25,8 @@ import '../../features/dealers/screens/dealer_share_screen.dart';
 import '../../features/dealers/screens/dealer_shell_screen.dart';
 import '../../features/dealers/screens/driver_assign_dealers_screen.dart';
 import '../../features/dealers/screens/driver_dealer_detail_screen.dart';
-import '../../features/dealers/screens/driver_detail_screen.dart';
 import '../../features/dealers/screens/driver_general_summary_screen.dart';
+import '../../features/dealers/screens/driver_scoped_dealer_shell.dart';
 import '../../features/dealers/screens/driver_list_screen.dart';
 import '../../features/dealers/widgets/patron_driver_guard.dart';
 import '../../features/debt_expense/screens/debt_expense_shell_screen.dart';
@@ -633,8 +633,8 @@ GoRouter createRouter() {
       GoRoute(
         path: '${AppRoutes.dealerDrivers}/:driverId',
         builder: (_, state) => PatronDriverGuard(
-          child:
-              DriverDetailScreen(driverId: state.pathParameters['driverId']!),
+          child: DriverScopedDealerShell(
+              driverId: state.pathParameters['driverId']!),
         ),
       ),
       // Sprint 3 — şoför read-only bayi detayı ('/dealers/assigned/:id').

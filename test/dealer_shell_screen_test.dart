@@ -1,6 +1,6 @@
 // DealerShellScreen widget testleri (UI placement güncellemesi sonrası).
 //
-// Ürün modeli: bireysel = ŞOFÖR → "Bana Atanan Bayiler" görünümü (patron shell
+// Ürün modeli: bireysel = ŞOFÖR → "Şoför Paneli" görünümü (patron shell
 // DEĞİL). Ticari (commercial) → patron shell (5 tab: Genel Bakış/Bayiler/
 // Hareketler/Raporlar/Şoförler; Gün Sonu Raporlar içine taşındı). Toptancı →
 // /wholesale/customers redirect.
@@ -132,8 +132,8 @@ void main() {
       await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
-      // "Bana Atanan Bayiler" şoför ekranı; patron bottom-nav YOK.
-      expect(find.text('Bana Atanan Bayiler'), findsOneWidget);
+      // "Şoför Paneli" şoför ekranı; patron bottom-nav YOK.
+      expect(find.text('Şoför Paneli'), findsOneWidget);
       expect(find.byType(PremiumBottomNav), findsNothing);
       // Patron Şoförler yönetim tabı bireysele görünmez.
       expect(find.text(AppStrings.dealerShellTabOverview), findsNothing);
