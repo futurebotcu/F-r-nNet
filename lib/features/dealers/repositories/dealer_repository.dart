@@ -87,10 +87,11 @@ abstract class DealerRepository {
 
   // ---- Şoför daveti (Sprint 6 — güvenli davet/onay) ----
 
-  /// Patron pending davet oluşturur (doğrudan aktif şoför YARATMAZ). Hedef tam
-  /// profile id; geniş arama yok. Supabase'de create_driver_invite RPC.
+  /// Patron pending davet oluşturur (doğrudan aktif şoför YARATMAZ). Hedef,
+  /// şoförün Ayarlar'da gördüğü FırınNet ID'si (FN-YYYY-NNNNNN); çözümleme
+  /// sunucuda (create_driver_invite RPC) yapılır — client lookup/arama yok.
   Future<void> createDriverInvite({
-    required String invitedUserId,
+    required String firinnetId,
     required String name,
     String phone = '',
     String note = '',

@@ -227,26 +227,39 @@ class LocalDealerRepository implements DealerRepository {
 
   @override
   Future<void> createDriverInvite({
-    required String invitedUserId,
+    required String firinnetId,
     required String name,
     String phone = '',
     String note = '',
   }) async {
     if (name.trim().isEmpty) throw StateError('Şoför adını gir.');
-    if (invitedUserId == currentUserId) {
+    // Local'de gerçek profiles yok; FN-ID normalize edilip hedef anahtar olarak
+    // kullanılır (gerçek FN-ID→profil çözümleme Supabase RPC'sinde). Boş/geçersiz
+    // → nötr hata.
+    final fn = firinnetId.trim().toUpperCase();
+    if (fn.isEmpty) {
+      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
+    }
+    if (fn == (currentUserId ?? '').toUpperCase()) {
       throw StateError('Kendini davet edemezsin.');
     }
-    if (_drivers.any((d) => d.driverUserId == invitedUserId)) {
+    if (_drivers.any((d) => d.driverUserId == fn)) {
       throw StateError('Bu kullanıcı zaten şoför.');
     }
     if (_invites.any((i) =>
-        i.invitedUserId == invitedUserId &&
+        i.invitedUserId == fn &&
         i.status == DealerDriverInviteStatus.pending)) {
       throw StateError('Bu kullanıcı için bekleyen davet var.');
     }
+    final pendingCount = _invites
+        .where((i) => i.status == DealerDriverInviteStatus.pending)
+        .length;
+    if (pendingCount >= 20) {
+      throw StateError('Çok fazla bekleyen davet var.');
+    }
     _invites.add(DealerDriverInvite(
       id: 'inv_${++_driverSeq}',
-      invitedUserId: invitedUserId,
+      invitedUserId: fn,
       driverName: name.trim(),
       driverPhone: phone,
       note: note,

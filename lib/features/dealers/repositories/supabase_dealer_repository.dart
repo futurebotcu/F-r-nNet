@@ -658,7 +658,7 @@ class SupabaseDealerRepository implements DealerRepository {
 
   @override
   Future<void> createDriverInvite({
-    required String invitedUserId,
+    required String firinnetId,
     required String name,
     String phone = '',
     String note = '',
@@ -666,16 +666,13 @@ class SupabaseDealerRepository implements DealerRepository {
     _requireUserId();
     try {
       await _client.rpc('create_driver_invite', params: <String, dynamic>{
-        'p_invited_user_id': invitedUserId,
+        'p_target_firinnet_id': firinnetId,
         'p_driver_name': name,
         if (phone.isNotEmpty) 'p_driver_phone': phone,
         if (note.isNotEmpty) 'p_note': note,
       });
     } on sb.PostgrestException catch (e) {
       final m = e.message;
-      if (e.code == '23503' || m.contains('foreign key')) {
-        throw StateError('Geçerli bir FırınNet kullanıcı ID girin.');
-      }
       if (m.contains('already a driver')) {
         throw StateError('Bu kullanıcı zaten şoför.');
       }
@@ -685,7 +682,11 @@ class SupabaseDealerRepository implements DealerRepository {
       if (m.contains('cannot invite self')) {
         throw StateError('Kendini davet edemezsin.');
       }
-      rethrow;
+      if (m.contains('too many pending invites')) {
+        throw StateError('Çok fazla bekleyen davet var. Önce bazılarını sonuçlandır.');
+      }
+      // 'invite failed' / 'name required' / FK / diğer → nötr (enumeration yok).
+      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
     }
     _notify();
   }

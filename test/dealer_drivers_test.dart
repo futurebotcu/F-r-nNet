@@ -228,24 +228,57 @@ void main() {
   group('Şoför daveti (Sprint 6, davet/onay)', () {
     test('davet oluştur → pending listede, aktif şoför YOK', () async {
       final repo = LocalDealerRepository(seed: true);
-      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      await repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali');
       expect((await repo.pendingDriverInvites()).length, 1);
       expect((await repo.listDrivers()).isEmpty, isTrue); // aktif bağlantı yok
     });
 
     test('kabul → aktif şoför oluşur, davet pending değil', () async {
       final repo = LocalDealerRepository(seed: true);
-      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      await repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali');
       final inv = (await repo.pendingDriverInvites()).first;
       await repo.respondDriverInvite(inv.id, accept: true);
-      expect((await repo.listDrivers()).any((d) => d.driverUserId == 'u1'),
+      expect(
+          (await repo.listDrivers())
+              .any((d) => d.driverUserId == 'FN-2026-000001'),
           isTrue);
       expect((await repo.pendingDriverInvites()).isEmpty, isTrue);
     });
 
+    test('FN-ID normalize: trim + upper', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.createDriverInvite(
+          firinnetId: '  fn-2026-000009  ', name: 'Veli');
+      final inv = (await repo.pendingDriverInvites()).first;
+      expect(inv.invitedUserId, 'FN-2026-000009'); // trim + upper
+    });
+
+    test('boş FN-ID → nötr hata', () async {
+      final repo = LocalDealerRepository(seed: true);
+      expect(
+        () => repo.createDriverInvite(firinnetId: '   ', name: 'Ali'),
+        throwsStateError,
+      );
+    });
+
+    test('owner başına 20 pending davet limiti', () async {
+      final repo = LocalDealerRepository(seed: true);
+      for (var i = 1; i <= 20; i++) {
+        await repo.createDriverInvite(
+            firinnetId: 'FN-2026-${i.toString().padLeft(6, '0')}',
+            name: 'Şoför $i');
+      }
+      expect((await repo.pendingDriverInvites()).length, 20);
+      expect(
+        () => repo.createDriverInvite(
+            firinnetId: 'FN-2026-000099', name: 'Fazla'),
+        throwsStateError,
+      );
+    });
+
     test('red → aktif şoför oluşmaz', () async {
       final repo = LocalDealerRepository(seed: true);
-      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      await repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali');
       final inv = (await repo.pendingDriverInvites()).first;
       await repo.respondDriverInvite(inv.id, accept: false);
       expect((await repo.listDrivers()).isEmpty, isTrue);
@@ -254,27 +287,27 @@ void main() {
 
     test('aynı kullanıcıya ikinci bekleyen davet engellenir', () async {
       final repo = LocalDealerRepository(seed: true);
-      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      await repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali');
       expect(
-        () => repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali 2'),
+        () => repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali 2'),
         throwsStateError,
       );
     });
 
     test('zaten şoför olana davet engellenir', () async {
       final repo = LocalDealerRepository(seed: true);
-      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      await repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali');
       final inv = (await repo.pendingDriverInvites()).first;
       await repo.respondDriverInvite(inv.id, accept: true);
       expect(
-        () => repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali'),
+        () => repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali'),
         throwsStateError,
       );
     });
 
     test('iptal → bekleyen davet kalkar', () async {
       final repo = LocalDealerRepository(seed: true);
-      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      await repo.createDriverInvite(firinnetId: 'FN-2026-000001', name: 'Ali');
       final inv = (await repo.pendingDriverInvites()).first;
       await repo.cancelDriverInvite(inv.id);
       expect((await repo.pendingDriverInvites()).isEmpty, isTrue);

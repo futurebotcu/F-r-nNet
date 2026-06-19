@@ -39,10 +39,11 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
 
   Future<void> _save() async {
     if (_saving) return;
-    final userId = _userId.text.trim();
+    final fnId = _userId.text.trim();
     final name = _name.text.trim();
-    if (userId.isEmpty) {
-      setState(() => _error = 'Şoförün FırınNet kullanıcı ID\'sini gir.');
+    if (fnId.isEmpty) {
+      setState(() =>
+          _error = 'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
       return;
     }
     if (name.isEmpty) {
@@ -55,7 +56,7 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
     });
     try {
       await ref.read(dealerRepositoryProvider).createDriverInvite(
-            invitedUserId: userId,
+            firinnetId: fnId,
             name: name,
             phone: _phone.text.trim(),
             note: _note.text.trim(),
@@ -72,7 +73,9 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = e is StateError ? e.message : 'Şoför eklenemedi. Tekrar deneyin.';
+        _error = e is StateError
+            ? e.message
+            : 'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.';
       });
     }
   }
@@ -93,14 +96,13 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
           children: [
             _field(
               controller: _userId,
-              label: 'FırınNet Kullanıcı ID',
-              hint: 'Şoförün profil/kullanıcı ID\'si',
+              label: 'FırınNet ID',
+              hint: 'Örn. FN-2026-000123',
             ),
             const SizedBox(height: AppSpacing.s),
             const Text(
-              'Şoför, kendi FırınNet hesabı olan bir kişidir. Davet gönderilir; '
-              'şoför kendi hesabından onaylayınca bağlantı aktif olur. ID '
-              'geçerli değilse davet oluşmaz.',
+              'Şoförün Ayarlar ekranında görünen FırınNet ID\'sini gir. Davet '
+              'gönderilir; şoför kendi hesabından onaylayınca bağlantı aktif olur.',
               style: TextStyle(
                   fontSize: 11.5, color: AppColors.textMuted, height: 1.35),
             ),
