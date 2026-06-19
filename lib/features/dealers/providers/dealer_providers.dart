@@ -7,6 +7,7 @@ import '../../auth/providers/can_write_check_provider.dart';
 import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_driver.dart';
+import '../models/dealer_driver_invite.dart';
 import '../models/dealer_note.dart';
 import '../models/driver_summary.dart';
 import '../models/dealer_price.dart';
@@ -184,6 +185,22 @@ final driverByIdProvider =
   ref.watch(dealerChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.getDriver(id);
+});
+
+/// Sprint 6 — patronun bekleyen şoför davetleri.
+final pendingDriverInvitesProvider =
+    FutureProvider.autoDispose<List<DealerDriverInvite>>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.pendingDriverInvites();
+});
+
+/// Sprint 6 — mevcut kullanıcıya (şoför) gelen bekleyen davetler.
+final myDriverInvitesProvider =
+    FutureProvider.autoDispose<List<DealerDriverInvite>>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.myDriverInvites();
 });
 
 /// Bir şoföre atanmış bayi id'leri (atama ekranı + detay).

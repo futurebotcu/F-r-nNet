@@ -1,6 +1,7 @@
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
 import '../models/dealer_driver.dart';
+import '../models/dealer_driver_invite.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -64,6 +65,13 @@ class GuardedDealerRepository implements DealerRepository {
   @override
   Future<List<String>> assignedDealerIds(String driverId) =>
       inner.assignedDealerIds(driverId);
+
+  @override
+  Future<List<DealerDriverInvite>> pendingDriverInvites() =>
+      inner.pendingDriverInvites();
+
+  @override
+  Future<List<DealerDriverInvite>> myDriverInvites() => inner.myDriverInvites();
 
   @override
   Future<bool> isAssignedDriver() => inner.isAssignedDriver();
@@ -152,6 +160,30 @@ class GuardedDealerRepository implements DealerRepository {
   }) {
     _requireWrite('şoföre bayi atamak');
     return inner.setDriverAssignments(driverId: driverId, dealerIds: dealerIds);
+  }
+
+  @override
+  Future<void> createDriverInvite({
+    required String invitedUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  }) {
+    _requireWrite('şoför daveti göndermek');
+    return inner.createDriverInvite(
+        invitedUserId: invitedUserId, name: name, phone: phone, note: note);
+  }
+
+  @override
+  Future<void> respondDriverInvite(String inviteId, {required bool accept}) {
+    _requireWrite('davet yanıtlamak');
+    return inner.respondDriverInvite(inviteId, accept: accept);
+  }
+
+  @override
+  Future<void> cancelDriverInvite(String inviteId) {
+    _requireWrite('davet iptal etmek');
+    return inner.cancelDriverInvite(inviteId);
   }
 
   @override

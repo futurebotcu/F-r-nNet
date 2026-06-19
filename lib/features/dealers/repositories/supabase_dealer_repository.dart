@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/dealer.dart';
 import '../models/dealer_driver.dart';
+import '../models/dealer_driver_invite.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -637,6 +638,105 @@ class SupabaseDealerRepository implements DealerRepository {
     }
     out.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return List.unmodifiable(out);
+  }
+
+  // ───────────────────────────────────────────────── Şoför davetleri (Sprint 6)
+
+  DealerDriverInvite _inviteFromRow(Map<String, dynamic> row) {
+    final owner = row['owner'] as Map<String, dynamic>?;
+    return DealerDriverInvite(
+      id: row['id'] as String,
+      invitedUserId: (row['invited_user_id'] as String?) ?? '',
+      driverName: (row['driver_name'] as String?) ?? '',
+      driverPhone: (row['driver_phone'] as String?) ?? '',
+      note: (row['note'] as String?) ?? '',
+      status: DealerDriverInviteStatusX.fromKey(row['status'] as String?),
+      createdAt: DateTime.parse(row['created_at'] as String),
+      ownerName: (owner?['display_name'] as String?) ?? '',
+    );
+  }
+
+  @override
+  Future<void> createDriverInvite({
+    required String invitedUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  }) async {
+    _requireUserId();
+    try {
+      await _client.rpc('create_driver_invite', params: <String, dynamic>{
+        'p_invited_user_id': invitedUserId,
+        'p_driver_name': name,
+        if (phone.isNotEmpty) 'p_driver_phone': phone,
+        if (note.isNotEmpty) 'p_note': note,
+      });
+    } on sb.PostgrestException catch (e) {
+      final m = e.message;
+      if (e.code == '23503' || m.contains('foreign key')) {
+        throw StateError('Geçerli bir FırınNet kullanıcı ID girin.');
+      }
+      if (m.contains('already a driver')) {
+        throw StateError('Bu kullanıcı zaten şoför.');
+      }
+      if (m.contains('invite already pending')) {
+        throw StateError('Bu kullanıcı için bekleyen davet var.');
+      }
+      if (m.contains('cannot invite self')) {
+        throw StateError('Kendini davet edemezsin.');
+      }
+      rethrow;
+    }
+    _notify();
+  }
+
+  @override
+  Future<List<DealerDriverInvite>> pendingDriverInvites() async {
+    final uid = _requireUserId();
+    final rows = await _client
+        .from('dealer_driver_invites')
+        .select('id, invited_user_id, driver_name, driver_phone, note, '
+            'status, created_at')
+        .eq('owner_id', uid)
+        .eq('status', 'pending')
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(_inviteFromRow)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<DealerDriverInvite>> myDriverInvites() async {
+    final uid = _requireUserId();
+    final rows = await _client
+        .from('dealer_driver_invites')
+        .select('id, invited_user_id, driver_name, driver_phone, note, '
+            'status, created_at, owner:profiles!owner_id(display_name)')
+        .eq('invited_user_id', uid)
+        .eq('status', 'pending')
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(_inviteFromRow)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> respondDriverInvite(String inviteId,
+      {required bool accept}) async {
+    _requireUserId();
+    await _client.rpc('respond_driver_invite',
+        params: <String, dynamic>{'p_invite_id': inviteId, 'p_accept': accept});
+    _notify();
+  }
+
+  @override
+  Future<void> cancelDriverInvite(String inviteId) async {
+    _requireUserId();
+    await _client.rpc('cancel_driver_invite',
+        params: <String, dynamic>{'p_invite_id': inviteId});
+    _notify();
   }
 
   @override

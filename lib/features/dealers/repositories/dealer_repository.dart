@@ -1,5 +1,6 @@
 import '../models/dealer.dart';
 import '../models/dealer_driver.dart';
+import '../models/dealer_driver_invite.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -83,6 +84,29 @@ abstract class DealerRepository {
   Future<List<Dealer>> dealersAssignedToMe();
 
   // ---- Şoför işlem yazma (Sprint 4 — yalnız RPC) ----
+
+  // ---- Şoför daveti (Sprint 6 — güvenli davet/onay) ----
+
+  /// Patron pending davet oluşturur (doğrudan aktif şoför YARATMAZ). Hedef tam
+  /// profile id; geniş arama yok. Supabase'de create_driver_invite RPC.
+  Future<void> createDriverInvite({
+    required String invitedUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  });
+
+  /// Patronun bekleyen davetleri (Şoförler listesi "Bekleyen Davetler").
+  Future<List<DealerDriverInvite>> pendingDriverInvites();
+
+  /// Mevcut kullanıcıya (şoför) gelen bekleyen davetler.
+  Future<List<DealerDriverInvite>> myDriverInvites();
+
+  /// Şoför daveti yanıtlar. accept=true → aktif dealer_drivers oluşur.
+  Future<void> respondDriverInvite(String inviteId, {required bool accept});
+
+  /// Patron kendi bekleyen davetini iptal eder.
+  Future<void> cancelDriverInvite(String inviteId);
 
   /// Şoför, atandığı bayiye işlem yazar (yalnız delivery/payment/return).
   /// Supabase'de `driver_add_transaction` SECURITY DEFINER RPC çağrılır:
