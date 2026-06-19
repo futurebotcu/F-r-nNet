@@ -67,6 +67,31 @@ class _DealerReportsTabScreenState
                 value: _period,
                 onChanged: (p) => setState(() => _period = p),
               ),
+              const SizedBox(height: AppSpacing.m),
+              // Gün Sonu artık ayrı alt-tab değil; Raporlar içinden açılır.
+              PremiumCard(
+                padding: EdgeInsets.zero,
+                onTap: () => context.push(AppRoutes.dealerEndOfDay),
+                child: const Padding(
+                  padding: EdgeInsets.all(AppSpacing.m),
+                  child: Row(
+                    children: [
+                      Icon(Icons.event_available_rounded,
+                          size: 20, color: AppColors.copper),
+                      SizedBox(width: AppSpacing.m),
+                      Expanded(
+                        child: Text('Gün Sonu',
+                            style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary)),
+                      ),
+                      Icon(Icons.chevron_right_rounded,
+                          size: 20, color: AppColors.textMuted),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: AppSpacing.l),
               metricsAsync.when(
                 skipLoadingOnReload: true,

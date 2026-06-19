@@ -44,6 +44,13 @@ class _WholesaleCustomersScreenState
       appBar: AppBar(
         title: const Text('Müşteriler'),
         actions: [
+          // Toptancı da patron/owner: aynı şoför yönetimi (davet/atama/özet)
+          // mevcut DriverListScreen ile reuse edilir (ayrı sistem yok).
+          IconButton(
+            tooltip: 'Şoförler',
+            onPressed: () => context.push(AppRoutes.dealerDrivers),
+            icon: const Icon(Icons.local_shipping_outlined),
+          ),
           IconButton(
             tooltip: 'Müşteri ekle',
             onPressed: () => context.push(AppRoutes.wholesaleCustomerNew),

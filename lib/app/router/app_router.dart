@@ -17,6 +17,7 @@ import '../../features/dealers/screens/add_driver_screen.dart';
 import '../../features/dealers/screens/dealer_adjustment_form_screen.dart';
 import '../../features/dealers/screens/dealer_delivery_form_screen.dart';
 import '../../features/dealers/screens/dealer_detail_screen.dart';
+import '../../features/dealers/screens/dealer_end_of_day_tab_screen.dart';
 import '../../features/dealers/screens/dealer_payment_form_screen.dart';
 import '../../features/dealers/screens/dealer_range_report_screen.dart';
 import '../../features/dealers/screens/dealer_return_form_screen.dart';
@@ -27,6 +28,7 @@ import '../../features/dealers/screens/driver_dealer_detail_screen.dart';
 import '../../features/dealers/screens/driver_detail_screen.dart';
 import '../../features/dealers/screens/driver_general_summary_screen.dart';
 import '../../features/dealers/screens/driver_list_screen.dart';
+import '../../features/dealers/widgets/patron_driver_guard.dart';
 import '../../features/debt_expense/screens/debt_expense_shell_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
 import '../../features/auth/screens/auth_entry_screen.dart';
@@ -177,6 +179,8 @@ class AppRoutes {
   static String dealerDriverAssign(String id) => '/dealers/drivers/$id/assign';
   // Sprint 3 — şoför read-only bayi detayı.
   static String driverDealerDetail(String id) => '/dealers/assigned/$id';
+  // Gün Sonu artık ayrı alt-tab değil; Raporlar içinden push edilir.
+  static const String dealerEndOfDay = '/dealers/end-of-day';
   // Sprint 3 — Date-range metrics report screen.
   // Quality Patch v2: opsiyonel `period` query param — Raporlar tab'ından
   // gelirken seçili periyodu transfer eder (`last30Days` / `thisMonth`).
@@ -602,34 +606,47 @@ GoRouter createRouter() {
       ),
       // Şoförler (Sprint 2) — literal '/dealers/drivers*' route'ları
       // '/dealers/:id'den ÖNCE kayıtlı; aksi halde ':id' "drivers"i yakalar.
+      // Patron şoför yönetimi route'ları — PatronDriverGuard ile sarılı:
+      // bireysel (şoför) deep-link ile gelse bile patron yönetimi açılmaz,
+      // güvenli DriverHomeScreen'e düşer. Ticari/toptancı aynen erişir.
       GoRoute(
         path: AppRoutes.dealerDrivers,
-        builder: (_, __) => const DriverListScreen(),
+        builder: (_, __) => const PatronDriverGuard(child: DriverListScreen()),
       ),
       GoRoute(
         path: AppRoutes.dealerDriverNew,
-        builder: (_, __) => const AddDriverScreen(),
+        builder: (_, __) => const PatronDriverGuard(child: AddDriverScreen()),
       ),
       GoRoute(
         path: AppRoutes.dealerDriversSummary,
-        builder: (_, __) => const DriverGeneralSummaryScreen(),
+        builder: (_, __) =>
+            const PatronDriverGuard(child: DriverGeneralSummaryScreen()),
       ),
       GoRoute(
         path: '${AppRoutes.dealerDrivers}/:driverId/assign',
-        builder: (_, state) => DriverAssignDealersScreen(
-          driverId: state.pathParameters['driverId']!,
+        builder: (_, state) => PatronDriverGuard(
+          child: DriverAssignDealersScreen(
+            driverId: state.pathParameters['driverId']!,
+          ),
         ),
       ),
       GoRoute(
         path: '${AppRoutes.dealerDrivers}/:driverId',
-        builder: (_, state) =>
-            DriverDetailScreen(driverId: state.pathParameters['driverId']!),
+        builder: (_, state) => PatronDriverGuard(
+          child:
+              DriverDetailScreen(driverId: state.pathParameters['driverId']!),
+        ),
       ),
       // Sprint 3 — şoför read-only bayi detayı ('/dealers/assigned/:id').
       GoRoute(
         path: '/dealers/assigned/:id',
         builder: (_, state) =>
             DriverDealerDetailScreen(dealerId: state.pathParameters['id']!),
+      ),
+      // Gün Sonu — Raporlar içinden push (ayrı alt-tab kaldırıldı).
+      GoRoute(
+        path: AppRoutes.dealerEndOfDay,
+        builder: (_, __) => const DealerEndOfDayTabScreen(),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/edit',
