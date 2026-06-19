@@ -82,6 +82,23 @@ abstract class DealerRepository {
   /// Mevcut kullanıcıya (şoför) atanmış bayiler — read-only.
   Future<List<Dealer>> dealersAssignedToMe();
 
+  // ---- Şoför işlem yazma (Sprint 4 — yalnız RPC) ----
+
+  /// Şoför, atandığı bayiye işlem yazar (yalnız delivery/payment/return).
+  /// Supabase'de `driver_add_transaction` SECURITY DEFINER RPC çağrılır:
+  /// owner_id=patron, driver_id=ilgili dealer_drivers kaydı (tek defter).
+  /// Yetki/atama doğrulaması sunucuda yapılır; adjustment şoföre kapalı.
+  Future<void> addDriverTransaction({
+    required String dealerId,
+    required DealerTransactionType type,
+    double amount = 0,
+    int? quantity,
+    double? unitPrice,
+    DealerPaymentMethod? paymentMethod,
+    String? productName,
+    String note = '',
+  });
+
   /// Repository YAPISAL değişiklik yayını (bayi ekle/düzenle/aktif-pasif).
   Stream<void> watch();
 

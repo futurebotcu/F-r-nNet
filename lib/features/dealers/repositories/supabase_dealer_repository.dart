@@ -638,6 +638,53 @@ class SupabaseDealerRepository implements DealerRepository {
   }
 
   @override
+  Future<void> addDriverTransaction({
+    required String dealerId,
+    required DealerTransactionType type,
+    double amount = 0,
+    int? quantity,
+    double? unitPrice,
+    DealerPaymentMethod? paymentMethod,
+    String? productName,
+    String note = '',
+  }) async {
+    _requireUserId();
+    if (type == DealerTransactionType.adjustment) {
+      throw StateError('Geçersiz işlem.');
+    }
+    try {
+      await _client.rpc('driver_add_transaction', params: <String, dynamic>{
+        'p_dealer_id': dealerId,
+        'p_type': type.persistKey,
+        'p_amount': amount,
+        if (quantity != null) 'p_quantity': quantity,
+        if (unitPrice != null) 'p_unit_price': unitPrice,
+        if (paymentMethod != null) 'p_payment_method': paymentMethod.persistKey,
+        if (productName != null && productName.isNotEmpty)
+          'p_product_name': productName,
+        if (note.isNotEmpty) 'p_note': note,
+      });
+    } on sb.PostgrestException catch (e) {
+      final msg = e.message;
+      if (msg.contains('not assigned to this dealer') ||
+          msg.contains('owner mismatch')) {
+        throw StateError('Bu bayiye işlem ekleme yetkin yok.');
+      }
+      if (msg.contains('not assigned') || msg.contains('auth required')) {
+        throw StateError('Şoför bağlantın aktif değil.');
+      }
+      if (msg.contains('dealer not active') ||
+          msg.contains('invalid type') ||
+          msg.contains('invalid amount') ||
+          msg.contains('invalid delivery line')) {
+        throw StateError('Geçersiz işlem.');
+      }
+      rethrow;
+    }
+    _notifyContent();
+  }
+
+  @override
   Stream<void> watch() => _changes.stream;
 
   @override

@@ -153,4 +153,28 @@ class GuardedDealerRepository implements DealerRepository {
     _requireWrite('şoföre bayi atamak');
     return inner.setDriverAssignments(driverId: driverId, dealerIds: dealerIds);
   }
+
+  @override
+  Future<void> addDriverTransaction({
+    required String dealerId,
+    required DealerTransactionType type,
+    double amount = 0,
+    int? quantity,
+    double? unitPrice,
+    DealerPaymentMethod? paymentMethod,
+    String? productName,
+    String note = '',
+  }) {
+    _requireWrite('işlem eklemek');
+    return inner.addDriverTransaction(
+      dealerId: dealerId,
+      type: type,
+      amount: amount,
+      quantity: quantity,
+      unitPrice: unitPrice,
+      paymentMethod: paymentMethod,
+      productName: productName,
+      note: note,
+    );
+  }
 }
