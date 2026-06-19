@@ -474,6 +474,12 @@ class _QuickActionsSection extends ConsumerWidget {
                 ref.read(dealerShellTabIndexProvider.notifier).state = 3;
               },
             ),
+            _QuickActionChip(
+              icon: Icons.local_shipping_outlined,
+              label: 'Şoförler',
+              accent: AppColors.copper,
+              onTap: () => context.push(AppRoutes.dealerDrivers),
+            ),
           ],
         ),
       ],

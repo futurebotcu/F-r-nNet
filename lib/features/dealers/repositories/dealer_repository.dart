@@ -1,4 +1,5 @@
 import '../models/dealer.dart';
+import '../models/dealer_driver.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -41,6 +42,36 @@ abstract class DealerRepository {
   // Notes
   Future<List<DealerNote>> listNotes(String dealerId);
   Future<void> addNote(DealerNote note);
+
+  // ---- Şoförler (Sprint 2: patron-side yönetim) ----
+  // owner_id daima patron; bu sprintte şoför login erişimi/yazma YOK.
+
+  /// Patronun kendi şoförleri (assignedDealerCount dolu).
+  Future<List<DealerDriver>> listDrivers();
+
+  Future<DealerDriver?> getDriver(String driverId);
+
+  /// Yeni şoför ekler. [driverUserId] geçerli bir FırınNet profile id olmalı
+  /// (Supabase'de FK doğrular). Aynı (owner, driverUserId) ikinci kez eklenemez.
+  Future<void> addDriver({
+    required String driverUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  });
+
+  /// Ad/telefon/not/aktiflik günceller.
+  Future<void> updateDriver(DealerDriver driver);
+
+  /// Bir şoföre atanmış bayi id'leri.
+  Future<List<String>> assignedDealerIds(String driverId);
+
+  /// Şoförün bayi atamasını verilen kümeye eşitler (ekle/çıkar). Yalnız
+  /// patronun kendi bayileri; DB trigger cross-owner atamayı ayrıca reddeder.
+  Future<void> setDriverAssignments({
+    required String driverId,
+    required List<String> dealerIds,
+  });
 
   /// Repository YAPISAL değişiklik yayını (bayi ekle/düzenle/aktif-pasif).
   Stream<void> watch();

@@ -6,6 +6,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
 import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
+import '../models/dealer_driver.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_pulse_snapshot.dart';
@@ -166,6 +167,30 @@ final notesByDealerProvider = FutureProvider.autoDispose
   ref.watch(dealerContentChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.listNotes(id);
+});
+
+/// Patronun şoförleri (Sprint 2). Yapısal tick'i izler (şoför ekle/güncelle/
+/// atama → yapısal `_notify`).
+final driversListProvider =
+    FutureProvider.autoDispose<List<DealerDriver>>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.listDrivers();
+});
+
+final driverByIdProvider =
+    FutureProvider.autoDispose.family<DealerDriver?, String>((ref, id) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.getDriver(id);
+});
+
+/// Bir şoföre atanmış bayi id'leri (atama ekranı + detay).
+final assignedDealerIdsProvider = FutureProvider.autoDispose
+    .family<List<String>, String>((ref, driverId) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.assignedDealerIds(driverId);
 });
 
 /// Bayi bakiye özeti (transactions üzerinden hesaplanır).
