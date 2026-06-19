@@ -591,6 +591,52 @@ class SupabaseDealerRepository implements DealerRepository {
     _notify();
   }
 
+  // ───────────────────────────────────────────────── Şoför read-only (Sprint 3)
+
+  @override
+  Future<bool> isAssignedDriver() async {
+    final uid = _requireUserId();
+    final row = await _client
+        .from('dealer_drivers')
+        .select('id')
+        .eq('driver_user_id', uid)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+    return row != null;
+  }
+
+  @override
+  Future<List<Dealer>> dealersAssignedToMe() async {
+    final uid = _requireUserId();
+    // Yalnız BENİM şoför kayıtlarımın atamaları (owner-only assignment'larla
+    // karışmasın diye driver_id ile filtrele). RLS ek koruma sağlar.
+    final driverRows = await _client
+        .from('dealer_drivers')
+        .select('id')
+        .eq('driver_user_id', uid)
+        .eq('is_active', true);
+    final driverIds = (driverRows as List)
+        .cast<Map<String, dynamic>>()
+        .map((r) => r['id'] as String)
+        .toList();
+    if (driverIds.isEmpty) return const [];
+    final rows = await _client
+        .from('dealer_driver_assignments')
+        .select('dealer:dealers!inner($_dealerColumns)')
+        .inFilter('driver_id', driverIds);
+    final seen = <String>{};
+    final out = <Dealer>[];
+    for (final r in (rows as List).cast<Map<String, dynamic>>()) {
+      final d = r['dealer'] as Map<String, dynamic>?;
+      if (d == null) continue;
+      final dealer = _dealerFromRow(d);
+      if (seen.add(dealer.id)) out.add(dealer);
+    }
+    out.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return List.unmodifiable(out);
+  }
+
   @override
   Stream<void> watch() => _changes.stream;
 
