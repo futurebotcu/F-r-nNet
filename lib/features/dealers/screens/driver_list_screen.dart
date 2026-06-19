@@ -54,6 +54,7 @@ class DriverListScreen extends ConsumerWidget {
               children: [
                 const _GeneralAccountCard(),
                 const SizedBox(height: AppSpacing.m),
+                const _PendingInvites(),
                 if (drivers.isEmpty)
                   const _DriversEmpty()
                 else
@@ -146,6 +147,79 @@ class _GeneralAccountCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Patronun bekleyen şoför davetleri (Sprint 6). Boşsa görünmez.
+class _PendingInvites extends ConsumerWidget {
+  const _PendingInvites();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final invites =
+        ref.watch(pendingDriverInvitesProvider).valueOrNull ?? const [];
+    if (invites.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: AppSpacing.xs, left: 2),
+          child: Text('BEKLEYEN DAVETLER',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: AppColors.textMuted)),
+        ),
+        for (final inv in invites) ...[
+          PremiumCard(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.m),
+              child: Row(
+                children: [
+                  const Icon(Icons.hourglass_top_rounded,
+                      size: 18, color: AppColors.textMuted),
+                  const SizedBox(width: AppSpacing.s),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(inv.driverName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary)),
+                        Text(
+                          [
+                            if (inv.driverPhone.isNotEmpty) inv.driverPhone,
+                            'Bekliyor',
+                          ].join(' · '),
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await ref
+                          .read(dealerRepositoryProvider)
+                          .cancelDriverInvite(inv.id);
+                      ref.invalidate(pendingDriverInvitesProvider);
+                    },
+                    child: const Text('İptal'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s),
+        ],
+        const SizedBox(height: AppSpacing.xs),
+      ],
     );
   }
 }

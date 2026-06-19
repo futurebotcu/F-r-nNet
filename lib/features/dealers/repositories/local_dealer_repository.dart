@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../models/dealer.dart';
 import '../models/dealer_driver.dart';
+import '../models/dealer_driver_invite.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -28,6 +29,7 @@ class LocalDealerRepository implements DealerRepository {
   final List<DealerDriver> _drivers = <DealerDriver>[];
   // driverId → atanmış dealerId kümesi.
   final Map<String, Set<String>> _assignments = <String, Set<String>>{};
+  final List<DealerDriverInvite> _invites = <DealerDriverInvite>[];
   int _driverSeq = 0;
 
   final StreamController<void> _changes =
@@ -218,6 +220,114 @@ class LocalDealerRepository implements DealerRepository {
     // Yalnız mevcut (patronun kendi) bayileri kabul et.
     final valid = dealerIds.where((id) => _dealers.any((d) => d.id == id));
     _assignments[driverId] = valid.toSet();
+    _notify();
+  }
+
+  // ─────────────────────────────────────── Şoför davetleri (Sprint 6)
+
+  @override
+  Future<void> createDriverInvite({
+    required String invitedUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  }) async {
+    if (name.trim().isEmpty) throw StateError('Şoför adını gir.');
+    if (invitedUserId == currentUserId) {
+      throw StateError('Kendini davet edemezsin.');
+    }
+    if (_drivers.any((d) => d.driverUserId == invitedUserId)) {
+      throw StateError('Bu kullanıcı zaten şoför.');
+    }
+    if (_invites.any((i) =>
+        i.invitedUserId == invitedUserId &&
+        i.status == DealerDriverInviteStatus.pending)) {
+      throw StateError('Bu kullanıcı için bekleyen davet var.');
+    }
+    _invites.add(DealerDriverInvite(
+      id: 'inv_${++_driverSeq}',
+      invitedUserId: invitedUserId,
+      driverName: name.trim(),
+      driverPhone: phone,
+      note: note,
+      status: DealerDriverInviteStatus.pending,
+      createdAt: DateTime.now(),
+    ));
+    _notify();
+  }
+
+  @override
+  Future<List<DealerDriverInvite>> pendingDriverInvites() async {
+    return _invites
+        .where((i) => i.status == DealerDriverInviteStatus.pending)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<DealerDriverInvite>> myDriverInvites() async {
+    return _invites
+        .where((i) =>
+            i.invitedUserId == currentUserId &&
+            i.status == DealerDriverInviteStatus.pending)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> respondDriverInvite(String inviteId,
+      {required bool accept}) async {
+    final i = _invites.indexWhere((x) => x.id == inviteId);
+    if (i == -1) throw StateError('Davet bulunamadı.');
+    final inv = _invites[i];
+    if (inv.status != DealerDriverInviteStatus.pending) return;
+    if (accept) {
+      if (!_drivers.any((d) => d.driverUserId == inv.invitedUserId)) {
+        _drivers.add(DealerDriver(
+          id: 'drv_${++_driverSeq}',
+          driverUserId: inv.invitedUserId,
+          name: inv.driverName,
+          phone: inv.driverPhone,
+          note: inv.note,
+          createdAt: DateTime.now(),
+        ));
+      }
+      _invites[i] = DealerDriverInvite(
+        id: inv.id,
+        invitedUserId: inv.invitedUserId,
+        driverName: inv.driverName,
+        driverPhone: inv.driverPhone,
+        note: inv.note,
+        status: DealerDriverInviteStatus.accepted,
+        createdAt: inv.createdAt,
+      );
+    } else {
+      _invites[i] = DealerDriverInvite(
+        id: inv.id,
+        invitedUserId: inv.invitedUserId,
+        driverName: inv.driverName,
+        driverPhone: inv.driverPhone,
+        note: inv.note,
+        status: DealerDriverInviteStatus.rejected,
+        createdAt: inv.createdAt,
+      );
+    }
+    _notify();
+  }
+
+  @override
+  Future<void> cancelDriverInvite(String inviteId) async {
+    final i = _invites.indexWhere(
+        (x) => x.id == inviteId && x.status == DealerDriverInviteStatus.pending);
+    if (i == -1) return;
+    final inv = _invites[i];
+    _invites[i] = DealerDriverInvite(
+      id: inv.id,
+      invitedUserId: inv.invitedUserId,
+      driverName: inv.driverName,
+      driverPhone: inv.driverPhone,
+      note: inv.note,
+      status: DealerDriverInviteStatus.cancelled,
+      createdAt: inv.createdAt,
+    );
     _notify();
   }
 

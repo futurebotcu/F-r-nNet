@@ -54,8 +54,8 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
       _error = null;
     });
     try {
-      await ref.read(dealerRepositoryProvider).addDriver(
-            driverUserId: userId,
+      await ref.read(dealerRepositoryProvider).createDriverInvite(
+            invitedUserId: userId,
             name: name,
             phone: _phone.text.trim(),
             note: _note.text.trim(),
@@ -63,7 +63,10 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Şoför eklendi.')),
+        const SnackBar(
+          content:
+              Text('Davet oluşturuldu. Şoför onayladığında aktif olacak.'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -77,7 +80,7 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
   @override
   Widget build(BuildContext context) {
     return PremiumScaffold(
-      appBar: AppBar(title: const Text('Şoför Ekle')),
+      appBar: AppBar(title: const Text('Şoför Daveti Gönder')),
       body: SafeArea(
         top: false,
         child: ListView(
@@ -95,8 +98,9 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
             ),
             const SizedBox(height: AppSpacing.s),
             const Text(
-              'Şoför, kendi FırınNet hesabı olan bir kişidir. ID geçerli değilse '
-              'ekleme reddedilir.',
+              'Şoför, kendi FırınNet hesabı olan bir kişidir. Davet gönderilir; '
+              'şoför kendi hesabından onaylayınca bağlantı aktif olur. ID '
+              'geçerli değilse davet oluşmaz.',
               style: TextStyle(
                   fontSize: 11.5, color: AppColors.textMuted, height: 1.35),
             ),
@@ -135,7 +139,7 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
                   textStyle: const TextStyle(
                       fontWeight: FontWeight.w800, fontSize: 15),
                 ),
-                child: Text(_saving ? 'Kaydediliyor…' : 'Kaydet'),
+                child: Text(_saving ? 'Gönderiliyor…' : 'Davet Gönder'),
               ),
             ),
           ],

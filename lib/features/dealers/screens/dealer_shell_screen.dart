@@ -50,14 +50,17 @@ class DealerShellScreen extends ConsumerWidget {
       );
     }
 
-    // Sprint 3 — Şoför read-only dalı: kullanıcı (patron olmayan) aktif bir
-    // şoför ise patron defteri yerine "Bana Atanan Bayiler" read-only görünümü
-    // açılır. Mevcut patron/ticari shell davranışı (şoför olmayan) DEĞİŞMEZ.
+    // Sprint 3/6 — Şoför dalı: kullanıcı (patron olmayan) aktif bir şoför İSE
+    // veya bekleyen şoför daveti VARSA, patron defteri yerine "Bana Atanan
+    // Bayiler" görünümü (davet kartları + read-only bayiler) açılır. Mevcut
+    // patron/ticari shell davranışı (şoför/davet olmayan) DEĞİŞMEZ.
     final isDriver = ref.watch(isAssignedDriverProvider);
-    if (isDriver.valueOrNull == true) {
+    final myInvites = ref.watch(myDriverInvitesProvider);
+    final hasInvite = (myInvites.valueOrNull ?? const []).isNotEmpty;
+    if (isDriver.valueOrNull == true || hasInvite) {
       return const DriverHomeScreen();
     }
-    if (isDriver.isLoading) {
+    if (isDriver.isLoading || myInvites.isLoading) {
       return const PremiumScaffold(
         body: Center(child: CircularProgressIndicator()),
       );

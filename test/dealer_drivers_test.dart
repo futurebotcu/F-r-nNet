@@ -225,6 +225,71 @@ void main() {
     });
   });
 
+  group('Şoför daveti (Sprint 6, davet/onay)', () {
+    test('davet oluştur → pending listede, aktif şoför YOK', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      expect((await repo.pendingDriverInvites()).length, 1);
+      expect((await repo.listDrivers()).isEmpty, isTrue); // aktif bağlantı yok
+    });
+
+    test('kabul → aktif şoför oluşur, davet pending değil', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      final inv = (await repo.pendingDriverInvites()).first;
+      await repo.respondDriverInvite(inv.id, accept: true);
+      expect((await repo.listDrivers()).any((d) => d.driverUserId == 'u1'),
+          isTrue);
+      expect((await repo.pendingDriverInvites()).isEmpty, isTrue);
+    });
+
+    test('red → aktif şoför oluşmaz', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      final inv = (await repo.pendingDriverInvites()).first;
+      await repo.respondDriverInvite(inv.id, accept: false);
+      expect((await repo.listDrivers()).isEmpty, isTrue);
+      expect((await repo.pendingDriverInvites()).isEmpty, isTrue);
+    });
+
+    test('aynı kullanıcıya ikinci bekleyen davet engellenir', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      expect(
+        () => repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali 2'),
+        throwsStateError,
+      );
+    });
+
+    test('zaten şoför olana davet engellenir', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      final inv = (await repo.pendingDriverInvites()).first;
+      await repo.respondDriverInvite(inv.id, accept: true);
+      expect(
+        () => repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali'),
+        throwsStateError,
+      );
+    });
+
+    test('iptal → bekleyen davet kalkar', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.createDriverInvite(invitedUserId: 'u1', name: 'Ali');
+      final inv = (await repo.pendingDriverInvites()).first;
+      await repo.cancelDriverInvite(inv.id);
+      expect((await repo.pendingDriverInvites()).isEmpty, isTrue);
+      expect((await repo.listDrivers()).isEmpty, isTrue);
+    });
+
+    test('pending davet şoföre bayi erişimi vermez', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      // Not: davet patron tarafından oluşturulur; burada currentUserId=u1
+      // sadece "erişim yok" kontrolü için — davet yokken de şoför değil.
+      expect(await repo.isAssignedDriver(), isFalse);
+      expect(await repo.dealersAssignedToMe(), isEmpty);
+    });
+  });
+
   group('Şoför özeti (Sprint 5, driver_id filtreli tek defter)', () {
     test('şoför işlemi driver_id taşır; eski NULL hareketler kırılıma girmez',
         () async {

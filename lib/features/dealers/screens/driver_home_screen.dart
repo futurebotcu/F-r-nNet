@@ -48,6 +48,7 @@ class DriverHomeScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppSpacing.m),
+                const _MyInvites(),
                 if (dealers.isEmpty)
                   const _DriverEmpty()
                 else
@@ -69,6 +70,90 @@ class DriverHomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Şoföre gelen bekleyen davetler — Kabul/Reddet (Sprint 6). Boşsa görünmez.
+class _MyInvites extends ConsumerWidget {
+  const _MyInvites();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final invites = ref.watch(myDriverInvitesProvider).valueOrNull ?? const [];
+    if (invites.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final inv in invites)
+          Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.s),
+            padding: const EdgeInsets.all(AppSpacing.m),
+            decoration: BoxDecoration(
+              color: AppColors.brandLemonPale,
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  inv.ownerName.isNotEmpty
+                      ? '${inv.ownerName} seni şoför olarak eklemek istiyor'
+                      : 'Bir işletme seni şoför olarak eklemek istiyor',
+                  style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.brandInk,
+                      height: 1.35),
+                ),
+                const SizedBox(height: AppSpacing.s),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => _respond(ref, inv.id, true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.brandLemon,
+                          foregroundColor: AppColors.brandInk,
+                          minimumSize: const Size(0, 40),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                          ),
+                          textStyle: const TextStyle(
+                              fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
+                        child: const Text('Kabul Et'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                    OutlinedButton(
+                      onPressed: () => _respond(ref, inv.id, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(color: AppColors.borderHairline),
+                        minimumSize: const Size(0, 40),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                        ),
+                      ),
+                      child: const Text('Reddet'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _respond(WidgetRef ref, String inviteId, bool accept) async {
+    await ref
+        .read(dealerRepositoryProvider)
+        .respondDriverInvite(inviteId, accept: accept);
+    ref.invalidate(myDriverInvitesProvider);
+    ref.invalidate(isAssignedDriverProvider);
+    ref.invalidate(dealersAssignedToMeProvider);
   }
 }
 
