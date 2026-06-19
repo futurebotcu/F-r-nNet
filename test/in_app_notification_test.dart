@@ -11,6 +11,7 @@
 
 import 'package:firin_defter/features/notifications/models/app_notification.dart';
 import 'package:firin_defter/features/notifications/repositories/local_notification_repository.dart';
+import 'package:firin_defter/features/notifications/screens/notifications_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AppNotification _n(String id, {DateTime? readAt, DateTime? createdAt}) {
@@ -75,6 +76,26 @@ void main() {
       repo.add(_n('a'));
       await f; // emit gelmezse test takılır/zaman aşımına uğrar
       expect(true, isTrue);
+    });
+  });
+
+  group('Bildirim navigasyonu (push→go düzeltmesi)', () {
+    test('shell/tab kökleri → go (push değil)', () {
+      for (final r in const [
+        '/community',
+        '/pazar',
+        '/ilanlar',
+        '/mesajlar',
+        '/panel',
+      ]) {
+        expect(isShellTabRoot(r), isTrue, reason: '$r shell kökü olmalı');
+      }
+    });
+
+    test('derin route\'lar push-safe kalır (go değil)', () {
+      expect(isShellTabRoot('/pazar/tekliflerim/abc'), isFalse);
+      expect(isShellTabRoot('/pazar/urun/x'), isFalse);
+      expect(isShellTabRoot('/groups/g1'), isFalse);
     });
   });
 
