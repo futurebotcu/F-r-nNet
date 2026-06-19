@@ -8,6 +8,7 @@ import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_driver.dart';
 import '../models/dealer_note.dart';
+import '../models/driver_summary.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_pulse_snapshot.dart';
 import '../models/dealer_range_metrics.dart';
@@ -207,6 +208,101 @@ final dealersAssignedToMeProvider =
   ref.watch(dealerChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
   return repo.dealersAssignedToMe();
+});
+
+/// Sprint 5 — Şoförler Genel Hesap: tüm şoför özeti + per-driver kırılım.
+/// Kaynak: mevcut allTransactions (driver_id filtreli) + driversList. Yeni
+/// hesap kuralı yok; DealerBalanceService.aggregateRange paylaşılır.
+final driversGeneralSummaryProvider = FutureProvider.autoDispose
+    .family<DriversGeneralSummary, DriverSummaryRange>((ref, rangeKind) async {
+  ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
+  final drivers = await ref.watch(driversListProvider.future);
+  final allTx = await ref.watch(allTransactionsProvider.future);
+  final svc = ref.watch(dealerBalanceServiceProvider);
+  final range = rangeKind.range();
+
+  // driver_id'ye göre grupla (NULL = patron işlemi → kırılıma DAHİL DEĞİL).
+  final byDriver = <String, List<DealerTransaction>>{};
+  for (final t in allTx) {
+    final id = t.driverId;
+    if (id == null || id.isEmpty) continue;
+    (byDriver[id] ??= <DealerTransaction>[]).add(t);
+  }
+
+  final perDriver = <DriverRangeSummary>[];
+  double tDelivery = 0, tReturn = 0, tPayment = 0, tNet = 0;
+  var tCount = 0;
+  for (final d in drivers) {
+    final agg = svc.aggregateRange(
+      transactions: byDriver[d.id] ?? const <DealerTransaction>[],
+      start: range.start,
+      end: range.end,
+    );
+    perDriver.add(DriverRangeSummary(
+      driverId: d.id,
+      name: d.name,
+      isActive: d.isActive,
+      assignedDealerCount: d.assignedDealerCount,
+      totalDelivery: agg.totalDelivery,
+      totalReturn: agg.totalReturn,
+      totalPayment: agg.totalPayment,
+      totalAdjustment: agg.totalAdjustment,
+      netChange: agg.netChange,
+      txCount: agg.txCount,
+    ));
+    tDelivery += agg.totalDelivery;
+    tReturn += agg.totalReturn;
+    tPayment += agg.totalPayment;
+    tNet += agg.netChange;
+    tCount += agg.txCount;
+  }
+
+  return DriversGeneralSummary(
+    totalDrivers: drivers.length,
+    activeDrivers: drivers.where((d) => d.isActive).length,
+    totalDelivery: tDelivery,
+    totalReturn: tReturn,
+    totalPayment: tPayment,
+    netChange: tNet,
+    txCount: tCount,
+    perDriver: perDriver,
+  );
+});
+
+/// Sprint 5 — tek şoför özeti (patron şoför detayı için).
+final driverRangeSummaryProvider = FutureProvider.autoDispose.family<
+    DriverRangeSummary,
+    ({String driverId, DriverSummaryRange range})>((ref, q) async {
+  ref.watch(dealerChangesProvider);
+  ref.watch(dealerContentChangesProvider);
+  final allTx = await ref.watch(allTransactionsProvider.future);
+  final driver = await ref.watch(driverByIdProvider(q.driverId).future);
+  final svc = ref.watch(dealerBalanceServiceProvider);
+  final range = q.range.range();
+  final mine = allTx.where((t) => t.driverId == q.driverId);
+  final agg = svc.aggregateRange(
+      transactions: mine, start: range.start, end: range.end);
+  return DriverRangeSummary(
+    driverId: q.driverId,
+    name: driver?.name ?? '',
+    isActive: driver?.isActive ?? true,
+    assignedDealerCount: driver?.assignedDealerCount ?? 0,
+    totalDelivery: agg.totalDelivery,
+    totalReturn: agg.totalReturn,
+    totalPayment: agg.totalPayment,
+    totalAdjustment: agg.totalAdjustment,
+    netChange: agg.netChange,
+    txCount: agg.txCount,
+  );
+});
+
+/// Sprint 5 — bir şoförün son işlemleri (driver_id filtreli, desc).
+final driverRecentTransactionsProvider = FutureProvider.autoDispose
+    .family<List<DealerTransaction>, String>((ref, driverId) async {
+  ref.watch(dealerContentChangesProvider);
+  final allTx = await ref.watch(allTransactionsProvider.future);
+  return allTx.where((t) => t.driverId == driverId).take(50).toList();
 });
 
 /// Bayi bakiye özeti (transactions üzerinden hesaplanır).

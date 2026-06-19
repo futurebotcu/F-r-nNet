@@ -104,6 +104,8 @@ class _GeneralAccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PremiumCard(
+      padding: EdgeInsets.zero,
+      onTap: () => context.push(AppRoutes.dealerDriversSummary),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.m),
         child: Row(
@@ -130,7 +132,7 @@ class _GeneralAccountCard extends StatelessWidget {
                           color: AppColors.textPrimary)),
                   SizedBox(height: 2),
                   Text(
-                    'Tüm şoför özeti yakında (Sprint 5).',
+                    'Tüm şoförlerin teslimat/tahsilat/iade özeti.',
                     style: TextStyle(
                         fontSize: 12.5,
                         color: AppColors.textMuted,
@@ -139,6 +141,8 @@ class _GeneralAccountCard extends StatelessWidget {
                 ],
               ),
             ),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted, size: 20),
           ],
         ),
       ),

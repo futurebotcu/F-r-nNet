@@ -25,6 +25,7 @@ import '../../features/dealers/screens/dealer_shell_screen.dart';
 import '../../features/dealers/screens/driver_assign_dealers_screen.dart';
 import '../../features/dealers/screens/driver_dealer_detail_screen.dart';
 import '../../features/dealers/screens/driver_detail_screen.dart';
+import '../../features/dealers/screens/driver_general_summary_screen.dart';
 import '../../features/dealers/screens/driver_list_screen.dart';
 import '../../features/debt_expense/screens/debt_expense_shell_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
@@ -171,6 +172,7 @@ class AppRoutes {
   // Şoförler (Sprint 2 — patron-side yönetim).
   static const String dealerDrivers = '/dealers/drivers';
   static const String dealerDriverNew = '/dealers/drivers/new';
+  static const String dealerDriversSummary = '/dealers/drivers/summary';
   static String dealerDriver(String id) => '/dealers/drivers/$id';
   static String dealerDriverAssign(String id) => '/dealers/drivers/$id/assign';
   // Sprint 3 — şoför read-only bayi detayı.
@@ -607,6 +609,10 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.dealerDriverNew,
         builder: (_, __) => const AddDriverScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dealerDriversSummary,
+        builder: (_, __) => const DriverGeneralSummaryScreen(),
       ),
       GoRoute(
         path: '${AppRoutes.dealerDrivers}/:driverId/assign',

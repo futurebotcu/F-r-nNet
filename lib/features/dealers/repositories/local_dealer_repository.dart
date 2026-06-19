@@ -263,8 +263,11 @@ class LocalDealerRepository implements DealerRepository {
         .where((d) => d.driverUserId == currentUserId && d.isActive)
         .map((d) => d.id)
         .toSet();
-    final assigned = myDriverIds
-        .any((id) => (_assignments[id] ?? const <String>{}).contains(dealerId));
+    final myDriverId = myDriverIds.firstWhere(
+      (id) => (_assignments[id] ?? const <String>{}).contains(dealerId),
+      orElse: () => '',
+    );
+    final assigned = myDriverId.isNotEmpty;
     if (currentUserId == null || myDriverIds.isEmpty) {
       throw StateError('Şoför bağlantın aktif değil.');
     }
@@ -290,6 +293,7 @@ class LocalDealerRepository implements DealerRepository {
       paymentMethod: paymentMethod,
       note: note,
       createdAt: DateTime.now(),
+      driverId: myDriverId,
     ));
     _notify();
   }
