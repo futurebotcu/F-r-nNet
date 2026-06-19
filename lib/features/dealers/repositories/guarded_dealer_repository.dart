@@ -164,14 +164,14 @@ class GuardedDealerRepository implements DealerRepository {
 
   @override
   Future<void> createDriverInvite({
-    required String invitedUserId,
+    required String firinnetId,
     required String name,
     String phone = '',
     String note = '',
   }) {
     _requireWrite('şoför daveti göndermek');
     return inner.createDriverInvite(
-        invitedUserId: invitedUserId, name: name, phone: phone, note: note);
+        firinnetId: firinnetId, name: name, phone: phone, note: note);
   }
 
   @override
