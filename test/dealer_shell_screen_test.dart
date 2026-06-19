@@ -1,7 +1,9 @@
-// Sprint 6A — DealerShellScreen widget testleri.
+// DealerShellScreen widget testleri (UI placement güncellemesi sonrası).
 //
-// Mini-app shell: default tab Genel Bakış, 5 tab, Bayiler tab mevcut
-// DealerListScreen'i embedler, toptancı /wholesale/customers'a redirect.
+// Ürün modeli: bireysel = ŞOFÖR → "Bana Atanan Bayiler" görünümü (patron shell
+// DEĞİL). Ticari (commercial) → patron shell (5 tab: Genel Bakış/Bayiler/
+// Hareketler/Raporlar/Şoförler; Gün Sonu Raporlar içine taşındı). Toptancı →
+// /wholesale/customers redirect.
 
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firin_defter/core/constants/app_strings.dart';
@@ -54,7 +56,6 @@ GoRouter _testRouter() => GoRouter(
           path: '/dealers',
           builder: (_, __) => const DealerShellScreen(),
         ),
-        // Toptancı redirect hedef sayfası — minimal stub.
         GoRoute(
           path: '/wholesale/customers',
           builder: (_, __) => const Scaffold(
@@ -87,18 +88,15 @@ Future<void> _tapNavTab(WidgetTester tester, String label) async {
 
 void main() {
   setUpAll(() async {
-    // IndexedStack tüm tab'ları build eder; DealerActivityScreen
-    // DateFormat('d MMM', 'tr_TR') kullandığı için locale init şart.
     await initializeDateFormatting('tr_TR', null);
   });
 
-  group('DealerShellScreen — render & default tab', () {
-    testWidgets('Bireysel: shell render, default tab Genel Bakış',
+  group('DealerShellScreen — rol gating', () {
+    testWidgets('Ticari: patron shell render, default tab Genel Bakış',
         (tester) async {
-      await tester.pumpWidget(_wrap(_individualProfile));
+      await tester.pumpWidget(_wrap(_commercialProfile));
       await tester.pumpAndSettle();
 
-      // PremiumBottomNav + 5 tab label bulunur
       expect(find.byType(PremiumBottomNav), findsOneWidget);
       expect(
         find.descendant(
@@ -107,19 +105,21 @@ void main() {
         ),
         findsOneWidget,
       );
+      // Şoförler tabı patron (ticari) için görünür.
       expect(
         find.descendant(
           of: find.byType(PremiumBottomNav),
-          matching: find.text(AppStrings.dealerShellTabDealers),
+          matching: find.text('Şoförler'),
         ),
         findsOneWidget,
       );
-
-      // Default tab Genel Bakış — Sprint 6B'den sonra DealerOverviewScreen
-      // render edilir; AKTİF BAYİ chip ve KPI label'ları görünür.
+      // Gün Sonu artık ayrı tab DEĞİL.
       expect(
-        find.text(AppStrings.dealerOverviewActiveDealersLabel),
-        findsOneWidget,
+        find.descendant(
+          of: find.byType(PremiumBottomNav),
+          matching: find.text(AppStrings.dealerShellTabEndOfDay),
+        ),
+        findsNothing,
       );
       expect(
         find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
@@ -127,151 +127,86 @@ void main() {
       );
     });
 
-    testWidgets('Ticari: shell render, default tab Genel Bakış', (tester) async {
-      await tester.pumpWidget(_wrap(_commercialProfile));
+    testWidgets('Bireysel: şoför görünümü (patron shell DEĞİL)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
-      expect(find.byType(PremiumBottomNav), findsOneWidget);
-      expect(
-        find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
-        findsOneWidget,
-      );
+      // "Bana Atanan Bayiler" şoför ekranı; patron bottom-nav YOK.
+      expect(find.text('Bana Atanan Bayiler'), findsOneWidget);
+      expect(find.byType(PremiumBottomNav), findsNothing);
+      // Patron Şoförler yönetim tabı bireysele görünmez.
+      expect(find.text(AppStrings.dealerShellTabOverview), findsNothing);
     });
 
-    testWidgets('Toptancı: shell hiç görünmez, /wholesale/customers\'a redirect',
-        (tester) async {
+    testWidgets('Toptancı: /wholesale/customers\'a redirect', (tester) async {
       await tester.pumpWidget(_wrap(_wholesalerProfile));
       await tester.pumpAndSettle();
 
-      // Redirect tamamlanmış olmalı — stub sayfa metni görünür
       expect(find.text('Müşteriler — stub'), findsOneWidget);
-      // Shell hiç render edilmemiş olmalı
       expect(find.byType(PremiumBottomNav), findsNothing);
     });
   });
 
-  group('DealerShellScreen — tab navigation', () {
+  group('DealerShellScreen — patron tab navigation (ticari)', () {
     testWidgets('Bayiler tab → embedded DealerListScreen', (tester) async {
-      await tester.pumpWidget(_wrap(_individualProfile));
+      await tester.pumpWidget(_wrap(_commercialProfile));
       await tester.pumpAndSettle();
 
-      // İlk açılışta DealerListScreen IndexedStack içinde mevcut ama
-      // offstage (default tab Genel Bakış). skipOffstage: false ile ara.
       expect(
         find.byType(DealerListScreen, skipOffstage: false),
         findsOneWidget,
       );
-
-      // Bayiler tab'a geç
       await _tapNavTab(tester, AppStrings.dealerShellTabDealers);
-
-      // DealerListScreen'in kendi AppBar başlığı görünür ("Bayi Yönetimi")
       expect(find.text(AppStrings.dealerListTitle), findsOneWidget);
     });
 
-    testWidgets('Hareketler tab → activity screen (Sprint Activity)',
-        (tester) async {
-      await tester.pumpWidget(_wrap(_individualProfile));
+    testWidgets('Hareketler tab → activity screen', (tester) async {
+      await tester.pumpWidget(_wrap(_commercialProfile));
       await tester.pumpAndSettle();
-
       await _tapNavTab(tester, AppStrings.dealerShellTabActivity);
-
-      // Sprint Activity: placeholder yerine gerçek DealerActivityScreen.
-      // AppBar başlığı + search hint + filter chip "Tümü" görünür.
-      expect(
-        find.text(AppStrings.dealerActivityTitle),
-        findsAtLeastNWidgets(1),
-      );
-      expect(
-        find.text(AppStrings.dealerActivitySearchHint),
-        findsOneWidget,
-      );
+      expect(find.text(AppStrings.dealerActivityTitle), findsAtLeastNWidgets(1));
+      expect(find.text(AppStrings.dealerActivitySearchHint), findsOneWidget);
     });
 
-    testWidgets('Raporlar tab → DealerReportsTabScreen içerik', (tester) async {
-      await tester.pumpWidget(_wrap(_individualProfile));
+    testWidgets('Raporlar tab → rapor + Gün Sonu kartı', (tester) async {
+      await tester.pumpWidget(_wrap(_commercialProfile));
       await tester.pumpAndSettle();
-
       await _tapNavTab(tester, AppStrings.dealerShellTabReports);
-
-      // Periyot segmenti + Genel Toplam başlığı görünür (artık placeholder yok).
       expect(find.text(AppStrings.dealerReportsPeriodLast30), findsOneWidget);
-      expect(
-        find.text(AppStrings.dealerReportsSummaryTitle.toUpperCase()),
-        findsOneWidget,
-      );
+      // Gün Sonu artık Raporlar içinde bir kart.
+      expect(find.text('Gün Sonu'), findsOneWidget);
     });
 
-    testWidgets('Gün Sonu tab → DealerEndOfDayTabScreen içerik',
+    testWidgets('Şoförler tab → DriverListScreen (Genel Hesap)',
         (tester) async {
-      await tester.pumpWidget(_wrap(_individualProfile));
+      await tester.pumpWidget(_wrap(_commercialProfile));
       await tester.pumpAndSettle();
-
-      await _tapNavTab(tester, AppStrings.dealerShellTabEndOfDay);
-
-      // Header (Bugün uppercase) ve Share CTA görünür; artık placeholder yok.
-      expect(
-        find.text(AppStrings.dealerEndOfDayHeaderToday.toUpperCase()),
-        findsOneWidget,
-      );
-      expect(
-        find.text(AppStrings.dealerEndOfDayShareCta),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('Genel Bakış tab içeriği — KPI labels (Sprint 6B)',
-        (tester) async {
-      await tester.pumpWidget(_wrap(_individualProfile));
-      await tester.pumpAndSettle();
-
-      // Sprint 6B: 5 KPI tile label'ı görünür (placeholder upcoming items
-      // kaldırıldı, gerçek DealerOverviewScreen render edilir)
-      expect(
-        find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
-        findsOneWidget,
-      );
-      expect(
-        find.text(AppStrings.dealerOverviewKpiTodayDelivery.toUpperCase()),
-        findsOneWidget,
-      );
-      expect(
-        find.text(AppStrings.dealerOverviewKpiTodayPayment.toUpperCase()),
-        findsOneWidget,
-      );
-      expect(
-        find.text(AppStrings.dealerOverviewKpiMonthNetChange.toUpperCase()),
-        findsOneWidget,
-      );
+      await _tapNavTab(tester, 'Şoförler');
+      // Şoför yönetim listesi: Genel Hesap kartı + Şoför Ekle.
+      expect(find.text('Genel Hesap'), findsOneWidget);
+      expect(find.text('Şoför Ekle'), findsAtLeastNWidgets(1));
     });
   });
 
-  group('DealerShellScreen — IndexedStack state preservation', () {
-    testWidgets('Tab geçişlerinde tüm child\'lar widget tree\'de kalır',
+  group('DealerShellScreen — IndexedStack state preservation (ticari)', () {
+    testWidgets('Tab geçişlerinde child\'lar widget tree\'de kalır',
         (tester) async {
-      await tester.pumpWidget(_wrap(_individualProfile));
+      await tester.pumpWidget(_wrap(_commercialProfile));
       await tester.pumpAndSettle();
 
-      // İlk açılışta default Genel Bakış aktif — DealerListScreen offstage
-      // (IndexedStack onu Offstage ile gizler).
       expect(
         find.byType(DealerListScreen, skipOffstage: false),
         findsOneWidget,
       );
-
-      // Bayiler tab → Hareketler → tekrar Bayiler
       await _tapNavTab(tester, AppStrings.dealerShellTabDealers);
       expect(find.text(AppStrings.dealerListTitle), findsOneWidget);
-
       await _tapNavTab(tester, AppStrings.dealerShellTabActivity);
-      // Activity tab'da Bayiler tekrar offstage — yine widget tree'de
       expect(
         find.byType(DealerListScreen, skipOffstage: false),
         findsOneWidget,
       );
-
       await _tapNavTab(tester, AppStrings.dealerShellTabDealers);
-      expect(find.byType(DealerListScreen), findsOneWidget);
       expect(find.text(AppStrings.dealerListTitle), findsOneWidget);
     });
   });

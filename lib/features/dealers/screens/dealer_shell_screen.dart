@@ -11,11 +11,11 @@ import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/dealer_providers.dart';
 import 'dealer_activity_screen.dart';
-import 'dealer_end_of_day_tab_screen.dart';
 import 'dealer_list_screen.dart';
 import 'dealer_overview_screen.dart';
 import 'dealer_reports_tab_screen.dart';
 import 'driver_home_screen.dart';
+import 'driver_list_screen.dart';
 
 /// Bayi Defteri mini-app shell (Sprint 6A).
 ///
@@ -50,21 +50,14 @@ class DealerShellScreen extends ConsumerWidget {
       );
     }
 
-    // Sprint 3/6 — Şoför dalı: kullanıcı (patron olmayan) aktif bir şoför İSE
-    // veya bekleyen şoför daveti VARSA, patron defteri yerine "Bana Atanan
-    // Bayiler" görünümü (davet kartları + read-only bayiler) açılır. Mevcut
-    // patron/ticari shell davranışı (şoför/davet olmayan) DEĞİŞMEZ.
-    final isDriver = ref.watch(isAssignedDriverProvider);
-    final myInvites = ref.watch(myDriverInvitesProvider);
-    final hasInvite = (myInvites.valueOrNull ?? const []).isNotEmpty;
-    if (isDriver.valueOrNull == true || hasInvite) {
+    // Ürün modeli: bireysel kullanıcı = ŞOFÖR (patron değil). Bayi Yönetimi'ne
+    // girince patron defteri/Şoförler yönetimi DEĞİL, "Bana Atanan Bayiler"
+    // şoför görünümü açılır (davet kartı / atanan bayiler / güvenli boş durum).
+    // Patron defteri fallback'i bireysele GÖSTERİLMEZ.
+    if (profile?.accountType == AccountType.individual) {
       return const DriverHomeScreen();
     }
-    if (isDriver.isLoading || myInvites.isLoading) {
-      return const PremiumScaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    // Ticari (commercial) → patron Bayi Yönetimi shell'i (Şoförler tabı dahil).
 
     // Sprint 6B: tab indeksi `dealerShellTabIndexProvider`'dan okunur.
     // Genel Bakış CTA'ları başka tab'a programatik geçiş için aynı
@@ -83,10 +76,10 @@ class DealerShellScreen extends ConsumerWidget {
           DealerListScreen(),
           // Sprint Activity: placeholder yerine cross-dealer hareket listesi.
           DealerActivityScreen(),
-          // Sprint Raporlar: toplu + bayi bazlı rapor.
+          // Raporlar: toplu + bayi bazlı rapor (+ Gün Sonu erişimi içeride).
           DealerReportsTabScreen(),
-          // Sprint Gün Sonu V1: pasif günlük rapor + plain text share.
-          DealerEndOfDayTabScreen(),
+          // Şoförler: patron tarafı yönetim (davet/atama/özet).
+          DriverListScreen(),
         ],
       ),
       bottomNavigationBar: PremiumBottomNav(
@@ -115,9 +108,9 @@ class DealerShellScreen extends ConsumerWidget {
             label: AppStrings.dealerShellTabReports,
           ),
           PremiumNavItem(
-            icon: Icons.event_available_outlined,
-            activeIcon: Icons.event_available_rounded,
-            label: AppStrings.dealerShellTabEndOfDay,
+            icon: Icons.local_shipping_outlined,
+            activeIcon: Icons.local_shipping_rounded,
+            label: 'Şoförler',
           ),
         ],
       ),
