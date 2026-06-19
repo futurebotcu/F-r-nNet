@@ -58,6 +58,7 @@ class B2bQuoteRequest {
     required this.status,
     this.replyCount = 0,
     this.createdByMe = false,
+    this.acceptedReplyId,
   });
 
   final String id;
@@ -91,7 +92,18 @@ class B2bQuoteRequest {
   /// Preview kullanıcının (alıcı) kendi açtığı talep mi → "Tekliflerim".
   final bool createdByMe;
 
-  B2bQuoteRequest copyWith({int? replyCount, B2bQuoteStatus? status}) {
+  /// Alıcının "Bu teklifle ilerle" dediği reply id'si (anlaşma). Yoksa null.
+  final String? acceptedReplyId;
+
+  /// Bu talepte seçilmiş bir teklif var mı?
+  bool get hasAcceptedReply =>
+      acceptedReplyId != null && acceptedReplyId!.isNotEmpty;
+
+  B2bQuoteRequest copyWith({
+    int? replyCount,
+    B2bQuoteStatus? status,
+    String? acceptedReplyId,
+  }) {
     return B2bQuoteRequest(
       id: id,
       productOrCategory: productOrCategory,
@@ -104,6 +116,7 @@ class B2bQuoteRequest {
       status: status ?? this.status,
       replyCount: replyCount ?? this.replyCount,
       createdByMe: createdByMe,
+      acceptedReplyId: acceptedReplyId ?? this.acceptedReplyId,
     );
   }
 }

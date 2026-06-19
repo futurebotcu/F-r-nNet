@@ -13,6 +13,7 @@ class B2bQuoteReply {
     this.priceHint,
     this.deliveryNote,
     this.supplierShopId,
+    this.accepted = false,
   });
 
   final String id;
@@ -31,4 +32,21 @@ class B2bQuoteReply {
 
   /// Opsiyonel teslimat notu (ör. "Bu hafta teslim").
   final String? deliveryNote;
+
+  /// Alıcı bu teklifi seçti mi ("Bu teklifle ilerle").
+  final bool accepted;
+
+  B2bQuoteReply copyWith({bool? accepted}) {
+    return B2bQuoteReply(
+      id: id,
+      requestId: requestId,
+      supplierName: supplierName,
+      message: message,
+      createdAtLabel: createdAtLabel,
+      priceHint: priceHint,
+      deliveryNote: deliveryNote,
+      supplierShopId: supplierShopId,
+      accepted: accepted ?? this.accepted,
+    );
+  }
 }

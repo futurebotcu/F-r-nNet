@@ -16,6 +16,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/b2b_campaign.dart';
+import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
@@ -177,6 +178,7 @@ class SupabaseB2bRepository implements B2bRepository {
       note: (row['note'] ?? '').toString(),
       status: statusFromText(row['status'] as String?),
       createdByMe: createdByMe,
+      acceptedReplyId: row['accepted_reply_id']?.toString(),
     );
   }
 
@@ -191,6 +193,17 @@ class SupabaseB2bRepository implements B2bRepository {
       priceHint: row['price_note'] as String?,
       deliveryNote: row['delivery_note'] as String?,
       supplierShopId: row['supplier_shop_id']?.toString(),
+      accepted: (row['accepted'] as bool?) ?? false,
+    );
+  }
+
+  static B2bLeadMessage leadMessageFromRow(Map<String, dynamic> row) {
+    return B2bLeadMessage(
+      id: (row['id'] ?? '').toString(),
+      leadId: (row['lead_id'] ?? '').toString(),
+      senderRole: B2bLeadSenderRoleX.fromText(row['sender_role'] as String?),
+      message: (row['message'] ?? '').toString(),
+      createdAtLabel: _dateLabel(row['created_at']),
     );
   }
 
@@ -584,7 +597,7 @@ class SupabaseB2bRepository implements B2bRepository {
 
   static const _qrCols =
       'id, target_type, target_id, category, quantity, city, district, '
-      'buyer_type, delivery_time, note, status, created_at';
+      'buyer_type, delivery_time, note, status, accepted_reply_id, created_at';
 
   @override
   Future<List<B2bQuoteRequest>> listMyQuoteRequests() async {
@@ -638,7 +651,8 @@ class SupabaseB2bRepository implements B2bRepository {
         .from('b2b_quote_replies')
         .select(
           'id, quote_request_id, supplier_shop_id, message, price_note, '
-          'delivery_note, created_at, b2b_supplier_shops!inner(shop_name)',
+          'delivery_note, accepted, created_at, '
+          'b2b_supplier_shops!inner(shop_name)',
         )
         .eq('quote_request_id', requestId)
         .order('created_at', ascending: false);
@@ -788,6 +802,10 @@ class SupabaseB2bRepository implements B2bRepository {
       requestCategory: (row['request_category'] ?? '').toString(),
       requestQuantity: (row['request_quantity'] ?? '').toString(),
       requestCity: (row['request_city'] ?? '').toString(),
+      replyAccepted:
+          ((row['b2b_quote_replies'] as Map<String, dynamic>?)?['accepted']
+                  as bool?) ??
+              false,
     );
   }
 
@@ -833,12 +851,40 @@ class SupabaseB2bRepository implements B2bRepository {
     final shopId = await _myShopId();
     if (shopId == null) return const [];
     // RLS yalnız kendi mağazasına ait lead'leri döndürür; ayrıca filtrele.
+    // İlgili teklif seçildi mi → "Teklifin seçildi" için embed.
     final rows = await _client
         .from('b2b_quote_leads')
-        .select(_leadCols)
+        .select('$_leadCols, b2b_quote_replies!inner(accepted)')
         .eq('supplier_shop_id', shopId)
         .order('created_at', ascending: false);
     return rows.map(leadFromRow).toList(growable: false);
+  }
+
+  // ---- Lead sonrası temas + anlaşma ----
+
+  @override
+  Future<void> acceptQuoteReply(String quoteReplyId) async {
+    await _client.rpc('b2b_accept_quote_reply',
+        params: {'p_reply_id': quoteReplyId});
+  }
+
+  @override
+  Future<void> sendLeadMessage({
+    required String leadId,
+    required String message,
+  }) async {
+    await _client.rpc('b2b_send_lead_message',
+        params: {'p_lead_id': leadId, 'p_message': message});
+  }
+
+  @override
+  Future<List<B2bLeadMessage>> messagesForLead(String leadId) async {
+    final rows = await _client
+        .from('b2b_quote_lead_messages')
+        .select('id, lead_id, sender_role, message, created_at')
+        .eq('lead_id', leadId)
+        .order('created_at', ascending: true);
+    return rows.map(leadMessageFromRow).toList(growable: false);
   }
 
   // ---- Yardımcılar ----

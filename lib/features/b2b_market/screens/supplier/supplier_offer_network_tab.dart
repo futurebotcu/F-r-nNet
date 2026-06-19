@@ -17,6 +17,7 @@ import '../../models/b2b_quote_lead.dart';
 import '../../models/b2b_quote_request.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_async_list.dart';
+import '../../widgets/b2b_lead_message_sheet.dart';
 import '../../widgets/b2b_meta_pill.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
 import '../../widgets/b2b_quote_request_card.dart';
@@ -35,6 +36,12 @@ class _SupplierOfferNetworkTabState
 
   @override
   Widget build(BuildContext context) {
+    final leadCount = ref
+            .watch(b2bSupplierLeadsProvider)
+            .valueOrNull
+            ?.where((l) => l.isInterested)
+            .length ??
+        0;
     return Column(
       children: [
         Padding(
@@ -46,6 +53,7 @@ class _SupplierOfferNetworkTabState
           ),
           child: _Segment(
             value: _seg,
+            leadCount: leadCount,
             onChanged: (v) => setState(() => _seg = v),
           ),
         ),
@@ -58,9 +66,14 @@ class _SupplierOfferNetworkTabState
 }
 
 class _Segment extends StatelessWidget {
-  const _Segment({required this.value, required this.onChanged});
+  const _Segment({
+    required this.value,
+    required this.onChanged,
+    this.leadCount = 0,
+  });
   final int value;
   final ValueChanged<int> onChanged;
+  final int leadCount;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +87,7 @@ class _Segment extends StatelessWidget {
       child: Row(
         children: [
           _seg(0, 'Açık Talepler'),
-          _seg(1, 'İlgilenenler'),
+          _seg(1, leadCount > 0 ? 'İlgilenenler ($leadCount)' : 'İlgilenenler'),
         ],
       ),
     );
@@ -241,8 +254,48 @@ class _LeadCard extends StatelessWidget {
                 ),
               ),
             ],
+            if (lead.replyAccepted) ...[
+              const SizedBox(height: AppSpacing.m),
+              const _LeadAcceptedChip(),
+            ],
             const SizedBox(height: AppSpacing.m),
             _PhoneRow(lead: lead),
+            const SizedBox(height: AppSpacing.s),
+            if (!lead.phoneShared)
+              const Text(
+                'Alıcı telefonunu paylaşmadı. Buradan kısa mesajla dönüş '
+                'yapabilirsin.',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                ),
+              ),
+            const SizedBox(height: AppSpacing.s),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => showB2bLeadMessageSheet(
+                  context,
+                  leadId: lead.id,
+                  title: 'Alıcı',
+                  viewerIsBuyer: false,
+                ),
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                label: const Text('Alıcıya yanıt yaz'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.borderHairline),
+                  minimumSize: const Size(0, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                  textStyle:
+                      const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.s),
             const Text(
               'Bu lead, verdiğin teklif üzerinden oluştu.',
@@ -254,6 +307,37 @@ class _LeadCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LeadAcceptedChip extends StatelessWidget {
+  const _LeadAcceptedChip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3FBEF),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: const Color(0x33166534), width: 0.8),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.verified_rounded, size: 14, color: Color(0xFF166534)),
+          SizedBox(width: 5),
+          Text(
+            'Teklifin seçildi',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF166534),
+            ),
+          ),
+        ],
       ),
     );
   }

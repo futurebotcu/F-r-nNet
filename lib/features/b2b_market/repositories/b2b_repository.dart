@@ -8,6 +8,7 @@
 // (productCategories/serviceRegions) senkron kalır — DB tablosu değil.
 
 import '../models/b2b_campaign.dart';
+import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
@@ -182,4 +183,20 @@ abstract class B2bRepository {
 
   /// Tedarikçinin kendi mağazasına gelen lead'ler ("İlgilenenler").
   Future<List<B2bQuoteLead>> leadsForMySupplierShop();
+
+  // ---- Lead sonrası temas + anlaşma ----
+
+  /// Alıcı bir teklifi kabul eder ("Bu teklifle ilerle"). RPC/repo içinde:
+  /// yalnız talep sahibi, aktif talep, reply talebe ait → accepted_reply_id set.
+  Future<void> acceptQuoteReply(String quoteReplyId);
+
+  /// Lead bağlamında kısa takip mesajı gönderir. Rol (buyer/supplier) sunucuda
+  /// lead üyeliğinden türetilir; UI'dan güvenilmez.
+  Future<void> sendLeadMessage({
+    required String leadId,
+    required String message,
+  });
+
+  /// Bir lead'in takip mesajları (alıcı veya ilgili tedarikçi görür).
+  Future<List<B2bLeadMessage>> messagesForLead(String leadId);
 }
