@@ -3,7 +3,9 @@
 // Kapsam: şoför ekle/listele/güncelle, duplicate engeli, bayi atama (yalnız
 // mevcut bayiler), atanmış bayi sayısı. Şoför erişim/yazma yok (sonraki sprint).
 
+import 'package:firin_defter/features/dealers/models/dealer_transaction.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
+import 'package:firin_defter/features/dealers/services/dealer_balance_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -122,6 +124,104 @@ void main() {
       await repo.updateDriver(drv.copyWith(isActive: false));
       expect(await repo.isAssignedDriver(), isFalse);
       expect(await repo.dealersAssignedToMe(), isEmpty);
+    });
+  });
+
+  group('Şoför işlem yazma (Sprint 4, addDriverTransaction)', () {
+    Future<LocalDealerRepository> seedAssignedDriver() async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final drv = (await repo.listDrivers()).first;
+      await repo.setDriverAssignments(driverId: drv.id, dealerIds: ['d_hamdi']);
+      return repo;
+    }
+
+    test('atanmış bayiye payment ekler → ledger + bakiye', () async {
+      final repo = await seedAssignedDriver();
+      final before = (await repo.listTransactions('d_hamdi')).length;
+      const svc = DealerBalanceService();
+      final balBefore = svc
+          .summarize(
+              dealerId: 'd_hamdi',
+              transactions: await repo.listTransactions('d_hamdi'))
+          .currentBalance;
+
+      await repo.addDriverTransaction(
+        dealerId: 'd_hamdi',
+        type: DealerTransactionType.payment,
+        amount: 100,
+        paymentMethod: DealerPaymentMethod.cash,
+      );
+      final after = await repo.listTransactions('d_hamdi');
+      expect(after.length, before + 1);
+      final balAfter =
+          svc.summarize(dealerId: 'd_hamdi', transactions: after).currentBalance;
+      expect(balAfter, balBefore - 100); // payment bakiyeyi azaltır
+    });
+
+    test('atanmış bayiye delivery ekler (amount=adet*fiyat)', () async {
+      final repo = await seedAssignedDriver();
+      await repo.addDriverTransaction(
+        dealerId: 'd_hamdi',
+        type: DealerTransactionType.delivery,
+        quantity: 10,
+        unitPrice: 8.5,
+        productName: 'Ekmek',
+      );
+      final tx = (await repo.listTransactions('d_hamdi'))
+          .firstWhere((t) => t.productName == 'Ekmek' && t.quantity == 10);
+      expect(tx.amount, 85.0);
+      expect(tx.type, DealerTransactionType.delivery);
+    });
+
+    test('atanmış bayiye return ekler', () async {
+      final repo = await seedAssignedDriver();
+      await repo.addDriverTransaction(
+        dealerId: 'd_hamdi',
+        type: DealerTransactionType.returned,
+        quantity: 2,
+        unitPrice: 8.5,
+        productName: 'Ekmek',
+      );
+      final has = (await repo.listTransactions('d_hamdi'))
+          .any((t) => t.type == DealerTransactionType.returned);
+      expect(has, isTrue);
+    });
+
+    test('atanmadığı bayiye işlem ekleyemez', () async {
+      final repo = await seedAssignedDriver();
+      expect(
+        () => repo.addDriverTransaction(
+            dealerId: 'd_mehmet',
+            type: DealerTransactionType.payment,
+            amount: 50),
+        throwsStateError,
+      );
+    });
+
+    test('pasif/şoför-olmayan kullanıcı işlem ekleyemez', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'baska');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final drv = (await repo.listDrivers()).first;
+      await repo.setDriverAssignments(driverId: drv.id, dealerIds: ['d_hamdi']);
+      expect(
+        () => repo.addDriverTransaction(
+            dealerId: 'd_hamdi',
+            type: DealerTransactionType.payment,
+            amount: 50),
+        throwsStateError,
+      );
+    });
+
+    test('şoföre adjustment kapalı', () async {
+      final repo = await seedAssignedDriver();
+      expect(
+        () => repo.addDriverTransaction(
+            dealerId: 'd_hamdi',
+            type: DealerTransactionType.adjustment,
+            amount: 10),
+        throwsStateError,
+      );
     });
   });
 }

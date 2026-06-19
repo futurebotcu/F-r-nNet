@@ -245,6 +245,56 @@ class LocalDealerRepository implements DealerRepository {
   }
 
   @override
+  Future<void> addDriverTransaction({
+    required String dealerId,
+    required DealerTransactionType type,
+    double amount = 0,
+    int? quantity,
+    double? unitPrice,
+    DealerPaymentMethod? paymentMethod,
+    String? productName,
+    String note = '',
+  }) async {
+    if (type == DealerTransactionType.adjustment) {
+      throw StateError('Geçersiz işlem.');
+    }
+    // Aktif olarak bu bayiye atanmış şoför müyüm? (currentUserId üzerinden)
+    final myDriverIds = _drivers
+        .where((d) => d.driverUserId == currentUserId && d.isActive)
+        .map((d) => d.id)
+        .toSet();
+    final assigned = myDriverIds
+        .any((id) => (_assignments[id] ?? const <String>{}).contains(dealerId));
+    if (currentUserId == null || myDriverIds.isEmpty) {
+      throw StateError('Şoför bağlantın aktif değil.');
+    }
+    if (!assigned) {
+      throw StateError('Bu bayiye işlem ekleme yetkin yok.');
+    }
+    final dealer = _dealers.firstWhere((d) => d.id == dealerId,
+        orElse: () => throw StateError('Bu bayiye işlem ekleme yetkin yok.'));
+    if (!dealer.isActive) throw StateError('Geçersiz işlem.');
+
+    // Tek defter: patron ledger'ına (Local _transactions) düşer.
+    final double effectiveAmount = type == DealerTransactionType.payment
+        ? amount
+        : (quantity ?? 0) * (unitPrice ?? 0.0);
+    _transactions.add(DealerTransaction(
+      id: 'dtx_${++_driverSeq}',
+      dealerId: dealerId,
+      type: type,
+      productName: productName,
+      quantity: quantity,
+      unitPrice: unitPrice,
+      amount: effectiveAmount,
+      paymentMethod: paymentMethod,
+      note: note,
+      createdAt: DateTime.now(),
+    ));
+    _notify();
+  }
+
+  @override
   Stream<void> watch() => _changes.stream;
 
   // Local in-memory'de storm yok; içerik tick'i yapısalla aynı stream'i
