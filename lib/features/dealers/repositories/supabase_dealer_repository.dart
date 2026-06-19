@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/dealer.dart';
+import '../models/dealer_driver.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -455,6 +456,139 @@ class SupabaseDealerRepository implements DealerRepository {
       'note': note.note,
     });
     _notifyContent();
+  }
+
+  // ───────────────────────────────────────────────── Şoförler (Sprint 2)
+
+  static const String _driverColumns =
+      'id, driver_user_id, name, phone, note, is_active, created_at';
+
+  DealerDriver _driverFromRow(Map<String, dynamic> row, {int count = 0}) {
+    return DealerDriver(
+      id: row['id'] as String,
+      driverUserId: (row['driver_user_id'] as String?) ?? '',
+      name: (row['name'] as String?) ?? '',
+      phone: (row['phone'] as String?) ?? '',
+      note: (row['note'] as String?) ?? '',
+      isActive: (row['is_active'] as bool?) ?? true,
+      createdAt: DateTime.parse(row['created_at'] as String),
+      assignedDealerCount: count,
+    );
+  }
+
+  @override
+  Future<List<DealerDriver>> listDrivers() async {
+    _requireUserId();
+    final rows = await _client
+        .from('dealer_drivers')
+        .select(_driverColumns)
+        .order('name');
+    final assigns = await _client
+        .from('dealer_driver_assignments')
+        .select('driver_id');
+    final counts = <String, int>{};
+    for (final a in (assigns as List).cast<Map<String, dynamic>>()) {
+      final id = a['driver_id'] as String?;
+      if (id != null) counts[id] = (counts[id] ?? 0) + 1;
+    }
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map((r) => _driverFromRow(r, count: counts[r['id']] ?? 0))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<DealerDriver?> getDriver(String driverId) async {
+    _requireUserId();
+    final row = await _client
+        .from('dealer_drivers')
+        .select(_driverColumns)
+        .eq('id', driverId)
+        .maybeSingle();
+    if (row == null) return null;
+    final ids = await assignedDealerIds(driverId);
+    return _driverFromRow(row, count: ids.length);
+  }
+
+  @override
+  Future<void> addDriver({
+    required String driverUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  }) async {
+    final ownerId = _requireUserId();
+    try {
+      await _client.from('dealer_drivers').insert(<String, dynamic>{
+        'owner_id': ownerId,
+        'driver_user_id': driverUserId,
+        'name': name,
+        if (phone.isNotEmpty) 'phone': phone,
+        if (note.isNotEmpty) 'note': note,
+      });
+    } on sb.PostgrestException catch (e) {
+      // 23503 FK ihlali → geçersiz profile id; 23505 unique → zaten ekli.
+      if (e.code == '23503') {
+        throw StateError('Geçerli bir FırınNet kullanıcı ID girin.');
+      }
+      if (e.code == '23505') {
+        throw StateError('Bu kullanıcı zaten şoför olarak eklenmiş.');
+      }
+      rethrow;
+    }
+    _notify();
+  }
+
+  @override
+  Future<void> updateDriver(DealerDriver driver) async {
+    _requireUserId();
+    await _client.from('dealer_drivers').update(<String, dynamic>{
+      'name': driver.name,
+      'phone': driver.phone,
+      'note': driver.note,
+      'is_active': driver.isActive,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', driver.id);
+    _notify();
+  }
+
+  @override
+  Future<List<String>> assignedDealerIds(String driverId) async {
+    _requireUserId();
+    final rows = await _client
+        .from('dealer_driver_assignments')
+        .select('dealer_id')
+        .eq('driver_id', driverId);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map((r) => r['dealer_id'] as String)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> setDriverAssignments({
+    required String driverId,
+    required List<String> dealerIds,
+  }) async {
+    final ownerId = _requireUserId();
+    // Tam eşitleme: mevcut atamaları sil, yeni kümeyi ekle. DB trigger
+    // cross-owner atamayı reddeder (ek güvenlik).
+    await _client
+        .from('dealer_driver_assignments')
+        .delete()
+        .eq('driver_id', driverId);
+    if (dealerIds.isNotEmpty) {
+      final unique = dealerIds.toSet().toList();
+      await _client.from('dealer_driver_assignments').insert([
+        for (final dealerId in unique)
+          <String, dynamic>{
+            'owner_id': ownerId,
+            'driver_id': driverId,
+            'dealer_id': dealerId,
+          },
+      ]);
+    }
+    _notify();
   }
 
   @override

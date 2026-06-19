@@ -13,6 +13,7 @@ import '../../features/bakery_panel/screens/waste_entry_screen.dart';
 import '../../features/dashboard/screens/app_shell.dart';
 import '../../features/dashboard/screens/role_dashboard_screen.dart';
 import '../../features/dealers/screens/add_dealer_screen.dart';
+import '../../features/dealers/screens/add_driver_screen.dart';
 import '../../features/dealers/screens/dealer_adjustment_form_screen.dart';
 import '../../features/dealers/screens/dealer_delivery_form_screen.dart';
 import '../../features/dealers/screens/dealer_detail_screen.dart';
@@ -21,6 +22,9 @@ import '../../features/dealers/screens/dealer_range_report_screen.dart';
 import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
 import '../../features/dealers/screens/dealer_shell_screen.dart';
+import '../../features/dealers/screens/driver_assign_dealers_screen.dart';
+import '../../features/dealers/screens/driver_detail_screen.dart';
+import '../../features/dealers/screens/driver_list_screen.dart';
 import '../../features/debt_expense/screens/debt_expense_shell_screen.dart';
 import '../../features/dealers/screens/wholesale_customers_screen.dart';
 import '../../features/auth/screens/auth_entry_screen.dart';
@@ -163,6 +167,11 @@ class AppRoutes {
   static const String dealers = '/dealers';
   static const String dealerNew = '/dealers/new';
   static String dealerEdit(String id) => '/dealers/$id/edit';
+  // Şoförler (Sprint 2 — patron-side yönetim).
+  static const String dealerDrivers = '/dealers/drivers';
+  static const String dealerDriverNew = '/dealers/drivers/new';
+  static String dealerDriver(String id) => '/dealers/drivers/$id';
+  static String dealerDriverAssign(String id) => '/dealers/drivers/$id/assign';
   // Sprint 3 — Date-range metrics report screen.
   // Quality Patch v2: opsiyonel `period` query param — Raporlar tab'ından
   // gelirken seçili periyodu transfer eder (`last30Days` / `thisMonth`).
@@ -585,6 +594,27 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.dealerNew,
         builder: (_, __) => const AddDealerScreen(),
+      ),
+      // Şoförler (Sprint 2) — literal '/dealers/drivers*' route'ları
+      // '/dealers/:id'den ÖNCE kayıtlı; aksi halde ':id' "drivers"i yakalar.
+      GoRoute(
+        path: AppRoutes.dealerDrivers,
+        builder: (_, __) => const DriverListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dealerDriverNew,
+        builder: (_, __) => const AddDriverScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.dealerDrivers}/:driverId/assign',
+        builder: (_, state) => DriverAssignDealersScreen(
+          driverId: state.pathParameters['driverId']!,
+        ),
+      ),
+      GoRoute(
+        path: '${AppRoutes.dealerDrivers}/:driverId',
+        builder: (_, state) =>
+            DriverDetailScreen(driverId: state.pathParameters['driverId']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/edit',

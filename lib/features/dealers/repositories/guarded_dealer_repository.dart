@@ -1,5 +1,6 @@
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
+import '../models/dealer_driver.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -54,6 +55,17 @@ class GuardedDealerRepository implements DealerRepository {
       inner.listNotes(dealerId);
 
   @override
+  Future<List<DealerDriver>> listDrivers() => inner.listDrivers();
+
+  @override
+  Future<DealerDriver?> getDriver(String driverId) =>
+      inner.getDriver(driverId);
+
+  @override
+  Future<List<String>> assignedDealerIds(String driverId) =>
+      inner.assignedDealerIds(driverId);
+
+  @override
   Stream<void> watch() => inner.watch();
 
   @override
@@ -101,5 +113,38 @@ class GuardedDealerRepository implements DealerRepository {
   Future<void> addNote(DealerNote note) {
     _requireWrite('bayi notu eklemek');
     return inner.addNote(note);
+  }
+
+  // ── Şoförler (guarded write) ───────────────────────
+
+  @override
+  Future<void> addDriver({
+    required String driverUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  }) {
+    _requireWrite('şoför eklemek');
+    return inner.addDriver(
+      driverUserId: driverUserId,
+      name: name,
+      phone: phone,
+      note: note,
+    );
+  }
+
+  @override
+  Future<void> updateDriver(DealerDriver driver) {
+    _requireWrite('şoför güncellemek');
+    return inner.updateDriver(driver);
+  }
+
+  @override
+  Future<void> setDriverAssignments({
+    required String driverId,
+    required List<String> dealerIds,
+  }) {
+    _requireWrite('şoföre bayi atamak');
+    return inner.setDriverAssignments(driverId: driverId, dealerIds: dealerIds);
   }
 }

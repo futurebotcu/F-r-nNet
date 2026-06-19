@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../models/dealer.dart';
+import '../models/dealer_driver.dart';
 import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
@@ -20,6 +21,10 @@ class LocalDealerRepository implements DealerRepository {
   final List<DealerPrice> _prices = <DealerPrice>[];
   final List<DealerTransaction> _transactions = <DealerTransaction>[];
   final List<DealerNote> _notes = <DealerNote>[];
+  final List<DealerDriver> _drivers = <DealerDriver>[];
+  // driverId → atanmış dealerId kümesi.
+  final Map<String, Set<String>> _assignments = <String, Set<String>>{};
+  int _driverSeq = 0;
 
   final StreamController<void> _changes =
       StreamController<void>.broadcast();
@@ -136,6 +141,79 @@ class LocalDealerRepository implements DealerRepository {
   @override
   Future<void> addNote(DealerNote note) async {
     _notes.add(note);
+    _notify();
+  }
+
+  // ─────────────────────────────────────── Şoförler
+
+  @override
+  Future<List<DealerDriver>> listDrivers() async {
+    final out = _drivers
+        .map((d) => d.copyWith(
+            assignedDealerCount: (_assignments[d.id] ?? const {}).length))
+        .toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return List.unmodifiable(out);
+  }
+
+  @override
+  Future<DealerDriver?> getDriver(String driverId) async {
+    for (final d in _drivers) {
+      if (d.id == driverId) {
+        return d.copyWith(
+            assignedDealerCount: (_assignments[d.id] ?? const {}).length);
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<void> addDriver({
+    required String driverUserId,
+    required String name,
+    String phone = '',
+    String note = '',
+  }) async {
+    if (_drivers.any((d) => d.driverUserId == driverUserId)) {
+      throw StateError('Bu kullanıcı zaten şoför olarak eklenmiş.');
+    }
+    _drivers.add(DealerDriver(
+      id: 'drv_${++_driverSeq}',
+      driverUserId: driverUserId,
+      name: name,
+      phone: phone,
+      note: note,
+      createdAt: DateTime.now(),
+    ));
+    _notify();
+  }
+
+  @override
+  Future<void> updateDriver(DealerDriver driver) async {
+    final i = _drivers.indexWhere((d) => d.id == driver.id);
+    if (i == -1) return;
+    _drivers[i] = _drivers[i].copyWith(
+      name: driver.name,
+      phone: driver.phone,
+      note: driver.note,
+      isActive: driver.isActive,
+    );
+    _notify();
+  }
+
+  @override
+  Future<List<String>> assignedDealerIds(String driverId) async {
+    return List.unmodifiable(_assignments[driverId] ?? const <String>{});
+  }
+
+  @override
+  Future<void> setDriverAssignments({
+    required String driverId,
+    required List<String> dealerIds,
+  }) async {
+    // Yalnız mevcut (patronun kendi) bayileri kabul et.
+    final valid = dealerIds.where((id) => _dealers.any((d) => d.id == id));
+    _assignments[driverId] = valid.toSet();
     _notify();
   }
 
