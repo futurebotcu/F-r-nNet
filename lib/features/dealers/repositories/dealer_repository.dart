@@ -73,6 +73,15 @@ abstract class DealerRepository {
     required List<String> dealerIds,
   });
 
+  // ---- Şoför read-only görünümü (Sprint 3) ----
+
+  /// Mevcut kullanıcı aktif bir şoför mü (kendisine ait dealer_drivers kaydı)?
+  /// Read-only "Bana Atanan Bayiler" görünümü gating'i için.
+  Future<bool> isAssignedDriver();
+
+  /// Mevcut kullanıcıya (şoför) atanmış bayiler — read-only.
+  Future<List<Dealer>> dealersAssignedToMe();
+
   /// Repository YAPISAL değişiklik yayını (bayi ekle/düzenle/aktif-pasif).
   Stream<void> watch();
 

@@ -66,6 +66,12 @@ class GuardedDealerRepository implements DealerRepository {
       inner.assignedDealerIds(driverId);
 
   @override
+  Future<bool> isAssignedDriver() => inner.isAssignedDriver();
+
+  @override
+  Future<List<Dealer>> dealersAssignedToMe() => inner.dealersAssignedToMe();
+
+  @override
   Stream<void> watch() => inner.watch();
 
   @override

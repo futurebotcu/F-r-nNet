@@ -23,6 +23,7 @@ import '../../features/dealers/screens/dealer_return_form_screen.dart';
 import '../../features/dealers/screens/dealer_share_screen.dart';
 import '../../features/dealers/screens/dealer_shell_screen.dart';
 import '../../features/dealers/screens/driver_assign_dealers_screen.dart';
+import '../../features/dealers/screens/driver_dealer_detail_screen.dart';
 import '../../features/dealers/screens/driver_detail_screen.dart';
 import '../../features/dealers/screens/driver_list_screen.dart';
 import '../../features/debt_expense/screens/debt_expense_shell_screen.dart';
@@ -172,6 +173,8 @@ class AppRoutes {
   static const String dealerDriverNew = '/dealers/drivers/new';
   static String dealerDriver(String id) => '/dealers/drivers/$id';
   static String dealerDriverAssign(String id) => '/dealers/drivers/$id/assign';
+  // Sprint 3 — şoför read-only bayi detayı.
+  static String driverDealerDetail(String id) => '/dealers/assigned/$id';
   // Sprint 3 — Date-range metrics report screen.
   // Quality Patch v2: opsiyonel `period` query param — Raporlar tab'ından
   // gelirken seçili periyodu transfer eder (`last30Days` / `thisMonth`).
@@ -615,6 +618,12 @@ GoRouter createRouter() {
         path: '${AppRoutes.dealerDrivers}/:driverId',
         builder: (_, state) =>
             DriverDetailScreen(driverId: state.pathParameters['driverId']!),
+      ),
+      // Sprint 3 — şoför read-only bayi detayı ('/dealers/assigned/:id').
+      GoRoute(
+        path: '/dealers/assigned/:id',
+        builder: (_, state) =>
+            DriverDealerDetailScreen(dealerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/edit',

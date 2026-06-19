@@ -193,6 +193,22 @@ final assignedDealerIdsProvider = FutureProvider.autoDispose
   return repo.assignedDealerIds(driverId);
 });
 
+/// Sprint 3 — mevcut kullanıcı aktif bir şoför mü (read-only görünüm gating'i).
+final isAssignedDriverProvider =
+    FutureProvider.autoDispose<bool>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.isAssignedDriver();
+});
+
+/// Sprint 3 — şoföre atanmış bayiler (read-only "Bana Atanan Bayiler").
+final dealersAssignedToMeProvider =
+    FutureProvider.autoDispose<List<Dealer>>((ref) async {
+  ref.watch(dealerChangesProvider);
+  final repo = ref.watch(dealerRepositoryProvider);
+  return repo.dealersAssignedToMe();
+});
+
 /// Bayi bakiye özeti (transactions üzerinden hesaplanır).
 final balanceSummaryProvider = FutureProvider.autoDispose
     .family<DealerBalanceSummary, String>((ref, id) async {

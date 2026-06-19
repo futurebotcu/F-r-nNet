@@ -82,4 +82,46 @@ void main() {
       expect(after, before);
     });
   });
+
+  group('Şoför read-only (Sprint 3, Local currentUserId)', () {
+    test('currentUserId yoksa şoför değildir', () async {
+      final repo = LocalDealerRepository(seed: true);
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      expect(await repo.isAssignedDriver(), isFalse);
+      expect(await repo.dealersAssignedToMe(), isEmpty);
+    });
+
+    test('atanmış şoför kendisine atanan bayiyi görür, atanmayanı görmez',
+        () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final driverId = (await repo.listDrivers()).first.id;
+      await repo.setDriverAssignments(driverId: driverId, dealerIds: ['d_hamdi']);
+
+      expect(await repo.isAssignedDriver(), isTrue);
+      final mine = await repo.dealersAssignedToMe();
+      expect(mine.map((d) => d.id).toList(), ['d_hamdi']);
+      // d_mehmet atanmadı → görünmez.
+      expect(mine.any((d) => d.id == 'd_mehmet'), isFalse);
+    });
+
+    test('başka kullanıcı (şoför olmayan) hiçbir atanmış bayi görmez', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'baska');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final driverId = (await repo.listDrivers()).first.id;
+      await repo.setDriverAssignments(driverId: driverId, dealerIds: ['d_hamdi']);
+      expect(await repo.isAssignedDriver(), isFalse);
+      expect(await repo.dealersAssignedToMe(), isEmpty);
+    });
+
+    test('pasif şoför read-only erişimi alamaz', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final drv = (await repo.listDrivers()).first;
+      await repo.setDriverAssignments(driverId: drv.id, dealerIds: ['d_hamdi']);
+      await repo.updateDriver(drv.copyWith(isActive: false));
+      expect(await repo.isAssignedDriver(), isFalse);
+      expect(await repo.dealersAssignedToMe(), isEmpty);
+    });
+  });
 }

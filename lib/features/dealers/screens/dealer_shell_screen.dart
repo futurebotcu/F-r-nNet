@@ -15,6 +15,7 @@ import 'dealer_end_of_day_tab_screen.dart';
 import 'dealer_list_screen.dart';
 import 'dealer_overview_screen.dart';
 import 'dealer_reports_tab_screen.dart';
+import 'driver_home_screen.dart';
 
 /// Bayi Defteri mini-app shell (Sprint 6A).
 ///
@@ -44,6 +45,19 @@ class DealerShellScreen extends ConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) context.go(AppRoutes.wholesaleCustomers);
       });
+      return const PremiumScaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Sprint 3 — Şoför read-only dalı: kullanıcı (patron olmayan) aktif bir
+    // şoför ise patron defteri yerine "Bana Atanan Bayiler" read-only görünümü
+    // açılır. Mevcut patron/ticari shell davranışı (şoför olmayan) DEĞİŞMEZ.
+    final isDriver = ref.watch(isAssignedDriverProvider);
+    if (isDriver.valueOrNull == true) {
+      return const DriverHomeScreen();
+    }
+    if (isDriver.isLoading) {
       return const PremiumScaffold(
         body: Center(child: CircularProgressIndicator()),
       );

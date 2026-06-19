@@ -13,9 +13,13 @@ import 'dealer_repository.dart';
 /// TODO(v2): SupabaseDealerRepository eklenecek.
 /// UI ve service katmanı bu sınıfa değil, [DealerRepository] arayüzüne bağlı.
 class LocalDealerRepository implements DealerRepository {
-  LocalDealerRepository({bool seed = true}) {
+  LocalDealerRepository({bool seed = true, this.currentUserId}) {
     if (seed) _seed();
   }
+
+  /// Test/demo: "ben kimim" — şoför read-only senaryosunu Local'de simüle eder.
+  /// Production guest yolunda null (gerçek auth Supabase'de) → şoför değil.
+  final String? currentUserId;
 
   final List<Dealer> _dealers = <Dealer>[];
   final List<DealerPrice> _prices = <DealerPrice>[];
@@ -215,6 +219,29 @@ class LocalDealerRepository implements DealerRepository {
     final valid = dealerIds.where((id) => _dealers.any((d) => d.id == id));
     _assignments[driverId] = valid.toSet();
     _notify();
+  }
+
+  @override
+  Future<bool> isAssignedDriver() async {
+    if (currentUserId == null) return false;
+    return _drivers
+        .any((d) => d.driverUserId == currentUserId && d.isActive);
+  }
+
+  @override
+  Future<List<Dealer>> dealersAssignedToMe() async {
+    if (currentUserId == null) return const [];
+    final myDriverIds = _drivers
+        .where((d) => d.driverUserId == currentUserId && d.isActive)
+        .map((d) => d.id)
+        .toSet();
+    final dealerIds = <String>{};
+    for (final id in myDriverIds) {
+      dealerIds.addAll(_assignments[id] ?? const <String>{});
+    }
+    final out = _dealers.where((d) => dealerIds.contains(d.id)).toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return List.unmodifiable(out);
   }
 
   @override
