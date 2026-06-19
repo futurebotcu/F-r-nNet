@@ -597,6 +597,20 @@ class SupabaseDealerRepository implements DealerRepository {
   // ───────────────────────────────────────────────── Şoför read-only (Sprint 3)
 
   @override
+  Future<List<String>> myDriverIds() async {
+    final uid = _requireUserId();
+    final rows = await _client
+        .from('dealer_drivers')
+        .select('id')
+        .eq('driver_user_id', uid)
+        .eq('is_active', true);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map((r) => r['id'] as String)
+        .toList(growable: false);
+  }
+
+  @override
   Future<bool> isAssignedDriver() async {
     final uid = _requireUserId();
     final row = await _client

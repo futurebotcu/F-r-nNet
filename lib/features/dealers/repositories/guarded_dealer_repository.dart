@@ -74,6 +74,9 @@ class GuardedDealerRepository implements DealerRepository {
   Future<List<DealerDriverInvite>> myDriverInvites() => inner.myDriverInvites();
 
   @override
+  Future<List<String>> myDriverIds() => inner.myDriverIds();
+
+  @override
   Future<bool> isAssignedDriver() => inner.isAssignedDriver();
 
   @override

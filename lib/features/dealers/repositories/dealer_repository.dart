@@ -83,6 +83,10 @@ abstract class DealerRepository {
   /// Mevcut kullanıcıya (şoför) atanmış bayiler — read-only.
   Future<List<Dealer>> dealersAssignedToMe();
 
+  /// Mevcut kullanıcının aktif dealer_drivers kayıt id'leri (şoför paneli
+  /// "Hareketlerim/Raporlarım" için kendi driver_id filtresi). Read-only.
+  Future<List<String>> myDriverIds();
+
   // ---- Şoför işlem yazma (Sprint 4 — yalnız RPC) ----
 
   // ---- Şoför daveti (Sprint 6 — güvenli davet/onay) ----
