@@ -114,6 +114,7 @@ class DealerTransaction {
     this.paymentMethod,
     this.note = '',
     required this.createdAt,
+    this.driverId,
   });
 
   final String id;
@@ -126,4 +127,9 @@ class DealerTransaction {
   final DealerPaymentMethod? paymentMethod;
   final String note;
   final DateTime createdAt;
+
+  /// Bu hareketi yazan şoför (dealer_drivers.id). Patron yazdıysa veya eski
+  /// kayıtlarda NULL. Yalnız şoför kırılımı/özeti için; bakiye hesabını
+  /// ETKİLEMEZ (tek defter — owner_id daima patron).
+  final String? driverId;
 }

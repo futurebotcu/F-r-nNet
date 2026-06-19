@@ -224,4 +224,82 @@ void main() {
       );
     });
   });
+
+  group('Şoför özeti (Sprint 5, driver_id filtreli tek defter)', () {
+    test('şoför işlemi driver_id taşır; eski NULL hareketler kırılıma girmez',
+        () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final driverId = (await repo.listDrivers()).first.id;
+      await repo.setDriverAssignments(driverId: driverId, dealerIds: ['d_hamdi']);
+      await repo.addDriverTransaction(
+          dealerId: 'd_hamdi',
+          type: DealerTransactionType.payment,
+          amount: 100,
+          paymentMethod: DealerPaymentMethod.cash);
+      await repo.addDriverTransaction(
+          dealerId: 'd_hamdi',
+          type: DealerTransactionType.delivery,
+          quantity: 10,
+          unitPrice: 5);
+
+      final all = await repo.listAllTransactions();
+      final mine = all.where((t) => t.driverId == driverId).toList();
+      expect(mine.length, 2); // yalnız şoför işlemleri
+      // Seed (patron) hareketleri driver_id NULL → kırılıma girmez.
+      expect(all.any((t) => t.driverId == null), isTrue);
+
+      const svc = DealerBalanceService();
+      final agg = svc.aggregateRange(
+          transactions: mine,
+          start: DateTime(2000),
+          end: DateTime(2100));
+      expect(agg.totalPayment, 100);
+      expect(agg.totalDelivery, 50);
+      expect(agg.txCount, 2);
+    });
+
+    test('başka şoförün işlemi kırılımda karışmaz', () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final d1 = (await repo.listDrivers()).first.id;
+      await repo.setDriverAssignments(driverId: d1, dealerIds: ['d_hamdi']);
+      await repo.addDriverTransaction(
+          dealerId: 'd_hamdi',
+          type: DealerTransactionType.payment,
+          amount: 70);
+
+      final all = await repo.listAllTransactions();
+      // Başka driverId ('drv_999') için hiçbir hareket yok.
+      expect(all.where((t) => t.driverId == 'drv_999'), isEmpty);
+      expect(all.where((t) => t.driverId == d1).length, 1);
+    });
+
+    test('date filtre: bugünkü şoför işlemi today aralığında, dün hariç',
+        () async {
+      final repo = LocalDealerRepository(seed: true, currentUserId: 'u1');
+      await repo.addDriver(driverUserId: 'u1', name: 'Ali');
+      final d1 = (await repo.listDrivers()).first.id;
+      await repo.setDriverAssignments(driverId: d1, dealerIds: ['d_hamdi']);
+      await repo.addDriverTransaction(
+          dealerId: 'd_hamdi',
+          type: DealerTransactionType.payment,
+          amount: 40);
+
+      final mine = (await repo.listAllTransactions())
+          .where((t) => t.driverId == d1);
+      const svc = DealerBalanceService();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final tomorrow = today.add(const Duration(days: 1));
+      final todayAgg = svc.aggregateRange(
+          transactions: mine, start: today, end: tomorrow);
+      final yesterdayAgg = svc.aggregateRange(
+          transactions: mine,
+          start: today.subtract(const Duration(days: 1)),
+          end: today);
+      expect(todayAgg.txCount, 1); // bugün
+      expect(yesterdayAgg.txCount, 0); // dün aralığında yok
+    });
+  });
 }

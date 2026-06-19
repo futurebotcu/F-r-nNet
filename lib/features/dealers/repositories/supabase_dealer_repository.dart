@@ -283,7 +283,7 @@ class SupabaseDealerRepository implements DealerRepository {
     _requireUserId();
     var q = _client.from('dealer_delivery_items').select('''
           id, product_name, quantity, unit_price, line_total, created_at,
-          delivery:dealer_deliveries!inner(id, dealer_id, delivery_date, note)
+          delivery:dealer_deliveries!inner(id, dealer_id, driver_id, delivery_date, note)
         ''');
     if (dealerId != null) {
       q = q.eq('delivery.dealer_id', dealerId);
@@ -305,6 +305,7 @@ class SupabaseDealerRepository implements DealerRepository {
         note: (delivery?['note'] as String?) ?? '',
         createdAt:
             dateStr != null ? DateTime.parse(dateStr) : DateTime.now(),
+        driverId: delivery?['driver_id'] as String?,
       );
     }).toList(growable: false);
   }
@@ -315,7 +316,7 @@ class SupabaseDealerRepository implements DealerRepository {
     _requireUserId();
     var q = _client.from('dealer_transactions').select(
           'id, dealer_id, type, product_name, quantity, unit_price, '
-          'amount, payment_method, note, created_at',
+          'amount, payment_method, note, created_at, driver_id',
         );
     if (dealerId != null) {
       q = q.eq('dealer_id', dealerId);
@@ -340,6 +341,7 @@ class SupabaseDealerRepository implements DealerRepository {
             : null,
         note: (row['note'] as String?) ?? '',
         createdAt: DateTime.parse(row['created_at'] as String),
+        driverId: row['driver_id'] as String?,
       );
     }).toList(growable: false);
   }
