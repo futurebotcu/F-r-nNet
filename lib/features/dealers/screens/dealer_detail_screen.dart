@@ -24,6 +24,7 @@ import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
+import '../repositories/driver_permission.dart';
 import '../widgets/quick_payment_sheet.dart';
 
 class DealerDetailScreen extends ConsumerWidget {
@@ -245,6 +246,11 @@ class DealerDetailScreen extends ConsumerWidget {
     } on GuestActionRequiredException {
       if (!context.mounted) return;
       await showAuthRequiredSheet(context, ref);
+    } on DriverPermissionException catch (e) {
+      // Şoför aktif/pasif (owner) tetikledi → temiz mesaj.
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -991,6 +997,11 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
       // exception atarsa sessizce yutmayalım — auth sheet aç.
       if (!mounted) return;
       await showAuthRequiredSheet(context, ref);
+    } on DriverPermissionException catch (e) {
+      // Şoför "Fiyat ekle" (owner) tetikledi → temiz mesaj, sheet açık kalır.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       // Sheet AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tek tıkla

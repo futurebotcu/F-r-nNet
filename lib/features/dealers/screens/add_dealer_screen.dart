@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
+import '../repositories/driver_permission.dart';
 import '../providers/dealer_providers.dart';
 
 class AddDealerScreen extends ConsumerStatefulWidget {
@@ -87,6 +88,13 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
           createdAt: editing?.createdAt ?? now,
         ),
       );
+    } on DriverPermissionException catch (e) {
+      // Şoför, patron yetkisi gereken bayi oluştur/düzenle'yi tetikledi.
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+      return;
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);

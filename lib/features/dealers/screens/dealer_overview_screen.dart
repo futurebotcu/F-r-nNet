@@ -389,6 +389,10 @@ class _QuickActionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // Ürün kuralı: yalnız "Şoförler" menüsü şoföre gizlenir; diğer CTA'lar
+    // (Bayi Ekle dahil) normal kalır — yetkisiz yazımlarda temiz mesaj gösterilir.
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -474,12 +478,13 @@ class _QuickActionsSection extends ConsumerWidget {
                 ref.read(dealerShellTabIndexProvider.notifier).state = 3;
               },
             ),
-            _QuickActionChip(
-              icon: Icons.local_shipping_outlined,
-              label: 'Şoförler',
-              accent: AppColors.copper,
-              onTap: () => context.push(AppRoutes.dealerDrivers),
-            ),
+            if (!driverScoped)
+              _QuickActionChip(
+                icon: Icons.local_shipping_outlined,
+                label: 'Şoförler',
+                accent: AppColors.copper,
+                onTap: () => context.push(AppRoutes.dealerDrivers),
+              ),
           ],
         ),
       ],

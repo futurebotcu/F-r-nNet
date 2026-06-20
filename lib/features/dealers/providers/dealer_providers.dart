@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
+import '../../profile/models/bakery_profile.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../models/dealer.dart';
 import '../models/dealer_balance_summary.dart';
 import '../models/dealer_driver.dart';
@@ -15,6 +17,7 @@ import '../models/dealer_pulse_snapshot.dart';
 import '../models/dealer_range_metrics.dart';
 import '../models/dealer_transaction.dart';
 import '../repositories/dealer_repository.dart';
+import '../repositories/driver_scoped_dealer_repository.dart';
 import '../repositories/guarded_dealer_repository.dart';
 import '../repositories/local_dealer_repository.dart';
 import '../repositories/supabase_dealer_repository.dart';
@@ -31,6 +34,28 @@ import '../services/dealer_share_builder.dart';
 /// Bayiler" / "Raporlar" CTA'ları başka tab'a programatik geçiş yapacağı
 /// için indeks Riverpod provider'a taşındı. Default 0 (Genel Bakış).
 final dealerShellTabIndexProvider = StateProvider<int>((_) => 0);
+
+/// Bayi Yönetimi shell modu (fix/driver-normal-dealer-shell).
+///
+/// `owner`: ticari/toptancı patron akışı (davranış değişmez).
+/// `driverScoped`: bireysel şoför — **normal** Bayi Yönetimi (DealerShellScreen
+/// + DealerDetailScreen + normal formlar) aynen kullanılır; tek fark Şoförler
+/// tabı/menüsü gizli ve veri atanmış bayilerle sınırlı.
+///
+/// Mod hesap tipinden **türetilir** (bireysel → driverScoped). Nested
+/// `ProviderScope` override'ı KULLANILMAZ (transitif bağımlı auto-dispose
+/// provider'lar Riverpod `dependencies` assertion'ı fırlatırdı).
+/// [dealerRepositoryProvider] bu modu okuyup repo'yu
+/// [DriverScopedDealerRepository] ile sarar.
+enum DealerShellMode { owner, driverScoped }
+
+final dealerShellModeProvider = Provider<DealerShellMode>((ref) {
+  final accountType =
+      ref.watch(profileControllerProvider.select((p) => p?.accountType));
+  return accountType == AccountType.individual
+      ? DealerShellMode.driverScoped
+      : DealerShellMode.owner;
+});
 
 /// "Borçlu Bayiler" Genel Bakış CTA için one-shot prefilter (Sprint 6B.x).
 /// CTA bu provider'ı `true`'ya set eder ve [dealerShellTabIndexProvider]'ı
@@ -85,7 +110,14 @@ final dealerRepositoryProvider = Provider<DealerRepository>((ref) {
     inner = LocalDealerRepository(seed: true);
   }
   final canWrite = ref.watch(canWriteCheckProvider);
-  final repo = GuardedDealerRepository(inner: inner, canWriteCheck: canWrite);
+  final DealerRepository guarded =
+      GuardedDealerRepository(inner: inner, canWriteCheck: canWrite);
+  // Bireysel şoför: normal ekranlar atanmış-bayi scoped data görsün ve normal
+  // formların addTransaction'ı şoför RPC'sine köprülensin diye decorator.
+  final repo =
+      ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped
+          ? DriverScopedDealerRepository(inner: guarded)
+          : guarded;
   // Provider rebuild'inde (login/logout → userId değişir) eski repo'nun
   // broadcast controller'larını kapat (küçük leak önlenir).
   ref.onDispose(repo.dispose);
