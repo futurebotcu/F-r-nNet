@@ -8,14 +8,16 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer.dart';
-import '../models/dealer_driver.dart';
 import '../models/dealer_transaction.dart';
 import '../models/driver_summary.dart';
 import '../providers/dealer_providers.dart';
 
 /// Şoför detayı (Sprint 2): bilgiler + aktif/pasif + atanmış bayiler + "Bayi Ata".
-/// İşlem özeti Sprint 3'te aktif olacak (driver_id bu sprintte yazılmıyor) →
-/// placeholder.
+///
+/// NOT (2026-06): Bu ekran route'lardan KULLANILMIYOR. Patron bir şoföre
+/// dokununca `/dealers/drivers/:driverId` → [DriverScopedDealerShell] açılır
+/// (yetki/Aktif yönetimi orada `_ManagementSection`'da). Burası legacy; yeni iş
+/// eklenmez. Yetki segmenti bu nedenle shell'e taşındı.
 class DriverDetailScreen extends ConsumerWidget {
   const DriverDetailScreen({super.key, required this.driverId});
   final String driverId;
@@ -102,42 +104,6 @@ class DriverDetailScreen extends ConsumerWidget {
                                     .read(dealerRepositoryProvider)
                                     .updateDriver(
                                         driver.copyWith(isActive: v));
-                                ref.invalidate(driverByIdProvider(driverId));
-                                ref.invalidate(driversListProvider);
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.s),
-                        Row(
-                          children: [
-                            const Text('Yetki',
-                                style: TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary)),
-                            const Spacer(),
-                            SegmentedButton<DriverPermission>(
-                              showSelectedIcon: false,
-                              style: ButtonStyle(
-                                visualDensity: VisualDensity.compact,
-                                tapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              segments: const [
-                                ButtonSegment(
-                                    value: DriverPermission.half,
-                                    label: Text('Yarı')),
-                                ButtonSegment(
-                                    value: DriverPermission.full,
-                                    label: Text('Tam')),
-                              ],
-                              selected: {driver.permissionLevel},
-                              onSelectionChanged: (s) async {
-                                await ref
-                                    .read(dealerRepositoryProvider)
-                                    .updateDriver(driver.copyWith(
-                                        permissionLevel: s.first));
                                 ref.invalidate(driverByIdProvider(driverId));
                                 ref.invalidate(driversListProvider);
                               },
