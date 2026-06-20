@@ -70,18 +70,24 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
     // map'i. allTxs zaten Sprint 6B'de sağlanan provider'dan.
     final txsAsync = ref.watch(allTransactionsProvider);
     final svc = ref.watch(dealerBalanceServiceProvider);
+    // Şoför scoped modda shell tek "Bayi Yönetimi" AppBar'ı sağlar; Bayi Ekle
+    // owner aksiyonu gizlenir, kart tap'i driverDealerDetail'e gider.
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
 
     return PremiumScaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.dealerListTitle),
-        actions: [
-          IconButton(
-            tooltip: AppStrings.dealerAddTooltip,
-            onPressed: () => context.push(AppRoutes.dealerNew),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-          ),
-        ],
-      ),
+      appBar: driverScoped
+          ? null
+          : AppBar(
+              title: const Text(AppStrings.dealerListTitle),
+              actions: [
+                IconButton(
+                  tooltip: AppStrings.dealerAddTooltip,
+                  onPressed: () => context.push(AppRoutes.dealerNew),
+                  icon: const Icon(Icons.person_add_alt_1_rounded),
+                ),
+              ],
+            ),
       body: SafeArea(
         top: false,
         child: dealersAsync.when(
@@ -94,11 +100,16 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
           data: (all) {
             if (all.isEmpty) {
               return EmptyState(
-                title: AppStrings.dealerListEmptyTitle,
-                subtitle: AppStrings.dealerListEmptySub,
+                title: driverScoped
+                    ? 'Henüz sana atanmış bayi yok'
+                    : AppStrings.dealerListEmptyTitle,
+                subtitle: driverScoped
+                    ? 'Fırın/işletme sana bayi atadığında burada görünecek.'
+                    : AppStrings.dealerListEmptySub,
                 icon: Icons.storefront_rounded,
-                actionLabel: AppStrings.dealerListEmptyCta,
-                onAction: () => context.push(AppRoutes.dealerNew),
+                actionLabel: driverScoped ? null : AppStrings.dealerListEmptyCta,
+                onAction:
+                    driverScoped ? null : () => context.push(AppRoutes.dealerNew),
               );
             }
 
@@ -197,6 +208,7 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                       dealer: d,
                       summary: summaryById[d.id]!,
                       lastTx: lastTxById[d.id],
+                      driverScoped: driverScoped,
                     ),
                   ),
               ],
@@ -314,16 +326,20 @@ class _DealerCard extends StatelessWidget {
     required this.dealer,
     required this.summary,
     required this.lastTx,
+    this.driverScoped = false,
   });
 
   final Dealer dealer;
   final DealerBalanceSummary summary;
   final DealerTransaction? lastTx;
+  final bool driverScoped;
 
   @override
   Widget build(BuildContext context) {
     return PremiumCard(
-      onTap: () => context.push('${AppRoutes.dealers}/${dealer.id}'),
+      onTap: () => context.push(driverScoped
+          ? AppRoutes.driverDealerDetail(dealer.id)
+          : '${AppRoutes.dealers}/${dealer.id}'),
       padding: const EdgeInsets.all(AppSpacing.l),
       warm: !dealer.isActive,
       child: Column(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_bottom_nav.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -36,6 +37,13 @@ class DealerShellScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // feat/driver-real-scoped-shell: bireysel şoför, normal Bayi Yönetimi
+    // shell'ini scoped modda reuse eder. Bu mod yalnız DriverHomeScreen'in
+    // sardığı ProviderScope içinde set edilir; profile gating'i atlanır.
+    if (ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped) {
+      return const _DriverScopedShell();
+    }
+
     final profile = ref.watch(profileControllerProvider);
 
     // Toptancı: mini-app'e hiç girmez. Mevcut DealerListScreen'in defansif
@@ -111,6 +119,84 @@ class DealerShellScreen extends ConsumerWidget {
             icon: Icons.local_shipping_outlined,
             activeIcon: Icons.local_shipping_rounded,
             label: 'Şoförler',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bireysel şoför scoped shell: normal Bayi Yönetimi tab ekranlarının
+/// (overview/list/activity/reports) AYNISINI, tek "Bayi Yönetimi" başlığı +
+/// "Şoför modunda…" alt bilgisi + 4-tab bottom nav ile render eder. Şoförler
+/// tabı ve Gün Sonu yok; owner-only CTA'lar ekran içinde gizlenir. Data scope
+/// `DriverScopedDealerRepository` (provider override) ile sağlanır.
+class _DriverScopedShell extends ConsumerWidget {
+  const _DriverScopedShell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Tab index owner ile aynı provider'ı paylaşır (overview CTA tab-switch
+    // çalışsın); driver shell 4 tab olduğu için 0..3'e clamp edilir.
+    final index = ref.watch(dealerShellTabIndexProvider).clamp(0, 3);
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Bayi Yönetimi'),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(26),
+          child: Padding(
+            padding: EdgeInsets.only(
+                left: AppSpacing.pageH, right: AppSpacing.pageH, bottom: 6),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Şoför modunda · Sana atanmış bayiler gösteriliyor',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: IndexedStack(
+          index: index,
+          children: const [
+            DealerOverviewScreen(),
+            DealerListScreen(),
+            DealerActivityScreen(),
+            DealerReportsTabScreen(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: PremiumBottomNav(
+        selectedIndex: index,
+        onSelect: (i) =>
+            ref.read(dealerShellTabIndexProvider.notifier).state = i,
+        items: const [
+          PremiumNavItem(
+            icon: Icons.dashboard_outlined,
+            activeIcon: Icons.dashboard_rounded,
+            label: AppStrings.dealerShellTabOverview,
+          ),
+          PremiumNavItem(
+            icon: Icons.storefront_outlined,
+            activeIcon: Icons.storefront_rounded,
+            label: AppStrings.dealerShellTabDealers,
+          ),
+          PremiumNavItem(
+            icon: Icons.swap_vert_outlined,
+            activeIcon: Icons.swap_vert_rounded,
+            label: AppStrings.dealerShellTabActivity,
+          ),
+          PremiumNavItem(
+            icon: Icons.analytics_outlined,
+            activeIcon: Icons.analytics_rounded,
+            label: AppStrings.dealerShellTabReports,
           ),
         ],
       ),

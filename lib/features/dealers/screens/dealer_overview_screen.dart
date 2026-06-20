@@ -31,9 +31,14 @@ class DealerOverviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final overviewAsync = ref.watch(dealersOverviewProvider);
+    // driver scoped modda shell tek "Bayi Yönetimi" AppBar'ı sağlar.
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text(AppStrings.dealerShellTabOverview)),
+      appBar: driverScoped
+          ? null
+          : AppBar(title: const Text(AppStrings.dealerShellTabOverview)),
       body: SafeArea(
         top: false,
         child: overviewAsync.when(
@@ -193,6 +198,8 @@ class _RecentActivitySection extends ConsumerWidget {
     final theme = Theme.of(context);
     final recentAsync = ref.watch(recentActivityProvider);
     final dealersAsync = ref.watch(dealersListProvider);
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,6 +269,7 @@ class _RecentActivitySection extends ConsumerWidget {
                     _RecentTxRow(
                       tx: txs[i],
                       dealerName: dealerNameById[txs[i].dealerId] ?? '—',
+                      driverScoped: driverScoped,
                     ),
                     if (i < txs.length - 1)
                       const Divider(
@@ -281,10 +289,15 @@ class _RecentActivitySection extends ConsumerWidget {
 }
 
 class _RecentTxRow extends StatelessWidget {
-  const _RecentTxRow({required this.tx, required this.dealerName});
+  const _RecentTxRow({
+    required this.tx,
+    required this.dealerName,
+    this.driverScoped = false,
+  });
 
   final DealerTransaction tx;
   final String dealerName;
+  final bool driverScoped;
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +308,9 @@ class _RecentTxRow extends StatelessWidget {
         .replaceAll(' ', ' ');
 
     return InkWell(
-      onTap: () => context.push('${AppRoutes.dealers}/${tx.dealerId}'),
+      onTap: () => context.push(driverScoped
+          ? AppRoutes.driverDealerDetail(tx.dealerId)
+          : '${AppRoutes.dealers}/${tx.dealerId}'),
       borderRadius: BorderRadius.circular(AppRadius.s),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -389,6 +404,8 @@ class _QuickActionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -408,51 +425,71 @@ class _QuickActionsSection extends ConsumerWidget {
           spacing: AppSpacing.s,
           runSpacing: AppSpacing.s,
           children: [
-            _QuickActionChip(
-              icon: Icons.person_add_alt_1_rounded,
-              label: AppStrings.dealerOverviewQuickAddDealer,
-              onTap: () => context.push(AppRoutes.dealerNew),
-            ),
-            _QuickActionChip(
-              icon: Icons.bakery_dining_rounded,
-              label: AppStrings.dealerOverviewQuickDelivery,
-              accent: AppColors.copper,
-              onTap: () => _pickThen(
-                context,
-                ref,
-                debtOnly: false,
-                onPicked: (d) =>
-                    context.push('${AppRoutes.dealers}/${d.id}/delivery'),
+            if (!driverScoped)
+              _QuickActionChip(
+                icon: Icons.person_add_alt_1_rounded,
+                label: AppStrings.dealerOverviewQuickAddDealer,
+                onTap: () => context.push(AppRoutes.dealerNew),
               ),
-            ),
-            _QuickActionChip(
-              icon: Icons.payments_rounded,
-              label: AppStrings.dealerOverviewQuickPayment,
-              accent: AppColors.success,
-              onTap: () => _pickThen(
-                context,
-                ref,
-                debtOnly: true,
-                onPicked: (d) async {
-                  // Borçlu filter zaten currentBalance > 0 garantiler;
-                  // QuickPaymentSheet.show direkt çağrılır.
-                  final svc = ref.read(dealerBalanceServiceProvider);
-                  final repo = ref.read(dealerRepositoryProvider);
-                  final txs = await repo.listTransactions(d.id);
-                  final summary = svc.summarize(
-                    dealerId: d.id,
-                    transactions: txs,
-                  );
-                  if (!context.mounted) return;
-                  await QuickPaymentSheet.show(
-                    context: context,
-                    dealerId: d.id,
-                    dealerName: d.name,
-                    currentBalance: summary.currentBalance,
-                  );
-                },
+            // Şoför modu: owner teslimat/tahsilat akışı yerine, atanmış bayi
+            // seç → mevcut driverDealerDetail işlem akışı.
+            if (driverScoped)
+              _QuickActionChip(
+                icon: Icons.add_circle_outline_rounded,
+                label: 'İşlem Ekle',
+                accent: AppColors.copper,
+                onTap: () => _pickThen(
+                  context,
+                  ref,
+                  debtOnly: false,
+                  onPicked: (d) async {
+                    if (!context.mounted) return;
+                    context.push(AppRoutes.driverDealerDetail(d.id));
+                  },
+                ),
               ),
-            ),
+            if (!driverScoped)
+              _QuickActionChip(
+                icon: Icons.bakery_dining_rounded,
+                label: AppStrings.dealerOverviewQuickDelivery,
+                accent: AppColors.copper,
+                onTap: () => _pickThen(
+                  context,
+                  ref,
+                  debtOnly: false,
+                  onPicked: (d) =>
+                      context.push('${AppRoutes.dealers}/${d.id}/delivery'),
+                ),
+              ),
+            if (!driverScoped)
+              _QuickActionChip(
+                icon: Icons.payments_rounded,
+                label: AppStrings.dealerOverviewQuickPayment,
+                accent: AppColors.success,
+                onTap: () => _pickThen(
+                  context,
+                  ref,
+                  debtOnly: true,
+                  onPicked: (d) async {
+                    // Borçlu filter zaten currentBalance > 0 garantiler;
+                    // QuickPaymentSheet.show direkt çağrılır.
+                    final svc = ref.read(dealerBalanceServiceProvider);
+                    final repo = ref.read(dealerRepositoryProvider);
+                    final txs = await repo.listTransactions(d.id);
+                    final summary = svc.summarize(
+                      dealerId: d.id,
+                      transactions: txs,
+                    );
+                    if (!context.mounted) return;
+                    await QuickPaymentSheet.show(
+                      context: context,
+                      dealerId: d.id,
+                      dealerName: d.name,
+                      currentBalance: summary.currentBalance,
+                    );
+                  },
+                ),
+              ),
             _QuickActionChip(
               icon: Icons.warning_amber_rounded,
               label: AppStrings.dealerOverviewQuickDebtDealers,
@@ -474,12 +511,13 @@ class _QuickActionsSection extends ConsumerWidget {
                 ref.read(dealerShellTabIndexProvider.notifier).state = 3;
               },
             ),
-            _QuickActionChip(
-              icon: Icons.local_shipping_outlined,
-              label: 'Şoförler',
-              accent: AppColors.copper,
-              onTap: () => context.push(AppRoutes.dealerDrivers),
-            ),
+            if (!driverScoped)
+              _QuickActionChip(
+                icon: Icons.local_shipping_outlined,
+                label: 'Şoförler',
+                accent: AppColors.copper,
+                onTap: () => context.push(AppRoutes.dealerDrivers),
+              ),
           ],
         ),
       ],

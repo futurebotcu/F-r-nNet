@@ -40,9 +40,19 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
   Widget build(BuildContext context) {
     final txsAsync = ref.watch(allTransactionsProvider);
     final dealersAsync = ref.watch(dealersListProvider);
+    // Şoför scoped mod: shell tek AppBar sağlar; hareketler YALNIZ bu şoförün
+    // driver_id kayıtlarına daraltılır (null/başka şoför görünmez).
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
+    final myDriverIds = driverScoped
+        ? (ref.watch(myDriverIdsProvider).valueOrNull ?? const <String>[])
+            .toSet()
+        : null;
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text(AppStrings.dealerActivityTitle)),
+      appBar: driverScoped
+          ? null
+          : AppBar(title: const Text(AppStrings.dealerActivityTitle)),
       body: SafeArea(
         top: false,
         child: txsAsync.when(
@@ -51,11 +61,17 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
           error: (e, _) =>
               const Center(child: Text(AppStrings.dealersErrorLoad)),
           data: (txs) {
+            final scopedTxs = myDriverIds == null
+                ? txs
+                : txs
+                    .where((t) =>
+                        t.driverId != null && myDriverIds.contains(t.driverId))
+                    .toList(growable: false);
             final dealerNameById = dealersAsync.maybeWhen(
               data: (list) => {for (final d in list) d.id: d.name},
               orElse: () => <String, String>{},
             );
-            return _buildContent(txs, dealerNameById);
+            return _buildContent(scopedTxs, dealerNameById, driverScoped);
           },
         ),
       ),
@@ -65,6 +81,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
   Widget _buildContent(
     List<DealerTransaction> allTxs,
     Map<String, String> dealerNameById,
+    bool driverScoped,
   ) {
     // Hiç tx yok → empty state
     if (allTxs.isEmpty) {
@@ -124,7 +141,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
                     compact: true,
                   ),
                 )
-              : _buildGroupedList(groups, dealerNameById),
+              : _buildGroupedList(groups, dealerNameById, driverScoped),
         ),
       ],
     );
@@ -133,6 +150,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
   Widget _buildGroupedList(
     List<_DateGroup> groups,
     Map<String, String> dealerNameById,
+    bool driverScoped,
   ) {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(
@@ -171,6 +189,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
                       _ActivityRow(
                         tx: g.txs[i],
                         dealerName: dealerNameById[g.txs[i].dealerId] ?? '—',
+                        driverScoped: driverScoped,
                       ),
                       if (i < g.txs.length - 1)
                         const Divider(
@@ -317,10 +336,15 @@ class _FilterChipRow extends StatelessWidget {
 }
 
 class _ActivityRow extends StatelessWidget {
-  const _ActivityRow({required this.tx, required this.dealerName});
+  const _ActivityRow({
+    required this.tx,
+    required this.dealerName,
+    this.driverScoped = false,
+  });
 
   final DealerTransaction tx;
   final String dealerName;
+  final bool driverScoped;
 
   @override
   Widget build(BuildContext context) {
@@ -330,7 +354,9 @@ class _ActivityRow extends StatelessWidget {
     final formattedAmount = '$sign${NumberFormatter.currency(amount)}';
 
     return InkWell(
-      onTap: () => context.push('${AppRoutes.dealers}/${tx.dealerId}'),
+      onTap: () => context.push(driverScoped
+          ? AppRoutes.driverDealerDetail(tx.dealerId)
+          : '${AppRoutes.dealers}/${tx.dealerId}'),
       borderRadius: BorderRadius.circular(AppRadius.s),
       child: Padding(
         padding: const EdgeInsets.symmetric(

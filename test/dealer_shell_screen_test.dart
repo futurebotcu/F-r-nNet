@@ -132,11 +132,11 @@ void main() {
       await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
-      // "Şoför Paneli" şoför ekranı; patron bottom-nav YOK.
-      expect(find.text('Şoför Paneli'), findsOneWidget);
+      // Atama yok (currentUserId set değil) → scoped shell DEĞİL, boş durum:
+      // başlık "Bayi Yönetimi", "Şoför Paneli" yok, patron bottom-nav yok.
+      expect(find.text('Bayi Yönetimi'), findsOneWidget);
+      expect(find.text('Şoför Paneli'), findsNothing);
       expect(find.byType(PremiumBottomNav), findsNothing);
-      // Patron Şoförler yönetim tabı bireysele görünmez.
-      expect(find.text(AppStrings.dealerShellTabOverview), findsNothing);
     });
 
     testWidgets('Toptancı: /wholesale/customers\'a redirect', (tester) async {

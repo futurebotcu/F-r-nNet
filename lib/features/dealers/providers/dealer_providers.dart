@@ -15,6 +15,7 @@ import '../models/dealer_pulse_snapshot.dart';
 import '../models/dealer_range_metrics.dart';
 import '../models/dealer_transaction.dart';
 import '../repositories/dealer_repository.dart';
+import '../repositories/driver_scoped_dealer_repository.dart';
 import '../repositories/guarded_dealer_repository.dart';
 import '../repositories/local_dealer_repository.dart';
 import '../repositories/supabase_dealer_repository.dart';
@@ -31,6 +32,19 @@ import '../services/dealer_share_builder.dart';
 /// Bayiler" / "Raporlar" CTA'ları başka tab'a programatik geçiş yapacağı
 /// için indeks Riverpod provider'a taşındı. Default 0 (Genel Bakış).
 final dealerShellTabIndexProvider = StateProvider<int>((_) => 0);
+
+/// Bayi Yönetimi shell modu (feat/driver-real-scoped-shell).
+///
+/// `owner`: normal patron/ticari/toptancı akışı (default — davranış değişmez).
+/// `driverScoped`: bireysel şoför, normal [DealerShellScreen]'i scoped data ile
+/// reuse eder. Bu mod yalnız [DriverHomeScreen]'in sardığı `ProviderScope`
+/// içinde override edilir; [dealerRepositoryProvider] bu modu okuyup repo'yu
+/// [DriverScopedDealerRepository] ile sarar, tab ekranları owner-only CTA'ları
+/// gizler.
+enum DealerShellMode { owner, driverScoped }
+
+final dealerShellModeProvider =
+    Provider<DealerShellMode>((_) => DealerShellMode.owner);
 
 /// "Borçlu Bayiler" Genel Bakış CTA için one-shot prefilter (Sprint 6B.x).
 /// CTA bu provider'ı `true`'ya set eder ve [dealerShellTabIndexProvider]'ı
@@ -85,7 +99,13 @@ final dealerRepositoryProvider = Provider<DealerRepository>((ref) {
     inner = LocalDealerRepository(seed: true);
   }
   final canWrite = ref.watch(canWriteCheckProvider);
-  final repo = GuardedDealerRepository(inner: inner, canWriteCheck: canWrite);
+  final DealerRepository guarded =
+      GuardedDealerRepository(inner: inner, canWriteCheck: canWrite);
+  // Bireysel şoför scoped modda: normal ekranlar atanmış-bayi/şoför scoped
+  // data görsün diye repo decorator'la sarılır (owner default → sarmasız).
+  final repo = ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped
+      ? DriverScopedDealerRepository(inner: guarded)
+      : guarded;
   // Provider rebuild'inde (login/logout → userId değişir) eski repo'nun
   // broadcast controller'larını kapat (küçük leak önlenir).
   ref.onDispose(repo.dispose);

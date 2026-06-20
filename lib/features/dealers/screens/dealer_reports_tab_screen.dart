@@ -48,9 +48,16 @@ class _DealerReportsTabScreenState
       allDealersRangeMetricsProvider((start: range.start, end: range.end)),
     );
     final dealersAsync = ref.watch(activeDealersListProvider);
+    // Şoför scoped mod: shell tek AppBar sağlar; Gün Sonu (owner) gizli, bayi
+    // satır tap'i driverDealerDetail'e gider. KPI/dönem/by-dealer korunur
+    // (data zaten atanmış bayilere scoped).
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text(AppStrings.dealerShellTabReports)),
+      appBar: driverScoped
+          ? null
+          : AppBar(title: const Text(AppStrings.dealerShellTabReports)),
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -67,31 +74,33 @@ class _DealerReportsTabScreenState
                 value: _period,
                 onChanged: (p) => setState(() => _period = p),
               ),
-              const SizedBox(height: AppSpacing.m),
-              // Gün Sonu artık ayrı alt-tab değil; Raporlar içinden açılır.
-              PremiumCard(
-                padding: EdgeInsets.zero,
-                onTap: () => context.push(AppRoutes.dealerEndOfDay),
-                child: const Padding(
-                  padding: EdgeInsets.all(AppSpacing.m),
-                  child: Row(
-                    children: [
-                      Icon(Icons.event_available_rounded,
-                          size: 20, color: AppColors.copper),
-                      SizedBox(width: AppSpacing.m),
-                      Expanded(
-                        child: Text('Gün Sonu',
-                            style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary)),
-                      ),
-                      Icon(Icons.chevron_right_rounded,
-                          size: 20, color: AppColors.textMuted),
-                    ],
+              // Gün Sonu owner aksiyonu — şoför scoped modda gizli.
+              if (!driverScoped) ...[
+                const SizedBox(height: AppSpacing.m),
+                PremiumCard(
+                  padding: EdgeInsets.zero,
+                  onTap: () => context.push(AppRoutes.dealerEndOfDay),
+                  child: const Padding(
+                    padding: EdgeInsets.all(AppSpacing.m),
+                    child: Row(
+                      children: [
+                        Icon(Icons.event_available_rounded,
+                            size: 20, color: AppColors.copper),
+                        SizedBox(width: AppSpacing.m),
+                        Expanded(
+                          child: Text('Gün Sonu',
+                              style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary)),
+                        ),
+                        Icon(Icons.chevron_right_rounded,
+                            size: 20, color: AppColors.textMuted),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
               const SizedBox(height: AppSpacing.l),
               metricsAsync.when(
                 skipLoadingOnReload: true,
@@ -117,6 +126,7 @@ class _DealerReportsTabScreenState
                     orElse: () => const <String, double>{},
                   ),
                   activePeriod: _period,
+                  driverScoped: driverScoped,
                 ),
               ),
             ],
@@ -290,6 +300,7 @@ class _ByDealerSection extends StatelessWidget {
     required this.dealers,
     required this.perDealerNet,
     required this.activePeriod,
+    this.driverScoped = false,
   });
 
   final List<Dealer> dealers;
@@ -298,6 +309,8 @@ class _ByDealerSection extends StatelessWidget {
   /// Quality Patch v2: bayi satır tap'ında range-report ekranına seçili
   /// periyot transfer edilir (eşleşen periyotlar için).
   final _ReportsPeriod activePeriod;
+
+  final bool driverScoped;
 
   @override
   Widget build(BuildContext context) {
@@ -340,6 +353,7 @@ class _ByDealerSection extends StatelessWidget {
                     dealer: dealers[i],
                     net: perDealerNet[dealers[i].id] ?? 0,
                     activePeriod: activePeriod,
+                    driverScoped: driverScoped,
                   ),
                 ],
               ],
@@ -355,11 +369,13 @@ class _DealerRow extends StatelessWidget {
     required this.dealer,
     required this.net,
     required this.activePeriod,
+    this.driverScoped = false,
   });
 
   final Dealer dealer;
   final double net;
   final _ReportsPeriod activePeriod;
+  final bool driverScoped;
 
   /// Quality Patch v2: Reports periyot'larından sadece RangeReport'ta
   /// karşılığı olanlar transfer edilir; `last7Days` RangeReport'ta
@@ -380,7 +396,9 @@ class _DealerRow extends StatelessWidget {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () => context.push(
-        AppRoutes.dealerReport(dealer.id, period: _transferPeriodKey),
+        driverScoped
+            ? AppRoutes.driverDealerDetail(dealer.id)
+            : AppRoutes.dealerReport(dealer.id, period: _transferPeriodKey),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(

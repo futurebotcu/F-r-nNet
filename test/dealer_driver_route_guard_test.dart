@@ -59,8 +59,9 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_wrap(_individual));
     await tester.pumpAndSettle();
-    // Şoför görünümü; patron yönetim listesi DEĞİL.
-    expect(find.text('Şoför Paneli'), findsOneWidget);
+    // Şoför scoped Bayi Yönetimi görünümü; patron yönetim listesi DEĞİL.
+    expect(find.text('Bayi Yönetimi'), findsOneWidget);
+    expect(find.text('Şoför Paneli'), findsNothing);
     expect(find.byType(DriverListScreen), findsNothing);
     expect(find.text('Genel Hesap'), findsNothing);
   });
