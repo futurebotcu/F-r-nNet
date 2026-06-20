@@ -93,6 +93,10 @@ class DriverScopedDealerRepository implements DealerRepository {
     );
   }
 
+  // İşlem silme owner aksiyonu → şoföre kapalı (temiz mesaj).
+  @override
+  Future<void> deleteTransaction(DealerTransaction tx) async => _denied();
+
   @override
   Future<void> addDriverTransaction({
     required String dealerId,

@@ -379,6 +379,19 @@ class SupabaseDealerRepository implements DealerRepository {
     _notifyContent();
   }
 
+  @override
+  Future<void> deleteTransaction(DealerTransaction tx) async {
+    _requireUserId();
+    // Teslimat satırı dealer_delivery_items'tan (tx.id = item id), diğer tipler
+    // dealer_transactions'tan silinir. RLS `*_delete_own` owner'a izin verir.
+    if (tx.type == DealerTransactionType.delivery) {
+      await _client.from('dealer_delivery_items').delete().eq('id', tx.id);
+    } else {
+      await _client.from('dealer_transactions').delete().eq('id', tx.id);
+    }
+    _notifyContent();
+  }
+
   Future<void> _addDeliveryToSupabase(DealerTransaction tx) async {
     final ownerId = _requireUserId();
     final bakeryId = await _ensureDefaultBakeryId();

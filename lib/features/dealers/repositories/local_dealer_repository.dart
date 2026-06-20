@@ -135,6 +135,12 @@ class LocalDealerRepository implements DealerRepository {
     _notify();
   }
 
+  @override
+  Future<void> deleteTransaction(DealerTransaction tx) async {
+    _transactions.removeWhere((t) => t.id == tx.id);
+    _notify();
+  }
+
   // ─────────────────────────────────────── Notes
 
   @override
