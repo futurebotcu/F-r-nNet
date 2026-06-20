@@ -4,6 +4,7 @@
 
 import 'package:firin_defter/features/dealers/models/dealer_transaction.dart';
 import 'package:firin_defter/features/dealers/providers/dealer_providers.dart';
+import 'package:firin_defter/features/dealers/repositories/driver_scoped_dealer_repository.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
 import 'package:firin_defter/features/dealers/screens/dealer_transaction_history_screen.dart';
 import 'package:flutter/material.dart';
@@ -98,5 +99,76 @@ void main() {
     expect(after.any((t) => t.id == 'h_del'), isFalse);
     // Ekranda Francala kalmadı.
     expect(find.textContaining('Francala'), findsNothing);
+  });
+
+  testWidgets('10 gün önceki "40 ekmek" Son 30 günde + aramada görünür',
+      (tester) async {
+    final repo = LocalDealerRepository(seed: true);
+    await repo.addTransaction(DealerTransaction(
+      id: 'h_old',
+      dealerId: 'd_pide',
+      type: DealerTransactionType.delivery,
+      productName: 'Ekmek',
+      quantity: 40,
+      unitPrice: 10,
+      amount: 400,
+      createdAt: DateTime.now().subtract(const Duration(days: 10)),
+    ));
+    await pump(tester, repo);
+
+    // Default (Tümü): 10 gün önceki kayıt görünür.
+    expect(find.text('Teslimat · Ekmek'), findsOneWidget);
+
+    // "Son 30 gün" dönem filtresi → hâlâ görünür (kayıp gibi görünmez).
+    await tester.tap(find.text('Son 30 gün'));
+    await tester.pumpAndSettle();
+    expect(find.text('Teslimat · Ekmek'), findsOneWidget);
+
+    // Arama "ekmek" → eski kayıt bulunur.
+    await tester.enterText(find.byType(TextField), 'ekmek');
+    await tester.pumpAndSettle();
+    expect(find.text('Teslimat · Ekmek'), findsOneWidget);
+  });
+
+  testWidgets('Şoför silme denerse → "patron yetkisi gerekir" mesajı',
+      (tester) async {
+    final inner = LocalDealerRepository(seed: true, currentUserId: 'u1');
+    await inner.addDriver(driverUserId: 'u1', name: 'Ali Şoför');
+    final driverId = (await inner.listDrivers()).first.id;
+    await inner.setDriverAssignments(driverId: driverId, dealerIds: ['d_pide']);
+    await inner.addTransaction(DealerTransaction(
+      id: 'h_del',
+      dealerId: 'd_pide',
+      type: DealerTransactionType.delivery,
+      productName: 'Francala',
+      quantity: 10,
+      unitPrice: 40,
+      amount: 400,
+      createdAt: DateTime.now(),
+    ));
+    final scoped = DriverScopedDealerRepository(inner: inner);
+
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [dealerRepositoryProvider.overrideWithValue(scoped)],
+      child: const MaterialApp(
+        home: DealerTransactionHistoryScreen(dealerId: 'd_pide'),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.textContaining('Francala'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('İşlemi Sil / İptal Et'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Sil'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bu işlem için patron yetkisi gerekir.'), findsOneWidget);
+    // Kayıt silinmedi.
+    final after = await inner.listTransactions('d_pide');
+    expect(after.any((t) => t.id == 'h_del'), isTrue);
   });
 }
