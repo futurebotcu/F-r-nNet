@@ -5,17 +5,23 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/premium/premium_bottom_nav.dart';
 import '../../../core/widgets/premium/premium_card.dart';
-import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_transaction.dart';
 import '../models/driver_summary.dart';
 import '../providers/dealer_providers.dart';
+import '../widgets/dealer_filter_chip.dart';
+import '../widgets/dealer_kpi_tile.dart';
+import '../widgets/driver_scoped_dealer_card.dart';
+import '../widgets/driver_scoped_tx_tile.dart';
 
-/// Faz 1 — Bireysel şoför PANELİ (zayıf liste değil, mini panel).
-///
-/// Üstte bekleyen davet kartları (varsa); altında segmentler:
-/// Genel Bakış · Atanan Bayiler · Hareketlerim · Raporlarım. Yalnız kendi
-/// atanan bayileri + kendi driver_id hareketleri. Owner aksiyonları YOK.
+/// Faz 1 / UI Hizalama (Yol B+) — Bireysel şoför PANELİ. Normal Bayi
+/// Yönetimi diliyle hizalı: alt [PremiumBottomNav] + 4 tab (Genel Bakış ·
+/// Atanan Bayiler · Hareketlerim · Raporlarım). Yalnız kendi atanan
+/// bayileri + kendi driver_id hareketleri. Owner aksiyonları YOK; davet
+/// kartı ve boş durum korunur.
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
 
@@ -24,13 +30,7 @@ class DriverHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
-  int _seg = 0;
-  static const _segments = [
-    'Genel Bakış',
-    'Atanan Bayiler',
-    'Hareketlerim',
-    'Raporlarım',
-  ];
+  int _tab = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
     final hasPanel = assigned.isNotEmpty ||
         (ref.watch(isAssignedDriverProvider).valueOrNull ?? false);
 
-    return PremiumScaffold(
+    return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Şoför Paneli'),
         bottom: const PreferredSize(
@@ -65,25 +66,10 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                     AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, 0),
                 child: const _MyInvites(),
               ),
-            if (hasPanel) ...[
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageH, vertical: AppSpacing.s),
-                child: Row(children: [
-                  for (var i = 0; i < _segments.length; i++) ...[
-                    ChoiceChip(
-                      label: Text(_segments[i]),
-                      selected: _seg == i,
-                      onSelected: (_) => setState(() => _seg = i),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                ]),
-              ),
+            if (hasPanel)
               Expanded(
                 child: IndexedStack(
-                  index: _seg,
+                  index: _tab,
                   children: const [
                     _MyOverview(),
                     _MyDealers(),
@@ -91,34 +77,50 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                     _MyReports(),
                   ],
                 ),
-              ),
-            ] else
+              )
+            else
               const Expanded(child: _DriverEmpty()),
           ],
         ),
       ),
+      bottomNavigationBar: hasPanel
+          ? PremiumBottomNav(
+              selectedIndex: _tab,
+              onSelect: (i) => setState(() => _tab = i),
+              items: const [
+                PremiumNavItem(
+                  icon: Icons.dashboard_outlined,
+                  activeIcon: Icons.dashboard_rounded,
+                  label: AppStrings.dealerShellTabOverview,
+                ),
+                PremiumNavItem(
+                  icon: Icons.storefront_outlined,
+                  activeIcon: Icons.storefront_rounded,
+                  label: 'Atanan Bayiler',
+                ),
+                PremiumNavItem(
+                  icon: Icons.swap_vert_outlined,
+                  activeIcon: Icons.swap_vert_rounded,
+                  label: 'Hareketlerim',
+                ),
+                PremiumNavItem(
+                  icon: Icons.analytics_outlined,
+                  activeIcon: Icons.analytics_rounded,
+                  label: 'Raporlarım',
+                ),
+              ],
+            )
+          : null,
     );
   }
 }
 
-String _tl(double v) => '₺${v.toStringAsFixed(0)}';
-String _shortDate(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')} '
-    '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+Color _netColor(double net) {
+  if (net == 0) return AppColors.textMuted;
+  return net > 0 ? AppColors.copper : AppColors.success;
+}
 
-Widget _kpi(String label, String value) => Expanded(
-      child: Column(children: [
-        Text(value,
-            style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary)),
-        const SizedBox(height: 2),
-        Text(label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-      ]),
-    );
+// ── Genel Bakış ───────────────────────────────────────────────────────────
 
 class _MyOverview extends ConsumerWidget {
   const _MyOverview();
@@ -132,50 +134,107 @@ class _MyOverview extends ConsumerWidget {
     final recent =
         ref.watch(myDriverTransactionsProvider).valueOrNull ?? const [];
     final names = {for (final d in assigned) d.id: d.name};
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+          AppSpacing.pageH, AppSpacing.m, AppSpacing.pageH, AppSpacing.xxl),
       children: [
-        PremiumCard(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.m),
-            child: today.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const Text('Özet yüklenemedi.'),
-              data: (s) => Column(children: [
-                Row(children: [
-                  _kpi('Atanan bayi', '${assigned.length}'),
-                  _kpi('Bugün işlem', '${s.txCount}'),
-                  _kpi('Net', _tl(s.netChange)),
-                ]),
-                const Divider(height: AppSpacing.l),
-                Row(children: [
-                  _kpi('Teslimat', _tl(s.totalDelivery)),
-                  _kpi('Tahsilat', _tl(s.totalPayment)),
-                  _kpi('İade', _tl(s.totalReturn)),
-                ]),
-              ]),
-            ),
-          ),
+        today.when(
+          loading: () => const _CardSpinner(),
+          error: (_, __) => const _ErrorCard('Özet yüklenemedi.'),
+          data: (s) => _MyKpis(assignedCount: assigned.length, summary: s),
         ),
         const SizedBox(height: AppSpacing.l),
-        const Text('Son Hareketlerim',
+        const Text('SON HAREKETLERİM',
             style: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary)),
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.w700,
+                fontSize: 11.5,
+                letterSpacing: 0.6)),
         const SizedBox(height: AppSpacing.s),
         if (recent.isEmpty)
           const _Box('Henüz işlem girmedin.')
         else
-          for (final t in recent.take(5)) ...[
-            _TxRow(tx: t, dealerName: names[t.dealerId] ?? 'Bayi'),
-            const SizedBox(height: AppSpacing.xs),
-          ],
+          PremiumCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < recent.take(5).length; i++) ...[
+                  DriverScopedTxTile(
+                    tx: recent[i],
+                    dealerName: names[recent[i].dealerId] ?? '—',
+                    onTap: () => context
+                        .push(AppRoutes.driverDealerDetail(recent[i].dealerId)),
+                  ),
+                  if (i < recent.take(5).length - 1)
+                    const Divider(
+                        height: 0.6,
+                        thickness: 0.6,
+                        color: AppColors.borderHairline),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }
 }
+
+class _MyKpis extends StatelessWidget {
+  const _MyKpis({required this.assignedCount, required this.summary});
+  final int assignedCount;
+  final DriverRangeSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: AppSpacing.s,
+          crossAxisSpacing: AppSpacing.s,
+          childAspectRatio: 1.5,
+          children: [
+            DealerKpiTile(
+              label: 'Atanan bayi',
+              value: NumberFormatter.integer(assignedCount),
+              accent: AppColors.softGold,
+              isCount: true,
+            ),
+            DealerKpiTile(
+              label: 'Bugün teslimat',
+              value: NumberFormatter.currency(summary.totalDelivery),
+              accent: AppColors.copper,
+            ),
+            DealerKpiTile(
+              label: 'Bugün tahsilat',
+              value: NumberFormatter.currency(summary.totalPayment),
+              accent: AppColors.success,
+            ),
+            DealerKpiTile(
+              label: 'Bugün işlem',
+              value: NumberFormatter.integer(summary.txCount),
+              accent: AppColors.textSecondary,
+              isCount: true,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.s),
+        DealerKpiTile(
+          label: 'Bugün net değişim',
+          value: NumberFormatter.currency(summary.netChange),
+          accent: _netColor(summary.netChange),
+          emphasized: true,
+          fullWidth: true,
+        ),
+      ],
+    );
+  }
+}
+
+// ── Atanan Bayiler ──────────────────────────────────────────────────────────
 
 class _MyDealers extends ConsumerWidget {
   const _MyDealers();
@@ -184,41 +243,34 @@ class _MyDealers extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final assigned =
         ref.watch(dealersAssignedToMeProvider).valueOrNull ?? const [];
+    final recent =
+        ref.watch(myDriverTransactionsProvider).valueOrNull ?? const [];
+    final lastTxByDealer = <String, DealerTransaction>{};
+    for (final t in recent) {
+      lastTxByDealer.putIfAbsent(t.dealerId, () => t);
+    }
     if (assigned.isEmpty) return const _Box('Sana atanmış bayi yok.');
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+          AppSpacing.pageH, AppSpacing.m, AppSpacing.pageH, AppSpacing.xxl),
       children: [
-        for (final d in assigned) ...[
-          PremiumCard(
-            padding: EdgeInsets.zero,
-            onTap: () => context.push(AppRoutes.driverDealerDetail(d.id)),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.m),
-              child: Row(children: [
-                const Icon(Icons.storefront_rounded,
-                    size: 20, color: AppColors.brandLemonPressed),
-                const SizedBox(width: AppSpacing.s),
-                Expanded(
-                  child: Text(d.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
-                ),
-                const Icon(Icons.chevron_right_rounded,
-                    size: 18, color: AppColors.textMuted),
-              ]),
+        for (final d in assigned)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.s),
+            child: DriverScopedDealerCard(
+              dealer: d,
+              balance: ref.watch(balanceSummaryProvider(d.id)).valueOrNull,
+              lastTx: lastTxByDealer[d.id],
+              onTap: () => context.push(AppRoutes.driverDealerDetail(d.id)),
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-        ],
       ],
     );
   }
 }
+
+// ── Hareketlerim ────────────────────────────────────────────────────────────
 
 class _MyTransactions extends ConsumerWidget {
   const _MyTransactions();
@@ -230,18 +282,16 @@ class _MyTransactions extends ConsumerWidget {
         ref.watch(dealersAssignedToMeProvider).valueOrNull ?? const [];
     final names = {for (final d in assigned) d.id: d.name};
     if (txs.isEmpty) return const _Box('Henüz işlemin yok.');
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
-      children: [
-        for (final t in txs) ...[
-          _TxRow(tx: t, dealerName: names[t.dealerId] ?? 'Bayi'),
-          const SizedBox(height: AppSpacing.xs),
-        ],
-      ],
+
+    return DriverScopedTxList(
+      txs: txs,
+      dealerNames: names,
+      onTapTx: (t) => context.push(AppRoutes.driverDealerDetail(t.dealerId)),
     );
   }
 }
+
+// ── Raporlarım ──────────────────────────────────────────────────────────────
 
 class _MyReports extends ConsumerStatefulWidget {
   const _MyReports();
@@ -251,93 +301,124 @@ class _MyReports extends ConsumerStatefulWidget {
 
 class _MyReportsState extends ConsumerState<_MyReports> {
   DriverSummaryRange _range = DriverSummaryRange.today;
+
   @override
   Widget build(BuildContext context) {
     final sum = ref.watch(myDriverRangeSummaryProvider(_range));
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+          AppSpacing.pageH, AppSpacing.m, AppSpacing.pageH, AppSpacing.xxl),
       children: [
-        Row(children: [
-          for (final r in DriverSummaryRange.values) ...[
-            ChoiceChip(
-              label: Text(r.label, style: const TextStyle(fontSize: 12)),
-              selected: _range == r,
-              visualDensity: VisualDensity.compact,
-              onSelected: (_) => setState(() => _range = r),
-            ),
-            const SizedBox(width: 6),
+        Wrap(
+          spacing: AppSpacing.s,
+          runSpacing: AppSpacing.s,
+          children: [
+            for (final r in DriverSummaryRange.values)
+              DealerFilterChip(
+                label: r.label,
+                selected: _range == r,
+                onSelected: (s) {
+                  if (s) setState(() => _range = r);
+                },
+              ),
           ],
-        ]),
-        const SizedBox(height: AppSpacing.m),
+        ),
+        const SizedBox(height: AppSpacing.l),
+        const Text('ÖZET',
+            style: TextStyle(
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.w700,
+                fontSize: 11.5,
+                letterSpacing: 0.6)),
+        const SizedBox(height: AppSpacing.s),
         sum.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Text('Rapor yüklenemedi.'),
-          data: (s) => PremiumCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.m),
-              child: Column(children: [
-                Row(children: [
-                  _kpi('İşlem', '${s.txCount}'),
-                  _kpi('Net', _tl(s.netChange)),
-                  _kpi('Teslimat', _tl(s.totalDelivery)),
-                ]),
-                const Divider(height: AppSpacing.l),
-                Row(children: [
-                  _kpi('Tahsilat', _tl(s.totalPayment)),
-                  _kpi('İade', _tl(s.totalReturn)),
-                  _kpi('Düzeltme', _tl(s.totalAdjustment)),
-                ]),
-              ]),
-            ),
-          ),
+          loading: () => const _CardSpinner(),
+          error: (_, __) => const _ErrorCard('Rapor yüklenemedi.'),
+          data: (s) => s.txCount == 0
+              ? const _Box('Bu dönemde işlem yok.')
+              : _MyReportsKpiBlock(summary: s),
         ),
       ],
     );
   }
 }
 
-class _TxRow extends StatelessWidget {
-  const _TxRow({required this.tx, required this.dealerName});
-  final DealerTransaction tx;
-  final String dealerName;
+class _MyReportsKpiBlock extends StatelessWidget {
+  const _MyReportsKpiBlock({required this.summary});
+  final DriverRangeSummary summary;
+
   @override
   Widget build(BuildContext context) {
-    final negative = tx.type == DealerTransactionType.payment ||
-        tx.type == DealerTransactionType.returned;
-    return PremiumCard(
-      padding: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.m),
-        child: Row(children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('$dealerName · ${tx.type.label}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary)),
-                const SizedBox(height: 2),
-                Text(_shortDate(tx.createdAt),
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textMuted)),
-              ],
+    return Column(
+      children: [
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: AppSpacing.s,
+          crossAxisSpacing: AppSpacing.s,
+          childAspectRatio: 1.5,
+          children: [
+            DealerKpiTile(
+              label: 'Teslimat',
+              value: NumberFormatter.currency(summary.totalDelivery),
+              accent: AppColors.softGold,
             ),
-          ),
-          const SizedBox(width: AppSpacing.s),
-          Text('${negative ? '−' : '+'}${_tl(tx.amount)}',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: negative ? AppColors.success : AppColors.textPrimary)),
-        ]),
-      ),
+            DealerKpiTile(
+              label: 'İade',
+              value: NumberFormatter.currency(summary.totalReturn),
+              accent: AppColors.textSecondary,
+            ),
+            DealerKpiTile(
+              label: 'Tahsilat',
+              value: NumberFormatter.currency(summary.totalPayment),
+              accent: AppColors.success,
+            ),
+            DealerKpiTile(
+              label: 'İşlem adedi',
+              value: NumberFormatter.integer(summary.txCount),
+              accent: AppColors.textSecondary,
+              isCount: true,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.s),
+        DealerKpiTile(
+          label: 'Net değişim',
+          value: NumberFormatter.currency(summary.netChange),
+          accent: _netColor(summary.netChange),
+          emphasized: true,
+          fullWidth: true,
+        ),
+      ],
     );
   }
+}
+
+// ── Ortak küçük parçalar ────────────────────────────────────────────────────
+
+class _CardSpinner extends StatelessWidget {
+  const _CardSpinner();
+  @override
+  Widget build(BuildContext context) => const PremiumCard(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.l),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+}
+
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) => PremiumCard(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.l),
+          child: Text(text,
+              style: const TextStyle(color: AppColors.textSecondary)),
+        ),
+      );
 }
 
 class _Box extends StatelessWidget {
@@ -347,6 +428,7 @@ class _Box extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
       padding: const EdgeInsets.all(AppSpacing.m),
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
