@@ -1048,6 +1048,12 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
           validFrom: now,
         ),
       );
+      // Fiyat listesi content-stream tick'iyle zaten tazelenir; explicit
+      // invalidate ile sheet kapanır kapanmaz detay ekranındaki liste anında
+      // güncel fiyatı gösterir (stream zamanlamasına bağlı kalmadan).
+      // Teslimat/iade formu fiyatı imperatif `currentPriceFor` ile okuduğu
+      // için ayrıca invalidate gerektirmez (her ürün seçiminde taze çeker).
+      ref.invalidate(pricesByDealerProvider(widget.dealerId));
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
