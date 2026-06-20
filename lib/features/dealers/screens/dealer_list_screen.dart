@@ -50,20 +50,13 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = ref.watch(profileControllerProvider);
-
-    // Toptancı kullanıcı "Bayi Defteri" dilini görmez — kendi tarafı
-    // "Müşteriler" diliyle ayrı yaşar. Nav kartında bu route'a giden link
-    // yok; yalnız deep-link / legacy bookmark senaryosu için defansif
-    // redirect.
-    if (profile?.accountType == AccountType.wholesaler) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go(AppRoutes.wholesaleCustomers);
-      });
-      return const PremiumScaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    // fix/wholesaler-dealer-shell-parity: Toptancı da bu listeyi normal Bayi
+    // Defteri shell'i içinde kullanır (eski wholesaler redirect KALDIRILDI).
+    // Tek fark dil/scope: başlık "Müşteriler", ekleme akışı toptan müşteri
+    // tipiyle, liste verisi `dealerListScopeProvider` ile wholesale_customer.
+    final isWholesaler =
+        ref.watch(profileControllerProvider.select((p) => p?.accountType)) ==
+            AccountType.wholesaler;
 
     final dealersAsync = ref.watch(dealersListProvider);
     // Sprint 6B.x: Borçlu filtre + chip count'lar için per-dealer balance
@@ -73,11 +66,15 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
 
     return PremiumScaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.dealerListTitle),
+        title: Text(isWholesaler ? 'Müşteriler' : AppStrings.dealerListTitle),
         actions: [
           IconButton(
-            tooltip: AppStrings.dealerAddTooltip,
-            onPressed: () => context.push(AppRoutes.dealerNew),
+            tooltip: isWholesaler ? 'Müşteri ekle' : AppStrings.dealerAddTooltip,
+            onPressed: () => context.push(
+              isWholesaler
+                  ? AppRoutes.wholesaleCustomerNew
+                  : AppRoutes.dealerNew,
+            ),
             icon: const Icon(Icons.person_add_alt_1_rounded),
           ),
         ],
@@ -97,8 +94,14 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                 title: AppStrings.dealerListEmptyTitle,
                 subtitle: AppStrings.dealerListEmptySub,
                 icon: Icons.storefront_rounded,
-                actionLabel: AppStrings.dealerListEmptyCta,
-                onAction: () => context.push(AppRoutes.dealerNew),
+                actionLabel: isWholesaler
+                    ? 'Müşteri ekle'
+                    : AppStrings.dealerListEmptyCta,
+                onAction: () => context.push(
+                  isWholesaler
+                      ? AppRoutes.wholesaleCustomerNew
+                      : AppRoutes.dealerNew,
+                ),
               );
             }
 

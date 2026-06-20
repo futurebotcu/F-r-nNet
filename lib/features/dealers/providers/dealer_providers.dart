@@ -57,6 +57,27 @@ final dealerShellModeProvider = Provider<DealerShellMode>((ref) {
       : DealerShellMode.owner;
 });
 
+/// Toptancı liste scope'u (fix/wholesaler-dealer-shell-parity).
+///
+/// Toptancı kullanıcı da ticari/patron ve şoför gibi **normal** Bayi Defteri
+/// shell'ini kullanır; tek fark liste verisinin `customer_type` süzgeci.
+/// - Toptancı → `wholesaleCustomer` (yalnız kendi müşterileri).
+/// - Ticari patron / bireysel şoför → `null` → mevcut davranış değişmez
+///   (patron normal bayiler; şoför [DriverScopedDealerRepository] override'ı
+///   ile atanmış bayiler — customerType yok sayılır).
+///
+/// RLS `owner_id = auth.uid()` zaten her sorguyu kullanıcıya kısıtlar; bu
+/// scope yalnız tip süzgecini ekler. Hareketler/Raporlar owner-scope'tan
+/// beslendiği için ayrıca filtre gerektirmez (toptancının tüm kayıtları
+/// zaten `wholesale_customer`).
+final dealerListScopeProvider = Provider<DealerCustomerType?>((ref) {
+  final accountType =
+      ref.watch(profileControllerProvider.select((p) => p?.accountType));
+  return accountType == AccountType.wholesaler
+      ? DealerCustomerType.wholesaleCustomer
+      : null;
+});
+
 /// "Borçlu Bayiler" Genel Bakış CTA için one-shot prefilter (Sprint 6B.x).
 /// CTA bu provider'ı `true`'ya set eder ve [dealerShellTabIndexProvider]'ı
 /// 1 yapar (Bayiler tab). [DealerListScreen] ilk build'inde değeri okur;
@@ -155,7 +176,7 @@ final dealersListProvider =
     FutureProvider.autoDispose<List<Dealer>>((ref) async {
   ref.watch(dealerChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
-  return repo.listDealers();
+  return repo.listDealers(customerType: ref.watch(dealerListScopeProvider));
 });
 
 /// customer_type'a göre filtrelenmiş bayi/müşteri listesi (V1.2).
@@ -172,7 +193,10 @@ final activeDealersListProvider =
     FutureProvider.autoDispose<List<Dealer>>((ref) async {
   ref.watch(dealerChangesProvider);
   final repo = ref.watch(dealerRepositoryProvider);
-  return repo.listDealers(activeOnly: true);
+  return repo.listDealers(
+    activeOnly: true,
+    customerType: ref.watch(dealerListScopeProvider),
+  );
 });
 
 final dealerByIdProvider =

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_bottom_nav.dart';
-import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/dealer_providers.dart';
@@ -50,19 +47,19 @@ class DealerShellScreen extends ConsumerWidget {
       final hasPanel = assigned.isNotEmpty ||
           (ref.watch(isAssignedDriverProvider).valueOrNull ?? false);
       if (!hasPanel) return const DriverHomeScreen();
-    } else {
-      // Toptancı: mini-app'e hiç girmez → defansif redirect.
-      final accountType = ref
-          .watch(profileControllerProvider.select((p) => p?.accountType));
-      if (accountType == AccountType.wholesaler) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) context.go(AppRoutes.wholesaleCustomers);
-        });
-        return const PremiumScaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
-      }
     }
+
+    // fix/wholesaler-dealer-shell-parity: Toptancı da AYNI normal Bayi Defteri
+    // shell'ini kullanır (eski `/wholesale/customers` redirect KALDIRILDI).
+    // Tek fark: liste tabı "Müşteriler" etiketi + veri wholesale_customer
+    // scope'lu ([dealerListScopeProvider]). Şoförler tabı toptancıda açık
+    // kalır (toptancı = owner; driverScoped değil).
+    final isWholesaler = ref.watch(
+          profileControllerProvider.select((p) => p?.accountType),
+        ) ==
+        AccountType.wholesaler;
+    final dealersTabLabel =
+        isWholesaler ? 'Müşteriler' : AppStrings.dealerShellTabDealers;
 
     // Tab indeksi `dealerShellTabIndexProvider`'dan okunur (Genel Bakış
     // CTA'ları programatik tab geçişi için aynı provider'ı set eder). Driver
@@ -93,10 +90,10 @@ class DealerShellScreen extends ConsumerWidget {
             activeIcon: Icons.dashboard_rounded,
             label: AppStrings.dealerShellTabOverview,
           ),
-          const PremiumNavItem(
+          PremiumNavItem(
             icon: Icons.storefront_outlined,
             activeIcon: Icons.storefront_rounded,
-            label: AppStrings.dealerShellTabDealers,
+            label: dealersTabLabel,
           ),
           const PremiumNavItem(
             icon: Icons.swap_vert_outlined,

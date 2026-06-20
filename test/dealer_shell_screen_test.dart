@@ -3,7 +3,8 @@
 // Ürün modeli: bireysel = ŞOFÖR → "Şoför Paneli" görünümü (patron shell
 // DEĞİL). Ticari (commercial) → patron shell (5 tab: Genel Bakış/Bayiler/
 // Hareketler/Raporlar/Şoförler; Gün Sonu Raporlar içine taşındı). Toptancı →
-// /wholesale/customers redirect.
+// AYNI shell (fix/wholesaler-dealer-shell-parity): liste tabı "Müşteriler" +
+// wholesale_customer scope, redirect YOK.
 
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firin_defter/core/constants/app_strings.dart';
@@ -139,12 +140,52 @@ void main() {
       expect(find.byType(PremiumBottomNav), findsNothing);
     });
 
-    testWidgets('Toptancı: /wholesale/customers\'a redirect', (tester) async {
+    testWidgets(
+        'Toptancı: AYNI shell render (redirect YOK), liste tabı "Müşteriler"',
+        (tester) async {
       await tester.pumpWidget(_wrap(_wholesalerProfile));
       await tester.pumpAndSettle();
 
-      expect(find.text('Müşteriler — stub'), findsOneWidget);
-      expect(find.byType(PremiumBottomNav), findsNothing);
+      // Parity: eski redirect kaldırıldı → shell + bottom-nav görünür.
+      expect(find.text('Müşteriler — stub'), findsNothing);
+      expect(find.byType(PremiumBottomNav), findsOneWidget);
+
+      // Liste tabı "Müşteriler" etiketiyle; "Bayiler" görünmez.
+      expect(
+        find.descendant(
+          of: find.byType(PremiumBottomNav),
+          matching: find.text('Müşteriler'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(PremiumBottomNav),
+          matching: find.text(AppStrings.dealerShellTabDealers),
+        ),
+        findsNothing,
+      );
+      // Şoförler tabı toptancıda açık (owner).
+      expect(
+        find.descendant(
+          of: find.byType(PremiumBottomNav),
+          matching: find.text('Şoförler'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        'Toptancı: Müşteriler tabı wholesale_customer scope (bakery sızmaz)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(_wholesalerProfile));
+      await tester.pumpAndSettle();
+
+      await _tapNavTab(tester, 'Müşteriler');
+      // Seed yalnız bakery_dealer içerir → toptancı scope'unda görünmez.
+      expect(find.text('Köşe Pide Evi'), findsNothing);
+      // Liste ekranı toptancı dilinde başlıkla render olur.
+      expect(find.text('Müşteriler'), findsAtLeastNWidgets(1));
     });
   });
 
