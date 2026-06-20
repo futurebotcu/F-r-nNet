@@ -10,9 +10,11 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/dealer.dart';
+import '../models/dealer_driver.dart';
 import '../models/dealer_transaction.dart';
 import '../models/driver_summary.dart';
 import '../providers/dealer_providers.dart';
+import 'add_driver_screen.dart';
 
 /// Faz 1 — Patron/toptancı: bir şoföre dokununca açılan ŞOFÖR-SCOPED mini Bayi
 /// Yönetimi (tek defter, scoped görünüm). Sadece o şoföre atanmış bayiler + o
@@ -109,6 +111,37 @@ String _tl(double v) => '₺${v.toStringAsFixed(0)}';
 String _shortDate(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')} '
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+
+/// Yetki seviyeleri bilgi popup'ı (AddDriverScreen ile aynı metinler).
+void _showDriverPermissionInfo(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (_) => const SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+            AppSpacing.pageH, 0, AppSpacing.pageH, AppSpacing.l),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Yarı Yetki',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            SizedBox(height: 6),
+            Text(AddDriverScreen.halfPermissionInfo,
+                style: TextStyle(fontSize: 13, height: 1.4)),
+            SizedBox(height: AppSpacing.m),
+            Text('Tam Yetki',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            SizedBox(height: 6),
+            Text(AddDriverScreen.fullPermissionInfo,
+                style: TextStyle(fontSize: 13, height: 1.4)),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
 Widget _kpi(String label, String value) => Expanded(
       child: Column(
@@ -443,6 +476,59 @@ class _ManagementSection extends ConsumerWidget {
                               .updateDriver(driver.copyWith(isActive: v));
                           ref.invalidate(driverByIdProvider(driverId));
                           ref.invalidate(driversListProvider);
+                        },
+                      ),
+                    ]),
+                    // Yarı/Tam yetki — patron mevcut şoförü düzenler
+                    // (feature/dealer-driver-permission-levels yüzey düzeltmesi).
+                    const SizedBox(height: AppSpacing.s),
+                    Row(children: [
+                      const Text('Yetki',
+                          style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary)),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.info_outline, size: 18),
+                        tooltip: 'Yetki seviyeleri',
+                        onPressed: () => _showDriverPermissionInfo(context),
+                      ),
+                      const Spacer(),
+                      SegmentedButton<DriverPermission>(
+                        showSelectedIcon: false,
+                        style: const ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        segments: const [
+                          ButtonSegment(
+                              value: DriverPermission.half,
+                              label: Text('Yarı')),
+                          ButtonSegment(
+                              value: DriverPermission.full,
+                              label: Text('Tam')),
+                        ],
+                        selected: {driver.permissionLevel},
+                        onSelectionChanged: (s) async {
+                          try {
+                            await ref
+                                .read(dealerRepositoryProvider)
+                                .updateDriver(driver.copyWith(
+                                    permissionLevel: s.first));
+                            ref.invalidate(driverByIdProvider(driverId));
+                            ref.invalidate(driversListProvider);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e is StateError
+                                      ? e.message
+                                      : 'Yetki güncellenemedi.'),
+                                ),
+                              );
+                            }
+                          }
                         },
                       ),
                     ]),
