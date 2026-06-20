@@ -5,6 +5,7 @@ import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
 import 'dealer_repository.dart';
+import 'driver_permission.dart';
 
 /// Şoför-scoped repository decorator (fix/driver-normal-dealer-shell).
 ///
@@ -28,8 +29,9 @@ class DriverScopedDealerRepository implements DealerRepository {
 
   final DealerRepository inner;
 
-  static Never _denied() =>
-      throw StateError('Şoför modunda bu işlem yapılamaz.');
+  // Owner yetkisi gerektiren yazımlarda ham StateError yerine UI'ın temiz
+  // mesaja çevirdiği tipli exception.
+  static Never _denied() => throw const DriverPermissionException();
 
   // ── Dealers: atanmışla sınırlı ──
   @override
@@ -72,18 +74,24 @@ class DriverScopedDealerRepository implements DealerRepository {
       inner.listNotes(dealerId);
 
   // ── Yazma köprüsü: normal formların addTransaction'ı → şoför RPC'si ──
+  // Teslimat/Tahsilat/İade → addDriverTransaction. Düzeltme (adjustment) şoföre
+  // kapalı → temiz "patron yetkisi gerekir" mesajı.
   @override
-  Future<void> addTransaction(DealerTransaction tx) =>
-      inner.addDriverTransaction(
-        dealerId: tx.dealerId,
-        type: tx.type,
-        amount: tx.amount,
-        quantity: tx.quantity,
-        unitPrice: tx.unitPrice,
-        paymentMethod: tx.paymentMethod,
-        productName: tx.productName,
-        note: tx.note,
-      );
+  Future<void> addTransaction(DealerTransaction tx) {
+    if (tx.type == DealerTransactionType.adjustment) {
+      throw const DriverPermissionException();
+    }
+    return inner.addDriverTransaction(
+      dealerId: tx.dealerId,
+      type: tx.type,
+      amount: tx.amount,
+      quantity: tx.quantity,
+      unitPrice: tx.unitPrice,
+      paymentMethod: tx.paymentMethod,
+      productName: tx.productName,
+      note: tx.note,
+    );
+  }
 
   @override
   Future<void> addDriverTransaction({

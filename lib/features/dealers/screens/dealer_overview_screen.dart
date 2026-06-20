@@ -389,8 +389,8 @@ class _QuickActionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    // Şoför modunda yalnız owner-yönetim CTA'ları (Bayi Ekle + Şoförler)
-    // gizlenir; teslimat/tahsilat/borçlu/raporlar normal kalır.
+    // Ürün kuralı: yalnız "Şoförler" menüsü şoföre gizlenir; diğer CTA'lar
+    // (Bayi Ekle dahil) normal kalır — yetkisiz yazımlarda temiz mesaj gösterilir.
     final driverScoped =
         ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
     return Column(
@@ -412,12 +412,11 @@ class _QuickActionsSection extends ConsumerWidget {
           spacing: AppSpacing.s,
           runSpacing: AppSpacing.s,
           children: [
-            if (!driverScoped)
-              _QuickActionChip(
-                icon: Icons.person_add_alt_1_rounded,
-                label: AppStrings.dealerOverviewQuickAddDealer,
-                onTap: () => context.push(AppRoutes.dealerNew),
-              ),
+            _QuickActionChip(
+              icon: Icons.person_add_alt_1_rounded,
+              label: AppStrings.dealerOverviewQuickAddDealer,
+              onTap: () => context.push(AppRoutes.dealerNew),
+            ),
             _QuickActionChip(
               icon: Icons.bakery_dining_rounded,
               label: AppStrings.dealerOverviewQuickDelivery,

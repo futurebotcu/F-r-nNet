@@ -3,6 +3,7 @@
 // (normal formlar şoför RPC'sine gider); owner-yönetim write→throw.
 
 import 'package:firin_defter/features/dealers/models/dealer_transaction.dart';
+import 'package:firin_defter/features/dealers/repositories/driver_permission.dart';
 import 'package:firin_defter/features/dealers/repositories/driver_scoped_dealer_repository.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,14 +46,30 @@ void main() {
     expect(mine.any((t) => t.productName == 'Ekmek'), isTrue);
   });
 
-  test('owner-yönetim write metotları StateError fırlatır', () async {
+  test('owner-yönetim write metotları DriverPermissionException fırlatır',
+      () async {
     final (:scoped, :inner) = await _seed();
     expect(() => scoped.setActive('d_hamdi', active: false),
-        throwsA(isA<StateError>()));
+        throwsA(isA<DriverPermissionException>()));
     expect(() => scoped.addDriver(driverUserId: 'z', name: 'X'),
-        throwsA(isA<StateError>()));
+        throwsA(isA<DriverPermissionException>()));
     expect(() => scoped.setDriverAssignments(driverId: 'x', dealerIds: const []),
-        throwsA(isA<StateError>()));
+        throwsA(isA<DriverPermissionException>()));
+  });
+
+  test('Düzeltme (adjustment) → DriverPermissionException (şoföre kapalı)',
+      () async {
+    final (:scoped, :inner) = await _seed();
+    expect(
+      () => scoped.addTransaction(DealerTransaction(
+        id: 'x',
+        dealerId: 'd_hamdi',
+        type: DealerTransactionType.adjustment,
+        amount: 100,
+        createdAt: DateTime.now(),
+      )),
+      throwsA(isA<DriverPermissionException>()),
+    );
   });
 
   test('listTransactions TAM döner (bakiye doğru)', () async {

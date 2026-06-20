@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer_transaction.dart';
+import '../repositories/driver_permission.dart';
 import '../providers/dealer_providers.dart';
 
 /// Bayi cari bakiyesini elle ayarlamak için form (V1.1).
@@ -92,6 +93,10 @@ class _DealerAdjustmentFormScreenState
       // guest exception atarsa auth sheet aç.
       if (!mounted) return;
       await showAuthRequiredSheet(context, ref);
+    } on DriverPermissionException catch (e) {
+      // Düzeltme şoföre kapalı → temiz "patron yetkisi gerekir" mesajı.
+      if (!mounted) return;
+      _err(e.message);
     } catch (_) {
       // V1.4 P1.7 — Ham PostgrestException/network UI'a sızmaz. Form AÇIK
       // kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin.
