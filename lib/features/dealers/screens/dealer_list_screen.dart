@@ -70,17 +70,23 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
     // map'i. allTxs zaten Sprint 6B'de sağlanan provider'dan.
     final txsAsync = ref.watch(allTransactionsProvider);
     final svc = ref.watch(dealerBalanceServiceProvider);
+    // Şoför modunda Bayi Ekle (owner bayi oluşturma) gizlenir; arama/filtre/
+    // kartlar/normal bayi detayına geçiş aynen kalır.
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
 
     return PremiumScaffold(
       appBar: AppBar(
         title: const Text(AppStrings.dealerListTitle),
-        actions: [
-          IconButton(
-            tooltip: AppStrings.dealerAddTooltip,
-            onPressed: () => context.push(AppRoutes.dealerNew),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-          ),
-        ],
+        actions: driverScoped
+            ? null
+            : [
+                IconButton(
+                  tooltip: AppStrings.dealerAddTooltip,
+                  onPressed: () => context.push(AppRoutes.dealerNew),
+                  icon: const Icon(Icons.person_add_alt_1_rounded),
+                ),
+              ],
       ),
       body: SafeArea(
         top: false,
@@ -94,11 +100,16 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
           data: (all) {
             if (all.isEmpty) {
               return EmptyState(
-                title: AppStrings.dealerListEmptyTitle,
-                subtitle: AppStrings.dealerListEmptySub,
+                title: driverScoped
+                    ? 'Henüz sana atanmış bayi yok'
+                    : AppStrings.dealerListEmptyTitle,
+                subtitle: driverScoped
+                    ? 'Fırın/işletme sana bayi atadığında burada görünecek.'
+                    : AppStrings.dealerListEmptySub,
                 icon: Icons.storefront_rounded,
-                actionLabel: AppStrings.dealerListEmptyCta,
-                onAction: () => context.push(AppRoutes.dealerNew),
+                actionLabel: driverScoped ? null : AppStrings.dealerListEmptyCta,
+                onAction:
+                    driverScoped ? null : () => context.push(AppRoutes.dealerNew),
               );
             }
 

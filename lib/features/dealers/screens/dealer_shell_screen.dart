@@ -36,82 +36,84 @@ class DealerShellScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileControllerProvider);
+    // fix/driver-normal-dealer-shell: mod hesap tipinden türetilir. Bireysel
+    // şoför = driverScoped → AYNI normal Bayi Yönetimi shell'i; tek fark
+    // Şoförler tabı yok ve veri atanmış bayilerle sınırlı (repo decorator).
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
 
-    // Toptancı: mini-app'e hiç girmez. Mevcut DealerListScreen'in defansif
-    // redirect pattern'i ile aynı — kart linki olmasa da deep-link / legacy
-    // bookmark senaryosu için.
-    if (profile?.accountType == AccountType.wholesaler) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) context.go(AppRoutes.wholesaleCustomers);
-      });
-      return const PremiumScaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+    if (driverScoped) {
+      // Henüz atanmamış (davet bekleyen) şoför: ayrı panel DEĞİL, sadece davet
+      // kartı + boş durum. Atanmış şoför → normal shell (aşağıda).
+      final assigned =
+          ref.watch(dealersAssignedToMeProvider).valueOrNull ?? const [];
+      final hasPanel = assigned.isNotEmpty ||
+          (ref.watch(isAssignedDriverProvider).valueOrNull ?? false);
+      if (!hasPanel) return const DriverHomeScreen();
+    } else {
+      // Toptancı: mini-app'e hiç girmez → defansif redirect.
+      final accountType = ref
+          .watch(profileControllerProvider.select((p) => p?.accountType));
+      if (accountType == AccountType.wholesaler) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) context.go(AppRoutes.wholesaleCustomers);
+        });
+        return const PremiumScaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
     }
 
-    // Ürün modeli: bireysel kullanıcı = ŞOFÖR (patron değil). Bayi Yönetimi'ne
-    // girince patron defteri/Şoförler yönetimi DEĞİL, "Bana Atanan Bayiler"
-    // şoför görünümü açılır (davet kartı / atanan bayiler / güvenli boş durum).
-    // Patron defteri fallback'i bireysele GÖSTERİLMEZ.
-    if (profile?.accountType == AccountType.individual) {
-      return const DriverHomeScreen();
-    }
-    // Ticari (commercial) → patron Bayi Yönetimi shell'i (Şoförler tabı dahil).
-
-    // Sprint 6B: tab indeksi `dealerShellTabIndexProvider`'dan okunur.
-    // Genel Bakış CTA'ları başka tab'a programatik geçiş için aynı
-    // provider'ı set eder. Default 0 (Genel Bakış).
-    final index = ref.watch(dealerShellTabIndexProvider);
+    // Tab indeksi `dealerShellTabIndexProvider`'dan okunur (Genel Bakış
+    // CTA'ları programatik tab geçişi için aynı provider'ı set eder). Driver
+    // modda Şoförler tabı olmadığı için 0..3'e clamp edilir.
+    final index =
+        ref.watch(dealerShellTabIndexProvider).clamp(0, driverScoped ? 3 : 4);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
         index: index,
-        children: const [
-          // Sprint 6B: placeholder yerine gerçek Genel Bakış ekranı.
-          DealerOverviewScreen(),
-          // Mevcut DealerListScreen olduğu gibi — kendi PremiumScaffold +
-          // AppBar'ı + arama + filtre chip + ekle butonu intakt.
-          DealerListScreen(),
-          // Sprint Activity: placeholder yerine cross-dealer hareket listesi.
-          DealerActivityScreen(),
-          // Raporlar: toplu + bayi bazlı rapor (+ Gün Sonu erişimi içeride).
-          DealerReportsTabScreen(),
-          // Şoförler: patron tarafı yönetim (davet/atama/özet).
-          DriverListScreen(),
+        children: [
+          const DealerOverviewScreen(),
+          const DealerListScreen(),
+          const DealerActivityScreen(),
+          const DealerReportsTabScreen(),
+          // Şoförler: patron tarafı yönetim — bireysel şoföre gösterilmez.
+          if (!driverScoped) const DriverListScreen(),
         ],
       ),
       bottomNavigationBar: PremiumBottomNav(
         selectedIndex: index,
         onSelect: (i) =>
             ref.read(dealerShellTabIndexProvider.notifier).state = i,
-        items: const [
-          PremiumNavItem(
+        items: [
+          const PremiumNavItem(
             icon: Icons.dashboard_outlined,
             activeIcon: Icons.dashboard_rounded,
             label: AppStrings.dealerShellTabOverview,
           ),
-          PremiumNavItem(
+          const PremiumNavItem(
             icon: Icons.storefront_outlined,
             activeIcon: Icons.storefront_rounded,
             label: AppStrings.dealerShellTabDealers,
           ),
-          PremiumNavItem(
+          const PremiumNavItem(
             icon: Icons.swap_vert_outlined,
             activeIcon: Icons.swap_vert_rounded,
             label: AppStrings.dealerShellTabActivity,
           ),
-          PremiumNavItem(
+          const PremiumNavItem(
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
             label: AppStrings.dealerShellTabReports,
           ),
-          PremiumNavItem(
-            icon: Icons.local_shipping_outlined,
-            activeIcon: Icons.local_shipping_rounded,
-            label: 'Şoförler',
-          ),
+          if (!driverScoped)
+            const PremiumNavItem(
+              icon: Icons.local_shipping_outlined,
+              activeIcon: Icons.local_shipping_rounded,
+              label: 'Şoförler',
+            ),
         ],
       ),
     );

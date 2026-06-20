@@ -389,6 +389,10 @@ class _QuickActionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // Şoför modunda yalnız owner-yönetim CTA'ları (Bayi Ekle + Şoförler)
+    // gizlenir; teslimat/tahsilat/borçlu/raporlar normal kalır.
+    final driverScoped =
+        ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -408,11 +412,12 @@ class _QuickActionsSection extends ConsumerWidget {
           spacing: AppSpacing.s,
           runSpacing: AppSpacing.s,
           children: [
-            _QuickActionChip(
-              icon: Icons.person_add_alt_1_rounded,
-              label: AppStrings.dealerOverviewQuickAddDealer,
-              onTap: () => context.push(AppRoutes.dealerNew),
-            ),
+            if (!driverScoped)
+              _QuickActionChip(
+                icon: Icons.person_add_alt_1_rounded,
+                label: AppStrings.dealerOverviewQuickAddDealer,
+                onTap: () => context.push(AppRoutes.dealerNew),
+              ),
             _QuickActionChip(
               icon: Icons.bakery_dining_rounded,
               label: AppStrings.dealerOverviewQuickDelivery,
@@ -474,12 +479,13 @@ class _QuickActionsSection extends ConsumerWidget {
                 ref.read(dealerShellTabIndexProvider.notifier).state = 3;
               },
             ),
-            _QuickActionChip(
-              icon: Icons.local_shipping_outlined,
-              label: 'Şoförler',
-              accent: AppColors.copper,
-              onTap: () => context.push(AppRoutes.dealerDrivers),
-            ),
+            if (!driverScoped)
+              _QuickActionChip(
+                icon: Icons.local_shipping_outlined,
+                label: 'Şoförler',
+                accent: AppColors.copper,
+                onTap: () => context.push(AppRoutes.dealerDrivers),
+              ),
           ],
         ),
       ],
