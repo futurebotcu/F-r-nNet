@@ -127,6 +127,12 @@ class GuardedDealerRepository implements DealerRepository {
   }
 
   @override
+  Future<void> deleteTransaction(DealerTransaction tx) {
+    _requireWrite('işlemi silmek');
+    return inner.deleteTransaction(tx);
+  }
+
+  @override
   Future<void> addNote(DealerNote note) {
     _requireWrite('bayi notu eklemek');
     return inner.addNote(note);

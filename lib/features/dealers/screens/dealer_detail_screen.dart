@@ -158,7 +158,11 @@ class DealerDetailScreen extends ConsumerWidget {
                     skipLoadingOnReload: true,
                     loading: () => const _MiniLoading(),
                     error: (e, _) => const _SectionError('Fiyatlar yüklenemedi'),
-                    data: (p) => _PricesCard(prices: p),
+                    data: (p) => _PricesCard(
+                      prices: p,
+                      onEdit: (price) =>
+                          _openPriceSheet(context, ref, d.id, edit: price),
+                    ),
                   ),
                 ),
                 const SectionLabel(title: AppStrings.dealerDetailSectionTxs),
@@ -171,6 +175,23 @@ class DealerDetailScreen extends ConsumerWidget {
                     loading: () => const _MiniLoading(),
                     error: (e, _) => const _SectionError('İşlemler yüklenemedi'),
                     data: (txs) => _TxList(txs: txs),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageH,
+                    AppSpacing.s,
+                    AppSpacing.pageH,
+                    0,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          context.push(AppRoutes.dealerHistory(d.id)),
+                      icon: const Icon(Icons.history_rounded, size: 18),
+                      label: const Text('Tüm işlem geçmişi'),
+                    ),
                   ),
                 ),
                 const SectionLabel(title: AppStrings.dealerDetailSectionNotes),
@@ -262,8 +283,9 @@ class DealerDetailScreen extends ConsumerWidget {
   Future<void> _openPriceSheet(
     BuildContext context,
     WidgetRef ref,
-    String dealerId,
-  ) {
+    String dealerId, {
+    DealerPrice? edit,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -271,7 +293,11 @@ class DealerDetailScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
-      builder: (ctx) => DealerPriceSheet(dealerId: dealerId),
+      builder: (ctx) => DealerPriceSheet(
+        dealerId: dealerId,
+        initialProduct: edit?.productName,
+        initialPrice: edit?.unitPrice,
+      ),
     );
   }
 }
@@ -843,8 +869,12 @@ class _ActionChip extends StatelessWidget {
 // ─────────────────────────────────────── Prices
 
 class _PricesCard extends StatelessWidget {
-  const _PricesCard({required this.prices});
+  const _PricesCard({required this.prices, this.onEdit});
   final List<DealerPrice> prices;
+
+  /// Fiyat satırına "Düzenle" — patron yeni aktif fiyat oluşturur (tarihçeli).
+  /// Şoför yetkisizse sheet kaydında temiz mesaj alır.
+  final void Function(DealerPrice price)? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -908,13 +938,28 @@ class _PricesCard extends StatelessWidget {
                   fontSize: 11.5,
                 ),
               ),
-              trailing: Text(
-                NumberFormatter.currency(prices[i].unitPrice),
-                style: const TextStyle(
-                  color: AppColors.softGold,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.5,
-                ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    NumberFormatter.currency(prices[i].unitPrice),
+                    style: const TextStyle(
+                      color: AppColors.softGold,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                  if (onEdit != null) ...[
+                    const SizedBox(width: 2),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Düzenle',
+                      icon: const Icon(Icons.edit_outlined,
+                          size: 18, color: AppColors.textMuted),
+                      onPressed: () => onEdit!(prices[i]),
+                    ),
+                  ],
+                ],
               ),
             ),
             if (i != prices.length - 1)
@@ -938,8 +983,18 @@ class _PricesCard extends StatelessWidget {
 /// `showModalBottomSheet` ile construct ediliyor; UI'a yeni surface
 /// eklemiyor.
 class DealerPriceSheet extends ConsumerStatefulWidget {
-  const DealerPriceSheet({super.key, required this.dealerId});
+  const DealerPriceSheet({
+    super.key,
+    required this.dealerId,
+    this.initialProduct,
+    this.initialPrice,
+  });
   final String dealerId;
+
+  /// Düzenleme: mevcut fiyat satırından ön-doldurma. Tarihçeli pattern —
+  /// kayıt güncellenmez, yeni `valid_from`'lu aktif fiyat eklenir (addPrice).
+  final String? initialProduct;
+  final double? initialPrice;
 
   @override
   ConsumerState<DealerPriceSheet> createState() => _PriceSheetState();
@@ -948,6 +1003,17 @@ class DealerPriceSheet extends ConsumerStatefulWidget {
 class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
   String? _product;
   final _price = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _product = widget.initialProduct;
+    final ip = widget.initialPrice;
+    if (ip != null) {
+      // parseLoose ',' → '.' çevirir; toString round-trip eder.
+      _price.text = ip == ip.roundToDouble() ? ip.toStringAsFixed(0) : '$ip';
+    }
+  }
 
   @override
   void dispose() {

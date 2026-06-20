@@ -40,6 +40,12 @@ abstract class DealerRepository {
   Future<List<DealerTransaction>> listAllTransactions();
   Future<void> addTransaction(DealerTransaction tx);
 
+  /// İşlemi siler/iptal eder (yanlış girilen kayıt). Teslimat ise
+  /// `dealer_delivery_items` satırı, diğer tipler `dealer_transactions`
+  /// satırı silinir. Bakiye, silinen kayıt artık okunmadığı için yeniden
+  /// hesaplanır. RLS owner-only (`*_delete_own`); şoför yetkisi yoktur.
+  Future<void> deleteTransaction(DealerTransaction tx);
+
   // Notes
   Future<List<DealerNote>> listNotes(String dealerId);
   Future<void> addNote(DealerNote note);

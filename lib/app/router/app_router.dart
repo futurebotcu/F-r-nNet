@@ -17,6 +17,7 @@ import '../../features/dealers/screens/add_driver_screen.dart';
 import '../../features/dealers/screens/dealer_adjustment_form_screen.dart';
 import '../../features/dealers/screens/dealer_delivery_form_screen.dart';
 import '../../features/dealers/screens/dealer_detail_screen.dart';
+import '../../features/dealers/screens/dealer_transaction_history_screen.dart';
 import '../../features/dealers/screens/dealer_end_of_day_tab_screen.dart';
 import '../../features/dealers/screens/dealer_payment_form_screen.dart';
 import '../../features/dealers/screens/dealer_range_report_screen.dart';
@@ -171,6 +172,7 @@ class AppRoutes {
   static const String dealers = '/dealers';
   static const String dealerNew = '/dealers/new';
   static String dealerEdit(String id) => '/dealers/$id/edit';
+  static String dealerHistory(String id) => '/dealers/$id/history';
   // Şoförler (Sprint 2 — patron-side yönetim).
   static const String dealerDrivers = '/dealers/drivers';
   static const String dealerDriverNew = '/dealers/drivers/new';
@@ -657,6 +659,12 @@ GoRouter createRouter() {
         path: '${AppRoutes.dealers}/:id',
         builder: (_, state) =>
             DealerDetailScreen(dealerId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '${AppRoutes.dealers}/:id/history',
+        builder: (_, state) => DealerTransactionHistoryScreen(
+          dealerId: state.pathParameters['id']!,
+        ),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/delivery',
