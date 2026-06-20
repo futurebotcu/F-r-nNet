@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../models/dealer_driver.dart';
 import '../providers/dealer_providers.dart';
 
 /// Şoför Ekle (Sprint 2).
@@ -16,6 +17,17 @@ import '../providers/dealer_providers.dart';
 class AddDriverScreen extends ConsumerStatefulWidget {
   const AddDriverScreen({super.key});
 
+  /// Bilgi popup metinleri (test referansı için public).
+  static const String halfPermissionInfo =
+      'Şoför teslimat, tahsilat, iade girer; atanmış bayileri ve geçmişi '
+      'görür. Fiyat, bayi bilgisi, işlem silme/düzeltme gibi patron '
+      'işlemlerini yapamaz.';
+  static const String fullPermissionInfo =
+      'Şoför, atanmış bayiler için Bayi Yönetimi\'ni patron gibi '
+      'kullanabilir. Fiyat düzenleme, işlem silme/düzeltme ve müşteri hesap '
+      'dökümü işlemlerini yapabilir. Şoförler menüsü ve başka şoför/atanmamış '
+      'bayi verileri yine kapalıdır.';
+
   @override
   ConsumerState<AddDriverScreen> createState() => _AddDriverScreenState();
 }
@@ -27,6 +39,7 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
   final _note = TextEditingController();
   bool _saving = false;
   String? _error;
+  DriverPermission _permission = DriverPermission.half;
 
   @override
   void dispose() {
@@ -60,6 +73,7 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
             name: name,
             phone: _phone.text.trim(),
             note: _note.text.trim(),
+            permissionLevel: _permission,
           );
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -78,6 +92,42 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
             : 'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.';
       });
     }
+  }
+
+  void _showPermissionInfo() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageH,
+            0,
+            AppSpacing.pageH,
+            AppSpacing.l,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text('Yarı Yetki',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800)),
+              SizedBox(height: 6),
+              Text(AddDriverScreen.halfPermissionInfo,
+                  style: TextStyle(fontSize: 13, height: 1.4)),
+              SizedBox(height: AppSpacing.m),
+              Text('Tam Yetki',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800)),
+              SizedBox(height: 6),
+              Text(AddDriverScreen.fullPermissionInfo,
+                  style: TextStyle(fontSize: 13, height: 1.4)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -119,6 +169,50 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
               controller: _note,
               label: 'Not (opsiyonel)',
               maxLines: 3,
+            ),
+            const SizedBox(height: AppSpacing.l),
+            Row(
+              children: [
+                const Text(
+                  'Yetki Seviyesi',
+                  style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.info_outline, size: 19),
+                  tooltip: 'Yetki seviyeleri',
+                  onPressed: _showPermissionInfo,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            SegmentedButton<DriverPermission>(
+              segments: const [
+                ButtonSegment(
+                  value: DriverPermission.half,
+                  label: Text('Yarı Yetki'),
+                  icon: Icon(Icons.shield_outlined, size: 18),
+                ),
+                ButtonSegment(
+                  value: DriverPermission.full,
+                  label: Text('Tam Yetki'),
+                  icon: Icon(Icons.verified_user_outlined, size: 18),
+                ),
+              ],
+              selected: {_permission},
+              onSelectionChanged: (s) =>
+                  setState(() => _permission = s.first),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              _permission == DriverPermission.full
+                  ? AddDriverScreen.fullPermissionInfo
+                  : AddDriverScreen.halfPermissionInfo,
+              style: const TextStyle(
+                  fontSize: 11.5, color: AppColors.textMuted, height: 1.35),
             ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.m),

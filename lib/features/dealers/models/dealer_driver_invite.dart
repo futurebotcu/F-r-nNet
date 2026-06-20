@@ -1,3 +1,5 @@
+import 'dealer_driver.dart';
+
 /// Şoför daveti (Sprint 6). Patron pending davet oluşturur; şoför kabul edince
 /// dealer_drivers (aktif bağlantı) oluşur. Supabase: dealer_driver_invites.
 enum DealerDriverInviteStatus { pending, accepted, rejected, cancelled }
@@ -43,6 +45,7 @@ class DealerDriverInvite {
     required this.status,
     required this.createdAt,
     this.ownerName = '',
+    this.permissionLevel = DriverPermission.half,
   });
 
   final String id;
@@ -55,4 +58,7 @@ class DealerDriverInvite {
 
   /// Şoför tarafı görünümü için davet eden işletme/kişi adı (opsiyonel).
   final String ownerName;
+
+  /// Davette taşınan yetki seviyesi; kabul edilince dealer_drivers'a kopyalanır.
+  final DriverPermission permissionLevel;
 }

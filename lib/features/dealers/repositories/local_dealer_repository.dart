@@ -141,6 +141,38 @@ class LocalDealerRepository implements DealerRepository {
     _notify();
   }
 
+  @override
+  Future<DriverPermission> myDriverPermission() async {
+    if (currentUserId == null) return DriverPermission.half;
+    final mine =
+        _drivers.where((d) => d.driverUserId == currentUserId && d.isActive);
+    return mine.any((d) => d.permissionLevel == DriverPermission.full)
+        ? DriverPermission.full
+        : DriverPermission.half;
+  }
+
+  @override
+  Future<void> driverDeleteTransaction(DealerTransaction tx) async {
+    _transactions.removeWhere((t) => t.id == tx.id);
+    _notify();
+  }
+
+  @override
+  Future<void> driverSetPrice({
+    required String dealerId,
+    required String productName,
+    required double unitPrice,
+  }) async {
+    _prices.add(DealerPrice(
+      id: 'p_${++_driverSeq}',
+      dealerId: dealerId,
+      productName: productName,
+      unitPrice: unitPrice,
+      validFrom: DateTime.now(),
+    ));
+    _notify();
+  }
+
   // ─────────────────────────────────────── Notes
 
   @override
@@ -185,6 +217,7 @@ class LocalDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) async {
     if (_drivers.any((d) => d.driverUserId == driverUserId)) {
       throw StateError('Bu kullanıcı zaten şoför olarak eklenmiş.');
@@ -196,6 +229,7 @@ class LocalDealerRepository implements DealerRepository {
       phone: phone,
       note: note,
       createdAt: DateTime.now(),
+      permissionLevel: permissionLevel,
     ));
     _notify();
   }
@@ -209,6 +243,7 @@ class LocalDealerRepository implements DealerRepository {
       phone: driver.phone,
       note: driver.note,
       isActive: driver.isActive,
+      permissionLevel: driver.permissionLevel,
     );
     _notify();
   }
@@ -237,6 +272,7 @@ class LocalDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) async {
     if (name.trim().isEmpty) throw StateError('Şoför adını gir.');
     // Local'de gerçek profiles yok; FN-ID normalize edilip hedef anahtar olarak
@@ -271,6 +307,7 @@ class LocalDealerRepository implements DealerRepository {
       note: note,
       status: DealerDriverInviteStatus.pending,
       createdAt: DateTime.now(),
+      permissionLevel: permissionLevel,
     ));
     _notify();
   }
@@ -307,6 +344,7 @@ class LocalDealerRepository implements DealerRepository {
           phone: inv.driverPhone,
           note: inv.note,
           createdAt: DateTime.now(),
+          permissionLevel: inv.permissionLevel,
         ));
       }
       _invites[i] = DealerDriverInvite(
@@ -393,9 +431,6 @@ class LocalDealerRepository implements DealerRepository {
     String? productName,
     String note = '',
   }) async {
-    if (type == DealerTransactionType.adjustment) {
-      throw StateError('Geçersiz işlem.');
-    }
     // Aktif olarak bu bayiye atanmış şoför müyüm? (currentUserId üzerinden)
     final myDriverIds = _drivers
         .where((d) => d.driverUserId == currentUserId && d.isActive)
@@ -412,14 +447,23 @@ class LocalDealerRepository implements DealerRepository {
     if (!assigned) {
       throw StateError('Bu bayiye işlem ekleme yetkin yok.');
     }
+    // Düzeltme (adjustment) yalnız TAM yetkili şofore açık (RPC ile aynı).
+    final isFull = _drivers.any(
+        (d) => d.id == myDriverId && d.permissionLevel == DriverPermission.full);
+    if (type == DealerTransactionType.adjustment && !isFull) {
+      throw StateError('Geçersiz işlem.');
+    }
     final dealer = _dealers.firstWhere((d) => d.id == dealerId,
         orElse: () => throw StateError('Bu bayiye işlem ekleme yetkin yok.'));
     if (!dealer.isActive) throw StateError('Geçersiz işlem.');
 
-    // Tek defter: patron ledger'ına (Local _transactions) düşer.
-    final double effectiveAmount = type == DealerTransactionType.payment
-        ? amount
-        : (quantity ?? 0) * (unitPrice ?? 0.0);
+    // Tek defter: patron ledger'ına (Local _transactions) düşer. Düzeltme
+    // işaretli tutarı korur; teslimat qty*price; tahsilat/iade amount.
+    final double effectiveAmount =
+        type == DealerTransactionType.payment ||
+                type == DealerTransactionType.adjustment
+            ? amount
+            : (quantity ?? 0) * (unitPrice ?? 0.0);
     _transactions.add(DealerTransaction(
       id: 'dtx_${++_driverSeq}',
       dealerId: dealerId,

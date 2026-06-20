@@ -9,6 +9,7 @@ import '../models/dealer_note.dart';
 import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
 import 'dealer_repository.dart';
+import 'driver_permission.dart';
 
 /// Supabase V1.2 implementasyonu — tüm bayi/müşteri verileri kalıcı tablolarda.
 ///
@@ -477,7 +478,8 @@ class SupabaseDealerRepository implements DealerRepository {
   // ───────────────────────────────────────────────── Şoförler (Sprint 2)
 
   static const String _driverColumns =
-      'id, driver_user_id, name, phone, note, is_active, created_at';
+      'id, driver_user_id, name, phone, note, is_active, created_at, '
+      'permission_level';
 
   DealerDriver _driverFromRow(Map<String, dynamic> row, {int count = 0}) {
     return DealerDriver(
@@ -489,6 +491,8 @@ class SupabaseDealerRepository implements DealerRepository {
       isActive: (row['is_active'] as bool?) ?? true,
       createdAt: DateTime.parse(row['created_at'] as String),
       assignedDealerCount: count,
+      permissionLevel:
+          DriverPermission.fromKey(row['permission_level'] as String?),
     );
   }
 
@@ -532,6 +536,7 @@ class SupabaseDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) async {
     final ownerId = _requireUserId();
     try {
@@ -539,6 +544,7 @@ class SupabaseDealerRepository implements DealerRepository {
         'owner_id': ownerId,
         'driver_user_id': driverUserId,
         'name': name,
+        'permission_level': permissionLevel.persistKey,
         if (phone.isNotEmpty) 'phone': phone,
         if (note.isNotEmpty) 'note': note,
       });
@@ -563,6 +569,7 @@ class SupabaseDealerRepository implements DealerRepository {
       'phone': driver.phone,
       'note': driver.note,
       'is_active': driver.isActive,
+      'permission_level': driver.permissionLevel.persistKey,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', driver.id);
     _notify();
@@ -689,12 +696,14 @@ class SupabaseDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) async {
     _requireUserId();
     try {
       await _client.rpc('create_driver_invite', params: <String, dynamic>{
         'p_target_firinnet_id': firinnetId,
         'p_driver_name': name,
+        'p_permission_level': permissionLevel.persistKey,
         if (phone.isNotEmpty) 'p_driver_phone': phone,
         if (note.isNotEmpty) 'p_note': note,
       });
@@ -779,9 +788,8 @@ class SupabaseDealerRepository implements DealerRepository {
     String note = '',
   }) async {
     _requireUserId();
-    if (type == DealerTransactionType.adjustment) {
-      throw StateError('Geçersiz işlem.');
-    }
+    // adjustment artık client'ta bloklanmaz — RPC karar verir (full şofor
+    // izinli, half için 'permission required' döner).
     try {
       await _client.rpc('driver_add_transaction', params: <String, dynamic>{
         'p_dealer_id': dealerId,
@@ -808,6 +816,59 @@ class SupabaseDealerRepository implements DealerRepository {
           msg.contains('invalid amount') ||
           msg.contains('invalid delivery line')) {
         throw StateError('Geçersiz işlem.');
+      }
+      rethrow;
+    }
+    _notifyContent();
+  }
+
+  @override
+  Future<DriverPermission> myDriverPermission() async {
+    final uid = _requireUserId();
+    final rows = await _client
+        .from('dealer_drivers')
+        .select('permission_level')
+        .eq('driver_user_id', uid)
+        .eq('is_active', true);
+    final anyFull = (rows as List)
+        .cast<Map<String, dynamic>>()
+        .any((r) => (r['permission_level'] as String?) == 'full');
+    return anyFull ? DriverPermission.full : DriverPermission.half;
+  }
+
+  @override
+  Future<void> driverDeleteTransaction(DealerTransaction tx) async {
+    _requireUserId();
+    try {
+      await _client.rpc('driver_delete_transaction', params: <String, dynamic>{
+        'p_id': tx.id,
+        'p_is_delivery': tx.type == DealerTransactionType.delivery,
+      });
+    } on sb.PostgrestException catch (e) {
+      if (e.message.contains('permission required')) {
+        throw const DriverPermissionException();
+      }
+      rethrow;
+    }
+    _notifyContent();
+  }
+
+  @override
+  Future<void> driverSetPrice({
+    required String dealerId,
+    required String productName,
+    required double unitPrice,
+  }) async {
+    _requireUserId();
+    try {
+      await _client.rpc('driver_set_price', params: <String, dynamic>{
+        'p_dealer_id': dealerId,
+        'p_product_name': productName,
+        'p_unit_price': unitPrice,
+      });
+    } on sb.PostgrestException catch (e) {
+      if (e.message.contains('permission required')) {
+        throw const DriverPermissionException();
       }
       rethrow;
     }

@@ -15,6 +15,7 @@ class DealerDriver {
     this.isActive = true,
     required this.createdAt,
     this.assignedDealerCount = 0,
+    this.permissionLevel = DriverPermission.half,
   });
 
   final String id;
@@ -31,12 +32,19 @@ class DealerDriver {
   /// Bu şoföre atanmış bayi sayısı (liste kartı için; repo doldurur).
   final int assignedDealerCount;
 
+  /// Yarı/Tam yetki (feature/dealer-driver-permission-levels). Tam yetkili
+  /// şoför atanmış bayilerde fiyat/silme/düzeltme yapabilir. Varsayılan yarı.
+  final DriverPermission permissionLevel;
+
+  bool get isFullPermission => permissionLevel == DriverPermission.full;
+
   DealerDriver copyWith({
     String? name,
     String? phone,
     String? note,
     bool? isActive,
     int? assignedDealerCount,
+    DriverPermission? permissionLevel,
   }) {
     return DealerDriver(
       id: id,
@@ -47,6 +55,18 @@ class DealerDriver {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt,
       assignedDealerCount: assignedDealerCount ?? this.assignedDealerCount,
+      permissionLevel: permissionLevel ?? this.permissionLevel,
     );
   }
+}
+
+/// Şoför yetki seviyesi. DB `dealer_drivers.permission_level` ('half'/'full').
+enum DriverPermission {
+  half,
+  full;
+
+  String get persistKey => name; // 'half' | 'full'
+
+  static DriverPermission fromKey(String? key) =>
+      key == 'full' ? DriverPermission.full : DriverPermission.half;
 }
