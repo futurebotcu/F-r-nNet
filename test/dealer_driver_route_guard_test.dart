@@ -1,7 +1,7 @@
 // PatronDriverGuard — patron şoför yönetimi route'ları deep-link hardening.
 //
 // Bireysel (şoför) direct /dealers/drivers'a gelse bile patron DriverListScreen
-// AÇILMAZ → DriverHomeScreen ("Şoför Paneli"). Ticari/toptancı → erişir.
+// AÇILMAZ → DriverHomeScreen ("Bayi Yönetimi" — şoför scoped). Ticari/toptancı → erişir.
 
 import 'package:firin_defter/features/dealers/providers/dealer_providers.dart';
 import 'package:firin_defter/features/dealers/repositories/local_dealer_repository.dart';
@@ -59,8 +59,9 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_wrap(_individual));
     await tester.pumpAndSettle();
-    // Şoför görünümü; patron yönetim listesi DEĞİL.
-    expect(find.text('Şoför Paneli'), findsOneWidget);
+    // Şoför görünümü (scoped Bayi Yönetimi); patron yönetim listesi DEĞİL.
+    expect(find.text('Bayi Yönetimi'), findsOneWidget);
+    expect(find.text('Şoför Paneli'), findsNothing);
     expect(find.byType(DriverListScreen), findsNothing);
     expect(find.text('Genel Hesap'), findsNothing);
   });

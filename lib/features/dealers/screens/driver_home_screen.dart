@@ -43,15 +43,20 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Şoför Paneli'),
+        title: const Text('Bayi Yönetimi'),
         bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(24),
+          preferredSize: Size.fromHeight(26),
           child: Padding(
-            padding: EdgeInsets.only(left: AppSpacing.pageH, bottom: 6),
+            padding: EdgeInsets.only(
+                left: AppSpacing.pageH, right: AppSpacing.pageH, bottom: 6),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text('Sana atanan bayiler ve işlemlerin',
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+              child: Text(
+                'Şoför modunda · Sana atanmış bayiler gösteriliyor',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              ),
             ),
           ),
         ),
@@ -70,11 +75,14 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
               Expanded(
                 child: IndexedStack(
                   index: _tab,
-                  children: const [
-                    _MyOverview(),
-                    _MyDealers(),
-                    _MyTransactions(),
-                    _MyReports(),
+                  children: [
+                    _MyOverview(
+                      onOpenDealers: () => setState(() => _tab = 1),
+                      onOpenActivity: () => setState(() => _tab = 2),
+                    ),
+                    const _MyDealers(),
+                    const _MyTransactions(),
+                    const _MyReports(),
                   ],
                 ),
               )
@@ -96,17 +104,17 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                 PremiumNavItem(
                   icon: Icons.storefront_outlined,
                   activeIcon: Icons.storefront_rounded,
-                  label: 'Atanan Bayiler',
+                  label: AppStrings.dealerShellTabDealers,
                 ),
                 PremiumNavItem(
                   icon: Icons.swap_vert_outlined,
                   activeIcon: Icons.swap_vert_rounded,
-                  label: 'Hareketlerim',
+                  label: AppStrings.dealerShellTabActivity,
                 ),
                 PremiumNavItem(
                   icon: Icons.analytics_outlined,
                   activeIcon: Icons.analytics_rounded,
-                  label: 'Raporlarım',
+                  label: AppStrings.dealerShellTabReports,
                 ),
               ],
             )
@@ -123,7 +131,9 @@ Color _netColor(double net) {
 // ── Genel Bakış ───────────────────────────────────────────────────────────
 
 class _MyOverview extends ConsumerWidget {
-  const _MyOverview();
+  const _MyOverview({required this.onOpenDealers, required this.onOpenActivity});
+  final VoidCallback onOpenDealers;
+  final VoidCallback onOpenActivity;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -134,6 +144,10 @@ class _MyOverview extends ConsumerWidget {
     final recent =
         ref.watch(myDriverTransactionsProvider).valueOrNull ?? const [];
     final names = {for (final d in assigned) d.id: d.name};
+    final lastTxByDealer = <String, DealerTransaction>{};
+    for (final t in recent) {
+      lastTxByDealer.putIfAbsent(t.dealerId, () => t);
+    }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -145,12 +159,33 @@ class _MyOverview extends ConsumerWidget {
           data: (s) => _MyKpis(assignedCount: assigned.length, summary: s),
         ),
         const SizedBox(height: AppSpacing.l),
-        const Text('SON HAREKETLERİM',
-            style: TextStyle(
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.w700,
-                fontSize: 11.5,
-                letterSpacing: 0.6)),
+        // Atanan bayiler kısa listesi (karttan detay/işlem ekranına geçilir).
+        _OverviewHeader(
+          title: 'ATANAN BAYİLER',
+          actionLabel: assigned.length > 3 ? 'Tümünü gör' : null,
+          onAction: onOpenDealers,
+        ),
+        const SizedBox(height: AppSpacing.s),
+        if (assigned.isEmpty)
+          const _Box('Sana atanmış bayi yok.')
+        else
+          for (final d in assigned.take(3))
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s),
+              child: DriverScopedDealerCard(
+                dealer: d,
+                balance: ref.watch(balanceSummaryProvider(d.id)).valueOrNull,
+                lastTx: lastTxByDealer[d.id],
+                onTap: () =>
+                    context.push(AppRoutes.driverDealerDetail(d.id)),
+              ),
+            ),
+        const SizedBox(height: AppSpacing.l),
+        _OverviewHeader(
+          title: 'SON HAREKETLER',
+          actionLabel: recent.isNotEmpty ? 'Tümünü gör' : null,
+          onAction: onOpenActivity,
+        ),
         const SizedBox(height: AppSpacing.s),
         if (recent.isEmpty)
           const _Box('Henüz işlem girmedin.')
@@ -173,6 +208,44 @@ class _MyOverview extends ConsumerWidget {
                         color: AppColors.borderHairline),
                 ],
               ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Genel Bakış bölüm başlığı + opsiyonel "Tümünü gör" aksiyonu.
+class _OverviewHeader extends StatelessWidget {
+  const _OverviewHeader({required this.title, this.actionLabel, this.onAction});
+  final String title;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w700,
+            fontSize: 11.5,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const Spacer(),
+        if (actionLabel != null && onAction != null)
+          GestureDetector(
+            onTap: onAction,
+            child: Text(
+              actionLabel!,
+              style: const TextStyle(
+                color: AppColors.brandLemonPressed,
+                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+              ),
             ),
           ),
       ],
@@ -255,6 +328,15 @@ class _MyDealers extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.pageH, AppSpacing.m, AppSpacing.pageH, AppSpacing.xxl),
       children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: AppSpacing.s, left: 2),
+          child: Text(
+            'Sana atanmış bayiler',
+            style: TextStyle(
+                fontSize: 12, color: AppColors.textMuted,
+                fontWeight: FontWeight.w600),
+          ),
+        ),
         for (final d in assigned)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.s),
@@ -270,7 +352,7 @@ class _MyDealers extends ConsumerWidget {
   }
 }
 
-// ── Hareketlerim ────────────────────────────────────────────────────────────
+// ── Hareketler ──────────────────────────────────────────────────────────────
 
 class _MyTransactions extends ConsumerWidget {
   const _MyTransactions();
@@ -291,7 +373,7 @@ class _MyTransactions extends ConsumerWidget {
   }
 }
 
-// ── Raporlarım ──────────────────────────────────────────────────────────────
+// ── Raporlar ────────────────────────────────────────────────────────────────
 
 class _MyReports extends ConsumerStatefulWidget {
   const _MyReports();
