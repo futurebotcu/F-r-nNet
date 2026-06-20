@@ -43,8 +43,30 @@ abstract class DealerRepository {
   /// İşlemi siler/iptal eder (yanlış girilen kayıt). Teslimat ise
   /// `dealer_delivery_items` satırı, diğer tipler `dealer_transactions`
   /// satırı silinir. Bakiye, silinen kayıt artık okunmadığı için yeniden
-  /// hesaplanır. RLS owner-only (`*_delete_own`); şoför yetkisi yoktur.
+  /// hesaplanır. RLS owner-only (`*_delete_own`); patron aksiyonu.
   Future<void> deleteTransaction(DealerTransaction tx);
+
+  // ---- Tam yetkili şoför yazımları (feature/dealer-driver-permission-levels)
+  // Owner-only RLS şoföre kapalı; tam yetkili şoför bu işlemleri SECURITY
+  // DEFINER RPC'ler üzerinden yapar (atama + permission_level='full' sunucuda
+  // doğrulanır). Yarı yetkili şoför çağırmaz (decorator engeller).
+
+  /// Mevcut kullanıcının (şoför) yetki seviyesi: 'full' herhangi aktif
+  /// dealer_drivers kaydı tam yetkiliyse, aksi halde 'half'. Şoför değilse
+  /// 'half' döner (etkisiz).
+  Future<DriverPermission> myDriverPermission();
+
+  /// Tam yetkili şoför atanmış bayide işlem siler (`driver_delete_transaction`
+  /// RPC). Teslimat → delivery_item, diğerleri → dealer_transactions.
+  Future<void> driverDeleteTransaction(DealerTransaction tx);
+
+  /// Tam yetkili şoför atanmış bayide yeni aktif fiyat ekler
+  /// (`driver_set_price` RPC; tarihçeli valid_from=bugün).
+  Future<void> driverSetPrice({
+    required String dealerId,
+    required String productName,
+    required double unitPrice,
+  });
 
   // Notes
   Future<List<DealerNote>> listNotes(String dealerId);
@@ -65,6 +87,7 @@ abstract class DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   });
 
   /// Ad/telefon/not/aktiflik günceller.
@@ -105,6 +128,7 @@ abstract class DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   });
 
   /// Patronun bekleyen davetleri (Şoförler listesi "Bekleyen Davetler").

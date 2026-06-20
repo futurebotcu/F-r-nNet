@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer.dart';
+import '../models/dealer_driver.dart';
 import '../models/dealer_transaction.dart';
 import '../models/driver_summary.dart';
 import '../providers/dealer_providers.dart';
@@ -101,6 +102,42 @@ class DriverDetailScreen extends ConsumerWidget {
                                     .read(dealerRepositoryProvider)
                                     .updateDriver(
                                         driver.copyWith(isActive: v));
+                                ref.invalidate(driverByIdProvider(driverId));
+                                ref.invalidate(driversListProvider);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.s),
+                        Row(
+                          children: [
+                            const Text('Yetki',
+                                style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary)),
+                            const Spacer(),
+                            SegmentedButton<DriverPermission>(
+                              showSelectedIcon: false,
+                              style: ButtonStyle(
+                                visualDensity: VisualDensity.compact,
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              segments: const [
+                                ButtonSegment(
+                                    value: DriverPermission.half,
+                                    label: Text('Yarı')),
+                                ButtonSegment(
+                                    value: DriverPermission.full,
+                                    label: Text('Tam')),
+                              ],
+                              selected: {driver.permissionLevel},
+                              onSelectionChanged: (s) async {
+                                await ref
+                                    .read(dealerRepositoryProvider)
+                                    .updateDriver(driver.copyWith(
+                                        permissionLevel: s.first));
                                 ref.invalidate(driverByIdProvider(driverId));
                                 ref.invalidate(driversListProvider);
                               },

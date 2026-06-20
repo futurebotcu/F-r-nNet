@@ -133,6 +133,26 @@ class GuardedDealerRepository implements DealerRepository {
   }
 
   @override
+  Future<DriverPermission> myDriverPermission() => inner.myDriverPermission();
+
+  @override
+  Future<void> driverDeleteTransaction(DealerTransaction tx) {
+    _requireWrite('işlemi silmek');
+    return inner.driverDeleteTransaction(tx);
+  }
+
+  @override
+  Future<void> driverSetPrice({
+    required String dealerId,
+    required String productName,
+    required double unitPrice,
+  }) {
+    _requireWrite('fiyat eklemek');
+    return inner.driverSetPrice(
+        dealerId: dealerId, productName: productName, unitPrice: unitPrice);
+  }
+
+  @override
   Future<void> addNote(DealerNote note) {
     _requireWrite('bayi notu eklemek');
     return inner.addNote(note);
@@ -146,6 +166,7 @@ class GuardedDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) {
     _requireWrite('şoför eklemek');
     return inner.addDriver(
@@ -153,6 +174,7 @@ class GuardedDealerRepository implements DealerRepository {
       name: name,
       phone: phone,
       note: note,
+      permissionLevel: permissionLevel,
     );
   }
 
@@ -177,10 +199,15 @@ class GuardedDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) {
     _requireWrite('şoför daveti göndermek');
     return inner.createDriverInvite(
-        firinnetId: firinnetId, name: name, phone: phone, note: note);
+        firinnetId: firinnetId,
+        name: name,
+        phone: phone,
+        note: note,
+        permissionLevel: permissionLevel);
   }
 
   @override

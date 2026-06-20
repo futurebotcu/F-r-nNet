@@ -33,6 +33,10 @@ class DriverScopedDealerRepository implements DealerRepository {
   // mesaja çevirdiği tipli exception.
   static Never _denied() => throw const DriverPermissionException();
 
+  /// Mevcut şoför tam yetkili mi? (fiyat/silme/düzeltme kararı).
+  Future<bool> _isFull() async =>
+      (await inner.myDriverPermission()) == DriverPermission.full;
+
   // ── Dealers: atanmışla sınırlı ──
   @override
   Future<List<Dealer>> listDealers({
@@ -74,11 +78,11 @@ class DriverScopedDealerRepository implements DealerRepository {
       inner.listNotes(dealerId);
 
   // ── Yazma köprüsü: normal formların addTransaction'ı → şoför RPC'si ──
-  // Teslimat/Tahsilat/İade → addDriverTransaction. Düzeltme (adjustment) şoföre
-  // kapalı → temiz "patron yetkisi gerekir" mesajı.
+  // Teslimat/Tahsilat/İade → addDriverTransaction (her şofor). Düzeltme
+  // (adjustment) yalnız TAM yetkili şofore açık; yarı yetkili → temiz mesaj.
   @override
-  Future<void> addTransaction(DealerTransaction tx) {
-    if (tx.type == DealerTransactionType.adjustment) {
+  Future<void> addTransaction(DealerTransaction tx) async {
+    if (tx.type == DealerTransactionType.adjustment && !await _isFull()) {
       throw const DriverPermissionException();
     }
     return inner.addDriverTransaction(
@@ -93,9 +97,12 @@ class DriverScopedDealerRepository implements DealerRepository {
     );
   }
 
-  // İşlem silme owner aksiyonu → şoföre kapalı (temiz mesaj).
+  // İşlem silme: TAM yetkili şofor → RPC; yarı yetkili → temiz mesaj.
   @override
-  Future<void> deleteTransaction(DealerTransaction tx) async => _denied();
+  Future<void> deleteTransaction(DealerTransaction tx) async {
+    if (!await _isFull()) throw const DriverPermissionException();
+    return inner.driverDeleteTransaction(tx);
+  }
 
   @override
   Future<void> addDriverTransaction({
@@ -161,8 +168,16 @@ class DriverScopedDealerRepository implements DealerRepository {
   Future<void> setActive(String dealerId, {required bool active}) async =>
       _denied();
 
+  // Fiyat ekleme/düzenleme: TAM yetkili şofor → RPC; yarı yetkili → temiz mesaj.
   @override
-  Future<void> addPrice(DealerPrice price) async => _denied();
+  Future<void> addPrice(DealerPrice price) async {
+    if (!await _isFull()) throw const DriverPermissionException();
+    return inner.driverSetPrice(
+      dealerId: price.dealerId,
+      productName: price.productName,
+      unitPrice: price.unitPrice,
+    );
+  }
 
   @override
   Future<void> addDriver({
@@ -170,6 +185,7 @@ class DriverScopedDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) async =>
       _denied();
 
@@ -189,11 +205,29 @@ class DriverScopedDealerRepository implements DealerRepository {
     required String name,
     String phone = '',
     String note = '',
+    DriverPermission permissionLevel = DriverPermission.half,
   }) async =>
       _denied();
 
   @override
   Future<void> cancelDriverInvite(String inviteId) async => _denied();
+
+  // ── Yetki seviyesi + tam-yetkili şofor RPC passthrough ──
+  @override
+  Future<DriverPermission> myDriverPermission() => inner.myDriverPermission();
+
+  @override
+  Future<void> driverDeleteTransaction(DealerTransaction tx) =>
+      inner.driverDeleteTransaction(tx);
+
+  @override
+  Future<void> driverSetPrice({
+    required String dealerId,
+    required String productName,
+    required double unitPrice,
+  }) =>
+      inner.driverSetPrice(
+          dealerId: dealerId, productName: productName, unitPrice: unitPrice);
 
   // ── Streams + dispose: delegate ──
   @override
