@@ -66,7 +66,11 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
 
     return PremiumScaffold(
       appBar: AppBar(
-        title: Text(isWholesaler ? 'Müşteriler' : AppStrings.dealerListTitle),
+        title: Text(
+          isWholesaler
+              ? AppStrings.wholesalerListTitle
+              : AppStrings.dealerListTitle,
+        ),
         actions: [
           IconButton(
             tooltip: isWholesaler ? 'Müşteri ekle' : AppStrings.dealerAddTooltip,
@@ -91,11 +95,15 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
           data: (all) {
             if (all.isEmpty) {
               return EmptyState(
-                title: AppStrings.dealerListEmptyTitle,
-                subtitle: AppStrings.dealerListEmptySub,
+                title: isWholesaler
+                    ? AppStrings.wholesalerListEmptyTitle
+                    : AppStrings.dealerListEmptyTitle,
+                subtitle: isWholesaler
+                    ? AppStrings.wholesalerListEmptySub
+                    : AppStrings.dealerListEmptySub,
                 icon: Icons.storefront_rounded,
                 actionLabel: isWholesaler
-                    ? 'Müşteri ekle'
+                    ? AppStrings.wholesalerListEmptyCta
                     : AppStrings.dealerListEmptyCta,
                 onAction: () => context.push(
                   isWholesaler
@@ -152,13 +160,15 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                       fontWeight: FontWeight.w500,
                       color: AppColors.textPrimary,
                     ),
-                    decoration: const InputDecoration(
-                      hintText: AppStrings.dealerSearchHint,
-                      prefixIcon: Icon(
+                    decoration: InputDecoration(
+                      hintText: isWholesaler
+                          ? AppStrings.wholesalerSearchHint
+                          : AppStrings.dealerSearchHint,
+                      prefixIcon: const Icon(
                         Icons.search_rounded,
                         color: AppColors.softGold,
                       ),
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.l,
                         vertical: 14,
                       ),
@@ -173,18 +183,22 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                   onChanged: (f) => setState(() => _filter = f),
                 ),
                 if (filtered.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.l),
                     child: EmptyState(
-                      title: AppStrings.dealerListNoMatch,
+                      title: isWholesaler
+                          ? AppStrings.wholesalerListNoMatch
+                          : AppStrings.dealerListNoMatch,
                       subtitle: AppStrings.dealerListNoMatchHint,
                       icon: Icons.search_off_rounded,
                       compact: true,
                     ),
                   )
                 else
-                  const SectionLabel(
-                    title: AppStrings.dealerListSection,
+                  SectionLabel(
+                    title: isWholesaler
+                        ? AppStrings.wholesalerListSection
+                        : AppStrings.dealerListSection,
                     topGap: AppSpacing.s,
                     bottomGap: AppSpacing.s,
                   ),

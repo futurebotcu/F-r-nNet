@@ -10,11 +10,11 @@ extension AccountTypeLabel on AccountType {
   String get label {
     switch (this) {
       case AccountType.commercial:
-        return 'Ticari';
+        return 'Fırın / İşletme';
       case AccountType.individual:
-        return 'Bireysel';
+        return 'Usta / Çalışan';
       case AccountType.wholesaler:
-        return 'Toptancı';
+        return 'Tedarikçi / Toptancı';
     }
   }
 }

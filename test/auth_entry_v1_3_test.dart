@@ -166,11 +166,13 @@ void main() {
     });
 
     test('Role select rol açıklamaları mevcut', () {
-      expect(AppStrings.roleCommercialTitle, 'Ticari');
+      // Rol standardı: commercial→Fırın/İşletme, individual→Usta/Çalışan,
+      // wholesaler→Tedarikçi/Toptancı (app-wide naming standardization).
+      expect(AppStrings.roleCommercialTitle, 'Fırın / İşletme');
       expect(AppStrings.roleCommercialSub, contains('Fırın'));
-      expect(AppStrings.roleIndividualTitle, 'Bireysel');
+      expect(AppStrings.roleIndividualTitle, 'Usta / Çalışan');
       expect(AppStrings.roleIndividualSub, contains('Usta'));
-      expect(AppStrings.roleWholesalerTitle, 'Toptancı');
+      expect(AppStrings.roleWholesalerTitle, 'Tedarikçi / Toptancı');
       expect(AppStrings.roleWholesalerSub, contains('Müşteri'));
     });
   });

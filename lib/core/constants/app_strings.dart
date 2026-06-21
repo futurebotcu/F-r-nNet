@@ -35,13 +35,13 @@ class AppStrings {
   static const String roleSelectTitle = 'Hangi rol senin için?';
   static const String roleSelectSubtitle =
       'Sektördeki yerini seç — formdaki alanları rolüne göre düzenleriz.';
-  static const String roleCommercialTitle = 'Ticari';
+  static const String roleCommercialTitle = 'Fırın / İşletme';
   static const String roleCommercialSub =
       'Fırın işletmesi, bayi ve üretim yönetimi';
-  static const String roleIndividualTitle = 'Bireysel';
+  static const String roleIndividualTitle = 'Usta / Çalışan';
   static const String roleIndividualSub =
       'Usta profili, iş arama ve reçeteler';
-  static const String roleWholesalerTitle = 'Toptancı';
+  static const String roleWholesalerTitle = 'Tedarikçi / Toptancı';
   static const String roleWholesalerSub =
       'Müşteri, ürün, fiyat ve teslimat yönetimi';
 
@@ -103,9 +103,9 @@ class AppStrings {
 
   // Profile
   static const String accountType = 'Hesap türü';
-  static const String accountCommercial = 'Ticari';
-  static const String accountIndividual = 'Bireysel';
-  static const String accountWholesaler = 'Toptancı';
+  static const String accountCommercial = 'Fırın / İşletme';
+  static const String accountIndividual = 'Usta / Çalışan';
+  static const String accountWholesaler = 'Tedarikçi / Toptancı';
   static const String displayName = 'Profil adı';
   static const String city = 'Şehir';
   static const String roleBadge = 'Meslek rozeti';
@@ -239,8 +239,12 @@ class AppStrings {
   static const String errorGenericTitle = 'Bir şeyler ters gitti';
   static const String errorGenericSubtitle =
       'İçerik şu an yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+  // Ortak kullanıcı-dostu işlem hata metinleri (ham exception UI'a sızmaz).
+  static const String commonSaveError = 'Kaydedilemedi. Lütfen tekrar dene.';
+  static const String commonFeedShareError =
+      'Akışta paylaşılamadı. Lütfen tekrar dene.';
   static const String storiesMyStoryLabel = 'Senin Hikayen';
-  static const String storiesEmptyHint = 'Hikaye akışı yakında.';
+  static const String storiesEmptyHint = 'Henüz hikaye paylaşılmamış.';
 
   // V2 Social Core Commit 2 — stories
   static const String storyCreateTitle = 'Hikaye ekle';
@@ -893,9 +897,9 @@ class AppStrings {
   static const String profileWorkerCitiesLabel = 'Tercih edilen şehirler';
   static const String profileWorkerShiftLabel = 'Vardiya tercihi';
   static const Map<String, String> profileAccountTypeLabels = <String, String>{
-    'commercial': 'Ticari',
-    'individual': 'Bireysel',
-    'wholesaler': 'Toptancı',
+    'commercial': 'Fırın / İşletme',
+    'individual': 'Usta / Çalışan',
+    'wholesaler': 'Tedarikçi / Toptancı',
   };
 
   // Professional Profile Center Sprint 1 — çalışma geçmişi + iş arama + durum.
@@ -1450,6 +1454,18 @@ class AppStrings {
       'Bayilerini ekledikçe teslimat, iade ve tahsilatları '
       'tek yerden yöneteceksin.';
   static const String dealerListEmptyCta = 'İlk bayiyi ekle';
+  // Tedarikçi/Toptancı dili — aynı liste yüzeyi "Müşteri" bağlamıyla
+  // (Fırın/İşletme'de "Bayi" dili korunur; rol-bazlı seçilir).
+  static const String wholesalerListTitle = 'Müşteri Yönetimi';
+  static const String wholesalerSearchHint = 'Müşteri adı, bölge veya kişi ara';
+  static const String wholesalerListSection = 'Müşteriler';
+  static const String wholesalerListNoMatch =
+      'Bu kriterlerle eşleşen müşteri yok.';
+  static const String wholesalerListEmptyTitle = 'Henüz müşteri eklenmemiş.';
+  static const String wholesalerListEmptySub =
+      'İlk müşterini ekleyerek teslimat ve tahsilatlarını takip etmeye '
+      'başlayabilirsin.';
+  static const String wholesalerListEmptyCta = 'İlk müşteriyi ekle';
   static const String dealerCardBalanceLabel = 'Bakiye';
   static const String dealerCardCreditLabel = 'Alacak';
   static const String dealerCardClosedLabel = 'Kapalı';
