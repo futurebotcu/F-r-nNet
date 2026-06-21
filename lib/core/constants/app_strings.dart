@@ -340,6 +340,7 @@ class AppStrings {
   static const String feedActionShare = 'Paylaş';
   static const String feedActionSave = 'Kaydet';
   static const String feedActionRepost = 'Yeniden paylaş';
+  static const String feedActionReply = 'Cevapla';
   static const String feedActionGoToGroup = 'Grupta gör';
   // Repost (toggle) geri bildirim + hata.
   static const String feedRepostedSnack = 'Yeniden paylaşıldı.';

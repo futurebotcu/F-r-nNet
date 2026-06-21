@@ -371,7 +371,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
               debugPrint(
                 '[FirinNet][PostCard] card tap → detail postId=${post.id}',
               );
-              SocialCommentsPage.show(context, post.id);
+              SocialCommentsPage.show(context, post.id, initialPost: post);
             },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +398,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             onLike: _likeBusy ? null : () => _onLikeTap(repo),
             onComment: () {
               debugPrint('[FirinNet][PostCard] comment tap postId=${post.id}');
-              SocialCommentsPage.show(context, post.id);
+              SocialCommentsPage.show(context, post.id, initialPost: post);
             },
             onRepost: _repostBusy ? null : () => _onRepostTap(repo),
             onShare: _shareBusy ? null : _onShareTap,
