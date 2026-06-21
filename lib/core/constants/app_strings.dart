@@ -947,9 +947,9 @@ class AppStrings {
   static const String cvOpenJobSeekCta = 'CV\'den İş Arıyorum ilanı aç';
   static const String cvUpdateJobSeekCta = 'Aktif iş ilanını düzenle';
   static const Map<String, String> cvEntryTypeLabels = <String, String>{
-    'individual': 'Bireysel / Usta',
-    'commercial': 'Ticari / İşletme',
-    'wholesaler': 'Toptancı',
+    'individual': 'Usta / Çalışan',
+    'commercial': 'Fırın / İşletme',
+    'wholesaler': 'Tedarikçi / Toptancı',
     'other': 'Diğer',
   };
   static const String profileStatusSeeking = 'İş arıyor';

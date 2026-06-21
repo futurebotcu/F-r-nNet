@@ -241,11 +241,11 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
     );
     switch (account) {
       case AccountType.individual:
-        return 'Bireysel';
+        return 'Usta / Çalışan';
       case AccountType.commercial:
-        return 'Ticari';
+        return 'Fırın / İşletme';
       case AccountType.wholesaler:
-        return 'Tedarikçi';
+        return 'Tedarikçi / Toptancı';
       case null:
         return '';
     }
