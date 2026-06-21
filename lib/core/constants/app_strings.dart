@@ -944,7 +944,10 @@ class AppStrings {
   static const String cvVisibilityPublic = 'Profilde görünür';
   static const String cvVisibilityHidden = 'Gizli';
   static const String cvEntryTypeLabel = 'Kayıt türü';
-  static const String cvOpenJobSeekCta = 'CV\'den İş Arıyorum ilanı aç';
+  // Not: AppPrimaryButton label'ı uppercase + letterSpacing ile render eder;
+  // "CV'den" ön-eki kaldırıldı (zaten CV merkezindeyiz) → Galaxy A34'te 11px
+  // sağ taşma giderildi, buton fonksiyonu/akışı aynı.
+  static const String cvOpenJobSeekCta = 'İş Arıyorum ilanı aç';
   static const String cvUpdateJobSeekCta = 'Aktif iş ilanını düzenle';
   static const Map<String, String> cvEntryTypeLabels = <String, String>{
     'individual': 'Usta / Çalışan',
