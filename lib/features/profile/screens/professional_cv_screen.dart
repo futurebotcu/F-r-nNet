@@ -78,11 +78,13 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text(AppStrings.cvBioSaved)));
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ).showSnackBar(
+        const SnackBar(content: Text(AppStrings.commonSaveError)),
+      );
     } finally {
       if (mounted) setState(() => _savingBio = false);
     }
@@ -556,11 +558,13 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ).showSnackBar(
+        const SnackBar(content: Text(AppStrings.commonSaveError)),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

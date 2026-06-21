@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
@@ -849,12 +850,14 @@ class _ShareSheet extends ConsumerWidget {
           context,
         ).showSnackBar(const SnackBar(content: Text('Reçete akışa eklendi.')));
       }
-    } catch (e) {
+    } catch (_) {
       if (context.mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Feed paylaşımı başarısız: $e')));
+        ).showSnackBar(
+          const SnackBar(content: Text(AppStrings.commonFeedShareError)),
+        );
       }
     }
   }

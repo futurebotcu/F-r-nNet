@@ -104,7 +104,12 @@ void main() {
       });
     }
 
-    test('Toptancı panel kartı fırın-müşteri odaklı copy', () {
+    test('cardWholesaleCustomers legacy sabiti korunur (artık ana kart değil)',
+        () {
+      // NOT: Toptancı ana kartı artık "Bayi Paneli" → /dealers (parity).
+      // `cardWholesaleCustomers = 'Fırın Müşterileri'` yalnız legacy /wholesale
+      // /customers route'u + geriye dönük uyumluluk için duruyor; kullanıcıya
+      // ana giriş kartı olarak GÖSTERİLMEZ. Sabit silinmedi.
       final src = _read('lib/core/constants/app_strings.dart');
       expect(src.contains("cardWholesaleCustomers = 'Fırın Müşterileri'"),
           isTrue);

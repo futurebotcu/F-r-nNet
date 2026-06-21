@@ -209,11 +209,13 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
         ),
       );
       Navigator.of(context).pop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ).showSnackBar(
+        const SnackBar(content: Text(AppStrings.commonSaveError)),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

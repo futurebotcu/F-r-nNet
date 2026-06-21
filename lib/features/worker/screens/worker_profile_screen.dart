@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -241,11 +242,13 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
         const SnackBar(content: Text('Ustalık bilgilerin kaydedildi.')),
       );
       Navigator.of(context).maybePop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ).showSnackBar(
+        const SnackBar(content: Text(AppStrings.commonSaveError)),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

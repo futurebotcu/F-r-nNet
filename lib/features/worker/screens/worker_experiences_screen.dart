@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
@@ -338,11 +339,13 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Kaydedilemedi: $e')));
+      ).showSnackBar(
+        const SnackBar(content: Text(AppStrings.commonSaveError)),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
