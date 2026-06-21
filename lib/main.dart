@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'app/theme/app_colors.dart';
 import 'core/config/app_config.dart';
+import 'features/notifications/push/push_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,9 @@ Future<void> main() async {
       anonKey: AppConfig.supabaseAnonKey,
     );
   }
+
+  // Push (FCM) — guard'lı init; config eksik/başarısızsa app etkilenmez.
+  await PushNotificationService.initFirebase();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

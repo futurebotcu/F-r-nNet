@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../messaging/services/chat_media_signed_url_cache.dart';
+import '../../notifications/push/push_notification_service.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/auth_providers.dart';
 import '../providers/guest_mode_provider.dart';
@@ -24,6 +25,9 @@ Future<void> performSignOut(BuildContext context, WidgetRef ref) async {
   final auth = ref.read(authRepositoryProvider);
   if (auth != null) {
     try {
+      // Push: oturum HÂLÂ geçerliyken token'ı pasifleştir (deactivate RPC
+      // auth.uid() ister) → bu cihaza artık push gitmez.
+      await PushNotificationService.unregister();
       await auth.signOut();
     } catch (_) {
       // Ağ kopuksa bile local state'i temizle.
