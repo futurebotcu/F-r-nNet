@@ -136,7 +136,11 @@ void main() {
     });
 
     test('Comment icon opens SocialCommentsPage.show', () {
-      expect(src.contains('SocialCommentsPage.show(context, post.id)'), isTrue);
+      expect(
+        src.contains('SocialCommentsPage.show(context, post.id, '
+            'initialPost: post)'),
+        isTrue,
+      );
       expect(src.contains('FeedCommentSheet'), isFalse);
     });
 

@@ -194,7 +194,8 @@ void main() {
           .where((l) => !l.trimLeft().startsWith('//'))
           .join('\n');
       expect(
-        stripped.contains('SocialCommentsPage.show(context, post.id)'),
+        stripped.contains('SocialCommentsPage.show(context, post.id, '
+            'initialPost: post)'),
         isTrue,
         reason: 'Action row + CommentsPreview SocialCommentsPage açar',
       );

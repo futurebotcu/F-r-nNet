@@ -47,17 +47,29 @@ final _replyTargetProvider =
     StateProvider.autoDispose<({String id, String author})?>((ref) => null);
 
 class SocialCommentsPage extends ConsumerWidget {
-  const SocialCommentsPage({super.key, required this.postId});
+  const SocialCommentsPage({super.key, required this.postId, this.initialPost});
 
   final String postId;
 
+  /// Feed kartından gelen bilinen gönderi. Verilirse detay açılışında ana
+  /// gönderi İLK FRAME'de tam çizilir; postAsync loading'de küçük fallback'e
+  /// düşüp post gelince yorumları aşağı itme/sıçrama OLMAZ. null ise async.
+  final FeedPost? initialPost;
+
   /// Yorum ekranını tam ekran modal route olarak açar.
-  static Future<void> show(BuildContext context, String postId) {
+  static Future<void> show(
+    BuildContext context,
+    String postId, {
+    FeedPost? initialPost,
+  }) {
     debugPrint('[FirinNet][Comments] open postId=$postId');
     return Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
-        builder: (_) => SocialCommentsPage(postId: postId),
+        builder: (_) => SocialCommentsPage(
+          postId: postId,
+          initialPost: initialPost,
+        ),
       ),
     );
   }
@@ -66,6 +78,9 @@ class SocialCommentsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final commentsAsync = ref.watch(socialCommentsProvider(postId));
     final postAsync = ref.watch(feedPostByIdProvider(postId));
+    // Detay açılış pozisyonu fix: ana gönderi İLK FRAME'de tam çizilsin diye
+    // önce feed kartından gelen bilinen [initialPost], sonra async refresh.
+    final post = postAsync.valueOrNull ?? initialPost;
     final user = ref.watch(currentAuthUserProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -106,7 +121,7 @@ class SocialCommentsPage extends ConsumerWidget {
                 // spinner flash yok; yeni yorum sessiz reload ile eklenir.
                 skipLoadingOnReload: true,
                 loading: () => _ScrollableShell(
-                  postAsync: postAsync,
+                  post: post,
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
                     child: Center(child: CircularProgressIndicator()),
@@ -115,7 +130,7 @@ class SocialCommentsPage extends ConsumerWidget {
                 error: (e, st) {
                   debugPrint('[FirinNet][Comments] list error: $e');
                   return _ScrollableShell(
-                    postAsync: postAsync,
+                    post: post,
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.xl),
                       child: Center(
@@ -136,7 +151,7 @@ class SocialCommentsPage extends ConsumerWidget {
                     '[FirinNet][Comments] list loaded count=${items.length}',
                   );
                   return _PostDetailScroll(
-                    postAsync: postAsync,
+                    post: post,
                     items: items,
                     user: user,
                     postId: postId,
@@ -156,9 +171,9 @@ class SocialCommentsPage extends ConsumerWidget {
 /// Loading/error durumunda da post header'ı üstte göster: scroll'a sahip
 /// bir gövde + üstte `_PostContextHeader` + altında child (loader/hata).
 class _ScrollableShell extends StatelessWidget {
-  const _ScrollableShell({required this.postAsync, required this.child});
+  const _ScrollableShell({required this.post, required this.child});
 
-  final AsyncValue<FeedPost?> postAsync;
+  final FeedPost? post;
   final Widget child;
 
   @override
@@ -168,7 +183,7 @@ class _ScrollableShell extends StatelessWidget {
         parent: BouncingScrollPhysics(),
       ),
       children: [
-        _PostContextHeader(postAsync: postAsync),
+        _PostContextHeader(post: post),
         const _SectionHeading(count: 0),
         child,
       ],
@@ -180,13 +195,13 @@ class _ScrollableShell extends StatelessWidget {
 /// "Yorumlar (N)" başlığı + altında yorumlar.
 class _PostDetailScroll extends ConsumerWidget {
   const _PostDetailScroll({
-    required this.postAsync,
+    required this.post,
     required this.items,
     required this.user,
     required this.postId,
   });
 
-  final AsyncValue<FeedPost?> postAsync;
+  final FeedPost? post;
   final List<SocialComment> items;
   final dynamic user; // currentAuthUserProvider'ın dönüş tipi (AuthUser?)
   final String postId;
@@ -201,7 +216,7 @@ class _PostDetailScroll extends ConsumerWidget {
           parent: BouncingScrollPhysics(),
         ),
         children: [
-          _PostContextHeader(postAsync: postAsync),
+          _PostContextHeader(post: post),
           const _SectionHeading(count: 0),
           _EmptyState(isGuest: user == null),
         ],
@@ -215,7 +230,7 @@ class _PostDetailScroll extends ConsumerWidget {
       ),
       itemCount: ordered.length + 2,
       itemBuilder: (_, i) {
-        if (i == 0) return _PostContextHeader(postAsync: postAsync);
+        if (i == 0) return _PostContextHeader(post: post);
         if (i == 1) return _SectionHeading(count: items.length);
         final c = ordered[i - 2];
         final isOwn = user != null && c.ownerId == user.id;
@@ -299,13 +314,13 @@ class _SectionHeading extends StatelessWidget {
 /// Twitter post-detail header: üstte post kartı (avatar + author + role ·
 /// time + caption 17 px + media + stat line "12 beğeni · 3 yorum").
 class _PostContextHeader extends StatelessWidget {
-  const _PostContextHeader({required this.postAsync});
+  const _PostContextHeader({required this.post});
 
-  final AsyncValue<FeedPost?> postAsync;
+  final FeedPost? post;
 
   @override
   Widget build(BuildContext context) {
-    final post = postAsync.maybeWhen(data: (p) => p, orElse: () => null);
+    final post = this.post; // yerel: null-check sonrası promote olsun
     if (post == null) {
       // Cache miss / lookup başarısız: sade fallback (yorum yine açılır).
       return Container(
@@ -855,31 +870,39 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
   Widget build(BuildContext context) {
     final liked = _liked;
     final color = liked ? AppColors.brandLemonPressed : AppColors.textMuted;
-    return InkWell(
-      onTap: _busy ? null : _onTap,
-      borderRadius: BorderRadius.circular(AppRadius.s),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              liked
-                  ? Icons.thumb_up_alt_rounded
-                  : Icons.thumb_up_alt_outlined,
-              size: 16,
-              color: color,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              _count > 0 ? '$_count' : AppStrings.feedActionLike,
-              style: TextStyle(
+    // Yazısız ikon (feed ile tutarlı): etiket Tooltip/semanticLabel'da; sayı
+    // yalnız > 0 ise ikon yanında (0 gizli, görünür "Beğen" metni yok).
+    return Tooltip(
+      message: AppStrings.feedActionLike,
+      child: InkWell(
+        onTap: _busy ? null : _onTap,
+        borderRadius: BorderRadius.circular(AppRadius.s),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                liked
+                    ? Icons.thumb_up_alt_rounded
+                    : Icons.thumb_up_alt_outlined,
+                size: 16,
                 color: color,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
+                semanticLabel: AppStrings.feedActionLike,
               ),
-            ),
-          ],
+              if (_count > 0) ...[
+                const SizedBox(width: 5),
+                Text(
+                  '$_count',
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -892,28 +915,23 @@ class _CommentReplyButton extends ConsumerWidget {
   final SocialComment comment;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return InkWell(
-      onTap: () {
-        ref.read(_replyTargetProvider.notifier).state =
-            (id: comment.id, author: comment.authorName);
-      },
-      borderRadius: BorderRadius.circular(AppRadius.s),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.reply_rounded, size: 16, color: AppColors.textMuted),
-            SizedBox(width: 5),
-            Text(
-              'Cevapla',
-              style: TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+    // Yazısız ikon: görünür "Cevapla" metni yok; etiket Tooltip/semanticLabel.
+    return Tooltip(
+      message: AppStrings.feedActionReply,
+      child: InkWell(
+        onTap: () {
+          ref.read(_replyTargetProvider.notifier).state =
+              (id: comment.id, author: comment.authorName);
+        },
+        borderRadius: BorderRadius.circular(AppRadius.s),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+          child: Icon(
+            Icons.reply_rounded,
+            size: 16,
+            color: AppColors.textMuted,
+            semanticLabel: AppStrings.feedActionReply,
+          ),
         ),
       ),
     );
