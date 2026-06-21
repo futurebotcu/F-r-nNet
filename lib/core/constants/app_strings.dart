@@ -342,6 +342,9 @@ class AppStrings {
   static const String feedActionRepost = 'Yeniden paylaş';
   static const String feedActionReply = 'Cevapla';
   static const String feedActionGoToGroup = 'Grupta gör';
+  // Repost surfacing — akış attribution satırı ("<Ad> yeniden paylaştı").
+  static String feedRepostedByLabel(String name) => '$name yeniden paylaştı';
+  static const String feedRepostAttributionFallback = 'Bir kullanıcı';
   // Repost (toggle) geri bildirim + hata.
   static const String feedRepostedSnack = 'Yeniden paylaşıldı.';
   static const String feedRepostUndoneSnack = 'Repost geri alındı.';

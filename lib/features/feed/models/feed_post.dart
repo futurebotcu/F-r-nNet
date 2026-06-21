@@ -31,6 +31,10 @@ class FeedPost {
     this.groupId,
     this.groupName,
     this.mediaList = const <FeedMedia>[],
+    this.isRepostEntry = false,
+    this.repostedByProfileId,
+    this.repostedByName,
+    this.repostedAt,
   });
 
   final String id;
@@ -61,6 +65,48 @@ class FeedPost {
   /// `groupHighlight` türü için — kaynak grup.
   final String? groupId;
   final String? groupName;
+
+  /// Repost surfacing — bu feed girişi bir "yeniden paylaşım" girişi mi?
+  /// true ise kart orijinal post içeriğini gösterir + üstte "X yeniden
+  /// paylaştı" attribution satırı çizilir. Aynı post hem orijinal hem repost
+  /// girişi olarak ayrı ayrı görünebilir (farklı [feedEntryKey]).
+  final bool isRepostEntry;
+
+  /// Repost'u yapan kullanıcının profil id'si (attribution).
+  final String? repostedByProfileId;
+
+  /// Repost'u yapanın görünen adı (attribution metni).
+  final String? repostedByName;
+
+  /// `feed_reposts.created_at` — repost girişinin akıştaki sıralama zamanı.
+  final DateTime? repostedAt;
+
+  /// Repost girişinin temsil ettiği orijinal post id'si (= [id]).
+  String get originalPostId => id;
+
+  /// Feed listesinde benzersiz anahtar: orijinal post ile repost girişi aynı
+  /// `id`'ye sahip olabileceğinden ayrıştırmak için.
+  String get feedEntryKey =>
+      isRepostEntry ? 'repost:$repostedByProfileId:$id' : id;
+
+  /// Akıştaki etkin sıralama zamanı: repost girişi repostedAt, orijinal post
+  /// createdAt.
+  DateTime get feedSortAt => repostedAt ?? createdAt;
+
+  /// Orijinal bir posttan repost girişi türetir (içerik aynı + attribution).
+  factory FeedPost.repostEntry({
+    required FeedPost original,
+    required String repostedByProfileId,
+    required String repostedByName,
+    required DateTime repostedAt,
+  }) {
+    return original.copyWith(
+      isRepostEntry: true,
+      repostedByProfileId: repostedByProfileId,
+      repostedByName: repostedByName,
+      repostedAt: repostedAt,
+    );
+  }
 
   /// V1 Social S3 — Post'a bağlı medya satırları (image V1; video V1.2).
   /// Boş liste = yalnız metin. UI tarafı `mediaList.isEmpty` ise medya
@@ -93,6 +139,10 @@ class FeedPost {
     bool? isSaved,
     bool? isReposted,
     List<FeedMedia>? mediaList,
+    bool? isRepostEntry,
+    String? repostedByProfileId,
+    String? repostedByName,
+    DateTime? repostedAt,
   }) {
     return FeedPost(
       id: id,
@@ -113,6 +163,10 @@ class FeedPost {
       groupId: groupId,
       groupName: groupName,
       mediaList: mediaList ?? this.mediaList,
+      isRepostEntry: isRepostEntry ?? this.isRepostEntry,
+      repostedByProfileId: repostedByProfileId ?? this.repostedByProfileId,
+      repostedByName: repostedByName ?? this.repostedByName,
+      repostedAt: repostedAt ?? this.repostedAt,
     );
   }
 }

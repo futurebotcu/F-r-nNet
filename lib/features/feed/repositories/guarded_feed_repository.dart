@@ -35,8 +35,14 @@ class GuardedFeedRepository implements FeedRepository {
     int offset = 0,
     int limit = 20,
     PostType? type,
+    Set<String> repostByOwnerIds = const <String>{},
   }) =>
-      inner.listPostsPage(offset: offset, limit: limit, type: type);
+      inner.listPostsPage(
+        offset: offset,
+        limit: limit,
+        type: type,
+        repostByOwnerIds: repostByOwnerIds,
+      );
 
   @override
   Future<List<FeedPost>> listPostsByOwner(String ownerId) =>

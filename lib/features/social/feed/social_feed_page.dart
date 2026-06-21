@@ -296,7 +296,7 @@ class _FeedList extends ConsumerWidget {
         final postIndex = i - headerCount;
         if (postIndex < posts.length) {
           final post = posts[postIndex];
-          return SocialPostCard(key: ValueKey(post.id), post: post);
+          return SocialPostCard(key: ValueKey(post.feedEntryKey), post: post);
         }
         // Footer: bottom indicator veya "End of feed" satırı.
         if (isLoadingMore) {

@@ -29,9 +29,44 @@ class LocalFeedRepository implements FeedRepository {
   final String _meName;
 
   final List<FeedPost> _posts = <FeedPost>[];
+  // Repost surfacing — in-memory repost girişleri (test/guest parite).
+  final List<({String postId, String ownerId, String ownerName, DateTime at})>
+      _reposts =
+      <({String postId, String ownerId, String ownerName, DateTime at})>[];
   // V1 P1-B — Local fallback için in-memory yorumlar (post_id -> liste).
   final Map<String, List<FeedComment>> _comments =
       <String, List<FeedComment>>{};
+
+  /// Test/seed yardımcı: bir repost girişi ekler (surfacing testleri için).
+  void seedRepost({
+    required String postId,
+    required String ownerId,
+    required String ownerName,
+    required DateTime at,
+  }) {
+    _reposts.add((postId: postId, ownerId: ownerId, ownerName: ownerName, at: at));
+  }
+
+  /// [ownerIds] kullanıcılarının repost'larını feed girişine çevirir
+  /// (orijinal post içeriği + attribution). Silinmiş/eksik post atlanır.
+  List<FeedPost> _localRepostEntries(Set<String> ownerIds) {
+    final entries = <FeedPost>[];
+    for (final r in _reposts) {
+      if (!ownerIds.contains(r.ownerId)) continue;
+      final idx =
+          _posts.indexWhere((p) => p.id == r.postId && !p.isRepostEntry);
+      if (idx < 0) continue;
+      entries.add(
+        FeedPost.repostEntry(
+          original: _posts[idx],
+          repostedByProfileId: r.ownerId,
+          repostedByName: r.ownerName,
+          repostedAt: r.at,
+        ),
+      );
+    }
+    return entries;
+  }
 
   final StreamController<void> _changes = StreamController<void>.broadcast();
   void _notify() => _changes.add(null);
@@ -50,21 +85,34 @@ class LocalFeedRepository implements FeedRepository {
     int offset = 0,
     int limit = 20,
     PostType? type,
+    Set<String> repostByOwnerIds = const <String>{},
   }) async {
-    final src = type == null
+    final posts = type == null
         ? List<FeedPost>.from(_posts)
         : _posts.where((p) => p.type == type).toList();
-    src.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    if (offset >= src.length) return const <FeedPost>[];
-    final end = (offset + limit).clamp(0, src.length);
-    return List.unmodifiable(src.sublist(offset, end));
+    if (repostByOwnerIds.isEmpty || type != null) {
+      posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      if (offset >= posts.length) return const <FeedPost>[];
+      final end = (offset + limit).clamp(0, posts.length);
+      return List.unmodifiable(posts.sublist(offset, end));
+    }
+    return mergeFeedEntriesPage(
+      postEntries: posts,
+      repostEntries: _localRepostEntries(repostByOwnerIds),
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
   Future<List<FeedPost>> listPostsByOwner(String ownerId) async {
-    final src = _posts.where((p) => p.ownerId == ownerId).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return List.unmodifiable(src);
+    final posts = _posts.where((p) => p.ownerId == ownerId).toList();
+    return mergeFeedEntriesPage(
+      postEntries: posts,
+      repostEntries: _localRepostEntries(<String>{ownerId}),
+      offset: 0,
+      limit: 1 << 30,
+    );
   }
 
   @override
@@ -73,11 +121,13 @@ class LocalFeedRepository implements FeedRepository {
     int offset = 0,
     int limit = 20,
   }) async {
-    final src = _posts.where((p) => p.ownerId == ownerId).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    if (offset >= src.length) return const <FeedPost>[];
-    final end = (offset + limit).clamp(0, src.length);
-    return List.unmodifiable(src.sublist(offset, end));
+    final posts = _posts.where((p) => p.ownerId == ownerId).toList();
+    return mergeFeedEntriesPage(
+      postEntries: posts,
+      repostEntries: _localRepostEntries(<String>{ownerId}),
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
@@ -87,11 +137,14 @@ class LocalFeedRepository implements FeedRepository {
     int limit = 20,
   }) async {
     if (followingIds.isEmpty) return const <FeedPost>[];
-    final src = _posts.where((p) => followingIds.contains(p.ownerId)).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    if (offset >= src.length) return const <FeedPost>[];
-    final end = (offset + limit).clamp(0, src.length);
-    return List.unmodifiable(src.sublist(offset, end));
+    final posts =
+        _posts.where((p) => followingIds.contains(p.ownerId)).toList();
+    return mergeFeedEntriesPage(
+      postEntries: posts,
+      repostEntries: _localRepostEntries(followingIds),
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
@@ -271,8 +324,16 @@ class LocalFeedRepository implements FeedRepository {
     final i = _posts.indexWhere((p) => p.id == postId);
     if (i == -1) throw StateError('Post not found: $postId');
     final p = _posts[i];
+    final newReposted = !p.isReposted;
+    // Surfacing: mevcut kullanıcının repost girişini ekle/çıkar.
+    _reposts.removeWhere((r) => r.postId == postId && r.ownerId == _meId);
+    if (newReposted) {
+      _reposts.add(
+        (postId: postId, ownerId: _meId, ownerName: _meName, at: DateTime.now()),
+      );
+    }
     final updated = p.copyWith(
-      isReposted: !p.isReposted,
+      isReposted: newReposted,
       repostCount: p.isReposted ? p.repostCount - 1 : p.repostCount + 1,
     );
     _posts[i] = updated;

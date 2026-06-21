@@ -109,7 +109,9 @@ void main() {
 
     test('Profile post listesi SocialPostCard kullanır (video destekli)',
         () {
-      expect(src.contains('SocialPostCard(key: ValueKey(p.id), post: p)'),
+      expect(
+          src.contains(
+              'SocialPostCard(key: ValueKey(p.feedEntryKey), post: p)'),
           isTrue);
       // Eski PostCardWired kullanılmamalı
       expect(
@@ -169,12 +171,20 @@ void main() {
       expect(body.contains(".eq('is_deleted', false)"), isTrue);
     });
 
-    test('listPostsByOwner _fetchMediaByPostIds kullanır', () {
+    test('listPostsByOwner media mapping (_mapRows → _fetchMediaByPostIds)',
+        () {
+      // Repost surfacing sonrası: profil listesi ortak _mapRows ile map'ler;
+      // _mapRows içinde media/like/save mapping yapılır.
       final start = src.indexOf('Future<List<FeedPost>> listPostsByOwner');
       expect(start, greaterThan(0));
       final end = src.indexOf('Future<', start + 50);
       final body = src.substring(start, end);
-      expect(body.contains('_fetchMediaByPostIds(ids)'), isTrue);
+      expect(body.contains('_mapRows('), isTrue);
+      final mapStart = src.indexOf('Future<List<FeedPost>> _mapRows');
+      expect(mapStart, greaterThan(0));
+      final mapBody =
+          src.substring(mapStart, src.indexOf('Future<', mapStart + 30));
+      expect(mapBody.contains('_fetchMediaByPostIds(ids)'), isTrue);
     });
   });
 }
