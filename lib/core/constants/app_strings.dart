@@ -339,7 +339,13 @@ class AppStrings {
   static const String feedActionComment = 'Yorum';
   static const String feedActionShare = 'Paylaş';
   static const String feedActionSave = 'Kaydet';
+  static const String feedActionRepost = 'Yeniden paylaş';
   static const String feedActionGoToGroup = 'Grupta gör';
+  // Repost (toggle) geri bildirim + hata.
+  static const String feedRepostedSnack = 'Yeniden paylaşıldı.';
+  static const String feedRepostUndoneSnack = 'Repost geri alındı.';
+  static const String feedRepostUpdateError =
+      'Repost güncellenemedi. Lütfen tekrar dene.';
   static const String feedActionLikedSnack = 'Beğendin.';
   static const String feedActionUnlikedSnack = 'Beğeni geri alındı.';
   static const String feedActionSavedSnack = 'Kaydedildi.';

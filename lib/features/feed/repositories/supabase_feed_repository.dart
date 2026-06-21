@@ -49,7 +49,8 @@ class SupabaseFeedRepository implements FeedRepository {
 
   static const String _postColumns =
       'id, owner_id, type, text, tags, group_id, group_name, '
-      'author_name, author_role, like_count, comment_count, created_at';
+      'author_name, author_role, like_count, comment_count, repost_count, '
+      'created_at';
 
   // ─────────────────────────────────────── Mapping
 
@@ -75,6 +76,7 @@ class SupabaseFeedRepository implements FeedRepository {
     Map<String, dynamic> row, {
     required Set<String> likedPostIds,
     required Set<String> savedPostIds,
+    Set<String> repostedPostIds = const <String>{},
     Map<String, List<FeedMedia>> mediaByPostId = const {},
   }) {
     final id = row['id'] as String;
@@ -93,8 +95,10 @@ class SupabaseFeedRepository implements FeedRepository {
       gradient: _gradientForId(id),
       likeCount: ((row['like_count'] as num?) ?? 0).toInt(),
       commentCount: ((row['comment_count'] as num?) ?? 0).toInt(),
+      repostCount: ((row['repost_count'] as num?) ?? 0).toInt(),
       isLiked: likedPostIds.contains(id),
       isSaved: savedPostIds.contains(id),
+      isReposted: repostedPostIds.contains(id),
       groupId: row['group_id'] as String?,
       groupName: row['group_name'] as String?,
       mediaList: mediaByPostId[id] ?? const <FeedMedia>[],
@@ -160,6 +164,20 @@ class SupabaseFeedRepository implements FeedRepository {
         .toSet();
   }
 
+  /// Mevcut kullanıcının repost ettiği post id'lerini set olarak çeker.
+  Future<Set<String>> _fetchRepostedSet(List<String> postIds) async {
+    final userId = _currentUserId;
+    if (userId == null || postIds.isEmpty) return <String>{};
+    final rows = await _client
+        .from('feed_reposts')
+        .select('post_id')
+        .eq('owner_id', userId)
+        .inFilter('post_id', postIds);
+    return (rows as List)
+        .map((e) => (e as Map<String, dynamic>)['post_id'] as String)
+        .toSet();
+  }
+
   // ─────────────────────────────────────── Posts
 
   @override
@@ -178,6 +196,7 @@ class SupabaseFeedRepository implements FeedRepository {
     // Üç paralel sorgu: isLiked / isSaved set + post id → media list.
     final liked = await _fetchLikedSet(ids);
     final saved = await _fetchSavedSet(ids);
+    final reposted = await _fetchRepostedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
 
     return list
@@ -186,6 +205,7 @@ class SupabaseFeedRepository implements FeedRepository {
             row,
             likedPostIds: liked,
             savedPostIds: saved,
+            repostedPostIds: reposted,
             mediaByPostId: media,
           ),
         )
@@ -206,6 +226,7 @@ class SupabaseFeedRepository implements FeedRepository {
     final ids = list.map((r) => r['id'] as String).toList(growable: false);
     final liked = await _fetchLikedSet(ids);
     final saved = await _fetchSavedSet(ids);
+    final reposted = await _fetchRepostedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
         .map(
@@ -213,6 +234,7 @@ class SupabaseFeedRepository implements FeedRepository {
             row,
             likedPostIds: liked,
             savedPostIds: saved,
+            repostedPostIds: reposted,
             mediaByPostId: media,
           ),
         )
@@ -240,6 +262,7 @@ class SupabaseFeedRepository implements FeedRepository {
     final ids = list.map((r) => r['id'] as String).toList(growable: false);
     final liked = await _fetchLikedSet(ids);
     final saved = await _fetchSavedSet(ids);
+    final reposted = await _fetchRepostedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
         .map(
@@ -247,6 +270,7 @@ class SupabaseFeedRepository implements FeedRepository {
             row,
             likedPostIds: liked,
             savedPostIds: saved,
+            repostedPostIds: reposted,
             mediaByPostId: media,
           ),
         )
@@ -275,6 +299,7 @@ class SupabaseFeedRepository implements FeedRepository {
     final ids = list.map((r) => r['id'] as String).toList(growable: false);
     final liked = await _fetchLikedSet(ids);
     final saved = await _fetchSavedSet(ids);
+    final reposted = await _fetchRepostedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
         .map(
@@ -282,6 +307,7 @@ class SupabaseFeedRepository implements FeedRepository {
             row,
             likedPostIds: liked,
             savedPostIds: saved,
+            repostedPostIds: reposted,
             mediaByPostId: media,
           ),
         )
@@ -310,6 +336,7 @@ class SupabaseFeedRepository implements FeedRepository {
     final ids = list.map((r) => r['id'] as String).toList(growable: false);
     final liked = await _fetchLikedSet(ids);
     final saved = await _fetchSavedSet(ids);
+    final reposted = await _fetchRepostedSet(ids);
     final media = await _fetchMediaByPostIds(ids);
     return list
         .map(
@@ -317,6 +344,7 @@ class SupabaseFeedRepository implements FeedRepository {
             row,
             likedPostIds: liked,
             savedPostIds: saved,
+            repostedPostIds: reposted,
             mediaByPostId: media,
           ),
         )
@@ -629,7 +657,13 @@ class SupabaseFeedRepository implements FeedRepository {
         .single();
     final liked = await _fetchLikedSet(<String>[postId]);
     final saved = await _fetchSavedSet(<String>[postId]);
-    return _fromRow(row, likedPostIds: liked, savedPostIds: saved);
+    final reposted = await _fetchRepostedSet(<String>[postId]);
+    return _fromRow(
+      row,
+      likedPostIds: liked,
+      savedPostIds: saved,
+      repostedPostIds: reposted,
+    );
   }
 
   @override
@@ -670,7 +704,61 @@ class SupabaseFeedRepository implements FeedRepository {
         .single();
     final liked = await _fetchLikedSet(<String>[postId]);
     final saved = await _fetchSavedSet(<String>[postId]);
-    return _fromRow(row, likedPostIds: liked, savedPostIds: saved);
+    final reposted = await _fetchRepostedSet(<String>[postId]);
+    return _fromRow(
+      row,
+      likedPostIds: liked,
+      savedPostIds: saved,
+      repostedPostIds: reposted,
+    );
+  }
+
+  @override
+  Future<FeedPost> toggleRepost(String postId) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    final existing = await _client
+        .from('feed_reposts')
+        .select('post_id')
+        .eq('post_id', postId)
+        .eq('owner_id', userId)
+        .maybeSingle();
+
+    try {
+      if (existing == null) {
+        await _client.from('feed_reposts').insert(<String, dynamic>{
+          'post_id': postId,
+          'owner_id': userId,
+        });
+      } else {
+        await _client
+            .from('feed_reposts')
+            .delete()
+            .eq('post_id', postId)
+            .eq('owner_id', userId);
+      }
+    } on sb.PostgrestException catch (e) {
+      // Race: çift tap → ikinci INSERT 23505. Idempotent yutma.
+      if (e.code != '23505') rethrow;
+    }
+    _notifyContent();
+
+    final row = await _client
+        .from('feed_posts')
+        .select(_postColumns)
+        .eq('id', postId)
+        .single();
+    final liked = await _fetchLikedSet(<String>[postId]);
+    final saved = await _fetchSavedSet(<String>[postId]);
+    final reposted = await _fetchRepostedSet(<String>[postId]);
+    return _fromRow(
+      row,
+      likedPostIds: liked,
+      savedPostIds: saved,
+      repostedPostIds: reposted,
+    );
   }
 
   @override

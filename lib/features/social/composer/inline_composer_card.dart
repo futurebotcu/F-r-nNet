@@ -141,7 +141,7 @@ class InlineComposerCard extends ConsumerWidget {
                             onTap: () => _openComposer(
                               context,
                               ref,
-                              type: PostType.production,
+                              type: PostType.recipe,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.xs),
@@ -151,7 +151,7 @@ class InlineComposerCard extends ConsumerWidget {
                             onTap: () => _openComposer(
                               context,
                               ref,
-                              type: PostType.supply,
+                              type: PostType.announcement,
                             ),
                           ),
                         ],
