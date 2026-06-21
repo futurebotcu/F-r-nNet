@@ -1358,6 +1358,11 @@ class AppStrings {
   static const String cardWholesaleCustomers = 'Fırın Müşterileri';
   static const String cardWholesaleCustomersSub =
       'Fırın müşterilerini, satışlarını ve tahsilatlarını takip et';
+  // fix/wholesaler-panel-card-to-dealers: toptancı ana kartı artık normal Bayi
+  // Yönetimi shell'ine (/dealers) gider; copy ticari Bayi Paneli ile aynı
+  // sistemi anlatır (müşteri/hareket/tahsilat/şoför).
+  static const String cardWholesaleDealerPanelSub =
+      'Müşterilerini, hareketlerini, tahsilatlarını ve şoförlerini yönet.';
   static const String cardWholesalePriceList = 'Fiyat Listesi';
   static const String cardWholesalePriceListSub = 'Toptan fiyatları yönet';
 
