@@ -11,19 +11,25 @@ import '../models/social_comment.dart';
 /// `deleteComment()` pattern'ı; bizim sıkı RLS standardına uyumlu (owner
 /// kontrolü server-side `auth.uid()` ile).
 abstract class SocialCommentsRepository {
-  /// Bir post için yorumlar (eski tarih önce, is_deleted=false).
-  /// V1 için tek seviye; donor `replied_to_comment_id` field'ı şu an
-  /// kullanılmaz.
+  /// Bir post için yorumlar (eski tarih önce, is_deleted=false). Üst yorumlar
+  /// ve cevaplar birlikte döner; UI parentCommentId'ye göre gruplar.
+  /// `isLiked` mevcut kullanıcının beğenisinden türetilir.
   Future<List<SocialComment>> listComments(String postId);
 
-  /// Yeni yorum oluştur. `author_name` ve `author_role` server-side
-  /// snapshot trigger ile doldurulur. Client sadece `text` gönderir.
+  /// Yeni yorum/cevap oluştur. `author_name`/`author_role` server-side
+  /// snapshot trigger ile doldurulur. `parentCommentId` dolu ise tek-seviye
+  /// cevaptır (parent bir ÜST yorum olmalı; server guard zorlar).
   Future<SocialComment> addComment({
     required String postId,
     required String text,
+    String? parentCommentId,
   });
 
-  /// Soft delete (`is_deleted=true`). RLS owner-only.
+  /// Yoruma beğeni toggle. Dönen değer yeni beğeni durumu (true = beğenildi).
+  Future<bool> toggleCommentLike(String commentId);
+
+  /// Soft delete (`is_deleted=true`). RLS owner-only. Üst yorum silinince
+  /// cevapları da server trigger ile soft-delete olur.
   Future<void> deleteComment(String commentId);
 
   /// Repository değişikliklerinde tetiklenir (UI invalidate için).

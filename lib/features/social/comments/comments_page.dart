@@ -40,6 +40,12 @@ import '../../safety/widgets/report_sheet.dart';
 import '../models/social_comment.dart';
 import '../providers/social_providers.dart';
 
+/// Cevap hedefi (tek-seviye): bir ÜST yoruma cevap yazılırken composer bunu
+/// okuyup `parentCommentId` geçirir. "Cevapla" set eder; gönderim/iptal
+/// temizler. autoDispose: sayfa kapanınca sıfırlanır.
+final _replyTargetProvider =
+    StateProvider.autoDispose<({String id, String author})?>((ref) => null);
+
 class SocialCommentsPage extends ConsumerWidget {
   const SocialCommentsPage({super.key, required this.postId});
 
@@ -201,26 +207,65 @@ class _PostDetailScroll extends ConsumerWidget {
         ],
       );
     }
+    // PR #2 — tek-seviye gruplama: her üst yorumun hemen altında cevapları.
+    final ordered = _orderTopLevelThenReplies(items);
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),
-      itemCount: items.length + 2,
+      itemCount: ordered.length + 2,
       itemBuilder: (_, i) {
         if (i == 0) return _PostContextHeader(postAsync: postAsync);
         if (i == 1) return _SectionHeading(count: items.length);
-        final c = items[i - 2];
+        final c = ordered[i - 2];
         final isOwn = user != null && c.ownerId == user.id;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+          // Cevaplar sola girintili (tek seviye); üst yorumlar normal.
+          padding: EdgeInsets.fromLTRB(
+            c.isReply ? AppSpacing.l + 36 : AppSpacing.l,
+            0,
+            AppSpacing.l,
+            0,
+          ),
           // UGC Safety V1 — engellenen kullanıcının yorumu placeholder olur
           // (konuşma akışı kopmaz, içerik gizlenir).
           child: blocked.contains(c.ownerId)
               ? const _BlockedCommentPlaceholder()
-              : _CommentItem(comment: c, isOwn: isOwn, postId: postId),
+              : _CommentItem(
+                  comment: c,
+                  isOwn: isOwn,
+                  postId: postId,
+                  isReply: c.isReply,
+                ),
         );
       },
     );
+  }
+
+  /// Üst yorumlar zaman sırasıyla; her birinin hemen altında cevapları.
+  static List<SocialComment> _orderTopLevelThenReplies(
+    List<SocialComment> items,
+  ) {
+    final repliesByParent = <String, List<SocialComment>>{};
+    for (final c in items) {
+      if (c.parentCommentId != null) {
+        (repliesByParent[c.parentCommentId!] ??= <SocialComment>[]).add(c);
+      }
+    }
+    final ordered = <SocialComment>[];
+    for (final c in items) {
+      if (c.parentCommentId == null) {
+        ordered.add(c);
+        final rs = repliesByParent[c.id];
+        if (rs != null) ordered.addAll(rs);
+      }
+    }
+    // Parent'ı görünmeyen (teorik) yetim cevaplar kaybolmasın.
+    final placed = ordered.map((c) => c.id).toSet();
+    for (final c in items) {
+      if (!placed.contains(c.id)) ordered.add(c);
+    }
+    return ordered;
   }
 }
 
@@ -519,11 +564,13 @@ class _CommentItem extends ConsumerWidget {
     required this.comment,
     required this.isOwn,
     required this.postId,
+    this.isReply = false,
   });
 
   final SocialComment comment;
   final bool isOwn;
   final String postId;
+  final bool isReply;
 
   String _timeAgo(DateTime t) {
     final d = DateTime.now().difference(t);
@@ -663,6 +710,17 @@ class _CommentItem extends ConsumerWidget {
                       height: 1.45,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  // PR #2 — yoruma beğeni + (üst yoruma) cevap.
+                  Row(
+                    children: [
+                      _CommentLikeButton(comment: comment),
+                      if (!isReply) ...[
+                        const SizedBox(width: 16),
+                        _CommentReplyButton(comment: comment),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -725,6 +783,143 @@ class _CommentItem extends ConsumerWidget {
   }
 }
 
+/// Yoruma beğeni — optimistic toggle (ikon + sayı). isLiked/likeCount modelden
+/// gelir; tıkta anında çevrilir, repo.toggleCommentLike çağrılır, hata olursa
+/// geri alınır. Repo _notify() stream'i otoritatif tazeleyince override temizlenir.
+class _CommentLikeButton extends ConsumerStatefulWidget {
+  const _CommentLikeButton({required this.comment});
+  final SocialComment comment;
+  @override
+  ConsumerState<_CommentLikeButton> createState() => _CommentLikeButtonState();
+}
+
+class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
+  bool? _likedOverride;
+  int? _countOverride;
+  bool _busy = false;
+
+  bool get _liked => _likedOverride ?? widget.comment.isLiked;
+  int get _count => _countOverride ?? widget.comment.likeCount;
+
+  @override
+  void didUpdateWidget(covariant _CommentLikeButton old) {
+    super.didUpdateWidget(old);
+    // Model (refresh) güncellenince override'ı bırak → kaynak modeldir.
+    if (old.comment.isLiked != widget.comment.isLiked ||
+        old.comment.likeCount != widget.comment.likeCount) {
+      _likedOverride = null;
+      _countOverride = null;
+    }
+  }
+
+  Future<void> _onTap() async {
+    if (_busy) return;
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    final prevLiked = _liked;
+    final prevCount = _count;
+    setState(() {
+      _busy = true;
+      _likedOverride = !prevLiked;
+      _countOverride =
+          prevLiked ? (prevCount > 0 ? prevCount - 1 : 0) : prevCount + 1;
+    });
+    try {
+      await ref
+          .read(socialCommentsRepositoryProvider)
+          .toggleCommentLike(widget.comment.id)
+          .timeout(const Duration(seconds: 15));
+    } on GuestActionRequiredException {
+      if (mounted) {
+        setState(() {
+          _likedOverride = prevLiked;
+          _countOverride = prevCount;
+        });
+        await showAuthRequiredSheet(context, ref);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _likedOverride = prevLiked;
+          _countOverride = prevCount;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final liked = _liked;
+    final color = liked ? AppColors.brandLemonPressed : AppColors.textMuted;
+    return InkWell(
+      onTap: _busy ? null : _onTap,
+      borderRadius: BorderRadius.circular(AppRadius.s),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              liked
+                  ? Icons.thumb_up_alt_rounded
+                  : Icons.thumb_up_alt_outlined,
+              size: 16,
+              color: color,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              _count > 0 ? '$_count' : AppStrings.feedActionLike,
+              style: TextStyle(
+                color: color,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Cevapla" — composer'ı bu ÜST yoruma cevap moduna alır (tek seviye).
+class _CommentReplyButton extends ConsumerWidget {
+  const _CommentReplyButton({required this.comment});
+  final SocialComment comment;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return InkWell(
+      onTap: () {
+        ref.read(_replyTargetProvider.notifier).state =
+            (id: comment.id, author: comment.authorName);
+      },
+      borderRadius: BorderRadius.circular(AppRadius.s),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.reply_rounded, size: 16, color: AppColors.textMuted),
+            SizedBox(width: 5),
+            Text(
+              'Cevapla',
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CommentComposer extends ConsumerStatefulWidget {
   const _CommentComposer({required this.postId, required this.guest});
 
@@ -780,10 +975,16 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
         '[FirinNet][Comments] send postId=${widget.postId} '
         'textLen=${text.length}',
       );
+      final reply = ref.read(_replyTargetProvider);
       final c = await repo
-          .addComment(postId: widget.postId, text: text)
+          .addComment(
+            postId: widget.postId,
+            text: text,
+            parentCommentId: reply?.id,
+          )
           .timeout(const Duration(seconds: 30));
-      debugPrint('[FirinNet][Comments] sent ok id=${c.id}');
+      debugPrint('[FirinNet][Comments] sent ok id=${c.id} '
+          'parent=${reply?.id ?? "-"}');
       if (!mounted) return;
       // Dar sayaç güncellemesi: paged feed'i yeniden çekmeden kart sayacını
       // anında +1 yap. basis = o an bilinen gerçek sayaç.
@@ -795,6 +996,7 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
           .increment(widget.postId, basis);
       _ctrl.clear();
       _focus.unfocus();
+      ref.read(_replyTargetProvider.notifier).state = null; // cevap modu kapanır
     } on GuestActionRequiredException {
       debugPrint('[FirinNet][Comments] send guest exception');
       if (mounted) await showAuthRequiredSheet(context, ref);
@@ -850,9 +1052,57 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
         ),
       );
     }
+    final reply = ref.watch(_replyTargetProvider);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (reply != null)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(
+              AppSpacing.l,
+              AppSpacing.s,
+              AppSpacing.l,
+              0,
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.m,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadius.m),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.reply_rounded,
+                    size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${reply.author} adlı kişiye cevap',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: () =>
+                      ref.read(_replyTargetProvider.notifier).state = null,
+                  borderRadius: BorderRadius.circular(20),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.close_rounded,
+                        size: 16, color: AppColors.textMuted),
+                  ),
+                ),
+              ],
+            ),
+          ),
         if (_inlineError != null)
           Container(
             width: double.infinity,
