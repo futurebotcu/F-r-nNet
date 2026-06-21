@@ -1,6 +1,7 @@
 // Repost surfacing — repost'lar akışta/profilde "X yeniden paylaştı" girişi
 // olarak yüzeye çıkar. Migration YOK; client-side merge (mergeFeedEntriesPage).
 
+import 'package:firin_defter/features/auth/models/auth_user.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
 import 'package:firin_defter/features/feed/models/feed_post.dart';
 import 'package:firin_defter/features/feed/models/post_type.dart';
@@ -202,6 +203,31 @@ void main() {
       ));
       await tester.pump();
       expect(find.textContaining('yeniden paylaştı'), findsNothing);
+    });
+  });
+
+  group('feedRepostOwnerIdsProvider — takip + self', () {
+    test('takip edilenler + mevcut kullanıcı (kendi repost\'u kendi feed\'inde)',
+        () async {
+      final container = ProviderContainer(overrides: [
+        currentFollowingIdsProvider.overrideWith((ref) async => {'friend'}),
+        currentAuthUserProvider.overrideWith(
+          (ref) => const AuthUser(id: 'me', email: null),
+        ),
+      ]);
+      addTearDown(container.dispose);
+      final ids = await container.read(feedRepostOwnerIdsProvider.future);
+      expect(ids, containsAll(<String>{'friend', 'me'}));
+    });
+
+    test('oturum yoksa yalnız takip edilenler', () async {
+      final container = ProviderContainer(overrides: [
+        currentFollowingIdsProvider.overrideWith((ref) async => {'friend'}),
+        currentAuthUserProvider.overrideWith((ref) => null),
+      ]);
+      addTearDown(container.dispose);
+      final ids = await container.read(feedRepostOwnerIdsProvider.future);
+      expect(ids, <String>{'friend'});
     });
   });
 }
