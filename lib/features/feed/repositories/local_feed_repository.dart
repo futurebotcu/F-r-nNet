@@ -267,6 +267,20 @@ class LocalFeedRepository implements FeedRepository {
   }
 
   @override
+  Future<FeedPost> toggleRepost(String postId) async {
+    final i = _posts.indexWhere((p) => p.id == postId);
+    if (i == -1) throw StateError('Post not found: $postId');
+    final p = _posts[i];
+    final updated = p.copyWith(
+      isReposted: !p.isReposted,
+      repostCount: p.isReposted ? p.repostCount - 1 : p.repostCount + 1,
+    );
+    _posts[i] = updated;
+    _notify();
+    return updated;
+  }
+
+  @override
   Future<List<FeedInsight>> listInsights() async {
     return const <FeedInsight>[];
   }

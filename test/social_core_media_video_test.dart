@@ -214,9 +214,10 @@ void main() {
     test('post.firstVideo varsa SocialPostVideo render eder', () {
       expect(src.contains('post.firstVideo?.publicUrl'), isTrue);
       expect(src.contains('SocialPostVideo(url: videoUrl)'), isTrue);
-      // Image VEYA video — image varsa öncelik
+      // Image VEYA video — image varsa öncelik (image kart-tap sarmalayıcı
+      // içinde; video yalnız image yokken, kendi kontrolleriyle dışarıda).
       expect(src.contains('if (imageUrl != null)'), isTrue);
-      expect(src.contains('else if (videoUrl != null)'), isTrue);
+      expect(src.contains('imageUrl == null && videoUrl != null'), isTrue);
     });
   });
 

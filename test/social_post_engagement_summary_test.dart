@@ -46,12 +46,15 @@ Widget _wrap(FeedPost post) {
 
 void main() {
   group('Action row sayıları — görünürlük', () {
-    testWidgets('0 beğeni + 0 yorum → sayı gösterilmez (label kalır)',
+    testWidgets('0 beğeni + 0 yorum → sayı gösterilmez (yazısız ikonlar)',
         (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 0, commentCount: 0)));
       await tester.pump();
-      expect(find.text(AppStrings.feedActionLike), findsOneWidget);
-      expect(find.text(AppStrings.feedActionComment), findsOneWidget);
+      // Yazısız ikon satırı: buton etiketi YOK, ikonlar var.
+      expect(find.text(AppStrings.feedActionLike), findsNothing);
+      expect(find.text(AppStrings.feedActionComment), findsNothing);
+      expect(find.byIcon(Icons.thumb_up_alt_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.mode_comment_outlined), findsOneWidget);
       // 0 sayaç gizli.
       expect(find.text('0'), findsNothing);
     });
@@ -98,14 +101,23 @@ void main() {
     });
   });
 
-  group('Action row label + overflow', () {
-    testWidgets('Beğen/Yorum/Kaydet/Paylaş label var', (tester) async {
+  group('Yazısız ikon satırı + overflow', () {
+    testWidgets('Buton metni yok; 5 ikon (beğeni/yorum/repost/kaydet/paylaş)',
+        (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 142, commentCount: 23)));
       await tester.pump();
-      expect(find.text(AppStrings.feedActionLike), findsOneWidget);
-      expect(find.text(AppStrings.feedActionComment), findsOneWidget);
-      expect(find.text(AppStrings.feedActionSave), findsOneWidget);
-      expect(find.text(AppStrings.feedActionShare), findsOneWidget);
+      // Yazılı etiket yok.
+      expect(find.text(AppStrings.feedActionLike), findsNothing);
+      expect(find.text(AppStrings.feedActionComment), findsNothing);
+      expect(find.text(AppStrings.feedActionSave), findsNothing);
+      expect(find.text(AppStrings.feedActionShare), findsNothing);
+      expect(find.text(AppStrings.feedActionRepost), findsNothing);
+      // İkonlar var (repost dahil).
+      expect(find.byIcon(Icons.thumb_up_alt_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.mode_comment_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.repeat_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.bookmark_border_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.ios_share_rounded), findsOneWidget);
     });
 
     testWidgets('Dar genişlikte overflow yok', (tester) async {

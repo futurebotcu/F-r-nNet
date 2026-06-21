@@ -112,6 +112,8 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   static const _types = <PostType>[
     PostType.production,
     PostType.question,
+    PostType.recipe,
+    PostType.announcement,
     PostType.supply,
     PostType.equipment,
     PostType.job,

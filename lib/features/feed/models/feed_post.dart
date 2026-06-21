@@ -24,8 +24,10 @@ class FeedPost {
     required this.gradient,
     this.likeCount = 0,
     this.commentCount = 0,
+    this.repostCount = 0,
     this.isLiked = false,
     this.isSaved = false,
+    this.isReposted = false,
     this.groupId,
     this.groupName,
     this.mediaList = const <FeedMedia>[],
@@ -47,8 +49,14 @@ class FeedPost {
   final List<Color> gradient;
   final int likeCount;
   final int commentCount;
+
+  /// PR — Repost sayısı (`feed_posts.repost_count`, feed_reposts trigger).
+  final int repostCount;
   final bool isLiked;
   final bool isSaved;
+
+  /// Mevcut kullanıcı bu gönderiyi repost etti mi (feed_reposts join).
+  final bool isReposted;
 
   /// `groupHighlight` türü için — kaynak grup.
   final String? groupId;
@@ -80,8 +88,10 @@ class FeedPost {
   FeedPost copyWith({
     int? likeCount,
     int? commentCount,
+    int? repostCount,
     bool? isLiked,
     bool? isSaved,
+    bool? isReposted,
     List<FeedMedia>? mediaList,
   }) {
     return FeedPost(
@@ -96,8 +106,10 @@ class FeedPost {
       gradient: gradient,
       likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,
+      repostCount: repostCount ?? this.repostCount,
       isLiked: isLiked ?? this.isLiked,
       isSaved: isSaved ?? this.isSaved,
+      isReposted: isReposted ?? this.isReposted,
       groupId: groupId,
       groupName: groupName,
       mediaList: mediaList ?? this.mediaList,

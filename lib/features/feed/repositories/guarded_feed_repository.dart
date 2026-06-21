@@ -164,6 +164,12 @@ class GuardedFeedRepository implements FeedRepository {
     return inner.toggleSave(postId);
   }
 
+  @override
+  Future<FeedPost> toggleRepost(String postId) {
+    _requireWrite('gönderiyi yeniden paylaşmak');
+    return inner.toggleRepost(postId);
+  }
+
   // ── Comments (V1 P1-B) ────────────────────────────────────────
 
   @override

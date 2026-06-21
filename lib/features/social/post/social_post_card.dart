@@ -54,17 +54,22 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   bool _likeBusy = false;
   bool _saveBusy = false;
   bool _shareBusy = false;
+  bool _repostBusy = false;
 
   // Donor optimistic UI pattern (PostBloc.state.isLiked override).
   bool? _likedOverride;
   bool? _savedOverride;
   int? _likeCountOverride;
+  bool? _repostedOverride;
+  int? _repostCountOverride;
 
   FeedPost get post => widget.post;
 
   bool get _displayLiked => _likedOverride ?? post.isLiked;
   bool get _displaySaved => _savedOverride ?? post.isSaved;
   int get _displayLikeCount => _likeCountOverride ?? post.likeCount;
+  bool get _displayReposted => _repostedOverride ?? post.isReposted;
+  int get _displayRepostCount => _repostCountOverride ?? post.repostCount;
 
   // Dar yorum-sayacı: yorum eklenince paged feed yeniden çekilmeden kart
   // sayacı override ile anında artar (max(model, override)).
@@ -159,6 +164,63 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       }
     } finally {
       if (mounted) setState(() => _saveBusy = false);
+    }
+  }
+
+  Future<void> _onRepostTap(FeedRepository repo) async {
+    if (!AuthRequiredGuard.canWriteWithRef(ref)) {
+      await showAuthRequiredSheet(context, ref);
+      return;
+    }
+    final wasReposted = _displayReposted;
+    final wasCount = _displayRepostCount;
+    final newReposted = !wasReposted;
+    final newCount = newReposted
+        ? wasCount + 1
+        : (wasCount > 0 ? wasCount - 1 : 0);
+    setState(() {
+      _repostBusy = true;
+      _repostedOverride = newReposted;
+      _repostCountOverride = newCount;
+    });
+    try {
+      await repo.toggleRepost(post.id).timeout(const Duration(seconds: 15));
+      if (!mounted) return;
+      setState(() {
+        _repostedOverride = null;
+        _repostCountOverride = null;
+      });
+      // Toggle yönünü kullanıcıya kısa geri bildirimle bildir.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            newReposted
+                ? AppStrings.feedRepostedSnack
+                : AppStrings.feedRepostUndoneSnack,
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } on GuestActionRequiredException {
+      if (mounted) {
+        setState(() {
+          _repostedOverride = wasReposted;
+          _repostCountOverride = wasCount;
+        });
+        await showAuthRequiredSheet(context, ref);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _repostedOverride = wasReposted;
+          _repostCountOverride = wasCount;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.feedRepostUpdateError)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _repostBusy = false);
     }
   }
 
@@ -300,27 +362,45 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
                 : () =>
                     confirmAndBlockUser(context, ref, userId: post.ownerId),
           ),
-          _Caption(author: post.author, text: post.text),
-          if (post.tags.isNotEmpty) _TagsRow(tags: post.tags),
-          if (imageUrl != null)
-            _PostMedia(imageUrl: imageUrl)
-          else if (videoUrl != null)
+          // Twitter/X: kart gövdesine (metin + etiket + görsel) dokunmak
+          // detay sayfasını açar. Action ikonları kendi InkWell'leriyle bu
+          // tap'i ezmez (en içteki handler kazanır → çakışma yok). Video
+          // kendi oynatma kontrollerini koruması için tap sarmalayıcı DIŞINDA.
+          InkWell(
+            onTap: () {
+              debugPrint(
+                '[FirinNet][PostCard] card tap → detail postId=${post.id}',
+              );
+              SocialCommentsPage.show(context, post.id);
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _Caption(author: post.author, text: post.text),
+                if (post.tags.isNotEmpty) _TagsRow(tags: post.tags),
+                if (imageUrl != null) _PostMedia(imageUrl: imageUrl),
+              ],
+            ),
+          ),
+          if (imageUrl == null && videoUrl != null)
             SocialPostVideo(url: videoUrl),
-          // Sayılar (beğeni/yorum) action row'da ikon yanında gösterilir;
-          // ayrı etkileşim özeti satırı kaldırıldı (çift gösterim yok).
+          // Sayılar (beğeni/yorum/repost) action row'da ikon yanında.
           _ActionRow(
             isLiked: _displayLiked,
             isSaved: _displaySaved,
+            isReposted: _displayReposted,
             likeBusy: _likeBusy,
             saveBusy: _saveBusy,
             shareBusy: _shareBusy,
             likeCount: _displayLikeCount,
             commentCount: _displayCommentCount,
+            repostCount: _displayRepostCount,
             onLike: _likeBusy ? null : () => _onLikeTap(repo),
             onComment: () {
               debugPrint('[FirinNet][PostCard] comment tap postId=${post.id}');
               SocialCommentsPage.show(context, post.id);
             },
+            onRepost: _repostBusy ? null : () => _onRepostTap(repo),
             onShare: _shareBusy ? null : _onShareTap,
             onSave: _saveBusy ? null : () => _onSaveTap(repo),
           ),
@@ -653,26 +733,32 @@ class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.isLiked,
     required this.isSaved,
+    required this.isReposted,
     required this.likeBusy,
     required this.saveBusy,
     required this.shareBusy,
     required this.likeCount,
     required this.commentCount,
+    required this.repostCount,
     required this.onLike,
     required this.onComment,
+    required this.onRepost,
     required this.onShare,
     required this.onSave,
   });
 
   final bool isLiked;
   final bool isSaved;
+  final bool isReposted;
   final bool likeBusy;
   final bool saveBusy;
   final bool shareBusy;
   final int likeCount;
   final int commentCount;
+  final int repostCount;
   final VoidCallback? onLike;
   final VoidCallback onComment;
+  final VoidCallback? onRepost;
   final VoidCallback? onShare;
   final VoidCallback? onSave;
 
@@ -709,6 +795,17 @@ class _ActionRow extends StatelessWidget {
               label: AppStrings.feedActionComment,
               count: commentCount,
               onTap: onComment,
+            ),
+          ),
+          // Repost — Twitter/X "yeniden paylaş". Aktif: yeşil. Sıra:
+          // Beğen · Yorum · Repost · Kaydet · Paylaş.
+          Expanded(
+            child: _ActionButton(
+              icon: Icons.repeat_rounded,
+              color: isReposted ? AppColors.success : AppColors.textPrimary,
+              label: AppStrings.feedActionRepost,
+              count: repostCount,
+              onTap: onRepost,
             ),
           ),
           Expanded(
@@ -758,63 +855,55 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Kompakt yatay sosyal aksiyon: ikon (18) + yan yana sade etiket (12).
-    // Sayı YOK (etkileşim özeti satırında); satır ~36 px, içerikle yarışmaz.
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.m),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Faz 2 Pass 3 — ikon değişiminde (beğen/kaydet toggle) zarif
-            // scale+fade pop; sürekli/loop animasyon yok, jank'sız.
-            AnimatedSwitcher(
-              duration: AppDuration.fast,
-              transitionBuilder: (child, anim) => ScaleTransition(
-                scale: Tween<double>(begin: 0.82, end: 1.0).animate(anim),
-                child: FadeTransition(opacity: anim, child: child),
-              ),
-              child: Icon(icon, key: ValueKey(icon), color: color, size: 18),
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: onTap == null ? AppColors.textMuted : color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  height: 1.0,
+    // Yazısız ikon satırı (Twitter/Instagram dili). Etiket görünmez;
+    // erişilebilirlik için Tooltip + Icon.semanticLabel taşır. Sayı varsa
+    // ikonun yanında (0/null gizli, kibar TR format: 142 / 1,2 B / 1,1 Mn).
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Faz 2 Pass 3 — ikon değişiminde (toggle) zarif scale+fade pop.
+              AnimatedSwitcher(
+                duration: AppDuration.fast,
+                transitionBuilder: (child, anim) => ScaleTransition(
+                  scale: Tween<double>(begin: 0.82, end: 1.0).animate(anim),
+                  child: FadeTransition(opacity: anim, child: child),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Icon(
+                  icon,
+                  key: ValueKey(icon),
+                  color: color,
+                  size: 20,
+                  semanticLabel: label,
+                ),
               ),
-            ),
-            // 0/null sayaç gizli; sayı varsa ikon+etiketin yanında gösterilir
-            // (kibar Türkçe format: 142 / 1,2 B / 1,1 Mn). Flexible+ellipsis:
-            // çok dar ekranda taşma yerine kırpılır.
-            if (count != null && count! > 0) ...[
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  _formatCount(count!),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: onTap == null ? AppColors.textMuted : color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    height: 1.0,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+              if (count != null && count! > 0) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    _formatCount(count!),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: onTap == null ? AppColors.textMuted : color,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      height: 1.0,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

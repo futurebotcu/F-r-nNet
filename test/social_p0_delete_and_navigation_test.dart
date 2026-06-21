@@ -98,10 +98,10 @@ void main() {
       expect(containerOccurrences, greaterThan(0));
     });
 
-    test('SocialCommentsPage.show called from exactly 1 place', () {
+    test('SocialCommentsPage.show called from exactly 2 places', () {
       final calls = RegExp(r'SocialCommentsPage\.show\(').allMatches(src);
-      expect(calls.length, 1,
-          reason: 'Yorum butonu; etkileşim özeti (view-all) satırı kaldırıldı');
+      expect(calls.length, 2,
+          reason: 'Kart gövdesi tap → detay + Yorum butonu (Twitter/X)');
     });
 
     test('PR #1 — action row sayıları, kaldırılan özet satırı', () {

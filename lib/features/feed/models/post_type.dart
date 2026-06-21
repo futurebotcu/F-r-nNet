@@ -11,6 +11,8 @@ enum PostType {
   supply, // Tedarik duyurusu
   equipment, // Ekipman ilanı
   job, // Usta arayışı / iş
+  recipe, // Tarif paylaşımı
+  announcement, // Duyuru
   groupHighlight, // Gruptan öne çıkan mesaj
 }
 
@@ -27,6 +29,10 @@ extension PostTypeMeta on PostType {
         return 'Ekipman';
       case PostType.job:
         return 'İş';
+      case PostType.recipe:
+        return 'Tarif';
+      case PostType.announcement:
+        return 'Duyuru';
       case PostType.groupHighlight:
         return 'Gruptan';
     }
@@ -44,6 +50,10 @@ extension PostTypeMeta on PostType {
         return Icons.build_rounded;
       case PostType.job:
         return Icons.work_rounded;
+      case PostType.recipe:
+        return Icons.menu_book_rounded;
+      case PostType.announcement:
+        return Icons.campaign_rounded;
       case PostType.groupHighlight:
         return Icons.forum_rounded;
     }
@@ -64,6 +74,10 @@ extension PostTypeMeta on PostType {
         return AppColors.textSecondary;
       case PostType.job:
         return AppColors.success;
+      case PostType.recipe:
+        return AppColors.brandLemonPressed;
+      case PostType.announcement:
+        return AppColors.info;
       case PostType.groupHighlight:
         return AppColors.brandLemonPressed;
     }
@@ -81,6 +95,10 @@ extension PostTypeMeta on PostType {
         return 'equipment';
       case PostType.job:
         return 'job';
+      case PostType.recipe:
+        return 'recipe';
+      case PostType.announcement:
+        return 'announcement';
       case PostType.groupHighlight:
         return 'group_highlight';
     }

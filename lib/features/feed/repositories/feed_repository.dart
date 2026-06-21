@@ -115,6 +115,10 @@ abstract class FeedRepository {
   /// Save (bookmark) toggle.
   Future<FeedPost> toggleSave(String postId);
 
+  /// Repost toggle: false → true (repost_count+1), true → false (-1).
+  /// Aynı kullanıcı aynı postu ikinci kez repost ederse geri alınır (toggle).
+  Future<FeedPost> toggleRepost(String postId);
+
   /// Insight kartları (sosyal büyüme rozetleri).
   Future<List<FeedInsight>> listInsights();
 
