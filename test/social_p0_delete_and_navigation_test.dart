@@ -98,15 +98,20 @@ void main() {
       expect(containerOccurrences, greaterThan(0));
     });
 
-    test('SocialCommentsPage.show called from exactly 2 places', () {
+    test('SocialCommentsPage.show called from exactly 1 place', () {
       final calls = RegExp(r'SocialCommentsPage\.show\(').allMatches(src);
-      expect(calls.length, 2, reason: 'Only comment button + view-all tap');
+      expect(calls.length, 1,
+          reason: 'Yorum butonu; etkileşim özeti (view-all) satırı kaldırıldı');
     });
 
-    test('CommentsPreview chevron + brandLemonPressed link appearance', () {
-      expect(src.contains('Icons.chevron_right_rounded'), isTrue);
+    test('PR #1 — action row sayıları, kaldırılan özet satırı', () {
+      // Beğeni/yorum sayıları action row'a taşındı; ayrı özet satırı yok.
+      expect(src.contains('count: likeCount'), isTrue);
+      expect(src.contains('count: commentCount'), isTrue);
+      expect(src.contains('postViewAllComments'), isFalse);
+      expect(src.contains('_PostEngagementSummary'), isFalse);
+      // Aktif beğeni rengi korunur.
       expect(src.contains('AppColors.brandLemonPressed'), isTrue);
-      expect(src.contains('postViewAllComments'), isTrue);
     });
   });
 

@@ -164,17 +164,16 @@ void main() {
       );
     });
 
-    test('Feed Premium Sprint - action labels + engagement summary', () {
-      expect(
-        src.contains("'\$label · \$count'"),
-        isFalse,
-        reason: 'Action row no longer shows counts',
-      );
-      expect(src.contains('_PostEngagementSummary'), isTrue);
+    test('PR #1 - action row counts (engagement summary kaldırıldı)', () {
+      // Sayılar action row'da ikon yanında (count: likeCount/commentCount),
+      // kibar Türkçe format (_formatCount). Ayrı etkileşim özeti satırı yok.
+      expect(src.contains('count: likeCount'), isTrue);
+      expect(src.contains('count: commentCount'), isTrue);
       expect(src.contains('_formatCount'), isTrue);
-      expect(src.contains('AppStrings.postLikesShortLabel'), isTrue);
-      expect(src.contains('AppStrings.postCommentsCountLabel'), isTrue);
-      expect(src.contains('AppStrings.postViewAllComments'), isTrue);
+      expect(src.contains('_PostEngagementSummary'), isFalse);
+      expect(src.contains('AppStrings.postLikesShortLabel'), isFalse);
+      expect(src.contains('AppStrings.postViewAllComments'), isFalse);
+      // Action label'ları korunur.
       expect(src.contains('AppStrings.feedActionLike'), isTrue);
       expect(src.contains('AppStrings.feedActionComment'), isTrue);
       expect(src.contains('AppStrings.feedActionSave'), isTrue);
