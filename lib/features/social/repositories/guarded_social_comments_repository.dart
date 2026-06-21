@@ -26,9 +26,20 @@ class GuardedSocialCommentsRepository implements SocialCommentsRepository {
   Future<SocialComment> addComment({
     required String postId,
     required String text,
+    String? parentCommentId,
   }) {
-    _requireWrite('yorum yazmak');
-    return inner.addComment(postId: postId, text: text);
+    _requireWrite(parentCommentId == null ? 'yorum yazmak' : 'cevap yazmak');
+    return inner.addComment(
+      postId: postId,
+      text: text,
+      parentCommentId: parentCommentId,
+    );
+  }
+
+  @override
+  Future<bool> toggleCommentLike(String commentId) {
+    _requireWrite('yorumu beğenmek');
+    return inner.toggleCommentLike(commentId);
   }
 
   @override

@@ -28,7 +28,7 @@ class SupabaseSocialCommentsRepository implements SocialCommentsRepository {
 
   static const String _columns =
       'id, post_id, owner_id, text, author_name, author_role, '
-      'is_deleted, created_at';
+      'is_deleted, created_at, like_count, parent_comment_id';
 
   @override
   Future<List<SocialComment>> listComments(String postId) async {
@@ -39,9 +39,27 @@ class SupabaseSocialCommentsRepository implements SocialCommentsRepository {
         .eq('is_deleted', false)
         .order('created_at', ascending: true)
         .limit(200);
-    return (rows as List)
-        .cast<Map<String, dynamic>>()
-        .map(SocialComment.fromRow)
+    final list = (rows as List).cast<Map<String, dynamic>>();
+
+    // Mevcut kullanıcının beğendiği yorum id'leri (tek sorgu) → isLiked.
+    final userId = _currentUserId;
+    Set<String> likedIds = const <String>{};
+    if (userId != null && list.isNotEmpty) {
+      final ids = list.map((r) => r['id'] as String).toList(growable: false);
+      final likeRows = await _client
+          .from('feed_comment_likes')
+          .select('comment_id')
+          .eq('owner_id', userId)
+          .inFilter('comment_id', ids);
+      likedIds = (likeRows as List)
+          .cast<Map<String, dynamic>>()
+          .map((r) => r['comment_id'] as String)
+          .toSet();
+    }
+
+    return list
+        .map((r) =>
+            SocialComment.fromRow(r, isLiked: likedIds.contains(r['id'])))
         .toList(growable: false);
   }
 
@@ -49,6 +67,7 @@ class SupabaseSocialCommentsRepository implements SocialCommentsRepository {
   Future<SocialComment> addComment({
     required String postId,
     required String text,
+    String? parentCommentId,
   }) async {
     final userId = _currentUserId;
     if (userId == null) {
@@ -60,12 +79,48 @@ class SupabaseSocialCommentsRepository implements SocialCommentsRepository {
           'post_id': postId,
           'owner_id': userId,
           'text': text.trim(),
+          if (parentCommentId != null) 'parent_comment_id': parentCommentId,
           // author_name / author_role server-side trigger ile.
         })
         .select(_columns)
         .single();
     _notify();
     return SocialComment.fromRow(row);
+  }
+
+  @override
+  Future<bool> toggleCommentLike(String commentId) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
+    }
+    final existing = await _client
+        .from('feed_comment_likes')
+        .select('comment_id')
+        .eq('comment_id', commentId)
+        .eq('owner_id', userId)
+        .limit(1);
+    final alreadyLiked = (existing as List).isNotEmpty;
+    if (alreadyLiked) {
+      await _client
+          .from('feed_comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('owner_id', userId);
+      _notify();
+      return false;
+    }
+    // Idempotent: yarış durumunda PK conflict (23505) sessizce beğenili sayılır.
+    try {
+      await _client.from('feed_comment_likes').insert(<String, dynamic>{
+        'comment_id': commentId,
+        'owner_id': userId,
+      });
+    } on sb.PostgrestException catch (e) {
+      if (e.code != '23505') rethrow;
+    }
+    _notify();
+    return true;
   }
 
   @override
