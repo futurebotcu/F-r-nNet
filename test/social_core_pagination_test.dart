@@ -52,7 +52,9 @@ void main() {
       expect(start, greaterThan(0));
       final next = src.indexOf('Future<', start + 30);
       final body = src.substring(start, next);
-      expect(body.contains('.range(offset, offset + limit - 1)'), isTrue);
+      // Repost surfacing sonrası: merge için en üst (offset+limit), aksi
+      // halde sayfa dilimi. Aralık is_deleted=false + created_at desc korunur.
+      expect(body.contains('.range(merging ? 0 : offset, end - 1)'), isTrue);
       expect(body.contains(".eq('is_deleted', false)"), isTrue);
       expect(
         body.contains(".order('created_at', ascending: false)"),

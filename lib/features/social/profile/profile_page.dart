@@ -337,7 +337,7 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
         return Column(
           children: [
             for (final p in paged.posts)
-              SocialPostCard(key: ValueKey(p.id), post: p),
+              SocialPostCard(key: ValueKey(p.feedEntryKey), post: p),
             if (paged.hasMore)
               _LoadMoreCta(
                 isLoading: paged.isLoadingMore,

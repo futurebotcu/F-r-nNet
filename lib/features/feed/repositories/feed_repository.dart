@@ -6,6 +6,29 @@ import '../models/feed_media.dart';
 import '../models/feed_post.dart';
 import '../models/post_type.dart';
 
+/// Repost surfacing — orijinal post girişleri ile repost girişlerini akış
+/// sıralamasına ([FeedPost.feedSortAt] desc) göre birleştirir, [feedEntryKey]
+/// ile dedupe eder ve `[offset, offset+limit)` dilimini döndürür. Over-fetch +
+/// slice deseni: her iki kaynak da en az `offset+limit` eleman getirdiyse
+/// dilim sınırları doğrudur (gap/duplicate yok).
+List<FeedPost> mergeFeedEntriesPage({
+  required List<FeedPost> postEntries,
+  required List<FeedPost> repostEntries,
+  required int offset,
+  required int limit,
+}) {
+  final merged = <FeedPost>[...postEntries, ...repostEntries]
+    ..sort((a, b) => b.feedSortAt.compareTo(a.feedSortAt));
+  final seen = <String>{};
+  final deduped = <FeedPost>[
+    for (final e in merged)
+      if (seen.add(e.feedEntryKey)) e,
+  ];
+  if (offset >= deduped.length) return const <FeedPost>[];
+  final end = (offset + limit).clamp(0, deduped.length);
+  return deduped.sublist(offset, end);
+}
+
 /// Feed için soyut erişim.
 ///
 /// V1: [LocalFeedRepository] (in-memory) ile çalışır, demo seed barındırır.
@@ -19,10 +42,14 @@ abstract class FeedRepository {
   /// muadili. Paged feed; ilk yükleme `offset=0,limit=20`, scroll altta
   /// `offset+=limit`. `is_deleted=false` filtresi korunur, `created_at`
   /// desc; media/liked/saved mapping aynı `_postColumns` yolu.
+  /// [repostByOwnerIds] dolu ise bu kullanıcıların repost'ları ayrı feed
+  /// girişi (isRepostEntry) olarak orijinal postlarla birleştirilir
+  /// (Twitter/X "yeniden paylaştı"). Boş ise yalnız orijinal postlar.
   Future<List<FeedPost>> listPostsPage({
     int offset = 0,
     int limit = 20,
     PostType? type,
+    Set<String> repostByOwnerIds = const <String>{},
   });
 
   /// V1 Social S1 — Belirli bir kullanıcının post listesi (newest first).

@@ -171,8 +171,14 @@ class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
     // feedChangesProvider tick → provider invalidate → ilk sayfayı tekrar
     // çek. Donor `FeedRefreshRequested` benzeri davranış.
     ref.watch(feedChangesProvider);
+    // Repost surfacing — Genel Akış'a takip edilenlerin repost'ları katılır.
+    final following = await ref.watch(currentFollowingIdsProvider.future);
     final repo = ref.watch(feedRepositoryProvider);
-    final first = await repo.listPostsPage(offset: 0, limit: _pageSize);
+    final first = await repo.listPostsPage(
+      offset: 0,
+      limit: _pageSize,
+      repostByOwnerIds: following,
+    );
     return FeedPagedState(
       posts: first,
       isLoadingMore: false,
@@ -189,14 +195,22 @@ class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
     if (current.isLoadingMore || !current.hasMore) return;
     state = AsyncData(current.copyWith(isLoadingMore: true));
     try {
+      final following = await ref.read(currentFollowingIdsProvider.future);
       final repo = ref.read(feedRepositoryProvider);
       final next = await repo.listPostsPage(
         offset: current.posts.length,
         limit: _pageSize,
+        repostByOwnerIds: following,
       );
+      // Dedupe — repost/orijinal girişler feedEntryKey ile tekilleştirilir.
+      final existing = <String>{for (final p in current.posts) p.feedEntryKey};
+      final filtered = <FeedPost>[
+        for (final p in next)
+          if (!existing.contains(p.feedEntryKey)) p,
+      ];
       state = AsyncData(
         FeedPagedState(
-          posts: <FeedPost>[...current.posts, ...next],
+          posts: <FeedPost>[...current.posts, ...filtered],
           isLoadingMore: false,
           hasMore: next.length == _pageSize,
           error: null,
@@ -213,8 +227,13 @@ class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      final following = await ref.read(currentFollowingIdsProvider.future);
       final repo = ref.read(feedRepositoryProvider);
-      final first = await repo.listPostsPage(offset: 0, limit: _pageSize);
+      final first = await repo.listPostsPage(
+        offset: 0,
+        limit: _pageSize,
+        repostByOwnerIds: following,
+      );
       return FeedPagedState(
         posts: first,
         isLoadingMore: false,
@@ -292,9 +311,14 @@ class FeedFollowingPagedNotifier extends AsyncNotifier<FeedPagedState> {
         offset: current.posts.length,
         limit: _pageSize,
       );
+      final existing = <String>{for (final p in current.posts) p.feedEntryKey};
+      final filtered = <FeedPost>[
+        for (final p in next)
+          if (!existing.contains(p.feedEntryKey)) p,
+      ];
       state = AsyncData(
         FeedPagedState(
-          posts: <FeedPost>[...current.posts, ...next],
+          posts: <FeedPost>[...current.posts, ...filtered],
           isLoadingMore: false,
           hasMore: next.length == _pageSize,
           error: null,
@@ -379,11 +403,14 @@ class UserPostsPagedNotifier
         offset: current.posts.length,
         limit: _pageSize,
       );
-      // Dedupe defansif — id çakışması append'lenmesin.
-      final existingIds = <String>{for (final p in current.posts) p.id};
+      // Dedupe defansif — feedEntryKey çakışması append'lenmesin (orijinal
+      // post ile repost girişi aynı id'ye sahip olabilir → entry key ile ayrı).
+      final existingIds = <String>{
+        for (final p in current.posts) p.feedEntryKey
+      };
       final filtered = <FeedPost>[
         for (final p in next)
-          if (!existingIds.contains(p.id)) p,
+          if (!existingIds.contains(p.feedEntryKey)) p,
       ];
       state = AsyncData(
         FeedPagedState(

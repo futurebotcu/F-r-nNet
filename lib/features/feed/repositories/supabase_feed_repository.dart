@@ -178,6 +178,109 @@ class SupabaseFeedRepository implements FeedRepository {
         .toSet();
   }
 
+  /// Post satırlarını FeedPost'a map'ler (liked/saved/reposted set + media tek
+  /// seferde çekilir). Listeleme metotlarındaki tekrar eden bloğun ortağı.
+  Future<List<FeedPost>> _mapRows(List<Map<String, dynamic>> list) async {
+    if (list.isEmpty) return const <FeedPost>[];
+    final ids = list.map((r) => r['id'] as String).toList(growable: false);
+    final liked = await _fetchLikedSet(ids);
+    final saved = await _fetchSavedSet(ids);
+    final reposted = await _fetchRepostedSet(ids);
+    final media = await _fetchMediaByPostIds(ids);
+    return list
+        .map(
+          (row) => _fromRow(
+            row,
+            likedPostIds: liked,
+            savedPostIds: saved,
+            repostedPostIds: reposted,
+            mediaByPostId: media,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  /// Repost surfacing — [reposterOwnerIds] kullanıcılarının en yeni [limit]
+  /// repost'unu, orijinal post içeriği + "X yeniden paylaştı" attribution ile
+  /// feed girişi (isRepostEntry) olarak kurar. Reposter adı profiles own-only
+  /// RLS nedeniyle `public_profile_snapshot` SECURITY DEFINER RPC'sinden gelir.
+  /// Migration/DB/RLS değişikliği YOK — mevcut tablolar + RPC.
+  Future<List<FeedPost>> _buildRepostEntries(
+    Set<String> reposterOwnerIds, {
+    required int limit,
+  }) async {
+    if (reposterOwnerIds.isEmpty || limit <= 0) return const <FeedPost>[];
+    final repostRows = await _client
+        .from('feed_reposts')
+        .select('post_id, owner_id, created_at')
+        .inFilter('owner_id', reposterOwnerIds.toList(growable: false))
+        .order('created_at', ascending: false)
+        .limit(limit);
+    final reposts = (repostRows as List).cast<Map<String, dynamic>>();
+    if (reposts.isEmpty) return const <FeedPost>[];
+
+    final postIds =
+        reposts.map((r) => r['post_id'] as String).toSet().toList();
+    final ownerIds =
+        reposts.map((r) => r['owner_id'] as String).toSet().toList();
+
+    // Orijinal post içerikleri (silinmemiş).
+    final postRows = await _client
+        .from('feed_posts')
+        .select(_postColumns)
+        .eq('is_deleted', false)
+        .inFilter('id', postIds);
+    final postById = <String, Map<String, dynamic>>{
+      for (final r in (postRows as List).cast<Map<String, dynamic>>())
+        r['id'] as String: r,
+    };
+    if (postById.isEmpty) return const <FeedPost>[];
+
+    final visibleIds = postById.keys.toList(growable: false);
+    final liked = await _fetchLikedSet(visibleIds);
+    final saved = await _fetchSavedSet(visibleIds);
+    final reposted = await _fetchRepostedSet(visibleIds);
+    final media = await _fetchMediaByPostIds(visibleIds);
+
+    // Reposter adları (batch RPC).
+    final nameById = <String, String>{};
+    try {
+      final snap = await _client.rpc(
+        'public_profile_snapshot',
+        params: <String, dynamic>{'p_user_ids': ownerIds},
+      );
+      for (final r in (snap as List).cast<Map<String, dynamic>>()) {
+        nameById[r['id'] as String] =
+            (r['display_name'] as String?) ?? 'FırınNet Kullanıcısı';
+      }
+    } catch (_) {
+      // İsim çözülemezse attribution sade fallback ile gösterilir.
+    }
+
+    final entries = <FeedPost>[];
+    for (final r in reposts) {
+      final postRow = postById[r['post_id'] as String];
+      if (postRow == null) continue; // silinmiş/gizli post → atla
+      final ownerId = r['owner_id'] as String;
+      final original = _fromRow(
+        postRow,
+        likedPostIds: liked,
+        savedPostIds: saved,
+        repostedPostIds: reposted,
+        mediaByPostId: media,
+      );
+      entries.add(
+        FeedPost.repostEntry(
+          original: original,
+          repostedByProfileId: ownerId,
+          repostedByName: nameById[ownerId] ?? 'FırınNet Kullanıcısı',
+          repostedAt: DateTime.parse(r['created_at'] as String),
+        ),
+      );
+    }
+    return entries;
+  }
+
   // ─────────────────────────────────────── Posts
 
   @override
@@ -214,7 +317,8 @@ class SupabaseFeedRepository implements FeedRepository {
 
   @override
   Future<List<FeedPost>> listPostsByOwner(String ownerId) async {
-    // V1 Social S1 — Public profile sayfası için.
+    // V1 Social S1 — Public profile. Profilde kullanıcının repost'ları da
+    // "X yeniden paylaştı" feed girişi olarak görünür (repost surfacing).
     final rows = await _client
         .from('feed_posts')
         .select(_postColumns)
@@ -222,23 +326,16 @@ class SupabaseFeedRepository implements FeedRepository {
         .eq('owner_id', ownerId)
         .order('created_at', ascending: false)
         .limit(100);
-    final list = (rows as List).cast<Map<String, dynamic>>();
-    final ids = list.map((r) => r['id'] as String).toList(growable: false);
-    final liked = await _fetchLikedSet(ids);
-    final saved = await _fetchSavedSet(ids);
-    final reposted = await _fetchRepostedSet(ids);
-    final media = await _fetchMediaByPostIds(ids);
-    return list
-        .map(
-          (row) => _fromRow(
-            row,
-            likedPostIds: liked,
-            savedPostIds: saved,
-            repostedPostIds: reposted,
-            mediaByPostId: media,
-          ),
-        )
-        .toList(growable: false);
+    final postEntries =
+        await _mapRows((rows as List).cast<Map<String, dynamic>>());
+    final repostEntries =
+        await _buildRepostEntries(<String>{ownerId}, limit: 100);
+    return mergeFeedEntriesPage(
+      postEntries: postEntries,
+      repostEntries: repostEntries,
+      offset: 0,
+      limit: 100,
+    );
   }
 
   @override
@@ -247,34 +344,26 @@ class SupabaseFeedRepository implements FeedRepository {
     int offset = 0,
     int limit = 20,
   }) async {
-    // M4 Polish — profile lazy paging. is_deleted=false + owner_id filter
-    // korunur; range(offset, offset+limit-1) ile RPC-friendly sayfalama.
-    final from = offset;
-    final to = offset + limit - 1;
+    // M4 Polish — profile lazy paging + repost surfacing. Merge için en üst
+    // (offset+limit) post çekilir, sahibin repost'larıyla birleştirilir.
+    final end = offset + limit;
     final rows = await _client
         .from('feed_posts')
         .select(_postColumns)
         .eq('is_deleted', false)
         .eq('owner_id', ownerId)
         .order('created_at', ascending: false)
-        .range(from, to);
-    final list = (rows as List).cast<Map<String, dynamic>>();
-    final ids = list.map((r) => r['id'] as String).toList(growable: false);
-    final liked = await _fetchLikedSet(ids);
-    final saved = await _fetchSavedSet(ids);
-    final reposted = await _fetchRepostedSet(ids);
-    final media = await _fetchMediaByPostIds(ids);
-    return list
-        .map(
-          (row) => _fromRow(
-            row,
-            likedPostIds: liked,
-            savedPostIds: saved,
-            repostedPostIds: reposted,
-            mediaByPostId: media,
-          ),
-        )
-        .toList(growable: false);
+        .range(0, end - 1);
+    final postEntries =
+        await _mapRows((rows as List).cast<Map<String, dynamic>>());
+    final repostEntries =
+        await _buildRepostEntries(<String>{ownerId}, limit: end);
+    return mergeFeedEntriesPage(
+      postEntries: postEntries,
+      repostEntries: repostEntries,
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
@@ -282,9 +371,13 @@ class SupabaseFeedRepository implements FeedRepository {
     int offset = 0,
     int limit = 20,
     PostType? type,
+    Set<String> repostByOwnerIds = const <String>{},
   }) async {
-    // V2 Social Core — donor `posts_repository.getPage` paged akışı.
-    // is_deleted=false korunur; range(offset, offset+limit-1) inclusive.
+    // V2 Social Core — paged akış. is_deleted=false korunur.
+    // Repost surfacing: repostByOwnerIds dolu + tip filtresi yoksa, bu
+    // kullanıcıların repost'ları ayrı feed girişi olarak birleştirilir.
+    final merging = repostByOwnerIds.isNotEmpty && type == null;
+    final end = offset + limit;
     var q = _client
         .from('feed_posts')
         .select(_postColumns)
@@ -292,26 +385,21 @@ class SupabaseFeedRepository implements FeedRepository {
     if (type != null) {
       q = q.eq('type', type.persistKey);
     }
+    // Merge için en üst (offset+limit) post; aksi halde yalnız sayfa dilimi.
     final rows = await q
         .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
-    final list = (rows as List).cast<Map<String, dynamic>>();
-    final ids = list.map((r) => r['id'] as String).toList(growable: false);
-    final liked = await _fetchLikedSet(ids);
-    final saved = await _fetchSavedSet(ids);
-    final reposted = await _fetchRepostedSet(ids);
-    final media = await _fetchMediaByPostIds(ids);
-    return list
-        .map(
-          (row) => _fromRow(
-            row,
-            likedPostIds: liked,
-            savedPostIds: saved,
-            repostedPostIds: reposted,
-            mediaByPostId: media,
-          ),
-        )
-        .toList(growable: false);
+        .range(merging ? 0 : offset, end - 1);
+    final postEntries =
+        await _mapRows((rows as List).cast<Map<String, dynamic>>());
+    if (!merging) return postEntries;
+    final repostEntries =
+        await _buildRepostEntries(repostByOwnerIds, limit: end);
+    return mergeFeedEntriesPage(
+      postEntries: postEntries,
+      repostEntries: repostEntries,
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
@@ -325,30 +413,24 @@ class SupabaseFeedRepository implements FeedRepository {
     // çalışır. Migration / RPC YOK; mevcut RLS (to authenticated select)
     // any-author postu görmeye izin verir.
     if (followingIds.isEmpty) return const <FeedPost>[];
+    // Repost surfacing: takip edilenlerin repost'ları da girişe katılır.
+    final end = offset + limit;
     final rows = await _client
         .from('feed_posts')
         .select(_postColumns)
         .eq('is_deleted', false)
         .inFilter('owner_id', followingIds.toList(growable: false))
         .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
-    final list = (rows as List).cast<Map<String, dynamic>>();
-    final ids = list.map((r) => r['id'] as String).toList(growable: false);
-    final liked = await _fetchLikedSet(ids);
-    final saved = await _fetchSavedSet(ids);
-    final reposted = await _fetchRepostedSet(ids);
-    final media = await _fetchMediaByPostIds(ids);
-    return list
-        .map(
-          (row) => _fromRow(
-            row,
-            likedPostIds: liked,
-            savedPostIds: saved,
-            repostedPostIds: reposted,
-            mediaByPostId: media,
-          ),
-        )
-        .toList(growable: false);
+        .range(0, end - 1);
+    final postEntries =
+        await _mapRows((rows as List).cast<Map<String, dynamic>>());
+    final repostEntries = await _buildRepostEntries(followingIds, limit: end);
+    return mergeFeedEntriesPage(
+      postEntries: postEntries,
+      repostEntries: repostEntries,
+      offset: offset,
+      limit: limit,
+    );
   }
 
   @override
@@ -743,7 +825,9 @@ class SupabaseFeedRepository implements FeedRepository {
       // Race: çift tap → ikinci INSERT 23505. Idempotent yutma.
       if (e.code != '23505') rethrow;
     }
-    _notifyContent();
+    // Repost surfacing: repost girişi akışa girer/çıkar → YAPISAL tick
+    // (content tick paged feed'i tazelemez). Kart ikonu optimistik gösterilir.
+    _notify();
 
     final row = await _client
         .from('feed_posts')

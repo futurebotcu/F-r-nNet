@@ -335,6 +335,11 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Repost surfacing — "🔁 <Ad> yeniden paylaştı" attribution satırı.
+          if (post.isRepostEntry)
+            _RepostAttribution(
+              name: post.repostedByName ?? AppStrings.feedRepostAttributionFallback,
+            ),
           _Header(
             post: post,
             timeAgo: _timeAgo(post.createdAt),
@@ -405,6 +410,46 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             onSave: _saveBusy ? null : () => _onSaveTap(repo),
           ),
           const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+}
+
+/// Repost surfacing — kart üstünde sade "🔁 [Ad] yeniden paylaştı" satırı.
+class _RepostAttribution extends StatelessWidget {
+  const _RepostAttribution({required this.name});
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.m,
+        AppSpacing.s,
+        AppSpacing.m,
+        0,
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.repeat_rounded,
+            size: 14,
+            color: AppColors.textMuted,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              AppStrings.feedRepostedByLabel(name),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ],
       ),
     );
