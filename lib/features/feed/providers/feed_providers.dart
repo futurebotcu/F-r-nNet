@@ -172,12 +172,12 @@ class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
     // çek. Donor `FeedRefreshRequested` benzeri davranış.
     ref.watch(feedChangesProvider);
     // Repost surfacing — Genel Akış'a takip edilenlerin repost'ları katılır.
-    final following = await ref.watch(currentFollowingIdsProvider.future);
+    final reposters = await ref.watch(feedRepostOwnerIdsProvider.future);
     final repo = ref.watch(feedRepositoryProvider);
     final first = await repo.listPostsPage(
       offset: 0,
       limit: _pageSize,
-      repostByOwnerIds: following,
+      repostByOwnerIds: reposters,
     );
     return FeedPagedState(
       posts: first,
@@ -195,12 +195,12 @@ class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
     if (current.isLoadingMore || !current.hasMore) return;
     state = AsyncData(current.copyWith(isLoadingMore: true));
     try {
-      final following = await ref.read(currentFollowingIdsProvider.future);
+      final reposters = await ref.read(feedRepostOwnerIdsProvider.future);
       final repo = ref.read(feedRepositoryProvider);
       final next = await repo.listPostsPage(
         offset: current.posts.length,
         limit: _pageSize,
-        repostByOwnerIds: following,
+        repostByOwnerIds: reposters,
       );
       // Dedupe — repost/orijinal girişler feedEntryKey ile tekilleştirilir.
       final existing = <String>{for (final p in current.posts) p.feedEntryKey};
@@ -227,12 +227,12 @@ class FeedPagedNotifier extends AsyncNotifier<FeedPagedState> {
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final following = await ref.read(currentFollowingIdsProvider.future);
+      final reposters = await ref.read(feedRepostOwnerIdsProvider.future);
       final repo = ref.read(feedRepositoryProvider);
       final first = await repo.listPostsPage(
         offset: 0,
         limit: _pageSize,
-        repostByOwnerIds: following,
+        repostByOwnerIds: reposters,
       );
       return FeedPagedState(
         posts: first,
@@ -261,6 +261,16 @@ final currentFollowingIdsProvider =
   final repo = ref.watch(followRepositoryProvider);
   final ids = await repo.listFollowingIds(user.id);
   return ids.toSet();
+});
+
+/// Repost surfacing — Genel Akış'ta repost girişi üretecek kullanıcılar:
+/// takip edilenler + MEVCUT KULLANICI. Böylece kendi repost'un kendi ana
+/// feed'inde de "yeniden paylaştı" girişi olarak görünür (Twitter/X).
+final feedRepostOwnerIdsProvider =
+    FutureProvider.autoDispose<Set<String>>((ref) async {
+  final following = await ref.watch(currentFollowingIdsProvider.future);
+  final user = ref.watch(currentAuthUserProvider);
+  return <String>{...following, if (user != null) user.id};
 });
 
 /// Social UI Polish Sprint 2A — "Takip Edilenler" segmenti paged feed.
