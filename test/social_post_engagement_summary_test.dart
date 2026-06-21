@@ -1,9 +1,8 @@
-// Feed Premium Sprint — Post etkileşim özeti satırı widget testleri.
+// PR #1 (Feed) — Action-row beğeni/yorum sayıları widget testleri.
 //
-// Sayılar action row'dan çıkıp ince/şık bir özet satırına taşındı:
-//   Sol: 👍 N beğeni · Sağ: N yorum · Tüm yorumları gör ›
-// Kurallar: 0 değerler gizlenir, hiç etkileşim yoksa satır tamamen gizli,
-// kibar Türkçe format (B / Mn). Action row sade kalır (sayı yok).
+// Sayılar action row'da ikon+etiketin yanında gösterilir (kibar Türkçe
+// format: 142 / 1,2 B / 1,1 Mn). 0 sayılar gizli. Ayrı "etkileşim özeti"
+// satırı kaldırıldı (çift gösterim yok). Kaydet/Paylaş sayaç göstermez.
 
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
@@ -46,83 +45,77 @@ Widget _wrap(FeedPost post) {
 }
 
 void main() {
-  group('Post etkileşim özeti — görünürlük', () {
-    testWidgets('0 beğeni + 0 yorum → özet satırı gizli', (tester) async {
+  group('Action row sayıları — görünürlük', () {
+    testWidgets('0 beğeni + 0 yorum → sayı gösterilmez (label kalır)',
+        (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 0, commentCount: 0)));
       await tester.pump();
-      expect(find.textContaining(AppStrings.postLikesShortLabel), findsNothing);
-      expect(find.textContaining(AppStrings.postViewAllComments), findsNothing);
+      expect(find.text(AppStrings.feedActionLike), findsOneWidget);
+      expect(find.text(AppStrings.feedActionComment), findsOneWidget);
+      // 0 sayaç gizli.
+      expect(find.text('0'), findsNothing);
     });
 
-    testWidgets('Sadece beğeni → "142 beğeni" görünür, yorum linki yok',
-        (tester) async {
+    testWidgets('Sadece beğeni → "142" görünür', (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 142, commentCount: 0)));
       await tester.pump();
-      expect(find.text('142 ${AppStrings.postLikesShortLabel}'),
-          findsOneWidget);
-      expect(find.textContaining(AppStrings.postViewAllComments), findsNothing);
+      expect(find.text('142'), findsOneWidget);
     });
 
-    testWidgets('Sadece yorum → "Tüm yorumları gör" görünür, beğeni yok',
-        (tester) async {
-      await tester.pumpWidget(_wrap(_post(likeCount: 0, commentCount: 23)));
-      await tester.pump();
-      expect(find.textContaining(AppStrings.postViewAllComments), findsOneWidget);
-      expect(find.textContaining(AppStrings.postLikesShortLabel), findsNothing);
-    });
-
-    testWidgets('Beğeni + yorum birlikte görünür', (tester) async {
+    testWidgets('Beğeni + yorum → her iki sayı görünür', (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 142, commentCount: 23)));
       await tester.pump();
-      expect(find.text('142 ${AppStrings.postLikesShortLabel}'),
-          findsOneWidget);
-      expect(find.textContaining(AppStrings.postViewAllComments), findsOneWidget);
+      expect(find.text('142'), findsOneWidget);
+      expect(find.text('23'), findsOneWidget);
+    });
+
+    testWidgets('Eski etkileşim özeti satırı kaldırıldı', (tester) async {
+      await tester.pumpWidget(_wrap(_post(likeCount: 142, commentCount: 23)));
+      await tester.pump();
+      expect(find.textContaining(AppStrings.postLikesShortLabel), findsNothing);
+      expect(
+          find.textContaining(AppStrings.postViewAllComments), findsNothing);
     });
   });
 
-  group('Post etkileşim özeti — kibar Türkçe sayı formatı', () {
-    testWidgets('1234 beğeni → "1,2 B beğeni"', (tester) async {
+  group('Kibar Türkçe sayı formatı (action row)', () {
+    testWidgets('1234 → "1,2 B"', (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 1234)));
       await tester.pump();
-      expect(find.text('1,2 B ${AppStrings.postLikesShortLabel}'),
-          findsOneWidget);
+      expect(find.text('1,2 B'), findsOneWidget);
     });
 
-    testWidgets('12400 beğeni → "12,4 B beğeni"', (tester) async {
+    testWidgets('12400 → "12,4 B"', (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 12400)));
       await tester.pump();
-      expect(find.text('12,4 B ${AppStrings.postLikesShortLabel}'),
-          findsOneWidget);
+      expect(find.text('12,4 B'), findsOneWidget);
     });
 
-    testWidgets('1100000 beğeni → "1,1 Mn beğeni"', (tester) async {
+    testWidgets('1100000 → "1,1 Mn"', (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 1100000)));
       await tester.pump();
-      expect(find.text('1,1 Mn ${AppStrings.postLikesShortLabel}'),
-          findsOneWidget);
+      expect(find.text('1,1 Mn'), findsOneWidget);
     });
   });
 
-  group('Action row sade kalır (sayı yok)', () {
-    testWidgets('Beğen/Yorum/Kaydet/Paylaş label var, sayı bitişik değil',
-        (tester) async {
+  group('Action row label + overflow', () {
+    testWidgets('Beğen/Yorum/Kaydet/Paylaş label var', (tester) async {
       await tester.pumpWidget(_wrap(_post(likeCount: 142, commentCount: 23)));
       await tester.pump();
       expect(find.text(AppStrings.feedActionLike), findsOneWidget);
       expect(find.text(AppStrings.feedActionComment), findsOneWidget);
       expect(find.text(AppStrings.feedActionSave), findsOneWidget);
       expect(find.text(AppStrings.feedActionShare), findsOneWidget);
-      // Eski "Beğen · 142" bitişik formatı kalmadı.
-      expect(find.textContaining('${AppStrings.feedActionLike} · '),
-          findsNothing);
     });
 
-    testWidgets('Hiç overflow yok (dar genişlik)', (tester) async {
+    testWidgets('Dar genişlikte overflow yok', (tester) async {
       tester.view.physicalSize = const Size(320 * 3, 800 * 3);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(_wrap(_post(likeCount: 12400, commentCount: 999)));
+      await tester.pumpWidget(
+        _wrap(_post(likeCount: 12400, commentCount: 999)),
+      );
       await tester.pump();
       expect(tester.takeException(), isNull);
     });

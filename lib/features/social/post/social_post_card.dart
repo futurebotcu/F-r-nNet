@@ -306,26 +306,16 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             _PostMedia(imageUrl: imageUrl)
           else if (videoUrl != null)
             SocialPostVideo(url: videoUrl),
-          // Feed Premium Sprint — etkileşim özeti: action row'dan ÖNCE,
-          // sayılar burada (ince/şık), action row sade kalır. Hiç etkileşim
-          // yoksa satır tamamen gizli.
-          if (_displayLikeCount > 0 || _displayCommentCount > 0)
-            _PostEngagementSummary(
-              likeCount: _displayLikeCount,
-              commentCount: _displayCommentCount,
-              onTapComments: () {
-                debugPrint(
-                  '[FirinNet][PostCard] summary comments tap postId=${post.id}',
-                );
-                SocialCommentsPage.show(context, post.id);
-              },
-            ),
+          // Sayılar (beğeni/yorum) action row'da ikon yanında gösterilir;
+          // ayrı etkileşim özeti satırı kaldırıldı (çift gösterim yok).
           _ActionRow(
             isLiked: _displayLiked,
             isSaved: _displaySaved,
             likeBusy: _likeBusy,
             saveBusy: _saveBusy,
             shareBusy: _shareBusy,
+            likeCount: _displayLikeCount,
+            commentCount: _displayCommentCount,
             onLike: _likeBusy ? null : () => _onLikeTap(repo),
             onComment: () {
               debugPrint('[FirinNet][PostCard] comment tap postId=${post.id}');
@@ -656,9 +646,9 @@ class _PostMedia extends StatelessWidget {
 }
 
 /// FırınNet action row — 4 eşit dağılmış sade buton: beğen / yorum / kaydet /
-/// paylaş. Feed Premium Sprint: sayılar action row'dan çıkıp etkileşim özeti
-/// satırına taşındı; burada yalnız ikon + etiket kalır (kompakt, içerikle
-/// yarışmaz).
+/// paylaş. Beğeni ve yorum sayıları ikon+etiketin yanında gösterilir (0 ise
+/// gizli); ayrı "etkileşim özeti" satırı yok (çift gösterim istenmiyor).
+/// Kaydet/Paylaş'ta public sayı olmadığı için sayaç gösterilmez.
 class _ActionRow extends StatelessWidget {
   const _ActionRow({
     required this.isLiked,
@@ -666,6 +656,8 @@ class _ActionRow extends StatelessWidget {
     required this.likeBusy,
     required this.saveBusy,
     required this.shareBusy,
+    required this.likeCount,
+    required this.commentCount,
     required this.onLike,
     required this.onComment,
     required this.onShare,
@@ -677,6 +669,8 @@ class _ActionRow extends StatelessWidget {
   final bool likeBusy;
   final bool saveBusy;
   final bool shareBusy;
+  final int likeCount;
+  final int commentCount;
   final VoidCallback? onLike;
   final VoidCallback onComment;
   final VoidCallback? onShare;
@@ -704,6 +698,7 @@ class _ActionRow extends StatelessWidget {
                   ? AppColors.brandLemonPressed
                   : AppColors.textPrimary,
               label: AppStrings.feedActionLike,
+              count: likeCount,
               onTap: onLike,
             ),
           ),
@@ -712,6 +707,7 @@ class _ActionRow extends StatelessWidget {
               icon: Icons.mode_comment_outlined,
               color: AppColors.textPrimary,
               label: AppStrings.feedActionComment,
+              count: commentCount,
               onTap: onComment,
             ),
           ),
@@ -747,12 +743,18 @@ class _ActionButton extends StatelessWidget {
     required this.color,
     required this.label,
     required this.onTap,
+    this.count,
   });
 
   final IconData icon;
   final Color color;
   final String label;
   final VoidCallback? onTap;
+
+  /// İkon+etiketin yanında gösterilecek sayaç. `null` veya `0` ise hiç
+  /// gösterilmez (yalnız ikon+etiket kalır). Kaydet/Paylaş'ta public sayı
+  /// olmadığı için bu butonlara count geçilmez.
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
@@ -792,6 +794,26 @@ class _ActionButton extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            // 0/null sayaç gizli; sayı varsa ikon+etiketin yanında gösterilir
+            // (kibar Türkçe format: 142 / 1,2 B / 1,1 Mn). Flexible+ellipsis:
+            // çok dar ekranda taşma yerine kırpılır.
+            if (count != null && count! > 0) ...[
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  _formatCount(count!),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: onTap == null ? AppColors.textMuted : color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    height: 1.0,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -865,115 +887,4 @@ String _shortDecimal(double d) {
   final intPart = s.substring(0, dot);
   final dec = s.substring(dot + 1);
   return dec == '0' ? intPart : '$intPart,$dec';
-}
-
-/// Feed Premium Sprint — etkileşim özeti satırı (action row'dan ÖNCE).
-/// Sol: 👍 N beğeni · Sağ: N yorum · Tüm yorumları gör ›
-/// Kart/pill değil; ince, doğal sosyal medya summary satırı. Sıfır değerler
-/// gizlenir (build tarafı en az biri > 0 iken render eder). Dar ekranda
-/// taşma yok: sol Expanded + sağ Flexible, her iki tarafta ellipsis.
-class _PostEngagementSummary extends StatelessWidget {
-  const _PostEngagementSummary({
-    required this.likeCount,
-    required this.commentCount,
-    required this.onTapComments,
-  });
-
-  final int likeCount;
-  final int commentCount;
-  final VoidCallback onTapComments;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.m,
-        AppSpacing.s,
-        AppSpacing.m,
-        AppSpacing.s,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: likeCount > 0
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.thumb_up_alt_rounded,
-                        size: 13,
-                        color: AppColors.brandLemonPressed,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          '${_formatCount(likeCount)} '
-                          '${AppStrings.postLikesShortLabel}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          ),
-          if (commentCount > 0) ...[
-            const SizedBox(width: AppSpacing.s),
-            Flexible(
-              child: InkWell(
-                onTap: onTapComments,
-                borderRadius: BorderRadius.circular(AppRadius.s),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text:
-                                    '${_formatCount(commentCount)} '
-                                    '${AppStrings.postCommentsCountLabel} · ',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const TextSpan(
-                                text: AppStrings.postViewAllComments,
-                                style: TextStyle(
-                                  color: AppColors.brandInk,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.brandLemonPressed,
-                        size: 15,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 }
