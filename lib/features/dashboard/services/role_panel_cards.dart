@@ -146,12 +146,15 @@ class RolePanelCards {
 
       case AccountType.wholesaler:
         return const [
-          // Ana modül — müşteri yönetimi (dealers altyapısı paylaşılır)
+          // Ana modül — toptancı da ticari gibi NORMAL Bayi Yönetimi shell'ine
+          // (/dealers) girer (fix/wholesaler-panel-card-to-dealers). Müşteri
+          // listesi wholesale_customer scope'lu; düz /wholesale/customers
+          // ekranı legacy route olarak kalır ama ana giriş DEĞİL.
           PanelCard(
-            label: AppStrings.cardWholesaleCustomers,
-            subtitle: AppStrings.cardWholesaleCustomersSub,
+            label: AppStrings.cardDealerPanel,
+            subtitle: AppStrings.cardWholesaleDealerPanelSub,
             icon: Icons.storefront_rounded,
-            route: AppRoutes.wholesaleCustomers,
+            route: AppRoutes.dealers,
           ),
           // V1 sprint sonrası — Marketplace yayını gerçek backend'e bağlandı.
           PanelCard(

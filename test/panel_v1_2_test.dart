@@ -57,11 +57,15 @@ void main() {
       expect(routes, isNot(contains(AppRoutes.workerExperiences)));
     });
 
-    test('Toptancı panelde Müşteriler kartı /wholesale/customers route\'una gider',
+    test('Toptancı panelde ana kart normal Bayi Yönetimi shell\'ine (/dealers) gider',
         () {
+      // fix/wholesaler-panel-card-to-dealers: toptancı da ticari gibi tablı
+      // DealerShell'e girer; düz /wholesale/customers ana giriş DEĞİL (legacy
+      // route olarak kalır, kart route'unda yer almaz).
       final cards = RolePanelCards.forAccount(AccountType.wholesaler);
       final routes = cards.map((c) => c.route).whereType<String>().toList();
-      expect(routes, contains(AppRoutes.wholesaleCustomers));
+      expect(routes, contains(AppRoutes.dealers));
+      expect(routes, isNot(contains(AppRoutes.wholesaleCustomers)));
     });
 
     test('comingSoon kartların route\'u null', () {
