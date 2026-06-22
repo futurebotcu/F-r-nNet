@@ -29,7 +29,7 @@ class DriverHomeScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, 0),
-                child: const _MyInvites(),
+                child: const MyDriverInvitesCard(),
               ),
             const Expanded(child: _DriverEmpty()),
           ],
@@ -40,8 +40,12 @@ class DriverHomeScreen extends ConsumerWidget {
 }
 
 /// Şoföre gelen bekleyen davetler — Kabul/Reddet. Boşsa görünmez.
-class _MyInvites extends ConsumerWidget {
-  const _MyInvites();
+///
+/// Hem [DriverHomeScreen]'de (atanmamış şoför), hem de bireysel kullanıcının
+/// **kişisel** Bayi Defteri üstünde banner olarak kullanılır (davet kabul →
+/// aktif şoför → scoped deftere geçiş).
+class MyDriverInvitesCard extends ConsumerWidget {
+  const MyDriverInvitesCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -118,6 +122,8 @@ class _MyInvites extends ConsumerWidget {
     ref.invalidate(myDriverInvitesProvider);
     ref.invalidate(isAssignedDriverProvider);
     ref.invalidate(dealersAssignedToMeProvider);
+    // Davet kabul → bireysel kullanıcı artık aktif şoför → mode owner→scoped.
+    ref.invalidate(individualActiveDriverProvider);
   }
 }
 

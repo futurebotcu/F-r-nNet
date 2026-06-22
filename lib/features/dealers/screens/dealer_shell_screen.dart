@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_bottom_nav.dart';
 import '../../profile/models/bakery_profile.dart';
@@ -33,15 +34,35 @@ class DealerShellScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // fix/driver-normal-dealer-shell: mod hesap tipinden türetilir. Bireysel
-    // şoför = driverScoped → AYNI normal Bayi Yönetimi shell'i; tek fark
-    // Şoförler tabı yok ve veri atanmış bayilerle sınırlı (repo decorator).
+    final accountType = ref.watch(
+      profileControllerProvider.select((p) => p?.accountType),
+    );
+    final isIndividual = accountType == AccountType.individual;
+    final isWholesaler = accountType == AccountType.wholesaler;
+    // Patron = commercial / wholesaler → Şoförler (şoför yönetimi) tabı + owner
+    // yetkileri. Bireysel kullanıcı ASLA patron değildir.
+    final isPatron = accountType == AccountType.commercial || isWholesaler;
+
+    // Bireysel: "aktif şoför mü?" sorgusu çözülene kadar bekle → mode
+    // (owner ↔ driverScoped) flash'ı önlenir.
+    if (isIndividual) {
+      final status = ref.watch(individualActiveDriverProvider);
+      if (status.isLoading && !status.hasValue) {
+        return const Scaffold(
+          backgroundColor: AppColors.background,
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+    }
+
+    // mode: bireysel + AKTİF şoför → driverScoped (atanmış bayiler scoped
+    // defter); bireysel + şoför DEĞİL → owner (kişisel defter); patron → owner.
     final driverScoped =
         ref.watch(dealerShellModeProvider) == DealerShellMode.driverScoped;
 
+    // Savunma: driverScoped (aktif şoför) ama atanmış bayi/şoför kaydı henüz
+    // görünmüyorsa davet/boş şoför ekranı. (Normalde driverScoped ⇒ atama var.)
     if (driverScoped) {
-      // Henüz atanmamış (davet bekleyen) şoför: ayrı panel DEĞİL, sadece davet
-      // kartı + boş durum. Atanmış şoför → normal shell (aşağıda).
       final assigned =
           ref.watch(dealersAssignedToMeProvider).valueOrNull ?? const [];
       final hasPanel = assigned.isNotEmpty ||
@@ -49,35 +70,46 @@ class DealerShellScreen extends ConsumerWidget {
       if (!hasPanel) return const DriverHomeScreen();
     }
 
-    // fix/wholesaler-dealer-shell-parity: Toptancı da AYNI normal Bayi Defteri
-    // shell'ini kullanır (eski `/wholesale/customers` redirect KALDIRILDI).
-    // Tek fark: liste tabı "Müşteriler" etiketi + veri wholesale_customer
-    // scope'lu ([dealerListScopeProvider]). Şoförler tabı toptancıda açık
-    // kalır (toptancı = owner; driverScoped değil).
-    final isWholesaler = ref.watch(
-          profileControllerProvider.select((p) => p?.accountType),
-        ) ==
-        AccountType.wholesaler;
     final dealersTabLabel =
         isWholesaler ? 'Müşteriler' : AppStrings.dealerShellTabDealers;
 
-    // Tab indeksi `dealerShellTabIndexProvider`'dan okunur (Genel Bakış
-    // CTA'ları programatik tab geçişi için aynı provider'ı set eder). Driver
-    // modda Şoförler tabı olmadığı için 0..3'e clamp edilir.
+    // Şoförler tabı YALNIZ patron'da → bireysel (owner kişisel defter veya
+    // scoped şoför defteri) 4 tab (0..3); patron 5 tab (0..4).
     final index =
-        ref.watch(dealerShellTabIndexProvider).clamp(0, driverScoped ? 3 : 4);
+        ref.watch(dealerShellTabIndexProvider).clamp(0, isPatron ? 4 : 3);
+
+    // Bireysel + bekleyen davet (henüz aktif şoför değil) → kişisel defter
+    // üstünde davet banner'ı (kabul → aktif şoför → scoped'a geçer). Kişisel
+    // defter KAYBOLMAZ. Banner davet yoksa kendini gizler.
+    final showInviteBanner = isIndividual && !driverScoped;
 
     final scaffold = Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: index,
+      body: Column(
         children: [
-          const DealerOverviewScreen(),
-          const DealerListScreen(),
-          const DealerActivityScreen(),
-          const DealerReportsTabScreen(),
-          // Şoförler: patron tarafı yönetim — bireysel şoföre gösterilmez.
-          if (!driverScoped) const DriverListScreen(),
+          if (showInviteBanner)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.pageH,
+                AppSpacing.s,
+                AppSpacing.pageH,
+                0,
+              ),
+              child: MyDriverInvitesCard(),
+            ),
+          Expanded(
+            child: IndexedStack(
+              index: index,
+              children: [
+                const DealerOverviewScreen(),
+                const DealerListScreen(),
+                const DealerActivityScreen(),
+                const DealerReportsTabScreen(),
+                // Şoförler: patron yönetimi — yalnız commercial/wholesaler.
+                if (isPatron) const DriverListScreen(),
+              ],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: PremiumBottomNav(
@@ -105,7 +137,7 @@ class DealerShellScreen extends ConsumerWidget {
             activeIcon: Icons.analytics_rounded,
             label: AppStrings.dealerShellTabReports,
           ),
-          if (!driverScoped)
+          if (isPatron)
             const PremiumNavItem(
               icon: Icons.local_shipping_outlined,
               activeIcon: Icons.local_shipping_rounded,

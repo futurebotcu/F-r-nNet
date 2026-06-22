@@ -49,12 +49,50 @@ final dealerShellTabIndexProvider = StateProvider<int>((_) => 0);
 /// [DriverScopedDealerRepository] ile sarar.
 enum DealerShellMode { owner, driverScoped }
 
+/// Mode-bağımsız ham repo — yalnız "bireysel aktif şoför mü?" read'i için.
+/// [dealerRepositoryProvider] mode'a bağlı olduğundan mode onu kullanamaz
+/// (Riverpod döngüsü olurdu). Yalnız tek-seferlik read; broadcast watch() yok.
+final _driverStatusRepoProvider = Provider<DealerRepository>((ref) {
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
+  final DealerRepository repo;
+  if (AppConfig.supabaseEnabled && userId != null) {
+    repo = SupabaseDealerRepository(sb.Supabase.instance.client);
+  } else {
+    repo = LocalDealerRepository(seed: true);
+  }
+  ref.onDispose(repo.dispose);
+  return repo;
+});
+
+/// Bireysel kullanıcı **aktif** (atanmış) bir şoför mü?
+///
+/// - true  → `/dealers` şoför-scoped defter (atanmış bayiler + driver RPC).
+/// - false → kendi **kişisel** Bayi Defteri (owner: bayi ekle/hareket/rapor).
+///
+/// Bekleyen davet TEK BAŞINA driverScoped YAPMAZ → kişisel defter korunur;
+/// davet kişisel defterde banner olarak gösterilir, kabul edilince invalidate
+/// edilir → mode driverScoped'a geçer. (dealerChanges izlenmez: o
+/// dealerRepository'ye bağlı, mode da repo'ya → döngü olurdu. Invite akışı
+/// explicit invalidate eder.)
+final individualActiveDriverProvider = FutureProvider<bool>((ref) async {
+  final accountType =
+      ref.watch(profileControllerProvider.select((p) => p?.accountType));
+  if (accountType != AccountType.individual) return false;
+  return ref.watch(_driverStatusRepoProvider).isAssignedDriver();
+});
+
+/// `/dealers` shell modu.
+/// - commercial / wholesaler → owner (patron Bayi Yönetimi, değişmez).
+/// - bireysel + AKTİF şoför → driverScoped (scoped defter).
+/// - bireysel + şoför DEĞİL → owner (kişisel Bayi Defteri).
+/// [dealerRepositoryProvider] bu modu okur (driverScoped → repo decorator).
 final dealerShellModeProvider = Provider<DealerShellMode>((ref) {
   final accountType =
       ref.watch(profileControllerProvider.select((p) => p?.accountType));
-  return accountType == AccountType.individual
-      ? DealerShellMode.driverScoped
-      : DealerShellMode.owner;
+  if (accountType != AccountType.individual) return DealerShellMode.owner;
+  final isActiveDriver =
+      ref.watch(individualActiveDriverProvider).valueOrNull ?? false;
+  return isActiveDriver ? DealerShellMode.driverScoped : DealerShellMode.owner;
 });
 
 /// Toptancı liste scope'u (fix/wholesaler-dealer-shell-parity).

@@ -1,10 +1,10 @@
 // DealerShellScreen widget testleri (UI placement güncellemesi sonrası).
 //
-// Ürün modeli: bireysel = ŞOFÖR → "Şoför Paneli" görünümü (patron shell
-// DEĞİL). Ticari (commercial) → patron shell (5 tab: Genel Bakış/Bayiler/
-// Hareketler/Raporlar/Şoförler; Gün Sonu Raporlar içine taşındı). Toptancı →
-// AYNI shell (fix/wholesaler-dealer-shell-parity): liste tabı "Müşteriler" +
-// wholesale_customer scope, redirect YOK.
+// Ürün modeli (BÖLÜM 1 düzeltmesi sonrası): bireysel + AKTİF şoför ataması YOK
+// → kendi **kişisel** Bayi Defteri (DriverHomeScreen DEĞİL); patron "Şoförler"
+// tabı yok. Bireysel + aktif şoför → driverScoped scoped defter. Ticari
+// (commercial) → patron shell (5 tab; Şoförler dahil). Toptancı → AYNI patron
+// shell: liste tabı "Müşteriler" + wholesale_customer scope, redirect YOK.
 
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firin_defter/core/constants/app_strings.dart';
@@ -74,6 +74,9 @@ Widget _wrap(BakeryProfile profile) {
       profileControllerProvider.overrideWith(
         (ref) => _SeededProfileController(ref, profile),
       ),
+      // Bireysel: aktif şoför ataması yok (kişisel defter). Patron rolleri
+      // mode'u early-return ile owner döndürür, bu override'ı okumaz.
+      individualActiveDriverProvider.overrideWith((ref) async => false),
     ],
     child: MaterialApp.router(routerConfig: _testRouter()),
   );
@@ -128,16 +131,29 @@ void main() {
       );
     });
 
-    testWidgets('Bireysel: şoför görünümü (patron shell DEĞİL)',
+    testWidgets('Bireysel (aktif şoför değil): kişisel defter (patron shell DEĞİL)',
         (tester) async {
       await tester.pumpWidget(_wrap(_individualProfile));
       await tester.pumpAndSettle();
 
-      // Atama yok (currentUserId set değil) → henüz atanmamış şoför: başlık
-      // "Bayi Yönetimi", "Şoför Paneli" yok, patron bottom-nav yok.
-      expect(find.text('Bayi Yönetimi'), findsOneWidget);
+      // BÖLÜM 1: bireysel + aktif şoför ataması YOK → kişisel Bayi Defteri
+      // (DriverHomeScreen DEĞİL): bottom-nav var, "Şoförler" patron tabı yok.
+      expect(find.byType(PremiumBottomNav), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(PremiumBottomNav),
+          matching: find.text(AppStrings.dealerShellTabOverview),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(PremiumBottomNav),
+          matching: find.text('Şoförler'),
+        ),
+        findsNothing,
+      );
       expect(find.text('Şoför Paneli'), findsNothing);
-      expect(find.byType(PremiumBottomNav), findsNothing);
     });
 
     testWidgets(
