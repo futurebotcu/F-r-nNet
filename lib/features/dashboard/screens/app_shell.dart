@@ -66,21 +66,33 @@ class AppShell extends ConsumerWidget {
     final index = _indexFor(location);
     // Mesajlar sekmesi okunmamış rozeti — mevcut provider korunur.
     final unread = ref.watch(totalUnreadMessagesProvider);
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: child,
-      bottomNavigationBar: PremiumBottomNav(
-        items: [
-          for (final t in _tabs)
-            PremiumNavItem(
-              icon: t.icon,
-              activeIcon: t.activeIcon,
-              label: t.label,
-              badgeCount: t.route == AppRoutes.messages ? unread : 0,
-            ),
-        ],
-        selectedIndex: index,
-        onSelect: (i) => context.go(_tabs[i].route),
+    // UI-NAV-001: Plain ShellRoute + tab switch `context.go` back-stack tutmaz;
+    // PopScope olmadan herhangi bir sekmede Android geri tuşu app'ten çıkarıyordu.
+    // İlk tab (index 0) → sistem geri ile çıkış (native). Diğer tab'larda geri →
+    // ilk taba dön (kaza ile app kapanmasın). Detay/form ekranları shell üstüne
+    // PUSH edildiğinden bu PopScope onları etkilemez (kendi geri davranışları).
+    return PopScope(
+      canPop: index == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.go(_tabs.first.route);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: child,
+        bottomNavigationBar: PremiumBottomNav(
+          items: [
+            for (final t in _tabs)
+              PremiumNavItem(
+                icon: t.icon,
+                activeIcon: t.activeIcon,
+                label: t.label,
+                badgeCount: t.route == AppRoutes.messages ? unread : 0,
+              ),
+          ],
+          selectedIndex: index,
+          onSelect: (i) => context.go(_tabs[i].route),
+        ),
       ),
     );
   }

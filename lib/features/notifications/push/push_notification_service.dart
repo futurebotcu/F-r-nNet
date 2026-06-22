@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/router/app_router.dart';
+import '../notification_routing.dart';
 
 /// Terminated/background mesaj handler'ı (FCM zorunlu kılar). PR-1'de no-op:
 /// "notification" tipli FCM mesajları sistem tepsisinde otomatik gösterilir.
@@ -61,8 +62,12 @@ class PushNotificationService {
   static void _navigateFromMessage(RemoteMessage message) {
     final route = message.data['route'];
     if (route == null || route.isEmpty) return;
+    final router = appRouter;
+    if (router == null) return;
     try {
-      appRouter?.go(route);
+      // UI-NAV-002: shell kökü `go`, derin route `push` → bildirimden açılan
+      // derin ekrandan Android geri tuşu app'ten çıkmaz (önceki ekrana döner).
+      navigateToNotificationRoute(router, route);
       debugPrint('[FirinNet][Push] tap → route=$route');
     } catch (e) {
       // Geçersiz route → güvenli fallback (no-op; app yine açılır).

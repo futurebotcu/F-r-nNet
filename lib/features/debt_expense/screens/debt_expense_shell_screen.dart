@@ -19,7 +19,7 @@ class DebtExpenseShellScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(debtExpenseShellTabIndexProvider);
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
         index: index,
@@ -63,6 +63,16 @@ class DebtExpenseShellScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+
+    // UI-NAV-004: iç tab >0 iken Android geri → tab 0; tab 0'da normal pop.
+    return PopScope(
+      canPop: index == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        ref.read(debtExpenseShellTabIndexProvider.notifier).state = 0;
+      },
+      child: scaffold,
     );
   }
 }

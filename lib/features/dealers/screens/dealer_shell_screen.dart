@@ -67,7 +67,7 @@ class DealerShellScreen extends ConsumerWidget {
     final index =
         ref.watch(dealerShellTabIndexProvider).clamp(0, driverScoped ? 3 : 4);
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
         index: index,
@@ -113,6 +113,17 @@ class DealerShellScreen extends ConsumerWidget {
             ),
         ],
       ),
+    );
+
+    // UI-NAV-004: mini-app içi tab >0 iken Android geri → tab 0'a dön
+    // (tek geri tüm mini-app'i kapatmasın). Tab 0'da → normal pop (panele döner).
+    return PopScope(
+      canPop: index == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        ref.read(dealerShellTabIndexProvider.notifier).state = 0;
+      },
+      child: scaffold,
     );
   }
 }
