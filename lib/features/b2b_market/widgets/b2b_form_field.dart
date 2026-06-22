@@ -341,11 +341,12 @@ class _SelectChip extends StatelessWidget {
 }
 
 /// Form altında tam-genişlik birincil kaydet butonu (sarı vurgu).
+/// [onTap] null ise buton devre dışı (FN-AUDIT-017 double-submit guard).
 class B2bSaveButton extends StatelessWidget {
   const B2bSaveButton({super.key, required this.label, required this.onTap});
 
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

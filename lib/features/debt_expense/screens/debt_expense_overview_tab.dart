@@ -9,6 +9,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -58,7 +59,12 @@ class DebtExpenseOverviewTab extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                       child: Center(child: CircularProgressIndicator()),
                     ),
-                    error: (_, __) => const SizedBox.shrink(),
+                    error: (_, __) => ErrorRetryState(
+                      compact: true,
+                      title: 'Özet yüklenemedi',
+                      subtitle: 'Borç/gider özeti alınamadı. Tekrar deneyin.',
+                      onRetry: () => ref.invalidate(debtExpenseSummaryProvider),
+                    ),
                     data: (s) => _SummaryBlock(summary: s),
                   ),
                   const SectionLabel(title: 'Hızlı işlem'),
@@ -96,7 +102,13 @@ class DebtExpenseOverviewTab extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(vertical: AppSpacing.l),
                       child: Center(child: CircularProgressIndicator()),
                     ),
-                    error: (_, __) => const SizedBox.shrink(),
+                    error: (_, __) => ErrorRetryState(
+                      compact: true,
+                      title: 'Hareketler yüklenemedi',
+                      subtitle: 'Son hareketler alınamadı. Tekrar deneyin.',
+                      onRetry: () =>
+                          ref.invalidate(debtExpenseEntriesProvider(null)),
+                    ),
                     data: (items) {
                       if (items.isEmpty) {
                         return const Padding(

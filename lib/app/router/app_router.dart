@@ -247,9 +247,42 @@ class AppRoutes {
 /// route'a gitmek için global router referansı. createRouter() bunu set eder.
 GoRouter? appRouter;
 
-GoRouter createRouter() {
+/// FN-AUDIT-008 — gerçek oturum (auth) gerektiren korumalı route prefix'leri.
+/// Yalnız sahip/ticari YÖNETİM yüzeyleri; guest/public BROWSE yüzeyleri
+/// (`/feed`, `/community`, `/pazar` (vitrin), `/ilanlar`, `/legal`, `/auth`,
+/// `/u/:id`) KORUNMAZ → guest akışı bozulmaz. `/pazar/magazam` korunur ama
+/// `/pazar` (vitrin) korunmaz.
+const List<String> kAuthRequiredPrefixes = <String>[
+  '/panel',
+  '/dealers',
+  '/debt-expense',
+  '/pazar/magazam',
+  '/wholesale',
+];
+
+/// [location] korumalı bir prefix altında mı? Query string yok sayılır;
+/// prefix sınırı `==` veya `'$prefix/'` ile (yan-eşleşme yok).
+bool routeRequiresAuth(String location) {
+  final path = location.split('?').first;
+  for (final p in kAuthRequiredPrefixes) {
+    if (path == p || path.startsWith('$p/')) return true;
+  }
+  return false;
+}
+
+/// [isAuthed]: gerçek oturum var mı (guest sayılmaz). Local mod
+/// (`supabaseEnabled=false`) çağıran tarafta `true` döndürülerek enforcement
+/// kapatılır (demo/test bozulmaz). `null` ise guard tamamen devre dışı.
+GoRouter createRouter({bool Function()? isAuthed}) {
   final router = GoRouter(
     initialLocation: AppRoutes.splash,
+    redirect: (context, state) {
+      if (isAuthed == null) return null;
+      if (routeRequiresAuth(state.matchedLocation) && !isAuthed()) {
+        return AppRoutes.authEntry;
+      }
+      return null;
+    },
     routes: <RouteBase>[
       GoRoute(
         path: AppRoutes.splash,

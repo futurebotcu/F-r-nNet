@@ -9,8 +9,36 @@ import '../../../core/constants/app_strings.dart';
 
 /// V1.3.5 — Auth ekranlarında (AuthEntry, Login) kullanılan ortak yasal
 /// footer. Kullanım Şartları + Gizlilik Politikası link'leri.
-class LegalFooter extends StatelessWidget {
+///
+/// FN-AUDIT-010 — `TapGestureRecognizer` build içinde değil, State field'ı
+/// olarak tutulur ve dispose edilir (her rebuild'de gesture arena sızıntısı
+/// olmasın). Bu ekranlar uygulamanın ilk açtığı yüzeylerdir.
+class LegalFooter extends StatefulWidget {
   const LegalFooter({super.key});
+
+  @override
+  State<LegalFooter> createState() => _LegalFooterState();
+}
+
+class _LegalFooterState extends State<LegalFooter> {
+  late final TapGestureRecognizer _termsTap;
+  late final TapGestureRecognizer _privacyTap;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsTap = TapGestureRecognizer()
+      ..onTap = () => context.push(AppRoutes.legalTerms);
+    _privacyTap = TapGestureRecognizer()
+      ..onTap = () => context.push(AppRoutes.legalPrivacy);
+  }
+
+  @override
+  void dispose() {
+    _termsTap.dispose();
+    _privacyTap.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +61,7 @@ class LegalFooter extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
               ),
-              recognizer: _tap(context, AppRoutes.legalTerms),
+              recognizer: _termsTap,
             ),
             const TextSpan(text: ' ve '),
             TextSpan(
@@ -43,16 +71,12 @@ class LegalFooter extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
               ),
-              recognizer: _tap(context, AppRoutes.legalPrivacy),
+              recognizer: _privacyTap,
             ),
             const TextSpan(text: '\'nı kabul etmiş olursun.'),
           ],
         ),
       ),
     );
-  }
-
-  TapGestureRecognizer _tap(BuildContext ctx, String route) {
-    return TapGestureRecognizer()..onTap = () => ctx.push(route);
   }
 }

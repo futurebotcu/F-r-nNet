@@ -610,7 +610,7 @@ class _AccountTypePicker extends StatelessWidget {
 /// Tıklanabilir Kullanım Şartları + Gizlilik Politikası link'leri içerir.
 /// Kabul edilmediğinde [showError] true olur ve kırmızı border + uyarı yazısı
 /// gösterilir.
-class _LegalAcceptCheckbox extends StatelessWidget {
+class _LegalAcceptCheckbox extends StatefulWidget {
   const _LegalAcceptCheckbox({
     required this.value,
     required this.onChanged,
@@ -622,8 +622,33 @@ class _LegalAcceptCheckbox extends StatelessWidget {
   final bool showError;
 
   @override
+  State<_LegalAcceptCheckbox> createState() => _LegalAcceptCheckboxState();
+}
+
+// FN-AUDIT-010 — recognizer'lar State field'ı + dispose (build içinde sızmaz).
+class _LegalAcceptCheckboxState extends State<_LegalAcceptCheckbox> {
+  late final TapGestureRecognizer _termsTap;
+  late final TapGestureRecognizer _privacyTap;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsTap = TapGestureRecognizer()
+      ..onTap = () => context.push(AppRoutes.legalTerms);
+    _privacyTap = TapGestureRecognizer()
+      ..onTap = () => context.push(AppRoutes.legalPrivacy);
+  }
+
+  @override
+  void dispose() {
+    _termsTap.dispose();
+    _privacyTap.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final borderColor = showError
+    final borderColor = widget.showError
         ? AppColors.danger.withValues(alpha: 0.55)
         : AppColors.borderHairline;
 
@@ -635,7 +660,7 @@ class _LegalAcceptCheckbox extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.m),
             border: Border.all(
               color: borderColor,
-              width: showError ? 1.0 : 0.6,
+              width: widget.showError ? 1.0 : 0.6,
             ),
             color: AppColors.card,
           ),
@@ -647,8 +672,8 @@ class _LegalAcceptCheckbox extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Checkbox(
-                value: value,
-                onChanged: onChanged,
+                value: widget.value,
+                onChanged: widget.onChanged,
                 activeColor: AppColors.copper,
               ),
               Expanded(
@@ -669,8 +694,7 @@ class _LegalAcceptCheckbox extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             decoration: TextDecoration.underline,
                           ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () => context.push(AppRoutes.legalTerms),
+                          recognizer: _termsTap,
                         ),
                         const TextSpan(text: ' ve '),
                         TextSpan(
@@ -680,9 +704,7 @@ class _LegalAcceptCheckbox extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             decoration: TextDecoration.underline,
                           ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () =>
-                                context.push(AppRoutes.legalPrivacy),
+                          recognizer: _privacyTap,
                         ),
                         const TextSpan(text: '\'nı okudum, kabul ediyorum.'),
                       ],
@@ -693,7 +715,7 @@ class _LegalAcceptCheckbox extends StatelessWidget {
             ],
           ),
         ),
-        if (showError)
+        if (widget.showError)
           Padding(
             padding: const EdgeInsets.only(top: 8, left: AppSpacing.s),
             child: Text(
