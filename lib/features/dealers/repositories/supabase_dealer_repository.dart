@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/dealer.dart';
@@ -10,6 +11,20 @@ import '../models/dealer_price.dart';
 import '../models/dealer_transaction.dart';
 import 'dealer_repository.dart';
 import 'driver_permission.dart';
+
+/// Date-only DB alanları (`dealer_deliveries.delivery_date`,
+/// `dealer_prices.valid_from`) için **YEREL takvim günü** `YYYY-MM-DD`.
+///
+/// **FN-AUDIT-004:** Önceki sürüm `d.toUtc()` kullanıyordu; UTC+ saat
+/// diliminde gece yarısından hemen sonraki (gece vardiyası) bir teslimat
+/// önceki güne kaydırılıyordu → gün sonu/aralık raporları yanlış güne düşüyordu.
+/// Date-only alanlar yerel takvim gününü taşımalı; UTC dönüşümü gün kaydırır.
+@visibleForTesting
+String dealerLocalCalendarDate(DateTime d) {
+  final mm = d.month.toString().padLeft(2, '0');
+  final day = d.day.toString().padLeft(2, '0');
+  return '${d.year}-$mm-$day';
+}
 
 /// Supabase V1.2 implementasyonu — tüm bayi/müşteri verileri kalıcı tablolarda.
 ///
@@ -68,12 +83,7 @@ class SupabaseDealerRepository implements DealerRepository {
     return _cachedBakeryId = created['id'] as String;
   }
 
-  String _date(DateTime d) {
-    final dd = d.toUtc();
-    final mm = dd.month.toString().padLeft(2, '0');
-    final day = dd.day.toString().padLeft(2, '0');
-    return '${dd.year}-$mm-$day';
-  }
+  String _date(DateTime d) => dealerLocalCalendarDate(d);
 
   /// V1.3.5 — Client-side ID'ler (örn. `'d_<microseconds>'`) Supabase
   /// `uuid` sütunlarına `eq` query ile gönderildiğinde Postgres
