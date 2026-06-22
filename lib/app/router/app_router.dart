@@ -243,8 +243,12 @@ class AppRoutes {
   static String conversation(String id) => '/messages/$id';
 }
 
+/// Push notification tap handling — terminated/background bildirime tıklanınca
+/// route'a gitmek için global router referansı. createRouter() bunu set eder.
+GoRouter? appRouter;
+
 GoRouter createRouter() {
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: AppRoutes.splash,
     routes: <RouteBase>[
       GoRoute(
@@ -821,6 +825,8 @@ GoRouter createRouter() {
       ),
     ],
   );
+  appRouter = router;
+  return router;
 }
 
 CustomTransitionPage<void> _noTransition(GoRouterState state, Widget child) {

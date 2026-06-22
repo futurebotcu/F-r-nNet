@@ -14,6 +14,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../app/router/app_router.dart';
+
 /// Terminated/background mesaj handler'ı (FCM zorunlu kılar). PR-1'de no-op:
 /// "notification" tipli FCM mesajları sistem tepsisinde otomatik gösterilir.
 /// PR-2'de data-message + route handling burada genişler.
@@ -39,9 +41,32 @@ class PushNotificationService {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(firinnetFirebaseBackgroundHandler);
       _firebaseReady = true;
+      _setupInteractionHandlers();
       debugPrint('[FirinNet][Push] Firebase initialized');
     } catch (e) {
       debugPrint('[FirinNet][Push] Firebase init skipped: $e');
+    }
+  }
+
+  /// Bildirime tıklama → ilgili route'a git. Terminated (getInitialMessage) +
+  /// background (onMessageOpenedApp). Foreground'da sistem bildirimi BASILMAZ
+  /// (Android default) → mevcut in-app davranış korunur.
+  static void _setupInteractionHandlers() {
+    FirebaseMessaging.instance.getInitialMessage().then((msg) {
+      if (msg != null) _navigateFromMessage(msg);
+    });
+    FirebaseMessaging.onMessageOpenedApp.listen(_navigateFromMessage);
+  }
+
+  static void _navigateFromMessage(RemoteMessage message) {
+    final route = message.data['route'];
+    if (route == null || route.isEmpty) return;
+    try {
+      appRouter?.go(route);
+      debugPrint('[FirinNet][Push] tap → route=$route');
+    } catch (e) {
+      // Geçersiz route → güvenli fallback (no-op; app yine açılır).
+      debugPrint('[FirinNet][Push] route nav failed ($route): $e');
     }
   }
 
