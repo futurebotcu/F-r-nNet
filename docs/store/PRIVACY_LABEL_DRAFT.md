@@ -21,7 +21,7 @@
 | User Content — Market/Job/Dealer/Recipe kayıtları | ✅ | ✅ | ❌ | İşletme/ilan içerikleri |
 | Photos or Videos | ✅ | ✅ | ❌ | Kullanıcı yüklemesi (image_picker + storage) |
 | Coarse/Approximate Location | ✅ | ✅ | ❌ | Şehir/ilçe seçimi (controlled code). **Precise location YOK** |
-| Diagnostics / Crash / Performance | ❌ | — | ❌ | SDK yok |
+| Diagnostics / Crash Data | ✅ | ❌ | ❌ | **Firebase Crashlytics** — yalnız crash stack trace + cihaz tanılama (model/OS). Kullanıcıya **BAĞLANMAZ** (`setUserIdentifier` çağrılmaz); PII/secret crash payload'ına yazılmaz. Yalnız release/profile'da toplanır. |
 | Usage Data | ❌ | — | ❌ | analytics yok |
 | Advertising Data / IDFA | ❌ | — | ❌ | reklam yok |
 | Contacts / Health / Financial | ❌ | — | ❌ | toplanmıyor (bayi "bakiye" kullanıcının kendi defteri, finansal-kurum verisi değil) |
@@ -35,13 +35,16 @@
 | Bileşen | Veri tarafı | Not |
 |---|---|---|
 | Supabase (`supabase_flutter`) | Backend (kendi altyapımız) | Auth + DB + Storage; veri kullanıcıya bağlı |
+| Firebase Crashlytics (`firebase_crashlytics`) | Crash tanılama | Yalnız crash stack trace + cihaz tanılama; kullanıcıya BAĞLANMAZ (userIdentifier yok); tracking değil; release/profile'da |
+| Firebase Messaging (`firebase_messaging`) | Push bildirim | Cihaz FCM token (kullanıcıya bağlı, push gönderimi için); reklam/analitik değil |
 | image_picker / video_player / cached_network_image | Cihaz/medya | reklam/analitik değil |
 | url_launcher / share_plus / pdf | Eylem | veri toplamaz |
 | Google Sign-In | **iOS'ta gizli** (bkz. social login kararı); Android'de Supabase OAuth web akışı | native SDK yok, reversed client id yok |
 
 ## Riskli Belirsizlikler (submission öncesi netleştir)
 - UGC + foto + opsiyonel telefon → "Data Linked to You" işaretlenmeli (yapıldı).
-- İleride analytics/crash SDK eklenirse bu label güncellenmeli.
+- Crash SDK (Firebase Crashlytics) **eklendi** → label "Crash Data" ile güncellendi
+  (kullanıcıya bağlanmaz, tracking değil). Analytics/advertising SDK hâlâ **YOK**.
 - Bayi defteri "bakiye/tutar" verisi: kişisel finansal-hesap verisi DEĞİL; kullanıcının
   kendi tuttuğu işletme kaydı. Apple "Financial Info"ya GİRMEZ — ama review notunda
   belirtmek faydalı.
