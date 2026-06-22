@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config/app_config.dart';
 import '../core/constants/app_strings.dart';
 import '../features/auth/models/auth_user.dart';
 import '../features/auth/providers/auth_providers.dart';
@@ -17,7 +18,14 @@ class FirinNetApp extends ConsumerStatefulWidget {
 }
 
 class _FirinNetAppState extends ConsumerState<FirinNetApp> {
-  late final _router = createRouter();
+  // FN-AUDIT-008 — korumalı route'lar için root auth guard. Local mod
+  // (supabaseEnabled=false) enforcement KAPALI (mock/demo/test bozulmaz);
+  // aksi halde gerçek oturum (guest sayılmaz) şartı.
+  late final _router = createRouter(
+    isAuthed: () =>
+        !AppConfig.supabaseEnabled ||
+        ref.read(currentAuthUserProvider) != null,
+  );
 
   @override
   void initState() {
@@ -39,6 +47,11 @@ class _FirinNetAppState extends ConsumerState<FirinNetApp> {
     ref.listen<AuthUser?>(currentAuthUserProvider, (prev, next) {
       if (next != null && prev?.id != next.id) {
         PushNotificationService.registerForUser();
+      }
+      // FN-AUDIT-008 — oturum değişince (login/logout) router guard'ı yeniden
+      // değerlendir: çıkışta korumalı ekranda kalan kullanıcı /auth'a düşer.
+      if (prev?.id != next?.id) {
+        _router.refresh();
       }
     });
     return MaterialApp.router(

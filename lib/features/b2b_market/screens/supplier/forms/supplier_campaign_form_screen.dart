@@ -44,6 +44,7 @@ class _SupplierCampaignFormScreenState
   String? _imageUrl;
 
   bool _editing = false;
+  bool _saving = false; // FN-AUDIT-017 — çift-submit guard.
 
   @override
   void initState() {
@@ -106,6 +107,7 @@ class _SupplierCampaignFormScreenState
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final formOk = _formKey.currentState?.validate() ?? false;
     final categoryOk = _category != null;
     if (!categoryOk) setState(() => _categoryTouched = true);
@@ -120,32 +122,45 @@ class _SupplierCampaignFormScreenState
     // `_tryDate` ISO'yu doğru parse eder; serbest metin belirsizliği yok.
     final validUntil =
         _validUntilDate == null ? '' : _isoDate(_validUntilDate!);
+    setState(() => _saving = true);
     final controller = ref.read(b2bMarketControllerProvider.notifier);
-    if (_editing) {
-      await controller.updateCampaign(
-        id: widget.campaignId!,
-        title: _title.text.trim(),
-        category: _category!,
-        region: region,
-        minPurchase: minPurchase,
-        validUntil: validUntil,
-        linkedProduct: linked.isEmpty ? null : linked,
-        description: _description.text.trim(),
-        published: _published,
-        imageUrl: _imageUrl,
+    try {
+      if (_editing) {
+        await controller.updateCampaign(
+          id: widget.campaignId!,
+          title: _title.text.trim(),
+          category: _category!,
+          region: region,
+          minPurchase: minPurchase,
+          validUntil: validUntil,
+          linkedProduct: linked.isEmpty ? null : linked,
+          description: _description.text.trim(),
+          published: _published,
+          imageUrl: _imageUrl,
+        );
+      } else {
+        await controller.addCampaign(
+          title: _title.text.trim(),
+          category: _category!,
+          region: region,
+          minPurchase: minPurchase,
+          validUntil: validUntil,
+          linkedProduct: linked.isEmpty ? null : linked,
+          description: _description.text.trim(),
+          published: _published,
+          imageUrl: _imageUrl,
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      PremiumTopBannerController.show(
+        context,
+        message: 'Kampanya kaydedilemedi. Tekrar deneyin.',
+        tone: PremiumTopBannerTone.danger,
+        duration: const Duration(seconds: 2),
       );
-    } else {
-      await controller.addCampaign(
-        title: _title.text.trim(),
-        category: _category!,
-        region: region,
-        minPurchase: minPurchase,
-        validUntil: validUntil,
-        linkedProduct: linked.isEmpty ? null : linked,
-        description: _description.text.trim(),
-        published: _published,
-        imageUrl: _imageUrl,
-      );
+      return;
     }
 
     if (!mounted) return;
@@ -251,8 +266,10 @@ class _SupplierCampaignFormScreenState
               ),
               const SizedBox(height: AppSpacing.xl),
               B2bSaveButton(
-                label: _editing ? 'Değişiklikleri kaydet' : 'Kampanyayı kaydet',
-                onTap: _save,
+                label: _saving
+                    ? 'Kaydediliyor…'
+                    : (_editing ? 'Değişiklikleri kaydet' : 'Kampanyayı kaydet'),
+                onTap: _saving ? null : _save,
               ),
             ],
           ),

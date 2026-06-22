@@ -41,6 +41,7 @@ class _SupplierProductFormScreenState
   bool _categoryTouched = false;
 
   bool _editing = false;
+  bool _saving = false; // FN-AUDIT-017 — çift-submit guard.
 
   @override
   void initState() {
@@ -81,6 +82,7 @@ class _SupplierProductFormScreenState
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final formOk = _formKey.currentState?.validate() ?? false;
     final categoryOk = _category != null;
     if (!categoryOk) setState(() => _categoryTouched = true);
@@ -89,28 +91,41 @@ class _SupplierProductFormScreenState
     final regions = _regions.isEmpty ? 'Belirtilmedi' : _regions.join(', ');
     final minOrder =
         _minOrder.text.trim().isEmpty ? 'Belirtilmedi' : _minOrder.text.trim();
+    setState(() => _saving = true);
     final controller = ref.read(b2bMarketControllerProvider.notifier);
-    if (_editing) {
-      await controller.updateProduct(
-        id: widget.productId!,
-        name: _name.text.trim(),
-        category: _category!,
-        minOrder: minOrder,
-        deliveryRegion: regions,
-        description: _description.text.trim(),
-        published: _published,
-        imageUrl: _imageUrl,
+    try {
+      if (_editing) {
+        await controller.updateProduct(
+          id: widget.productId!,
+          name: _name.text.trim(),
+          category: _category!,
+          minOrder: minOrder,
+          deliveryRegion: regions,
+          description: _description.text.trim(),
+          published: _published,
+          imageUrl: _imageUrl,
+        );
+      } else {
+        await controller.addProduct(
+          name: _name.text.trim(),
+          category: _category!,
+          minOrder: minOrder,
+          deliveryRegion: regions,
+          description: _description.text.trim(),
+          published: _published,
+          imageUrl: _imageUrl,
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      PremiumTopBannerController.show(
+        context,
+        message: 'Ürün kaydedilemedi. Tekrar deneyin.',
+        tone: PremiumTopBannerTone.danger,
+        duration: const Duration(seconds: 2),
       );
-    } else {
-      await controller.addProduct(
-        name: _name.text.trim(),
-        category: _category!,
-        minOrder: minOrder,
-        deliveryRegion: regions,
-        description: _description.text.trim(),
-        published: _published,
-        imageUrl: _imageUrl,
-      );
+      return;
     }
 
     if (!mounted) return;
@@ -203,8 +218,10 @@ class _SupplierProductFormScreenState
               ),
               const SizedBox(height: AppSpacing.xl),
               B2bSaveButton(
-                label: _editing ? 'Değişiklikleri kaydet' : 'Ürünü kaydet',
-                onTap: _save,
+                label: _saving
+                    ? 'Kaydediliyor…'
+                    : (_editing ? 'Değişiklikleri kaydet' : 'Ürünü kaydet'),
+                onTap: _saving ? null : _save,
               ),
             ],
           ),

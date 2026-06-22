@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_transaction.dart';
@@ -84,7 +85,13 @@ class DriverDealerDetailScreen extends ConsumerWidget {
                 padding: EdgeInsets.all(AppSpacing.m),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, __) => ErrorRetryState(
+                compact: true,
+                title: 'Bakiye yüklenemedi',
+                subtitle: 'Güncel bakiye alınamadı. Tekrar deneyin.',
+                onRetry: () =>
+                    ref.invalidate(balanceSummaryProvider(dealerId)),
+              ),
               data: (b) => PremiumCard(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.m),
