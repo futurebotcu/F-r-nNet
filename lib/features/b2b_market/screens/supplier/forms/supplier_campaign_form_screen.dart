@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_tokens.dart';
+import '../../../../../core/widgets/dirty_form_guard.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
@@ -45,6 +46,14 @@ class _SupplierCampaignFormScreenState
 
   bool _editing = false;
   bool _saving = false; // FN-AUDIT-017 — çift-submit guard.
+  // PR-UI-2 — kaydedilmemiş değişiklik koruması. `_hydrating` prefill sırasında
+  // Form.onChanged'in false-dirty üretmesini engeller.
+  bool _dirty = false;
+  bool _hydrating = false;
+  void _markDirty() {
+    if (_hydrating || _dirty) return;
+    setState(() => _dirty = true);
+  }
 
   @override
   void initState() {
@@ -57,8 +66,12 @@ class _SupplierCampaignFormScreenState
   }
 
   Future<void> _prefill(String id) async {
+    _hydrating = true;
     final c = await ref.read(b2bRepositoryProvider).campaignById(id);
-    if (c == null || !mounted) return;
+    if (c == null || !mounted) {
+      _hydrating = false;
+      return;
+    }
     final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
     setState(() {
       _title.text = c.title;
@@ -76,6 +89,9 @@ class _SupplierCampaignFormScreenState
             .split(', ')
             .map((e) => e.trim())
             .where(known.contains));
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrating = false;
     });
   }
 
@@ -103,7 +119,12 @@ class _SupplierCampaignFormScreenState
       lastDate: DateTime(now.year + 3),
       helpText: 'Geçerlilik tarihi seç',
     );
-    if (picked != null) setState(() => _validUntilDate = picked);
+    if (picked != null) {
+      setState(() {
+        _validUntilDate = picked;
+        _dirty = true;
+      });
+    }
   }
 
   Future<void> _save() async {
@@ -180,13 +201,14 @@ class _SupplierCampaignFormScreenState
     final categories = ref.read(b2bRepositoryProvider).productCategories();
     final regions = ref.read(b2bRepositoryProvider).serviceRegions();
 
-    return PremiumScaffold(
+    final scaffold = PremiumScaffold(
       appBar: AppBar(
         title: Text(_editing ? 'Kampanyayı düzenle' : 'Kampanya oluştur'),
       ),
       body: SafeArea(
         child: Form(
           key: _formKey,
+          onChanged: _markDirty,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pageH,
@@ -212,6 +234,7 @@ class _SupplierCampaignFormScreenState
                 onSelect: (c) => setState(() {
                   _category = c;
                   _categoryTouched = true;
+                  _dirty = true;
                 }),
                 errorText: _categoryTouched && _category == null
                     ? 'Kategori seçin'
@@ -230,6 +253,7 @@ class _SupplierCampaignFormScreenState
                 selected: _regions,
                 onToggle: (r) => setState(() {
                   _regions.contains(r) ? _regions.remove(r) : _regions.add(r);
+                  _dirty = true;
                 }),
               ),
               const SizedBox(height: AppSpacing.l),
@@ -243,7 +267,10 @@ class _SupplierCampaignFormScreenState
                 label: 'Geçerlilik tarihi (opsiyonel)',
                 value: _validUntilDate,
                 onTap: _pickValidUntil,
-                onClear: () => setState(() => _validUntilDate = null),
+                onClear: () => setState(() {
+                  _validUntilDate = null;
+                  _dirty = true;
+                }),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bTextField(
@@ -257,12 +284,18 @@ class _SupplierCampaignFormScreenState
                 kind: B2bMediaKind.campaign,
                 label: 'Kampanya görseli',
                 currentUrl: _imageUrl,
-                onChanged: (u) => setState(() => _imageUrl = u),
+                onChanged: (u) => setState(() {
+                  _imageUrl = u;
+                  _dirty = true;
+                }),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bStatusField(
                 published: _published,
-                onChanged: (v) => setState(() => _published = v),
+                onChanged: (v) => setState(() {
+                  _published = v;
+                  _dirty = true;
+                }),
               ),
               const SizedBox(height: AppSpacing.xl),
               B2bSaveButton(
@@ -276,5 +309,6 @@ class _SupplierCampaignFormScreenState
         ),
       ),
     );
+    return DirtyFormGuard(isDirty: _dirty, child: scaffold);
   }
 }

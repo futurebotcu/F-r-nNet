@@ -23,6 +23,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -86,6 +87,14 @@ class _MarketListingFormScreenState
 
   bool _saving = false;
   bool _loaded = false;
+  // PR-UI-2 — kaydedilmemiş değişiklik koruması. `_hydrating` _loadExisting
+  // sırasında Form.onChanged'in false-dirty üretmesini engeller.
+  bool _dirty = false;
+  bool _hydrating = false;
+  void _markDirty() {
+    if (_hydrating || _dirty) return;
+    setState(() => _dirty = true);
+  }
 
   @override
   void initState() {
@@ -98,10 +107,12 @@ class _MarketListingFormScreenState
   }
 
   Future<void> _loadExisting() async {
+    _hydrating = true;
     final m = await ref
         .read(marketListingRepositoryProvider)
         .getListing(widget.listingId!);
     if (!mounted || m == null) {
+      _hydrating = false;
       setState(() => _loaded = true);
       return;
     }
@@ -140,6 +151,9 @@ class _MarketListingFormScreenState
       );
     }
     setState(() => _loaded = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrating = false;
+    });
   }
 
   @override
@@ -179,6 +193,7 @@ class _MarketListingFormScreenState
       if (!mounted) return;
       setState(() {
         _newPhotos.add(_PickedPhoto(bytes: bytes, ext: ext));
+        _dirty = true;
       });
     } catch (e) {
       debugPrint('[FirinNet][MarketForm] pickPhoto error: $e');
@@ -205,7 +220,10 @@ class _MarketListingFormScreenState
   }
 
   void _removePickedPhoto(int index) {
-    setState(() => _newPhotos.removeAt(index));
+    setState(() {
+      _newPhotos.removeAt(index);
+      _dirty = true;
+    });
   }
 
   // ─── Save flow ────────────────────────────────────────────────────
@@ -319,6 +337,7 @@ class _MarketListingFormScreenState
         _selectedDistrict = null;
       }
       _selectedProvince = picked;
+      _dirty = true;
     });
   }
 
@@ -331,18 +350,25 @@ class _MarketListingFormScreenState
       initialCode: _selectedDistrict?.code,
     );
     if (picked == null) return;
-    setState(() => _selectedDistrict = picked);
+    setState(() {
+      _selectedDistrict = picked;
+      _dirty = true;
+    });
   }
 
   void _clearProvince() {
     setState(() {
       _selectedProvince = null;
       _selectedDistrict = null;
+      _dirty = true;
     });
   }
 
   void _clearDistrict() {
-    setState(() => _selectedDistrict = null);
+    setState(() {
+      _selectedDistrict = null;
+      _dirty = true;
+    });
   }
 
   // ─── Build ────────────────────────────────────────────────────────
@@ -356,11 +382,12 @@ class _MarketListingFormScreenState
     }
     final isEquip = _listingType == 'equipment_sale';
     final isTransfer = _listingType == 'bakery_transfer';
-    return PremiumScaffold(
+    final scaffold = PremiumScaffold(
       body: SafeArea(
         bottom: false,
         child: Form(
           key: _formKey,
+          onChanged: _markDirty,
           child: ListView(
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
@@ -601,14 +628,19 @@ class _MarketListingFormScreenState
                       _TriSwitch(
                         title: AppStrings.marketListingFieldEquipmentIncluded,
                         value: _equipmentIncluded,
-                        onChanged: (v) =>
-                            setState(() => _equipmentIncluded = v),
+                        onChanged: (v) => setState(() {
+                          _equipmentIncluded = v;
+                          _dirty = true;
+                        }),
                       ),
                       const SizedBox(height: 4),
                       _TriSwitch(
                         title: AppStrings.marketListingFieldHasLicense,
                         value: _hasLicense,
-                        onChanged: (v) => setState(() => _hasLicense = v),
+                        onChanged: (v) => setState(() {
+                          _hasLicense = v;
+                          _dirty = true;
+                        }),
                       ),
                       const SizedBox(height: AppSpacing.m),
                     ],
@@ -661,7 +693,10 @@ class _MarketListingFormScreenState
                     // ── Negotiable ──
                     SwitchListTile(
                       value: _negotiable,
-                      onChanged: (v) => setState(() => _negotiable = v),
+                      onChanged: (v) => setState(() {
+                        _negotiable = v;
+                        _dirty = true;
+                      }),
                       title: const Text(
                         AppStrings.marketListingFieldNegotiable,
                       ),
@@ -822,6 +857,7 @@ class _MarketListingFormScreenState
         ),
       ),
     );
+    return DirtyFormGuard(isDirty: _dirty, child: scaffold);
   }
 }
 

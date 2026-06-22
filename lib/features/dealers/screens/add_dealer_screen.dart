@@ -6,6 +6,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -41,6 +42,11 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
   String? _hydratedDealerId;
   // Çift-gönderim koruması: hızlı çift tıkta mükerrer bayi/kayıt oluşmasın.
   bool _saving = false;
+  // PR-UI-2 — kaydedilmemiş değişiklik koruması (geri çıkışta onay).
+  bool _dirty = false;
+  void _markDirty() {
+    if (!_dirty) setState(() => _dirty = true);
+  }
 
   /// M6B — eski `_area` TextField yerine il + ilçe picker.
   TurkeyProvince? _selectedProvince;
@@ -201,11 +207,12 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
     required String title,
     required bool isEditing,
   }) {
-    return PremiumScaffold(
+    final scaffold = PremiumScaffold(
       appBar: AppBar(title: Text(title)),
       body: SafeArea(
         child: Form(
           key: _formKey,
+          onChanged: _markDirty,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pageH,
@@ -288,6 +295,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                           setState(() {
                             _selectedProvince = picked;
                             _selectedDistrict = null;
+                            _dirty = true;
                           });
                         }
                       },
@@ -296,6 +304,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                           : () => setState(() {
                               _selectedProvince = null;
                               _selectedDistrict = null;
+                              _dirty = true;
                             }),
                     ),
                   ),
@@ -314,12 +323,18 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                           initialCode: _selectedDistrict?.code,
                         );
                         if (picked != null) {
-                          setState(() => _selectedDistrict = picked);
+                          setState(() {
+                            _selectedDistrict = picked;
+                            _dirty = true;
+                          });
                         }
                       },
                       onClear: _selectedDistrict == null
                           ? null
-                          : () => setState(() => _selectedDistrict = null),
+                          : () => setState(() {
+                              _selectedDistrict = null;
+                              _dirty = true;
+                            }),
                     ),
                   ),
                 ],
@@ -348,7 +363,10 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
                   ),
                 ],
                 selected: {_wt},
-                onSelectionChanged: (s) => setState(() => _wt = s.first),
+                onSelectionChanged: (s) => setState(() {
+                  _wt = s.first;
+                  _dirty = true;
+                }),
               ),
               const SizedBox(height: AppSpacing.l),
               const _Label(AppStrings.dealerFieldNote),
@@ -373,6 +391,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
         ),
       ),
     );
+    return DirtyFormGuard(isDirty: _dirty, child: scaffold);
   }
 }
 

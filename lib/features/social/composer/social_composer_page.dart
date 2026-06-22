@@ -26,6 +26,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -97,6 +98,9 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   final _focus = FocusNode();
   PostType _type = PostType.production;
   bool _saving = false;
+  // PR-UI-2 — kaydedilmemiş değişiklik koruması (geri çıkışta onay).
+  // _dirty inline işaretlenir (text onChanged + medya/tür setState'leri).
+  bool _dirty = false;
 
   // Image picked
   Uint8List? _pickedBytes;
@@ -181,6 +185,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
       if (!mounted) return;
       // Image ve video mutually exclusive — biri seçilince diğeri sıfırlanır.
       setState(() {
+        _dirty = true;
         _pickedBytes = bytes;
         _pickedExt = ext;
         _pickedVideoBytes = null;
@@ -216,6 +221,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
 
   void _removePickedImage() {
     setState(() {
+      _dirty = true;
       _pickedBytes = null;
       _pickedExt = null;
     });
@@ -256,6 +262,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
       if (!mounted) return;
       // Image ve video mutually exclusive — biri seçilince diğeri sıfırlanır.
       setState(() {
+        _dirty = true;
         _pickedVideoBytes = bytes;
         _pickedVideoExt = ext;
         _pickedBytes = null;
@@ -290,6 +297,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
 
   void _removePickedVideo() {
     setState(() {
+      _dirty = true;
       _pickedVideoBytes = null;
       _pickedVideoExt = null;
       _pickedVideoDurationMs = null;
@@ -403,14 +411,20 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumScaffold(
+    final scaffold = PremiumScaffold(
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           color: AppColors.textPrimary,
-          onPressed: _saving ? null : () => context.pop(),
+          onPressed: _saving
+              ? null
+              : () => maybePopWithDirtyGuard(
+                    context,
+                    isDirty: _dirty,
+                    onConfirmed: () => context.pop(),
+                  ),
         ),
         title: const Text(
           'Yeni Gönderi',
@@ -515,8 +529,8 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               maxLength: 1200,
               enabled: !_saving,
               // V2 Commit 3.5 — onChanged setState ile sticky Paylaş
-              // CTA disabled→enabled state'i güncellenir.
-              onChanged: (_) => setState(() {}),
+              // CTA disabled→enabled state'i güncellenir. PR-UI-2: dirty işaretle.
+              onChanged: (_) => setState(() => _dirty = true),
               decoration: InputDecoration(
                 hintText: AppStrings.feedComposerExpandHint,
                 filled: true,
@@ -594,7 +608,10 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                     ),
                     onSelected: _saving
                         ? null
-                        : (_) => setState(() => _type = t),
+                        : (_) => setState(() {
+                            _type = t;
+                            _dirty = true;
+                          }),
                   ),
                 );
               }).toList(),
@@ -695,6 +712,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
         ),
       ),
     );
+    return DirtyFormGuard(isDirty: _dirty, child: scaffold);
   }
 }
 
