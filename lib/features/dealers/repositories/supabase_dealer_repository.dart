@@ -485,6 +485,30 @@ class SupabaseDealerRepository implements DealerRepository {
     _notifyContent();
   }
 
+  @override
+  Future<void> driverAddNote({
+    required String dealerId,
+    required String note,
+  }) async {
+    _requireUserId();
+    // FN-AUDIT-009: owner_id = PATRON (RPC içinde atama+owner doğrulanır);
+    // şoförün kendi uid'iyle görünmez not oluşmaz.
+    try {
+      await _client.rpc('driver_add_note', params: <String, dynamic>{
+        'p_dealer_id': dealerId,
+        'p_note': note,
+      });
+    } on sb.PostgrestException catch (e) {
+      final m = e.message;
+      if (m.contains('not assigned to this dealer') ||
+          m.contains('owner mismatch')) {
+        throw const DriverPermissionException();
+      }
+      rethrow;
+    }
+    _notifyContent();
+  }
+
   // ───────────────────────────────────────────────── Şoförler (Sprint 2)
 
   static const String _driverColumns =
@@ -719,19 +743,12 @@ class SupabaseDealerRepository implements DealerRepository {
       });
     } on sb.PostgrestException catch (e) {
       final m = e.message;
-      if (m.contains('already a driver')) {
-        throw StateError('Bu kullanıcı zaten şoför.');
+      if (m.contains('too many invites')) {
+        throw StateError(
+            'Çok fazla davet denemesi. Lütfen biraz sonra tekrar dene.');
       }
-      if (m.contains('invite already pending')) {
-        throw StateError('Bu kullanıcı için bekleyen davet var.');
-      }
-      if (m.contains('cannot invite self')) {
-        throw StateError('Kendini davet edemezsin.');
-      }
-      if (m.contains('too many pending invites')) {
-        throw StateError('Çok fazla bekleyen davet var. Önce bazılarını sonuçlandır.');
-      }
-      // 'invite failed' / 'name required' / FK / diğer → nötr (enumeration yok).
+      // FN-AUDIT-012: FN-ID var/yok + ilişki durumu (self/zaten-şoför/bekleyen)
+      // MESAJDAN anlaşılmasın → hepsi tek nötr mesaj.
       throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
     }
     _notify();

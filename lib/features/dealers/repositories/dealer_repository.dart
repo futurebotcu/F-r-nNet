@@ -72,6 +72,11 @@ abstract class DealerRepository {
   Future<List<DealerNote>> listNotes(String dealerId);
   Future<void> addNote(DealerNote note);
 
+  /// Şoför atanmış bayiye not ekler (`driver_add_note` RPC; owner_id=PATRON).
+  /// Patron normal [addNote] (owner-only) akışını kullanır; bu yalnız
+  /// driver-scoped yol (FN-AUDIT-009: not şoförün uid'iyle görünmez olmasın).
+  Future<void> driverAddNote({required String dealerId, required String note});
+
   // ---- Şoförler (Sprint 2: patron-side yönetim) ----
   // owner_id daima patron; bu sprintte şoför login erişimi/yazma YOK.
 

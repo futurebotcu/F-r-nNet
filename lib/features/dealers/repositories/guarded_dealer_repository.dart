@@ -158,6 +158,12 @@ class GuardedDealerRepository implements DealerRepository {
     return inner.addNote(note);
   }
 
+  @override
+  Future<void> driverAddNote({required String dealerId, required String note}) {
+    _requireWrite('bayi notu eklemek');
+    return inner.driverAddNote(dealerId: dealerId, note: note);
+  }
+
   // ── Şoförler (guarded write) ───────────────────────
 
   @override
