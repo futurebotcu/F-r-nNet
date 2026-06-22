@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../core/services/media_limits.dart';
 import '../models/market_filters.dart';
 import '../models/market_listing.dart';
 import '../models/market_listing_media.dart';
@@ -355,6 +356,7 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
     final mediaId = _generateUuidV4();
     final path = '$userId/$listingId/$mediaId.$ext';
     final mime = _mimeForImageExt(ext);
+    MediaLimits.ensureImageUnderLimit(bytes.length);
 
     // 1) Storage upload — path-prefix RLS owner_id=auth.uid().
     await _client.storage.from('market-media').uploadBinary(

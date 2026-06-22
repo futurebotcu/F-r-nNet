@@ -13,6 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../core/services/media_limits.dart';
+
 import '../../../core/config/app_config.dart';
 
 class AvatarUploadResult {
@@ -46,6 +48,7 @@ class AvatarUploadService {
     required XFile file,
   }) async {
     final bytes = await file.readAsBytes();
+    MediaLimits.ensureImageUnderLimit(bytes.lengthInBytes);
     final ext = _extensionOf(file).toLowerCase();
     final ts = DateTime.now().millisecondsSinceEpoch;
     final path = '$userId/avatar_$ts.$ext';

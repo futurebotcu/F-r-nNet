@@ -14,6 +14,7 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../../../core/services/media_limits.dart';
 import '../models/social_story.dart';
 import 'social_stories_repository.dart';
 
@@ -102,6 +103,7 @@ class SupabaseSocialStoriesRepository implements SocialStoriesRepository {
     if (userId == null) {
       throw StateError('Oturum bulunamadı. Lütfen tekrar giriş yap.');
     }
+    MediaLimits.ensureImageUnderLimit(bytes.lengthInBytes);
     final storyId = _generateUuidV4();
     final ext = fileExtension.toLowerCase().replaceAll('.', '');
     final path = '$userId/$storyId.$ext';
