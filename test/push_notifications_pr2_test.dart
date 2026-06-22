@@ -70,7 +70,8 @@ void main() {
       expect(s.contains('getInitialMessage'), isTrue);
       expect(s.contains('onMessageOpenedApp'), isTrue);
       expect(s.contains("message.data['route']"), isTrue);
-      expect(s.contains('appRouter?.go(route)'), isTrue);
+      // UI-NAV-002: koşulsuz go yerine shell-kök/derin ayrımı yapan helper.
+      expect(s.contains('navigateToNotificationRoute(router, route)'), isTrue);
     });
 
     test('app_router global appRouter referansı', () {

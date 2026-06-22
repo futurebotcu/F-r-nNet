@@ -8,32 +8,8 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/app_notification.dart';
+import '../notification_routing.dart';
 import '../providers/notification_providers.dart';
-
-/// Alt-nav shell/tab kök route'ları. Bunlar zaten alt navigasyonda mounted;
-/// `context.push` ile ikinci kez açılınca aynı GlobalKey widget tree'ye tekrar
-/// girer ve navigator.dart `!keyReservation.contains(key)` assertion'ı kırılır
-/// (kırmızı ekran). Bu yüzden shell kökleri için `go`, derin route'lar (ör.
-/// /pazar/tekliflerim/:id) için mevcut `push` davranışı korunur.
-const Set<String> kShellTabRoots = <String>{
-  '/community',
-  '/pazar',
-  '/ilanlar',
-  '/mesajlar',
-  '/panel',
-};
-
-/// Route bir alt-nav shell kökü mü? Kökler `go` ile (zaten mounted, push duplicate
-/// GlobalKey'e yol açar); derin route'lar `push` ile açılır.
-bool isShellTabRoot(String route) => kShellTabRoots.contains(route);
-
-void _navigateToNotificationRoute(BuildContext context, String route) {
-  if (isShellTabRoot(route)) {
-    context.go(route);
-  } else {
-    context.push(route);
-  }
-}
 
 /// V1 P1-D — Uygulama içi bildirim merkezi.
 ///
@@ -125,7 +101,7 @@ class NotificationRow extends ConsumerWidget {
         if (!context.mounted) return;
         final route = item.route;
         if (route != null && route.isNotEmpty) {
-          _navigateToNotificationRoute(context, route);
+          navigateToNotificationRoute(GoRouter.of(context), route);
         }
       },
       child: Padding(

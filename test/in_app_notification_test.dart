@@ -10,8 +10,8 @@
 // trigger'larıyla yapılır; canlı davranışı MCP rollback işlemiyle doğrulandı.
 
 import 'package:firin_defter/features/notifications/models/app_notification.dart';
+import 'package:firin_defter/features/notifications/notification_routing.dart';
 import 'package:firin_defter/features/notifications/repositories/local_notification_repository.dart';
-import 'package:firin_defter/features/notifications/screens/notifications_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AppNotification _n(String id, {DateTime? readAt, DateTime? createdAt}) {
@@ -85,11 +85,13 @@ void main() {
         '/community',
         '/pazar',
         '/ilanlar',
-        '/mesajlar',
+        '/messages', // UI-NAV-003: doğru route (eski yanlış literal /mesajlar)
         '/panel',
       ]) {
         expect(isShellTabRoot(r), isTrue, reason: '$r shell kökü olmalı');
       }
+      // Eski yanlış literal artık shell kökü SAYILMAZ.
+      expect(isShellTabRoot('/mesajlar'), isFalse);
     });
 
     test('derin route\'lar push-safe kalır (go değil)', () {
