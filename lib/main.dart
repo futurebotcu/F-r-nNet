@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'app/theme/app_colors.dart';
 import 'core/config/app_config.dart';
+import 'core/services/crash_reporting_service.dart';
 import 'features/notifications/push/push_notification_service.dart';
 
 Future<void> main() async {
@@ -21,7 +22,12 @@ Future<void> main() async {
   }
 
   // Push (FCM) — guard'lı init; config eksik/başarısızsa app etkilenmez.
+  // (Firebase.initializeApp burada yapılır; Crashlytics buna bağlı.)
   await PushNotificationService.initFirebase();
+
+  // Crash reporting (Crashlytics) — Firebase hazırsa + release/profile'da aktif;
+  // debug'da kapalı, Firebase yoksa no-op. PII/secret crash'e bağlanmaz.
+  await CrashReportingService.init();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

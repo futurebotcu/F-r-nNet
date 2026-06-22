@@ -15,6 +15,12 @@ plugins {
 // - Cihaz / release build (dosya mevcut): plugin uygulanir → FCM aktif.
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
+    // Crashlytics gradle plugin'i de yalniz config varsa uygulanir (google-services'e
+    // bagimli). CI/dosyasiz ortamda atlanir → build derlenir; runtime'da Firebase
+    // guard'li init ile crash reporting sessizce devre disi. firebase_crashlytics
+    // Flutter plugin'i runtime'da bu plugin olmadan da calisir (plugin yalniz
+    // release sembol upload icin).
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 // V1 P0-C — Release signing config (fail-fast, no debug fallback).

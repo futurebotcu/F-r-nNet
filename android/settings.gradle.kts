@@ -23,6 +23,9 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.1.0" apply false
     // Push notifications — FCM (firebase_messaging) icin google-services.
     id("com.google.gms.google-services") version "4.4.2" apply false
+    // Crashlytics — release sembol/mapping upload (yalniz google-services.json
+    // varsa app/build.gradle.kts'de conditional apply edilir; CI'da atlanir).
+    id("com.google.firebase.crashlytics") version "3.0.2" apply false
 }
 
 include(":app")
