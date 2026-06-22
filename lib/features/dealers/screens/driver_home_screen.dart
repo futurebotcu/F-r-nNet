@@ -5,6 +5,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../providers/dealer_providers.dart';
+import '../widgets/role_data_lock.dart';
 
 /// Bireysel şoför "henüz atanmamış" görünümü (fix/driver-normal-dealer-shell).
 ///
@@ -80,7 +81,7 @@ class MyDriverInvitesCard extends ConsumerWidget {
                 Row(children: [
                   Expanded(
                     child: FilledButton(
-                      onPressed: () => _respond(ref, inv.id, true),
+                      onPressed: () => _respond(context, ref, inv.id, true),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.brandLemon,
                         foregroundColor: AppColors.brandInk,
@@ -96,7 +97,7 @@ class MyDriverInvitesCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppSpacing.s),
                   OutlinedButton(
-                    onPressed: () => _respond(ref, inv.id, false),
+                    onPressed: () => _respond(context, ref, inv.id, false),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textSecondary,
                       side: const BorderSide(color: AppColors.borderHairline),
@@ -115,15 +116,35 @@ class MyDriverInvitesCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _respond(WidgetRef ref, String inviteId, bool accept) async {
-    await ref
-        .read(dealerRepositoryProvider)
-        .respondDriverInvite(inviteId, accept: accept);
+  Future<void> _respond(
+    BuildContext context,
+    WidgetRef ref,
+    String inviteId,
+    bool accept,
+  ) async {
+    try {
+      await ref
+          .read(dealerRepositoryProvider)
+          .respondDriverInvite(inviteId, accept: accept);
+    } catch (e) {
+      // ROL/SCOPE VERİ KİLİDİ: kendi defter/işletme kaydı olan kullanıcı şoför
+      // daveti kabul edemez (DB respond_driver_invite engeller) → açıklama.
+      if (!context.mounted) return;
+      if (isRoleDataLockError(e)) {
+        await showRoleDataLockDialog(context, forInvite: true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('İşlem başarısız. Lütfen tekrar deneyin.')),
+        );
+      }
+      return;
+    }
     ref.invalidate(myDriverInvitesProvider);
     ref.invalidate(isAssignedDriverProvider);
     ref.invalidate(dealersAssignedToMeProvider);
     // Davet kabul → bireysel kullanıcı artık aktif şoför → mode owner→scoped.
     ref.invalidate(individualActiveDriverProvider);
+    ref.invalidate(individualHasOwnLedgerDataProvider);
   }
 }
 

@@ -29,6 +29,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../dealers/widgets/role_data_lock.dart';
 import '../models/bakery_profile.dart';
 import '../providers/profile_provider.dart';
 import '../providers/public_profile_detail_provider.dart';
@@ -226,9 +227,15 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     } catch (e) {
       debugPrint('[FirinNet][ProfileEdit] save error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileEditSaveError)),
-      );
+      // ROL/SCOPE VERİ KİLİDİ: rol-kilitli verisi (bayi/defter/borç-gider) olan
+      // kullanıcı account_type değiştiremez (DB trigger engeller) → açıklama.
+      if (isRoleDataLockError(e)) {
+        await showRoleDataLockDialog(context, forInvite: false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.profileEditSaveError)),
+        );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

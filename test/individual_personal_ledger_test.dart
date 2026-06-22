@@ -60,6 +60,7 @@ GoRouter _router() => GoRouter(
 Widget _wrap(
   BakeryProfile profile, {
   bool activeDriver = false,
+  bool hasOwnData = false,
   List<DealerDriverInvite> invites = const [],
 }) =>
     ProviderScope(
@@ -67,6 +68,8 @@ Widget _wrap(
         profileControllerProvider
             .overrideWith((ref) => _SeededProfileController(ref, profile)),
         individualActiveDriverProvider.overrideWith((ref) async => activeDriver),
+        individualHasOwnLedgerDataProvider
+            .overrideWith((ref) async => hasOwnData),
         dealerRepositoryProvider
             .overrideWithValue(LocalDealerRepository(seed: true)),
         myDriverInvitesProvider.overrideWith((ref) async => invites),
@@ -92,25 +95,35 @@ void main() {
     Future<DealerShellMode> modeFor(
       BakeryProfile p, {
       bool activeDriver = false,
+      bool hasOwnData = false,
     }) async {
       final c = ProviderContainer(overrides: [
         profileControllerProvider
             .overrideWith((ref) => _SeededProfileController(ref, p)),
         individualActiveDriverProvider
             .overrideWith((ref) async => activeDriver),
+        individualHasOwnLedgerDataProvider
+            .overrideWith((ref) async => hasOwnData),
       ]);
       addTearDown(c.dispose);
       await c.read(individualActiveDriverProvider.future);
+      await c.read(individualHasOwnLedgerDataProvider.future);
       return c.read(dealerShellModeProvider);
     }
 
-    test('individual + aktif şoför DEĞİL → owner (kişisel defter)', () async {
-      expect(await modeFor(_individual, activeDriver: false),
-          DealerShellMode.owner);
+    test('individual + veri yok + aktif şoför DEĞİL → owner', () async {
+      expect(await modeFor(_individual), DealerShellMode.owner);
     });
-    test('individual + aktif şoför → driverScoped', () async {
+    test('individual + veri yok + aktif şoför → driverScoped', () async {
       expect(await modeFor(_individual, activeDriver: true),
           DealerShellMode.driverScoped);
+    });
+    test('individual + KENDİ verisi var + aktif şoför → owner (defter korunur)',
+        () async {
+      // Kritik: kendi bayisi olan bireysel, şoför olsa bile kişisel defterde
+      // kalır (driverScoped'a düşüp kendi bayilerini kaybetmez).
+      expect(await modeFor(_individual, activeDriver: true, hasOwnData: true),
+          DealerShellMode.owner);
     });
     test('commercial → owner', () async {
       expect(await modeFor(_commercial), DealerShellMode.owner);
@@ -129,6 +142,18 @@ void main() {
       expect(_navLabel('Bayiler'), findsOneWidget);
       expect(_navLabel('Şoförler'), findsNothing); // patron tabı yok
       expect(find.byType(DriverListScreen), findsNothing);
+    });
+
+    testWidgets(
+        'individual + KENDİ verisi + aktif şoför → kişisel defter, Şoförler yok',
+        (tester) async {
+      // Scope krizi regresyonu: kendi bayisi olan bireysel şoför olsa bile
+      // driverScoped'a düşüp kendi defterini KAYBETMEZ.
+      await pump(tester, _wrap(_individual, activeDriver: true, hasOwnData: true));
+      expect(find.byType(DriverHomeScreen), findsNothing);
+      expect(_navLabel('Genel Bakış'), findsOneWidget);
+      expect(_navLabel('Bayiler'), findsOneWidget);
+      expect(_navLabel('Şoförler'), findsNothing);
     });
 
     testWidgets('individual + bekleyen davet → defter + davet banner',

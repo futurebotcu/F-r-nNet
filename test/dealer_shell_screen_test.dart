@@ -74,9 +74,10 @@ Widget _wrap(BakeryProfile profile) {
       profileControllerProvider.overrideWith(
         (ref) => _SeededProfileController(ref, profile),
       ),
-      // Bireysel: aktif şoför ataması yok (kişisel defter). Patron rolleri
-      // mode'u early-return ile owner döndürür, bu override'ı okumaz.
+      // Bireysel: aktif şoför yok + kendi verisi yok → kişisel (boş) defter.
+      // Patron rolleri mode'u early-return ile owner döndürür, bunları okumaz.
       individualActiveDriverProvider.overrideWith((ref) async => false),
+      individualHasOwnLedgerDataProvider.overrideWith((ref) async => false),
     ],
     child: MaterialApp.router(routerConfig: _testRouter()),
   );

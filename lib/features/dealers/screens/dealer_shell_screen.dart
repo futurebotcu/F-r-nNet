@@ -43,11 +43,14 @@ class DealerShellScreen extends ConsumerWidget {
     // yetkileri. Bireysel kullanıcı ASLA patron değildir.
     final isPatron = accountType == AccountType.commercial || isWholesaler;
 
-    // Bireysel: "aktif şoför mü?" sorgusu çözülene kadar bekle → mode
-    // (owner ↔ driverScoped) flash'ı önlenir.
+    // Bireysel: "kendi verisi var mı?" + "aktif şoför mü?" sorguları çözülene
+    // kadar bekle → mode (owner ↔ driverScoped) flash'ı önlenir.
     if (isIndividual) {
-      final status = ref.watch(individualActiveDriverProvider);
-      if (status.isLoading && !status.hasValue) {
+      final hasData = ref.watch(individualHasOwnLedgerDataProvider);
+      final driverStatus = ref.watch(individualActiveDriverProvider);
+      final stillLoading = (hasData.isLoading && !hasData.hasValue) ||
+          (driverStatus.isLoading && !driverStatus.hasValue);
+      if (stillLoading) {
         return const Scaffold(
           backgroundColor: AppColors.background,
           body: Center(child: CircularProgressIndicator()),
