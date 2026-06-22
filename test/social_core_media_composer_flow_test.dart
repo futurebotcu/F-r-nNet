@@ -84,9 +84,10 @@ void main() {
     test('_canShare disabled/enabled durumu (metin VEYA medya)', () {
       expect(src.contains('bool get _canShare'), isTrue);
       expect(src.contains('onPressed: _canShare ? _submit : null'), isTrue);
-      // TextField onChanged → setState
+      // TextField onChanged → setState (PR-UI-2: ayrıca _dirty işaretler →
+      // sticky CTA hâlâ metin değişimine reaktif).
       expect(
-        src.contains('onChanged: (_) => setState(() {})'),
+        src.contains('onChanged: (_) => setState(() => _dirty = true)'),
         isTrue,
         reason: 'Sticky CTA TextField değişimine reaktif',
       );

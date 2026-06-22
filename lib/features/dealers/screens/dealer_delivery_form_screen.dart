@@ -8,6 +8,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/product_choice_chips.dart';
@@ -36,6 +37,19 @@ class _DealerDeliveryFormScreenState
   // Çift-gönderim koruması: hızlı çift tıklamada iki teslimat (mükerrer
   // finansal hareket) oluşmasını engeller.
   bool _saving = false;
+  // PR-UI-2 — kaydedilmemiş değişiklik koruması (geri çıkışta onay).
+  bool _dirty = false;
+  void _markDirty() {
+    if (!_dirty) setState(() => _dirty = true);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _quantity.addListener(_markDirty);
+    _unitPrice.addListener(_markDirty);
+    _note.addListener(_markDirty);
+  }
 
   @override
   void dispose() {
@@ -46,7 +60,10 @@ class _DealerDeliveryFormScreenState
   }
 
   Future<void> _onProductChanged(String p) async {
-    setState(() => _product = p);
+    setState(() {
+      _product = p;
+      _dirty = true;
+    });
     final repo = ref.read(dealerRepositoryProvider);
     final price = await repo.currentPriceFor(
       dealerId: widget.dealerId,
@@ -146,7 +163,7 @@ class _DealerDeliveryFormScreenState
     // Rol bazlı ürün preset'i: toptancı → tedarik ürünleri, diğer → fırın.
     final accountType = ref.watch(profileControllerProvider)?.accountType;
 
-    return PremiumScaffold(
+    final scaffold = PremiumScaffold(
       appBar: AppBar(title: const Text(AppStrings.dealerDeliveryTitle)),
       body: SafeArea(
         child: ListView(
@@ -271,6 +288,7 @@ class _DealerDeliveryFormScreenState
         ),
       ),
     );
+    return DirtyFormGuard(isDirty: _dirty, child: scaffold);
   }
 }
 

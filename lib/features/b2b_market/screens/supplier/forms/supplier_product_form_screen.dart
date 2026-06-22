@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_tokens.dart';
+import '../../../../../core/widgets/dirty_form_guard.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
@@ -42,6 +43,14 @@ class _SupplierProductFormScreenState
 
   bool _editing = false;
   bool _saving = false; // FN-AUDIT-017 — çift-submit guard.
+  // PR-UI-2 — kaydedilmemiş değişiklik koruması. `_hydrating` prefill sırasında
+  // Form.onChanged'in false-dirty üretmesini engeller.
+  bool _dirty = false;
+  bool _hydrating = false;
+  void _markDirty() {
+    if (_hydrating || _dirty) return;
+    setState(() => _dirty = true);
+  }
 
   @override
   void initState() {
@@ -54,8 +63,12 @@ class _SupplierProductFormScreenState
   }
 
   Future<void> _prefill(String id) async {
+    _hydrating = true;
     final p = await ref.read(b2bRepositoryProvider).productById(id);
-    if (p == null || !mounted) return;
+    if (p == null || !mounted) {
+      _hydrating = false;
+      return;
+    }
     final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
     setState(() {
       _name.text = p.name;
@@ -70,6 +83,9 @@ class _SupplierProductFormScreenState
             .split(', ')
             .map((e) => e.trim())
             .where(known.contains));
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrating = false;
     });
   }
 
@@ -145,11 +161,12 @@ class _SupplierProductFormScreenState
     final categories = ref.read(b2bRepositoryProvider).productCategories();
     final regions = ref.read(b2bRepositoryProvider).serviceRegions();
 
-    return PremiumScaffold(
+    final scaffold = PremiumScaffold(
       appBar: AppBar(title: Text(_editing ? 'Ürünü düzenle' : 'Ürün ekle')),
       body: SafeArea(
         child: Form(
           key: _formKey,
+          onChanged: _markDirty,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pageH,
@@ -175,6 +192,7 @@ class _SupplierProductFormScreenState
                 onSelect: (c) => setState(() {
                   _category = c;
                   _categoryTouched = true;
+                  _dirty = true;
                 }),
                 errorText: _categoryTouched && _category == null
                     ? 'Kategori seçin'
@@ -193,6 +211,7 @@ class _SupplierProductFormScreenState
                 selected: _regions,
                 onToggle: (r) => setState(() {
                   _regions.contains(r) ? _regions.remove(r) : _regions.add(r);
+                  _dirty = true;
                 }),
               ),
               const SizedBox(height: AppSpacing.l),
@@ -209,12 +228,18 @@ class _SupplierProductFormScreenState
                 kind: B2bMediaKind.product,
                 label: 'Ürün görseli',
                 currentUrl: _imageUrl,
-                onChanged: (u) => setState(() => _imageUrl = u),
+                onChanged: (u) => setState(() {
+                  _imageUrl = u;
+                  _dirty = true;
+                }),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bStatusField(
                 published: _published,
-                onChanged: (v) => setState(() => _published = v),
+                onChanged: (v) => setState(() {
+                  _published = v;
+                  _dirty = true;
+                }),
               ),
               const SizedBox(height: AppSpacing.xl),
               B2bSaveButton(
@@ -228,6 +253,7 @@ class _SupplierProductFormScreenState
         ),
       ),
     );
+    return DirtyFormGuard(isDirty: _dirty, child: scaffold);
   }
 }
 
