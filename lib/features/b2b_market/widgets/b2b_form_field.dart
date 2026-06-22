@@ -69,6 +69,81 @@ class B2bTextField extends StatelessWidget {
       );
 }
 
+/// Etiketli tarih seçici alanı (opsiyonel — boş = "Süresiz"). Serbest metin
+/// yerine DatePicker kullanılır (FN-AUDIT-006: serbest metin sessizce kaybolup
+/// kampanya "süresiz" oluyordu).
+class B2bDateField extends StatelessWidget {
+  const B2bDateField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onTap,
+    required this.onClear,
+    this.placeholder = 'Süresiz (belirtilmedi)',
+  });
+
+  final String label;
+  final DateTime? value;
+  final VoidCallback onTap;
+  final VoidCallback onClear;
+  final String placeholder;
+
+  static String formatTr(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}.'
+      '${d.month.toString().padLeft(2, '0')}.${d.year}';
+
+  @override
+  Widget build(BuildContext context) {
+    final has = value != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _FieldLabel(label),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.m,
+              vertical: AppSpacing.m,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(color: AppColors.borderHairline, width: 0.8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded,
+                    size: 16, color: AppColors.textMuted),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    has ? formatTr(value!) : placeholder,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: has ? AppColors.textPrimary : AppColors.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (has)
+                  GestureDetector(
+                    onTap: onClear,
+                    behavior: HitTestBehavior.opaque,
+                    child: const Icon(Icons.close_rounded,
+                        size: 16, color: AppColors.textMuted),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Yayında / Taslak durum seçici (kompakt segmented).
 class B2bStatusField extends StatelessWidget {
   const B2bStatusField({

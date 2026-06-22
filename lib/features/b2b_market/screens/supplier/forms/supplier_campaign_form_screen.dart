@@ -32,8 +32,10 @@ class _SupplierCampaignFormScreenState
   final _title = TextEditingController();
   final _linkedProduct = TextEditingController();
   final _minPurchase = TextEditingController();
-  final _validUntil = TextEditingController();
   final _description = TextEditingController();
+
+  /// FN-AUDIT-006: serbest metin yerine takvim tarihi. null = "Süresiz".
+  DateTime? _validUntilDate;
 
   String? _category;
   final Set<String> _regions = <String>{};
@@ -61,7 +63,8 @@ class _SupplierCampaignFormScreenState
       _title.text = c.title;
       _linkedProduct.text = c.linkedProduct ?? '';
       _minPurchase.text = c.minPurchase == 'Belirtilmedi' ? '' : c.minPurchase;
-      _validUntil.text = c.validUntil == 'Süresiz' ? '' : c.validUntil;
+      _validUntilDate =
+          c.validUntil == 'Süresiz' ? null : DateTime.tryParse(c.validUntil);
       _description.text = c.description;
       _category = c.category;
       _published = c.published;
@@ -80,9 +83,26 @@ class _SupplierCampaignFormScreenState
     _title.dispose();
     _linkedProduct.dispose();
     _minPurchase.dispose();
-    _validUntil.dispose();
     _description.dispose();
     super.dispose();
+  }
+
+  static String _isoDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
+
+  Future<void> _pickValidUntil() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final initial = _validUntilDate ?? today;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial.isBefore(today) ? today : initial,
+      firstDate: today,
+      lastDate: DateTime(now.year + 3),
+      helpText: 'Geçerlilik tarihi seç',
+    );
+    if (picked != null) setState(() => _validUntilDate = picked);
   }
 
   Future<void> _save() async {
@@ -96,8 +116,10 @@ class _SupplierCampaignFormScreenState
     final minPurchase = _minPurchase.text.trim().isEmpty
         ? 'Belirtilmedi'
         : _minPurchase.text.trim();
+    // FN-AUDIT-006: ISO tarih (DB date kolonu) veya boş (Süresiz). Repo
+    // `_tryDate` ISO'yu doğru parse eder; serbest metin belirsizliği yok.
     final validUntil =
-        _validUntil.text.trim().isEmpty ? 'Süresiz' : _validUntil.text.trim();
+        _validUntilDate == null ? '' : _isoDate(_validUntilDate!);
     final controller = ref.read(b2bMarketControllerProvider.notifier);
     if (_editing) {
       await controller.updateCampaign(
@@ -202,10 +224,11 @@ class _SupplierCampaignFormScreenState
                 hint: 'Ör. 200 çuval ve üzeri',
               ),
               const SizedBox(height: AppSpacing.l),
-              B2bTextField(
-                label: 'Geçerlilik tarihi',
-                controller: _validUntil,
-                hint: 'Ör. 30 Haziran 2026',
+              B2bDateField(
+                label: 'Geçerlilik tarihi (opsiyonel)',
+                value: _validUntilDate,
+                onTap: _pickValidUntil,
+                onClear: () => setState(() => _validUntilDate = null),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bTextField(

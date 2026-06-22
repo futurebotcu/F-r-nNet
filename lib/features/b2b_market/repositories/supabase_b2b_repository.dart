@@ -316,11 +316,13 @@ class SupabaseB2bRepository implements B2bRepository {
 
   @override
   Future<List<B2bCampaign>> campaignsForStore(String storeId) async {
+    // FN-AUDIT-006: mağaza vitrininde de süresi geçmiş kampanya gösterme.
     final rows = await _client
         .from('b2b_campaigns')
         .select(_campaignCols)
         .eq('shop_id', storeId)
         .eq('published', true)
+        .or('valid_until.is.null,valid_until.gte.${_todayIso()}')
         .order('created_at', ascending: false);
     final uid = _uid;
     return rows
@@ -474,10 +476,12 @@ class SupabaseB2bRepository implements B2bRepository {
 
   @override
   Future<List<B2bCampaign>> listCampaigns({String? category}) async {
-    final base = _client.from('b2b_campaigns').select(_campaignCols).eq(
-          'published',
-          true,
-        );
+    // FN-AUDIT-006: süresi geçmiş kampanyaları gizle (null = süresiz → görünür).
+    final base = _client
+        .from('b2b_campaigns')
+        .select(_campaignCols)
+        .eq('published', true)
+        .or('valid_until.is.null,valid_until.gte.${_todayIso()}');
     final filtered = category != null ? base.eq('category', category) : base;
     final rows = await filtered.order('created_at', ascending: false);
     final uid = _uid;
@@ -752,13 +756,21 @@ class SupabaseB2bRepository implements B2bRepository {
   }) async {
     final shopId = await _myShopId();
     if (shopId == null) throw StateError('Önce mağaza oluşturun.');
-    await _client.from('b2b_quote_replies').insert(quoteReplyInsert(
-          quoteRequestId: quoteRequestId,
-          supplierShopId: shopId,
-          message: message,
-          priceNote: priceNote,
-          deliveryNote: deliveryNote,
-        ));
+    try {
+      await _client.from('b2b_quote_replies').insert(quoteReplyInsert(
+            quoteRequestId: quoteRequestId,
+            supplierShopId: shopId,
+            message: message,
+            priceNote: priceNote,
+            deliveryNote: deliveryNote,
+          ));
+    } on sb.PostgrestException catch (e) {
+      // FN-AUDIT-015: aynı talebe aynı mağazadan tek teklif (unique violation).
+      if (e.code == '23505') {
+        throw StateError('Bu talebe zaten teklif verdiniz.');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -895,9 +907,16 @@ class SupabaseB2bRepository implements B2bRepository {
       .where((e) => e.isNotEmpty && e != 'Belirtilmedi')
       .toList();
 
-  /// Serbest metin tarihi date'e çevirmeye çalışır; olmazsa null (DB date
-  /// kolonu). Form serbest metin verdiği için çoğu zaman null kalır (gap:
-  /// ileride date picker).
+  /// Bugünün YEREL takvim günü 'YYYY-MM-DD' (kampanya expiry filtresi için).
+  static String _todayIso() {
+    final n = DateTime.now();
+    return '${n.year.toString().padLeft(4, '0')}-'
+        '${n.month.toString().padLeft(2, '0')}-'
+        '${n.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Serbest metin/ISO tarihi date'e çevirmeye çalışır; olmazsa null (DB date
+  /// kolonu). Form artık DatePicker'dan ISO verir (FN-AUDIT-006).
   static String? _tryDate(String raw) {
     final d = DateTime.tryParse(raw.trim());
     if (d == null) return null;
