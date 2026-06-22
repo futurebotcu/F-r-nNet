@@ -188,6 +188,20 @@ class LocalDealerRepository implements DealerRepository {
     _notify();
   }
 
+  @override
+  Future<void> driverAddNote({
+    required String dealerId,
+    required String note,
+  }) async {
+    _notes.add(DealerNote(
+      id: 'n_${DateTime.now().microsecondsSinceEpoch}',
+      dealerId: dealerId,
+      note: note,
+      createdAt: DateTime.now(),
+    ));
+    _notify();
+  }
+
   // ─────────────────────────────────────── Şoförler
 
   @override

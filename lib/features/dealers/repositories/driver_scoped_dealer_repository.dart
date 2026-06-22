@@ -126,9 +126,15 @@ class DriverScopedDealerRepository implements DealerRepository {
         note: note,
       );
 
-  /// Atanmış bayiye not — RLS karar verir (transaction değil).
+  /// Atanmış bayiye not — FN-AUDIT-009: owner_id=PATRON yazan driver RPC'sine
+  /// köprülenir (şoförün uid'iyle görünmez not oluşmaz).
   @override
-  Future<void> addNote(DealerNote note) => inner.addNote(note);
+  Future<void> addNote(DealerNote note) =>
+      inner.driverAddNote(dealerId: note.dealerId, note: note.note);
+
+  @override
+  Future<void> driverAddNote({required String dealerId, required String note}) =>
+      inner.driverAddNote(dealerId: dealerId, note: note);
 
   // ── Şoför self-view okumaları: passthrough ──
   @override
