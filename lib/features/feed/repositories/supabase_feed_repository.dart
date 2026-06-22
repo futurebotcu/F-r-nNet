@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/services/media_limits.dart';
 import '../models/feed_comment.dart';
 import '../models/feed_insight.dart';
 import '../models/feed_media.dart';
@@ -518,6 +519,7 @@ class SupabaseFeedRepository implements FeedRepository {
     final mediaId = _generateUuidV4();
     final path = '$userId/$postId/$mediaId.$ext';
     final mime = _mimeForImageExt(ext);
+    MediaLimits.ensureImageUnderLimit(bytes.length);
 
     // 1) Storage upload — path prefix RLS policy `{userId}/...` ile uyumlu.
     await _client.storage
