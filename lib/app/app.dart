@@ -1,22 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants/app_strings.dart';
+import '../features/auth/models/auth_user.dart';
+import '../features/auth/providers/auth_providers.dart';
+import '../features/notifications/push/push_notification_service.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
-class FirinNetApp extends StatefulWidget {
+class FirinNetApp extends ConsumerStatefulWidget {
   const FirinNetApp({super.key});
 
   @override
-  State<FirinNetApp> createState() => _FirinNetAppState();
+  ConsumerState<FirinNetApp> createState() => _FirinNetAppState();
 }
 
-class _FirinNetAppState extends State<FirinNetApp> {
+class _FirinNetAppState extends ConsumerState<FirinNetApp> {
   late final _router = createRouter();
 
   @override
+  void initState() {
+    super.initState();
+    // ref.listen yalnız SONRAKİ değişimleri yakalar; zaten girişli oturum
+    // (uygulama açılışında session restore) için mevcut kullanıcıyı da kaydet.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (ref.read(currentAuthUserProvider) != null) {
+        PushNotificationService.registerForUser();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Push (FCM): login (oturum açılınca / app resume) → cihaz token'ını
+    // Supabase'e kaydet. Çıkışta performSignOut zaten deactivate eder.
+    ref.listen<AuthUser?>(currentAuthUserProvider, (prev, next) {
+      if (next != null && prev?.id != next.id) {
+        PushNotificationService.registerForUser();
+      }
+    });
     return MaterialApp.router(
       title: AppStrings.appName,
       // Tek tema modu: white-first + yellow accent social identity.

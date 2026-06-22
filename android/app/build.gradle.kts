@@ -8,6 +8,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Push notifications — FCM google-services plugin'i YALNIZ config dosyasi
+// varsa uygula. google-services.json `.gitignore`'lu (secret; repoya girmez):
+// - CI / dosyasiz ortam: plugin atlanir → build derlenir (Firebase runtime'da
+//   guard'li init ile sessizce devre disi).
+// - Cihaz / release build (dosya mevcut): plugin uygulanir → FCM aktif.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // V1 P0-C — Release signing config (fail-fast, no debug fallback).
 //
 // Release build'leri her zaman `signingConfigs["release"]` kullanır. Bu

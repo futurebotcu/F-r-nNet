@@ -3,6 +3,8 @@
          için zorunlu. (Flutter şablonu INTERNET'i yalnız debug/profile'a
          koyar; release AAB'de bu satır olmadan uygulama ağ-ölü olur.) -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Push notifications (FCM) — Android 13+ runtime bildirim izni. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="FırınNet"
         android:name="${applicationName}"
