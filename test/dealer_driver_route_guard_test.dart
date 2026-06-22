@@ -20,6 +20,13 @@ class _SeededProfileController extends ProfileController {
   }
 }
 
+/// Profil hiç yüklenmemiş / yükleme hatası → state null kalır.
+class _NullProfileController extends ProfileController {
+  _NullProfileController(super.ref) {
+    state = null;
+  }
+}
+
 const _commercial = BakeryProfile(
   displayName: 'Hasan', accountType: AccountType.commercial,
   city: 'Konya', roleBadge: 'Fırıncı', email: 'h@e.com',
@@ -54,6 +61,17 @@ Widget _wrap(BakeryProfile profile) => ProviderScope(
       child: MaterialApp.router(routerConfig: _router()),
     );
 
+/// Profil null (yüklenmedi/hata) ile sarmalar — FN-AUDIT-002 fail-closed.
+Widget _wrapNull() => ProviderScope(
+      overrides: [
+        dealerRepositoryProvider
+            .overrideWithValue(LocalDealerRepository(seed: true)),
+        profileControllerProvider
+            .overrideWith((ref) => _NullProfileController(ref)),
+      ],
+      child: MaterialApp.router(routerConfig: _router()),
+    );
+
 void main() {
   testWidgets('Bireysel direct /dealers/drivers → DriverHomeScreen (patron yok)',
       (tester) async {
@@ -79,5 +97,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(DriverListScreen), findsOneWidget);
     expect(find.text('Genel Hesap'), findsOneWidget);
+  });
+
+  testWidgets(
+      'FN-AUDIT-002: profil null (yüklenmedi/hata) → fail-closed DriverHomeScreen',
+      (tester) async {
+    await tester.pumpWidget(_wrapNull());
+    await tester.pumpAndSettle();
+    // Patron yönetimi AÇILMAMALI (fail-closed): profil belirsizken şoför görünümü.
+    expect(find.byType(DriverListScreen), findsNothing);
+    expect(find.text('Genel Hesap'), findsNothing);
+    expect(find.text('Bayi Yönetimi'), findsOneWidget);
   });
 }

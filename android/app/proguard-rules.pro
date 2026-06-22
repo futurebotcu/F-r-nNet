@@ -44,3 +44,13 @@
 # ───────────────────────────── image_picker / video / file plugin'leri
 -dontwarn androidx.lifecycle.**
 -keep class androidx.lifecycle.** { *; }
+
+# ───────────────────────────── Firebase / Google Play Services (FCM push)
+# FN-AUDIT-013: Release minify/shrink açıkken Firebase Messaging / GMS reflection
+# sınıfları kırpılırsa uygulama-dışı push CIHAZDA SESSİZCE çalışmaz. firebase_core
+# + firebase_messaging host katmanını koru.
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-keep interface com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**

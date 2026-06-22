@@ -13,6 +13,13 @@ import '../screens/driver_home_screen.dart';
 /// yönetimi AÇILMAZ → güvenli şekilde [DriverHomeScreen]'e ("Bana Atanan
 /// Bayiler" / davet kartı / boş durum) düşer. Ticari (commercial) ve toptancı
 /// (wholesaler) patron/owner'dır → [child] aynen gösterilir.
+///
+/// **FAIL-CLOSED (FN-AUDIT-002):** Patron yüzeyi YALNIZCA accountType kesin
+/// olarak `commercial` veya `wholesaler` ise gösterilir. Profil henüz
+/// yüklenmediyse (`null`), yükleme hata aldıysa veya `individual` ise → güvenli
+/// varsayılan olarak şoför görünümüne düşülür. Böylece geçici profil hatası bir
+/// bireysel/şoför kullanıcıyı patron yönetim ekranına düşürmez (önceki davranış
+/// `null → child` ile fail-OPEN idi).
 class PatronDriverGuard extends ConsumerWidget {
   const PatronDriverGuard({super.key, required this.child});
 
@@ -23,9 +30,12 @@ class PatronDriverGuard extends ConsumerWidget {
     final accountType = ref.watch(
       profileControllerProvider.select((p) => p?.accountType),
     );
-    if (accountType == AccountType.individual) {
-      return const DriverHomeScreen();
+    // Yalnız kesin patron rolleri child'ı (patron yönetimi) görür.
+    if (accountType == AccountType.commercial ||
+        accountType == AccountType.wholesaler) {
+      return child;
     }
-    return child;
+    // null / individual / bilinmeyen → güvenli varsayılan: şoför görünümü.
+    return const DriverHomeScreen();
   }
 }

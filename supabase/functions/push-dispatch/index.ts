@@ -5,6 +5,10 @@
 // değişmez.
 //
 // Güvenlik / kurallar:
+// - Caller-auth (FN-AUDIT-001): PUSH_DISPATCH_KEY (veya PUSH_DISPATCH_WEBHOOK_SECRET)
+//   secret'ı `Authorization: Bearer <secret>` ile doğrulanır. Secret yoksa veya
+//   header eşleşmezse fail-closed (401, push yok). Database Webhook'un Authorization
+//   header'ı bu secret ile AYNI olmalı (deploy sonrası manuel set; bkz. PR notu).
 // - FIREBASE_SERVICE_ACCOUNT_JSON Supabase secret'ından (repo'ya ASLA yazılmaz).
 //   Secret yoksa GRACEFUL no-op döner (in-app akışı bozulmaz).
 // - DB erişimi service-role ile: SUPABASE_SERVICE_ROLE_KEY (yeni sb_secret
@@ -88,6 +92,20 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
 
 Deno.serve(async (req: Request) => {
   try {
+    // Caller doğrulaması (FN-AUDIT-001): Database Webhook / dispatch trigger
+    // paylaşılan secret'ı taşımalı. Gateway verify_jwt'ye EK katman: anon-key'i
+    // olan biri push tetikleyemesin. Secret yoksa VEYA header eşleşmiyorsa
+    // fail-closed (401, push gönderme). Secret değeri ASLA loglanmaz.
+    const dispatchSecret = Deno.env.get("PUSH_DISPATCH_KEY") ??
+      Deno.env.get("PUSH_DISPATCH_WEBHOOK_SECRET");
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!dispatchSecret || authHeader !== `Bearer ${dispatchSecret}`) {
+      return new Response(
+        JSON.stringify({ ok: false, reason: "unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
     const saRaw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON") ??
       Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
