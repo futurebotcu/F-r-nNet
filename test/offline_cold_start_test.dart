@@ -69,9 +69,10 @@ void main() {
   group('Splash offline guard (kaynak sözleşmesi)', () {
     final src = _read('lib/features/onboarding/screens/splash_screen.dart');
 
-    test('fetchProfile timeout + try/catch ile sarılı', () {
+    test('fetchProfile timeout (4s) + try/catch ile sarılı', () {
       expect(src.contains('.fetchProfile('), isTrue);
-      expect(src.contains('.timeout('), isTrue);
+      // PR-OFFLINE-2: offline cold-start daha hızlı Feed'e düşsün (8s→4s).
+      expect(src.contains('.timeout(const Duration(seconds: 4))'), isTrue);
       expect(src.contains('catch (e)'), isTrue);
       // Offline catch yorumu → bilinçli offline davranışı.
       expect(src.contains('offline?'), isTrue);
