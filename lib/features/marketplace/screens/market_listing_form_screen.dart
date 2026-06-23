@@ -23,6 +23,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -176,6 +177,12 @@ class _MarketListingFormScreenState
   // ─── Photo picker ────────────────────────────────────────────────
 
   Future<void> _pickPhoto(ImageSource source) async {
+    // Kamera ÇEKİMİ → izin iste (galeri seçimi istemez).
+    if (source == ImageSource.camera &&
+        !await AppPermissionService.requestCameraForCapture(context)) {
+      return;
+    }
+    if (!mounted) return;
     if (_newPhotos.length >= _maxPhotos) {
       _showSnack(AppStrings.marketListingPhotoMaxHint);
       return;

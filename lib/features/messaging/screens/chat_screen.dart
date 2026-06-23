@@ -30,6 +30,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/premium/chat_media_picker_sheet.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -165,6 +166,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _onAttach() async {
     final pick = await ChatMediaPickerSheet.show(context);
     if (pick == null || !mounted) return;
+    // Kamera ÇEKİMİ → izin iste (galeri seçimi istemez).
+    if (pick.source == ImageSource.camera &&
+        !await AppPermissionService.requestCameraForCapture(context)) {
+      return;
+    }
+    if (!mounted) return;
     final svc = ref.read(chatMediaUploadServiceProvider);
     if (svc == null) return;
     XFile? file;

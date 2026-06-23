@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Push notifications (FCM) — Android 13+ runtime bildirim izni. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Kamera — yalnız fotoğraf/video ÇEKİM aksiyonlarında runtime istenir
+         (galeri seçimi izin istemez). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
     <application
         android:label="FırınNet"
         android:name="${applicationName}"

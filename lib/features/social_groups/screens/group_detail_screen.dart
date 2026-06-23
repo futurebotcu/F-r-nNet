@@ -10,6 +10,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
@@ -1913,6 +1914,12 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     }
     final pick = await ChatMediaPickerSheet.show(context);
     if (pick == null || !mounted) return;
+    // Kamera ÇEKİMİ → izin iste (galeri seçimi istemez).
+    if (pick.source == ImageSource.camera &&
+        !await AppPermissionService.requestCameraForCapture(context)) {
+      return;
+    }
+    if (!mounted) return;
     final svc = ref.read(chatMediaUploadServiceProvider);
     if (svc == null) return;
     XFile? file;

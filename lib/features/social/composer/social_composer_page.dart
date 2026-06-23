@@ -26,6 +26,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -160,7 +161,11 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   }
 
   Future<void> _pickImage() => _captureOrPickImage(ImageSource.gallery);
-  Future<void> _capturePhoto() => _captureOrPickImage(ImageSource.camera);
+  Future<void> _capturePhoto() async {
+    // Kamera ÇEKİMİ → izin iste (galeri seçimi istemez).
+    if (!await AppPermissionService.requestCameraForCapture(context)) return;
+    await _captureOrPickImage(ImageSource.camera);
+  }
 
   Future<void> _captureOrPickImage(ImageSource source) async {
     debugPrint('[FirinNet][Composer] pickImage source=$source');
@@ -228,7 +233,11 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   }
 
   Future<void> _pickVideo() => _captureOrPickVideo(ImageSource.gallery);
-  Future<void> _captureVideo() => _captureOrPickVideo(ImageSource.camera);
+  Future<void> _captureVideo() async {
+    // Kamera ÇEKİMİ → izin iste (galeri seçimi istemez).
+    if (!await AppPermissionService.requestCameraForCapture(context)) return;
+    await _captureOrPickVideo(ImageSource.camera);
+  }
 
   Future<void> _captureOrPickVideo(ImageSource source) async {
     debugPrint('[FirinNet][Composer] pickVideo source=$source');
