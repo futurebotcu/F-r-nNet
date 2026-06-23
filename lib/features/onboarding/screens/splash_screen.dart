@@ -128,7 +128,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     try {
       final profile = await repo
           .fetchProfile(user.id)
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 4));
       if (!mounted) return;
       if (profile == null || !profile.isComplete) {
         context.go(AppRoutes.createProfile);
