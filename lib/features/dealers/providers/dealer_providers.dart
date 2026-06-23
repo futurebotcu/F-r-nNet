@@ -49,12 +49,72 @@ final dealerShellTabIndexProvider = StateProvider<int>((_) => 0);
 /// [DriverScopedDealerRepository] ile sarar.
 enum DealerShellMode { owner, driverScoped }
 
+/// Mode-bağımsız ham repo — yalnız "bireysel aktif şoför mü?" read'i için.
+/// [dealerRepositoryProvider] mode'a bağlı olduğundan mode onu kullanamaz
+/// (Riverpod döngüsü olurdu). Yalnız tek-seferlik read; broadcast watch() yok.
+final _driverStatusRepoProvider = Provider<DealerRepository>((ref) {
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
+  final DealerRepository repo;
+  if (AppConfig.supabaseEnabled && userId != null) {
+    repo = SupabaseDealerRepository(sb.Supabase.instance.client);
+  } else {
+    repo = LocalDealerRepository(seed: true);
+  }
+  ref.onDispose(repo.dispose);
+  return repo;
+});
+
+/// Bireysel kullanıcı **aktif** (atanmış) bir şoför mü?
+///
+/// - true  → `/dealers` şoför-scoped defter (atanmış bayiler + driver RPC).
+/// - false → kendi **kişisel** Bayi Defteri (owner: bayi ekle/hareket/rapor).
+///
+/// Bekleyen davet TEK BAŞINA driverScoped YAPMAZ → kişisel defter korunur;
+/// davet kişisel defterde banner olarak gösterilir, kabul edilince invalidate
+/// edilir → mode driverScoped'a geçer. (dealerChanges izlenmez: o
+/// dealerRepository'ye bağlı, mode da repo'ya → döngü olurdu. Invite akışı
+/// explicit invalidate eder.)
+final individualActiveDriverProvider = FutureProvider<bool>((ref) async {
+  final accountType =
+      ref.watch(profileControllerProvider.select((p) => p?.accountType));
+  if (accountType != AccountType.individual) return false;
+  return ref.watch(_driverStatusRepoProvider).isAssignedDriver();
+});
+
+/// Bireysel kullanıcının **kendi Bayi Defteri verisi** (sahip olduğu bayi) var
+/// mı? Varsa kullanıcı HER ZAMAN kişisel defterde kalır — şoför olsa bile
+/// driverScoped'a düşüp kendi bayilerini KAYBETMEZ. Mode-bağımsız ham repo
+/// (RLS owner → yalnız kendi bayileri). NOT: yeni `role_data_lock` DB guard'ı
+/// kendi verisi olanın şoför davetini kabul etmesini zaten engeller; bu kontrol
+/// mevcut (legacy) çakışmış kullanıcıları (ör. ticariyken bayi açıp bireysele
+/// geçmiş) da güvenle kişisel defterde tutar.
+final individualHasOwnLedgerDataProvider = FutureProvider<bool>((ref) async {
+  final accountType =
+      ref.watch(profileControllerProvider.select((p) => p?.accountType));
+  if (accountType != AccountType.individual) return false;
+  final dealers = await ref.watch(_driverStatusRepoProvider).listDealers();
+  return dealers.isNotEmpty;
+});
+
+/// `/dealers` shell modu — DOĞRU MODEL:
+/// - commercial / wholesaler → owner (patron Bayi Yönetimi, değişmez).
+/// - bireysel + KENDİ bayi defteri verisi VAR → owner (kişisel defter; şoför
+///   olsa bile kendi bayileri korunur).
+/// - bireysel + veri YOK + AKTİF şoför → driverScoped (atanmış bayi modu).
+/// - bireysel + veri yok + şoför değil → owner (boş kişisel defter).
+/// [dealerRepositoryProvider] bu modu okur (driverScoped → repo decorator).
 final dealerShellModeProvider = Provider<DealerShellMode>((ref) {
   final accountType =
       ref.watch(profileControllerProvider.select((p) => p?.accountType));
-  return accountType == AccountType.individual
-      ? DealerShellMode.driverScoped
-      : DealerShellMode.owner;
+  if (accountType != AccountType.individual) return DealerShellMode.owner;
+  // Kendi defter verisi olan bireysel → her zaman owner (kişisel defter).
+  final hasOwnData =
+      ref.watch(individualHasOwnLedgerDataProvider).valueOrNull ?? false;
+  if (hasOwnData) return DealerShellMode.owner;
+  // Veri yok + aktif şoför → scoped (atanmış bayi modu).
+  final isActiveDriver =
+      ref.watch(individualActiveDriverProvider).valueOrNull ?? false;
+  return isActiveDriver ? DealerShellMode.driverScoped : DealerShellMode.owner;
 });
 
 /// Toptancı liste scope'u (fix/wholesaler-dealer-shell-parity).
