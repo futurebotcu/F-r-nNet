@@ -17,6 +17,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../providers/social_providers.dart';
@@ -36,7 +37,11 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
   String? _inlineError;
 
   Future<void> _pickImage() => _captureOrPick(ImageSource.gallery);
-  Future<void> _capturePhoto() => _captureOrPick(ImageSource.camera);
+  Future<void> _capturePhoto() async {
+    // Kamera ÇEKİMİ → izin iste (galeri seçimi istemez).
+    if (!await AppPermissionService.requestCameraForCapture(context)) return;
+    await _captureOrPick(ImageSource.camera);
+  }
 
   /// V2 Commit 3.6 — Story camera regression fix. ImageSource.camera
   /// dönen XFile bazı Android sürümlerinde `name` field'ını ham path
