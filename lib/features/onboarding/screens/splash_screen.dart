@@ -13,7 +13,6 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/guest_mode_provider.dart';
 import '../../auth/services/guest_mode_storage.dart';
 import '../../profile/providers/profile_provider.dart';
-import '../../profile/repositories/profile_repository.dart';
 import '../services/onboarding_seen_storage.dart';
 
 /// V1.3 — Splash boot decision.
@@ -113,21 +112,39 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     // 5 / 6 — Supabase var + oturum var → profile completeness'i değerlendir
     final repo = ref.read(profileRepositoryProvider);
-    ProfileRepository? r = repo;
-    final profile = r != null ? await r.fetchProfile(user.id) : null;
-    if (!mounted) return;
-
-    if (profile == null || !profile.isComplete) {
+    if (repo == null) {
+      if (!mounted) return;
       context.go(AppRoutes.createProfile);
       return;
     }
 
-    // Sahip mode → guest flag temizle (auth aktif).
-    await GuestModeStorage.instance.clear();
-    if (!mounted) return;
-    // V1.3.5 — Login sonrası ilk açılış Feed (sektör akışı). Panel'e
-    // bottom nav 5. tab'dan ulaşılır. Brief ürün kararı.
-    context.go(AppRoutes.feed);
+    // OFFLINE COLD-START (PR-OFFLINE-1): profil fetch network ister. İnternet
+    // yokken bu çağrı throw/hang ederse splash'ta SONSUZ TAKILMA olurdu (app
+    // açılmıyor). Timeout + try/catch ile:
+    //   - başarı  → normal completeness kararı,
+    //   - hata/timeout (offline) → oturumu KAPATMA / logout YAPMA / sonsuz
+    //     spinner'a SOKMA; ana akışa (Feed shell) al. Network alanları kendi
+    //     "İnternet bağlantısı yok / Tekrar dene" state'ini gösterir.
+    try {
+      final profile = await repo
+          .fetchProfile(user.id)
+          .timeout(const Duration(seconds: 8));
+      if (!mounted) return;
+      if (profile == null || !profile.isComplete) {
+        context.go(AppRoutes.createProfile);
+        return;
+      }
+      // Sahip mode → guest flag temizle (auth aktif).
+      await GuestModeStorage.instance.clear();
+      if (!mounted) return;
+      // V1.3.5 — Login sonrası ilk açılış Feed (sektör akışı). Panel'e
+      // bottom nav 5. tab'dan ulaşılır. Brief ürün kararı.
+      context.go(AppRoutes.feed);
+    } catch (e) {
+      debugPrint('[FirinNet][Splash] profile fetch failed (offline?): $e');
+      if (!mounted) return;
+      context.go(AppRoutes.feed);
+    }
   }
 
   @override
