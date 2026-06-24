@@ -51,6 +51,16 @@ BakeryProfile _profile(AccountType type) => BakeryProfile(
 );
 
 void main() {
+  // Liste uzadığı için tüm kartların render olabilmesi adına yüksek yüzey.
+  Future<void> pumpTall(WidgetTester tester, AccountType type) async {
+    tester.view.physicalSize = const Size(1200, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(_wrap(_profile(type)));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('hub açılır ve başlığı gösterir', (tester) async {
     await tester.pumpWidget(_wrap(_profile(AccountType.individual)));
     await tester.pumpAndSettle();
@@ -64,8 +74,9 @@ void main() {
   });
 
   testWidgets('ticari rolde Hamurdan Ürün aracı listelenir', (tester) async {
-    await tester.pumpWidget(_wrap(_profile(AccountType.commercial)));
-    await tester.pumpAndSettle();
+    // Ticari tarafta Günlük Hızlı bölümü en altta; tüm kartların render
+    // olabilmesi için yüksek yüzey kullan.
+    await pumpTall(tester, AccountType.commercial);
     expect(find.text(AppStrings.calcDoughYieldTitle), findsOneWidget);
   });
 
@@ -83,16 +94,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('DoughScreen — stub'), findsOneWidget);
   });
-
-  // Liste uzadığı için tüm kartların render olabilmesi adına yüksek yüzey.
-  Future<void> pumpTall(WidgetTester tester, AccountType type) async {
-    tester.view.physicalSize = const Size(1200, 4000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(_wrap(_profile(type)));
-    await tester.pumpAndSettle();
-  }
 
   testWidgets('patron (ticari) patron kartını görür, çalışan kartını görmez', (
     tester,
@@ -112,4 +113,51 @@ void main() {
       expect(find.text(AppStrings.calcCostProfitTitle), findsNothing);
     },
   );
+
+  testWidgets('kategori bölüm başlıkları gösterilir', (tester) async {
+    await pumpTall(tester, AccountType.commercial);
+    expect(find.text(AppStrings.calcCatDailyQuickTitle), findsOneWidget);
+    expect(find.text(AppStrings.calcCatProductionTitle), findsOneWidget);
+    expect(find.text(AppStrings.calcCatBossCostTitle), findsOneWidget);
+    expect(find.text(AppStrings.calcCatSupplierTitle), findsOneWidget);
+  });
+
+  testWidgets('her kartta Offline rozeti + üstte offline notu var', (
+    tester,
+  ) async {
+    await pumpTall(tester, AccountType.individual);
+    // 7 araç (3 günlük + 4 üretim) → en az birkaç Offline rozeti.
+    expect(find.text(AppStrings.calcOfflineBadge), findsWidgets);
+    expect(find.text(AppStrings.calcHubOfflineNote), findsOneWidget);
+  });
+
+  testWidgets('patron sıralaması: Üretim, Maliyet/Kâr\'ın üstünde', (
+    tester,
+  ) async {
+    await pumpTall(tester, AccountType.commercial);
+    final production = tester
+        .getTopLeft(find.text(AppStrings.calcCatProductionTitle))
+        .dy;
+    final bossCost = tester
+        .getTopLeft(find.text(AppStrings.calcCatBossCostTitle))
+        .dy;
+    final supplier = tester
+        .getTopLeft(find.text(AppStrings.calcCatSupplierTitle))
+        .dy;
+    expect(production, lessThan(bossCost));
+    expect(bossCost, lessThan(supplier));
+  });
+
+  testWidgets('bireysel sıralaması: Günlük Hızlı, Üretim\'in üstünde', (
+    tester,
+  ) async {
+    await pumpTall(tester, AccountType.individual);
+    final daily = tester
+        .getTopLeft(find.text(AppStrings.calcCatDailyQuickTitle))
+        .dy;
+    final production = tester
+        .getTopLeft(find.text(AppStrings.calcCatProductionTitle))
+        .dy;
+    expect(daily, lessThan(production));
+  });
 }

@@ -1,3 +1,4 @@
+import 'package:firin_defter/features/bakery_panel/calculators/models/calculator_category.dart';
 import 'package:firin_defter/features/bakery_panel/calculators/models/calculator_role_visibility.dart';
 import 'package:firin_defter/features/bakery_panel/calculators/models/calculator_tool.dart';
 import 'package:firin_defter/features/bakery_panel/calculators/registry/calculator_tools_registry.dart';
@@ -132,6 +133,54 @@ void main() {
       final routes = CalculatorToolsRegistry.all.map((e) => e.route).toList();
       expect(ids.toSet().length, ids.length, reason: 'id tekrarı var');
       expect(routes.toSet().length, routes.length, reason: 'route tekrarı var');
+    });
+  });
+
+  group('groupedForAccount (kategori + rol sıralaması)', () {
+    test('bireysel: Günlük Hızlı önce, sonra Üretim; patron grupları yok', () {
+      final groups = CalculatorToolsRegistry.groupedForAccount(
+        AccountType.individual,
+      );
+      final cats = groups.map((g) => g.category).toList();
+      expect(cats, [
+        CalculatorCategory.dailyQuick,
+        CalculatorCategory.productionRecipe,
+      ]);
+      // dailyQuick içinde su sıcaklığı (çalışan) yer alır.
+      final daily = groups.first.tools.map((t) => t.id);
+      expect(daily, contains('water_temp'));
+    });
+
+    test('patron: Üretim → Maliyet/Kâr → Tedarikçi → Günlük sırası', () {
+      final groups = CalculatorToolsRegistry.groupedForAccount(
+        AccountType.commercial,
+      );
+      final cats = groups.map((g) => g.category).toList();
+      expect(cats, [
+        CalculatorCategory.productionRecipe,
+        CalculatorCategory.bossCostProfit,
+        CalculatorCategory.supplierDeal,
+        CalculatorCategory.dailyQuick,
+      ]);
+      // Üretim grubunun ilk aracı sabah üretim planlayıcı (en sık).
+      expect(groups.first.tools.first.id, 'morning_plan');
+    });
+
+    test('toptancı: hiç grup yok', () {
+      expect(
+        CalculatorToolsRegistry.groupedForAccount(AccountType.wholesaler),
+        isEmpty,
+      );
+    });
+
+    test('her görünür araç tam olarak bir gruba düşer', () {
+      for (final type in [AccountType.individual, AccountType.commercial]) {
+        final visible = CalculatorToolsRegistry.forAccount(type).length;
+        final grouped = CalculatorToolsRegistry.groupedForAccount(
+          type,
+        ).fold<int>(0, (sum, g) => sum + g.tools.length);
+        expect(grouped, visible, reason: '$type: araç sayısı korunmalı');
+      }
     });
   });
 }
