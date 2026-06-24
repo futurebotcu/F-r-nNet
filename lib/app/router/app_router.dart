@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/bakery_panel/calculators/screens/bakers_percentage_screen.dart';
+import '../../features/bakery_panel/calculators/screens/calculators_hub_screen.dart';
+import '../../features/bakery_panel/calculators/screens/cost_profit_screen.dart';
+import '../../features/bakery_panel/calculators/screens/dough_water_ratio_screen.dart';
+import '../../features/bakery_panel/calculators/screens/dough_yield_calculator_screen.dart';
+import '../../features/bakery_panel/calculators/screens/evening_discount_screen.dart';
+import '../../features/bakery_panel/calculators/screens/flour_price_hike_screen.dart';
+import '../../features/bakery_panel/calculators/screens/free_goods_screen.dart';
+import '../../features/bakery_panel/calculators/screens/morning_production_planner_screen.dart';
+import '../../features/bakery_panel/calculators/screens/oven_energy_screen.dart';
+import '../../features/bakery_panel/calculators/screens/recipe_scaler_screen.dart';
+import '../../features/bakery_panel/calculators/screens/sack_to_bread_screen.dart';
+import '../../features/bakery_panel/calculators/screens/water_temperature_screen.dart';
 import '../../features/bakery_panel/screens/bakery_panel_screen.dart';
-import '../../features/bakery_panel/screens/calculator_screen.dart';
 import '../../features/bakery_panel/screens/end_of_day_screen.dart';
 import '../../features/bakery_panel/screens/production_entry_screen.dart';
 import '../../features/bakery_panel/screens/recipe_detail_screen.dart';
@@ -87,7 +99,8 @@ class AppRoutes {
   const AppRoutes._();
 
   static const String splash = '/';
-  static const String onboarding = '/onboarding'; // legacy alias — Splash artık /auth'a gider
+  static const String onboarding =
+      '/onboarding'; // legacy alias — Splash artık /auth'a gider
   // Faz 2 Pass 3 — 3 sayfalık intro onboarding (ilk açılış değer anlatımı).
   static const String intro = '/intro';
   static const String authEntry = '/auth';
@@ -193,8 +206,24 @@ class AppRoutes {
     return '/dealers/$id/report?period=$period';
   }
 
-  // V1.2: standalone Hesaplama Makinesi (ticari + bireysel ortak araç)
+  // Modüler hesaplama merkezi — /calculator hub, araçlar alt route'larda.
   static const String calculator = '/calculator';
+  static const String calculatorDough = '/calculator/dough';
+  // Ortak modüller.
+  static const String calculatorMorningPlan = '/calculator/morning-plan';
+  static const String calculatorWaterRatio = '/calculator/water-ratio';
+  static const String calculatorSackBread = '/calculator/sack-bread';
+  static const String calculatorBakersPercent = '/calculator/bakers-percent';
+  static const String calculatorRecipeScale = '/calculator/recipe-scale';
+  // Çalışan modülü.
+  static const String calculatorWaterTemp = '/calculator/water-temp';
+  // Patron modülleri.
+  static const String calculatorCostProfit = '/calculator/cost-profit';
+  static const String calculatorFlourHike = '/calculator/flour-hike';
+  static const String calculatorOvenEnergy = '/calculator/oven-energy';
+  static const String calculatorFreeGoods = '/calculator/free-goods';
+  static const String calculatorEveningDiscount =
+      '/calculator/evening-discount';
 
   // V1.2: Bireysel (Usta) panel route'ları
   static const String workerProfile = '/worker/profile';
@@ -211,7 +240,8 @@ class AppRoutes {
   // V2 Social Core — donor `AppRoutes.postEdit` muadili. Owner-only edit
   // ekranı; SocialPostCard ⋮ menüsünden "Düzenle" push eder.
   static const String socialPostEdit = '/social/post';
-  static String socialPostEditFor(String postId) => '$socialPostEdit/$postId/edit';
+  static String socialPostEditFor(String postId) =>
+      '$socialPostEdit/$postId/edit';
 
   // V2 Social Core Commit 2 — story create + viewer (donor
   // `AppRoutes.createStories` + `AppRoutes.stories` muadili).
@@ -284,10 +314,7 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       return null;
     },
     routes: <RouteBase>[
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (_, __) => const SplashScreen(),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
       GoRoute(
         // Legacy mock onboarding — V1.3'te boot landing /auth'a taşındı.
         // Backward compat için ekran korunuyor (Supabase-off senaryosunda da
@@ -328,10 +355,7 @@ GoRouter createRouter({bool Function()? isAuthed}) {
         path: AppRoutes.legalAccountDeletion,
         builder: (_, __) => const AccountDeletionScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (_, __) => const LoginScreen(),
-      ),
+      GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
       GoRoute(
         path: AppRoutes.createProfile,
         builder: (_, state) {
@@ -373,8 +397,8 @@ GoRouter createRouter({bool Function()? isAuthed}) {
               final initial = seg == 'isyeri'
                   ? 1
                   : seg == 'ekipman'
-                      ? 2
-                      : 0;
+                  ? 2
+                  : 0;
               return _noTransition(
                 state,
                 ListingsScreen(initialSegment: initial),
@@ -399,18 +423,12 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       // Legacy tab route'ları → yeni kapsayıcılara redirect (geriye dönük
       // uyumluluk; eski deeplink/iç çağrı kırılmaz). /market/listings/:id gibi
       // alt route'lar AYRI GoRoute'lardır, bu redirect'lerden etkilenmez.
-      GoRoute(
-        path: AppRoutes.feed,
-        redirect: (_, __) => AppRoutes.community,
-      ),
+      GoRoute(path: AppRoutes.feed, redirect: (_, __) => AppRoutes.community),
       GoRoute(
         path: AppRoutes.groups,
         redirect: (_, __) => '${AppRoutes.community}?seg=groups',
       ),
-      GoRoute(
-        path: AppRoutes.jobs,
-        redirect: (_, __) => AppRoutes.listings,
-      ),
+      GoRoute(path: AppRoutes.jobs, redirect: (_, __) => AppRoutes.listings),
       GoRoute(
         path: AppRoutes.market,
         redirect: (_, __) => '${AppRoutes.listings}?seg=isyeri',
@@ -425,9 +443,8 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       // B2B Pazar — Alıcı teklif detayı (full-screen push).
       GoRoute(
         path: '/pazar/tekliflerim/:id',
-        builder: (_, state) => BuyerQuoteDetailScreen(
-          quoteRequestId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            BuyerQuoteDetailScreen(quoteRequestId: state.pathParameters['id']!),
       ),
 
       // B2B Pazar — ürün / kampanya / mağaza detay (full-screen push).
@@ -462,15 +479,13 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       ),
       GoRoute(
         path: '/pazar/magazam/urun/:id/duzenle',
-        builder: (_, state) => SupplierProductFormScreen(
-          productId: state.pathParameters['id'],
-        ),
+        builder: (_, state) =>
+            SupplierProductFormScreen(productId: state.pathParameters['id']),
       ),
       GoRoute(
         path: '/pazar/magazam/kampanya/:id/duzenle',
-        builder: (_, state) => SupplierCampaignFormScreen(
-          campaignId: state.pathParameters['id'],
-        ),
+        builder: (_, state) =>
+            SupplierCampaignFormScreen(campaignId: state.pathParameters['id']),
       ),
 
       // Profile — bottom nav'dan çıkarıldı ama route geriye dönük uyumluluk
@@ -485,9 +500,8 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       // (V2 Commit 4 cleanup — eski PublicProfileScreen tamamen silindi.)
       GoRoute(
         path: '${AppRoutes.userPublicProfile}/:userId',
-        builder: (_, state) => SocialProfilePage(
-          userId: state.pathParameters['userId']!,
-        ),
+        builder: (_, state) =>
+            SocialProfilePage(userId: state.pathParameters['userId']!),
       ),
       // F2 — Followers list (`/u/:userId/followers`).
       GoRoute(
@@ -531,9 +545,8 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       // SocialPostCard ⋮ menüsünden "Düzenle" push eder; owner-only.
       GoRoute(
         path: '${AppRoutes.socialPostEdit}/:postId/edit',
-        builder: (_, state) => SocialPostEditPage(
-          postId: state.pathParameters['postId']!,
-        ),
+        builder: (_, state) =>
+            SocialPostEditPage(postId: state.pathParameters['postId']!),
       ),
 
       // V2 Social Core Commit 2 — story create + viewer.
@@ -599,10 +612,7 @@ GoRouter createRouter({bool Function()? isAuthed}) {
             RecipeEditorScreen(recipeId: state.pathParameters['id']!),
       ),
       // Legacy alias — eski /panel/recipe çağrılarını yeni listeye redirect.
-      GoRoute(
-        path: AppRoutes.recipe,
-        redirect: (_, __) => AppRoutes.recipes,
-      ),
+      GoRoute(path: AppRoutes.recipe, redirect: (_, __) => AppRoutes.recipes),
       GoRoute(
         path: AppRoutes.production,
         builder: (_, __) => const ProductionEntryScreen(),
@@ -622,10 +632,7 @@ GoRouter createRouter({bool Function()? isAuthed}) {
         path: AppRoutes.endOfDay,
         builder: (_, __) => const EndOfDayScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.report,
-        builder: (_, __) => const ReportScreen(),
-      ),
+      GoRoute(path: AppRoutes.report, builder: (_, __) => const ReportScreen()),
 
       // Bayi Defteri mini-app shell (Sprint 6A). Eski DealerListScreen
       // shell'in "Bayiler" tab'ına embedlenir; tüm alt-route'lar
@@ -673,7 +680,8 @@ GoRouter createRouter({bool Function()? isAuthed}) {
         path: '${AppRoutes.dealerDrivers}/:driverId',
         builder: (_, state) => PatronDriverGuard(
           child: DriverScopedDealerShell(
-              driverId: state.pathParameters['driverId']!),
+            driverId: state.pathParameters['driverId']!,
+          ),
         ),
       ),
       // Sprint 3 — şoför read-only bayi detayı ('/dealers/assigned/:id').
@@ -705,33 +713,28 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/delivery',
-        builder: (_, state) => DealerDeliveryFormScreen(
-          dealerId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            DealerDeliveryFormScreen(dealerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/return',
-        builder: (_, state) => DealerReturnFormScreen(
-          dealerId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            DealerReturnFormScreen(dealerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/payment',
-        builder: (_, state) => DealerPaymentFormScreen(
-          dealerId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            DealerPaymentFormScreen(dealerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/share',
-        builder: (_, state) => DealerShareScreen(
-          dealerId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            DealerShareScreen(dealerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/adjustment',
-        builder: (_, state) => DealerAdjustmentFormScreen(
-          dealerId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            DealerAdjustmentFormScreen(dealerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${AppRoutes.dealers}/:id/report',
@@ -741,10 +744,58 @@ GoRouter createRouter({bool Function()? isAuthed}) {
         ),
       ),
 
-      // V1.2 — Standalone Hesaplama Makinesi
+      // Modüler hesaplama merkezi — /calculator hub, araçlar alt route'larda.
       GoRoute(
         path: AppRoutes.calculator,
-        builder: (_, __) => const CalculatorScreen(),
+        builder: (_, __) => const CalculatorsHubScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorDough,
+        builder: (_, __) => const DoughYieldCalculatorScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorMorningPlan,
+        builder: (_, __) => const MorningProductionPlannerScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorWaterRatio,
+        builder: (_, __) => const DoughWaterRatioScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorSackBread,
+        builder: (_, __) => const SackToBreadScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorBakersPercent,
+        builder: (_, __) => const BakersPercentageScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorRecipeScale,
+        builder: (_, __) => const RecipeScalerScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorWaterTemp,
+        builder: (_, __) => const WaterTemperatureScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorCostProfit,
+        builder: (_, __) => const CostProfitScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorFlourHike,
+        builder: (_, __) => const FlourPriceHikeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorOvenEnergy,
+        builder: (_, __) => const OvenEnergyScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorFreeGoods,
+        builder: (_, __) => const FreeGoodsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorEveningDiscount,
+        builder: (_, __) => const EveningDiscountScreen(),
       ),
 
       // V1.2 — Bireysel (Usta) panel ekranları
@@ -833,9 +884,8 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       ),
       GoRoute(
         path: '/market/listings/:id',
-        builder: (_, state) => MarketplaceDetailScreen(
-          listingId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            MarketplaceDetailScreen(listingId: state.pathParameters['id']!),
       ),
 
       // V1 — Messaging routes (tek canlı sistem: generic conversations).
@@ -852,9 +902,8 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       // yalniz /messages/:id (ChatScreen) full-screen push olarak kalir.
       GoRoute(
         path: '/messages/:id',
-        builder: (_, state) => ChatScreen(
-          conversationId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            ChatScreen(conversationId: state.pathParameters['id']!),
       ),
     ],
   );
