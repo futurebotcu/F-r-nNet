@@ -1358,33 +1358,45 @@ class AppStrings {
   static const String calcHubTitle = 'Hesaplama';
   static const String calcHubEmpty =
       'Bu hesap türü için şimdilik hesaplama aracı yok.';
+  // Hub UX cilası — kategori başlıkları, offline rozeti, kısa not.
+  static const String calcHubOfflineNote =
+      'Tüm hesaplar internet olmadan çalışır.';
+  static const String calcOfflineBadge = 'Offline';
+  static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
+  static const String calcCatProductionTitle = 'Üretim ve Reçete';
+  static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';
+  static const String calcCatSupplierTitle = 'Tedarikçi ve Pazarlık';
   static const String calcDoughYieldTitle = 'Hamurdan Ürün';
-  static const String calcDoughYieldSub = 'Un, su, maya, tuz → tahmini adet';
+  static const String calcDoughYieldSub =
+      'Hamurdan kaç ürün çıkar, hızlıca gör';
   // Ortak modüller (ticari + bireysel).
   static const String calcMorningPlanTitle = 'Sabah Üretim Planlayıcı';
-  static const String calcMorningPlanSub = 'Adetten un, su, maya, tuz planı';
+  static const String calcMorningPlanSub =
+      'Kaç ürün için ne kadar un, su, maya, tuz?';
   static const String calcWaterRatioTitle = 'Hamur Su Oranı Ustası';
-  static const String calcWaterRatioSub = 'Su / un oranı ve kıvam yorumu';
+  static const String calcWaterRatioSub = 'Hamurun kıvamı: su az mı, ideal mi?';
   static const String calcSackBreadTitle = 'Çuvaldan Kaç Ekmek?';
-  static const String calcSackBreadSub = 'Çuval sayısından tahmini adet';
+  static const String calcSackBreadSub = 'Çuvaldan kaç ekmek çıkar, hesapla';
   static const String calcBakersPercentTitle = 'Fırıncı Yüzdesi';
-  static const String calcBakersPercentSub = 'Un %100, malzemeler yüzdeyle';
+  static const String calcBakersPercentSub = 'Una göre su, maya, tuz miktarı';
   static const String calcRecipeScaleTitle = 'Reçete Büyüt / Küçült';
-  static const String calcRecipeScaleSub = 'Hedefe göre malzeme ölçekle';
+  static const String calcRecipeScaleSub = 'Reçeteyi büyüt ya da küçült';
   // Çalışan modülü (yalnız bireysel).
   static const String calcWaterTempTitle = 'Hamur Suyu Sıcaklığı';
-  static const String calcWaterTempSub = 'Hedef hamur ısısı için su sıcaklığı';
+  static const String calcWaterTempSub =
+      'Hamur tutsun diye su kaç derece olmalı?';
   // Patron modülleri (yalnız ticari).
   static const String calcCostProfitTitle = 'Gerçek Maliyet + Kâr';
-  static const String calcCostProfitSub = 'Maliyet, adet başı kâr, kâr oranı';
+  static const String calcCostProfitSub =
+      'Ürün başı maliyetin ve kârın ne kadar?';
   static const String calcFlourHikeTitle = 'Un Zammı Etki Hesabı';
-  static const String calcFlourHikeSub = 'Zammın günlük / aylık etkisi';
+  static const String calcFlourHikeSub = 'Un zammı cebine ne kadar yansır?';
   static const String calcOvenEnergyTitle = 'Fırın Enerji Maliyeti';
-  static const String calcOvenEnergySub = 'kW × saat × birim fiyat';
+  static const String calcOvenEnergySub = 'Fırının günlük enerji gideri';
   static const String calcFreeGoodsTitle = 'Bedelsiz Kampanya Çözücü';
-  static const String calcFreeGoodsSub = 'Bedelsizle gerçek birim fiyat';
+  static const String calcFreeGoodsSub = 'Bedelsizle gerçek çuval fiyatı';
   static const String calcEveningDiscountTitle = 'Akşam İndirim Robotu';
-  static const String calcEveningDiscountSub = 'Zarar etmeden minimum fiyat';
+  static const String calcEveningDiscountSub = 'Zarar etmeden indirim sınırı';
   static const String cardWorkerProfile = 'Ustalık Bilgilerim';
   static const String cardWorkerProfileSub = 'Meslek, tecrübe, beceri';
   static const String cardWorkerExperiences = 'Çalışma Geçmişim';

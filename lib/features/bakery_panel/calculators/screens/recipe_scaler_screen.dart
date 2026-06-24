@@ -66,8 +66,7 @@ class _RecipeScalerScreenState extends State<RecipeScalerScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcRecipeScaleTitle,
-      hint:
-          'Çarpan = yeni hedef / eski hedef. Tüm malzemeler orantılı ölçeklenir.',
+      hint: 'Reçeteyi yeni hedefe göre büyütür ya da küçültür.',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(label: 'Eski hedef (adet / kg)', controller: _oldTarget),

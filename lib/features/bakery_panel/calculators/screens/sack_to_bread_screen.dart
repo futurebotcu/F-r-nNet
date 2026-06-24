@@ -60,7 +60,7 @@ class _SackToBreadScreenState extends State<SackToBreadScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcSackBreadTitle,
-      hint: 'Çuval sayısından tahmini ekmek adedi (un + su kaldırma − fire).',
+      hint: 'Çuval sayısından kaç ekmek çıkacağını tahmin eder.',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(

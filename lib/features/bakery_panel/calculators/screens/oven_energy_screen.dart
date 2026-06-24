@@ -57,7 +57,7 @@ class _OvenEnergyScreenState extends State<OvenEnergyScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcOvenEnergyTitle,
-      hint: 'Enerji maliyeti = güç × süre × birim fiyat.',
+      hint: 'Fırının günlük enerji giderini ve ürün başı payını gösterir.',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(label: 'Fırın gücü', controller: _power, suffix: 'kW'),

@@ -64,7 +64,7 @@ class _DoughWaterRatioScreenState extends State<DoughWaterRatioScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcWaterRatioTitle,
-      hint: 'Su / un × 100. 65–70 arası genelde ideal kabul edilir.',
+      hint: 'Hamurun kıvamını söyler: su az mı, ideal mi, fazla mı?',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(label: 'Un', controller: _flour, suffix: 'kg'),

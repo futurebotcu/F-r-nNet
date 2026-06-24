@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../profile/models/bakery_profile.dart';
+import '../models/calculator_category.dart';
 import '../models/calculator_role_visibility.dart';
 import '../models/calculator_tool.dart';
 
@@ -27,6 +28,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcDoughYieldSub,
       icon: Icons.bakery_dining_outlined,
       route: AppRoutes.calculatorDough,
+      category: CalculatorCategory.dailyQuick,
       // Bugünkü davranış: hamur hesabı ticari + bireysel tarafta görünür
       // (toptancı dashboard'ında hesaplama kartı yok). Rol kararları ileride
       // değişebilir; değişiklik tek nokta olarak burada yapılır.
@@ -40,6 +42,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcMorningPlanSub,
       icon: Icons.wb_sunny_outlined,
       route: AppRoutes.calculatorMorningPlan,
+      category: CalculatorCategory.productionRecipe,
       visibility: CalculatorRoleVisibility.producers,
     ),
     CalculatorTool(
@@ -48,6 +51,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcWaterRatioSub,
       icon: Icons.water_drop_outlined,
       route: AppRoutes.calculatorWaterRatio,
+      category: CalculatorCategory.dailyQuick,
       visibility: CalculatorRoleVisibility.producers,
     ),
     CalculatorTool(
@@ -56,6 +60,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcSackBreadSub,
       icon: Icons.inventory_2_outlined,
       route: AppRoutes.calculatorSackBread,
+      category: CalculatorCategory.productionRecipe,
       visibility: CalculatorRoleVisibility.producers,
     ),
     CalculatorTool(
@@ -64,6 +69,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcBakersPercentSub,
       icon: Icons.percent_rounded,
       route: AppRoutes.calculatorBakersPercent,
+      category: CalculatorCategory.productionRecipe,
       visibility: CalculatorRoleVisibility.producers,
     ),
     CalculatorTool(
@@ -72,6 +78,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcRecipeScaleSub,
       icon: Icons.unfold_more_rounded,
       route: AppRoutes.calculatorRecipeScale,
+      category: CalculatorCategory.productionRecipe,
       visibility: CalculatorRoleVisibility.producers,
     ),
 
@@ -82,6 +89,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcWaterTempSub,
       icon: Icons.thermostat_outlined,
       route: AppRoutes.calculatorWaterTemp,
+      category: CalculatorCategory.dailyQuick,
       visibility: CalculatorRoleVisibility.individualOnly,
     ),
 
@@ -92,6 +100,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcCostProfitSub,
       icon: Icons.trending_up_rounded,
       route: AppRoutes.calculatorCostProfit,
+      category: CalculatorCategory.bossCostProfit,
       visibility: CalculatorRoleVisibility.commercialOnly,
     ),
     CalculatorTool(
@@ -100,6 +109,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcFlourHikeSub,
       icon: Icons.show_chart_rounded,
       route: AppRoutes.calculatorFlourHike,
+      category: CalculatorCategory.supplierDeal,
       visibility: CalculatorRoleVisibility.commercialOnly,
     ),
     CalculatorTool(
@@ -108,6 +118,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcOvenEnergySub,
       icon: Icons.bolt_rounded,
       route: AppRoutes.calculatorOvenEnergy,
+      category: CalculatorCategory.bossCostProfit,
       visibility: CalculatorRoleVisibility.commercialOnly,
     ),
     CalculatorTool(
@@ -116,6 +127,7 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcFreeGoodsSub,
       icon: Icons.card_giftcard_outlined,
       route: AppRoutes.calculatorFreeGoods,
+      category: CalculatorCategory.supplierDeal,
       visibility: CalculatorRoleVisibility.commercialOnly,
     ),
     CalculatorTool(
@@ -124,14 +136,66 @@ class CalculatorToolsRegistry {
       description: AppStrings.calcEveningDiscountSub,
       icon: Icons.price_change_outlined,
       route: AppRoutes.calculatorEveningDiscount,
+      category: CalculatorCategory.bossCostProfit,
       visibility: CalculatorRoleVisibility.commercialOnly,
     ),
   ];
 
-  /// [type] hesap türüne görünür ve etkin araçlar.
+  /// [type] hesap türüne görünür ve etkin araçlar (registry ham sırasında).
   static List<CalculatorTool> forAccount(AccountType type) {
     return all
         .where((tool) => tool.enabled && tool.isVisibleTo(type))
         .toList(growable: false);
   }
+
+  /// Hub'ta gösterilecek kategori sırası. En sık kullanılan grup üstte;
+  /// sıralama role göre değişir (bireysel günlük hesaplarla, patron üretim/
+  /// maliyetle başlar). Tek karar noktası buradadır.
+  static List<CalculatorCategory> _categoryOrder(AccountType type) {
+    switch (type) {
+      case AccountType.individual:
+        // Usta/çalışan: önce hamur & günlük hesaplar, sonra üretim.
+        return const [
+          CalculatorCategory.dailyQuick,
+          CalculatorCategory.productionRecipe,
+          CalculatorCategory.bossCostProfit,
+          CalculatorCategory.supplierDeal,
+        ];
+      case AccountType.commercial:
+        // Patron: önce sabah üretim, maliyet/kâr/enerji, sonra tedarikçi.
+        return const [
+          CalculatorCategory.productionRecipe,
+          CalculatorCategory.bossCostProfit,
+          CalculatorCategory.supplierDeal,
+          CalculatorCategory.dailyQuick,
+        ];
+      case AccountType.wholesaler:
+        return const [];
+    }
+  }
+
+  /// [type] için kategoriye göre gruplanmış, rol-sıralı araç bölümleri.
+  /// Boş kategori atlanır. Bölüm içi sıra registry ham sırasıdır (en sık
+  /// kullanılan üstte). Hub ekranı bunu doğrudan çizer.
+  static List<CalculatorToolGroup> groupedForAccount(AccountType type) {
+    final visible = forAccount(type);
+    final groups = <CalculatorToolGroup>[];
+    for (final category in _categoryOrder(type)) {
+      final tools = visible
+          .where((tool) => tool.category == category)
+          .toList(growable: false);
+      if (tools.isNotEmpty) {
+        groups.add(CalculatorToolGroup(category: category, tools: tools));
+      }
+    }
+    return groups;
+  }
+}
+
+/// Hub'ta tek bir kategori bölümü: başlık (kategori) + o role görünür araçlar.
+class CalculatorToolGroup {
+  const CalculatorToolGroup({required this.category, required this.tools});
+
+  final CalculatorCategory category;
+  final List<CalculatorTool> tools;
 }

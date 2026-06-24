@@ -54,8 +54,7 @@ class _FlourPriceHikeScreenState extends State<FlourPriceHikeScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcFlourHikeTitle,
-      hint:
-          'Çuval fiyat farkının günlük ve aylık maliyet etkisi (ay = 30 gün).',
+      hint: 'Un zammı günlük ve aylık ne kadar ek yük getiriyor? (ay = 30 gün)',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(

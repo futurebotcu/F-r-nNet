@@ -60,7 +60,7 @@ class _BakersPercentageScreenState extends State<BakersPercentageScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcBakersPercentTitle,
-      hint: 'Un = %100. Her malzeme un ağırlığının yüzdesi olarak hesaplanır.',
+      hint: 'Una göre su, maya ve tuz miktarını verir.',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(label: 'Un', controller: _flour, suffix: 'kg'),

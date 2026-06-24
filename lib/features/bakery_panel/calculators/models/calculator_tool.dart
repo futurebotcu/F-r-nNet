@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../profile/models/bakery_profile.dart';
+import 'calculator_category.dart';
 import 'calculator_role_visibility.dart';
 
 /// Hesaplama merkezindeki tek bir araç (modül) tanımı.
@@ -16,6 +17,7 @@ class CalculatorTool {
     required this.description,
     required this.icon,
     required this.route,
+    this.category = CalculatorCategory.dailyQuick,
     this.visibility = CalculatorRoleVisibility.producers,
     this.enabled = true,
   });
@@ -29,6 +31,10 @@ class CalculatorTool {
 
   /// Aracın tam ekran route'u (`/calculator/...`).
   final String route;
+
+  /// Hub'da hangi bölümde listeleneceği. Bölüm sırası role göre registry'de
+  /// belirlenir; kategori-araç eşlemesi tek noktada burada tutulur.
+  final CalculatorCategory category;
 
   /// Hangi hesap türlerine görünür. Görünürlük kararları ileride
   /// değişebilir; sertleştirme registry'de tek noktada yapılır.
