@@ -3,63 +3,44 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../app/router/app_router.dart';
-import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_tokens.dart';
-import '../../../core/utils/number_formatter.dart';
-import '../../../core/widgets/app_number_field.dart';
-import '../../../core/widgets/app_primary_button.dart';
-import '../../../core/widgets/premium/premium_card.dart';
-import '../../../core/widgets/premium/premium_scaffold.dart';
-import '../../../core/widgets/premium/stat_card.dart';
-import '../models/recipe_quantities.dart';
-import '../models/recipe.dart' show RecipeResult;
-import '../providers/bakery_providers.dart';
+import '../../../../app/router/app_router.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/widgets/app_number_field.dart';
+import '../../../../core/widgets/app_primary_button.dart';
+import '../../../../core/widgets/premium/premium_card.dart';
+import '../../../../core/widgets/premium/premium_scaffold.dart';
+import '../../models/recipe.dart' show RecipeResult;
+import '../../models/recipe_quantities.dart';
+import '../services/dough_yield_calculator.dart';
+import '../widgets/calculator_quantity_row.dart';
+import '../widgets/calculator_result_grid.dart';
 
-/// Standalone Hesaplama Makinesi.
+/// "Hamurdan Ürün" hesabı — eski standalone Hesaplama Makinesi.
 ///
-/// Reçete kaydetmeden hızlı hesap için ayrı route. Aynı motor
-/// (`RecipeCalculator.calculateFromQuantities`) — sonuç hem ticari hem
-/// bireysel panelde kullanılabilir.
+/// Reçete kaydetmeden hızlı hesap için. Saf motor
+/// ([DoughYieldCalculator] → `RecipeCalculator.calculateFromQuantities`)
+/// UI'dan ayrıdır. Davranış değişmedi; yalnız modüler hesaplama merkezine
+/// (calculators/) taşındı ve ortak widget'lara bölündü.
 ///
 /// Aksiyonlar:
 /// - Hesapla
-/// - Reçete olarak kaydet (`/recipes/new` push, alan ön doldurma için
-///   şu an basit yönlendirme)
+/// - Reçete olarak kaydet (`/recipes/new` push)
 /// - WhatsApp / sistem paylaşımı (`share_plus`)
-class CalculatorScreen extends ConsumerStatefulWidget {
-  const CalculatorScreen({super.key});
+class DoughYieldCalculatorScreen extends ConsumerStatefulWidget {
+  const DoughYieldCalculatorScreen({super.key});
 
   @override
-  ConsumerState<CalculatorScreen> createState() => _CalculatorScreenState();
+  ConsumerState<DoughYieldCalculatorScreen> createState() =>
+      _DoughYieldCalculatorScreenState();
 }
 
-enum _MassUnit { kg, gr, l }
+class _DoughYieldCalculatorScreenState
+    extends ConsumerState<DoughYieldCalculatorScreen> {
+  static const DoughYieldCalculator _calculator = DoughYieldCalculator();
 
-extension on _MassUnit {
-  String get label {
-    switch (this) {
-      case _MassUnit.kg:
-        return 'kg';
-      case _MassUnit.gr:
-        return 'gr';
-      case _MassUnit.l:
-        return 'L';
-    }
-  }
-}
-
-double _toKg(double value, _MassUnit unit) {
-  switch (unit) {
-    case _MassUnit.kg:
-    case _MassUnit.l:
-      return value;
-    case _MassUnit.gr:
-      return value / 1000.0;
-  }
-}
-
-class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   // Default brief örneği — açılışta 316 adet veren değerler.
   final _flour = TextEditingController(text: '50');
   final _water = TextEditingController(text: '30');
@@ -68,10 +49,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   final _piece = TextEditingController(text: '250');
   final _waste = TextEditingController(text: '2.445');
 
-  _MassUnit _waterUnit = _MassUnit.l;
-  _MassUnit _yeastUnit = _MassUnit.gr;
-  _MassUnit _saltUnit = _MassUnit.kg;
-  _MassUnit _wasteUnit = _MassUnit.kg;
+  MassUnit _waterUnit = MassUnit.l;
+  MassUnit _yeastUnit = MassUnit.gr;
+  MassUnit _saltUnit = MassUnit.kg;
+  MassUnit _wasteUnit = MassUnit.kg;
 
   RecipeResult? _result;
 
@@ -95,19 +76,18 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   RecipeQuantities _readQuantities() {
     return RecipeQuantities(
       flourKg: NumberFormatter.parseLoose(_flour.text),
-      waterKg: _toKg(NumberFormatter.parseLoose(_water.text), _waterUnit),
-      yeastKg: _toKg(NumberFormatter.parseLoose(_yeast.text), _yeastUnit),
-      saltKg: _toKg(NumberFormatter.parseLoose(_salt.text), _saltUnit),
+      waterKg: massToKg(NumberFormatter.parseLoose(_water.text), _waterUnit),
+      yeastKg: massToKg(NumberFormatter.parseLoose(_yeast.text), _yeastUnit),
+      saltKg: massToKg(NumberFormatter.parseLoose(_salt.text), _saltUnit),
       pieceWeightG: NumberFormatter.parseLoose(_piece.text),
       wasteKg: _waste.text.trim().isEmpty
           ? 0.0
-          : _toKg(NumberFormatter.parseLoose(_waste.text), _wasteUnit),
+          : massToKg(NumberFormatter.parseLoose(_waste.text), _wasteUnit),
     );
   }
 
   void _recalculate() {
-    final calc = ref.read(recipeCalculatorProvider);
-    setState(() => _result = calc.calculateFromQuantities(_readQuantities()));
+    setState(() => _result = _calculator.calculate(_readQuantities()));
   }
 
   Future<void> _share() async {
@@ -140,8 +120,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
   void _saveAsRecipe() {
     // Yeni reçete sihirbazına geç — kullanıcı orada ürün adı, malzemeler,
-    // adımlar gibi ek alanları doldurup kaydedebilir. Şu an quantity
-    // değerlerini editöre ön doldurma kapsam dışı (V1.2 minimal).
+    // adımlar gibi ek alanları doldurup kaydedebilir. Quantity değerlerini
+    // editöre ön doldurma şu an kapsam dışı (davranış korundu).
     context.push(AppRoutes.recipeNew);
   }
 
@@ -149,7 +129,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   Widget build(BuildContext context) {
     return PremiumScaffold(
       appBar: AppBar(
-        title: const Text('Hesaplama Makinesi'),
+        title: const Text(AppStrings.calcDoughYieldTitle),
         actions: [
           IconButton(
             tooltip: 'Paylaş',
@@ -171,27 +151,27 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             const SizedBox(height: AppSpacing.l),
             AppNumberField(label: 'Un (kg)', controller: _flour, suffix: 'kg'),
             const SizedBox(height: AppSpacing.s),
-            _QuantityRow(
+            CalculatorQuantityRow(
               label: 'Su',
               controller: _water,
               unit: _waterUnit,
-              units: const [_MassUnit.l, _MassUnit.kg],
+              units: const [MassUnit.l, MassUnit.kg],
               onUnitChanged: (u) => setState(() => _waterUnit = u),
             ),
             const SizedBox(height: AppSpacing.s),
-            _QuantityRow(
+            CalculatorQuantityRow(
               label: 'Maya',
               controller: _yeast,
               unit: _yeastUnit,
-              units: const [_MassUnit.gr, _MassUnit.kg],
+              units: const [MassUnit.gr, MassUnit.kg],
               onUnitChanged: (u) => setState(() => _yeastUnit = u),
             ),
             const SizedBox(height: AppSpacing.s),
-            _QuantityRow(
+            CalculatorQuantityRow(
               label: 'Tuz',
               controller: _salt,
               unit: _saltUnit,
-              units: const [_MassUnit.kg, _MassUnit.gr],
+              units: const [MassUnit.kg, MassUnit.gr],
               onUnitChanged: (u) => setState(() => _saltUnit = u),
             ),
             const SizedBox(height: AppSpacing.s),
@@ -201,11 +181,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               suffix: 'gr',
             ),
             const SizedBox(height: AppSpacing.s),
-            _QuantityRow(
+            CalculatorQuantityRow(
               label: 'Fire / kayıp (opsiyonel)',
               controller: _waste,
               unit: _wasteUnit,
-              units: const [_MassUnit.kg, _MassUnit.gr],
+              units: const [MassUnit.kg, MassUnit.gr],
               onUnitChanged: (u) => setState(() => _wasteUnit = u),
               hint: 'Boşsa 0 sayılır',
             ),
@@ -218,7 +198,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             if (_result != null) ...[
               const SizedBox(height: AppSpacing.xl),
               const _Section(label: 'SONUÇ'),
-              _ResultGrid(result: _result!),
+              CalculatorResultGrid(result: _result!),
               const SizedBox(height: AppSpacing.l),
               Row(
                 children: [
@@ -307,123 +287,6 @@ class _Section extends StatelessWidget {
           letterSpacing: 1.4,
         ),
       ),
-    );
-  }
-}
-
-class _ResultGrid extends StatelessWidget {
-  const _ResultGrid({required this.result});
-  final RecipeResult result;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: StatCard(
-                icon: Icons.scale_outlined,
-                label: 'Toplam hamur',
-                value: '${NumberFormatter.decimal(result.totalDoughKg)} kg',
-              ),
-            ),
-            const SizedBox(width: AppSpacing.m),
-            Expanded(
-              child: StatCard(
-                icon: Icons.cleaning_services_outlined,
-                label: 'Net hamur',
-                value:
-                    '${NumberFormatter.decimal(result.doughAfterWasteKg)} kg',
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.m),
-        StatCard(
-          warm: true,
-          hero: true,
-          icon: Icons.bakery_dining_outlined,
-          label: 'Tahmini adet',
-          value: NumberFormatter.integer(result.estimatedPieces),
-          accent: AppColors.softGold,
-        ),
-      ],
-    );
-  }
-}
-
-class _QuantityRow extends StatelessWidget {
-  const _QuantityRow({
-    required this.label,
-    required this.controller,
-    required this.unit,
-    required this.units,
-    required this.onUnitChanged,
-    this.hint,
-  });
-  final String label;
-  final TextEditingController controller;
-  final _MassUnit unit;
-  final List<_MassUnit> units;
-  final ValueChanged<_MassUnit> onUnitChanged;
-  final String? hint;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppNumberField(
-            label: label,
-            controller: controller,
-            suffix: unit.label,
-            hint: hint,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.s),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(color: AppColors.borderHairline, width: 0.6),
-          ),
-          padding: const EdgeInsets.all(3),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final o in units)
-                GestureDetector(
-                  onTap: () => onUnitChanged(o),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: o == unit
-                          ? AppColors.copper.withValues(alpha: 0.30)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    child: Text(
-                      o.label,
-                      style: TextStyle(
-                        color: o == unit
-                            ? AppColors.softGold
-                            : AppColors.textMuted,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

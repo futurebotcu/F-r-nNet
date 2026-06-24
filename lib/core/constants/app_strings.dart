@@ -39,8 +39,7 @@ class AppStrings {
   static const String roleCommercialSub =
       'Fırın işletmesi, bayi ve üretim yönetimi';
   static const String roleIndividualTitle = 'Usta / Çalışan';
-  static const String roleIndividualSub =
-      'Usta profili, iş arama ve reçeteler';
+  static const String roleIndividualSub = 'Usta profili, iş arama ve reçeteler';
   static const String roleWholesalerTitle = 'Tedarikçi / Toptancı';
   static const String roleWholesalerSub =
       'Müşteri, ürün, fiyat ve teslimat yönetimi';
@@ -84,8 +83,7 @@ class AppStrings {
   static const String authRequiredKeepBrowsing = 'Şimdilik gezmeye devam et';
 
   // V1.3.1 — Profile create escape hatch
-  static const String profileCreateGuestEscape =
-      'Üye olmadan gezmeye devam et';
+  static const String profileCreateGuestEscape = 'Üye olmadan gezmeye devam et';
   static const String profileCreateGuestHint =
       'İstersen daha sonra hesap oluşturabilirsin.';
   static const String profileCreateDiscardTitle = 'Formdan çıkılsın mı?';
@@ -196,8 +194,7 @@ class AppStrings {
       'İlk gönderiyi sen paylaş — sektörün gündemi buradan büyür.';
   static const String feedComposerNewPostCta = 'Paylaş';
   // Social UI Polish Sprint 1 — inline composer card.
-  static const String feedComposerInlinePlaceholder =
-      'Ne paylaşmak istersin?';
+  static const String feedComposerInlinePlaceholder = 'Ne paylaşmak istersin?';
   static const String feedComposerInlineCtaPhoto = 'Fotoğraf';
   static const String feedComposerInlineCtaQuestion = 'Soru';
   static const String feedComposerInlineCtaProduction = 'Üretim';
@@ -310,8 +307,7 @@ class AppStrings {
   static const String postEditTitle = 'Gönderiyi düzenle';
   static const String postEditSaveCta = 'Kaydet';
   static const String postEditCancelCta = 'Vazgeç';
-  static const String postEditEmptyError =
-      'Metin boş olamaz — bir şeyler yaz.';
+  static const String postEditEmptyError = 'Metin boş olamaz — bir şeyler yaz.';
   static const String postEditSavedSnack = 'Gönderi güncellendi.';
   static const String postEditError =
       'Gönderi güncellenemedi. Tekrar dener misin?';
@@ -361,13 +357,11 @@ class AppStrings {
   static const String feedSaveUpdateError =
       'Kaydetme işlemi tamamlanamadı. Lütfen tekrar dene.';
   // V1 P1-B — Feed yorumlar gerçek UI'a bağlandı; eski snackbar kaldırıldı.
-  static const String feedActionCommentSnack =
-      'Yorumlar yükleniyor…';
+  static const String feedActionCommentSnack = 'Yorumlar yükleniyor…';
   static const String feedCommentSheetTitle = 'Yorumlar';
   static const String feedCommentComposerHint = 'Yorum yaz…';
   static const String feedCommentSendCta = 'Gönder';
-  static const String feedCommentEmpty =
-      'Henüz yorum yok. İlk yorumu sen yaz.';
+  static const String feedCommentEmpty = 'Henüz yorum yok. İlk yorumu sen yaz.';
   static const String feedCommentEmptyGuest =
       'Henüz yorum yok. Üye olunca ilk yorumu sen atabilirsin.';
   static const String feedCommentErrorGeneric =
@@ -464,19 +458,15 @@ class AppStrings {
   static const String groupJoinRequestPending = 'İstek gönderildi';
   static const String groupJoinRequestRejectedLabel = 'İstek reddedildi';
   static const String groupJoinRequestResend = 'Tekrar istek gönder';
-  static const String groupJoinRequestSent =
-      'Katılma isteğin gönderildi.';
+  static const String groupJoinRequestSent = 'Katılma isteğin gönderildi.';
   static const String groupJoinRequestError =
       'Katılma isteği gönderilemedi. Lütfen tekrar dene.';
-  static const String groupJoinRequestApproved =
-      'Katılım isteği kabul edildi.';
-  static const String groupJoinRequestRejected =
-      'Katılım isteği reddedildi.';
+  static const String groupJoinRequestApproved = 'Katılım isteği kabul edildi.';
+  static const String groupJoinRequestRejected = 'Katılım isteği reddedildi.';
   static const String groupJoinRequestDecideError =
       'İstek güncellenemedi. Lütfen tekrar dene.';
   static const String groupJoinRequestsTitle = 'Katılım istekleri';
-  static const String groupJoinRequestsEmpty =
-      'Bekleyen katılım isteği yok.';
+  static const String groupJoinRequestsEmpty = 'Bekleyen katılım isteği yok.';
   static const String groupPrivateInfo =
       'Bu grup katılım onaylıdır. İçeriği görmek için katılma isteği gönderebilirsin.';
   static const String groupApprovalRequiredBadge = 'Katılım onaylı';
@@ -492,8 +482,7 @@ class AppStrings {
   /// V1 Sprint 2 — Üyeler / Yönet / Gruptan çık / Grubu kapat metinleri.
   static const String groupManage = 'Yönet';
   static const String groupMembers = 'Üyeler';
-  static const String groupMembersEmpty =
-      'Bu grubun üyeleri henüz görünmüyor.';
+  static const String groupMembersEmpty = 'Bu grubun üyeleri henüz görünmüyor.';
   static const String groupFounder = 'Kurucu';
   static const String groupRemoveMember = 'Üyeyi çıkar';
   static const String groupLeave = 'Gruptan çık';
@@ -678,7 +667,8 @@ class AppStrings {
 
   // V1 — Job messaging (job_conversations + job_messages)
   static const String messagesTitle = 'Mesajlar';
-  static const String messagesSubtitle = 'İlanlar üzerinden başlattığın sohbetler';
+  static const String messagesSubtitle =
+      'İlanlar üzerinden başlattığın sohbetler';
   static const String messagesEmpty =
       'Henüz mesaj yok. Bir ilana başvurduğunda veya iletişime geçtiğinde '
       'sohbetler burada görünür.';
@@ -746,14 +736,12 @@ class AppStrings {
   // Tile etiketleri
   // FırınNet ID — sadece sahibine gösterilir; public alanlarda yok.
   static const String settingsFirinnetIdTitle = 'FırınNet ID';
-  static const String settingsFirinnetIdCopied =
-      'FırınNet ID kopyalandı.';
+  static const String settingsFirinnetIdCopied = 'FırınNet ID kopyalandı.';
   static const String settingsEditProfile = 'Profilimi düzenle';
   static const String settingsEditProfileSubtitle =
       'Ad, hesap türü, şehir ve meslek rozetini güncelle.';
   static const String settingsSignOut = 'Çıkış yap';
-  static const String settingsSignOutSubtitle =
-      'Bu cihazda oturumunu kapat.';
+  static const String settingsSignOutSubtitle = 'Bu cihazda oturumunu kapat.';
   static const String settingsDeleteAccount = 'Hesabımı sil';
   static const String settingsDeleteAccountSubtitle =
       'Hesabını ve tüm verilerini kalıcı olarak siler.';
@@ -985,8 +973,7 @@ class AppStrings {
       'Fotoğraf yüklenemedi. Lütfen tekrar dene.';
   static const String profileEditSaveCta = 'Kaydet';
   static const String profileEditSaving = 'Kaydediliyor…';
-  static const String profileEditSaveSuccess =
-      'Profil bilgilerin güncellendi.';
+  static const String profileEditSaveSuccess = 'Profil bilgilerin güncellendi.';
   static const String profileEditSaveError =
       'Kaydedilemedi. Lütfen tekrar dene.';
   static const String profileEditNameRequired = 'Adın boş olamaz.';
@@ -1058,8 +1045,7 @@ class AppStrings {
   static const String reportSubmit = 'Gönder';
   static const String reportSuccessBanner =
       'Şikayetin alındı. Ekibimiz inceleyecek.';
-  static const String reportDuplicateBanner =
-      'Bu içeriği zaten şikayet ettin.';
+  static const String reportDuplicateBanner = 'Bu içeriği zaten şikayet ettin.';
   static const String reportErrorBanner =
       'Şikayet gönderilemedi. Bağlantını kontrol edip tekrar dene.';
   static const String safetyActionReport = 'Şikayet et';
@@ -1073,8 +1059,7 @@ class AppStrings {
   static const String blockSuccessBanner = 'Kullanıcı engellendi.';
   static const String blockAlreadyBanner = 'Bu kullanıcı zaten engelli.';
   static const String unblockSuccessBanner = 'Engel kaldırıldı.';
-  static const String safetyErrorBanner =
-      'İşlem tamamlanamadı. Tekrar dene.';
+  static const String safetyErrorBanner = 'İşlem tamamlanamadı. Tekrar dene.';
   // Engellenen kullanıcının yorum/grup mesajı yerine gösterilen placeholder.
   static const String blockedContentPlaceholder =
       'Engellediğin kullanıcıdan içerik';
@@ -1213,15 +1198,15 @@ class AppStrings {
   // V1 Market M2: ekipman alt kategorisi (listing_type=equipment_sale için).
   static const Map<String, String> marketEquipmentCategoryLabels =
       <String, String>{
-    'oven': 'Fırın',
-    'mixer': 'Hamur karıştırıcı',
-    'dough_divider': 'Hamur böleri',
-    'proofing': 'Mayalama dolabı',
-    'refrigerator': 'Buzdolabı',
-    'display_counter': 'Vitrin / Reyon',
-    'vehicle': 'Servis aracı',
-    'other': 'Diğer',
-  };
+        'oven': 'Fırın',
+        'mixer': 'Hamur karıştırıcı',
+        'dough_divider': 'Hamur böleri',
+        'proofing': 'Mayalama dolabı',
+        'refrigerator': 'Buzdolabı',
+        'display_counter': 'Vitrin / Reyon',
+        'vehicle': 'Servis aracı',
+        'other': 'Diğer',
+      };
 
   // V1 Market M2 — UI labels
   static const String marketFilterCta = 'Filtrele';
@@ -1280,8 +1265,7 @@ class AppStrings {
   static const String marketListingFieldRentPrice = 'Aylık kira (₺)';
   static const String marketListingFieldTransferPrice = 'Devir bedeli (₺)';
   static const String marketListingFieldAreaM2 = 'Alan (m²)';
-  static const String marketListingFieldEquipmentIncluded =
-      'Ekipman dahil';
+  static const String marketListingFieldEquipmentIncluded = 'Ekipman dahil';
   static const String marketListingFieldHasLicense = 'Ruhsat var';
   static const String marketListingFieldNegotiable = 'Pazarlığa açık';
   static const String marketListingFieldContactPhone = 'Telefon';
@@ -1302,7 +1286,8 @@ class AppStrings {
 
   // V1 — Account deletion (P0 / KVKK / Play compliance)
   static const String accountDeleteCta = 'Hesabımı Sil';
-  static const String accountDeleteConfirmTitle = 'Hesabını silmek istiyor musun?';
+  static const String accountDeleteConfirmTitle =
+      'Hesabını silmek istiyor musun?';
   static const String accountDeleteConfirmBody =
       'Bu işlem geri alınamaz. Hesabın, profilin, reçeteler, bayi kayıtların, '
       'fire/üretim verilerin ve sosyal omurga paylaşımların kalıcı silinir.';
@@ -1368,6 +1353,13 @@ class AppStrings {
   // V1.2 — yeni ortak/role kartlar
   static const String cardCalculator = 'Hesaplama Makinesi';
   static const String cardCalculatorSub = 'Un, su, maya, tuz → adet';
+
+  // Modüler hesaplama merkezi (calculators/) — /calculator hub + araçlar.
+  static const String calcHubTitle = 'Hesaplama';
+  static const String calcHubEmpty =
+      'Bu hesap türü için şimdilik hesaplama aracı yok.';
+  static const String calcDoughYieldTitle = 'Hamurdan Ürün';
+  static const String calcDoughYieldSub = 'Un, su, maya, tuz → tahmini adet';
   static const String cardWorkerProfile = 'Ustalık Bilgilerim';
   static const String cardWorkerProfileSub = 'Meslek, tecrübe, beceri';
   static const String cardWorkerExperiences = 'Çalışma Geçmişim';
@@ -1659,8 +1651,7 @@ class AppStrings {
   static const String dealerEndOfDayPlainTextHeader =
       'FırınNet — Gün Sonu Özeti';
   static const String dealerEndOfDayTxCountSuffix = 'işlem';
-  static const String dealerEndOfDayShareEmptyLine =
-      'Bugün henüz hareket yok.';
+  static const String dealerEndOfDayShareEmptyLine = 'Bugün henüz hareket yok.';
 
   // Raporlar tab (mini-app — toplu + bayi bazlı)
   static const String dealerReportsPeriodLast7 = 'Son 7 gün';
@@ -1713,8 +1704,7 @@ class AppStrings {
   static const String dealerTxKindAdjustment = 'Bakiye düzeltmesi';
 
   // Notes
-  static const String dealerNotesEmpty =
-      'Bu bayi için henüz not eklenmedi.';
+  static const String dealerNotesEmpty = 'Bu bayi için henüz not eklenmedi.';
   static const String dealerNotesAddHint = 'Yeni not ekle…';
   // V1.4 P1.23 — addNote exception olursa ham hata kullanıcıya sızmasın;
   // not metni input'ta korunur, kullanıcı tekrar deneyebilir.
@@ -1741,8 +1731,7 @@ class AppStrings {
   static const String dealerReturnProductLabel = 'İade edilen ürün';
   static const String dealerReturnUnitPriceHint = 'iade kıymeti';
   static const String dealerReturnTotalLabel = 'İade toplamı';
-  static const String dealerReturnNoteHint =
-      'Akşam kalan, müşteri iadesi vb.';
+  static const String dealerReturnNoteHint = 'Akşam kalan, müşteri iadesi vb.';
   static const String dealerReturnReasonLabel = 'Neden / not (opsiyonel)';
   static const String dealerSaveSnackReturn = 'İade kaydedildi: ';
 
@@ -1758,13 +1747,10 @@ class AppStrings {
   // Forms — Adjustment (V1.1)
   static const String dealerAdjustmentTitle = 'Bakiye Düzeltmesi';
   static const String dealerAdjustmentDirectionLabel = 'Yön';
-  static const String dealerAdjustmentDirectionAdd =
-      'Bakiyeyi artır (+)';
-  static const String dealerAdjustmentDirectionSubtract =
-      'Bakiyeyi azalt (−)';
+  static const String dealerAdjustmentDirectionAdd = 'Bakiyeyi artır (+)';
+  static const String dealerAdjustmentDirectionSubtract = 'Bakiyeyi azalt (−)';
   static const String dealerAdjustmentNoteRequired = 'Not zorunlu';
-  static const String dealerAdjustmentNoteLabel =
-      'Açıklama (zorunlu)';
+  static const String dealerAdjustmentNoteLabel = 'Açıklama (zorunlu)';
   static const String dealerAdjustmentNoteHint =
       'Örn. eski hesap kapanışı, hatalı kayıt düzeltme';
   static const String dealerSaveSnackAdjustment =
@@ -1808,8 +1794,7 @@ class AppStrings {
   static const String dealerErrQtyPositive = 'Adet sıfırdan büyük olmalı.';
   static const String dealerErrPricePositive =
       'Birim fiyat sıfırdan büyük olmalı.';
-  static const String dealerErrAmountPositive =
-      'Tutar sıfırdan büyük olmalı.';
+  static const String dealerErrAmountPositive = 'Tutar sıfırdan büyük olmalı.';
 
   // ─────────────────────────── Social Groups (V1)
 
