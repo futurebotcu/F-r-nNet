@@ -83,4 +83,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('DoughScreen — stub'), findsOneWidget);
   });
+
+  // Liste uzadığı için tüm kartların render olabilmesi adına yüksek yüzey.
+  Future<void> pumpTall(WidgetTester tester, AccountType type) async {
+    tester.view.physicalSize = const Size(1200, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(_wrap(_profile(type)));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('patron (ticari) patron kartını görür, çalışan kartını görmez', (
+    tester,
+  ) async {
+    await pumpTall(tester, AccountType.commercial);
+    expect(find.text(AppStrings.calcCostProfitTitle), findsOneWidget);
+    expect(find.text(AppStrings.calcMorningPlanTitle), findsOneWidget);
+    expect(find.text(AppStrings.calcWaterTempTitle), findsNothing);
+  });
+
+  testWidgets(
+    'bireysel çalışan + ortak kartları görür, patron kartını görmez',
+    (tester) async {
+      await pumpTall(tester, AccountType.individual);
+      expect(find.text(AppStrings.calcWaterTempTitle), findsOneWidget);
+      expect(find.text(AppStrings.calcMorningPlanTitle), findsOneWidget);
+      expect(find.text(AppStrings.calcCostProfitTitle), findsNothing);
+    },
+  );
 }

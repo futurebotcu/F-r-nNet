@@ -7,12 +7,7 @@ import '../../../../core/widgets/premium/stat_card.dart';
 
 /// Tek bir sonuç satırı (StatCard'a dönüşür). Saf gösterim verisi.
 class CalcResultLine {
-  const CalcResultLine(
-    this.label,
-    this.value, {
-    this.icon,
-    this.hero = false,
-  });
+  const CalcResultLine(this.label, this.value, {this.icon, this.hero = false});
 
   final String label;
   final String value;

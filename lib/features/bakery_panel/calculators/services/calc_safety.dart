@@ -3,6 +3,7 @@
 /// Tüm modüller bu fonksiyonları kullanarak NaN / Infinity / negatif /
 /// sıfıra bölme durumlarını tek noktada eler. Böylece hiçbir servis sonsuz
 /// ya da tanımsız değer üretmez.
+library;
 
 /// Negatifi ve NaN'ı 0'a indirger (miktar/fiyat gibi non-negatif girişler).
 double nonNeg(double v) => (v.isNaN || v < 0) ? 0.0 : v;

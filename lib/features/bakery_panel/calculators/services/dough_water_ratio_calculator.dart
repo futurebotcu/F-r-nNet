@@ -5,10 +5,7 @@ enum DoughHydrationBand { tooStiff, lowWater, ideal, highWater }
 
 /// Hamur Su Oranı Ustası sonucu.
 class DoughWaterRatioResult {
-  const DoughWaterRatioResult({
-    required this.ratioPct,
-    required this.band,
-  });
+  const DoughWaterRatioResult({required this.ratioPct, required this.band});
 
   final double ratioPct;
   final DoughHydrationBand band;

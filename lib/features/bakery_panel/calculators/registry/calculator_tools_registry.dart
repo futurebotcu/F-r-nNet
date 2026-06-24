@@ -32,6 +32,100 @@ class CalculatorToolsRegistry {
       // değişebilir; değişiklik tek nokta olarak burada yapılır.
       visibility: CalculatorRoleVisibility.producers,
     ),
+
+    // ── ORTAK modüller (ticari + bireysel; toptancıya kapalı) ──────────────
+    CalculatorTool(
+      id: 'morning_plan',
+      title: AppStrings.calcMorningPlanTitle,
+      description: AppStrings.calcMorningPlanSub,
+      icon: Icons.wb_sunny_outlined,
+      route: AppRoutes.calculatorMorningPlan,
+      visibility: CalculatorRoleVisibility.producers,
+    ),
+    CalculatorTool(
+      id: 'water_ratio',
+      title: AppStrings.calcWaterRatioTitle,
+      description: AppStrings.calcWaterRatioSub,
+      icon: Icons.water_drop_outlined,
+      route: AppRoutes.calculatorWaterRatio,
+      visibility: CalculatorRoleVisibility.producers,
+    ),
+    CalculatorTool(
+      id: 'sack_bread',
+      title: AppStrings.calcSackBreadTitle,
+      description: AppStrings.calcSackBreadSub,
+      icon: Icons.inventory_2_outlined,
+      route: AppRoutes.calculatorSackBread,
+      visibility: CalculatorRoleVisibility.producers,
+    ),
+    CalculatorTool(
+      id: 'bakers_percent',
+      title: AppStrings.calcBakersPercentTitle,
+      description: AppStrings.calcBakersPercentSub,
+      icon: Icons.percent_rounded,
+      route: AppRoutes.calculatorBakersPercent,
+      visibility: CalculatorRoleVisibility.producers,
+    ),
+    CalculatorTool(
+      id: 'recipe_scale',
+      title: AppStrings.calcRecipeScaleTitle,
+      description: AppStrings.calcRecipeScaleSub,
+      icon: Icons.unfold_more_rounded,
+      route: AppRoutes.calculatorRecipeScale,
+      visibility: CalculatorRoleVisibility.producers,
+    ),
+
+    // ── ÇALIŞAN modülü (yalnız bireysel/usta) ──────────────────────────────
+    CalculatorTool(
+      id: 'water_temp',
+      title: AppStrings.calcWaterTempTitle,
+      description: AppStrings.calcWaterTempSub,
+      icon: Icons.thermostat_outlined,
+      route: AppRoutes.calculatorWaterTemp,
+      visibility: CalculatorRoleVisibility.individualOnly,
+    ),
+
+    // ── PATRON modülleri (yalnız ticari/işletme) ───────────────────────────
+    CalculatorTool(
+      id: 'cost_profit',
+      title: AppStrings.calcCostProfitTitle,
+      description: AppStrings.calcCostProfitSub,
+      icon: Icons.trending_up_rounded,
+      route: AppRoutes.calculatorCostProfit,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'flour_hike',
+      title: AppStrings.calcFlourHikeTitle,
+      description: AppStrings.calcFlourHikeSub,
+      icon: Icons.show_chart_rounded,
+      route: AppRoutes.calculatorFlourHike,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'oven_energy',
+      title: AppStrings.calcOvenEnergyTitle,
+      description: AppStrings.calcOvenEnergySub,
+      icon: Icons.bolt_rounded,
+      route: AppRoutes.calculatorOvenEnergy,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'free_goods',
+      title: AppStrings.calcFreeGoodsTitle,
+      description: AppStrings.calcFreeGoodsSub,
+      icon: Icons.card_giftcard_outlined,
+      route: AppRoutes.calculatorFreeGoods,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'evening_discount',
+      title: AppStrings.calcEveningDiscountTitle,
+      description: AppStrings.calcEveningDiscountSub,
+      icon: Icons.price_change_outlined,
+      route: AppRoutes.calculatorEveningDiscount,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
   ];
 
   /// [type] hesap türüne görünür ve etkin araçlar.

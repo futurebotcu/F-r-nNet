@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/bakery_panel/calculators/screens/bakers_percentage_screen.dart';
 import '../../features/bakery_panel/calculators/screens/calculators_hub_screen.dart';
+import '../../features/bakery_panel/calculators/screens/cost_profit_screen.dart';
+import '../../features/bakery_panel/calculators/screens/dough_water_ratio_screen.dart';
 import '../../features/bakery_panel/calculators/screens/dough_yield_calculator_screen.dart';
+import '../../features/bakery_panel/calculators/screens/evening_discount_screen.dart';
+import '../../features/bakery_panel/calculators/screens/flour_price_hike_screen.dart';
+import '../../features/bakery_panel/calculators/screens/free_goods_screen.dart';
+import '../../features/bakery_panel/calculators/screens/morning_production_planner_screen.dart';
+import '../../features/bakery_panel/calculators/screens/oven_energy_screen.dart';
+import '../../features/bakery_panel/calculators/screens/recipe_scaler_screen.dart';
+import '../../features/bakery_panel/calculators/screens/sack_to_bread_screen.dart';
+import '../../features/bakery_panel/calculators/screens/water_temperature_screen.dart';
 import '../../features/bakery_panel/screens/bakery_panel_screen.dart';
 import '../../features/bakery_panel/screens/end_of_day_screen.dart';
 import '../../features/bakery_panel/screens/production_entry_screen.dart';
@@ -198,6 +209,21 @@ class AppRoutes {
   // Modüler hesaplama merkezi — /calculator hub, araçlar alt route'larda.
   static const String calculator = '/calculator';
   static const String calculatorDough = '/calculator/dough';
+  // Ortak modüller.
+  static const String calculatorMorningPlan = '/calculator/morning-plan';
+  static const String calculatorWaterRatio = '/calculator/water-ratio';
+  static const String calculatorSackBread = '/calculator/sack-bread';
+  static const String calculatorBakersPercent = '/calculator/bakers-percent';
+  static const String calculatorRecipeScale = '/calculator/recipe-scale';
+  // Çalışan modülü.
+  static const String calculatorWaterTemp = '/calculator/water-temp';
+  // Patron modülleri.
+  static const String calculatorCostProfit = '/calculator/cost-profit';
+  static const String calculatorFlourHike = '/calculator/flour-hike';
+  static const String calculatorOvenEnergy = '/calculator/oven-energy';
+  static const String calculatorFreeGoods = '/calculator/free-goods';
+  static const String calculatorEveningDiscount =
+      '/calculator/evening-discount';
 
   // V1.2: Bireysel (Usta) panel route'ları
   static const String workerProfile = '/worker/profile';
@@ -726,6 +752,50 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       GoRoute(
         path: AppRoutes.calculatorDough,
         builder: (_, __) => const DoughYieldCalculatorScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorMorningPlan,
+        builder: (_, __) => const MorningProductionPlannerScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorWaterRatio,
+        builder: (_, __) => const DoughWaterRatioScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorSackBread,
+        builder: (_, __) => const SackToBreadScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorBakersPercent,
+        builder: (_, __) => const BakersPercentageScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorRecipeScale,
+        builder: (_, __) => const RecipeScalerScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorWaterTemp,
+        builder: (_, __) => const WaterTemperatureScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorCostProfit,
+        builder: (_, __) => const CostProfitScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorFlourHike,
+        builder: (_, __) => const FlourPriceHikeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorOvenEnergy,
+        builder: (_, __) => const OvenEnergyScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorFreeGoods,
+        builder: (_, __) => const FreeGoodsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorEveningDiscount,
+        builder: (_, __) => const EveningDiscountScreen(),
       ),
 
       // V1.2 — Bireysel (Usta) panel ekranları

@@ -83,4 +83,55 @@ void main() {
       expect(tool.enabled, isTrue);
     });
   });
+
+  group('Rol görünürlük matrisi (ortak / çalışan / patron)', () {
+    // Modül id → beklenen kategori.
+    const ortak = {
+      'dough_yield',
+      'morning_plan',
+      'water_ratio',
+      'sack_bread',
+      'bakers_percent',
+      'recipe_scale',
+    };
+    const calisan = {'water_temp'};
+    const patron = {
+      'cost_profit',
+      'flour_hike',
+      'oven_energy',
+      'free_goods',
+      'evening_discount',
+    };
+
+    Set<String> idsFor(AccountType t) =>
+        CalculatorToolsRegistry.forAccount(t).map((e) => e.id).toSet();
+
+    test(
+      'patron (ticari) ortak + patron modüllerini görür, çalışanı görmez',
+      () {
+        final ids = idsFor(AccountType.commercial);
+        expect(ids, containsAll(ortak));
+        expect(ids, containsAll(patron));
+        expect(ids.intersection(calisan), isEmpty);
+      },
+    );
+
+    test('bireysel ortak + çalışan modüllerini görür, patronu görmez', () {
+      final ids = idsFor(AccountType.individual);
+      expect(ids, containsAll(ortak));
+      expect(ids, containsAll(calisan));
+      expect(ids.intersection(patron), isEmpty);
+    });
+
+    test('toptancı hiçbir modülü görmez (boş)', () {
+      expect(idsFor(AccountType.wholesaler), isEmpty);
+    });
+
+    test('her araç tekil id + tekil route taşır', () {
+      final ids = CalculatorToolsRegistry.all.map((e) => e.id).toList();
+      final routes = CalculatorToolsRegistry.all.map((e) => e.route).toList();
+      expect(ids.toSet().length, ids.length, reason: 'id tekrarı var');
+      expect(routes.toSet().length, routes.length, reason: 'route tekrarı var');
+    });
+  });
 }

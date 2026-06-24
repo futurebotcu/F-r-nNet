@@ -66,8 +66,10 @@ class MorningProductionPlanner {
     final sacks = safeDiv(flourKg, sackKg);
 
     final netDoughKg = totalDoughKg * (1.0 - waste / 100.0);
-    final expectedPieces =
-        safeDiv(nonNeg(netDoughKg) * 1000.0, atLeast(pieceG, 1)).floor();
+    final expectedPieces = safeDiv(
+      nonNeg(netDoughKg) * 1000.0,
+      atLeast(pieceG, 1),
+    ).floor();
 
     return MorningPlanResult(
       flourKg: flourKg,
