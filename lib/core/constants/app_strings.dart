@@ -1373,12 +1373,16 @@ class AppStrings {
   static const String calcMorningPlanTitle = 'Sabah Üretim Planlayıcı';
   static const String calcMorningPlanSub =
       'Kaç ürün için ne kadar un, su, maya, tuz?';
-  static const String calcWaterRatioTitle = 'Hamur Su Oranı Ustası';
-  static const String calcWaterRatioSub = 'Hamurun kıvamı: su az mı, ideal mi?';
-  static const String calcSackBreadTitle = 'Çuvaldan Kaç Ekmek?';
-  static const String calcSackBreadSub = 'Çuvaldan kaç ekmek çıkar, hesapla';
-  static const String calcBakersPercentTitle = 'Fırıncı Yüzdesi';
-  static const String calcBakersPercentSub = 'Una göre su, maya, tuz miktarı';
+  static const String calcWaterRatioTitle = 'Hamur Kıvamı (Su Oranı)';
+  static const String calcWaterRatioSub =
+      'Una göre su oranını gör; hamur sert mi, ideal mi, fazla sulu mu anla.';
+  static const String calcSackBreadTitle = 'Çuvaldan Kaç Ürün Çıkar?';
+  static const String calcSackBreadSub =
+      'Un, su oranı, gramaj ve fireyle yaklaşık ürün adedini hesapla.';
+  static const String calcBakersPercentTitle =
+      'Fırıncı Yüzdesi (Una Göre Reçete)';
+  static const String calcBakersPercentSub =
+      'Unu %100 kabul et, su/tuz/maya miktarını reçete diliyle hesapla.';
   static const String calcRecipeScaleTitle = 'Reçete Büyüt / Küçült';
   static const String calcRecipeScaleSub = 'Reçeteyi büyüt ya da küçült';
   // Çalışan modülü (yalnız bireysel).
@@ -1389,13 +1393,13 @@ class AppStrings {
   static const String calcCostProfitTitle = 'Gerçek Maliyet + Kâr';
   static const String calcCostProfitSub =
       'Ürün başı maliyetin ve kârın ne kadar?';
-  static const String calcFlourHikeTitle = 'Un Zammı Etki Hesabı';
+  static const String calcFlourHikeTitle = 'Un Zammı Cebe Etkisi';
   static const String calcFlourHikeSub = 'Un zammı cebine ne kadar yansır?';
   static const String calcOvenEnergyTitle = 'Fırın Enerji Maliyeti';
   static const String calcOvenEnergySub = 'Fırının günlük enerji gideri';
-  static const String calcFreeGoodsTitle = 'Bedelsiz Kampanya Çözücü';
-  static const String calcFreeGoodsSub = 'Bedelsizle gerçek çuval fiyatı';
-  static const String calcEveningDiscountTitle = 'Akşam İndirim Robotu';
+  static const String calcFreeGoodsTitle = 'X Al Y Bedelsiz Hesabı';
+  static const String calcFreeGoodsSub = 'Bedelsizle gerçek çuval fiyatını gör';
+  static const String calcEveningDiscountTitle = 'Gün Sonu Fiyatı';
   static const String calcEveningDiscountSub = 'Zarar etmeden indirim sınırı';
   static const String cardWorkerProfile = 'Ustalık Bilgilerim';
   static const String cardWorkerProfileSub = 'Meslek, tecrübe, beceri';

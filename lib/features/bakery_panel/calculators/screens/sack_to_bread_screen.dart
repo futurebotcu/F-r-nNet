@@ -60,7 +60,7 @@ class _SackToBreadScreenState extends State<SackToBreadScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcSackBreadTitle,
-      hint: 'Çuval sayısından kaç ekmek çıkacağını tahmin eder.',
+      hint: 'Çuvaldan yaklaşık kaç ürün çıkacağını tahmin eder.',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(
@@ -75,15 +75,26 @@ class _SackToBreadScreenState extends State<SackToBreadScreen> {
           suffix: '%',
         ),
         AppNumberField(
-          label: 'Ekmek hamur gramajı',
+          label: 'Ürün hamur gramajı',
           controller: _doughG,
           suffix: 'gr',
         ),
-        AppNumberField(label: 'Fire oranı', controller: _waste, suffix: '%'),
+        AppNumberField(
+          label: 'Pişme / fire oranı',
+          controller: _waste,
+          suffix: '%',
+          hint: 'Bu oran tahminidir, ürün ve fırına göre değişir.',
+        ),
       ],
       result: r == null
           ? null
           : CalculatorResultList(
+              warnings: const [
+                'Bu sonuç tahminidir; gramaj ve pişme firesi değişirse '
+                    'adet değişir.',
+                'Gramaj +10g saparsa çuval başına adet düşer, '
+                    'teraziyi kontrol et.',
+              ],
               lines: [
                 CalcResultLine(
                   'Tahmini adet',

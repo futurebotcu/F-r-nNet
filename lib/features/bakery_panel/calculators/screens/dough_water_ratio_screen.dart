@@ -59,12 +59,27 @@ class _DoughWaterRatioScreenState extends State<DoughWaterRatioScreen> {
     }
   }
 
+  /// Sonuç bandına göre pratik fırıncı yorumu (uyarı bandında gösterilir).
+  static String _bandAdvice(DoughHydrationBand band) {
+    switch (band) {
+      case DoughHydrationBand.tooStiff:
+      case DoughHydrationBand.lowWater:
+        return 'Hamur sert kalabilir; ürün tipine göre biraz su gerekebilir.';
+      case DoughHydrationBand.ideal:
+        return 'Kıvam iyi görünüyor; teraziyi bu oranla koru.';
+      case DoughHydrationBand.highWater:
+        return 'Su fazla olabilir; hamur yapışırsa un eklemeden önce bekle.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcWaterRatioTitle,
-      hint: 'Hamurun kıvamını söyler: su az mı, ideal mi, fazla mı?',
+      hint:
+          'Hamurun kıvamını söyler: su az mı, ideal mi, fazla mı? '
+          'Eşikler ürün tipine göre değişebilir.',
       onCalculate: _recalculate,
       inputs: [
         AppNumberField(label: 'Un', controller: _flour, suffix: 'kg'),
@@ -73,6 +88,7 @@ class _DoughWaterRatioScreenState extends State<DoughWaterRatioScreen> {
       result: r == null
           ? null
           : CalculatorResultList(
+              warnings: [_bandAdvice(r.band)],
               lines: [
                 CalcResultLine(
                   'Su oranı',

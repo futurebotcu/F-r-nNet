@@ -76,6 +76,7 @@ class _FlourPriceHikeScreenState extends State<FlourPriceHikeScreen> {
       result: r == null
           ? null
           : CalculatorResultList(
+              warnings: const ['Bu fark her gün kasadan çıkan ek maliyettir.'],
               lines: [
                 CalcResultLine(
                   'Aylık ek maliyet',

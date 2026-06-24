@@ -128,7 +128,12 @@ class _MorningProductionPlannerScreenState
             suffix: 'gr',
           ),
         AppNumberField(label: 'Adet', controller: _count, allowDecimal: false),
-        AppNumberField(label: 'Fire oranı', controller: _waste, suffix: '%'),
+        AppNumberField(
+          label: 'Pişme / fire oranı',
+          controller: _waste,
+          suffix: '%',
+          hint: 'Bu oran tahminidir, ürün ve fırına göre değişir.',
+        ),
         AppNumberField(
           label: 'Yoğurma kapasitesi (opsiyonel)',
           controller: _capacity,
