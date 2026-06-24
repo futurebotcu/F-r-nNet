@@ -68,6 +68,9 @@ class _CostProfitScreenState extends State<CostProfitScreen> {
   Widget build(BuildContext context) {
     final r = _result;
     final loss = r != null && r.profitPerUnit < 0;
+    // Salt gösterim eşiği — hesaplanan değeri değiştirmez, yalnız yorum verir.
+    // Kâr oranı %10'un altındaysa (zarar değilse) "düşük kâr" uyarısı.
+    final lowProfit = r != null && !loss && r.profitMarginPct < 10;
     return CalculatorFormScaffold(
       title: AppStrings.calcCostProfitTitle,
       hint: 'Tüm giderleri topla, adet başı maliyet ve kârı gör.',
@@ -103,8 +106,10 @@ class _CostProfitScreenState extends State<CostProfitScreen> {
           : CalculatorResultList(
               warnings: [
                 if (loss)
-                  'Bu fiyatta adet başı zarar var — satış fiyatını veya '
-                      'maliyeti gözden geçir.',
+                  'Bu satış fiyatında zarar ediyorsun — satış fiyatını veya '
+                      'giderleri kontrol et.',
+                if (lowProfit)
+                  'Kâr düşük görünüyor; satış fiyatı veya giderleri kontrol et.',
               ],
               lines: [
                 CalcResultLine(
