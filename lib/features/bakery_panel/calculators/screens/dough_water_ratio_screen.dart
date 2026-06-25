@@ -3,12 +3,16 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/widgets/app_number_field.dart';
+import '../models/turkish_bakery_product_preset.dart';
 import '../services/dough_water_ratio_calculator.dart';
 import '../widgets/calculator_form_scaffold.dart';
 import '../widgets/calculator_result_list.dart';
 
-/// Hamur Su Oranı Ustası ekranı — su/un oranını yüzde olarak verir + kıvam
-/// yorumu. Matematik [DoughWaterRatioCalculator] servisindedir.
+/// Hamur Kıvamı (Su Oranı) ekranı — su/un oranını yüzde verir + kıvam yorumu.
+/// Matematik [DoughWaterRatioCalculator] servisindedir (formül değişmez).
+///
+/// Ürün grubu seçilirse o gruba uygun ideal su oranı bandı (eşikler) uygulanır;
+/// grup seçilmezse genel varsayılan eşik (60/65/70) korunur.
 class DoughWaterRatioScreen extends StatefulWidget {
   const DoughWaterRatioScreen({super.key});
 
@@ -17,12 +21,26 @@ class DoughWaterRatioScreen extends StatefulWidget {
 }
 
 class _DoughWaterRatioScreenState extends State<DoughWaterRatioScreen> {
-  static const DoughWaterRatioCalculator _calc = DoughWaterRatioCalculator();
+  // null → ürün seçilmedi; genel varsayılan eşik (60/65/70) kullanılır.
+  BakeryProductGroup? _group;
 
   final _flour = TextEditingController(text: '50');
   final _water = TextEditingController(text: '33');
 
   DoughWaterRatioResult? _result;
+
+  /// Seçilen gruba göre hesaplayıcı. Grup yoksa/bandı yoksa servis varsayılanı
+  /// (60/65/70) — mevcut davranış korunur. Çekirdek formül değişmez; yalnız
+  /// eşik parametreleri ürün grubuna göre dolar.
+  DoughWaterRatioCalculator get _calc {
+    final band = _group?.hydrationBand;
+    if (band == null) return const DoughWaterRatioCalculator();
+    return DoughWaterRatioCalculator(
+      stiffBelow: band.stiffBelow,
+      lowWaterBelow: band.idealLow,
+      idealBelow: band.idealHigh,
+    );
+  }
 
   @override
   void initState() {
@@ -82,6 +100,28 @@ class _DoughWaterRatioScreenState extends State<DoughWaterRatioScreen> {
           'Eşikler ürün tipine göre değişebilir.',
       onCalculate: _recalculate,
       inputs: [
+        DropdownButtonFormField<BakeryProductGroup?>(
+          initialValue: _group,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: AppStrings.calcProductGroupSelectLabel,
+          ),
+          items: [
+            const DropdownMenuItem<BakeryProductGroup?>(
+              value: null,
+              child: Text('Genel (ürün seçme)'),
+            ),
+            for (final g in TurkishBakeryProducts.hydrationGroups)
+              DropdownMenuItem<BakeryProductGroup?>(
+                value: g,
+                child: Text(g.displayName),
+              ),
+          ],
+          onChanged: (g) {
+            setState(() => _group = g);
+            _recalculate();
+          },
+        ),
         AppNumberField(label: 'Un', controller: _flour, suffix: 'kg'),
         AppNumberField(label: 'Su', controller: _water, suffix: 'L / kg'),
       ],

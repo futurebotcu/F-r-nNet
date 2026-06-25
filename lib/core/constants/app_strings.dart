@@ -1362,6 +1362,12 @@ class AppStrings {
   static const String calcHubOfflineNote =
       'Tüm hesaplar internet olmadan çalışır.';
   static const String calcOfflineBadge = 'Offline';
+  // Faz 2 — ortak ürün preset kataloğu bilgilendirme notu.
+  static const String calcPresetDefaultNote =
+      'Bu değerler varsayılan öneridir; un, fırın ve reçeteye göre '
+      'değiştirebilirsin.';
+  static const String calcProductSelectLabel = 'Ürün';
+  static const String calcProductGroupSelectLabel = 'Ürün grubu';
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';

@@ -3,12 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/widgets/app_number_field.dart';
+import '../models/turkish_bakery_product_preset.dart';
 import '../services/sack_to_bread_calculator.dart';
 import '../widgets/calculator_form_scaffold.dart';
 import '../widgets/calculator_result_list.dart';
 
-/// "Çuvaldan Kaç Ekmek Çıkar?" ekranı. Matematik
-/// [SackToBreadCalculator] servisindedir.
+/// Tam sayıysa ondalıksız, değilse sade ondalıklı metin (controller için).
+String _numText(double v) =>
+    v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
+
+/// "Çuvaldan Kaç Ürün Çıkar?" ekranı. Matematik
+/// [SackToBreadCalculator] servisindedir. Ürün seçimi yalnızca gramaj, su
+/// kaldırma ve fire alanlarını **varsayılan** doldurur; kullanıcı her değeri
+/// elle değiştirebilir, ürün seçmezse mevcut davranış korunur.
 class SackToBreadScreen extends StatefulWidget {
   const SackToBreadScreen({super.key});
 
@@ -19,6 +26,8 @@ class SackToBreadScreen extends StatefulWidget {
 class _SackToBreadScreenState extends State<SackToBreadScreen> {
   static const SackToBreadCalculator _calc = SackToBreadCalculator();
 
+  // Varsayılan "Diğer / Manuel" — mevcut davranış (60/500/3) korunur.
+  TurkishBakeryProductPreset _product = TurkishBakeryProducts.manual;
   final _sacks = TextEditingController(text: '1');
   final _sackKg = TextEditingController(text: '50');
   final _absorption = TextEditingController(text: '60');
@@ -26,6 +35,20 @@ class _SackToBreadScreenState extends State<SackToBreadScreen> {
   final _waste = TextEditingController(text: '3');
 
   SackToBreadResult? _result;
+
+  void _onProductChanged(TurkishBakeryProductPreset? p) {
+    if (p == null) return;
+    setState(() {
+      _product = p;
+      // Ürün seçimi yalnızca varsayılanları doldurur; manuel ise dokunma.
+      if (!p.isManual) {
+        _doughG.text = _numText(p.defaultDoughWeightG);
+        _absorption.text = _numText(p.defaultHydrationPct);
+        _waste.text = _numText(p.defaultBakeLossPct);
+      }
+    });
+    _recalculate();
+  }
 
   @override
   void initState() {
@@ -60,9 +83,23 @@ class _SackToBreadScreenState extends State<SackToBreadScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcSackBreadTitle,
-      hint: 'Çuvaldan yaklaşık kaç ürün çıkacağını tahmin eder.',
+      hint:
+          'Çuvaldan yaklaşık kaç ürün çıkacağını tahmin eder. '
+          '${AppStrings.calcPresetDefaultNote}',
       onCalculate: _recalculate,
       inputs: [
+        DropdownButtonFormField<TurkishBakeryProductPreset>(
+          initialValue: _product,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: AppStrings.calcProductSelectLabel,
+          ),
+          items: [
+            for (final p in TurkishBakeryProducts.all)
+              DropdownMenuItem(value: p, child: Text(p.displayName)),
+          ],
+          onChanged: _onProductChanged,
+        ),
         AppNumberField(
           label: 'Çuval sayısı',
           controller: _sacks,

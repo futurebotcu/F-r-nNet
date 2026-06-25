@@ -3,54 +3,22 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/widgets/app_number_field.dart';
+import '../models/turkish_bakery_product_preset.dart';
 import '../services/morning_production_planner.dart';
 import '../widgets/calculator_form_scaffold.dart';
 import '../widgets/calculator_result_list.dart';
 
-/// Üretim planında seçilebilen hazır ürün tipleri (gramaj eşlemesi).
-enum _ProductType { ekmek250, ekmek300, simit100, pogaca80, pogaca100, other }
-
-extension _ProductTypeMeta on _ProductType {
-  String get label {
-    switch (this) {
-      case _ProductType.ekmek250:
-        return 'Ekmek 250g';
-      case _ProductType.ekmek300:
-        return 'Ekmek 300g';
-      case _ProductType.simit100:
-        return 'Simit 100g';
-      case _ProductType.pogaca80:
-        return 'Poğaça 80g';
-      case _ProductType.pogaca100:
-        return 'Poğaça 100g';
-      case _ProductType.other:
-        return 'Diğer';
-    }
-  }
-
-  /// Hazır gramaj (gr); [other] için null (kullanıcı girer).
-  double? get grams {
-    switch (this) {
-      case _ProductType.ekmek250:
-        return 250;
-      case _ProductType.ekmek300:
-        return 300;
-      case _ProductType.simit100:
-        return 100;
-      case _ProductType.pogaca80:
-        return 80;
-      case _ProductType.pogaca100:
-        return 100;
-      case _ProductType.other:
-        return null;
-    }
-  }
-}
+/// Tam sayıysa ondalıksız, değilse sade ondalıklı metin (controller için).
+String _numText(double v) =>
+    v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
 
 /// Sabah Üretim Planlayıcı ekranı — adetten malzeme planı (un/su/maya/tuz).
 ///
-/// Matematik [MorningProductionPlanner] servisindedir; ekran yalnız girdi
-/// toplar ve sonucu sade kartlarla gösterir.
+/// Ürün listesi ortak [TurkishBakeryProducts] kataloğundan beslenir; ürün
+/// seçimi yalnızca gramaj ve pişme/fire alanlarını **varsayılan** doldurur,
+/// kullanıcı her değeri elle değiştirebilir. Matematik
+/// [MorningProductionPlanner] servisindedir; formül davranışı korunmuştur
+/// (girdiler aynı: gramaj + fire).
 class MorningProductionPlannerScreen extends StatefulWidget {
   const MorningProductionPlannerScreen({super.key});
 
@@ -63,10 +31,14 @@ class _MorningProductionPlannerScreenState
     extends State<MorningProductionPlannerScreen> {
   static const MorningProductionPlanner _planner = MorningProductionPlanner();
 
-  _ProductType _type = _ProductType.ekmek250;
-  final _customGram = TextEditingController(text: '250');
+  TurkishBakeryProductPreset _product = TurkishBakeryProducts.all.first;
+  late final TextEditingController _gram = TextEditingController(
+    text: _numText(_product.defaultDoughWeightG),
+  );
   final _count = TextEditingController(text: '500');
-  final _waste = TextEditingController(text: '3');
+  late final TextEditingController _waste = TextEditingController(
+    text: _numText(_product.defaultBakeLossPct),
+  );
   final _capacity = TextEditingController();
 
   MorningPlanResult? _result;
@@ -79,21 +51,31 @@ class _MorningProductionPlannerScreenState
 
   @override
   void dispose() {
-    _customGram.dispose();
+    _gram.dispose();
     _count.dispose();
     _waste.dispose();
     _capacity.dispose();
     super.dispose();
   }
 
-  double get _pieceGrams =>
-      _type.grams ?? NumberFormatter.parseLoose(_customGram.text);
+  void _onProductChanged(TurkishBakeryProductPreset? p) {
+    if (p == null) return;
+    setState(() {
+      _product = p;
+      // Ürün seçimi yalnızca varsayılanları doldurur; manuel ise dokunma.
+      if (!p.isManual) {
+        _gram.text = _numText(p.defaultDoughWeightG);
+        _waste.text = _numText(p.defaultBakeLossPct);
+      }
+    });
+    _recalculate();
+  }
 
   void _recalculate() {
     setState(() {
       _result = _planner.plan(
         count: NumberFormatter.parseLoose(_count.text),
-        pieceWeightG: _pieceGrams,
+        pieceWeightG: NumberFormatter.parseLoose(_gram.text),
         wastePct: NumberFormatter.parseLoose(_waste.text),
         mixerCapacityKg: NumberFormatter.parseLoose(_capacity.text),
       );
@@ -105,28 +87,24 @@ class _MorningProductionPlannerScreenState
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcMorningPlanTitle,
-      hint: 'Adet ve ürün tipinden un, su, maya, tuz ve çuval planı çıkar.',
+      hint:
+          'Adet ve ürün tipinden un, su, maya, tuz ve çuval planı çıkar. '
+          '${AppStrings.calcPresetDefaultNote}',
       onCalculate: _recalculate,
       inputs: [
-        DropdownButtonFormField<_ProductType>(
-          initialValue: _type,
-          decoration: const InputDecoration(labelText: 'Ürün tipi'),
-          items: [
-            for (final t in _ProductType.values)
-              DropdownMenuItem(value: t, child: Text(t.label)),
-          ],
-          onChanged: (t) {
-            if (t == null) return;
-            setState(() => _type = t);
-            _recalculate();
-          },
-        ),
-        if (_type == _ProductType.other)
-          AppNumberField(
-            label: 'Birim gramaj',
-            controller: _customGram,
-            suffix: 'gr',
+        DropdownButtonFormField<TurkishBakeryProductPreset>(
+          initialValue: _product,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: AppStrings.calcProductSelectLabel,
           ),
+          items: [
+            for (final p in TurkishBakeryProducts.all)
+              DropdownMenuItem(value: p, child: Text(p.displayName)),
+          ],
+          onChanged: _onProductChanged,
+        ),
+        AppNumberField(label: 'Birim gramaj', controller: _gram, suffix: 'gr'),
         AppNumberField(label: 'Adet', controller: _count, allowDecimal: false),
         AppNumberField(
           label: 'Pişme / fire oranı',
