@@ -1407,6 +1407,26 @@ class AppStrings {
   static const String calcFreeGoodsSub = 'Bedelsizle gerçek çuval fiyatını gör';
   static const String calcEveningDiscountTitle = 'Gün Sonu Fiyatı';
   static const String calcEveningDiscountSub = 'Zarar etmeden indirim sınırı';
+  // Faz 3 — ortak modüller (ticari + bireysel).
+  static const String calcStockRunwayTitle = 'Stok Bu Hafta Biter mi?';
+  static const String calcStockRunwaySub =
+      'Eldeki malzeme kaç gün yeter, ne zaman sipariş ver?';
+  static const String calcBatchValueTitle = 'Tepsi / Parti Değeri';
+  static const String calcBatchValueSub =
+      'Bir tepsi/parti üretim kasaya ne bırakır?';
+  // Faz 3 — patron modülleri (yalnız ticari).
+  static const String calcPriceUpdateTitle = 'Fiyat Güncelleme Simülatörü';
+  static const String calcPriceUpdateSub =
+      'Maliyet artınca fiyatı ne kadar güncellemeli?';
+  static const String calcDealerProfitTitle = 'Bayi Kârlılık Ölçeği';
+  static const String calcDealerProfitSub =
+      'Bu bayi iade ve dağıtımdan sonra kazandırıyor mu?';
+  static const String calcFixedCostTitle = 'Dükkan Boşta Kaça Çalışıyor?';
+  static const String calcFixedCostSub =
+      'Sabit giderin günlük / çuval / ürün başına yükü';
+  static const String calcWasteLossTitle = 'Günlük Fire / Bayat Zarar';
+  static const String calcWasteLossSub =
+      'Çöpe giden ürün bugün ne kadar zarar ettirdi?';
   static const String cardWorkerProfile = 'Ustalık Bilgilerim';
   static const String cardWorkerProfileSub = 'Meslek, tecrübe, beceri';
   static const String cardWorkerExperiences = 'Çalışma Geçmişim';

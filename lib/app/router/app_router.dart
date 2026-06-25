@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/bakery_panel/calculators/screens/bakers_percentage_screen.dart';
+import '../../features/bakery_panel/calculators/screens/batch_value_screen.dart';
 import '../../features/bakery_panel/calculators/screens/calculators_hub_screen.dart';
 import '../../features/bakery_panel/calculators/screens/cost_profit_screen.dart';
+import '../../features/bakery_panel/calculators/screens/dealer_profit_screen.dart';
 import '../../features/bakery_panel/calculators/screens/dough_water_ratio_screen.dart';
 import '../../features/bakery_panel/calculators/screens/dough_yield_calculator_screen.dart';
 import '../../features/bakery_panel/calculators/screens/evening_discount_screen.dart';
+import '../../features/bakery_panel/calculators/screens/fixed_cost_screen.dart';
 import '../../features/bakery_panel/calculators/screens/flour_price_hike_screen.dart';
 import '../../features/bakery_panel/calculators/screens/free_goods_screen.dart';
 import '../../features/bakery_panel/calculators/screens/morning_production_planner_screen.dart';
 import '../../features/bakery_panel/calculators/screens/oven_energy_screen.dart';
+import '../../features/bakery_panel/calculators/screens/price_update_screen.dart';
 import '../../features/bakery_panel/calculators/screens/recipe_scaler_screen.dart';
 import '../../features/bakery_panel/calculators/screens/sack_to_bread_screen.dart';
+import '../../features/bakery_panel/calculators/screens/stock_runway_screen.dart';
+import '../../features/bakery_panel/calculators/screens/waste_loss_screen.dart';
 import '../../features/bakery_panel/calculators/screens/water_temperature_screen.dart';
 import '../../features/bakery_panel/screens/bakery_panel_screen.dart';
 import '../../features/bakery_panel/screens/end_of_day_screen.dart';
@@ -215,6 +221,8 @@ class AppRoutes {
   static const String calculatorSackBread = '/calculator/sack-bread';
   static const String calculatorBakersPercent = '/calculator/bakers-percent';
   static const String calculatorRecipeScale = '/calculator/recipe-scale';
+  static const String calculatorStockRunway = '/calculator/stock-runway';
+  static const String calculatorBatchValue = '/calculator/batch-value';
   // Çalışan modülü.
   static const String calculatorWaterTemp = '/calculator/water-temp';
   // Patron modülleri.
@@ -224,6 +232,10 @@ class AppRoutes {
   static const String calculatorFreeGoods = '/calculator/free-goods';
   static const String calculatorEveningDiscount =
       '/calculator/evening-discount';
+  static const String calculatorPriceUpdate = '/calculator/price-update';
+  static const String calculatorDealerProfit = '/calculator/dealer-profit';
+  static const String calculatorFixedCost = '/calculator/fixed-cost';
+  static const String calculatorWasteLoss = '/calculator/waste-loss';
 
   // V1.2: Bireysel (Usta) panel route'ları
   static const String workerProfile = '/worker/profile';
@@ -796,6 +808,30 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       GoRoute(
         path: AppRoutes.calculatorEveningDiscount,
         builder: (_, __) => const EveningDiscountScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorStockRunway,
+        builder: (_, __) => const StockRunwayScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorBatchValue,
+        builder: (_, __) => const BatchValueScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorPriceUpdate,
+        builder: (_, __) => const PriceUpdateScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorDealerProfit,
+        builder: (_, __) => const DealerProfitScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorFixedCost,
+        builder: (_, __) => const FixedCostScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorWasteLoss,
+        builder: (_, __) => const WasteLossScreen(),
       ),
 
       // V1.2 — Bireysel (Usta) panel ekranları
