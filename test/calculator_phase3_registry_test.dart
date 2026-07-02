@@ -75,6 +75,22 @@ void main() {
       expect(boss, containsAll({'price_update', 'fixed_cost', 'waste_loss'}));
       expect(supplier, contains('dealer_profit'));
     });
+
+    test('cila: patron görünümünde Stok modülü üst bölümlerde (2. bölüm)', () {
+      final groups = CalculatorToolsRegistry.groupedForAccount(
+        AccountType.commercial,
+      );
+      final stockSection = groups.indexWhere(
+        (g) => g.tools.any((t) => t.id == 'stock_runway'),
+      );
+      final bossSection = groups.indexWhere(
+        (g) => g.category == CalculatorCategory.bossCostProfit,
+      );
+      // Stok (Günlük Hızlı), Maliyet/Kâr bölümünün üstünde ve en fazla 2.
+      // bölümde olmalı (Üretim'den hemen sonra).
+      expect(stockSection, lessThan(bossSection));
+      expect(stockSection, lessThanOrEqualTo(1));
+    });
   });
 
   group('Faz 3 bütünlük', () {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/utils/tr_case.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
 import '../../../../core/widgets/premium/stat_card.dart';
 
@@ -43,7 +44,9 @@ class CalculatorResultList extends StatelessWidget {
         for (var i = 0; i < lines.length; i++) ...[
           StatCard(
             icon: lines[i].icon,
-            label: lines[i].label,
+            // Türkçe büyük harf (StatCard içeride upper-case eder; helper
+            // i→İ / ı→I'yı doğru sabitler, tekrar upper-case güvenli).
+            label: trUpperCase(lines[i].label),
             value: lines[i].value,
             hero: lines[i].hero,
             warm: lines[i].hero,

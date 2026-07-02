@@ -87,9 +87,7 @@ class _MorningProductionPlannerScreenState
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcMorningPlanTitle,
-      hint:
-          'Adet ve ürün tipinden un, su, maya, tuz ve çuval planı çıkar. '
-          '${AppStrings.calcPresetDefaultNote}',
+      hint: 'Adet ve ürün tipinden un, su, maya, tuz ve çuval planı çıkar.',
       onCalculate: _recalculate,
       inputs: [
         DropdownButtonFormField<TurkishBakeryProductPreset>(
@@ -141,7 +139,7 @@ class _MorningProductionPlannerScreenState
                 ),
                 CalcResultLine(
                   'Su',
-                  '${NumberFormatter.decimal(r.waterKg)} kg / L',
+                  '${NumberFormatter.decimal(r.waterKg)} L / kg',
                   icon: Icons.water_drop_outlined,
                 ),
                 CalcResultLine(

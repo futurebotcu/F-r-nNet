@@ -216,12 +216,14 @@ class CalculatorToolsRegistry {
           CalculatorCategory.supplierDeal,
         ];
       case AccountType.commercial:
-        // Patron: önce sabah üretim, maliyet/kâr/enerji, sonra tedarikçi.
+        // Patron: önce sabah üretim, hemen ardından günlük hızlı hesaplar
+        // (stok/tepsi gibi her gün bakılanlar üstte kalsın), sonra maliyet/
+        // kâr/enerji ve tedarikçi.
         return const [
           CalculatorCategory.productionRecipe,
+          CalculatorCategory.dailyQuick,
           CalculatorCategory.bossCostProfit,
           CalculatorCategory.supplierDeal,
-          CalculatorCategory.dailyQuick,
         ];
       case AccountType.wholesaler:
         return const [];

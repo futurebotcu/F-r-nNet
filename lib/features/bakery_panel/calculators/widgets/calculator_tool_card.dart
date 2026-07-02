@@ -62,6 +62,9 @@ class CalculatorToolCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Row(
+                            // Uzun başlık 2 satıra sarsa bile rozet ilk
+                            // satırla hizalı kalsın (düzen bozulmaz).
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Flexible(
                                 child: Text(
@@ -72,7 +75,9 @@ class CalculatorToolCard extends StatelessWidget {
                                     fontSize: 16,
                                     letterSpacing: -0.1,
                                   ),
-                                  maxLines: 1,
+                                  // Küçük ekranda uzun başlıklar kırpılmasın;
+                                  // 2 satıra kadar açılabilir.
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),

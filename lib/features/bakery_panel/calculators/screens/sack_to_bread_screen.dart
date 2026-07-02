@@ -83,9 +83,7 @@ class _SackToBreadScreenState extends State<SackToBreadScreen> {
     final r = _result;
     return CalculatorFormScaffold(
       title: AppStrings.calcSackBreadTitle,
-      hint:
-          'Çuvaldan yaklaşık kaç ürün çıkacağını tahmin eder. '
-          '${AppStrings.calcPresetDefaultNote}',
+      hint: 'Çuvaldan yaklaşık kaç ürün çıkacağını tahmin eder.',
       onCalculate: _recalculate,
       inputs: [
         DropdownButtonFormField<TurkishBakeryProductPreset>(

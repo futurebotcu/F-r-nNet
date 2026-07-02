@@ -87,7 +87,7 @@ class _BakersPercentageScreenState extends State<BakersPercentageScreen> {
                 ),
                 CalcResultLine(
                   'Su',
-                  '${NumberFormatter.decimal(r.waterKg)} kg / L',
+                  '${NumberFormatter.decimal(r.waterKg)} L / kg',
                   icon: Icons.water_drop_outlined,
                 ),
                 CalcResultLine(
