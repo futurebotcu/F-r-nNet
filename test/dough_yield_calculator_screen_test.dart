@@ -45,9 +45,9 @@ void main() {
   ) async {
     await pumpTall(tester);
     // initState postFrame recalculate → SONUÇ bölümü + hero "tahmini adet"
-    // kartı (StatCard etiketi büyük harfe çevirir).
+    // kartı (etiket trUpperCase ile Türkçe kurallarına göre büyür: i → İ).
     expect(find.text('SONUÇ'), findsOneWidget);
-    expect(find.text('Tahmini adet'.toUpperCase()), findsOneWidget);
+    expect(find.text('TAHMİNİ ADET'), findsOneWidget);
     expect(find.text('316'), findsOneWidget);
   });
 

@@ -99,8 +99,26 @@ class CalculatorToolsRegistry {
       category: CalculatorCategory.dailyQuick,
       visibility: CalculatorRoleVisibility.producers,
     ),
+    CalculatorTool(
+      id: 'weight_change',
+      title: AppStrings.calcWeightChangeTitle,
+      description: AppStrings.calcWeightChangeSub,
+      icon: Icons.monitor_weight_outlined,
+      route: AppRoutes.calculatorWeightChange,
+      category: CalculatorCategory.dailyQuick,
+      visibility: CalculatorRoleVisibility.producers,
+    ),
+    CalculatorTool(
+      id: 'pack_convert',
+      title: AppStrings.calcPackConvertTitle,
+      description: AppStrings.calcPackConvertSub,
+      icon: Icons.all_inbox_outlined,
+      route: AppRoutes.calculatorPackConvert,
+      category: CalculatorCategory.productionRecipe,
+      visibility: CalculatorRoleVisibility.producers,
+    ),
 
-    // ── ÇALIŞAN modülü (yalnız bireysel/usta) ──────────────────────────────
+    // ── ÇALIŞAN modülleri (yalnız bireysel/usta) ───────────────────────────
     CalculatorTool(
       id: 'water_temp',
       title: AppStrings.calcWaterTempTitle,
@@ -108,6 +126,24 @@ class CalculatorToolsRegistry {
       icon: Icons.thermostat_outlined,
       route: AppRoutes.calculatorWaterTemp,
       category: CalculatorCategory.dailyQuick,
+      visibility: CalculatorRoleVisibility.individualOnly,
+    ),
+    CalculatorTool(
+      id: 'fermentation_time',
+      title: AppStrings.calcFermentationTitle,
+      description: AppStrings.calcFermentationSub,
+      icon: Icons.hourglass_bottom_rounded,
+      route: AppRoutes.calculatorFermentation,
+      category: CalculatorCategory.dailyQuick,
+      visibility: CalculatorRoleVisibility.individualOnly,
+    ),
+    CalculatorTool(
+      id: 'overtime_pay',
+      title: AppStrings.calcOvertimePayTitle,
+      description: AppStrings.calcOvertimePaySub,
+      icon: Icons.more_time_rounded,
+      route: AppRoutes.calculatorOvertimePay,
+      category: CalculatorCategory.productionRecipe,
       visibility: CalculatorRoleVisibility.individualOnly,
     ),
 
@@ -193,6 +229,72 @@ class CalculatorToolsRegistry {
       category: CalculatorCategory.supplierDeal,
       visibility: CalculatorRoleVisibility.commercialOnly,
     ),
+    // Final tamamlama paketi — patron modülleri.
+    CalculatorTool(
+      id: 'daily_close',
+      title: AppStrings.calcDailyCloseTitle,
+      description: AppStrings.calcDailyCloseSub,
+      icon: Icons.point_of_sale_outlined,
+      route: AppRoutes.calculatorDailyClose,
+      // Gün sonu rutini: patron görünümünde "Günlük Hızlı Hesaplar" grubunda
+      // stok/tepsiyle birlikte üstte dursun.
+      category: CalculatorCategory.dailyQuick,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'oven_capacity',
+      title: AppStrings.calcOvenCapacityTitle,
+      description: AppStrings.calcOvenCapacitySub,
+      icon: Icons.speed_rounded,
+      route: AppRoutes.calculatorOvenCapacity,
+      category: CalculatorCategory.productionRecipe,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'recipe_cost_detail',
+      title: AppStrings.calcRecipeCostDetailTitle,
+      description: AppStrings.calcRecipeCostDetailSub,
+      icon: Icons.receipt_long_outlined,
+      route: AppRoutes.calculatorRecipeCostDetail,
+      category: CalculatorCategory.bossCostProfit,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'labor_index',
+      title: AppStrings.calcLaborIndexTitle,
+      description: AppStrings.calcLaborIndexSub,
+      icon: Icons.engineering_outlined,
+      route: AppRoutes.calculatorLaborIndex,
+      category: CalculatorCategory.bossCostProfit,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'flat_deal',
+      title: AppStrings.calcFlatDealTitle,
+      description: AppStrings.calcFlatDealSub,
+      icon: Icons.handshake_outlined,
+      route: AppRoutes.calculatorFlatDeal,
+      category: CalculatorCategory.supplierDeal,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'master_earnings',
+      title: AppStrings.calcMasterEarningsTitle,
+      description: AppStrings.calcMasterEarningsSub,
+      icon: Icons.workspace_premium_outlined,
+      route: AppRoutes.calculatorMasterEarnings,
+      category: CalculatorCategory.staffShare,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
+    CalculatorTool(
+      id: 'tip_split',
+      title: AppStrings.calcTipSplitTitle,
+      description: AppStrings.calcTipSplitSub,
+      icon: Icons.groups_outlined,
+      route: AppRoutes.calculatorTipSplit,
+      category: CalculatorCategory.staffShare,
+      visibility: CalculatorRoleVisibility.commercialOnly,
+    ),
   ];
 
   /// [type] hesap türüne görünür ve etkin araçlar (registry ham sırasında).
@@ -209,21 +311,24 @@ class CalculatorToolsRegistry {
     switch (type) {
       case AccountType.individual:
         // Usta/çalışan: önce hamur & günlük hesaplar, sonra üretim.
+        // (Patron/personel grupları bireyselde boş kalır ve atlanır.)
         return const [
           CalculatorCategory.dailyQuick,
           CalculatorCategory.productionRecipe,
           CalculatorCategory.bossCostProfit,
           CalculatorCategory.supplierDeal,
+          CalculatorCategory.staffShare,
         ];
       case AccountType.commercial:
         // Patron: önce sabah üretim, hemen ardından günlük hızlı hesaplar
-        // (stok/tepsi gibi her gün bakılanlar üstte kalsın), sonra maliyet/
-        // kâr/enerji ve tedarikçi.
+        // (stok/tepsi/kapanış gibi her gün bakılanlar üstte kalsın), sonra
+        // maliyet/kâr/enerji, tedarikçi ve personel paylaşımı.
         return const [
           CalculatorCategory.productionRecipe,
           CalculatorCategory.dailyQuick,
           CalculatorCategory.bossCostProfit,
           CalculatorCategory.supplierDeal,
+          CalculatorCategory.staffShare,
         ];
       case AccountType.wholesaler:
         return const [];

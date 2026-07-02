@@ -5,21 +5,32 @@ import '../../features/bakery_panel/calculators/screens/bakers_percentage_screen
 import '../../features/bakery_panel/calculators/screens/batch_value_screen.dart';
 import '../../features/bakery_panel/calculators/screens/calculators_hub_screen.dart';
 import '../../features/bakery_panel/calculators/screens/cost_profit_screen.dart';
+import '../../features/bakery_panel/calculators/screens/daily_close_screen.dart';
 import '../../features/bakery_panel/calculators/screens/dealer_profit_screen.dart';
 import '../../features/bakery_panel/calculators/screens/dough_water_ratio_screen.dart';
 import '../../features/bakery_panel/calculators/screens/dough_yield_calculator_screen.dart';
 import '../../features/bakery_panel/calculators/screens/evening_discount_screen.dart';
+import '../../features/bakery_panel/calculators/screens/fermentation_time_screen.dart';
 import '../../features/bakery_panel/calculators/screens/fixed_cost_screen.dart';
+import '../../features/bakery_panel/calculators/screens/flat_deal_screen.dart';
 import '../../features/bakery_panel/calculators/screens/flour_price_hike_screen.dart';
 import '../../features/bakery_panel/calculators/screens/free_goods_screen.dart';
+import '../../features/bakery_panel/calculators/screens/labor_index_screen.dart';
+import '../../features/bakery_panel/calculators/screens/master_earnings_screen.dart';
 import '../../features/bakery_panel/calculators/screens/morning_production_planner_screen.dart';
+import '../../features/bakery_panel/calculators/screens/oven_capacity_screen.dart';
 import '../../features/bakery_panel/calculators/screens/oven_energy_screen.dart';
+import '../../features/bakery_panel/calculators/screens/overtime_pay_screen.dart';
+import '../../features/bakery_panel/calculators/screens/pack_convert_screen.dart';
 import '../../features/bakery_panel/calculators/screens/price_update_screen.dart';
+import '../../features/bakery_panel/calculators/screens/recipe_cost_detail_screen.dart';
 import '../../features/bakery_panel/calculators/screens/recipe_scaler_screen.dart';
 import '../../features/bakery_panel/calculators/screens/sack_to_bread_screen.dart';
 import '../../features/bakery_panel/calculators/screens/stock_runway_screen.dart';
+import '../../features/bakery_panel/calculators/screens/tip_split_screen.dart';
 import '../../features/bakery_panel/calculators/screens/waste_loss_screen.dart';
 import '../../features/bakery_panel/calculators/screens/water_temperature_screen.dart';
+import '../../features/bakery_panel/calculators/screens/weight_change_screen.dart';
 import '../../features/bakery_panel/screens/bakery_panel_screen.dart';
 import '../../features/bakery_panel/screens/end_of_day_screen.dart';
 import '../../features/bakery_panel/screens/production_entry_screen.dart';
@@ -236,6 +247,21 @@ class AppRoutes {
   static const String calculatorDealerProfit = '/calculator/dealer-profit';
   static const String calculatorFixedCost = '/calculator/fixed-cost';
   static const String calculatorWasteLoss = '/calculator/waste-loss';
+  // Final tamamlama paketi — ortak.
+  static const String calculatorWeightChange = '/calculator/weight-change';
+  static const String calculatorPackConvert = '/calculator/pack-convert';
+  // Final tamamlama paketi — çalışan (bireysel).
+  static const String calculatorFermentation = '/calculator/fermentation-time';
+  static const String calculatorOvertimePay = '/calculator/overtime-pay';
+  // Final tamamlama paketi — patron (ticari).
+  static const String calculatorRecipeCostDetail =
+      '/calculator/recipe-cost-detail';
+  static const String calculatorFlatDeal = '/calculator/flat-deal';
+  static const String calculatorOvenCapacity = '/calculator/oven-capacity';
+  static const String calculatorLaborIndex = '/calculator/labor-index';
+  static const String calculatorMasterEarnings = '/calculator/master-earnings';
+  static const String calculatorTipSplit = '/calculator/tip-split';
+  static const String calculatorDailyClose = '/calculator/daily-close';
 
   // V1.2: Bireysel (Usta) panel route'ları
   static const String workerProfile = '/worker/profile';
@@ -832,6 +858,53 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       GoRoute(
         path: AppRoutes.calculatorWasteLoss,
         builder: (_, __) => const WasteLossScreen(),
+      ),
+      // Final tamamlama paketi — ortak.
+      GoRoute(
+        path: AppRoutes.calculatorWeightChange,
+        builder: (_, __) => const WeightChangeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorPackConvert,
+        builder: (_, __) => const PackConvertScreen(),
+      ),
+      // Final tamamlama paketi — çalışan (bireysel).
+      GoRoute(
+        path: AppRoutes.calculatorFermentation,
+        builder: (_, __) => const FermentationTimeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorOvertimePay,
+        builder: (_, __) => const OvertimePayScreen(),
+      ),
+      // Final tamamlama paketi — patron (ticari).
+      GoRoute(
+        path: AppRoutes.calculatorRecipeCostDetail,
+        builder: (_, __) => const RecipeCostDetailScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorFlatDeal,
+        builder: (_, __) => const FlatDealScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorOvenCapacity,
+        builder: (_, __) => const OvenCapacityScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorLaborIndex,
+        builder: (_, __) => const LaborIndexScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorMasterEarnings,
+        builder: (_, __) => const MasterEarningsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorTipSplit,
+        builder: (_, __) => const TipSplitScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calculatorDailyClose,
+        builder: (_, __) => const DailyCloseScreen(),
       ),
 
       // V1.2 — Bireysel (Usta) panel ekranları

@@ -10,6 +10,7 @@ enum CalculatorCategory {
   productionRecipe,
   bossCostProfit,
   supplierDeal,
+  staffShare,
 }
 
 extension CalculatorCategoryMeta on CalculatorCategory {
@@ -24,6 +25,8 @@ extension CalculatorCategoryMeta on CalculatorCategory {
         return AppStrings.calcCatBossCostTitle;
       case CalculatorCategory.supplierDeal:
         return AppStrings.calcCatSupplierTitle;
+      case CalculatorCategory.staffShare:
+        return AppStrings.calcCatStaffShareTitle;
     }
   }
 }
