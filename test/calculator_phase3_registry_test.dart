@@ -76,7 +76,7 @@ void main() {
       expect(supplier, contains('dealer_profit'));
     });
 
-    test('cila: patron görünümünde Stok modülü üst bölümlerde (2. bölüm)', () {
+    test('cila: patron görünümünde Stok modülü 1. bölümde (Günlük Hızlı)', () {
       final groups = CalculatorToolsRegistry.groupedForAccount(
         AccountType.commercial,
       );
@@ -86,10 +86,10 @@ void main() {
       final bossSection = groups.indexWhere(
         (g) => g.category == CalculatorCategory.bossCostProfit,
       );
-      // Stok (Günlük Hızlı), Maliyet/Kâr bölümünün üstünde ve en fazla 2.
-      // bölümde olmalı (Üretim'den hemen sonra).
+      // Günlük Hızlı Hesaplar artık en üstte; Stok 1. bölümde ve Maliyet/Kâr
+      // bölümünün üstünde olmalı.
+      expect(stockSection, 0);
       expect(stockSection, lessThan(bossSection));
-      expect(stockSection, lessThanOrEqualTo(1));
     });
   });
 

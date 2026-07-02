@@ -96,16 +96,32 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Daha okunur bölüm başlığı: solda ince softGold ayırıcı + daha büyük
+    // koyu metin. Kategori hızlı taramada net ayrışır; tasarım sistemine
+    // sadık (QuickActionTile'ın featured accent bar diliyle aynı).
     return Padding(
       padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.softGold,
-          fontWeight: FontWeight.w800,
-          fontSize: 12,
-          letterSpacing: 1.2,
-        ),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.softGold,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s),
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 14.5,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ],
       ),
     );
   }

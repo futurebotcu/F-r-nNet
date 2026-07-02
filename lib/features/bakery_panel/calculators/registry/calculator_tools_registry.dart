@@ -320,13 +320,14 @@ class CalculatorToolsRegistry {
           CalculatorCategory.staffShare,
         ];
       case AccountType.commercial:
-        // Patron: önce sabah üretim, hemen ardından günlük hızlı hesaplar
-        // (stok/tepsi/kapanış gibi her gün bakılanlar üstte kalsın), sonra
-        // maliyet/kâr/enerji, tedarikçi ve personel paylaşımı.
+        // Patron: önce her gün bakılan günlük hızlı hesaplar (stok/tepsi/
+        // kapanış), hemen ardından para kararları (maliyet/kâr), sonra üretim
+        // planı, tedarikçi pazarlığı ve personel paylaşımı. Görünürlük/route
+        // değişmez; yalnız bölüm sırası — patron "para"ya daha hızlı ulaşır.
         return const [
-          CalculatorCategory.productionRecipe,
           CalculatorCategory.dailyQuick,
           CalculatorCategory.bossCostProfit,
+          CalculatorCategory.productionRecipe,
           CalculatorCategory.supplierDeal,
           CalculatorCategory.staffShare,
         ];

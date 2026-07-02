@@ -113,13 +113,20 @@ void main() {
       },
     );
 
-    test('patron görünümünde günlük kontrol (dailyQuick) 2. bölümdedir', () {
+    test('patron görünümünde günlük hızlı hesaplar 1. bölümdür', () {
       final groups = CalculatorToolsRegistry.groupedForAccount(
         AccountType.commercial,
       );
-      expect(groups[1].category, CalculatorCategory.dailyQuick);
-      final daily = groups[1].tools.map((t) => t.id);
+      expect(groups.first.category, CalculatorCategory.dailyQuick);
+      final daily = groups.first.tools.map((t) => t.id);
       expect(daily, containsAll({'stock_runway', 'daily_close'}));
+    });
+
+    test('patron görünümünde Maliyet ve Kâr 2. bölümdür', () {
+      final groups = CalculatorToolsRegistry.groupedForAccount(
+        AccountType.commercial,
+      );
+      expect(groups[1].category, CalculatorCategory.bossCostProfit);
     });
   });
 

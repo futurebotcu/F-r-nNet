@@ -74,8 +74,8 @@ void main() {
   });
 
   testWidgets('ticari rolde Hamurdan Ürün aracı listelenir', (tester) async {
-    // Ticari tarafta Günlük Hızlı bölümü en altta; tüm kartların render
-    // olabilmesi için yüksek yüzey kullan.
+    // Ticari tarafta Günlük Hızlı bölümü en üstte; yine de tüm kartların
+    // render olabilmesi için yüksek yüzey kullan.
     await pumpTall(tester, AccountType.commercial);
     expect(find.text(AppStrings.calcDoughYieldTitle), findsOneWidget);
   });
@@ -122,31 +122,36 @@ void main() {
     expect(find.text(AppStrings.calcCatSupplierTitle), findsOneWidget);
   });
 
-  testWidgets('her kartta Offline rozeti + üstte offline notu var', (
+  testWidgets('kartta Offline rozeti yok, üstte tek offline notu var', (
     tester,
   ) async {
     await pumpTall(tester, AccountType.individual);
-    // 7 araç (3 günlük + 4 üretim) → en az birkaç Offline rozeti.
-    expect(find.text(AppStrings.calcOfflineBadge), findsWidgets);
+    // Cila: rozet karttan kaldırıldı; offline bilgisi yalnız üst notta.
+    expect(find.text(AppStrings.calcOfflineBadge), findsNothing);
     expect(find.text(AppStrings.calcHubOfflineNote), findsOneWidget);
   });
 
-  testWidgets('patron sıralaması: Üretim, Maliyet/Kâr\'ın üstünde', (
-    tester,
-  ) async {
-    await pumpTall(tester, AccountType.commercial);
-    final production = tester
-        .getTopLeft(find.text(AppStrings.calcCatProductionTitle))
-        .dy;
-    final bossCost = tester
-        .getTopLeft(find.text(AppStrings.calcCatBossCostTitle))
-        .dy;
-    final supplier = tester
-        .getTopLeft(find.text(AppStrings.calcCatSupplierTitle))
-        .dy;
-    expect(production, lessThan(bossCost));
-    expect(bossCost, lessThan(supplier));
-  });
+  testWidgets(
+    'patron sıralaması: Günlük Hızlı → Maliyet/Kâr → Üretim → Tedarikçi',
+    (tester) async {
+      await pumpTall(tester, AccountType.commercial);
+      final daily = tester
+          .getTopLeft(find.text(AppStrings.calcCatDailyQuickTitle))
+          .dy;
+      final bossCost = tester
+          .getTopLeft(find.text(AppStrings.calcCatBossCostTitle))
+          .dy;
+      final production = tester
+          .getTopLeft(find.text(AppStrings.calcCatProductionTitle))
+          .dy;
+      final supplier = tester
+          .getTopLeft(find.text(AppStrings.calcCatSupplierTitle))
+          .dy;
+      expect(daily, lessThan(bossCost));
+      expect(bossCost, lessThan(production));
+      expect(production, lessThan(supplier));
+    },
+  );
 
   testWidgets('bireysel sıralaması: Günlük Hızlı, Üretim\'in üstünde', (
     tester,
