@@ -151,16 +151,19 @@ void main() {
       expect(daily, contains('water_temp'));
     });
 
-    test('patron: Üretim → Maliyet/Kâr → Tedarikçi → Günlük sırası', () {
+    test('patron: Üretim → Günlük Hızlı → Maliyet/Kâr → Tedarikçi sırası', () {
       final groups = CalculatorToolsRegistry.groupedForAccount(
         AccountType.commercial,
       );
       final cats = groups.map((g) => g.category).toList();
+      // Cila: Günlük Hızlı (stok/tepsi) Üretim'den hemen sonra, maliyet/kâr
+      // ve tedarikçinin üstünde; personel paylaşımı en sonda.
       expect(cats, [
         CalculatorCategory.productionRecipe,
+        CalculatorCategory.dailyQuick,
         CalculatorCategory.bossCostProfit,
         CalculatorCategory.supplierDeal,
-        CalculatorCategory.dailyQuick,
+        CalculatorCategory.staffShare,
       ]);
       // Üretim grubunun ilk aracı sabah üretim planlayıcı (en sık).
       expect(groups.first.tools.first.id, 'morning_plan');

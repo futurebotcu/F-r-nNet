@@ -72,7 +72,7 @@ class _RecipeScalerScreenState extends State<RecipeScalerScreen> {
         AppNumberField(label: 'Eski hedef (adet / kg)', controller: _oldTarget),
         AppNumberField(label: 'Yeni hedef (adet / kg)', controller: _newTarget),
         AppNumberField(label: 'Un', controller: _flour, suffix: 'kg'),
-        AppNumberField(label: 'Su', controller: _water, suffix: 'kg / L'),
+        AppNumberField(label: 'Su', controller: _water, suffix: 'L / kg'),
         AppNumberField(label: 'Maya', controller: _yeast, suffix: 'kg'),
         AppNumberField(label: 'Tuz', controller: _salt, suffix: 'kg'),
         AppNumberField(
@@ -98,7 +98,7 @@ class _RecipeScalerScreenState extends State<RecipeScalerScreen> {
                 ),
                 CalcResultLine(
                   'Su',
-                  '${NumberFormatter.decimal(r.waterKg)} kg / L',
+                  '${NumberFormatter.decimal(r.waterKg)} L / kg',
                   icon: Icons.water_drop_outlined,
                 ),
                 CalcResultLine(
