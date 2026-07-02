@@ -62,21 +62,30 @@ class StatCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: hero ? AppSpacing.l : AppSpacing.m),
-          Text(
-            value,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              // Premium card trio sprint — hero variant rakam vurgusu:
-              // letterSpacing -0.8 → -1.0 + fontSize 32 → 34 ile gün sonu
-              // ve dealer overview KPI'larında daha güçlü "AAA hiyerarşi"
-              // hissi. Default variant (26 / -0.8) dokunulmaz.
-              letterSpacing: hero ? -1.0 : -0.8,
-              fontSize: hero ? 34 : 26,
-              height: 1.05,
+          // Büyük rakam/para değeri kart genişliğini aşarsa kırpma/ellipsis
+          // yerine tek satır kalıp küçülür (FittedBox scaleDown). Sığan
+          // değerlerde görünüm değişmez; yalnız taşma durumunda ölçeklenir.
+          SizedBox(
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  // Premium card trio sprint — hero variant rakam vurgusu:
+                  // letterSpacing -0.8 → -1.0 + fontSize 32 → 34 ile gün sonu
+                  // ve dealer overview KPI'larında daha güçlü "AAA hiyerarşi"
+                  // hissi. Default variant (26 / -0.8) dokunulmaz.
+                  letterSpacing: hero ? -1.0 : -0.8,
+                  fontSize: hero ? 34 : 26,
+                  height: 1.05,
+                ),
+                maxLines: 1,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           if (helper != null) ...[
             const SizedBox(height: 6),

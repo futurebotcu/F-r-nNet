@@ -42,8 +42,9 @@ void main() {
     testWidgets('320px uzun başlık taşmaz: $title', (tester) async {
       await pump320(tester, title);
       expect(find.text(title), findsOneWidget);
-      // Offline rozeti ve chevron hâlâ görünür (düzen bozulmadı).
-      expect(find.text('Offline'), findsOneWidget);
+      // Kartta artık Offline rozeti yok (üst nota taşındı); başlık alanı
+      // ferah, uzun başlık 320px'te taşmadan 2 satıra açılır. Chevron durur.
+      expect(find.text('Offline'), findsNothing);
       expect(find.byIcon(Icons.arrow_forward_ios_rounded), findsOneWidget);
     });
   }

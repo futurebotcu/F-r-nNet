@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/interactions.dart';
 
 /// Hub'taki tek bir hesaplama aracı kartı.
 ///
 /// Sade ve mobil-dostu: büyük dokunma alanı, ikon + kalın başlık + kısa
-/// açıklama ve her kartta "Offline" rozeti (tüm hesaplar internetsiz çalışır).
+/// açıklama. Offline bilgisi hub üstündeki tek nottan gelir; kartta tekrar
+/// rozet yoktur (başlık alanı ferahlar, uzun başlıklar dar ekranda sıkışmaz).
 /// Saf gösterim — matematik/iş mantığı içermez.
 class CalculatorToolCard extends StatelessWidget {
   const CalculatorToolCard({
@@ -61,29 +61,18 @@ class CalculatorToolCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            // Uzun başlık 2 satıra sarsa bile rozet ilk
-                            // satırla hizalı kalsın (düzen bozulmaz).
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  title,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
-                                    fontSize: 16,
-                                    letterSpacing: -0.1,
-                                  ),
-                                  // Küçük ekranda uzun başlıklar kırpılmasın;
-                                  // 2 satıra kadar açılabilir.
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.s),
-                              const _OfflineBadge(),
-                            ],
+                          Text(
+                            title,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                              letterSpacing: -0.1,
+                            ),
+                            // Küçük ekranda (320px) uzun başlıklar kırpılmasın;
+                            // tam genişlik + 2 satıra kadar açılabilir.
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 3),
                           Text(
@@ -133,43 +122,6 @@ class _IconChip extends StatelessWidget {
         ),
       ),
       child: Icon(icon, color: AppColors.brandInk, size: 21),
-    );
-  }
-}
-
-/// Her kartta gösterilen küçük "Offline" rozeti.
-class _OfflineBadge extends StatelessWidget {
-  const _OfflineBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppColors.borderHairline, width: 0.6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.cloud_off_rounded,
-            size: 11,
-            color: AppColors.textMuted,
-          ),
-          const SizedBox(width: 3),
-          Text(
-            AppStrings.calcOfflineBadge,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

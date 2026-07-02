@@ -1377,18 +1377,16 @@ class AppStrings {
       'Hamurdan kaç ürün çıkar, hızlıca gör';
   // Ortak modüller (ticari + bireysel).
   static const String calcMorningPlanTitle = 'Sabah Üretim Planlayıcı';
-  static const String calcMorningPlanSub =
-      'Kaç ürün için ne kadar un, su, maya, tuz?';
+  static const String calcMorningPlanSub = 'Adete göre un, su, maya, tuz.';
   static const String calcWaterRatioTitle = 'Hamur Kıvamı (Su Oranı)';
-  static const String calcWaterRatioSub =
-      'Una göre su oranını gör; hamur sert mi, ideal mi, fazla sulu mu anla.';
+  static const String calcWaterRatioSub = 'Su oranına göre hamur kıvamını gör.';
   static const String calcSackBreadTitle = 'Çuvaldan Kaç Ürün Çıkar?';
   static const String calcSackBreadSub =
-      'Un, su oranı, gramaj ve fireyle yaklaşık ürün adedini hesapla.';
+      'Çuvaldan yaklaşık ürün adedini hesapla.';
   static const String calcBakersPercentTitle =
       'Fırıncı Yüzdesi (Una Göre Reçete)';
   static const String calcBakersPercentSub =
-      'Unu %100 kabul et, su/tuz/maya miktarını reçete diliyle hesapla.';
+      'Una göre su, tuz, maya miktarını bul.';
   static const String calcRecipeScaleTitle = 'Reçete Büyüt / Küçült';
   static const String calcRecipeScaleSub = 'Reçeteyi büyüt ya da küçült';
   // Çalışan modülü (yalnız bireysel).
@@ -1397,8 +1395,7 @@ class AppStrings {
       'Hamur tutsun diye su kaç derece olmalı?';
   // Patron modülleri (yalnız ticari).
   static const String calcCostProfitTitle = 'Gerçek Maliyet + Kâr';
-  static const String calcCostProfitSub =
-      'Ürün başı maliyetin ve kârın ne kadar?';
+  static const String calcCostProfitSub = 'Adet başı maliyet ve kârı gör.';
   static const String calcFlourHikeTitle = 'Un Zammı Cebe Etkisi';
   static const String calcFlourHikeSub = 'Un zammı cebine ne kadar yansır?';
   static const String calcOvenEnergyTitle = 'Fırın Enerji Maliyeti';
@@ -1409,62 +1406,48 @@ class AppStrings {
   static const String calcEveningDiscountSub = 'Zarar etmeden indirim sınırı';
   // Faz 3 — ortak modüller (ticari + bireysel).
   static const String calcStockRunwayTitle = 'Stok Bu Hafta Biter mi?';
-  static const String calcStockRunwaySub =
-      'Eldeki malzeme kaç gün yeter, ne zaman sipariş ver?';
+  static const String calcStockRunwaySub = 'Stokun kaç gün yeteceğini gör.';
   static const String calcBatchValueTitle = 'Tepsi / Parti Değeri';
-  static const String calcBatchValueSub =
-      'Bir tepsi/parti üretim kasaya ne bırakır?';
+  static const String calcBatchValueSub = 'Bir tepsi kasaya ne bırakır, gör.';
   // Faz 3 — patron modülleri (yalnız ticari).
   static const String calcPriceUpdateTitle = 'Fiyat Güncelleme Simülatörü';
-  static const String calcPriceUpdateSub =
-      'Maliyet artınca fiyatı ne kadar güncellemeli?';
+  static const String calcPriceUpdateSub = 'Maliyet artınca yeni fiyatı bul.';
   static const String calcDealerProfitTitle = 'Bayi Kârlılık Ölçeği';
   static const String calcDealerProfitSub =
-      'Bu bayi iade ve dağıtımdan sonra kazandırıyor mu?';
+      'Bayi iade sonrası kazandırıyor mu?';
   static const String calcFixedCostTitle = 'Dükkan Boşta Kaça Çalışıyor?';
-  static const String calcFixedCostSub =
-      'Sabit giderin günlük / çuval / ürün başına yükü';
+  static const String calcFixedCostSub = 'Sabit giderin ürün başına yükü.';
   static const String calcWasteLossTitle = 'Günlük Fire / Bayat Zarar';
-  static const String calcWasteLossSub =
-      'Çöpe giden ürün bugün ne kadar zarar ettirdi?';
+  static const String calcWasteLossSub = 'Bayat/fire bugün ne kadar zarar?';
   // Final tamamlama paketi — yeni kategori + yeni modüller.
   static const String calcCatStaffShareTitle = 'Personel ve Paylaşım';
   // Final — ortak modüller (ticari + bireysel).
   static const String calcWeightChangeTitle = 'Gramaj Değişimi';
   static const String calcWeightChangeSub =
-      'Gramaj değişirse aynı hamurdan kaç adet fark eder?';
+      'Gramaj değişince adet farkını gör.';
   static const String calcPackConvertTitle = 'Koli / Paket Dönüştürücü';
-  static const String calcPackConvertSub =
-      'İstediğin adet kaç koli eder, açıkta kaç tane kalır?';
+  static const String calcPackConvertSub = 'Adet ↔ koli dönüşümünü yap.';
   // Final — çalışan modülleri (yalnız bireysel).
   static const String calcFermentationTitle = 'Mayalanma Süresi Tahmini';
-  static const String calcFermentationSub =
-      'Ortama ve mayaya göre hamur yaklaşık ne zaman hazır?';
+  static const String calcFermentationSub = 'Hamur yaklaşık ne zaman hazır?';
   static const String calcOvertimePayTitle = 'Mesai + Prim Hesaplayıcı';
-  static const String calcOvertimePaySub =
-      'Bugünkü mesai, fazla mesai ve prim karşılığın ne kadar?';
+  static const String calcOvertimePaySub = 'Mesai ve prim tutarını hesapla.';
   // Final — patron modülleri (yalnız ticari).
   static const String calcRecipeCostDetailTitle = 'Detaylı Reçete Maliyeti';
   static const String calcRecipeCostDetailSub =
-      'Malzeme × birim fiyatla ürün başı gerçek maliyet ve hedef fiyat';
+      'Ürün başı gerçek maliyeti bul.';
   static const String calcFlatDealTitle = 'Düz Hesap / İskonto';
-  static const String calcFlatDealSub =
-      '"Düz hesap yapalım" pazarlığı gerçekte yüzde kaç iskonto?';
+  static const String calcFlatDealSub = 'Düz hesap yüzde kaç iskonto?';
   static const String calcOvenCapacityTitle = 'Fırın Kapasite Hesabı';
-  static const String calcOvenCapacitySub =
-      'Tepsi, pişirme süresi ve mesaiyle günlük azami üretim';
+  static const String calcOvenCapacitySub = 'Günlük azami üretim kapasiten.';
   static const String calcLaborIndexTitle = 'Ürün Başı İşçilik';
-  static const String calcLaborIndexSub =
-      'Bir ürüne kaç saniye ve kaç lira işçilik gidiyor?';
+  static const String calcLaborIndexSub = 'Ürün başı işçilik (saniye + ₺).';
   static const String calcMasterEarningsTitle = 'Usta Hak Ediş Hesabı';
-  static const String calcMasterEarningsSub =
-      'Çuval / parti başı primle ustanın hak edişi ne kadar?';
+  static const String calcMasterEarningsSub = 'Ustanın prim hak edişini bul.';
   static const String calcTipSplitTitle = 'Prim / Bahşiş Bölüştürücü';
-  static const String calcTipSplitSub =
-      'Gün sonu primi imalat, tezgâh ve çırak arasında adil böl';
+  static const String calcTipSplitSub = 'Primi ekip arasında adil böl.';
   static const String calcDailyCloseTitle = 'Günlük Kapanış (Kâr / Zarar)';
-  static const String calcDailyCloseSub =
-      'Bugün cebine tahmini ne kaldı? Günün kâr / zarar röntgeni';
+  static const String calcDailyCloseSub = 'Günün kâr / zarar özetini gör.';
   static const String cardWorkerProfile = 'Ustalık Bilgilerim';
   static const String cardWorkerProfileSub = 'Meslek, tecrübe, beceri';
   static const String cardWorkerExperiences = 'Çalışma Geçmişim';
