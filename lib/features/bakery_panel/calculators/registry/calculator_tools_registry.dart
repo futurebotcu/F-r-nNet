@@ -304,6 +304,44 @@ class CalculatorToolsRegistry {
         .toList(growable: false);
   }
 
+  /// Hub üstündeki "Bugün lazım olur" kısayol bölümünün rol-bazlı araç
+  /// kimlikleri. Salt gösterim sırasıdır: görünürlük/route/kategori
+  /// kararlarını DEĞİŞTİRMEZ — [featuredForAccount] listeyi her zaman
+  /// [forAccount] (rol filtreli) kümesinden türetir.
+  static const List<String> _featuredCommercialIds = <String>[
+    'daily_close',
+    'cost_profit',
+    'stock_runway',
+    'morning_plan',
+    'price_update',
+    'dealer_profit',
+  ];
+  static const List<String> _featuredIndividualIds = <String>[
+    'dough_yield',
+    'water_ratio',
+    'stock_runway',
+    'batch_value',
+    'fermentation_time',
+    'overtime_pay',
+  ];
+
+  /// [type] için hub üstünde öne çıkarılacak araçlar (kısayol; araçlar
+  /// kendi kategori bölümlerinde de listelenmeye devam eder). Toptancıda
+  /// hiçbir araç görünmediği için boş döner.
+  static List<CalculatorTool> featuredForAccount(AccountType type) {
+    final List<String> ids;
+    switch (type) {
+      case AccountType.commercial:
+        ids = _featuredCommercialIds;
+      case AccountType.individual:
+        ids = _featuredIndividualIds;
+      case AccountType.wholesaler:
+        ids = const <String>[];
+    }
+    final visible = forAccount(type);
+    return [for (final id in ids) ...visible.where((tool) => tool.id == id)];
+  }
+
   /// Hub'ta gösterilecek kategori sırası. En sık kullanılan grup üstte;
   /// sıralama role göre değişir (bireysel günlük hesaplarla, patron üretim/
   /// maliyetle başlar). Tek karar noktası buradadır.

@@ -1368,6 +1368,10 @@ class AppStrings {
       'değiştirebilirsin.';
   static const String calcProductSelectLabel = 'Ürün';
   static const String calcProductGroupSelectLabel = 'Ürün grubu';
+  // Premium hub yenileme — üstte rol-bazlı "Bugün lazım olur" kısayolları
+  // ve kategori başlığındaki araç sayacı eki ("6 araç").
+  static const String calcHubFeaturedTitle = 'Bugün lazım olur';
+  static const String calcHubToolCountSuffix = 'araç';
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';
