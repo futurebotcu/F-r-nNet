@@ -151,14 +151,36 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// 2 kolonlu kompakt araç ızgarası. Sabit satır yüksekliği + kart içinde
-/// Flexible metinler 320dp dar ekranda taşmayı engeller. Kart dokunuşu
-/// aracın mevcut route'una gider (route registry'de tanımlı, değişmez).
+/// 2 kolonlu kompakt araç ızgarası. Satır yüksekliği kullanıcının yazı
+/// ölçeğiyle kontrollü büyür (aşağıda [_mainAxisExtent]); kart içindeki
+/// Flexible metinler dar ekranda taşmaya karşı yedek korumadır. Kart
+/// dokunuşu aracın mevcut route'una gider (registry'de tanımlı, değişmez).
 class _ToolGrid extends StatelessWidget {
   const _ToolGrid({required this.tools, required this.keyPrefix});
 
   final List<CalculatorTool> tools;
   final String keyPrefix;
+
+  /// Izgara satır yüksekliği. 1.0x yazı ölçeğinde birebir eski değer (142);
+  /// büyük yazı ölçeğinde yalnız kartın metin alanı büyür, ikon şeridi ve
+  /// boşluklar sabit kalır. Böylece 1.3x'te başlığın ikinci satırı alttan
+  /// kırpılmaz; erişilebilirlik ölçeği korunur, aşırı büyümede tavan var.
+  ///
+  /// Önemli: ölçekleme blok yüksekliğiyle DEĞİL, karttaki gerçek font
+  /// boyutlarıyla (başlık 13.5 / açıklama 11.5) yapılır — Android 14+
+  /// non-linear font scaling büyük değerleri neredeyse hiç büyütmediği
+  /// için `scale(<blok yüksekliği>)` cihazda yanlış (küçük) sonuç verir.
+  static double _mainAxisExtent(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    // CalculatorMiniCard metin stilleriyle birebir: 2 satır başlık
+    // (13.5, height 1.2) + 2 satır açıklama (11.5, height 1.25).
+    final titleBlock = scaler.scale(13.5) * 1.2 * 2;
+    final descBlock = scaler.scale(11.5) * 1.25 * 2;
+    // 1.0x'te metin bloğu ≈ 61.2 → sabit kısım 142 - 61.2 = 80.8
+    // (padding + ikon şeridi + aralıklar + nefes payı).
+    const fixedPart = 80.8;
+    return (fixedPart + titleBlock + descBlock).clamp(142.0, 220.0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,11 +188,11 @@ class _ToolGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        mainAxisExtent: 142,
+        mainAxisExtent: _mainAxisExtent(context),
       ),
       itemCount: tools.length,
       itemBuilder: (context, i) {
