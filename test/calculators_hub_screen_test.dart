@@ -68,16 +68,17 @@ void main() {
   });
 
   testWidgets('bireysel rolde Hamurdan Ürün aracı listelenir', (tester) async {
-    await tester.pumpWidget(_wrap(_profile(AccountType.individual)));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.calcDoughYieldTitle), findsOneWidget);
+    // Premium hub: araç hem "Bugün lazım olur" kısayolunda hem kendi
+    // kategorisinde görünebilir; en az bir kart yeterli.
+    await pumpTall(tester, AccountType.individual);
+    expect(find.text(AppStrings.calcDoughYieldTitle), findsAtLeastNWidgets(1));
   });
 
   testWidgets('ticari rolde Hamurdan Ürün aracı listelenir', (tester) async {
     // Ticari tarafta Günlük Hızlı bölümü en üstte; yine de tüm kartların
     // render olabilmesi için yüksek yüzey kullan.
     await pumpTall(tester, AccountType.commercial);
-    expect(find.text(AppStrings.calcDoughYieldTitle), findsOneWidget);
+    expect(find.text(AppStrings.calcDoughYieldTitle), findsAtLeastNWidgets(1));
   });
 
   testWidgets('toptancı rolde araç yok → boş durum gösterir', (tester) async {
@@ -90,7 +91,9 @@ void main() {
   testWidgets('araç kartına dokununca alt route\'a gider', (tester) async {
     await tester.pumpWidget(_wrap(_profile(AccountType.individual)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.calcDoughYieldTitle));
+    // Araç kısayol + kategori kartı olarak iki kez görünebilir; ikisi de
+    // aynı route'a gider — ilkine dokunmak yeterli.
+    await tester.tap(find.text(AppStrings.calcDoughYieldTitle).first);
     await tester.pumpAndSettle();
     expect(find.text('DoughScreen — stub'), findsOneWidget);
   });
@@ -99,8 +102,8 @@ void main() {
     tester,
   ) async {
     await pumpTall(tester, AccountType.commercial);
-    expect(find.text(AppStrings.calcCostProfitTitle), findsOneWidget);
-    expect(find.text(AppStrings.calcMorningPlanTitle), findsOneWidget);
+    expect(find.text(AppStrings.calcCostProfitTitle), findsAtLeastNWidgets(1));
+    expect(find.text(AppStrings.calcMorningPlanTitle), findsAtLeastNWidgets(1));
     expect(find.text(AppStrings.calcWaterTempTitle), findsNothing);
   });
 
@@ -108,8 +111,11 @@ void main() {
     'bireysel çalışan + ortak kartları görür, patron kartını görmez',
     (tester) async {
       await pumpTall(tester, AccountType.individual);
-      expect(find.text(AppStrings.calcWaterTempTitle), findsOneWidget);
-      expect(find.text(AppStrings.calcMorningPlanTitle), findsOneWidget);
+      expect(find.text(AppStrings.calcWaterTempTitle), findsAtLeastNWidgets(1));
+      expect(
+        find.text(AppStrings.calcMorningPlanTitle),
+        findsAtLeastNWidgets(1),
+      );
       expect(find.text(AppStrings.calcCostProfitTitle), findsNothing);
     },
   );

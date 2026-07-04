@@ -9,16 +9,17 @@ import '../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../profile/models/bakery_profile.dart';
 import '../../../profile/providers/profile_provider.dart';
 import '../models/calculator_category.dart';
+import '../models/calculator_tool.dart';
 import '../registry/calculator_tools_registry.dart';
-import '../widgets/calculator_tool_card.dart';
+import '../widgets/calculator_mini_card.dart';
 
 /// Hesaplama merkezi — `/calculator` route'unun kök ekranı.
 ///
 /// Kullanıcının hesap türünü okur ve araçları [CalculatorToolsRegistry]
-/// üzerinden kategori bölümlerine ayırıp role-sıralı listeler (en sık
-/// kullanılan grup üstte). Sıralama/kategori kararları registry'de tek
-/// noktada yönetilir; ekran rolü hard-code etmez. Rolün aracı yoksa sade
-/// boş durum gösterilir.
+/// üzerinden çizer: üstte rol-bazlı "Bugün lazım olur" kısayolları, altında
+/// role-sıralı kategori bölümleri (2 kolonlu kompakt ızgara). Sıralama,
+/// kısayol ve kategori kararları registry'de tek noktada yönetilir; ekran
+/// rolü hard-code etmez. Rolün aracı yoksa sade boş durum gösterilir.
 class CalculatorsHubScreen extends ConsumerWidget {
   const CalculatorsHubScreen({super.key});
 
@@ -27,6 +28,7 @@ class CalculatorsHubScreen extends ConsumerWidget {
     final profile = ref.watch(profileControllerProvider);
     final account = profile?.accountType ?? AccountType.individual;
     final groups = CalculatorToolsRegistry.groupedForAccount(account);
+    final featured = CalculatorToolsRegistry.featuredForAccount(account);
 
     return PremiumScaffold(
       appBar: AppBar(title: const Text(AppStrings.calcHubTitle)),
@@ -43,20 +45,23 @@ class CalculatorsHubScreen extends ConsumerWidget {
                 children: [
                   const _OfflineNote(),
                   const SizedBox(height: AppSpacing.l),
+                  if (featured.isNotEmpty) ...[
+                    const _SectionHeader(
+                      icon: Icons.bolt_rounded,
+                      title: AppStrings.calcHubFeaturedTitle,
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+                    _ToolGrid(tools: featured, keyPrefix: 'featured'),
+                  ],
                   for (var g = 0; g < groups.length; g++) ...[
-                    if (g != 0) const SizedBox(height: AppSpacing.xl),
-                    _SectionHeader(title: groups[g].category.title),
-                    const SizedBox(height: AppSpacing.s),
-                    for (var i = 0; i < groups[g].tools.length; i++) ...[
-                      CalculatorToolCard(
-                        title: groups[g].tools[i].title,
-                        subtitle: groups[g].tools[i].description,
-                        icon: groups[g].tools[i].icon,
-                        onTap: () => context.push(groups[g].tools[i].route),
-                      ),
-                      if (i != groups[g].tools.length - 1)
-                        const SizedBox(height: AppSpacing.s),
-                    ],
+                    const SizedBox(height: AppSpacing.xl),
+                    _SectionHeader(
+                      icon: groups[g].category.icon,
+                      title: groups[g].category.title,
+                      count: groups[g].tools.length,
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+                    _ToolGrid(tools: groups[g].tools, keyPrefix: 'tool'),
                   ],
                 ],
               ),
@@ -90,39 +95,94 @@ class _OfflineNote extends StatelessWidget {
   }
 }
 
+/// Bölüm başlığı: limon zeminli küçük ikon + kalın başlık + opsiyonel
+/// araç sayacı ("6 araç"). Kısayol ve kategori bölümleri aynı dili konuşur.
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+  const _SectionHeader({required this.icon, required this.title, this.count});
+
+  final IconData icon;
   final String title;
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
-    // Daha okunur bölüm başlığı: solda ince softGold ayırıcı + daha büyük
-    // koyu metin. Kategori hızlı taramada net ayrışır; tasarım sistemine
-    // sadık (QuickActionTile'ın featured accent bar diliyle aynı).
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 16,
-            decoration: BoxDecoration(
-              color: AppColors.softGold,
-              borderRadius: BorderRadius.circular(2),
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: AppColors.brandLemonPale,
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+              color: AppColors.brandLemonPressed.withValues(alpha: 0.28),
+              width: 0.7,
             ),
           ),
-          const SizedBox(width: AppSpacing.s),
-          Text(
+          child: Icon(icon, size: 15, color: AppColors.brandInk),
+        ),
+        const SizedBox(width: AppSpacing.s),
+        Flexible(
+          child: Text(
             title,
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w800,
-              fontSize: 14.5,
+              fontSize: 15,
               letterSpacing: -0.1,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (count != null) ...[
+          const SizedBox(width: AppSpacing.s),
+          Text(
+            '$count ${AppStrings.calcHubToolCountSuffix}',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
             ),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// 2 kolonlu kompakt araç ızgarası. Sabit satır yüksekliği + kart içinde
+/// Flexible metinler 320dp dar ekranda taşmayı engeller. Kart dokunuşu
+/// aracın mevcut route'una gider (route registry'de tanımlı, değişmez).
+class _ToolGrid extends StatelessWidget {
+  const _ToolGrid({required this.tools, required this.keyPrefix});
+
+  final List<CalculatorTool> tools;
+  final String keyPrefix;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        mainAxisExtent: 142,
       ),
+      itemCount: tools.length,
+      itemBuilder: (context, i) {
+        final tool = tools[i];
+        return CalculatorMiniCard(
+          key: ValueKey('${keyPrefix}_${tool.id}'),
+          title: tool.title,
+          subtitle: tool.description,
+          icon: tool.icon,
+          onTap: () => context.push(tool.route),
+        );
+      },
     );
   }
 }
