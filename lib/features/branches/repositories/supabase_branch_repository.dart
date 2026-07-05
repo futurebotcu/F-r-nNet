@@ -350,22 +350,25 @@ class SupabaseBranchRepository implements BranchRepository {
 
   @override
   Future<List<BranchInvite>> myPendingInvites() async {
-    final uid = _requireUserId();
-    // branch join: kabul öncesi RLS gereği null döner (davetli şube satırını
-    // göremez) — UI fallback başlığı uygular. Owner adı snapshot RPC ile.
-    final rows = await _client
-        .from('branch_invites')
-        .select(
-          'id, branch_id, owner_id, invited_user_id, role, permissions, '
-          'created_at, branch:branches!branch_id(name)',
+    _requireUserId();
+    // Kabul öncesi davetli şube satırını RLS gereği göremez; davet kartı
+    // bağlamı (şube adı + davet eden) parametresiz SECURITY DEFINER RPC'den
+    // gelir — yalnız çağıranın kendi pending davetleri döner.
+    final rows = await _client.rpc('my_branch_invite_contexts');
+    if (rows is! List) return const [];
+    return rows
+        .cast<Map<String, dynamic>>()
+        .map(
+          (r) => BranchInvite(
+            id: r['invite_id'] as String,
+            branchId: r['branch_id'] as String,
+            role: BranchRoleMeta.fromKey(r['role'] as String),
+            permissions: _permsFromJson(r['permissions']),
+            branchName: (r['branch_name'] as String?) ?? '',
+            ownerName: (r['owner_name'] as String?) ?? '',
+            createdAt: DateTime.tryParse((r['created_at'] as String?) ?? ''),
+          ),
         )
-        .eq('invited_user_id', uid)
-        .eq('status', 'pending')
-        .order('created_at', ascending: false);
-    final list = (rows as List).cast<Map<String, dynamic>>();
-    final names = await _displayNames(list.map((r) => r['owner_id'] as String));
-    return list
-        .map((r) => _inviteFromRow(r, names: names))
         .toList(growable: false);
   }
 
