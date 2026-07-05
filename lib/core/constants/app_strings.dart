@@ -1372,6 +1372,41 @@ class AppStrings {
   // ve kategori başlığındaki araç sayacı eki ("6 araç").
   static const String calcHubFeaturedTitle = 'Bugün lazım olur';
   static const String calcHubToolCountSuffix = 'araç';
+
+  // ── Uygulama içi yönlendirme (guide) yüzeyleri ─────────────────────────
+  // Şoför ekleme işlem rehberi (bottomGuide) — her yeni ekleme işleminde
+  // görünür; kalıcı gizleme yok. Metinler GERÇEK akışa göre: ekleme
+  // FırınNet ID ile davet akışıdır; ID şoför tarafında Ayarlar ekranında
+  // gösterilir (dokununca kopyalanır).
+  static const String driverAddGuideTitle = 'Şoför nasıl eklenir?';
+  static const String driverAddGuideBody =
+      'Şoförün FırınNet ID\'sini al, bu ekrana gir ve yetkisini '
+      'belirleyerek davet gönder.';
+  static const String driverAddGuideStep1Title =
+      'Şoförden FırınNet ID\'sini iste';
+  static const String driverAddGuideStep1Body =
+      'Şoför uygulamaya kendi hesabıyla giriş yapar ve Ayarlar '
+      'bölümündeki FırınNet ID\'sini sana gönderir.';
+  static const String driverAddGuideStep2Title = 'ID\'yi bu ekrana yaz';
+  static const String driverAddGuideStep2Body =
+      'Şoförün gönderdiği FırınNet ID\'yi buradaki ID alanına gir. '
+      'Böylece doğru kullanıcı bulunur.';
+  static const String driverAddGuideStep3Title = 'Görev ve yetkiyi belirle';
+  static const String driverAddGuideStep3Body =
+      'Şoförün hangi teslimat, bayi ve cari işlemlerini görebileceğini seç.';
+  static const String driverAddGuideStep4Title = 'Daveti gönder';
+  static const String driverAddGuideStep4Body =
+      'Kaydettikten sonra şoföre davet gider. Şoför onayladığında panelde '
+      'aktifleşir.';
+  static const String driverAddGuideFootnote =
+      'ID\'yi bulamıyorsa şoföre uygulamayı açıp Ayarlar bölümünden '
+      'FırınNet ID\'sini kopyalamasını söyle.';
+  // Şoför daveti gönderildi kısa üst bilgi şeridi (topBanner, success).
+  static const String driverAddedBannerTitle = 'Şoför daveti gönderildi';
+  static const String driverAddedBannerBody =
+      'Şoför onayladığında teslimat ve cari takibini panelden '
+      'yönetebilirsin.';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';
