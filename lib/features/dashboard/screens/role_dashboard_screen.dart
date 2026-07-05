@@ -10,6 +10,7 @@ import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/quick_action_tile.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../branches/providers/branch_providers.dart';
 import '../../messaging/providers/messaging_providers.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -28,7 +29,22 @@ class RoleDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
     final account = profile?.accountType ?? AccountType.individual;
-    final cards = RolePanelCards.forAccount(account);
+    var cards = RolePanelCards.forAccount(account);
+    // Şube Yönetimi V1 — bireyselde "Şube İşlerim" YALNIZ aktif şube
+    // üyeliği (veya bekleyen davet) varsa görünür; yoksa hiçbir şube
+    // yüzeyi render edilmez (fail-closed görünürlük, asıl sınır RLS'te).
+    if (account == AccountType.individual &&
+        ref.watch(hasBranchWorkSurfaceProvider)) {
+      cards = [
+        const PanelCard(
+          label: AppStrings.myBranchTitle,
+          subtitle: AppStrings.myBranchCardSub,
+          icon: Icons.store_mall_directory_outlined,
+          route: AppRoutes.myBranch,
+        ),
+        ...cards,
+      ];
+    }
     // M-10 — Panel "Mesajlar" kartı için gerçek okunmamış toplamı.
     final unread = ref.watch(totalUnreadMessagesProvider);
     final greeting = profile?.displayName.isNotEmpty == true
@@ -61,8 +77,9 @@ class RoleDashboardScreen extends ConsumerWidget {
                       subtitle: cards[i].subtitle,
                       icon: cards[i].icon,
                       featured: i == 0,
-                      badgeCount:
-                          cards[i].route == AppRoutes.messages ? unread : 0,
+                      badgeCount: cards[i].route == AppRoutes.messages
+                          ? unread
+                          : 0,
                       onTap: () => _onTap(context, cards[i]),
                     ),
                     if (i != cards.length - 1)
