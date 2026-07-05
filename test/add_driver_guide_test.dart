@@ -56,6 +56,42 @@ void main() {
     expect(find.text(AppStrings.driverAddGuideTitle), findsOneWidget);
     expect(find.text(AppStrings.driverAddGuideStep1Title), findsOneWidget);
     expect(find.text(AppStrings.driverAddGuideStep4Title), findsOneWidget);
+    // Alt küçük yardım notu (ID nereden kopyalanır).
+    expect(find.text(AppStrings.driverAddGuideFootnote), findsOneWidget);
+  });
+
+  testWidgets('rehber FırınNet ID akışını anlatır (gerçek akışla uyumlu)', (
+    tester,
+  ) async {
+    await _pumpTall(tester, const AddDriverScreen());
+    // "FırınNet ID" rehber metinlerinde geçer (yalnız form etiketi değil).
+    expect(
+      find.textContaining('FırınNet ID', findRichText: true),
+      findsAtLeastNWidgets(3),
+    );
+    // ID'nin gerçek konumu: Ayarlar (Profil/Hesabım ekranı yok).
+    expect(find.text(AppStrings.driverAddGuideStep1Body), findsOneWidget);
+    expect(AppStrings.driverAddGuideStep1Body, contains('Ayarlar'));
+    expect(AppStrings.driverAddGuideFootnote, contains('Ayarlar'));
+  });
+
+  testWidgets('rehber adımları doğru sırada görünür (1→2→3→4)', (tester) async {
+    await _pumpTall(tester, const AddDriverScreen());
+    final y1 = tester
+        .getTopLeft(find.text(AppStrings.driverAddGuideStep1Title))
+        .dy;
+    final y2 = tester
+        .getTopLeft(find.text(AppStrings.driverAddGuideStep2Title))
+        .dy;
+    final y3 = tester
+        .getTopLeft(find.text(AppStrings.driverAddGuideStep3Title))
+        .dy;
+    final y4 = tester
+        .getTopLeft(find.text(AppStrings.driverAddGuideStep4Title))
+        .dy;
+    expect(y1, lessThan(y2));
+    expect(y2, lessThan(y3));
+    expect(y3, lessThan(y4));
   });
 
   testWidgets('rehber kapatılsa bile yeni girişte yeniden görünür', (
@@ -100,7 +136,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Ekran kapandı (launcher görünür) + success banner overlay'de.
+    // Metin davet akışına uygun: "Şoför daveti gönderildi" (eklendi değil).
     expect(find.byKey(const ValueKey('open_add_driver')), findsOneWidget);
+    expect(find.text('Şoför daveti gönderildi'), findsOneWidget);
     expect(find.text(AppStrings.driverAddedBannerTitle), findsOneWidget);
     expect(find.text(AppStrings.driverAddedBannerBody), findsOneWidget);
 

@@ -44,6 +44,7 @@ class DriverGuides {
         body: AppStrings.driverAddGuideStep4Body,
       ),
     ],
+    footnote: AppStrings.driverAddGuideFootnote,
   );
 
   static const GuideMessage driverAddedBanner = GuideMessage(

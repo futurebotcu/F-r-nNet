@@ -1375,27 +1375,37 @@ class AppStrings {
 
   // ── Uygulama içi yönlendirme (guide) yüzeyleri ─────────────────────────
   // Şoför ekleme işlem rehberi (bottomGuide) — her yeni ekleme işleminde
-  // görünür; kalıcı gizleme yok.
-  static const String driverAddGuideTitle = 'Şoför ekleme nasıl çalışır?';
+  // görünür; kalıcı gizleme yok. Metinler GERÇEK akışa göre: ekleme
+  // FırınNet ID ile davet akışıdır; ID şoför tarafında Ayarlar ekranında
+  // gösterilir (dokununca kopyalanır).
+  static const String driverAddGuideTitle = 'Şoför nasıl eklenir?';
   static const String driverAddGuideBody =
-      'Şoför bilgilerini ekle, görevini belirle ve teslimat/cari takibini '
-      'patron panelinden yönet.';
-  static const String driverAddGuideStep1Title = 'Şoför bilgilerini gir';
+      'Şoförün FırınNet ID\'sini al, bu ekrana gir ve yetkisini '
+      'belirleyerek davet gönder.';
+  static const String driverAddGuideStep1Title =
+      'Şoförden FırınNet ID\'sini iste';
   static const String driverAddGuideStep1Body =
-      'Ad, telefon ve gerekli bilgileri ekle.';
-  static const String driverAddGuideStep2Title = 'Görev ve yetkiyi belirle';
+      'Şoför uygulamaya kendi hesabıyla giriş yapar ve Ayarlar '
+      'bölümündeki FırınNet ID\'sini sana gönderir.';
+  static const String driverAddGuideStep2Title = 'ID\'yi bu ekrana yaz';
   static const String driverAddGuideStep2Body =
-      'Hangi teslimat ve bayi işlemlerini göreceğini seç.';
-  static const String driverAddGuideStep3Title = 'Takibi panelden yap';
+      'Şoförün gönderdiği FırınNet ID\'yi buradaki ID alanına gir. '
+      'Böylece doğru kullanıcı bulunur.';
+  static const String driverAddGuideStep3Title = 'Görev ve yetkiyi belirle';
   static const String driverAddGuideStep3Body =
-      'Teslimat, not ve bakiye hareketlerini patron panelinden izle.';
-  static const String driverAddGuideStep4Title = 'İşlemi kaydet';
+      'Şoförün hangi teslimat, bayi ve cari işlemlerini görebileceğini seç.';
+  static const String driverAddGuideStep4Title = 'Daveti gönder';
   static const String driverAddGuideStep4Body =
-      'Kaydettikten sonra şoför panelde kullanılabilir hale gelir.';
-  // Şoför eklendi kısa üst bilgi şeridi (topBanner, success).
-  static const String driverAddedBannerTitle = 'Şoför eklendi';
+      'Kaydettikten sonra şoföre davet gider. Şoför onayladığında panelde '
+      'aktifleşir.';
+  static const String driverAddGuideFootnote =
+      'ID\'yi bulamıyorsa şoföre uygulamayı açıp Ayarlar bölümünden '
+      'FırınNet ID\'sini kopyalamasını söyle.';
+  // Şoför daveti gönderildi kısa üst bilgi şeridi (topBanner, success).
+  static const String driverAddedBannerTitle = 'Şoför daveti gönderildi';
   static const String driverAddedBannerBody =
-      'Teslimat ve cari takibini artık panelden yönetebilirsin.';
+      'Şoför onayladığında teslimat ve cari takibini panelden '
+      'yönetebilirsin.';
 
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';

@@ -57,6 +57,7 @@ class GuideMessage {
     this.icon,
     this.steps = const <GuideStep>[],
     this.ctaLabel,
+    this.footnote,
     this.dismissible = true,
     this.showCondition,
   });
@@ -87,6 +88,10 @@ class GuideMessage {
 
   /// Opsiyonel eylem etiketi.
   final String? ctaLabel;
+
+  /// Adımların altında görünen küçük yardım notu (örn. "ID'yi bulamıyorsa
+  /// ..."). Yalnız geniş yerleşimlerde çizilir.
+  final String? footnote;
 
   /// Kullanıcı bu mesajı kapatabilir mi.
   final bool dismissible;

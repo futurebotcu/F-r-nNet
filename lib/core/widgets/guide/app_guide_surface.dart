@@ -318,6 +318,18 @@ class _BottomGuidePanel extends StatelessWidget {
                         if (i != message.steps.length - 1)
                           const SizedBox(height: AppSpacing.s + 2),
                       ],
+                      if (message.footnote != null) ...[
+                        const SizedBox(height: AppSpacing.m),
+                        Text(
+                          message.footnote!,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                       if (message.ctaLabel != null && onCta != null) ...[
                         const SizedBox(height: AppSpacing.m),
                         Align(
