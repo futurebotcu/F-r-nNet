@@ -1372,6 +1372,31 @@ class AppStrings {
   // ve kategori başlığındaki araç sayacı eki ("6 araç").
   static const String calcHubFeaturedTitle = 'Bugün lazım olur';
   static const String calcHubToolCountSuffix = 'araç';
+
+  // ── Uygulama içi yönlendirme (guide) yüzeyleri ─────────────────────────
+  // Şoför ekleme işlem rehberi (bottomGuide) — her yeni ekleme işleminde
+  // görünür; kalıcı gizleme yok.
+  static const String driverAddGuideTitle = 'Şoför ekleme nasıl çalışır?';
+  static const String driverAddGuideBody =
+      'Şoför bilgilerini ekle, görevini belirle ve teslimat/cari takibini '
+      'patron panelinden yönet.';
+  static const String driverAddGuideStep1Title = 'Şoför bilgilerini gir';
+  static const String driverAddGuideStep1Body =
+      'Ad, telefon ve gerekli bilgileri ekle.';
+  static const String driverAddGuideStep2Title = 'Görev ve yetkiyi belirle';
+  static const String driverAddGuideStep2Body =
+      'Hangi teslimat ve bayi işlemlerini göreceğini seç.';
+  static const String driverAddGuideStep3Title = 'Takibi panelden yap';
+  static const String driverAddGuideStep3Body =
+      'Teslimat, not ve bakiye hareketlerini patron panelinden izle.';
+  static const String driverAddGuideStep4Title = 'İşlemi kaydet';
+  static const String driverAddGuideStep4Body =
+      'Kaydettikten sonra şoför panelde kullanılabilir hale gelir.';
+  // Şoför eklendi kısa üst bilgi şeridi (topBanner, success).
+  static const String driverAddedBannerTitle = 'Şoför eklendi';
+  static const String driverAddedBannerBody =
+      'Teslimat ve cari takibini artık panelden yönetebilirsin.';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';
