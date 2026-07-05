@@ -12,11 +12,15 @@ import '../providers/branch_providers.dart';
 /// [allowedTypes] çağıran yüzey belirler: patron tüm tipler, personel yalnız
 /// izinli tipleri (UX filtresi — asıl izin denetimi server RPC'sindedir;
 /// izinsiz deneme yine nötr hatayla döner).
+/// V2: [initialType]/[initialTitle] şablondan hızlı oluşturma için ön
+/// doldurur — kullanıcı düzenleyebilir (şablon dayatmaz, başlatır).
 Future<void> showBranchProcessSheet(
   BuildContext context,
   WidgetRef ref, {
   required String branchId,
   required List<BranchProcessType> allowedTypes,
+  BranchProcessType? initialType,
+  String initialTitle = '',
 }) {
   if (allowedTypes.isEmpty) return Future.value();
   return showModalBottomSheet<void>(
@@ -27,25 +31,40 @@ Future<void> showBranchProcessSheet(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
       ),
-      child: _ProcessSheet(branchId: branchId, allowedTypes: allowedTypes),
+      child: _ProcessSheet(
+        branchId: branchId,
+        allowedTypes: allowedTypes,
+        initialType: initialType,
+        initialTitle: initialTitle,
+      ),
     ),
   );
 }
 
 class _ProcessSheet extends ConsumerStatefulWidget {
-  const _ProcessSheet({required this.branchId, required this.allowedTypes});
+  const _ProcessSheet({
+    required this.branchId,
+    required this.allowedTypes,
+    this.initialType,
+    this.initialTitle = '',
+  });
 
   final String branchId;
   final List<BranchProcessType> allowedTypes;
+  final BranchProcessType? initialType;
+  final String initialTitle;
 
   @override
   ConsumerState<_ProcessSheet> createState() => _ProcessSheetState();
 }
 
 class _ProcessSheetState extends ConsumerState<_ProcessSheet> {
-  final _title = TextEditingController();
+  late final _title = TextEditingController(text: widget.initialTitle);
   final _note = TextEditingController();
-  late BranchProcessType _type = widget.allowedTypes.first;
+  late BranchProcessType _type =
+      widget.allowedTypes.contains(widget.initialType)
+      ? widget.initialType!
+      : widget.allowedTypes.first;
   bool _saving = false;
   String? _error;
 

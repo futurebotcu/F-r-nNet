@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/branch_activity.dart';
 import '../models/branch_models.dart';
 import 'branch_repository.dart';
 
@@ -27,6 +28,7 @@ class LocalBranchRepository implements BranchRepository {
   final List<_MembershipRow> _memberships = [];
   final List<_InviteRow> _invites = [];
   final List<_ProcessRow> _processes = [];
+  final List<BranchActivityEntry> _activity = [];
 
   /// FN-ID → (userId, accountType) sahte profil rehberi (yalnız local).
   final Map<String, (String, String)> knownProfiles = {
@@ -39,6 +41,9 @@ class LocalBranchRepository implements BranchRepository {
   String _newId(String prefix) => '$prefix-${++_idSeq}';
 
   void _seed() {
+    // Üretilen id'ler ('proc-1' vb.) seed'in sabit id'leriyle ÇAKIŞMASIN:
+    // aynı id'li iki satır updateProcess/KPI hesaplarını bozar.
+    _idSeq = 100;
     _branches.add(
       _BranchRow(
         id: 'branch-1',
@@ -86,10 +91,48 @@ class LocalBranchRepository implements BranchRepository {
         status: BranchProcessStatus.attention,
       ),
     );
+    _activity.insertAll(0, [
+      BranchActivityEntry(
+        id: 'activity-seed-1',
+        branchId: 'branch-1',
+        event: BranchActivityEvent.processCreated,
+        actorName: _displayName('owner-1'),
+        createdAt: DateTime.now(),
+      ),
+      BranchActivityEntry(
+        id: 'activity-seed-2',
+        branchId: 'branch-1',
+        event: BranchActivityEvent.statusChanged,
+        actorName: _displayName('staff-1'),
+        note: 'attention',
+        createdAt: DateTime.now(),
+      ),
+    ]);
   }
 
   bool _isOwner(String branchId) =>
       _branches.any((b) => b.id == branchId && b.ownerId == currentUserId);
+
+  /// Aktif şube sorumlusu mu? (is_active_branch_manager aynası)
+  bool _isActiveManager(String branchId) {
+    final m = _activeMembership(branchId);
+    return m != null && m.role == BranchRole.branchManager;
+  }
+
+  /// Server RPC'lerinin activity log append'inin aynası (append-only).
+  void _log(String branchId, BranchActivityEvent event, {String note = ''}) {
+    _activity.insert(
+      0,
+      BranchActivityEntry(
+        id: _newId('activity'),
+        branchId: branchId,
+        event: event,
+        actorName: _displayName(currentUserId),
+        note: note,
+        createdAt: DateTime.now(),
+      ),
+    );
+  }
 
   _MembershipRow? _activeMembership(String branchId) {
     for (final m in _memberships) {
@@ -219,17 +262,34 @@ class LocalBranchRepository implements BranchRepository {
       pendingInvites: _invites
           .where((i) => i.ownerId == currentUserId && i.pending)
           .length,
+      attentionProcesses: _processes
+          .where(
+            (p) =>
+                ids.contains(p.branchId) &&
+                p.status == BranchProcessStatus.attention,
+          )
+          .length,
+      completedToday: _processes.where((p) {
+        if (!ids.contains(p.branchId) || p.completedAt == null) return false;
+        final now = DateTime.now();
+        final c = p.completedAt!;
+        return c.year == now.year && c.month == now.month && c.day == now.day;
+      }).length,
     );
   }
 
   @override
   Future<List<BranchMembership>> branchMembers(String branchId) async {
-    if (!_isOwner(branchId)) return const [];
+    // RLS aynası: owner + aktif manager tüm listeyi, normal aktif üye
+    // yalnız kendi satırını görür.
+    final manages = _isOwner(branchId) || _isActiveManager(branchId);
+    if (!manages && _activeMembership(branchId) == null) return const [];
     return _memberships
         .where(
           (m) =>
               m.branchId == branchId &&
-              m.status != BranchMembershipStatus.removed,
+              m.status != BranchMembershipStatus.removed &&
+              (manages || m.userId == currentUserId),
         )
         .map(
           (m) => BranchMembership(
@@ -247,7 +307,7 @@ class LocalBranchRepository implements BranchRepository {
 
   @override
   Future<List<BranchInvite>> branchPendingInvites(String branchId) async {
-    if (!_isOwner(branchId)) return const [];
+    if (!_isOwner(branchId) && !_isActiveManager(branchId)) return const [];
     return _invites
         .where((i) => i.branchId == branchId && i.pending)
         .map(_toInvite)
@@ -277,8 +337,15 @@ class LocalBranchRepository implements BranchRepository {
     List<BranchProcessType> permissions = const [],
     String note = '',
   }) async {
-    // Server kurallarının aynası — nötr hatalar korunur.
-    if (!_isOwner(branchId)) throw StateError('not branch owner');
+    // Server kurallarının aynası — nötr hatalar korunur. V2: aktif
+    // branch_manager kendi şubesine yalnız ALT ROL davet edebilir.
+    final isOwner = _isOwner(branchId);
+    if (!isOwner && !_isActiveManager(branchId)) {
+      throw StateError('not branch owner');
+    }
+    if (!isOwner && role == BranchRole.branchManager) {
+      throw StateError('Şube sorumlusu bu rolü veremez.');
+    }
     final target = knownProfiles[firinnetId.trim().toUpperCase()];
     if (target == null || target.$2 != 'individual') {
       throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
@@ -302,12 +369,15 @@ class LocalBranchRepository implements BranchRepository {
       _InviteRow(
         id: id,
         branchId: branchId,
-        ownerId: currentUserId,
+        // Davetin sahibi her zaman şube sahibidir (manager davetinde de).
+        ownerId: _branches.firstWhere((b) => b.id == branchId).ownerId,
+        invitedBy: currentUserId,
         invitedUserId: targetId,
         role: role,
         permissions: List.of(permissions),
       ),
     );
+    _log(branchId, BranchActivityEvent.inviteCreated);
     _notify();
     return id;
   }
@@ -315,9 +385,28 @@ class LocalBranchRepository implements BranchRepository {
   @override
   Future<void> cancelInvite(String inviteId) async {
     for (final i in _invites) {
-      if (i.id == inviteId && i.ownerId == currentUserId) i.pending = false;
+      if (i.id == inviteId &&
+          (i.ownerId == currentUserId ||
+              (i.invitedBy == currentUserId && _isActiveManager(i.branchId)))) {
+        i.pending = false;
+      }
     }
     _notify();
+  }
+
+  /// Üyelik üzerinde işlem yetkisi: owner tam; aktif manager yalnız kendi
+  /// şubesinin non-manager, kendisi olmayan üyeleri (server aynası).
+  _MembershipRow _requireManageableMembership(String membershipId) {
+    for (final m in _memberships) {
+      if (m.id != membershipId) continue;
+      if (m.ownerId == currentUserId) return m;
+      if (_isActiveManager(m.branchId) &&
+          m.userId != currentUserId &&
+          m.role != BranchRole.branchManager) {
+        return m;
+      }
+    }
+    throw StateError('membership not found');
   }
 
   @override
@@ -325,12 +414,39 @@ class LocalBranchRepository implements BranchRepository {
     String membershipId,
     BranchMembershipStatus status,
   ) async {
-    for (final m in _memberships) {
-      if (m.id == membershipId && m.ownerId == currentUserId) {
-        m.status = status;
-      }
-    }
+    final m = _requireManageableMembership(membershipId);
+    m.status = status;
+    _log(
+      m.branchId,
+      BranchActivityEvent.membershipChanged,
+      note: status.persistKey,
+    );
     _notify();
+  }
+
+  @override
+  Future<void> updateMembershipPermissions(
+    String membershipId,
+    List<BranchProcessType> permissions,
+  ) async {
+    final m = _requireManageableMembership(membershipId);
+    m.permissions
+      ..clear()
+      ..addAll(permissions);
+    _log(
+      m.branchId,
+      BranchActivityEvent.membershipChanged,
+      note: 'permissions',
+    );
+    _notify();
+  }
+
+  @override
+  Future<List<BranchActivityEntry>> activity(String branchId) async {
+    if (!_canSee(branchId)) return const [];
+    return _activity
+        .where((a) => a.branchId == branchId)
+        .toList(growable: false);
   }
 
   @override
@@ -386,6 +502,11 @@ class LocalBranchRepository implements BranchRepository {
           ),
         );
       }
+      _log(
+        i.branchId,
+        BranchActivityEvent.inviteResponded,
+        note: accept ? 'accepted' : 'rejected',
+      );
     }
     _notify();
   }
@@ -404,6 +525,8 @@ class LocalBranchRepository implements BranchRepository {
             note: p.note,
             status: p.status,
             createdByName: _displayName(p.createdBy),
+            createdAt: p.createdAt,
+            completedAt: p.completedAt,
           ),
         )
         .toList(growable: false);
@@ -432,6 +555,7 @@ class LocalBranchRepository implements BranchRepository {
         note: note.trim(),
       ),
     );
+    _log(branchId, BranchActivityEvent.processCreated);
     _notify();
     return id;
   }
@@ -447,8 +571,20 @@ class LocalBranchRepository implements BranchRepository {
       if (!_canWriteType(p.branchId, p.type)) {
         throw StateError('Bu süreç tipi için yetkin yok.');
       }
-      if (status != null) p.status = status;
+      if (status != null) {
+        p.status = status;
+        p.completedAt = status == BranchProcessStatus.completed
+            ? DateTime.now()
+            : null;
+      }
       if (note != null && note.trim().isNotEmpty) p.note = note.trim();
+      _log(
+        p.branchId,
+        status != null
+            ? BranchActivityEvent.statusChanged
+            : BranchActivityEvent.processUpdated,
+        note: status?.persistKey ?? '',
+      );
     }
     _notify();
   }
@@ -482,8 +618,8 @@ class _MembershipRow {
     required this.ownerId,
     required this.userId,
     required this.role,
-    this.permissions = const [],
-  });
+    List<BranchProcessType> permissions = const [],
+  }) : permissions = List.of(permissions);
   final String id;
   final String branchId;
   final String ownerId;
@@ -500,11 +636,13 @@ class _InviteRow {
     required this.ownerId,
     required this.invitedUserId,
     required this.role,
+    String? invitedBy,
     this.permissions = const [],
-  });
+  }) : invitedBy = invitedBy ?? ownerId;
   final String id;
   final String branchId;
   final String ownerId;
+  final String invitedBy;
   final String invitedUserId;
   final BranchRole role;
   final List<BranchProcessType> permissions;
@@ -521,7 +659,7 @@ class _ProcessRow {
     required this.title,
     this.note = '',
     this.status = BranchProcessStatus.pending,
-  });
+  }) : createdAt = DateTime.now();
   final String id;
   final String branchId;
   final String ownerId;
@@ -530,4 +668,6 @@ class _ProcessRow {
   String title;
   String note;
   BranchProcessStatus status;
+  final DateTime createdAt;
+  DateTime? completedAt;
 }

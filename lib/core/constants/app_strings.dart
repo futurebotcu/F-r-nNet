@@ -1543,6 +1543,39 @@ class AppStrings {
   static const String myBranchInviteFrom = 'Davet eden';
   // V1 polish — şube listesi hata durumu.
   static const String branchListError = 'Şubeler yüklenemedi.';
+  // ── Şube Yönetimi V2 ──
+  static const String branchKpiAttention = 'Dikkat Gereken';
+  static const String branchKpiCompletedToday = 'Bugün Tamamlanan';
+  static const String branchTabActivity = 'Geçmiş';
+  static const String branchActivityTitle = 'Aktivite Geçmişi';
+  static const String branchActivityEmpty =
+      'Henüz aktivite yok. Davetler, personel değişiklikleri ve süreç '
+      'hareketleri burada listelenir.';
+  static const String branchTemplatesSection = 'Şablondan Süreç Oluştur';
+  static const String branchTemplateCreate = 'Oluştur';
+  static const String branchSummaryToday = 'Bugün';
+  static const String branchSummaryWeek = '7 Gün';
+  static const String branchSummaryCreated = 'Açılan süreç';
+  static const String branchSummaryCompleted = 'Tamamlanan süreç';
+  static const String branchSummaryLastActivity = 'Son aktivite';
+  static const String myBranchSummaryTitle = 'Şube Özetim';
+  static const String myBranchSummaryOpen = 'Açık Süreç';
+  static const String myBranchSummaryAttention = 'Dikkat';
+  static const String myBranchSummaryCompleted = 'Tamamlanan';
+  static const String myBranchSummaryPermittedTypes = 'Yetkili Tip';
+  static const String myBranchManagerSection = 'Sorumlu Araçları';
+  static const String myBranchManagerInfo =
+      'Bu şubenin sorumlususun: personel davet edebilir, personel durumunu '
+      'yönetebilir ve tüm süreçleri takip edebilirsin.';
+  static const String myBranchManagerStaffSection = 'Şube Personeli';
+  static const String myBranchManagerInviteCta = 'Personel Davet Et';
+  static const String branchManagerInviteRoleNote =
+      'Şube sorumlusu yalnız alt rollere davet gönderebilir; şube sorumlusu '
+      'rolünü sadece işletme sahibi verebilir.';
+  static const String branchPermissionsEditCta = 'İzinleri Düzenle';
+  static const String branchPermissionsSheetTitle = 'Süreç İzinleri';
+  static const String branchPermissionsSave = 'Kaydet';
+  static const String branchPermissionsUpdated = 'İzinler güncellendi.';
 
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';

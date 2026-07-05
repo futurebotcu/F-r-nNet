@@ -8,8 +8,11 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/branch_models.dart';
 import '../providers/branch_providers.dart';
+import '../widgets/branch_activity_list.dart';
+import '../widgets/branch_manager_tools.dart';
 import '../widgets/branch_process_sheet.dart';
 import '../widgets/branch_process_tile.dart';
+import '../widgets/branch_template_row.dart';
 
 /// "Şube İşlerim" — bireysel şube personeli mini app'i.
 ///
@@ -81,7 +84,25 @@ class _MyBranchScreenState extends ConsumerState<MyBranchScreen> {
               ],
               _MembershipHeader(membership: current),
               const SizedBox(height: AppSpacing.m),
+              _MySummaryCard(membership: current),
+              const SizedBox(height: AppSpacing.m),
+              // V2: şube sorumlusu sınırlı yönetim araçları — SADECE
+              // branch_manager rolünde render edilir (asıl sınır RPC+RLS).
+              if (current.role == BranchRole.branchManager) ...[
+                BranchManagerTools(membership: current),
+                const SizedBox(height: AppSpacing.m),
+              ],
+              BranchTemplateRow(
+                branchId: current.branchId,
+                allowedTypes: current.role.hasAllProcessPermissions
+                    ? BranchProcessType.values
+                    : current.permissions,
+              ),
+              const SizedBox(height: AppSpacing.m),
               _MyProcesses(membership: current),
+              const SizedBox(height: AppSpacing.m),
+              const _SectionLabel(AppStrings.branchActivityTitle),
+              BranchActivityList(branchId: current.branchId, maxEntries: 10),
             ],
           ],
         ),
@@ -143,6 +164,102 @@ class _MembershipHeader extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// V2 — bireysel şube özeti: açık/dikkat/tamamlanan süreç + yetkili tip.
+class _MySummaryCard extends ConsumerWidget {
+  const _MySummaryCard({required this.membership});
+  final BranchMembership membership;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final processes =
+        ref.watch(branchProcessesProvider(membership.branchId)).valueOrNull ??
+        const [];
+    final open = processes.where((p) => p.status.isOpen).length;
+    final attention = processes
+        .where((p) => p.status == BranchProcessStatus.attention)
+        .length;
+    final completed = processes
+        .where((p) => p.status == BranchProcessStatus.completed)
+        .length;
+    final permitted = membership.role.hasAllProcessPermissions
+        ? BranchProcessType.values.length
+        : membership.permissions.length;
+    return PremiumCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              AppStrings.myBranchSummaryTitle,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Row(
+              children: [
+                _MySummaryItem(
+                  count: '$open',
+                  label: AppStrings.myBranchSummaryOpen,
+                ),
+                _MySummaryItem(
+                  count: '$attention',
+                  label: AppStrings.myBranchSummaryAttention,
+                ),
+                _MySummaryItem(
+                  count: '$completed',
+                  label: AppStrings.myBranchSummaryCompleted,
+                ),
+                _MySummaryItem(
+                  count: '$permitted',
+                  label: AppStrings.myBranchSummaryPermittedTypes,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MySummaryItem extends StatelessWidget {
+  const _MySummaryItem({required this.count, required this.label});
+  final String count;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            count,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textMuted,
+              height: 1.2,
+            ),
+          ),
+        ],
       ),
     );
   }
