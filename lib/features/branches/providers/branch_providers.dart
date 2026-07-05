@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../models/branch_activity.dart';
 import '../models/branch_models.dart';
 import '../repositories/branch_repository.dart';
 import '../repositories/local_branch_repository.dart';
@@ -81,6 +82,13 @@ final branchProcessesProvider = FutureProvider.autoDispose
     .family<List<BranchProcess>, String>((ref, branchId) async {
       ref.watch(branchChangesProvider);
       return ref.watch(branchRepositoryProvider).processes(branchId);
+    });
+
+/// V2 — şube aktivite geçmişi (owner + aktif üye; RLS sınırında).
+final branchActivityProvider = FutureProvider.autoDispose
+    .family<List<BranchActivityEntry>, String>((ref, branchId) async {
+      ref.watch(branchChangesProvider);
+      return ref.watch(branchRepositoryProvider).activity(branchId);
     });
 
 // ── Bireysel (şube personeli) tarafı ──

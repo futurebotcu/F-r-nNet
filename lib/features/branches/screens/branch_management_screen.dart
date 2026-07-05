@@ -164,6 +164,27 @@ class _HighlightsCard extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: AppSpacing.s),
+        // V2: operasyon nabzı — dikkat gereken + bugün tamamlanan.
+        Row(
+          children: [
+            Expanded(
+              child: StatCard(
+                label: AppStrings.branchKpiAttention,
+                value: '${o.attentionProcesses}',
+                icon: Icons.priority_high_rounded,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: StatCard(
+                label: AppStrings.branchKpiCompletedToday,
+                value: '${o.completedToday}',
+                icon: Icons.task_alt_rounded,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

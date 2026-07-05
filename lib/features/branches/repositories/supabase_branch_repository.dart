@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../models/branch_activity.dart';
 import '../models/branch_models.dart';
 import 'branch_repository.dart';
 
@@ -179,17 +180,35 @@ class SupabaseBranchRepository implements BranchRepository {
         .select('id')
         .eq('owner_id', uid)
         .eq('status', 'pending');
+    // Bugün tamamlananlar: gün başlangıcı lokal saatle hesaplanır (UTC'ye
+    // çevrilerek sorgulanır) — "bugün" fırıncının günüdür.
+    final todayStart = DateTime.now();
+    final localMidnight = DateTime(
+      todayStart.year,
+      todayStart.month,
+      todayStart.day,
+    );
+    final completed = await _client
+        .from('branch_processes')
+        .select('id')
+        .eq('owner_id', uid)
+        .eq('status', 'completed')
+        .gte('completed_at', localMidnight.toUtc().toIso8601String());
     var members = 0;
     var open = 0;
+    var attention = 0;
     for (final b in branches) {
       members += b.memberCount;
       open += b.openProcessCount;
+      attention += b.attentionCount;
     }
     return BranchOverview(
       totalBranches: branches.length,
       activeMembers: members,
       openProcesses: open,
       pendingInvites: (invites as List).length,
+      attentionProcesses: attention,
+      completedToday: (completed as List).length,
     );
   }
 
@@ -300,6 +319,9 @@ class SupabaseBranchRepository implements BranchRepository {
       if (m.contains('invite already pending')) {
         throw StateError('Bu kullanıcı için bekleyen davet var.');
       }
+      if (m.contains('role not allowed')) {
+        throw StateError('Şube sorumlusu bu rolü veremez.');
+      }
       // FN-ID var/yok/tip/format → tek nötr mesaj (sızıntı yok).
       throw StateError(_neutralInviteError);
     }
@@ -326,6 +348,53 @@ class SupabaseBranchRepository implements BranchRepository {
       params: {'p_membership_id': membershipId, 'p_status': status.persistKey},
     );
     _notify();
+  }
+
+  @override
+  Future<void> updateMembershipPermissions(
+    String membershipId,
+    List<BranchProcessType> permissions,
+  ) async {
+    _requireUserId();
+    try {
+      await _client.rpc(
+        'update_branch_membership_permissions',
+        params: <String, dynamic>{
+          'p_membership_id': membershipId,
+          'p_permissions': permissions
+              .map((p) => p.persistKey)
+              .toList(growable: false),
+        },
+      );
+      _notify();
+    } on sb.PostgrestException {
+      throw StateError('İzinler güncellenemedi. Tekrar dene.');
+    }
+  }
+
+  @override
+  Future<List<BranchActivityEntry>> activity(String branchId) async {
+    _requireUserId();
+    final rows = await _client
+        .from('branch_activity_log')
+        .select('id, branch_id, actor_id, event_type, note, created_at')
+        .eq('branch_id', branchId)
+        .order('created_at', ascending: false)
+        .limit(100);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final names = await _displayNames(list.map((r) => r['actor_id'] as String));
+    return list
+        .map(
+          (r) => BranchActivityEntry(
+            id: r['id'] as String,
+            branchId: r['branch_id'] as String,
+            event: BranchActivityEventMeta.fromKey(r['event_type'] as String),
+            actorName: names[r['actor_id'] as String] ?? '',
+            note: (r['note'] as String?) ?? '',
+            createdAt: DateTime.tryParse((r['created_at'] as String?) ?? ''),
+          ),
+        )
+        .toList(growable: false);
   }
 
   // ── Bireysel taraf ──
@@ -391,7 +460,7 @@ class SupabaseBranchRepository implements BranchRepository {
         .from('branch_processes')
         .select(
           'id, branch_id, created_by, type, title, note, status, due_at, '
-          'created_at',
+          'created_at, completed_at',
         )
         .eq('branch_id', branchId)
         .order('created_at', ascending: false);
@@ -411,6 +480,9 @@ class SupabaseBranchRepository implements BranchRepository {
             createdByName: names[r['created_by'] as String] ?? '',
             createdAt: DateTime.tryParse((r['created_at'] as String?) ?? ''),
             dueAt: DateTime.tryParse((r['due_at'] as String?) ?? ''),
+            completedAt: DateTime.tryParse(
+              (r['completed_at'] as String?) ?? '',
+            ),
           );
         })
         .toList(growable: false);

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/branch_activity.dart';
 import '../models/branch_models.dart';
 
 /// Şube Yönetimi V1 repo sözleşmesi.
@@ -35,6 +36,17 @@ abstract class BranchRepository {
     String membershipId,
     BranchMembershipStatus status,
   );
+
+  /// V2 — üyelik süreç izinlerini güncelle (rol değişmez; owner tam,
+  /// branch_manager yalnız kendi şubesinin non-manager üyeleri — asıl
+  /// denetim RPC'de).
+  Future<void> updateMembershipPermissions(
+    String membershipId,
+    List<BranchProcessType> permissions,
+  );
+
+  /// V2 — şube aktivite geçmişi (append-only log; owner + aktif üye görür).
+  Future<List<BranchActivityEntry>> activity(String branchId);
 
   // ── Bireysel (şube personeli) tarafı ──
   /// Aktif üyelikler — boşsa "Şube İşlerim" yüzeyi HİÇ görünmez.

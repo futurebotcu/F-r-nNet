@@ -9,12 +9,16 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/tr_case.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../models/branch_activity.dart';
 import '../models/branch_models.dart';
 import '../providers/branch_providers.dart';
+import '../widgets/branch_activity_list.dart';
+import '../widgets/branch_permissions_sheet.dart';
 import '../widgets/branch_process_sheet.dart';
 import '../widgets/branch_process_tile.dart';
+import '../widgets/branch_template_row.dart';
 
-/// Şube detay mini app'i — Genel / Personel / Süreçler / Yetkiler tabları.
+/// Şube detay mini app'i — Genel / Personel / Süreçler / Yetkiler / Geçmiş.
 class BranchDetailScreen extends ConsumerWidget {
   const BranchDetailScreen({super.key, required this.branchId});
 
@@ -24,7 +28,7 @@ class BranchDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final branch = ref.watch(branchByIdProvider(branchId));
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: PremiumScaffold(
         appBar: AppBar(
           title: Text(branch.valueOrNull?.name ?? AppStrings.branchMgmtTitle),
@@ -37,6 +41,7 @@ class BranchDetailScreen extends ConsumerWidget {
               Tab(text: AppStrings.branchTabStaff),
               Tab(text: AppStrings.branchTabProcesses),
               Tab(text: AppStrings.branchTabPermissions),
+              Tab(text: AppStrings.branchTabActivity),
             ],
           ),
         ),
@@ -48,10 +53,25 @@ class BranchDetailScreen extends ConsumerWidget {
               _StaffTab(branchId: branchId),
               _ProcessesTab(branchId: branchId),
               _PermissionsTab(branchId: branchId),
+              _ActivityTab(branchId: branchId),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// V2 — Geçmiş tabı: filtreli aktivite listesi (append-only log görünümü).
+class _ActivityTab extends StatelessWidget {
+  const _ActivityTab({required this.branchId});
+  final String branchId;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.pageH),
+      children: [BranchActivityList(branchId: branchId)],
     );
   }
 }
@@ -65,6 +85,9 @@ class _GeneralTab extends ConsumerWidget {
     final branch = ref.watch(branchByIdProvider(branchId)).valueOrNull;
     final processes =
         ref.watch(branchProcessesProvider(branchId)).valueOrNull ?? const [];
+    final invites =
+        ref.watch(branchPendingInvitesProvider(branchId)).valueOrNull ??
+        const [];
     if (branch == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -112,15 +135,35 @@ class _GeneralTab extends ConsumerWidget {
         PremiumCard(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.m),
-            child: Row(
+            child: Column(
               children: [
-                _Summary(count: '${branch.memberCount}', label: 'Personel'),
-                _Summary(count: '$open', label: 'Açık süreç'),
-                _Summary(count: '$attention', label: 'Dikkat'),
+                Row(
+                  children: [
+                    _Summary(count: '${branch.memberCount}', label: 'Personel'),
+                    _Summary(count: '$open', label: 'Açık süreç'),
+                    _Summary(count: '$attention', label: 'Dikkat'),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.s),
+                Row(
+                  children: [
+                    _Summary(
+                      count:
+                          '${processes.where((p) => p.status == BranchProcessStatus.completed).length}',
+                      label: 'Tamamlanan',
+                    ),
+                    _Summary(
+                      count: '${invites.length}',
+                      label: 'Bekleyen davet',
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.m),
+        _RangeSummaryCard(branchId: branchId, processes: processes),
         const SizedBox(height: AppSpacing.m),
         // Pasif şube listede Pasif rozetiyle kalır; veri silinmez.
         OutlinedButton.icon(
@@ -182,6 +225,116 @@ class _GeneralTab extends ConsumerWidget {
     await ref
         .read(branchRepositoryProvider)
         .setBranchActive(branch.id, !branch.isActive);
+  }
+}
+
+/// V2 — Bugün / 7 Gün filtreli küçük operasyon özeti + son aktivite satırı.
+class _RangeSummaryCard extends ConsumerStatefulWidget {
+  const _RangeSummaryCard({required this.branchId, required this.processes});
+
+  final String branchId;
+  final List<BranchProcess> processes;
+
+  @override
+  ConsumerState<_RangeSummaryCard> createState() => _RangeSummaryCardState();
+}
+
+class _RangeSummaryCardState extends ConsumerState<_RangeSummaryCard> {
+  bool _week = false;
+
+  bool _inRange(DateTime? at) {
+    if (at == null) return false;
+    final now = DateTime.now();
+    if (_week) {
+      return now.difference(at).inDays < 7;
+    }
+    return at.year == now.year && at.month == now.month && at.day == now.day;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final created = widget.processes.where((p) => _inRange(p.createdAt)).length;
+    final completed = widget.processes
+        .where((p) => _inRange(p.completedAt))
+        .length;
+    final activity =
+        ref.watch(branchActivityProvider(widget.branchId)).valueOrNull ??
+        const <BranchActivityEntry>[];
+    final last = activity.isEmpty ? null : activity.first;
+    return PremiumCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Dar ekran + büyük yazı ölçeğinde chip'ler taşmasın (Wrap).
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final (label, week) in [
+                  (AppStrings.branchSummaryToday, false),
+                  (AppStrings.branchSummaryWeek, true),
+                ])
+                  ChoiceChip(
+                    key: ValueKey('branch_summary_range_$week'),
+                    label: Text(label),
+                    selected: _week == week,
+                    onSelected: (_) => setState(() => _week = week),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    selectedColor: AppColors.brandLemonPale,
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Row(
+              children: [
+                _Summary(
+                  count: '$created',
+                  label: AppStrings.branchSummaryCreated,
+                ),
+                _Summary(
+                  count: '$completed',
+                  label: AppStrings.branchSummaryCompleted,
+                ),
+              ],
+            ),
+            if (last != null) ...[
+              const SizedBox(height: AppSpacing.s),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.history_rounded,
+                    size: 15,
+                    color: AppColors.textMuted,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${AppStrings.branchSummaryLastActivity}: '
+                      '${last.description}'
+                      '${last.actorName.isEmpty ? '' : ' · ${last.actorName}'}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -476,6 +629,12 @@ class _ProcessesTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pageH),
       children: [
+        // V2: şablondan hızlı süreç oluşturma (patron tüm tipler).
+        BranchTemplateRow(
+          branchId: branchId,
+          allowedTypes: BranchProcessType.values,
+        ),
+        const SizedBox(height: AppSpacing.m),
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
@@ -581,13 +740,33 @@ class _PermissionsTab extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${m.memberName} — ${m.role.label}',
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${m.memberName} — ${m.role.label}',
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        // V2: izinler yeniden davet gerektirmeden düzenlenir
+                        // (şube sorumlusu zaten tüm tiplere yetkili).
+                        if (!m.role.hasAllProcessPermissions)
+                          TextButton(
+                            key: ValueKey('perm_edit_cta_${m.id}'),
+                            onPressed: () => showBranchPermissionsSheet(
+                              context,
+                              membership: m,
+                            ),
+                            child: const Text(
+                              AppStrings.branchPermissionsEditCta,
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(

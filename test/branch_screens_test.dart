@@ -566,6 +566,297 @@ void main() {
       expect((await repo.branchById('branch-2'))!.isActive, isTrue);
     });
   });
+  // ── V2 — KPI, şablonlar, aktivite geçmişi, sorumlu araçları ──
+
+  group('V2 — ticari KPI + şablonlar + Geçmiş tabı', () {
+    testWidgets('ana ekranda V2 KPI kartları görünür', (tester) async {
+      final repo = LocalBranchRepository(seed: true);
+      await _pump(tester, const BranchManagementScreen(), repo: repo);
+      // StatCard etiketi uppercase render eder.
+      expect(
+        find.text(AppStrings.branchKpiAttention.toUpperCase()),
+        findsOneWidget,
+      );
+      expect(
+        find.text(AppStrings.branchKpiCompletedToday.toUpperCase()),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('şube detayında Geçmiş tabı filtreli aktivite gösterir', (
+      tester,
+    ) async {
+      final repo = LocalBranchRepository(seed: true);
+      await _pump(
+        tester,
+        const BranchDetailScreen(branchId: 'branch-1'),
+        repo: repo,
+      );
+      await tester.tap(find.widgetWithText(Tab, AppStrings.branchTabActivity));
+      await tester.pumpAndSettle();
+      // Seed aktiviteleri: süreç oluşturuldu + dikkat durumu.
+      expect(find.text('Süreç oluşturuldu'), findsOneWidget);
+      expect(find.text('Süreç dikkat durumuna alındı'), findsOneWidget);
+      // Dikkat filtresi yalnız attention olayını bırakır.
+      await tester.tap(
+        find.byKey(const ValueKey('branch_activity_filter_attention')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Süreç oluşturuldu'), findsNothing);
+      expect(find.text('Süreç dikkat durumuna alındı'), findsOneWidget);
+    });
+
+    testWidgets('şablondan süreç oluşturma başlığı ön dolu açılır', (
+      tester,
+    ) async {
+      final repo = LocalBranchRepository(seed: true);
+      await _pump(
+        tester,
+        const BranchDetailScreen(branchId: 'branch-1'),
+        repo: repo,
+      );
+      await tester.tap(find.widgetWithText(Tab, AppStrings.branchTabProcesses));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.branchTemplatesSection), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey('branch_template_opening_check')),
+      );
+      await tester.pumpAndSettle();
+      // Sheet başlık alanı şablon adıyla ön dolu; kaydedince süreç oluşur.
+      expect(
+        find.widgetWithText(TextField, BranchProcessType.openingCheck.label),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('process_sheet_save')));
+      await tester.pumpAndSettle();
+      expect(find.text(BranchProcessType.openingCheck.label), findsWidgets);
+      final processes = await repo.processes('branch-1');
+      expect(
+        processes.map((p) => p.title),
+        contains(BranchProcessType.openingCheck.label),
+      );
+    });
+
+    testWidgets('Yetkiler tabından izin düzenleme çalışır', (tester) async {
+      final repo = LocalBranchRepository(seed: true);
+      await _pump(
+        tester,
+        const BranchDetailScreen(branchId: 'branch-1'),
+        repo: repo,
+      );
+      await tester.tap(
+        find.widgetWithText(Tab, AppStrings.branchTabPermissions),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('perm_edit_cta_member-1')));
+      await tester.pumpAndSettle();
+      // account_note iznini ekle, kaydet.
+      await tester.tap(find.byKey(const ValueKey('perm_edit_account_note')));
+      await tester.tap(find.byKey(const ValueKey('perm_edit_save')));
+      await tester.pumpAndSettle();
+      final member = (await repo.branchMembers('branch-1')).single;
+      expect(member.permissions, contains(BranchProcessType.accountNote));
+    });
+  });
+
+  group('V2 — bireysel özet + şablonlar (izin filtresi)', () {
+    testWidgets('özet kartı + yalnız izinli şablonlar görünür', (tester) async {
+      final repo = LocalBranchRepository(seed: true, currentUserId: 'staff-1');
+      await _pump(
+        tester,
+        const MyBranchScreen(),
+        repo: repo,
+        account: AccountType.individual,
+      );
+      expect(find.text(AppStrings.myBranchSummaryTitle), findsOneWidget);
+      expect(find.text(AppStrings.branchTemplatesSection), findsOneWidget);
+      // staff-1 izinleri: production_note + opening_check.
+      expect(
+        find.byKey(const ValueKey('branch_template_production_note')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('branch_template_account_note')),
+        findsNothing,
+      );
+      // Aktivite bölümü kendi şubesi için görünür.
+      expect(find.text(AppStrings.branchActivityTitle), findsOneWidget);
+      // Normal personel: Sorumlu Araçları YOK.
+      expect(find.text(AppStrings.myBranchManagerSection), findsNothing);
+    });
+  });
+
+  group('V2 — branch_manager Sorumlu Araçları', () {
+    /// staff-1'i branch-2 sorumlusu yapar (davet→kabul), staff-2'yi
+    /// tezgah personeli olarak ekler.
+    Future<LocalBranchRepository> managerRepo() async {
+      final repo = LocalBranchRepository(seed: true);
+      final managerInvite = await repo.createStaffInvite(
+        branchId: 'branch-2',
+        firinnetId: 'FN-2026-000001',
+        role: BranchRole.branchManager,
+      );
+      repo.currentUserId = 'staff-1';
+      await repo.respondInvite(managerInvite, accept: true);
+      final staffInvite = await repo.createStaffInvite(
+        branchId: 'branch-2',
+        firinnetId: 'FN-2026-000002',
+        role: BranchRole.counter,
+      );
+      repo.currentUserId = 'staff-2';
+      await repo.respondInvite(staffInvite, accept: true);
+      repo.currentUserId = 'staff-1';
+      return repo;
+    }
+
+    Future<void> selectBranch2(WidgetTester tester) async {
+      // staff-1'in iki üyeliği var; şube seçiciden Çarşı Şube'ye geç.
+      await tester.tap(find.byKey(const ValueKey('my_branch_picker')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Çarşı Şube').last);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('sorumlu araçları görünür; ekran adı Şube İşlerim kalır', (
+      tester,
+    ) async {
+      final repo = await managerRepo();
+      await _pump(
+        tester,
+        const MyBranchScreen(),
+        repo: repo,
+        account: AccountType.individual,
+      );
+      await selectBranch2(tester);
+      expect(find.text(AppStrings.myBranchTitle), findsOneWidget);
+      expect(find.text(AppStrings.branchMgmtTitle), findsNothing);
+      expect(find.text(AppStrings.myBranchManagerSection), findsOneWidget);
+      expect(find.byKey(const ValueKey('manager_invite_cta')), findsOneWidget);
+      // Personel listesi: staff-2 görünür ve yönetilebilir; kendi satırı
+      // (sorumlu) menüsüz.
+      expect(find.text('Mehmet Kalfa'), findsOneWidget);
+      final staff2 = (await repo.branchMembers(
+        'branch-2',
+      )).firstWhere((m) => m.userId == 'staff-2');
+      final self = (await repo.branchMembers(
+        'branch-2',
+      )).firstWhere((m) => m.userId == 'staff-1');
+      expect(
+        find.byKey(ValueKey('manager_member_menu_${staff2.id}')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(ValueKey('manager_member_menu_${self.id}')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('davet sheet\'inde branch_manager rolü YOK; davet gönderilir', (
+      tester,
+    ) async {
+      final repo = await managerRepo();
+      // staff-2'yi çıkar ki yeniden davet edilebilsin.
+      final staff2 = (await repo.branchMembers(
+        'branch-2',
+      )).firstWhere((m) => m.userId == 'staff-2');
+      await repo.setMembershipStatus(staff2.id, BranchMembershipStatus.removed);
+      await _pump(
+        tester,
+        const MyBranchScreen(),
+        repo: repo,
+        account: AccountType.individual,
+      );
+      await selectBranch2(tester);
+      await tester.tap(find.byKey(const ValueKey('manager_invite_cta')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('manager_role_branch_manager')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('manager_role_counter')),
+        findsOneWidget,
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, AppStrings.branchInviteFnIdLabel),
+        'FN-2026-000002',
+      );
+      await tester.tap(find.byKey(const ValueKey('manager_invite_send')));
+      await tester.pumpAndSettle();
+      expect(await repo.branchPendingInvites('branch-2'), hasLength(1));
+    });
+
+    testWidgets('sorumlu personeli askıya alabilir', (tester) async {
+      final repo = await managerRepo();
+      await _pump(
+        tester,
+        const MyBranchScreen(),
+        repo: repo,
+        account: AccountType.individual,
+      );
+      await selectBranch2(tester);
+      final staff2 = (await repo.branchMembers(
+        'branch-2',
+      )).firstWhere((m) => m.userId == 'staff-2');
+      await tester.ensureVisible(
+        find.byKey(ValueKey('manager_member_menu_${staff2.id}')),
+      );
+      await tester.tap(
+        find.byKey(ValueKey('manager_member_menu_${staff2.id}')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(AppStrings.branchStaffSuspend));
+      await tester.pumpAndSettle();
+      final updated = (await repo.branchMembers(
+        'branch-2',
+      )).firstWhere((m) => m.userId == 'staff-2');
+      expect(updated.status, BranchMembershipStatus.suspended);
+    });
+
+    testWidgets('320dp + 1.3x sorumlu görünümü taşma yapmaz', (tester) async {
+      final repo = await managerRepo();
+      await _pump(
+        tester,
+        const MyBranchScreen(),
+        repo: repo,
+        account: AccountType.individual,
+        size: const Size(320, 5000),
+        textScale: 1.3,
+      );
+      await selectBranch2(tester);
+      expect(find.text(AppStrings.myBranchManagerSection), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('V2 — 320dp/1.3x ticari yüzeyler', () {
+    testWidgets('şube detayı Geçmiş tabı dar ekranda taşmaz', (tester) async {
+      final repo = LocalBranchRepository(seed: true);
+      await _pump(
+        tester,
+        const BranchDetailScreen(branchId: 'branch-1'),
+        repo: repo,
+        size: const Size(320, 4000),
+        textScale: 1.3,
+      );
+      // 320dp'de 5. tab görünür alan dışında — TabBar scrollable'ını kaydır.
+      await tester.scrollUntilVisible(
+        find.widgetWithText(Tab, AppStrings.branchTabActivity),
+        100,
+        scrollable: find
+            .descendant(
+              of: find.byType(TabBar),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(Tab, AppStrings.branchTabActivity));
+      await tester.pumpAndSettle();
+      expect(find.text('Süreç oluşturuldu'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
 
 /// Ad çözümü başarısız Supabase durumunun aynası: davet var ama şube/patron

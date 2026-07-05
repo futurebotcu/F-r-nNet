@@ -123,6 +123,24 @@ extension BranchProcessTypeMeta on BranchProcessType {
     }
   }
 
+  /// V2 şablon açıklaması — "Şablondan süreç oluştur" kartlarında görünür.
+  String get templateDescription {
+    switch (this) {
+      case BranchProcessType.openingCheck:
+        return 'Şubenin güne hazır olup olmadığını kontrol et.';
+      case BranchProcessType.productionNote:
+        return 'Üretimle ilgili eksik, fire veya plan notu ekle.';
+      case BranchProcessType.shipmentPrep:
+        return 'Bayi/teslimat hazırlığını takip et.';
+      case BranchProcessType.dealerCollection:
+        return 'Bayi tahsilat veya iade durumunu not al.';
+      case BranchProcessType.accountNote:
+        return 'Şubeye bağlı cari/ödeme notu ekle.';
+      case BranchProcessType.generalNote:
+        return 'Şubeyle ilgili genel not veya görev oluştur.';
+    }
+  }
+
   static BranchProcessType fromKey(String key) =>
       BranchProcessType.values.firstWhere(
         (t) => t.persistKey == key,
@@ -305,6 +323,7 @@ class BranchProcess {
     this.createdByName = '',
     this.createdAt,
     this.dueAt,
+    this.completedAt,
   });
 
   final String id;
@@ -316,6 +335,7 @@ class BranchProcess {
   final String createdByName;
   final DateTime? createdAt;
   final DateTime? dueAt;
+  final DateTime? completedAt;
 }
 
 /// Ticari ana ekran "Bugün Öne Çıkanlar" KPI özeti.
@@ -326,10 +346,16 @@ class BranchOverview {
     this.activeMembers = 0,
     this.openProcesses = 0,
     this.pendingInvites = 0,
+    this.attentionProcesses = 0,
+    this.completedToday = 0,
   });
 
   final int totalBranches;
   final int activeMembers;
   final int openProcesses;
   final int pendingInvites;
+
+  // V2: operasyon özeti genişletmesi.
+  final int attentionProcesses;
+  final int completedToday;
 }
