@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
@@ -46,10 +47,10 @@ class BranchManagementScreen extends ConsumerWidget {
         top: false,
         child: branches.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Center(
-            child: Text(
-              'Şubeler yüklenemedi. Tekrar deneyin.',
-              style: TextStyle(color: AppColors.textSecondary),
+          error: (_, __) => Center(
+            child: ErrorRetryState(
+              title: AppStrings.branchListError,
+              onRetry: () => ref.invalidate(myBranchesProvider),
             ),
           ),
           data: (list) => ListView(

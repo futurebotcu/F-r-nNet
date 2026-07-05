@@ -121,8 +121,67 @@ class _GeneralTab extends ConsumerWidget {
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.m),
+        // Pasif şube listede Pasif rozetiyle kalır; veri silinmez.
+        OutlinedButton.icon(
+          key: const ValueKey('branch_toggle_active'),
+          onPressed: () => _toggleActive(context, ref, branch),
+          icon: Icon(
+            branch.isActive
+                ? Icons.pause_circle_outline_rounded
+                : Icons.play_circle_outline_rounded,
+            size: 18,
+          ),
+          label: Text(
+            branch.isActive
+                ? AppStrings.branchDeactivateCta
+                : AppStrings.branchActivateCta,
+          ),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 46),
+            foregroundColor: branch.isActive
+                ? AppColors.textSecondary
+                : AppColors.brandInk,
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _toggleActive(
+    BuildContext context,
+    WidgetRef ref,
+    Branch branch,
+  ) async {
+    if (branch.isActive) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text(AppStrings.branchDeactivateConfirmTitle),
+          content: const Text(AppStrings.branchDeactivateConfirmBody),
+          actions: [
+            TextButton(
+              key: const ValueKey('branch_deactivate_cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text(AppStrings.branchConfirmCancel),
+            ),
+            FilledButton(
+              key: const ValueKey('branch_deactivate_confirm'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text(AppStrings.branchConfirmApprove),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    await ref
+        .read(branchRepositoryProvider)
+        .setBranchActive(branch.id, !branch.isActive);
   }
 }
 
@@ -207,7 +266,9 @@ class _StaffTab extends ConsumerWidget {
           width: double.infinity,
           child: FilledButton.icon(
             key: const ValueKey('branch_staff_add_cta'),
-            onPressed: () => context.push(AppRoutes.branchStaffNew),
+            // Detaydan gelişte şube önceden seçili gelsin (değiştirilebilir).
+            onPressed: () =>
+                context.push('${AppRoutes.branchStaffNew}?branch=$branchId'),
             icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
             label: const Text(AppStrings.branchStaffAddCta),
             style: FilledButton.styleFrom(
@@ -283,6 +344,52 @@ class _MemberCard extends ConsumerWidget {
   const _MemberCard({required this.membership});
   final BranchMembership membership;
 
+  /// Erişimi kapatan durum değişiklikleri onay ister (aktifleştirme direkt).
+  Future<bool> _confirm(
+    BuildContext context,
+    BranchMembershipStatus status,
+  ) async {
+    final removing = status == BranchMembershipStatus.removed;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          removing
+              ? AppStrings.branchStaffRemoveConfirmTitle
+              : AppStrings.branchStaffSuspendConfirmTitle,
+        ),
+        content: Text(
+          removing
+              ? AppStrings.branchStaffRemoveConfirmBody
+              : AppStrings.branchStaffSuspendConfirmBody,
+        ),
+        actions: [
+          TextButton(
+            key: const ValueKey('member_action_cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text(AppStrings.branchConfirmCancel),
+          ),
+          FilledButton(
+            key: const ValueKey('member_action_confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: removing
+                  ? AppColors.danger
+                  : AppColors.brandLemon,
+              foregroundColor: removing ? Colors.white : AppColors.brandInk,
+            ),
+            child: Text(
+              removing
+                  ? AppStrings.branchStaffRemove
+                  : AppStrings.branchStaffSuspend,
+            ),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final m = membership;
@@ -326,6 +433,10 @@ class _MemberCard extends ConsumerWidget {
                 color: AppColors.textMuted,
               ),
               onSelected: (status) async {
+                if (status != BranchMembershipStatus.active &&
+                    !await _confirm(context, status)) {
+                  return;
+                }
                 await ref
                     .read(branchRepositoryProvider)
                     .setMembershipStatus(m.id, status);

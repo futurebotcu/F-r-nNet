@@ -1471,7 +1471,7 @@ class AppStrings {
   static const String myBranchCardSub =
       'Bağlı olduğun şubenin süreçlerini yönet';
   static const String myBranchEmpty =
-      'Aktif şube üyeliğin yok. Bir işletme seni FırınNet ID\'inle şube '
+      'Aktif şube üyeliğin yok. Bir işletme seni FırınNet ID\'nle şube '
       'personeli olarak eklerse şuben burada görünür.';
   static const String myBranchInviteSection = 'Şube Davetleri';
   static const String myBranchInviteAccept = 'Kabul Et';
@@ -1513,6 +1513,36 @@ class AppStrings {
       'Personel daveti gönderildi';
   static const String branchInviteSentBannerBody =
       'Çalışan onayladığında şube süreçlerinde çalışmaya başlayabilir.';
+  // V1 polish — davet ekranı bilgi notu + genel hata.
+  static const String branchInviteNoPermissionNote =
+      'İzin seçmezsen personel şubeyi görebilir, ancak süreç ekleyemez.';
+  static const String branchInviteGenericError =
+      'Davet gönderilemedi. Bağlantını kontrol edip tekrar dene.';
+  // V1 polish — personel durum değişikliği onayları.
+  static const String branchStaffSuspendConfirmTitle =
+      'Personel askıya alınsın mı?';
+  static const String branchStaffSuspendConfirmBody =
+      'Bu personelin şube erişimi geçici olarak kapatılacak. İstediğin '
+      'zaman tekrar aktifleştirebilirsin.';
+  static const String branchStaffRemoveConfirmTitle = 'Personel çıkarılsın mı?';
+  static const String branchStaffRemoveConfirmBody =
+      'Bu personelin şube erişimi kapatılacak. Tekrar eklemek için yeni '
+      'bir davet göndermen gerekir.';
+  static const String branchConfirmCancel = 'Vazgeç';
+  static const String branchConfirmApprove = 'Onayla';
+  // V1 polish — şube pasifleştirme/aktifleştirme.
+  static const String branchDeactivateCta = 'Şubeyi Pasifleştir';
+  static const String branchActivateCta = 'Şubeyi Aktifleştir';
+  static const String branchDeactivateConfirmTitle =
+      'Şube pasifleştirilsin mi?';
+  static const String branchDeactivateConfirmBody =
+      'Şube listede Pasif olarak görünür; personel ve süreç verileri '
+      'silinmez. İstediğin zaman tekrar aktifleştirebilirsin.';
+  // V1 polish — bireysel davet kartı.
+  static const String myBranchInviteFallbackTitle = 'Şube daveti';
+  static const String myBranchInviteFrom = 'Davet eden';
+  // V1 polish — şube listesi hata durumu.
+  static const String branchListError = 'Şubeler yüklenemedi.';
 
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
