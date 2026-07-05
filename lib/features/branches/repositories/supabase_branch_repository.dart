@@ -30,6 +30,29 @@ class SupabaseBranchRepository implements BranchRepository {
   static const _neutralInviteError =
       'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.';
 
+  /// Diğer kullanıcıların display_name'i — profiles RLS owner-only olduğu
+  /// için embedded join yerine mevcut `public_profile_snapshot` RPC'si
+  /// kullanılır (groups V1 kalıbı; yalnız güvenli kolonlar döner).
+  /// RPC hatasında sessizce boş map — UI fallback metnini uygular.
+  Future<Map<String, String>> _displayNames(Iterable<String> ids) async {
+    final unique = ids.toSet().toList(growable: false);
+    if (unique.isEmpty) return const {};
+    try {
+      final rows = await _client.rpc(
+        'public_profile_snapshot',
+        params: <String, dynamic>{'p_user_ids': unique},
+      );
+      if (rows is! List) return const {};
+      return <String, String>{
+        for (final p in rows.cast<Map<String, dynamic>>())
+          if (p['display_name'] is String)
+            p['id'] as String: p['display_name'] as String,
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
   // ── Patron tarafı ──
 
   @override
@@ -42,7 +65,7 @@ class SupabaseBranchRepository implements BranchRepository {
         .order('created_at');
     final members = await _client
         .from('branch_memberships')
-        .select('branch_id, role, member:profiles!user_id(display_name)')
+        .select('branch_id, user_id, role')
         .eq('owner_id', uid)
         .eq('status', 'active');
     final processes = await _client
@@ -50,12 +73,17 @@ class SupabaseBranchRepository implements BranchRepository {
         .select('branch_id, status')
         .eq('owner_id', uid)
         .neq('status', 'completed');
+    final memberRows = (members as List).cast<Map<String, dynamic>>();
+    final names = await _displayNames(
+      memberRows
+          .where((m) => m['role'] == BranchRole.branchManager.persistKey)
+          .map((m) => m['user_id'] as String),
+    );
     return (rows as List)
         .cast<Map<String, dynamic>>()
         .map((r) {
           final id = r['id'] as String;
-          final myMembers = (members as List)
-              .cast<Map<String, dynamic>>()
+          final myMembers = memberRows
               .where((m) => m['branch_id'] == id)
               .toList();
           final open = (processes as List)
@@ -65,7 +93,7 @@ class SupabaseBranchRepository implements BranchRepository {
           String? manager;
           for (final m in myMembers) {
             if (m['role'] == BranchRole.branchManager.persistKey) {
-              manager = (m['member'] as Map?)?['display_name'] as String?;
+              manager = names[m['user_id'] as String];
               break;
             }
           }
@@ -170,30 +198,30 @@ class SupabaseBranchRepository implements BranchRepository {
     _requireUserId();
     final rows = await _client
         .from('branch_memberships')
-        .select(
-          'id, branch_id, user_id, role, permissions, status, '
-          'member:profiles!user_id(display_name)',
-        )
+        .select('id, branch_id, user_id, role, permissions, status')
         .eq('branch_id', branchId)
         .neq('status', 'removed')
         .order('created_at');
-    return (rows as List)
-        .cast<Map<String, dynamic>>()
-        .map(_membershipFromRow)
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final names = await _displayNames(list.map((m) => m['user_id'] as String));
+    return list
+        .map((r) => _membershipFromRow(r, names: names))
         .toList(growable: false);
   }
 
-  BranchMembership _membershipFromRow(Map<String, dynamic> r) =>
-      BranchMembership(
-        id: r['id'] as String,
-        branchId: r['branch_id'] as String,
-        userId: r['user_id'] as String,
-        role: BranchRoleMeta.fromKey(r['role'] as String),
-        status: BranchMembershipStatusMeta.fromKey(r['status'] as String),
-        permissions: _permsFromJson(r['permissions']),
-        memberName: ((r['member'] as Map?)?['display_name'] as String?) ?? '',
-        branchName: ((r['branch'] as Map?)?['name'] as String?) ?? '',
-      );
+  BranchMembership _membershipFromRow(
+    Map<String, dynamic> r, {
+    Map<String, String> names = const {},
+  }) => BranchMembership(
+    id: r['id'] as String,
+    branchId: r['branch_id'] as String,
+    userId: r['user_id'] as String,
+    role: BranchRoleMeta.fromKey(r['role'] as String),
+    status: BranchMembershipStatusMeta.fromKey(r['status'] as String),
+    permissions: _permsFromJson(r['permissions']),
+    memberName: names[r['user_id'] as String] ?? '',
+    branchName: ((r['branch'] as Map?)?['name'] as String?) ?? '',
+  );
 
   List<BranchProcessType> _permsFromJson(dynamic raw) {
     if (raw is! List) return const [];
@@ -208,27 +236,30 @@ class SupabaseBranchRepository implements BranchRepository {
     _requireUserId();
     final rows = await _client
         .from('branch_invites')
-        .select(
-          'id, branch_id, role, permissions, created_at, '
-          'invited:profiles!invited_user_id(display_name)',
-        )
+        .select('id, branch_id, invited_user_id, role, permissions, created_at')
         .eq('branch_id', branchId)
         .eq('status', 'pending')
         .order('created_at', ascending: false);
-    return (rows as List)
-        .cast<Map<String, dynamic>>()
-        .map(_inviteFromRow)
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final names = await _displayNames(
+      list.map((r) => r['invited_user_id'] as String),
+    );
+    return list
+        .map((r) => _inviteFromRow(r, names: names))
         .toList(growable: false);
   }
 
-  BranchInvite _inviteFromRow(Map<String, dynamic> r) => BranchInvite(
+  BranchInvite _inviteFromRow(
+    Map<String, dynamic> r, {
+    Map<String, String> names = const {},
+  }) => BranchInvite(
     id: r['id'] as String,
     branchId: r['branch_id'] as String,
     role: BranchRoleMeta.fromKey(r['role'] as String),
     permissions: _permsFromJson(r['permissions']),
     branchName: ((r['branch'] as Map?)?['name'] as String?) ?? '',
-    ownerName: ((r['owner'] as Map?)?['display_name'] as String?) ?? '',
-    invitedName: ((r['invited'] as Map?)?['display_name'] as String?) ?? '',
+    ownerName: names[r['owner_id'] as String?] ?? '',
+    invitedName: names[r['invited_user_id'] as String?] ?? '',
     createdAt: DateTime.tryParse((r['created_at'] as String?) ?? ''),
   );
 
@@ -320,19 +351,21 @@ class SupabaseBranchRepository implements BranchRepository {
   @override
   Future<List<BranchInvite>> myPendingInvites() async {
     final uid = _requireUserId();
+    // branch join: kabul öncesi RLS gereği null döner (davetli şube satırını
+    // göremez) — UI fallback başlığı uygular. Owner adı snapshot RPC ile.
     final rows = await _client
         .from('branch_invites')
         .select(
-          'id, branch_id, role, permissions, created_at, '
-          'branch:branches!branch_id(name), '
-          'owner:profiles!owner_id(display_name)',
+          'id, branch_id, owner_id, invited_user_id, role, permissions, '
+          'created_at, branch:branches!branch_id(name)',
         )
         .eq('invited_user_id', uid)
         .eq('status', 'pending')
         .order('created_at', ascending: false);
-    return (rows as List)
-        .cast<Map<String, dynamic>>()
-        .map(_inviteFromRow)
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final names = await _displayNames(list.map((r) => r['owner_id'] as String));
+    return list
+        .map((r) => _inviteFromRow(r, names: names))
         .toList(growable: false);
   }
 
@@ -354,13 +387,16 @@ class SupabaseBranchRepository implements BranchRepository {
     final rows = await _client
         .from('branch_processes')
         .select(
-          'id, branch_id, type, title, note, status, due_at, '
-          'created_at, creator:profiles!created_by(display_name)',
+          'id, branch_id, created_by, type, title, note, status, due_at, '
+          'created_at',
         )
         .eq('branch_id', branchId)
         .order('created_at', ascending: false);
-    return (rows as List)
-        .cast<Map<String, dynamic>>()
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    final names = await _displayNames(
+      list.map((r) => r['created_by'] as String),
+    );
+    return list
         .map((r) {
           return BranchProcess(
             id: r['id'] as String,
@@ -369,8 +405,7 @@ class SupabaseBranchRepository implements BranchRepository {
             title: r['title'] as String,
             note: (r['note'] as String?) ?? '',
             status: BranchProcessStatusMeta.fromKey(r['status'] as String),
-            createdByName:
-                ((r['creator'] as Map?)?['display_name'] as String?) ?? '',
+            createdByName: names[r['created_by'] as String] ?? '',
             createdAt: DateTime.tryParse((r['created_at'] as String?) ?? ''),
             dueAt: DateTime.tryParse((r['due_at'] as String?) ?? ''),
           );

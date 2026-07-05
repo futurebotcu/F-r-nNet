@@ -82,10 +82,12 @@ class _AddBranchStaffScreenState extends ConsumerState<AddBranchStaffScreen> {
         _error = e.message;
       });
     } catch (_) {
+      // Beklenmeyen hata (ağ vb.) — FN-ID mesajı yanıltıcı olur; nötr genel
+      // mesaj göster (enumeration sızdırmayan dil korunur).
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = AppStrings.branchInviteFnIdRequired;
+        _error = AppStrings.branchInviteGenericError;
       });
     }
   }
@@ -224,6 +226,34 @@ class _AddBranchStaffScreenState extends ConsumerState<AddBranchStaffScreen> {
                 ),
             ],
           ),
+        // Bilgi notu: izin seçilmezse personel salt-görüntüleyici kalır.
+        // Daveti engellemez; patronun bilinçli seçim yapmasını sağlar.
+        if (!_role.hasAllProcessPermissions && _permissions.isEmpty) ...[
+          const SizedBox(height: AppSpacing.s),
+          Row(
+            key: const ValueKey('branch_invite_permission_note'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 15,
+                color: AppColors.textMuted,
+              ),
+              SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  AppStrings.branchInviteNoPermissionNote,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.m),
           Text(

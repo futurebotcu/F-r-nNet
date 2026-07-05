@@ -242,8 +242,12 @@ class _InviteCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Şube adı kabul öncesi RLS gereği gelmeyebilir → güvenli
+            // fallback başlık; davet eden işletme adı ayrı satırda gösterilir.
             Text(
-              invite.branchName.isEmpty ? 'Şube daveti' : invite.branchName,
+              invite.branchName.isEmpty
+                  ? AppStrings.myBranchInviteFallbackTitle
+                  : invite.branchName,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
@@ -253,7 +257,8 @@ class _InviteCard extends ConsumerWidget {
             const SizedBox(height: 2),
             Text(
               [
-                if (invite.ownerName.isNotEmpty) invite.ownerName,
+                if (invite.ownerName.isNotEmpty)
+                  '${AppStrings.myBranchInviteFrom}: ${invite.ownerName}',
                 invite.role.label,
               ].join(' · '),
               style: const TextStyle(
