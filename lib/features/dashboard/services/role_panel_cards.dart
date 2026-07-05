@@ -63,6 +63,13 @@ class RolePanelCards {
             icon: Icons.account_balance_wallet_rounded,
             route: AppRoutes.debtExpense,
           ),
+          // Şube Yönetimi mini app (V1) — çok şubeli operasyon merkezi.
+          PanelCard(
+            label: AppStrings.branchMgmtTitle,
+            subtitle: AppStrings.branchMgmtCardSub,
+            icon: Icons.store_mall_directory_outlined,
+            route: AppRoutes.branches,
+          ),
           // Araçlar
           PanelCard(
             label: AppStrings.cardCalculator,

@@ -1407,6 +1407,113 @@ class AppStrings {
       'Şoför onayladığında teslimat ve cari takibini panelden '
       'yönetebilirsin.';
 
+  // ── Şube Yönetimi mini app ─────────────────────────────────────────────
+  static const String branchMgmtTitle = 'Şube Yönetimi';
+  static const String branchMgmtSubtitle = 'Ticari Panel';
+  static const String branchMgmtCardSub =
+      'Şubelerini, personelini ve süreçlerini yönet';
+  static const String branchMgmtHighlights = 'Bugün Öne Çıkanlar';
+  static const String branchKpiTotalBranches = 'Toplam Şube';
+  static const String branchKpiActiveStaff = 'Aktif Personel';
+  static const String branchKpiOpenProcesses = 'Açık Süreç';
+  static const String branchKpiPendingInvites = 'Bekleyen Davet';
+  static const String branchCreateCta = 'Yeni Şube Oluştur';
+  static const String branchListEmpty =
+      'Henüz şube yok. İlk şubeni oluşturup personelini davet et.';
+  static const String branchStatusActive = 'Aktif';
+  static const String branchStatusAttention = 'Dikkat';
+  static const String branchStatusPassive = 'Pasif';
+  static const String branchFormTitle = 'Yeni Şube';
+  static const String branchFormName = 'Şube adı';
+  static const String branchFormAddress = 'Adres (opsiyonel)';
+  static const String branchFormPhone = 'Telefon (opsiyonel)';
+  static const String branchFormSave = 'Şubeyi Oluştur';
+  static const String branchFormNameRequired = 'Şube adını gir.';
+  static const String branchTabGeneral = 'Genel';
+  static const String branchTabStaff = 'Personel';
+  static const String branchTabProcesses = 'Süreçler';
+  static const String branchTabPermissions = 'Yetkiler';
+  static const String branchDetailManager = 'Şube sorumlusu';
+  static const String branchDetailNoManager = 'Sorumlu atanmadı';
+  static const String branchStaffAddCta = 'Personel Ekle';
+  static const String branchStaffEmpty =
+      'Bu şubede henüz personel yok. FırınNet ID ile davet gönder.';
+  static const String branchStaffPendingSection = 'Bekleyen Davetler';
+  static const String branchStaffSuspend = 'Askıya Al';
+  static const String branchStaffActivate = 'Aktifleştir';
+  static const String branchStaffRemove = 'Çıkar';
+  static const String branchProcessAddCta = 'Süreç Ekle';
+  static const String branchProcessEmpty =
+      'Henüz süreç yok. Günlük işleri süreç olarak ekleyip takip et.';
+  static const String branchProcessFormTitle = 'Yeni Süreç';
+  static const String branchProcessFormTitleField = 'Başlık';
+  static const String branchProcessFormNoteField = 'Not (opsiyonel)';
+  static const String branchProcessFormTypeField = 'Süreç tipi';
+  static const String branchProcessTitleRequired = 'Süreç başlığını gir.';
+  static const String branchPermissionsInfo =
+      'Roller ve süreç izinleri davet sırasında belirlenir. Şube sorumlusu '
+      'tüm süreç tiplerine yetkilidir; diğer roller yalnız seçilen tiplerde '
+      'süreç ekleyip güncelleyebilir. İzin denetimi sunucudadır.';
+  // Personel davet ekranı.
+  static const String branchInviteTitle = 'Personel Davet Et';
+  static const String branchInviteFnIdLabel = 'FırınNet ID';
+  static const String branchInviteFnIdHint = 'Örn. FN-2026-000123';
+  static const String branchInviteBranchField = 'Şube';
+  static const String branchInviteRoleField = 'Rol';
+  static const String branchInvitePermissionsField = 'Süreç izinleri';
+  static const String branchInviteSend = 'Davet Gönder';
+  static const String branchInviteSending = 'Gönderiliyor…';
+  static const String branchInviteFnIdRequired =
+      'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.';
+  static const String branchInviteBranchRequired = 'Şube seç.';
+  // Bireysel "Şube İşlerim".
+  static const String myBranchTitle = 'Şube İşlerim';
+  static const String myBranchCardSub =
+      'Bağlı olduğun şubenin süreçlerini yönet';
+  static const String myBranchEmpty =
+      'Aktif şube üyeliğin yok. Bir işletme seni FırınNet ID\'inle şube '
+      'personeli olarak eklerse şuben burada görünür.';
+  static const String myBranchInviteSection = 'Şube Davetleri';
+  static const String myBranchInviteAccept = 'Kabul Et';
+  static const String myBranchInviteReject = 'Reddet';
+  static const String myBranchPickerLabel = 'Şube';
+  static const String myBranchNoPermittedTypes =
+      'Bu şubede süreç ekleme yetkin yok. Süreçleri görüntüleyebilirsin.';
+  // "Çalışan nasıl eklenir?" rehberi (Guide Surface).
+  static const String branchStaffGuideTitle = 'Çalışan nasıl eklenir?';
+  static const String branchStaffGuideBody =
+      'Çalışanın FırınNet ID\'sini al, şubesini ve yetkisini seçip davet '
+      'gönder.';
+  static const String branchStaffGuideStep1Title =
+      'Çalışandan FırınNet ID\'sini iste';
+  static const String branchStaffGuideStep1Body =
+      'Çalışan uygulamaya kendi hesabıyla giriş yapar ve Ayarlar '
+      'bölümündeki FırınNet ID\'sini sana gönderir.';
+  static const String branchStaffGuideStep2Title = 'ID\'yi bu ekrana yaz';
+  static const String branchStaffGuideStep2Body =
+      'Çalışanın gönderdiği FırınNet ID\'yi buradaki ID alanına gir.';
+  static const String branchStaffGuideStep3Title = 'Çalışacağı şubeyi seç';
+  static const String branchStaffGuideStep3Body =
+      'Çalışanın bağlanacağı şubeyi listeden seç.';
+  static const String branchStaffGuideStep4Title = 'Rol ve yetkisini belirle';
+  static const String branchStaffGuideStep4Body =
+      'Rolünü seç; hangi süreç tiplerinde çalışabileceğini işaretle.';
+  static const String branchStaffGuideStep5Title = 'Daveti gönder';
+  static const String branchStaffGuideStep5Body =
+      'Davet çalışanın hesabına düşer; onaylayana dek şube verisi görünmez.';
+  static const String branchStaffGuideStep6Title =
+      'Onaylayınca süreçler açılır';
+  static const String branchStaffGuideStep6Body =
+      'Çalışan onaylayınca "Şube İşlerim" açılır; sen de hareketleri '
+      'panelden takip edersin.';
+  static const String branchStaffGuideFootnote =
+      'ID\'yi bulamıyorsa çalışana uygulamayı açıp Ayarlar bölümünden '
+      'FırınNet ID\'sini kopyalamasını söyle.';
+  static const String branchInviteSentBannerTitle =
+      'Personel daveti gönderildi';
+  static const String branchInviteSentBannerBody =
+      'Çalışan onayladığında şube süreçlerinde çalışmaya başlayabilir.';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';

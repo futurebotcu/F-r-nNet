@@ -16,16 +16,16 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('M-10 — QuickActionTile unread badge (widget)', () {
     Widget host(int badgeCount) => MaterialApp(
-          home: Scaffold(
-            body: QuickActionTile(
-              label: 'Mesajlar',
-              subtitle: 'Sohbetler',
-              icon: Icons.chat_bubble_outline_rounded,
-              badgeCount: badgeCount,
-              onTap: () {},
-            ),
-          ),
-        );
+      home: Scaffold(
+        body: QuickActionTile(
+          label: 'Mesajlar',
+          subtitle: 'Sohbetler',
+          icon: Icons.chat_bubble_outline_rounded,
+          badgeCount: badgeCount,
+          onTap: () {},
+        ),
+      ),
+    );
 
     testWidgets('badgeCount > 0 → sayı görünür', (tester) async {
       await tester.pumpWidget(host(3));
@@ -60,8 +60,12 @@ void main() {
         'lib/features/dashboard/screens/role_dashboard_screen.dart',
       ).readAsStringSync();
       expect(src.contains('totalUnreadMessagesProvider'), isTrue);
+      // Biçimden bağımsız sözleşme: formatter satırı bölebilir (Şube
+      // Yönetimi sprintinde bölündü); davranış aynı kaldıkça geçer.
       expect(
-        src.contains('cards[i].route == AppRoutes.messages ? unread : 0'),
+        RegExp(
+          r'cards\[i\]\.route == AppRoutes\.messages\s*\?\s*unread\s*:\s*0',
+        ).hasMatch(src),
         isTrue,
       );
     });
@@ -70,8 +74,9 @@ void main() {
   group('G-6/G-7 — Grup topluluk header (kaynak)', () {
     late String src;
     setUpAll(() {
-      src = File('lib/features/social_groups/screens/group_detail_screen.dart')
-          .readAsStringSync();
+      src = File(
+        'lib/features/social_groups/screens/group_detail_screen.dart',
+      ).readAsStringSync();
     });
 
     test('_GroupCommunityHeader chat body\'ye eklendi', () {
@@ -93,8 +98,9 @@ void main() {
   group('G-8 — Grup composer gönderim feedback (kaynak)', () {
     late String src;
     setUpAll(() {
-      src = File('lib/features/social_groups/screens/group_detail_screen.dart')
-          .readAsStringSync();
+      src = File(
+        'lib/features/social_groups/screens/group_detail_screen.dart',
+      ).readAsStringSync();
     });
 
     test('Sending state + duplicate guard', () {
@@ -109,7 +115,9 @@ void main() {
       expect(src.contains('onAction: _send'), isTrue);
       // Eski hata snackbar\'ı kaldırıldı.
       expect(
-        src.contains('SnackBar(content: Text(AppStrings.groupMessageSendError))'),
+        src.contains(
+          'SnackBar(content: Text(AppStrings.groupMessageSendError))',
+        ),
         isFalse,
       );
     });
@@ -118,8 +126,9 @@ void main() {
   group('M-5 deepening — Chat error bubble görünür retry (kaynak)', () {
     late String src;
     setUpAll(() {
-      src = File('lib/features/messaging/screens/chat_screen.dart')
-          .readAsStringSync();
+      src = File(
+        'lib/features/messaging/screens/chat_screen.dart',
+      ).readAsStringSync();
     });
 
     test('textMessageBuilder default SimpleTextMessage\'ı korur', () {
@@ -137,7 +146,8 @@ void main() {
       expect(
         src.contains('chatMessageBuilder:'),
         isFalse,
-        reason: 'Hizalama/animasyon paket varsayılanından gelmeli; '
+        reason:
+            'Hizalama/animasyon paket varsayılanından gelmeli; '
             'chatMessageBuilder atanmamalı',
       );
     });

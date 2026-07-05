@@ -64,6 +64,12 @@ import '../../features/dealers/screens/wholesale_customers_screen.dart';
 import '../../features/auth/screens/auth_entry_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/branches/screens/add_branch_staff_screen.dart';
+import '../../features/branches/screens/branch_detail_screen.dart';
+import '../../features/branches/screens/branch_form_screen.dart';
+import '../../features/branches/screens/branch_management_screen.dart';
+import '../../features/branches/screens/my_branch_screen.dart';
+import '../../features/branches/widgets/patron_branch_guard.dart';
 import '../../features/auth/screens/role_select_screen.dart';
 import '../../features/legal/screens/account_deletion_screen.dart';
 import '../../features/legal/screens/community_guidelines_screen.dart';
@@ -203,6 +209,12 @@ class AppRoutes {
   static const String dealerNew = '/dealers/new';
   static String dealerEdit(String id) => '/dealers/$id/edit';
   static String dealerHistory(String id) => '/dealers/$id/history';
+  // Şube Yönetimi mini app (V1) — ticari yönetim + bireysel Şube İşlerim.
+  static const String branches = '/branches';
+  static const String branchNew = '/branches/new';
+  static const String branchStaffNew = '/branches/staff/new';
+  static String branchDetail(String id) => '/branches/$id';
+  static const String myBranch = '/my-branch';
   // Şoförler (Sprint 2 — patron-side yönetim).
   static const String dealerDrivers = '/dealers/drivers';
   static const String dealerDriverNew = '/dealers/drivers/new';
@@ -687,6 +699,38 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       GoRoute(
         path: AppRoutes.dealerNew,
         builder: (_, __) => const AddDealerScreen(),
+      ),
+      // Şube Yönetimi (V1) — literal route'lar ':id'den önce; yönetim
+      // yüzeyleri PatronBranchGuard'lı (bireysel deep-link → Şube İşlerim'e
+      // düşer, yönetim açılmaz; asıl sınır RLS'te).
+      GoRoute(
+        path: AppRoutes.branches,
+        builder: (_, __) =>
+            const PatronBranchGuard(child: BranchManagementScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.branchNew,
+        builder: (_, __) => const PatronBranchGuard(child: BranchFormScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.branchStaffNew,
+        builder: (_, state) => PatronBranchGuard(
+          child: AddBranchStaffScreen(
+            initialBranchId: state.uri.queryParameters['branch'],
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '${AppRoutes.branches}/:branchId',
+        builder: (_, state) => PatronBranchGuard(
+          child: BranchDetailScreen(
+            branchId: state.pathParameters['branchId']!,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.myBranch,
+        builder: (_, __) => const MyBranchScreen(),
       ),
       // Şoförler (Sprint 2) — literal '/dealers/drivers*' route'ları
       // '/dealers/:id'den ÖNCE kayıtlı; aksi halde ':id' "drivers"i yakalar.
