@@ -5,8 +5,10 @@
 // yoksa Türkçe snackbar + adres gösterir). Kişisel veri basılmaz.
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
@@ -85,7 +87,9 @@ class SupportScreen extends StatelessWidget {
   void _showMailError(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${AppStrings.supportMailError}${AppStrings.supportEmail}'),
+        content: Text(
+          '${AppStrings.supportMailError}${AppStrings.supportEmail}',
+        ),
       ),
     );
   }
@@ -147,6 +151,59 @@ class SupportScreen extends StatelessWidget {
               ),
             ),
 
+            // ───── Anlaşmalı iş yeri başvurusu (V1 — partners feature)
+            const SectionLabel(title: AppStrings.partnersTitle),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: PremiumCard(
+                child: InkWell(
+                  key: const ValueKey('support_partner_apply'),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                  onTap: () => context.push(AppRoutes.partnersApply),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.handshake_outlined,
+                        size: 22,
+                        color: AppColors.brandInk,
+                      ),
+                      const SizedBox(width: AppSpacing.m),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              AppStrings.partnersApplyEntry,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              AppStrings.partnersApplyEntrySub,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                height: 1.4,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.textMuted,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
             // ───── Bize ulaşın
             const SectionLabel(title: AppStrings.supportContactSection),
             Padding(
@@ -167,8 +224,11 @@ class SupportScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.s),
                     Row(
                       children: [
-                        const Icon(Icons.mail_outline_rounded,
-                            size: 16, color: AppColors.textMuted),
+                        const Icon(
+                          Icons.mail_outline_rounded,
+                          size: 16,
+                          color: AppColors.textMuted,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           AppStrings.supportEmail,

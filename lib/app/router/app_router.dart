@@ -71,6 +71,9 @@ import '../../features/branches/screens/branch_management_screen.dart';
 import '../../features/branches/screens/my_branch_screen.dart';
 import '../../features/branches/widgets/patron_branch_guard.dart';
 import '../../features/auth/screens/role_select_screen.dart';
+import '../../features/partners/screens/partner_business_application_screen.dart';
+import '../../features/partners/screens/partner_business_detail_screen.dart';
+import '../../features/partners/screens/partner_businesses_screen.dart';
 import '../../features/legal/screens/account_deletion_screen.dart';
 import '../../features/legal/screens/community_guidelines_screen.dart';
 import '../../features/legal/screens/privacy_screen.dart';
@@ -321,6 +324,11 @@ class AppRoutes {
   // V1 — Job messaging (job_conversations + job_messages)
   static const String messages = '/messages';
   static String conversation(String id) => '/messages/$id';
+
+  // Anlaşmalı İş Yerleri V1 — tüm roller için dizin + destek başvurusu.
+  static const String partners = '/partners';
+  static const String partnersApply = '/partners/apply';
+  static String partnerDetail(String id) => '/partners/$id';
 }
 
 /// Push notification tap handling — terminated/background bildirime tıklanınca
@@ -338,6 +346,9 @@ const List<String> kAuthRequiredPrefixes = <String>[
   '/debt-expense',
   '/pazar/magazam',
   '/wholesale',
+  // Anlaşmalı İş Yerleri: anon'un DB erişimi tamamen kapalı (RLS) — guest'e
+  // kırık ekran yerine auth girişine yönlendirilir.
+  '/partners',
 ];
 
 /// [location] korumalı bir prefix altında mı? Query string yok sayılır;
@@ -731,6 +742,23 @@ GoRouter createRouter({bool Function()? isAuthed}) {
       GoRoute(
         path: AppRoutes.myBranch,
         builder: (_, __) => const MyBranchScreen(),
+      ),
+      // Anlaşmalı İş Yerleri (V1) — literal '/partners/apply' ':id'den ÖNCE
+      // kayıtlı (aksi halde ':id' "apply"ı yakalar). Tüm roller erişir;
+      // auth guard prefix'i guest'i auth girişine düşürür.
+      GoRoute(
+        path: AppRoutes.partners,
+        builder: (_, __) => const PartnerBusinessesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.partnersApply,
+        builder: (_, __) => const PartnerBusinessApplicationScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.partners}/:partnerId',
+        builder: (_, state) => PartnerBusinessDetailScreen(
+          partnerId: state.pathParameters['partnerId']!,
+        ),
       ),
       // Şoförler (Sprint 2) — literal '/dealers/drivers*' route'ları
       // '/dealers/:id'den ÖNCE kayıtlı; aksi halde ':id' "drivers"i yakalar.

@@ -1577,6 +1577,56 @@ class AppStrings {
   static const String branchPermissionsSave = 'Kaydet';
   static const String branchPermissionsUpdated = 'İzinler güncellendi.';
 
+  // ── Anlaşmalı İş Yerleri V1 ──
+  static const String partnersTitle = 'Anlaşmalı İş Yerleri';
+  static const String partnersCardSub =
+      'Şehrinizdeki avantajlı iş yerlerini keşfedin.';
+  static const String partnersSearchHint = 'İş yeri, kategori veya şehir ara';
+  static const String partnersFilterCity = 'Şehir';
+  static const String partnersFilterDistrict = 'İlçe';
+  static const String partnersFilterCategory = 'Kategori';
+  static const String partnersFilterAll = 'Tümü';
+  static const String partnersFilterClear = 'Filtreleri temizle';
+  static const String partnersEmptyTitle =
+      'Bu bölgede henüz anlaşmalı iş yeri yok.';
+  static const String partnersEmptyBody =
+      'Anlaşmalı iş yeri olmak için destek bölümünden başvuru '
+      'yapabilirsiniz.';
+  static const String partnersListError = 'Anlaşmalı iş yerleri yüklenemedi.';
+  static const String partnersBadge = 'Anlaşmalı İş Yeri';
+  static const String partnersCall = 'Ara';
+  static const String partnersOpenMap = 'Haritada aç';
+  static const String partnersDetailCta = 'Detay';
+  static const String partnersDetailNotFound = 'İş yeri bulunamadı.';
+  static const String partnersDetailBenefit = 'Avantaj';
+  static const String partnersDetailAbout = 'Hakkında';
+  static const String partnersDetailContact = 'İletişim';
+  static const String partnersDetailWebsite = 'Web sitesi';
+  static const String partnersDetailReportHint =
+      'Bilgilerde hata mı var? Destek ile iletişime geçin.';
+  static const String partnersLinkError = 'Bağlantı açılamadı.';
+  // Başvuru formu.
+  static const String partnersApplyTitle = 'Anlaşmalı İş Yeri Başvurusu';
+  static const String partnersApplyEntry = 'Anlaşmalı iş yeri olmak istiyorum';
+  static const String partnersApplyEntrySub =
+      'İşletmeni FırınNet anlaşmalı iş yerleri arasına ekletmek için '
+      'başvuru yap.';
+  static const String partnersApplyBusinessName = 'İşletme adı *';
+  static const String partnersApplyContactName = 'Yetkili adı *';
+  static const String partnersApplyPhone = 'Telefon *';
+  static const String partnersApplyEmail = 'E-posta';
+  static const String partnersApplyCity = 'Şehir *';
+  static const String partnersApplyDistrict = 'İlçe *';
+  static const String partnersApplyCategory = 'Kategori *';
+  static const String partnersApplyMessage = 'Mesaj / açıklama';
+  static const String partnersApplyRequired = 'Zorunlu alanları doldur.';
+  static const String partnersApplySubmit = 'Başvuruyu Gönder';
+  static const String partnersApplySubmitting = 'Gönderiliyor…';
+  static const String partnersApplySuccess =
+      'Başvurunuz alındı. Ekibimiz sizinle iletişime geçecek.';
+  static const String partnersApplyError =
+      'Başvuru gönderilemedi. Tekrar dene.';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';
