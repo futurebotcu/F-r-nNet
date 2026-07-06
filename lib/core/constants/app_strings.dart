@@ -1323,8 +1323,9 @@ class AppStrings {
   static const String panelRoleSubWholesaler = 'Ürün ve müşterilerini yönet';
 
   // Ticari kartlar
-  static const String cardBakeryPanel = 'Fırın Paneli';
-  static const String cardBakeryPanelSub = 'Üretim, fire, gün sonu';
+  static const String cardBakeryPanel = 'Fırın Defteri';
+  static const String cardBakeryPanelSub =
+      'Üretim, fire, ciro ve günlük işlerini takip et.';
   static const String cardDealerPanel = 'Bayi Paneli';
   static const String cardDealerPanelSub = 'Teslimat, tahsilat, hesap';
   static const String cardMyListings = 'İlanlarım';
@@ -1626,6 +1627,69 @@ class AppStrings {
       'Başvurunuz alındı. Ekibimiz sizinle iletişime geçecek.';
   static const String partnersApplyError =
       'Başvuru gönderilemedi. Tekrar dene.';
+
+  // ── Fırın Defteri V1 ──
+  static const String ledgerTitle = 'Fırın Defteri';
+  static const String ledgerSubtitle =
+      'Bugünkü üretim, fire, ciro ve işlerini tek yerden takip et.';
+  static const String ledgerDayOpen = 'Gün Açık';
+  static const String ledgerDayClosed = 'Gün Kapatıldı';
+  static const String ledgerQuickSection = 'Hızlı Girişler';
+  static const String ledgerQuickProduction = 'Üretim yaz';
+  static const String ledgerQuickWaste = 'Fire yaz';
+  static const String ledgerQuickRevenue = 'Ciro yaz';
+  static const String ledgerQuickNote = 'Not ekle';
+  static const String ledgerQuickTask = 'İş ekle';
+  static const String ledgerQuickEndOfDay = 'Gün sonu';
+  static const String ledgerTasksSection = 'Bugün ne yapacağım?';
+  static const String ledgerTasksEmpty =
+      'Bugün için iş eklemedin. Önerilerden seç veya kendin yaz:';
+  static const String ledgerTaskAddHint = 'Yeni iş yaz…';
+  static const String ledgerTaskAdded = 'İş eklendi.';
+  static const String ledgerRecentSection = 'Son Kayıtlar';
+  static const String ledgerRecentEmpty =
+      'Bugün henüz kayıt yok. Üretim veya fire yazarak başla.';
+  // Akıllı özet chip'leri (deterministik).
+  static const String ledgerChipNoProduction = 'Bugün üretim kaydı yok';
+  static const String ledgerChipNoRevenue = 'Bugün ciro kaydı yok';
+  static const String ledgerChipHighWaste = 'Fire oranı yüksek';
+  static const String ledgerChipDayOpen = 'Gün sonu bekliyor';
+  static const String ledgerChipAllGood = 'Bugün düzenli görünüyor';
+  // Ciro / not sheet'i.
+  static const String ledgerRevenueSheetTitle = 'Ciro / Gün Notu';
+  static const String ledgerRevenueField = 'Bugünkü ciro (₺)';
+  static const String ledgerRevenueHint =
+      'Günlük ciro notudur; muhasebe kaydı değildir.';
+  static const String ledgerDayNoteField = 'Gün notu';
+  static const String ledgerSaved = 'Kaydedildi.';
+  // Fire sebebi.
+  static const String ledgerWasteReasonField = 'Fire sebebi';
+  static const String ledgerWasteReasonRequired = 'Fire sebebini seç.';
+  // Gün sonu.
+  static const String ledgerEodTitle = 'Gün Sonu';
+  static const String ledgerCloseDayCta = 'Günü kapat';
+  static const String ledgerReopenDayCta = 'Günü yeniden aç';
+  static const String ledgerDayClosedInfo =
+      'Bu gün kapatıldı. Değişiklik için günü yeniden açabilirsin.';
+  static const String ledgerEodTasksDone = 'Tamamlanan iş';
+  static const String ledgerEodTasksOpen = 'Açık iş';
+  static const String ledgerEodProduction = 'Üretim';
+  static const String ledgerEodWaste = 'Fire';
+  static const String ledgerEodWasteRatio = 'Fire oranı';
+  static const String ledgerEodRevenue = 'Ciro';
+  static const String ledgerEodNoteLabel = 'Gün notu';
+  // Rapor.
+  static const String ledgerReportTitle = 'Rapor';
+  static const String ledgerReportClosedDays = 'Kapatılan gün';
+  static const String ledgerReportTopWaste = 'En çok fire yazılan ürünler';
+  static const String ledgerReportRecentNotes = 'Son günlük notlar';
+  static const String ledgerReportEmpty =
+      'Bu dönemde kayıt yok. Üretim, fire veya ciro yazdıkça rapor burada '
+      'oluşur.';
+  // Gider ayrımı — Fırın Defteri gider sistemi DEĞİLDİR.
+  static const String ledgerExpenseLinkCta = 'Giderleri yönet';
+  static const String ledgerExpenseLinkNote =
+      'Giderler ayrı menüden takip edilir.';
 
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';

@@ -14,18 +14,28 @@ import '../../../core/widgets/premium/metric_pill.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/quick_action_tile.dart'
-    show QuickActionTile, QuickActionMini;
+    show QuickActionMini;
 import '../../../core/widgets/premium/section_label.dart';
-import '../../dealers/providers/dealer_providers.dart';
+import '../models/bakery_day_book.dart';
+import '../models/bakery_task.dart';
 import '../models/daily_summary.dart';
+import '../models/waste_entry.dart';
 import '../providers/bakery_providers.dart';
+import '../widgets/ledger_revenue_sheet.dart';
 
+/// Fırın Defteri — fırıncının günlük operasyon mini app'i.
+///
+/// "Bugün ne ürettim, ne kadar fire verdim, ne kadar ciro yazdım, bugün
+/// hangi işlerim var, günü kapattım mı?" tek ekranda. GİDER/FİNANS BURADA
+/// DEĞİLDİR — Borç & Gider ve Bayi Defteri kendi menülerinde kalır; buradan
+/// yalnız yönlendirme linki verilir.
 class BakeryPanelScreen extends ConsumerWidget {
   const BakeryPanelScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(todaySummaryProvider);
+    final dayBook = ref.watch(todayDayBookProvider);
     final df = DateFormat('d MMMM, EEEE', 'tr_TR');
 
     return PremiumScaffold(
@@ -37,43 +47,54 @@ class BakeryPanelScreen extends ConsumerWidget {
           ),
           padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
           children: [
-            // V1 — header calendar action V1'de () {} no-op idi; tarih
-            // alt başlıkta zaten görünüyor, ek calendar UI V2'ye bırakıldı.
             FirinNetHeader(
-              title: AppStrings.panelTitle,
+              title: AppStrings.ledgerTitle,
               subtitle: df.format(DateTime.now()),
             ),
             const SizedBox(height: AppSpacing.xs),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: FadeSlideIn(child: _TodayHero(summary: summary)),
+              child: FadeSlideIn(
+                child: _TodayHero(
+                  summary: summary,
+                  dayBook: dayBook.valueOrNull,
+                ),
+              ),
             ),
-            // ───── Üretim Yönetimi
-            const SectionLabel(title: 'Üretim Yönetimi'),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: _ProductionActions(),
-            ),
-            // ───── Bayi Yönetimi
-            const SectionLabel(title: 'Bayi Yönetimi'),
+            const SizedBox(height: AppSpacing.s),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: _DealerSummaryCard(),
+              child: _SmartChips(
+                summary: summary.valueOrNull,
+                dayBook: dayBook.valueOrNull,
+              ),
             ),
-            // ───── Üretim son hareketleri
-            const SectionLabel(
-              title: AppStrings.panelSectionRecent,
-              trailingLabel: AppStrings.panelTrailingDayEnd,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: _RecentList(summary: summary),
-            ),
-            // ───── Topluluk
-            const SectionLabel(title: AppStrings.panelSectionTips),
+            // ───── Hızlı girişler
+            const SectionLabel(title: AppStrings.ledgerQuickSection),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: _CommunityTips(),
+              child: _QuickEntries(),
+            ),
+            // ───── Bugün ne yapacağım?
+            const SectionLabel(title: AppStrings.ledgerTasksSection),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: _TasksCard(),
+            ),
+            // ───── Son kayıtlar
+            const SectionLabel(title: AppStrings.ledgerRecentSection),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: _RecentList(
+                summary: summary,
+                dayBook: dayBook.valueOrNull,
+              ),
+            ),
+            // ───── Gider/bayi ayrımı: yalnız yönlendirme (form YOK).
+            const SizedBox(height: AppSpacing.m),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: _OtherBooksLinks(),
             ),
           ],
         ),
@@ -82,48 +103,31 @@ class BakeryPanelScreen extends ConsumerWidget {
   }
 }
 
-/// Bugünün özeti kartı (üretim + bayi + fire net özet).
+/// Bugün kartı: ciro + üretim/fire/fire oranı + gün durumu + not önizleme.
 class _TodayHero extends StatelessWidget {
-  const _TodayHero({required this.summary});
+  const _TodayHero({required this.summary, required this.dayBook});
 
   final AsyncValue<DailySummary> summary;
+  final BakeryDayBook? dayBook;
 
   @override
   Widget build(BuildContext context) {
-    final data = summary.maybeWhen(data: (d) => d, orElse: () => null);
+    // Perf sözleşmesi (Instant UX): mutasyon sonrası reload'da spinner/sıfır
+    // flash'ı atılmaz — önceki değer korunur.
+    final data = summary.when(
+      skipLoadingOnReload: true,
+      data: (d) => d,
+      loading: () => null,
+      error: (_, __) => null,
+    );
     final theme = Theme.of(context);
 
     final production = data?.totalProduction ?? 0;
-    final delivered = data?.totalDelivered ?? 0;
     final waste = data?.totalWaste ?? 0;
-    final net = data?.netAmount ?? 0;
-    final productionSparkline = _sparklineSeries(production.toDouble(), const [
-      0.72,
-      0.76,
-      0.79,
-      0.84,
-      0.89,
-      0.95,
-      1.0,
-    ]);
-    final deliveredSparkline = _sparklineSeries(delivered.toDouble(), const [
-      0.68,
-      0.72,
-      0.77,
-      0.82,
-      0.88,
-      0.94,
-      1.0,
-    ]);
-    final wasteSparkline = _sparklineSeries(waste.toDouble(), const [
-      1.0,
-      0.98,
-      0.96,
-      0.93,
-      0.9,
-      0.87,
-      0.84,
-    ]);
+    final ratio = data?.wasteRatio;
+    final revenue = dayBook?.revenueAmount;
+    final closed = dayBook?.isClosed ?? false;
+    final note = dayBook?.dayNote ?? '';
 
     return Container(
       decoration: BoxDecoration(
@@ -167,57 +171,23 @@ class _TodayHero extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  boxShadow: AppShadow.card,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppColors.softGold,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      AppStrings.panelHeroLive,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.softGold,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 10.5,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _DayStatusBadge(closed: closed),
             ],
           ),
           const SizedBox(height: AppSpacing.l),
-          AnimatedNumber(
-            value: net,
-            duration: const Duration(milliseconds: 720),
-            builder: (context, v) => Text(
-              NumberFormatter.currency(v),
-              style: theme.textTheme.displaySmall?.copyWith(
-                color: AppColors.softGold,
-                fontWeight: FontWeight.w800,
-                fontSize: 38,
-                letterSpacing: -1.2,
-                height: 1.05,
-              ),
+          Text(
+            revenue == null ? '₺ —' : NumberFormatter.currency(revenue),
+            style: theme.textTheme.displaySmall?.copyWith(
+              color: AppColors.softGold,
+              fontWeight: FontWeight.w800,
+              fontSize: 38,
+              letterSpacing: -1.2,
+              height: 1.05,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            AppStrings.panelHeroSub,
+            AppStrings.ledgerEodRevenue,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
               fontSize: 12.5,
@@ -229,456 +199,394 @@ class _TodayHero extends StatelessWidget {
             runSpacing: 8,
             children: [
               MetricPill(
-                label: 'Üretim',
+                label: AppStrings.ledgerEodProduction,
                 value: NumberFormatter.integer(production),
                 color: AppColors.primary,
-                sparklineValues: productionSparkline,
-                sparklineColor: AppColors.primary,
               ),
               MetricPill(
-                label: 'Bayi',
-                value: NumberFormatter.integer(delivered),
-                color: const Color(0xFF10B981),
-                sparklineValues: deliveredSparkline,
-                sparklineColor: const Color(0xFF10B981),
-              ),
-              MetricPill(
-                label: 'Fire',
+                label: AppStrings.ledgerEodWaste,
                 value: NumberFormatter.integer(waste),
                 color: const Color(0xFFEF4444),
-                sparklineValues: wasteSparkline,
-                sparklineColor: const Color(0xFFEF4444),
+              ),
+              MetricPill(
+                label: AppStrings.ledgerEodWasteRatio,
+                value: ratio == null
+                    ? '—'
+                    : '%${(ratio * 100).toStringAsFixed(1)}',
+                color: const Color(0xFFB45309),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Üretim Yönetimi: Reçete (featured) + 4 mini (Üretim, Fire, Gün Sonu, Rapor).
-class _ProductionActions extends StatelessWidget {
-  const _ProductionActions();
-
-  static const _featured = _QuickItem(
-    label: 'Reçeteler',
-    subtitle: 'Hesap + malzeme + yapılış kütüphanen',
-    icon: Icons.menu_book_outlined,
-    route: AppRoutes.recipes,
-  );
-
-  static const _grid = <_QuickItem>[
-    _QuickItem(
-      label: 'Üretim Gir',
-      subtitle: 'Günlük üretim kaydı',
-      icon: Icons.bakery_dining_outlined,
-      route: AppRoutes.production,
-    ),
-    _QuickItem(
-      label: 'Fire Gir',
-      subtitle: 'Kalan, iade, atık',
-      icon: Icons.delete_sweep_outlined,
-      route: AppRoutes.waste,
-    ),
-    _QuickItem(
-      label: 'Gün Sonu',
-      subtitle: 'Toplam üretim, bayi, fire',
-      icon: Icons.nightlight_outlined,
-      route: AppRoutes.endOfDay,
-    ),
-    _QuickItem(
-      label: 'Rapor Al',
-      subtitle: 'Paylaş veya kopyala',
-      icon: Icons.share_outlined,
-      route: AppRoutes.report,
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        QuickActionTile(
-          label: _featured.label,
-          subtitle: _featured.subtitle,
-          icon: _featured.icon,
-          featured: true,
-          onTap: () => GoRouter.of(context).push(_featured.route),
-        ),
-        const SizedBox(height: AppSpacing.m),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: AppSpacing.s,
-          crossAxisSpacing: AppSpacing.s,
-          childAspectRatio: 1.55,
-          children: [
-            for (final item in _grid)
-              QuickActionMini(
-                label: item.label,
-                icon: item.icon,
-                onTap: () => GoRouter.of(context).push(item.route),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickItem {
-  const _QuickItem({
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.route,
-  });
-
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final String route;
-}
-
-/// Bayi Yönetimi özet kartı: 4 metrik + büyük CTA.
-class _DealerSummaryCard extends ConsumerWidget {
-  const _DealerSummaryCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final overviewAsync = ref.watch(dealersOverviewProvider);
-    final theme = Theme.of(context);
-
-    return PressScale(
-      onTap: () => context.push(AppRoutes.dealers),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          boxShadow: AppShadow.card,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          child: InkWell(
-            onTap: () => context.push(AppRoutes.dealers),
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            splashColor: AppColors.softGold.withValues(alpha: 0.06),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.l),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(AppRadius.s),
-                          boxShadow: AppShadow.card,
-                        ),
-                        child: const Icon(
-                          Icons.storefront_rounded,
-                          color: AppColors.softGold,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.m),
-                      Expanded(
-                        child: Text(
-                          'Bayi defteri',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.1,
-                          ),
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.textPrimary,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.l),
-                  overviewAsync.when(
-                    // Perf: panel KPI'ları mutasyon sonrası eski değeri korur.
-                    skipLoadingOnReload: true,
-                    loading: () => const SizedBox(
-                      height: 80,
-                      child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 1.6),
-                      ),
-                    ),
-                    error: (e, _) => Text(
-                      'Özet okunamadı: $e',
-                      style: const TextStyle(color: AppColors.danger),
-                    ),
-                    data: (o) => Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _DealerMetric(
-                                label: 'Bayi',
-                                value: '${o.activeDealers} / ${o.totalDealers}',
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            Expanded(
-                              child: _DealerMetric(
-                                label: 'Açık bakiye',
-                                value: NumberFormatter.currency(o.openBalance),
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.m),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _DealerMetric(
-                                label: 'Bugün teslim',
-                                value: NumberFormatter.currency(
-                                  o.todayDelivered,
-                                ),
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            Expanded(
-                              child: _DealerMetric(
-                                label: 'Bugün tahsilat',
-                                value: NumberFormatter.currency(
-                                  o.todayCollected,
-                                ),
-                                color: const Color(0xFF10B981),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.l),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton.icon(
-                      onPressed: () => context.push(AppRoutes.dealers),
-                      icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                      label: const Text('Bayi Yönetimine Git'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.copper,
-                        // P0 hijyen — copper zemin üstünde beyaz yazı (standart);
-                        // koyu textPrimary kontrastı ~1.5:1 idi, okunmuyordu.
-                        foregroundColor: AppColors.surface,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.m),
-                        ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14.5,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DealerMetric extends StatelessWidget {
-  const _DealerMetric({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w700,
-            fontSize: 10.5,
-            letterSpacing: 1.0,
-          ),
-        ),
-        const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text.rich(_buildValueSpan(value, color)),
-        ),
-      ],
-    );
-  }
-
-  TextSpan _buildValueSpan(String value, Color color) {
-    final main = TextStyle(
-      color: color,
-      fontWeight: FontWeight.w800,
-      fontSize: 17,
-      letterSpacing: -0.3,
-    );
-    final unit = main.copyWith(
-      fontWeight: FontWeight.w400,
-      fontSize: 12.5,
-      letterSpacing: 0,
-    );
-
-    if (value.contains('₺')) {
-      final clean = value.replaceAll('₺', '').trim();
-      return TextSpan(
-        children: [
-          TextSpan(text: '₺ ', style: unit),
-          TextSpan(text: clean, style: main),
-        ],
-      );
-    }
-    if (value.endsWith(' kg')) {
-      return TextSpan(
-        children: [
-          TextSpan(text: value.substring(0, value.length - 3), style: main),
-          TextSpan(text: ' kg', style: unit),
-        ],
-      );
-    }
-    if (value.endsWith(' adet')) {
-      return TextSpan(
-        children: [
-          TextSpan(text: value.substring(0, value.length - 5), style: main),
-          TextSpan(text: ' adet', style: unit),
-        ],
-      );
-    }
-    return TextSpan(text: value, style: main);
-  }
-}
-
-class _RecentList extends StatelessWidget {
-  const _RecentList({required this.summary});
-
-  final AsyncValue<DailySummary> summary;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final data = summary.maybeWhen(data: (d) => d, orElse: () => null);
-    if (data == null || data.isEmpty) {
-      return PremiumCard(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.l,
-          AppSpacing.l,
-          AppSpacing.l,
-          AppSpacing.m,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          if (note.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.m),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.s),
-                    boxShadow: AppShadow.card,
-                  ),
-                  child: const Icon(
-                    Icons.history_rounded,
-                    color: AppColors.softGold,
-                    size: 18,
-                  ),
+                const Icon(
+                  Icons.sticky_note_2_outlined,
+                  size: 15,
+                  color: AppColors.textMuted,
                 ),
-                const SizedBox(width: AppSpacing.m),
+                const SizedBox(width: 6),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.panelEmptyTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        AppStrings.panelEmptySub,
-                        style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
-                      ),
-                    ],
+                  child: Text(
+                    note,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.m),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () =>
-                    GoRouter.of(context).push(AppRoutes.production),
-                icon: const Icon(Icons.add_rounded, size: 16),
-                label: const Text(AppStrings.panelEmptyCta),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DayStatusBadge extends StatelessWidget {
+  const _DayStatusBadge({required this.closed});
+
+  final bool closed;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, bg, fg) = closed
+        ? (
+            AppStrings.ledgerDayClosed,
+            const Color(0xFFF3FBEF),
+            const Color(0xFF166534),
+          )
+        : (
+            AppStrings.ledgerDayOpen,
+            AppColors.surfaceVariant,
+            AppColors.textSecondary,
+          );
+    return Container(
+      key: ValueKey('ledger_day_status_${closed ? 'closed' : 'open'}'),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
+          color: fg,
+        ),
+      ),
+    );
+  }
+}
+
+/// Deterministik akıllı özet chip'leri (AI yok).
+class _SmartChips extends StatelessWidget {
+  const _SmartChips({required this.summary, required this.dayBook});
+
+  final DailySummary? summary;
+  final BakeryDayBook? dayBook;
+
+  static List<String> chipsFor(DailySummary? s, BakeryDayBook? book) {
+    if (s == null) return const [];
+    final chips = <String>[];
+    final ratio = s.wasteRatio;
+    if (s.totalProduction == 0) chips.add(AppStrings.ledgerChipNoProduction);
+    if (book?.revenueAmount == null) chips.add(AppStrings.ledgerChipNoRevenue);
+    if (ratio != null && ratio > 0.10) {
+      chips.add(AppStrings.ledgerChipHighWaste);
+    }
+    if (!(book?.isClosed ?? false)) chips.add(AppStrings.ledgerChipDayOpen);
+    if (chips.isEmpty) chips.add(AppStrings.ledgerChipAllGood);
+    return chips;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = chipsFor(summary, dayBook);
+    if (chips.isEmpty) return const SizedBox.shrink();
+    final allGood =
+        chips.length == 1 && chips.first == AppStrings.ledgerChipAllGood;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final c in chips)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: allGood
+                  ? const Color(0xFFF3FBEF)
+                  : AppColors.brandLemonPale,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              c,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: allGood ? const Color(0xFF166534) : AppColors.brandInk,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// 6 hızlı giriş: Üretim / Fire / Ciro / Not / İş / Gün sonu.
+class _QuickEntries extends ConsumerWidget {
+  const _QuickEntries();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // GridView yerine Wrap: kart yüksekliği içeriğe uyar → 320dp + 1.3x
+    // yazı ölçeğinde sabit aspect-ratio taşması yaşanmaz (3 sütun).
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = AppSpacing.s;
+        final cellWidth = (constraints.maxWidth - 2 * spacing) / 3;
+        final items = <(String, IconData, VoidCallback)>[
+          (
+            AppStrings.ledgerQuickProduction,
+            Icons.bakery_dining_outlined,
+            () => GoRouter.of(context).push(AppRoutes.production),
+          ),
+          (
+            AppStrings.ledgerQuickWaste,
+            Icons.delete_sweep_outlined,
+            () => GoRouter.of(context).push(AppRoutes.waste),
+          ),
+          (
+            AppStrings.ledgerQuickRevenue,
+            Icons.payments_outlined,
+            () => showLedgerRevenueSheet(context, ref),
+          ),
+          (
+            AppStrings.ledgerQuickNote,
+            Icons.sticky_note_2_outlined,
+            () => showLedgerRevenueSheet(context, ref, focusNote: true),
+          ),
+          (
+            AppStrings.ledgerQuickTask,
+            Icons.add_task_rounded,
+            () => showLedgerTaskSheet(context, ref),
+          ),
+          (
+            AppStrings.ledgerQuickEndOfDay,
+            Icons.nightlight_outlined,
+            () => GoRouter.of(context).push(AppRoutes.endOfDay),
+          ),
+        ];
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final (label, icon, onTap) in items)
+              SizedBox(
+                width: cellWidth,
+                child: QuickActionMini(label: label, icon: icon, onTap: onTap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// "Bugün ne yapacağım?" — görev listesi + öneri chip'leri.
+class _TasksCard extends ConsumerWidget {
+  const _TasksCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tasks = ref.watch(todayTasksProvider).valueOrNull ?? const [];
+    return PremiumCard(
+      padding: const EdgeInsets.all(AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (tasks.isEmpty) ...[
+            const Text(
+              AppStrings.ledgerTasksEmpty,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final s in kBakeryTaskSuggestions)
+                  ActionChip(
+                    key: ValueKey('ledger_suggestion_$s'),
+                    label: Text(s),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    onPressed: () async {
+                      await ref
+                          .read(bakeryRepositoryProvider)
+                          .addTask(day: DateTime.now(), title: s);
+                    },
                   ),
+              ],
+            ),
+          ] else ...[
+            for (final t in tasks) _TaskRow(task: t),
+          ],
+          const SizedBox(height: AppSpacing.s),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: const ValueKey('ledger_task_add'),
+              onPressed: () => showLedgerTaskSheet(context, ref),
+              icon: const Icon(Icons.add_rounded, size: 16),
+              label: const Text(AppStrings.ledgerQuickTask),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
                 ),
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TaskRow extends ConsumerWidget {
+  const _TaskRow({required this.task});
+
+  final BakeryTask task;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: Checkbox(
+              key: ValueKey('ledger_task_done_${task.id}'),
+              value: task.isDone,
+              onChanged: (v) => ref
+                  .read(bakeryRepositoryProvider)
+                  .setTaskDone(task.id, v ?? false),
+              activeColor: AppColors.softGold,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              task.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: task.isDone
+                    ? AppColors.textMuted
+                    : AppColors.textPrimary,
+                decoration: task.isDone ? TextDecoration.lineThrough : null,
+              ),
+            ),
+          ),
+          IconButton(
+            key: ValueKey('ledger_task_delete_${task.id}'),
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: AppColors.textMuted,
+            ),
+            onPressed: () =>
+                ref.read(bakeryRepositoryProvider).deleteTask(task.id),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bugünün son kayıtları — üretim + fire + ciro/not güncellemesi.
+class _RecentList extends StatelessWidget {
+  const _RecentList({required this.summary, required this.dayBook});
+
+  final AsyncValue<DailySummary> summary;
+  final BakeryDayBook? dayBook;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = summary.when(
+      skipLoadingOnReload: true,
+      data: (d) => d,
+      loading: () => null,
+      error: (_, __) => null,
+    );
+    final hasBook =
+        dayBook != null &&
+        (dayBook!.revenueAmount != null || dayBook!.dayNote.isNotEmpty);
+    if (data == null || (data.isEmpty && !hasBook)) {
+      return const PremiumCard(
+        padding: EdgeInsets.all(AppSpacing.l),
+        child: Text(
+          AppStrings.ledgerRecentEmpty,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+            height: 1.45,
+          ),
         ),
       );
     }
-
     return PremiumCard(
       padding: EdgeInsets.zero,
       child: Column(
         children: [
-          for (final p in data.production.take(2))
+          for (final p in data.production.take(3))
             _RecentRow(
               icon: Icons.bakery_dining_outlined,
               title: '${p.product} · ${p.quantity} adet',
               meta: 'Üretim',
               accent: AppColors.primary,
             ),
-          for (final d in data.deliveries.take(2))
-            _RecentRow(
-              icon: Icons.local_shipping_outlined,
-              title: '${d.dealerName} · ${d.quantity} ${d.product}',
-              meta: 'Bayi',
-              accent: const Color(0xFF10B981),
-            ),
-          for (final w in data.wastes.take(2))
+          for (final w in data.wastes.take(3))
             _RecentRow(
               icon: Icons.delete_sweep_outlined,
-              title: '${w.product} · ${w.quantity} adet',
+              title: '${w.product} · ${w.quantity} adet · ${w.reason.label}',
               meta: 'Fire',
               accent: const Color(0xFFEF4444),
+            ),
+          if (dayBook?.revenueAmount != null)
+            _RecentRow(
+              icon: Icons.payments_outlined,
+              title: NumberFormatter.currency(dayBook!.revenueAmount!),
+              meta: 'Ciro',
+              accent: const Color(0xFF10B981),
+            ),
+          if (dayBook != null && dayBook!.dayNote.isNotEmpty)
+            _RecentRow(
+              icon: Icons.sticky_note_2_outlined,
+              title: dayBook!.dayNote,
+              meta: 'Not',
+              accent: AppColors.softGold,
             ),
         ],
       ),
@@ -725,6 +633,8 @@ class _RecentRow extends StatelessWidget {
           Expanded(
             child: Text(
               title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
@@ -745,122 +655,33 @@ class _RecentRow extends StatelessWidget {
   }
 }
 
-/// Sektörel mikro içerik kartları — veriden bağımsız, panel'e dolu his katar.
-class _CommunityTips extends StatelessWidget {
-  const _CommunityTips();
-
-  static const _tips = <_TipCard>[
-    _TipCard(
-      icon: Icons.local_fire_department_rounded,
-      accent: AppColors.softGold,
-      label: 'Bugünün ipucu',
-      title: 'Yaz aylarında maya %0.2 düşür',
-      body:
-          'Sıcakta hızlanan fermantasyon için maya oranını azaltıp '
-          'fermantasyon süresini uzatmak hamur kontrolünü artırır.',
-    ),
-    _TipCard(
-      icon: Icons.trending_up_rounded,
-      accent: AppColors.success,
-      label: 'Topluluktan',
-      title: 'Bu hafta öne çıkan tedarikçi',
-      body:
-          'Konya Değirmen yeni hasat ekstra unu için 25 kg paketlerde '
-          'avantajlı toplu alım açtı — Market\'ten inceleyebilirsin.',
-    ),
-    _TipCard(
-      icon: Icons.event_note_outlined,
-      accent: AppColors.info,
-      label: 'Hatırlatma',
-      title: 'Gün sonu kapanışı yapmadın',
-      body:
-          'Bugünün üretim, bayi ve fire toplamlarını kapatıp '
-          'WhatsApp\'a gönderebileceğin tek raporu hazırla.',
-    ),
-  ];
+/// Gider ve bayi defterleri AYRI modüllerdir — buradan yalnız yönlendirilir.
+class _OtherBooksLinks extends StatelessWidget {
+  const _OtherBooksLinks();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < _tips.length; i++) ...[
-          _tips[i],
-          if (i != _tips.length - 1) const SizedBox(height: AppSpacing.s),
-        ],
-      ],
-    );
-  }
-}
-
-class _TipCard extends StatelessWidget {
-  const _TipCard({
-    required this.icon,
-    required this.accent,
-    required this.label,
-    required this.title,
-    required this.body,
-  });
-
-  final IconData icon;
-  final Color accent;
-  final String label;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final surfaceTint = AppColors.surface.withValues(alpha: 0.92);
     return PremiumCard(
-      padding: const EdgeInsets.all(AppSpacing.l),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.l,
+        vertical: AppSpacing.s,
+      ),
+      child: Column(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: surfaceTint,
-              borderRadius: BorderRadius.circular(AppRadius.m),
-              border: Border.all(color: AppColors.borderHairline, width: 0.6),
-            ),
-            child: Icon(icon, color: accent, size: 19),
+          _LinkRow(
+            keyName: 'ledger_expense_link',
+            icon: Icons.account_balance_wallet_outlined,
+            label: AppStrings.ledgerExpenseLinkCta,
+            note: AppStrings.ledgerExpenseLinkNote,
+            onTap: () => context.push(AppRoutes.debtExpense),
           ),
-          const SizedBox(width: AppSpacing.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label.toUpperCase(),
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: accent,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 10.5,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14.5,
-                    letterSpacing: -0.1,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  body,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    height: 1.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+          const Divider(height: 0, color: AppColors.borderHairline),
+          _LinkRow(
+            keyName: 'ledger_dealer_link',
+            icon: Icons.storefront_outlined,
+            label: AppStrings.cardDealerPanel,
+            note: AppStrings.cardDealerPanelSub,
+            onTap: () => context.push(AppRoutes.dealers),
           ),
         ],
       ),
@@ -868,9 +689,65 @@ class _TipCard extends StatelessWidget {
   }
 }
 
-List<double> _sparklineSeries(double value, List<double> weights) {
-  if (value <= 0) {
-    return List<double>.filled(weights.length, 0);
+class _LinkRow extends StatelessWidget {
+  const _LinkRow({
+    required this.keyName,
+    required this.icon,
+    required this.label,
+    required this.note,
+    required this.onTap,
+  });
+
+  final String keyName;
+  final IconData icon;
+  final String label;
+  final String note;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      key: ValueKey(keyName),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppColors.textSecondary),
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    note,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
   }
-  return weights.map((w) => value * w).toList(growable: false);
 }

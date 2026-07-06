@@ -18,11 +18,9 @@ class DailySummary {
   bool get isEmpty =>
       production.isEmpty && deliveries.isEmpty && wastes.isEmpty;
 
-  int get totalProduction =>
-      production.fold(0, (sum, e) => sum + e.quantity);
+  int get totalProduction => production.fold(0, (sum, e) => sum + e.quantity);
 
-  int get totalDelivered =>
-      deliveries.fold(0, (sum, e) => sum + e.quantity);
+  int get totalDelivered => deliveries.fold(0, (sum, e) => sum + e.quantity);
 
   double get totalDealerAmount =>
       deliveries.fold(0.0, (sum, e) => sum + e.total);
@@ -34,4 +32,8 @@ class DailySummary {
 
   /// Net özet: bayi tutarı – tahmini fire zararı.
   double get netAmount => totalDealerAmount - totalEstimatedLoss;
+
+  /// Fire oranı: fire adedi / üretim adedi. Üretim yoksa null ('—').
+  double? get wasteRatio =>
+      totalProduction > 0 ? totalWaste / totalProduction : null;
 }
