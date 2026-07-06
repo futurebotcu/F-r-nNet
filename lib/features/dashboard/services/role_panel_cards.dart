@@ -92,6 +92,12 @@ class RolePanelCards {
           ),
           // Destek
           PanelCard(
+            label: AppStrings.partnersTitle,
+            subtitle: AppStrings.partnersCardSub,
+            icon: Icons.handshake_outlined,
+            route: AppRoutes.partners,
+          ),
+          PanelCard(
             label: AppStrings.cardMyListings,
             subtitle: AppStrings.cardMyListingsSub,
             icon: Icons.work_outline_rounded,
@@ -138,6 +144,12 @@ class RolePanelCards {
           ),
           // Destek
           PanelCard(
+            label: AppStrings.partnersTitle,
+            subtitle: AppStrings.partnersCardSub,
+            icon: Icons.handshake_outlined,
+            route: AppRoutes.partners,
+          ),
+          PanelCard(
             label: AppStrings.cardJobAds,
             subtitle: AppStrings.cardJobAdsSub,
             icon: Icons.work_outline_rounded,
@@ -175,6 +187,12 @@ class RolePanelCards {
             subtitle: AppStrings.cardCompanyProfileSub,
             icon: Icons.business_outlined,
             route: AppRoutes.profile,
+          ),
+          PanelCard(
+            label: AppStrings.partnersTitle,
+            subtitle: AppStrings.partnersCardSub,
+            icon: Icons.handshake_outlined,
+            route: AppRoutes.partners,
           ),
           PanelCard(
             label: AppStrings.cardIncomingMessages,
