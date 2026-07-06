@@ -16,6 +16,7 @@ import 'package:firin_defter/features/partners/screens/partner_business_detail_s
 import 'package:firin_defter/features/partners/screens/partner_businesses_screen.dart';
 import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/providers/profile_provider.dart';
+import 'package:firin_defter/features/settings/screens/support_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -355,6 +356,88 @@ void main() {
       );
       expect(find.text(AppStrings.partnersApplyTitle), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('UX polish — liste içi başvuru CTA', () {
+    testWidgets('dolu listede CTA görünür', (tester) async {
+      final repo = LocalPartnerBusinessRepository(seed: true);
+      await _pump(tester, const PartnerBusinessesScreen(), repo: repo);
+      expect(find.byKey(const ValueKey('partners_apply_cta')), findsOneWidget);
+      expect(find.text(AppStrings.partnersApplyEntry), findsOneWidget);
+    });
+
+    testWidgets('boş durumda da CTA görünür', (tester) async {
+      final repo = LocalPartnerBusinessRepository(); // seed yok
+      await _pump(tester, const PartnerBusinessesScreen(), repo: repo);
+      expect(find.text(AppStrings.partnersEmptyTitle), findsOneWidget);
+      expect(find.byKey(const ValueKey('partners_apply_cta')), findsOneWidget);
+    });
+
+    testWidgets('CTA /partners/apply başvuru formunu açar (route)', (
+      tester,
+    ) async {
+      final repo = LocalPartnerBusinessRepository(seed: true);
+      final router = GoRouter(
+        initialLocation: AppRoutes.partners,
+        routes: [
+          GoRoute(
+            path: AppRoutes.partners,
+            builder: (_, __) => const PartnerBusinessesScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.partnersApply,
+            builder: (_, __) => const PartnerBusinessApplicationScreen(),
+          ),
+        ],
+      );
+      tester.view.physicalSize = const Size(1200, 3200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            partnerBusinessRepositoryProvider.overrideWithValue(repo),
+            profileControllerProvider.overrideWith(
+              (ref) => _FixedProfileController(
+                ref,
+                _profile(AccountType.individual),
+              ),
+            ),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('partners_apply_cta')),
+      );
+      await tester.tap(find.byKey(const ValueKey('partners_apply_cta')));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.partnersApplyTitle), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('partner_apply_submit')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('destek ekranındaki başvuru girişi aynen durur', (
+      tester,
+    ) async {
+      // Giriş, SSS listesinin altında — lazy ListView'da build olması için
+      // büyük yüzeyle pump edilir.
+      tester.view.physicalSize = const Size(1200, 3600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const MaterialApp(home: SupportScreen()));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('support_partner_apply')),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.partnersApplyEntry), findsOneWidget);
     });
   });
 
