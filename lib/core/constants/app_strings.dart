@@ -1690,6 +1690,31 @@ class AppStrings {
   static const String ledgerExpenseLinkCta = 'Giderleri yönet';
   static const String ledgerExpenseLinkNote =
       'Giderler ayrı menüden takip edilir.';
+  // Operasyon tabloları (tables polish).
+  static const String ledgerTableProductionTitle = 'Bugünün Üretimi';
+  static const String ledgerTableWasteTitle = 'Bugünün Fire / Zayiatı';
+  static const String ledgerTableProductionEmpty =
+      'Bugün henüz üretim kaydı yok.';
+  static const String ledgerTableWasteEmpty = 'Bugün fire kaydı yok.';
+  static const String ledgerTableDayBookTitle = 'Gün Sonu Defteri';
+  static const String ledgerTableProductSummaryTitle = 'Ürün Bazlı Özet';
+  static const String ledgerTableNotesTitle = 'Son Notlar';
+  static const String ledgerTableEodTitle = 'Günün Özeti';
+  static const String ledgerTableColTime = 'Saat';
+  static const String ledgerTableColProduct = 'Ürün';
+  static const String ledgerTableColQty = 'Adet';
+  static const String ledgerTableColReason = 'Sebep';
+  static const String ledgerTableColLoss = 'Zarar';
+  static const String ledgerTableColDate = 'Tarih';
+  static const String ledgerTableColRevenue = 'Ciro';
+  static const String ledgerTableColProduction = 'Üretim';
+  static const String ledgerTableColWaste = 'Fire';
+  static const String ledgerTableColRatio = 'Oran';
+  static const String ledgerTableColStatus = 'Durum';
+  static const String ledgerTableShowAll = 'Tümünü gör';
+  static const String ledgerTableShowLess = 'Daha az göster';
+  static const String ledgerTaskStatusOpen = 'Açık';
+  static const String ledgerTaskStatusDone = 'Tamamlandı';
 
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';

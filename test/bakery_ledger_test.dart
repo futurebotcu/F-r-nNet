@@ -209,6 +209,94 @@ void main() {
     });
   });
 
+  group('operasyon tabloları — dönem satırları (tables polish)', () {
+    test('ürün bazlı üretim/fire aggregation + sıralama + kayıp doğru', () {
+      final report = LedgerRangeReport.build(
+        from: today,
+        to: today,
+        production: [prod('Ekmek', 100), prod('Simit', 200), prod('Ekmek', 50)],
+        wastes: [
+          waste('Ekmek', 20, unitValue: 8),
+          waste('Simit', 5, unitValue: 4),
+          waste('Poğaça', 3, unitValue: 10), // üretimi olmayan ürün
+        ],
+        dayBooks: const [],
+      );
+      expect(report.productRows, hasLength(3));
+      // En yüksek fire üstte.
+      expect(report.productRows.first.product, 'Ekmek');
+      expect(report.productRows.first.production, 150);
+      expect(report.productRows.first.waste, 20);
+      expect(report.productRows.first.wasteRatio, closeTo(20 / 150, 1e-9));
+      expect(report.productRows.first.estimatedLoss, 160);
+      expect(report.productRows.first.isHighWaste, isTrue); // %13.3
+      // Üretimi olmayan üründe oran null (bölme hatası yok).
+      final pogaca = report.productRows.firstWhere(
+        (r) => r.product == 'Poğaça',
+      );
+      expect(pogaca.wasteRatio, isNull);
+      expect(pogaca.estimatedLoss, 30);
+      // Simit: düşük oran, uyarı yok.
+      final simit = report.productRows.firstWhere((r) => r.product == 'Simit');
+      expect(simit.isHighWaste, isFalse);
+    });
+
+    test('günlük defter satırları doğru: gün birleşimi + en yeni üstte', () {
+      final yesterday = today.subtract(const Duration(days: 1));
+      final report = LedgerRangeReport.build(
+        from: yesterday,
+        to: today,
+        production: [
+          prod('Ekmek', 100),
+          prod('Ekmek', 80, at: yesterday),
+        ],
+        wastes: [waste('Ekmek', 30)],
+        dayBooks: [
+          BakeryDayBook(
+            id: 'b1',
+            businessDate: yesterday,
+            revenueAmount: 4000,
+            isClosed: true,
+          ),
+        ],
+      );
+      expect(report.dailyRows, hasLength(2));
+      // En yeni tarih üstte.
+      expect(report.dailyRows.first.date.day, today.day);
+      expect(report.dailyRows.first.production, 100);
+      expect(report.dailyRows.first.waste, 30);
+      expect(report.dailyRows.first.wasteRatio, closeTo(0.30, 1e-9));
+      expect(report.dailyRows.first.isHighWaste, isTrue);
+      expect(report.dailyRows.first.revenue, isNull); // '—' gösterilir
+      expect(report.dailyRows.first.isClosed, isFalse);
+      // Dünkü satır: ciro + kapalı; fire yok → oran 0, uyarı yok.
+      final y = report.dailyRows[1];
+      expect(y.revenue, 4000);
+      expect(y.isClosed, isTrue);
+      expect(y.wasteRatio, 0);
+      expect(y.isHighWaste, isFalse);
+    });
+
+    test('not satırları gün + ciro/kasa notunu birlikte taşır', () {
+      final report = LedgerRangeReport.build(
+        from: today,
+        to: today,
+        production: const [],
+        wastes: const [],
+        dayBooks: [
+          BakeryDayBook(
+            id: 'b1',
+            businessDate: today,
+            dayNote: 'Gün notu',
+            cashNote: 'Kasa sayıldı',
+          ),
+        ],
+      );
+      expect(report.noteRows.single.$2, 'Gün notu');
+      expect(report.noteRows.single.$3, 'Kasa sayıldı');
+    });
+  });
+
   group('rapor dönemleri — yerel gün aralıkları (deterministik)', () {
     test('bugün/dün/7/30 sınırları doğru', () {
       final now = DateTime(2026, 7, 10, 23, 45); // gece geç saat

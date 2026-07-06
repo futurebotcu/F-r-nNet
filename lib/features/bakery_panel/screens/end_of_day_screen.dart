@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../providers/bakery_providers.dart';
+import '../widgets/ledger_tables.dart';
 
 /// Fırın Defteri — Gün Sonu.
 ///
@@ -148,6 +149,15 @@ class EndOfDayScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
+                ),
+                // Tables polish: kapatmadan önce "bugün ne var?" tek bakışta.
+                const SizedBox(height: AppSpacing.m),
+                EodMiniTable(
+                  production: s.totalProduction,
+                  waste: s.totalWaste,
+                  revenue: book?.revenueAmount,
+                  openTasks: openCount,
+                  doneTasks: doneCount,
                 ),
                 if ((book?.dayNote ?? '').isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.m),
