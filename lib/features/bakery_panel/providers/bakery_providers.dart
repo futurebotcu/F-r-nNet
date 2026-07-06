@@ -4,7 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../../core/config/app_config.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/can_write_check_provider.dart';
+import '../models/bakery_day_book.dart';
+import '../models/bakery_task.dart';
 import '../models/daily_summary.dart';
+import '../models/ledger_range_report.dart';
 import '../models/recipe_record.dart';
 import '../repositories/bakery_repository.dart';
 import '../repositories/guarded_bakery_repository.dart';
@@ -67,8 +70,9 @@ final recipeChangesProvider = StreamProvider<void>((ref) {
 /// (provider zaten `recipeRepositoryProvider`'ı watch ettiği için auth state
 /// değişiminde repo yenilenir; autoDispose listener kalmadığında state'i de
 /// silerek bellek tutmamasını sağlar).
-final recipesListProvider =
-    FutureProvider.autoDispose<List<Recipe>>((ref) async {
+final recipesListProvider = FutureProvider.autoDispose<List<Recipe>>((
+  ref,
+) async {
   ref.watch(recipeChangesProvider);
   final repo = ref.watch(recipeRepositoryProvider);
   return repo.list();
@@ -76,13 +80,12 @@ final recipesListProvider =
 
 /// Bir sahibin `is_public = true` reçeteleri (profil "Açık Reçeteler" için).
 /// Boş/null ownerId → boş liste.
-final publicRecipesByOwnerProvider =
-    FutureProvider.autoDispose.family<List<Recipe>, String?>(
-        (ref, ownerId) async {
-  ref.watch(recipeChangesProvider);
-  final repo = ref.watch(recipeRepositoryProvider);
-  return repo.listPublicByOwner(ownerId);
-});
+final publicRecipesByOwnerProvider = FutureProvider.autoDispose
+    .family<List<Recipe>, String?>((ref, ownerId) async {
+      ref.watch(recipeChangesProvider);
+      final repo = ref.watch(recipeRepositoryProvider);
+      return repo.listPublicByOwner(ownerId);
+    });
 
 final reportBuilderProvider = Provider<ReportBuilder>((ref) {
   return const ReportBuilder();
@@ -100,10 +103,73 @@ final bakeryChangesProvider = StreamProvider<void>((ref) {
 /// gece yarısı geçildikten sonra eski "today" cache'inin kalmaması için
 /// ekran kapanışında state silinir. Ekran tekrar açılınca yeni gün için
 /// yeniden fetch.
-final todaySummaryProvider =
-    FutureProvider.autoDispose<DailySummary>((ref) async {
+final todaySummaryProvider = FutureProvider.autoDispose<DailySummary>((
+  ref,
+) async {
   ref.watch(bakeryChangesProvider);
   final repo = ref.watch(bakeryRepositoryProvider);
   final now = DateTime.now();
   return repo.dailySummary(DateTime(now.year, now.month, now.day));
 });
+
+// ── Fırın Defteri V1 ──
+
+/// Bugünün defter satırı (ciro/not/kapanış). Yoksa null → gün henüz boş.
+final todayDayBookProvider = FutureProvider.autoDispose<BakeryDayBook?>((
+  ref,
+) async {
+  ref.watch(bakeryChangesProvider);
+  final repo = ref.watch(bakeryRepositoryProvider);
+  return repo.dayBook(DateTime.now());
+});
+
+/// Bugünün işleri ("Bugün ne yapacağım?").
+final todayTasksProvider = FutureProvider.autoDispose<List<BakeryTask>>((
+  ref,
+) async {
+  ref.watch(bakeryChangesProvider);
+  final repo = ref.watch(bakeryRepositoryProvider);
+  return repo.tasks(DateTime.now());
+});
+
+/// Rapor dönemleri — deterministik aralıklar (yerel gün).
+enum LedgerReportPeriod { today, yesterday, week7, month30 }
+
+extension LedgerReportPeriodMeta on LedgerReportPeriod {
+  String get label {
+    switch (this) {
+      case LedgerReportPeriod.today:
+        return 'Bugün';
+      case LedgerReportPeriod.yesterday:
+        return 'Dün';
+      case LedgerReportPeriod.week7:
+        return 'Son 7 Gün';
+      case LedgerReportPeriod.month30:
+        return 'Son 30 Gün';
+    }
+  }
+
+  ({DateTime from, DateTime to}) range(DateTime now) {
+    final today = DateTime(now.year, now.month, now.day);
+    switch (this) {
+      case LedgerReportPeriod.today:
+        return (from: today, to: today);
+      case LedgerReportPeriod.yesterday:
+        final y = today.subtract(const Duration(days: 1));
+        return (from: y, to: y);
+      case LedgerReportPeriod.week7:
+        return (from: today.subtract(const Duration(days: 6)), to: today);
+      case LedgerReportPeriod.month30:
+        return (from: today.subtract(const Duration(days: 29)), to: today);
+    }
+  }
+}
+
+/// Seçili dönemin basit raporu.
+final ledgerReportProvider = FutureProvider.autoDispose
+    .family<LedgerRangeReport, LedgerReportPeriod>((ref, period) async {
+      ref.watch(bakeryChangesProvider);
+      final repo = ref.watch(bakeryRepositoryProvider);
+      final r = period.range(DateTime.now());
+      return repo.rangeReport(r.from, r.to);
+    });

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
@@ -22,9 +23,11 @@ class WasteEntryScreen extends ConsumerStatefulWidget {
 
 class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
   String? _product;
+  WasteReason? _reason;
   final _quantity = TextEditingController();
   final _unitValue = TextEditingController();
   final _note = TextEditingController();
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -41,6 +44,7 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final productName = _product?.trim() ?? '';
     if (productName.isEmpty) {
       _err('Önce bir ürün seç.');
@@ -52,29 +56,40 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
       _err('Adet sıfırdan büyük olmalı.');
       return;
     }
-    await AuthRequiredGuard.runOrPrompt(
-      context,
-      ref,
-      action: () async {
-        final repo = ref.read(bakeryRepositoryProvider);
-        final now = DateTime.now();
-        await repo.addWaste(
-          WasteEntry(
-            id: now.microsecondsSinceEpoch.toString(),
-            product: productName,
-            quantity: qty,
-            unitValue: value,
-            note: _note.text.trim(),
-            createdAt: now,
-          ),
-        );
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fire kaydedildi: $qty $productName')),
-        );
-      },
-    );
+    final reason = _reason;
+    if (reason == null) {
+      _err(AppStrings.ledgerWasteReasonRequired);
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await AuthRequiredGuard.runOrPrompt(
+        context,
+        ref,
+        action: () async {
+          final repo = ref.read(bakeryRepositoryProvider);
+          final now = DateTime.now();
+          await repo.addWaste(
+            WasteEntry(
+              id: now.microsecondsSinceEpoch.toString(),
+              product: productName,
+              quantity: qty,
+              unitValue: value,
+              note: _note.text.trim(),
+              createdAt: now,
+              reason: reason,
+            ),
+          );
+          if (!mounted) return;
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fire kaydedildi: $qty $productName')),
+          );
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   void _err(String msg) {
@@ -160,6 +175,34 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: AppSpacing.l),
+            const Text(
+              AppStrings.ledgerWasteReasonField,
+              style: TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final r in WasteReason.values)
+                  ChoiceChip(
+                    key: ValueKey('waste_reason_${r.persistKey}'),
+                    label: Text(r.label),
+                    selected: _reason == r,
+                    onSelected: (_) => setState(() => _reason = r),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    selectedColor: AppColors.brandLemonPale,
+                  ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.s),
             TextField(
               controller: _note,
@@ -171,9 +214,9 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
             ),
             const SizedBox(height: AppSpacing.l),
             AppPrimaryButton(
-              label: 'Kaydet',
+              label: _saving ? 'Kaydediliyor…' : 'Kaydet',
               icon: Icons.check_rounded,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
             ),
           ],
         ),

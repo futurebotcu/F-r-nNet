@@ -1,19 +1,22 @@
+import '../models/bakery_day_book.dart';
+import '../models/bakery_task.dart';
 import '../models/daily_summary.dart';
 import '../models/dealer_delivery_entry.dart';
+import '../models/ledger_range_report.dart';
 import '../models/production_entry.dart';
 import '../models/waste_entry.dart';
 
-/// Fırın paneli verilerine soyut erişim.
+/// Fırın Defteri verilerine soyut erişim.
 ///
-/// V1: [LocalBakeryRepository] (in-memory) ile çalışır.
-/// V2: SupabaseBakeryRepository — yalnızca aynı yüzeyi uyarlayacak,
-///       UI ve servis katmanı değişmeyecek.
+/// Üretim/fire mevcut tablolara direct (owner-only RLS) yazar; günlük
+/// defter (ciro/not/kapanış) ve görevler SECURITY DEFINER RPC'lerle yazılır
+/// (owner_id + bakery_id server-side auth.uid()).
 abstract class BakeryRepository {
   // Production
   Future<List<ProductionEntry>> listProduction({DateTime? day});
   Future<void> addProduction(ProductionEntry entry);
 
-  // Dealer
+  // Dealer (legacy panel görünümü)
   Future<List<DealerDeliveryEntry>> listDeliveries({DateTime? day});
   Future<void> addDelivery(DealerDeliveryEntry entry);
 
@@ -23,6 +26,30 @@ abstract class BakeryRepository {
 
   // Aggregated
   Future<DailySummary> dailySummary(DateTime day);
+
+  // ── Fırın Defteri V1 — günlük defter (ciro/not/kapanış) ──
+  Future<BakeryDayBook?> dayBook(DateTime day);
+  Future<void> upsertDayBook({
+    required DateTime day,
+    double? revenue,
+    String? dayNote,
+    String? cashNote,
+  });
+  Future<void> closeDay(DateTime day);
+  Future<void> reopenDay(DateTime day);
+
+  // ── Fırın Defteri V1 — bugünün işleri ──
+  Future<List<BakeryTask>> tasks(DateTime day);
+  Future<String> addTask({
+    required DateTime day,
+    required String title,
+    String? category,
+  });
+  Future<void> setTaskDone(String taskId, bool done);
+  Future<void> deleteTask(String taskId);
+
+  // ── Fırın Defteri V1 — dönem raporu ──
+  Future<LedgerRangeReport> rangeReport(DateTime from, DateTime to);
 
   /// Repository içeriği değiştiğinde yayın.
   /// Provider seviyesinde stream'lemek için.

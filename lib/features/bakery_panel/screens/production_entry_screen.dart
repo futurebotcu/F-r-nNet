@@ -25,6 +25,7 @@ class _ProductionEntryScreenState extends ConsumerState<ProductionEntryScreen> {
   String? _product;
   final _quantity = TextEditingController();
   final _note = TextEditingController();
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -34,6 +35,7 @@ class _ProductionEntryScreenState extends ConsumerState<ProductionEntryScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final productName = _product?.trim() ?? '';
     if (productName.isEmpty) {
       _err('Önce bir ürün seç.');
@@ -44,28 +46,33 @@ class _ProductionEntryScreenState extends ConsumerState<ProductionEntryScreen> {
       _err('Adet sıfırdan büyük olmalı.');
       return;
     }
-    await AuthRequiredGuard.runOrPrompt(
-      context,
-      ref,
-      action: () async {
-        final repo = ref.read(bakeryRepositoryProvider);
-        final now = DateTime.now();
-        await repo.addProduction(
-          ProductionEntry(
-            id: now.microsecondsSinceEpoch.toString(),
-            product: productName,
-            quantity: qty,
-            note: _note.text.trim(),
-            createdAt: now,
-          ),
-        );
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Üretim kaydedildi: $qty $productName')),
-        );
-      },
-    );
+    setState(() => _saving = true);
+    try {
+      await AuthRequiredGuard.runOrPrompt(
+        context,
+        ref,
+        action: () async {
+          final repo = ref.read(bakeryRepositoryProvider);
+          final now = DateTime.now();
+          await repo.addProduction(
+            ProductionEntry(
+              id: now.microsecondsSinceEpoch.toString(),
+              product: productName,
+              quantity: qty,
+              note: _note.text.trim(),
+              createdAt: now,
+            ),
+          );
+          if (!mounted) return;
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Üretim kaydedildi: $qty $productName')),
+          );
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   void _err(String msg) {
@@ -119,9 +126,9 @@ class _ProductionEntryScreenState extends ConsumerState<ProductionEntryScreen> {
             ),
             const SizedBox(height: AppSpacing.l),
             AppPrimaryButton(
-              label: 'Kaydet',
+              label: _saving ? 'Kaydediliyor…' : 'Kaydet',
               icon: Icons.check_rounded,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
             ),
           ],
         ),
