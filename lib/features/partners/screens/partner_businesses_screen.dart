@@ -71,10 +71,36 @@ class _PartnerBusinessesScreenState
                     ),
                     const SizedBox(height: AppSpacing.s),
                   ],
+                // UX polish: başvuru CTA'sı listeden de erişilir — boş
+                // durumda empty metninin altında, dolu listede en altta
+                // küçük ama net giriş (destek ekranı girişi aynen durur).
+                const SizedBox(height: AppSpacing.m),
+                const _ApplyCta(),
               ],
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+/// "Anlaşmalı iş yeri olmak istiyorum" → mevcut başvuru formu
+/// (/partners/apply). Destek ekranındaki giriş korunur; bu ikinci yoldur.
+class _ApplyCta extends StatelessWidget {
+  const _ApplyCta();
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      key: const ValueKey('partners_apply_cta'),
+      onPressed: () => context.push(AppRoutes.partnersApply),
+      icon: const Icon(Icons.handshake_outlined, size: 18),
+      label: const Text(AppStrings.partnersApplyEntry),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 46),
+        foregroundColor: AppColors.brandInk,
+        textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
       ),
     );
   }
