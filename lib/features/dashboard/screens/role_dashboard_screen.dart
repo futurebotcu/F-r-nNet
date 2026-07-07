@@ -14,6 +14,7 @@ import '../../branches/providers/branch_providers.dart';
 import '../../messaging/providers/messaging_providers.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../subscriptions/providers/subscription_providers.dart';
 import '../services/role_panel_cards.dart';
 
 /// Panel tab'ının yeni kök ekranı.
@@ -29,6 +30,13 @@ class RoleDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
     final account = profile?.accountType ?? AccountType.individual;
+    // Ücretlendirme Foundation V1 — ticari panel girişinde entitlement satırı
+    // garanti edilir (ensure_my_entitlement + trial). Non-visual: sonuç şu an
+    // UI'da kullanılmaz; paywall/kilit rozetleri sonraki PR. autoDispose
+    // provider yalnız tetikler.
+    if (account == AccountType.commercial) {
+      ref.watch(myEntitlementProvider);
+    }
     var cards = RolePanelCards.forAccount(account);
     // Şube Yönetimi V1 — bireyselde "Şube İşlerim" YALNIZ aktif şube
     // üyeliği (veya bekleyen davet) varsa görünür; yoksa hiçbir şube
