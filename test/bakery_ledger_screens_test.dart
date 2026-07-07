@@ -12,6 +12,9 @@ import 'package:firin_defter/features/bakery_panel/screens/report_screen.dart';
 import 'package:firin_defter/features/bakery_panel/screens/waste_entry_screen.dart';
 import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/providers/profile_provider.dart';
+import 'package:firin_defter/features/subscriptions/data/local_subscription_repository.dart';
+import 'package:firin_defter/features/subscriptions/models/business_plan.dart';
+import 'package:firin_defter/features/subscriptions/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +52,11 @@ Future<void> _pump(
         bakeryRepositoryProvider.overrideWithValue(repo),
         profileControllerProvider.overrideWith(
           (ref) => _FixedProfileController(ref),
+        ),
+        // Rapor tablo testleri paywall'ı test etmez → premium ile tam içerik.
+        // (Paywall kilit davranışı ayrı paywall_ui_test'te doğrulanır.)
+        subscriptionRepositoryProvider.overrideWithValue(
+          LocalSubscriptionRepository(plan: BusinessPlan.premium),
         ),
       ],
       child: MaterialApp(home: home),

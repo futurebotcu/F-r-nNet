@@ -15,6 +15,7 @@ class QuickActionTile extends StatelessWidget {
     this.accent = AppColors.softGold,
     this.featured = false,
     this.badgeCount = 0,
+    this.lockedTag,
   });
 
   final String label;
@@ -27,6 +28,10 @@ class QuickActionTile extends StatelessWidget {
   /// M-10 — > 0 ise trailing chevron öncesinde premium okunmamış rozeti
   /// gösterir (lemon zemin + brandInk sayı). 0 ise hiç render edilmez.
   final int badgeCount;
+
+  /// Paywall UI — non-null ise trailing chevron öncesinde kilit rozeti
+  /// gösterir ("Pro"/"Premium"). null ise hiç render edilmez (mevcut davranış).
+  final String? lockedTag;
 
   @override
   Widget build(BuildContext context) {
@@ -79,12 +84,16 @@ class QuickActionTile extends StatelessWidget {
                       color: AppColors.brandLemonPale,
                       borderRadius: BorderRadius.circular(AppRadius.m),
                       border: Border.all(
-                        color: AppColors.brandLemonPressed.withValues(alpha: 0.28),
+                        color: AppColors.brandLemonPressed.withValues(
+                          alpha: 0.28,
+                        ),
                         width: 0.7,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.brandLemonPressed.withValues(alpha: 0.10),
+                          color: AppColors.brandLemonPressed.withValues(
+                            alpha: 0.10,
+                          ),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
@@ -151,6 +160,39 @@ class QuickActionTile extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                           height: 1.1,
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                  ],
+                  if (lockedTag != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandInk,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.lock_rounded,
+                            size: 11,
+                            color: AppColors.brandLemon,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            lockedTag!,
+                            style: const TextStyle(
+                              color: AppColors.brandLemon,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: AppSpacing.s),

@@ -9,6 +9,12 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
+import '../../profile/models/bakery_profile.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../subscriptions/models/business_entitlements.dart';
+import '../../subscriptions/models/feature_lock.dart';
+import '../../subscriptions/providers/subscription_providers.dart';
+import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../providers/bakery_providers.dart';
 import '../widgets/ledger_tables.dart';
 
@@ -24,9 +30,24 @@ class ReportScreen extends ConsumerStatefulWidget {
 class _ReportScreenState extends ConsumerState<ReportScreen> {
   LedgerReportPeriod _period = LedgerReportPeriod.today;
 
+  /// Bir dönem ticari plan tarafından kilitli mi? Free → yalnız 30 gün kilitli
+  /// (Pro açar). Entitlement yüklü değilse kilit yok. (Server-side rapor gate
+  /// YOK — bu yalnız UX; veri gizlenmez.)
+  bool _periodLocked(LedgerReportPeriod p, BusinessEntitlements? e) {
+    if (e == null) return false;
+    return p == LedgerReportPeriod.month30 && e.isFree;
+  }
+
   @override
   Widget build(BuildContext context) {
     final report = ref.watch(ledgerReportProvider(_period));
+    // Rapor kilidi YALNIZ ticari kullanıcıya; bireysel pass-through.
+    final isCommercial =
+        ref.watch(profileControllerProvider)?.accountType ==
+        AccountType.commercial;
+    final entitlements = isCommercial
+        ? ref.watch(myEntitlementProvider).valueOrNull
+        : null;
     final df = DateFormat('d MMM', 'tr_TR');
 
     return PremiumScaffold(
@@ -46,16 +67,34 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
               runSpacing: 6,
               children: [
                 for (final p in LedgerReportPeriod.values)
-                  ChoiceChip(
-                    key: ValueKey('ledger_period_${p.name}'),
-                    label: Text(p.label),
-                    selected: _period == p,
-                    onSelected: (_) => setState(() => _period = p),
-                    labelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    selectedColor: AppColors.brandLemonPale,
+                  Builder(
+                    builder: (context) {
+                      final locked = _periodLocked(p, entitlements);
+                      return ChoiceChip(
+                        key: ValueKey('ledger_period_${p.name}'),
+                        avatar: locked
+                            ? const Icon(
+                                Icons.lock_rounded,
+                                size: 13,
+                                color: AppColors.textMuted,
+                              )
+                            : null,
+                        label: Text(p.label),
+                        selected: _period == p,
+                        onSelected: (_) {
+                          if (locked) {
+                            showPaywallSheet(context, FeatureLock.reportPro);
+                            return;
+                          }
+                          setState(() => _period = p);
+                        },
+                        labelStyle: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        selectedColor: AppColors.brandLemonPale,
+                      );
+                    },
                   ),
               ],
             ),
@@ -163,7 +202,17 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                     ],
                     if (r.productRows.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.m),
-                      ProductSummaryTable(rows: r.productRows),
+                      // Ürün bazlı özet = ileri tablo → Pro/Premium. Free'de
+                      // kilitli teaser (veri gizlenmez; tablo yerine paywall
+                      // kartı). Entitlement yüklü değilse açık.
+                      if (entitlements != null && entitlements.isFree)
+                        _LockedReportTeaser(
+                          title: AppStrings.ledgerTableProductSummaryTitle,
+                          onTap: () =>
+                              showPaywallSheet(context, FeatureLock.reportPro),
+                        )
+                      else
+                        ProductSummaryTable(rows: r.productRows),
                     ],
                     if (r.noteRows.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.m),
@@ -172,6 +221,81 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                   ],
                 );
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Free kullanıcıya ileri rapor tablosu yerine gösterilen kilitli teaser
+/// (veri gizlenmez; tıklanınca paywall açılır).
+class _LockedReportTeaser extends StatelessWidget {
+  const _LockedReportTeaser({required this.title, required this.onTap});
+
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: const ValueKey('ledger_report_locked_products'),
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          boxShadow: AppShadow.card,
+          border: Border.all(color: AppColors.borderHairline),
+        ),
+        padding: const EdgeInsets.all(AppSpacing.l),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.lock_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    AppStrings.paywallReportProTitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.brandLemon,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
+              child: const Text(
+                AppStrings.paywallProTag,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.brandInk,
+                ),
+              ),
             ),
           ],
         ),
