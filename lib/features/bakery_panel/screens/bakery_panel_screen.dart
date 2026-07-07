@@ -22,6 +22,7 @@ import '../models/daily_summary.dart';
 import '../models/waste_entry.dart';
 import '../providers/bakery_providers.dart';
 import '../widgets/ledger_revenue_sheet.dart';
+import '../widgets/ledger_tables.dart';
 
 /// Fırın Defteri — fırıncının günlük operasyon mini app'i.
 ///
@@ -88,6 +89,24 @@ class BakeryPanelScreen extends ConsumerWidget {
               child: _RecentList(
                 summary: summary,
                 dayBook: dayBook.valueOrNull,
+              ),
+            ),
+            // ───── Operasyon tabloları (tables polish): tür bazlı bugün
+            // görünümü — son 5 kayıt + "Tümünü gör" (ekranı boğmamak için).
+            const SizedBox(height: AppSpacing.m),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: TodayProductionTable(
+                entries: summary.valueOrNull?.production ?? const [],
+                onAdd: () => GoRouter.of(context).push(AppRoutes.production),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: TodayWasteTable(
+                entries: summary.valueOrNull?.wastes ?? const [],
+                onAdd: () => GoRouter.of(context).push(AppRoutes.waste),
               ),
             ),
             // ───── Gider/bayi ayrımı: yalnız yönlendirme (form YOK).
@@ -493,19 +512,41 @@ class _TaskRow extends ConsumerWidget {
           ),
           const SizedBox(width: 4),
           Expanded(
-            child: Text(
-              task.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: task.isDone
-                    ? AppColors.textMuted
-                    : AppColors.textPrimary,
-                decoration: task.isDone ? TextDecoration.lineThrough : null,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: task.isDone
+                        ? AppColors.textMuted
+                        : AppColors.textPrimary,
+                    decoration: task.isDone ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+                if (task.category.isNotEmpty)
+                  Text(
+                    task.category,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+              ],
             ),
+          ),
+          LedgerBadge(
+            task.isDone
+                ? AppStrings.ledgerTaskStatusDone
+                : AppStrings.ledgerTaskStatusOpen,
+            tone: task.isDone
+                ? LedgerBadgeTone.success
+                : LedgerBadgeTone.neutral,
           ),
           IconButton(
             key: ValueKey('ledger_task_delete_${task.id}'),

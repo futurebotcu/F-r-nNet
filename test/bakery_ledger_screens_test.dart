@@ -160,6 +160,174 @@ void main() {
     });
   });
 
+  group('operasyon tabloları (tables polish)', () {
+    testWidgets('ana ekranda üretim/fire tabloları: boş durum + CTA', (
+      tester,
+    ) async {
+      final repo = LocalBakeryRepository();
+      await _pump(tester, const BakeryPanelScreen(), repo: repo);
+      expect(
+        find.byKey(const ValueKey('ledger_table_production')),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.ledgerTableProductionEmpty), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('ledger_table_production_add')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('ledger_table_waste')), findsOneWidget);
+      expect(find.text(AppStrings.ledgerTableWasteEmpty), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('ledger_table_waste_add')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'dolu tablolar: üretim satırı + fire sebep rozeti + görev durum rozeti',
+      (tester) async {
+        final repo = LocalBakeryRepository();
+        await _addProduction(repo, 'Ekmek', 120);
+        await repo.addWaste(
+          WasteEntry(
+            id: 'w1',
+            product: 'Simit',
+            quantity: 8,
+            unitValue: 5,
+            note: 'sabah',
+            createdAt: DateTime.now(),
+            reason: WasteReason.burnt,
+          ),
+        );
+        await repo.addTask(day: DateTime.now(), title: 'Açık işim');
+        final doneId = await repo.addTask(
+          day: DateTime.now(),
+          title: 'Biten işim',
+        );
+        await repo.setTaskDone(doneId, true);
+        await _pump(tester, const BakeryPanelScreen(), repo: repo);
+        // Üretim tablosu satırı.
+        expect(find.text('120 adet'), findsWidgets);
+        // Fire tablosu: sebep rozeti görünür.
+        expect(find.text(WasteReason.burnt.label), findsWidgets);
+        // Görevler: açık iş üstte, durum rozetleri görünür.
+        final openY = tester.getTopLeft(find.text('Açık işim')).dy;
+        final doneY = tester.getTopLeft(find.text('Biten işim')).dy;
+        expect(openY, lessThan(doneY));
+        expect(find.text(AppStrings.ledgerTaskStatusOpen), findsOneWidget);
+        expect(find.text(AppStrings.ledgerTaskStatusDone), findsOneWidget);
+      },
+    );
+
+    testWidgets('raporda Gün Sonu Defteri + Ürün Bazlı Özet tabloları', (
+      tester,
+    ) async {
+      final repo = LocalBakeryRepository();
+      await _addProduction(repo, 'Ekmek', 100);
+      await repo.addWaste(
+        WasteEntry(
+          id: 'w1',
+          product: 'Ekmek',
+          quantity: 20,
+          unitValue: 8,
+          note: '',
+          createdAt: DateTime.now(),
+          reason: WasteReason.spoilage,
+        ),
+      );
+      await repo.upsertDayBook(
+        day: DateTime.now(),
+        revenue: 5000,
+        dayNote: 'İyi gün',
+      );
+      await _pump(tester, const ReportScreen(), repo: repo);
+      expect(
+        find.byKey(const ValueKey('ledger_table_daybook')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('ledger_table_products')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('ledger_table_notes')), findsOneWidget);
+      // Fire oranı formatı (%20.0) + yüksek fire rozeti.
+      expect(find.text('%20.0'), findsWidgets);
+      expect(find.text(AppStrings.ledgerChipHighWaste), findsWidgets);
+      expect(find.text('İyi gün'), findsOneWidget);
+    });
+
+    testWidgets('üretim yoksa üründe fire oranı — olur', (tester) async {
+      final repo = LocalBakeryRepository();
+      await repo.addWaste(
+        WasteEntry(
+          id: 'w1',
+          product: 'Poğaça',
+          quantity: 3,
+          unitValue: 0,
+          note: '',
+          createdAt: DateTime.now(),
+          reason: WasteReason.other,
+        ),
+      );
+      await _pump(tester, const ReportScreen(), repo: repo);
+      // Ürün satırında oran ve zarar '—'.
+      expect(find.text('—'), findsWidgets);
+    });
+
+    testWidgets('gün sonu ekranında Günün Özeti mini tablosu', (tester) async {
+      final repo = LocalBakeryRepository();
+      await _addProduction(repo, 'Ekmek', 90);
+      await repo.addTask(day: DateTime.now(), title: 'Bir iş');
+      await _pump(tester, const EndOfDayScreen(), repo: repo);
+      expect(find.byKey(const ValueKey('ledger_table_eod')), findsOneWidget);
+      expect(find.text(AppStrings.ledgerTableEodTitle), findsOneWidget);
+      expect(find.text('90 adet'), findsWidgets);
+    });
+
+    testWidgets('tablolar 320dp + 1.3x taşma yapmaz + Tümünü gör katlaması', (
+      tester,
+    ) async {
+      final repo = LocalBakeryRepository();
+      for (var i = 0; i < 7; i++) {
+        await _addProduction(repo, 'Uzun Ürün Adı Denemesi $i', 100 + i);
+      }
+      await repo.addWaste(
+        WasteEntry(
+          id: 'w1',
+          product: 'Ekmek',
+          quantity: 50,
+          unitValue: 12.5,
+          note: 'uzunca bir fire notu taşma denemesi',
+          createdAt: DateTime.now(),
+          reason: WasteReason.staffError,
+        ),
+      );
+      await repo.upsertDayBook(day: DateTime.now(), revenue: 123456.78);
+      await _pump(
+        tester,
+        const ReportScreen(),
+        repo: repo,
+        size: const Size(320, 6000),
+        textScale: 1.3,
+      );
+      expect(
+        find.byKey(const ValueKey('ledger_table_daybook')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      // "Tümünü gör" katlaması çalışır (8 ürün > 6 satır limiti).
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('ledger_table_products_toggle')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('ledger_table_products_toggle')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.ledgerTableShowLess), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('üretim / fire form validasyonu', () {
     testWidgets(
       'üretim: ürün seçilmeden kaydetme reddedilir; seçilince kaydolur',

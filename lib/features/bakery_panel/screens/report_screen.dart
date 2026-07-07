@@ -7,10 +7,10 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/error_retry_state.dart';
-import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../providers/bakery_providers.dart';
+import '../widgets/ledger_tables.dart';
 
 /// Fırın Defteri — basit dönem raporu (Bugün / Dün / 7 Gün / 30 Gün).
 /// PDF/Excel/grafik YOK (V2) — sade kart/liste.
@@ -154,93 +154,20 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                       label: AppStrings.ledgerReportClosedDays,
                       value: NumberFormatter.integer(r.closedDays),
                     ),
-                    if (r.topWasteProducts.isNotEmpty) ...[
+                    // Operasyon tabloları (tables polish): gün-gün defter +
+                    // ürün bazlı üretim/fire özeti + notlar. Aynı veriden
+                    // türetilir; migration/yeni sorgu yok.
+                    if (r.dailyRows.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.l),
-                      const _SectionTitle(AppStrings.ledgerReportTopWaste),
-                      const SizedBox(height: AppSpacing.s),
-                      PremiumCard(
-                        padding: const EdgeInsets.all(AppSpacing.l),
-                        child: Column(
-                          children: [
-                            for (final (product, qty) in r.topWasteProducts)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.delete_sweep_outlined,
-                                      size: 15,
-                                      color: AppColors.danger,
-                                    ),
-                                    const SizedBox(width: AppSpacing.s),
-                                    Expanded(
-                                      child: Text(
-                                        product,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      '$qty adet',
-                                      style: const TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                      DayBookTable(rows: r.dailyRows),
                     ],
-                    if (r.recentDayNotes.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.l),
-                      const _SectionTitle(AppStrings.ledgerReportRecentNotes),
-                      const SizedBox(height: AppSpacing.s),
-                      PremiumCard(
-                        padding: const EdgeInsets.all(AppSpacing.l),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final (date, note) in r.recentDayNotes)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      df.format(date),
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                    Text(
-                                      note,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textPrimary,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                    if (r.productRows.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.m),
+                      ProductSummaryTable(rows: r.productRows),
+                    ],
+                    if (r.noteRows.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.m),
+                      NotesTable(rows: r.noteRows),
                     ],
                   ],
                 );
@@ -248,24 +175,6 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.title);
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.4,
-        color: AppColors.textMuted,
       ),
     );
   }
