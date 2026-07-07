@@ -28,6 +28,7 @@ class JobOfferPost {
     this.authorRole,
     this.createdAt,
     this.updatedAt,
+    this.feeStatus = 'not_required',
   });
 
   final String? id;
@@ -51,6 +52,7 @@ class JobOfferPost {
   final String? description;
   final double? salaryMin;
   final double? salaryMax;
+
   /// Türkçe vardiya label (eski text, display fallback).
   final String? shiftType;
 
@@ -77,6 +79,14 @@ class JobOfferPost {
   final String? authorRole;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  /// İlan Ücretlendirme V1 — server-side set edilir (client değiştiremez).
+  /// `not_required | pending | paid | waived | grandfathered`.
+  final String feeStatus;
+
+  /// Ücretli ilan ödeme bekliyor mu? (owner kendi ilanında görür; public'e
+  /// pending ilan zaten görünmez — server SELECT gate'i.)
+  bool get isPendingPayment => feeStatus == 'pending';
 
   JobOfferPost copyWith({
     String? title,
@@ -122,6 +132,7 @@ class JobOfferPost {
       authorRole: authorRole,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      feeStatus: feeStatus,
     );
   }
 
@@ -176,13 +187,13 @@ class JobOfferPost {
       shiftCode: row['shift_code'] as String?,
       experienceCode: row['experience_code'] as String?,
       isActive: (row['is_active'] as bool?) ?? true,
-      contactPreference:
-          (row['contact_preference'] as String?) ?? 'in_app',
+      contactPreference: (row['contact_preference'] as String?) ?? 'in_app',
       contactPhone: row['contact_phone'] as String?,
       authorName: row['author_name'] as String?,
       authorRole: row['author_role'] as String?,
       createdAt: parse(row['created_at'] as String?),
       updatedAt: parse(row['updated_at'] as String?),
+      feeStatus: (row['fee_status'] as String?) ?? 'not_required',
     );
   }
 }

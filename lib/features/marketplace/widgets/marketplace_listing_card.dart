@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../subscriptions/widgets/listing_fee_notice.dart';
 import '../models/market_listing.dart';
 
 class MarketplaceListingCard extends StatelessWidget {
@@ -93,7 +94,8 @@ class MarketplaceListingCard extends StatelessWidget {
                       CachedNetworkImage(
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
-                        memCacheWidth: 720, // Perf: kart görseli; decode sınırı.
+                        memCacheWidth:
+                            720, // Perf: kart görseli; decode sınırı.
                         placeholder: (_, __) => Container(
                           color: AppColors.surface,
                           alignment: Alignment.center,
@@ -113,6 +115,14 @@ class MarketplaceListingCard extends StatelessWidget {
                       top: 10,
                       child: _TypeBadge(label: _typeLabel()),
                     ),
+                    // İlan Ücretlendirme V1 — owner kendi pending ilanında
+                    // "Ödeme bekliyor" görür (public zaten pending görmez).
+                    if (listing.isPendingPayment)
+                      const Positioned(
+                        left: 10,
+                        top: 40,
+                        child: ListingPendingBadge(),
+                      ),
                     // Save toggle (sağ üst)
                     if (onToggleSave != null)
                       Positioned(

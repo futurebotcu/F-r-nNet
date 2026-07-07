@@ -196,8 +196,7 @@ Widget _withJobSafetyActions(
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (ctx) => SafeArea(
         top: false,
@@ -205,8 +204,10 @@ Widget _withJobSafetyActions(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.flag_outlined,
-                  color: AppColors.textPrimary),
+              leading: const Icon(
+                Icons.flag_outlined,
+                color: AppColors.textPrimary,
+              ),
               title: const Text(AppStrings.safetyActionReport),
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -220,8 +221,7 @@ Widget _withJobSafetyActions(
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.block_rounded, color: AppColors.danger),
+              leading: const Icon(Icons.block_rounded, color: AppColors.danger),
               title: const Text(
                 AppStrings.safetyActionBlock,
                 style: TextStyle(color: AppColors.danger),
@@ -497,13 +497,18 @@ class _JobOfferCard extends ConsumerWidget {
     // CTA gizlenir.
     final user = ref.watch(currentAuthUserProvider);
     final isOwn = user != null && offer.ownerId == user.id;
+    // İlan Ücretlendirme V1 — owner kendi ücretli-bekleyen ilanında "Ödeme
+    // bekliyor" rozeti görür (public zaten pending ilanı görmez).
+    final pendingOwn = isOwn && offer.isPendingPayment;
     final card = JobOpportunityCard(
       position: offer.title,
       business: _formatBusiness(),
       city: _formatCity(),
       salary: _formatSalary(),
       experience: _formatExperience(),
-      badge: AppStrings.jobsCardBadgeActive,
+      badge: pendingOwn
+          ? AppStrings.listingFeePendingBadge
+          : AppStrings.jobsCardBadgeActive,
       shift: _formatShift(),
       onApply: isOwn ? null : () => _onApply(context, ref),
       applyLabel: AppStrings.jobsApply,
