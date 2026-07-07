@@ -38,9 +38,12 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
         BusinessPlan.pro => 50,
         BusinessPlan.free => 5,
       },
+      // Bayi sayı limiti: Free 0 (kapalı) · Pro/Premium -1 (sınırsız).
+      // Pro↔Premium ayrımı şoförlü operasyonda (dealer_driver_ops), sayıda
+      // DEĞİL.
       dealerLimit: switch (eff) {
         BusinessPlan.premium => -1,
-        BusinessPlan.pro => 1,
+        BusinessPlan.pro => -1,
         BusinessPlan.free => 0,
       },
       canUseBranches: eff == BusinessPlan.premium,

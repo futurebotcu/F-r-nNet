@@ -50,6 +50,10 @@ class BusinessEntitlements {
   bool get recipesUnlimited => recipeLimit < 0;
   bool get dealersUnlimited => dealerLimit < 0;
 
+  /// Bayi Defteri açık mı? Free kapalı (dealer_limit 0); Pro/Premium açık
+  /// (sınırsız). Pro↔Premium ayrımı [canUseDealerDriverOps]'tadır.
+  bool get dealerEnabled => dealersUnlimited || dealerLimit > 0;
+
   /// UX aynası (asıl karar server'da): verilen mevcut sayıyla yeni ekleme
   /// yapılabilir mi? -1 sınırsız → daima true.
   bool canAddRecipe(int current) => recipesUnlimited || current < recipeLimit;
