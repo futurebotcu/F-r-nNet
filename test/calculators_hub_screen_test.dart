@@ -2,6 +2,9 @@ import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/bakery_panel/calculators/screens/calculators_hub_screen.dart';
 import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/providers/profile_provider.dart';
+import 'package:firin_defter/features/subscriptions/data/local_subscription_repository.dart';
+import 'package:firin_defter/features/subscriptions/models/business_plan.dart';
+import 'package:firin_defter/features/subscriptions/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -170,5 +173,90 @@ void main() {
         .getTopLeft(find.text(AppStrings.calcCatProductionTitle))
         .dy;
     expect(daily, lessThan(production));
+  });
+
+  // ── Paywall UI V1 — ticari plan kilitleri ──
+  GoRouter routerWithCostProfit() => GoRouter(
+    initialLocation: '/calculator',
+    routes: [
+      GoRoute(
+        path: '/calculator',
+        builder: (_, __) => const CalculatorsHubScreen(),
+      ),
+      GoRoute(
+        path: '/calculator/dough',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('DoughScreen — stub'))),
+      ),
+      GoRoute(
+        path: '/calculator/cost-profit',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('CostProfit — stub'))),
+      ),
+      GoRoute(
+        path: '/plans',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Plans — stub'))),
+      ),
+    ],
+  );
+
+  Future<void> pumpCommercialPlan(
+    WidgetTester tester,
+    BusinessPlan plan,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          profileControllerProvider.overrideWith(
+            (ref) =>
+                _FixedProfileController(ref, _profile(AccountType.commercial)),
+          ),
+          subscriptionRepositoryProvider.overrideWithValue(
+            LocalSubscriptionRepository(plan: plan),
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: routerWithCostProfit()),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('free ticari: Pro aracı (Maliyet/Kâr) tıklanınca paywall', (
+    tester,
+  ) async {
+    await pumpCommercialPlan(tester, BusinessPlan.free);
+    // Kilit rozeti "Pro" görünür (en az bir kart).
+    expect(find.text(AppStrings.paywallProTag), findsAtLeastNWidgets(1));
+    await tester.tap(find.text(AppStrings.calcCostProfitTitle).first);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('paywall_sheet')), findsOneWidget);
+    // Navigasyon OLMADI (stub ekranı yok).
+    expect(find.text('CostProfit — stub'), findsNothing);
+  });
+
+  testWidgets('free ticari: Free aracı (Hamurdan Ürün) normal açılır', (
+    tester,
+  ) async {
+    await pumpCommercialPlan(tester, BusinessPlan.free);
+    await tester.tap(find.text(AppStrings.calcDoughYieldTitle).first);
+    await tester.pumpAndSettle();
+    expect(find.text('DoughScreen — stub'), findsOneWidget);
+  });
+
+  testWidgets('premium ticari: Pro aracı kilitsiz, normal açılır', (
+    tester,
+  ) async {
+    await pumpCommercialPlan(tester, BusinessPlan.premium);
+    // Kilit rozeti yok.
+    expect(find.text(AppStrings.paywallProTag), findsNothing);
+    expect(find.text(AppStrings.paywallPremiumTag), findsNothing);
+    await tester.tap(find.text(AppStrings.calcCostProfitTitle).first);
+    await tester.pumpAndSettle();
+    expect(find.text('CostProfit — stub'), findsOneWidget);
   });
 }

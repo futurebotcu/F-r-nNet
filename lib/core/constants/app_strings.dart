@@ -1716,6 +1716,88 @@ class AppStrings {
   static const String ledgerTaskStatusOpen = 'Açık';
   static const String ledgerTaskStatusDone = 'Tamamlandı';
 
+  // ── Ticari İşletme Paywall UI V1 ──
+  // Plan etiketleri.
+  static const String planFreeLabel = 'Free';
+  static const String planProLabel = 'Pro';
+  static const String planPremiumLabel = 'Premium';
+  static const String planTrialLabel = 'Deneme';
+  // Panel plan/trial kartı.
+  static const String planCardTrialTitle = 'Deneme sürümündesiniz';
+  static const String planCardTrialDaysLeft = 'gün kaldı';
+  static const String planCardTrialSub =
+      'Deneme boyunca Premium özellikleri kullanabilirsiniz.';
+  static const String planCardFreeTitle = 'Free plan';
+  static const String planCardFreeSub =
+      'Temel Fırın Defteri, 5 reçete ve temel hesaplamalar açık.';
+  static const String planCardProTitle = 'Pro plan';
+  static const String planCardProSub =
+      'Bayi Defteri, Borç-Gider, 50 reçete ve gelişmiş raporlar açık.';
+  static const String planCardPremiumTitle = 'Premium plan';
+  static const String planCardPremiumSub =
+      'Şube, şoförlü bayi, sınırsız reçete ve tüm raporlar açık.';
+  static const String planCardViewPlans = 'Paketleri incele';
+  // Planlar ekranı.
+  static const String plansTitle = 'Paketler';
+  static const String plansSubtitle =
+      'İşletmene uygun paketi seç. Ödeme yakında; şimdilik deneme sürümü açık.';
+  static const String plansTrialBanner =
+      'Deneme süresince tüm Premium özellikler açık.';
+  static const String plansSupportCta = 'Destek ile iletişime geç';
+  static const String plansComingSoon = 'Satın alma yakında';
+  static const String plansCurrentBadge = 'Mevcut';
+  // Plan özellik listeleri (planlar ekranı).
+  static const String planFreeFeatures =
+      'Fırın Defteri temel · 7 gün rapor · 5 reçete · 8 temel hesaplama · '
+      'B2B alıcı ve Anlaşmalı İş Yerleri';
+  static const String planProFeatures =
+      'Borç-Gider · Bayi Defteri (sınırsız bayi, tek kullanıcı) · 50 reçete · '
+      '~19 hesaplama · 30 gün rapor · ürün bazlı özet';
+  static const String planPremiumFeatures =
+      'Şube Yönetimi · şoförlü/ekipli bayi operasyonu · sınırsız reçete · '
+      'tüm hesaplamalar · sınırsız geçmiş · ileri raporlar';
+  // Paywall sheet genel.
+  static const String paywallUpgradeCta = 'Paketleri incele';
+  static const String paywallProTag = 'Pro';
+  static const String paywallPremiumTag = 'Premium';
+  // Modül paywall metinleri.
+  static const String paywallBranchesTitle = 'Şube Yönetimi Premium’da açılır.';
+  static const String paywallBranchesBody =
+      'Şube, personel, süreç ve aktivite takibi için Premium’a geçin.';
+  static const String paywallDealerBookTitle = 'Bayi Defteri Pro’da açılır.';
+  static const String paywallDealerBookBody =
+      'Pro’da sınırsız bayi defteri tutabilir, tahsilat/iade/hareketleri '
+      'yönetebilirsiniz. (Bayi Defteri tek kullanıcı/işletme sahibi '
+      'kullanımıyla açıktır; bayi sayısı sınırsızdır.)';
+  static const String paywallDealerDriverTitle =
+      'Şoförlü ve ekipli bayi operasyonu Premium’da açılır.';
+  static const String paywallDealerDriverBody =
+      'Şoför daveti, atama ve scoped erişim Premium paketindedir.';
+  static const String paywallDebtExpenseTitle =
+      'Borç-Gider kayıtları Pro’da açılır.';
+  static const String paywallDebtExpenseBody =
+      'Borç, gider ve personel ödeme kayıtlarını Pro veya Premium ile '
+      'takip edin.';
+  static const String paywallRecipeFreeTitle =
+      '5 reçeteye kadar ücretsiz kullanabilirsiniz.';
+  static const String paywallRecipeFreeBody =
+      'Daha fazla reçete için Pro’ya geçin.';
+  static const String paywallRecipeProTitle =
+      '50 reçeteye kadar Pro’da kullanabilirsiniz.';
+  static const String paywallRecipeProBody =
+      'Sınırsız reçete için Premium’a geçin.';
+  static const String paywallCalcProTitle = 'Bu hesaplama Pro’da açılır.';
+  static const String paywallCalcPremiumTitle =
+      'Bu hesaplama Premium’da açılır.';
+  static const String paywallCalcBody =
+      'Daha fazla karar-odaklı hesaplama için paketi yükseltin.';
+  static const String paywallReportProTitle =
+      'Son 30 gün raporu Pro’da açılır.';
+  static const String paywallReportPremiumTitle =
+      'Sınırsız geçmiş Premium’da açılır.';
+  static const String paywallReportBody =
+      'Daha uzun rapor geçmişi için paketi yükseltin.';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';

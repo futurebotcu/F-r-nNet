@@ -8,8 +8,12 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../profile/models/bakery_profile.dart';
 import '../../../profile/providers/profile_provider.dart';
+import '../../../subscriptions/models/business_entitlements.dart';
+import '../../../subscriptions/providers/subscription_providers.dart';
+import '../../../subscriptions/widgets/paywall_sheet.dart';
 import '../models/calculator_category.dart';
 import '../models/calculator_tool.dart';
+import '../registry/calculator_entitlements.dart';
 import '../registry/calculator_tools_registry.dart';
 import '../widgets/calculator_mini_card.dart';
 
@@ -29,6 +33,11 @@ class CalculatorsHubScreen extends ConsumerWidget {
     final account = profile?.accountType ?? AccountType.individual;
     final groups = CalculatorToolsRegistry.groupedForAccount(account);
     final featured = CalculatorToolsRegistry.featuredForAccount(account);
+    // Ticari kullanıcı için plan kilidi; bireysel/toptancıda kilit yok.
+    final isCommercial = account == AccountType.commercial;
+    final entitlements = isCommercial
+        ? ref.watch(myEntitlementProvider).valueOrNull
+        : null;
 
     return PremiumScaffold(
       appBar: AppBar(title: const Text(AppStrings.calcHubTitle)),
@@ -51,7 +60,12 @@ class CalculatorsHubScreen extends ConsumerWidget {
                       title: AppStrings.calcHubFeaturedTitle,
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    _ToolGrid(tools: featured, keyPrefix: 'featured'),
+                    _ToolGrid(
+                      tools: featured,
+                      keyPrefix: 'featured',
+                      entitlements: entitlements,
+                      isCommercial: isCommercial,
+                    ),
                   ],
                   for (var g = 0; g < groups.length; g++) ...[
                     const SizedBox(height: AppSpacing.xl),
@@ -61,7 +75,12 @@ class CalculatorsHubScreen extends ConsumerWidget {
                       count: groups[g].tools.length,
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    _ToolGrid(tools: groups[g].tools, keyPrefix: 'tool'),
+                    _ToolGrid(
+                      tools: groups[g].tools,
+                      keyPrefix: 'tool',
+                      entitlements: entitlements,
+                      isCommercial: isCommercial,
+                    ),
                   ],
                 ],
               ),
@@ -156,10 +175,17 @@ class _SectionHeader extends StatelessWidget {
 /// Flexible metinler dar ekranda taşmaya karşı yedek korumadır. Kart
 /// dokunuşu aracın mevcut route'una gider (registry'de tanımlı, değişmez).
 class _ToolGrid extends StatelessWidget {
-  const _ToolGrid({required this.tools, required this.keyPrefix});
+  const _ToolGrid({
+    required this.tools,
+    required this.keyPrefix,
+    required this.entitlements,
+    required this.isCommercial,
+  });
 
   final List<CalculatorTool> tools;
   final String keyPrefix;
+  final BusinessEntitlements? entitlements;
+  final bool isCommercial;
 
   /// Izgara satır yüksekliği. 1.0x yazı ölçeğinde birebir eski değer (142);
   /// büyük yazı ölçeğinde yalnız kartın metin alanı büyür, ikon şeridi ve
@@ -197,12 +223,23 @@ class _ToolGrid extends StatelessWidget {
       itemCount: tools.length,
       itemBuilder: (context, i) {
         final tool = tools[i];
+        // Kilit yalnız ticari + entitlement yüklü + araç plan üstündeyse.
+        final lock = entitlements == null
+            ? null
+            : CalculatorEntitlements.lockFor(
+                toolId: tool.id,
+                entitlements: entitlements!,
+                isCommercial: isCommercial,
+              );
         return CalculatorMiniCard(
           key: ValueKey('${keyPrefix}_${tool.id}'),
           title: tool.title,
           subtitle: tool.description,
           icon: tool.icon,
-          onTap: () => context.push(tool.route),
+          lockedTag: lock?.requiredPlanTag,
+          onTap: lock != null
+              ? () => showPaywallSheet(context, lock)
+              : () => context.push(tool.route),
         );
       },
     );

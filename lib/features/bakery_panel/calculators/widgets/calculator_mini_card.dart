@@ -19,12 +19,17 @@ class CalculatorMiniCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.onTap,
+    this.lockedTag,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
   final VoidCallback onTap;
+
+  /// Paywall UI — non-null ise üst şeritte chevron yerine kilit rozeti
+  /// ("Pro"/"Premium") gösterir. null ise mevcut davranış (chevron).
+  final String? lockedTag;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +58,7 @@ class CalculatorMiniCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _TopRow(icon: icon),
+                  _TopRow(icon: icon, lockedTag: lockedTag),
                   const SizedBox(height: AppSpacing.s),
                   Flexible(
                     child: Text(
@@ -94,8 +99,9 @@ class CalculatorMiniCard extends StatelessWidget {
 
 /// Üst şerit: limon zeminli ikon solda, küçük pasif chevron sağda.
 class _TopRow extends StatelessWidget {
-  const _TopRow({required this.icon});
+  const _TopRow({required this.icon, this.lockedTag});
   final IconData icon;
+  final String? lockedTag;
 
   @override
   Widget build(BuildContext context) {
@@ -114,11 +120,52 @@ class _TopRow extends StatelessWidget {
           ),
           child: Icon(icon, color: AppColors.brandInk, size: 18),
         ),
-        const Spacer(),
-        const Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 13,
-          color: AppColors.textMuted,
+        const SizedBox(width: 6),
+        // Kilit rozeti/chevron sağa hizalı; dar ekran + büyük yazı ölçeğinde
+        // FittedBox ile küçülür (taşma-güvenli — 320dp/1.3x'te overflow yok).
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: lockedTag != null
+                ? FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandInk,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.lock_rounded,
+                            size: 10,
+                            color: AppColors.brandLemon,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            lockedTag!,
+                            style: const TextStyle(
+                              color: AppColors.brandLemon,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 13,
+                    color: AppColors.textMuted,
+                  ),
+          ),
         ),
       ],
     );

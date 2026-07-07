@@ -119,6 +119,7 @@ import '../../features/safety/screens/blocked_users_screen.dart';
 import '../../features/settings/screens/about_screen.dart';
 import '../../features/settings/screens/data_info_screen.dart';
 import '../../features/settings/screens/support_screen.dart';
+import '../../features/subscriptions/screens/plans_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 
 class AppRoutes {
@@ -206,6 +207,9 @@ class AppRoutes {
 
   // Borç & Gider Defteri mini-app (ticari/fırın kullanıcı).
   static const String debtExpense = '/debt-expense';
+
+  // Ticari İşletme Paketleri (Paywall UI V1 — bilgilendirme; ödeme yok).
+  static const String plans = '/plans';
 
   // Bayi Yönetimi sub-routes
   static const String dealers = '/dealers';
@@ -637,6 +641,7 @@ GoRouter createRouter({bool Function()? isAuthed}) {
         path: AppRoutes.settingsSupport,
         builder: (_, __) => const SupportScreen(),
       ),
+      GoRoute(path: AppRoutes.plans, builder: (_, __) => const PlansScreen()),
       GoRoute(
         path: AppRoutes.settingsDataInfo,
         builder: (_, __) => const DataInfoScreen(),

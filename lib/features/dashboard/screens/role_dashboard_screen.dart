@@ -14,7 +14,11 @@ import '../../branches/providers/branch_providers.dart';
 import '../../messaging/providers/messaging_providers.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../subscriptions/models/business_entitlements.dart';
+import '../../subscriptions/models/feature_lock.dart';
 import '../../subscriptions/providers/subscription_providers.dart';
+import '../../subscriptions/widgets/paywall_sheet.dart';
+import '../../subscriptions/widgets/plan_status_card.dart';
 import '../services/role_panel_cards.dart';
 
 /// Panel tab'ının yeni kök ekranı.
@@ -30,13 +34,12 @@ class RoleDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
     final account = profile?.accountType ?? AccountType.individual;
-    // Ücretlendirme Foundation V1 — ticari panel girişinde entitlement satırı
-    // garanti edilir (ensure_my_entitlement + trial). Non-visual: sonuç şu an
-    // UI'da kullanılmaz; paywall/kilit rozetleri sonraki PR. autoDispose
-    // provider yalnız tetikler.
-    if (account == AccountType.commercial) {
-      ref.watch(myEntitlementProvider);
-    }
+    // Paywall UI V1 — ticari panelde entitlement okunur (ensure + trial
+    // provider içinde). Kilitli kartlar rozet + tap'ta paywall gösterir.
+    // Yüklenene kadar / non-commercial → null (kilit yok, server korur).
+    final entitlements = account == AccountType.commercial
+        ? ref.watch(myEntitlementProvider).valueOrNull
+        : null;
     var cards = RolePanelCards.forAccount(account);
     // Şube Yönetimi V1 — bireyselde "Şube İşlerim" YALNIZ aktif şube
     // üyeliği (veya bekleyen davet) varsa görünür; yoksa hiçbir şube
@@ -74,6 +77,13 @@ class RoleDashboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: _RoleBadgeStrip(account: account),
             ),
+            if (account == AccountType.commercial) ...[
+              const SizedBox(height: AppSpacing.s),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+                child: PlanStatusCard(),
+              ),
+            ],
             SectionLabel(title: _sectionTitleFor(account)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
@@ -88,7 +98,8 @@ class RoleDashboardScreen extends ConsumerWidget {
                       badgeCount: cards[i].route == AppRoutes.messages
                           ? unread
                           : 0,
-                      onTap: () => _onTap(context, cards[i]),
+                      lockedTag: _lockFor(cards[i].route, entitlements)?.$2,
+                      onTap: () => _onTap(context, cards[i], entitlements),
                     ),
                     if (i != cards.length - 1)
                       const SizedBox(height: AppSpacing.xs),
@@ -113,7 +124,27 @@ class RoleDashboardScreen extends ConsumerWidget {
     }
   }
 
-  void _onTap(BuildContext context, PanelCard card) {
+  /// Kartın kilit durumu: (FeatureLock, rozet etiketi) veya null (açık).
+  /// Yalnız ticari + entitlement yüklü + ilgili feature kapalıysa döner.
+  (FeatureLock, String)? _lockFor(String? route, BusinessEntitlements? e) {
+    if (e == null || route == null) return null;
+    if (route == AppRoutes.branches && !e.canUseBranches) {
+      return (FeatureLock.branches, FeatureLock.branches.requiredPlanTag);
+    }
+    if (route == AppRoutes.dealers && !e.dealerEnabled) {
+      return (FeatureLock.dealerBook, FeatureLock.dealerBook.requiredPlanTag);
+    }
+    if (route == AppRoutes.debtExpense && !e.canUseDebtExpense) {
+      return (FeatureLock.debtExpense, FeatureLock.debtExpense.requiredPlanTag);
+    }
+    return null;
+  }
+
+  void _onTap(
+    BuildContext context,
+    PanelCard card,
+    BusinessEntitlements? entitlements,
+  ) {
     if (card.comingSoon || card.route == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -121,6 +152,12 @@ class RoleDashboardScreen extends ConsumerWidget {
           duration: const Duration(seconds: 2),
         ),
       );
+      return;
+    }
+    // Kilitli ticari modül → navigasyon yerine paywall (server zaten korur).
+    final lock = _lockFor(card.route, entitlements);
+    if (lock != null) {
+      showPaywallSheet(context, lock.$1);
       return;
     }
     final route = card.route!;

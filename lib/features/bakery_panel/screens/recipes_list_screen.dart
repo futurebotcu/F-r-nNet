@@ -11,6 +11,12 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../profile/models/bakery_profile.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../../subscriptions/models/business_entitlements.dart';
+import '../../subscriptions/models/feature_lock.dart';
+import '../../subscriptions/providers/subscription_providers.dart';
+import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../models/recipe_record.dart';
 import '../providers/bakery_providers.dart';
 import 'recipe_visibility_badge.dart';
@@ -23,9 +29,31 @@ import 'recipe_visibility_badge.dart';
 class RecipesListScreen extends ConsumerWidget {
   const RecipesListScreen({super.key});
 
+  /// Reçete limiti dolduysa paywall açar; değilse yeni reçete ekranına gider.
+  /// Server-side `can_add_recipe` zaten korur — bu yalnız temiz UX.
+  void _addRecipe(BuildContext context, BusinessEntitlements? e, int count) {
+    if (e != null && !e.canAddRecipe(count)) {
+      showPaywallSheet(
+        context,
+        e.isFree ? FeatureLock.recipeFree : FeatureLock.recipePro,
+      );
+      return;
+    }
+    context.push(AppRoutes.recipeNew);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(recipesListProvider);
+    // Reçete limiti YALNIZ ticari kullanıcıya uygulanır; bireysel/toptancı
+    // pass-through (server can_add_recipe de öyle). Aksi bireysel regresyon.
+    final isCommercial =
+        ref.watch(profileControllerProvider)?.accountType ==
+        AccountType.commercial;
+    final entitlements = isCommercial
+        ? ref.watch(myEntitlementProvider).valueOrNull
+        : null;
+    final count = async.valueOrNull?.length ?? 0;
 
     return PremiumScaffold(
       appBar: AppBar(
@@ -33,7 +61,7 @@ class RecipesListScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'Yeni reçete',
-            onPressed: () => context.push(AppRoutes.recipeNew),
+            onPressed: () => _addRecipe(context, entitlements, count),
             icon: const Icon(Icons.add_rounded),
           ),
         ],
@@ -67,7 +95,7 @@ class RecipesListScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.recipeNew),
+        onPressed: () => _addRecipe(context, entitlements, count),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni reçete'),
         backgroundColor: AppColors.copper,

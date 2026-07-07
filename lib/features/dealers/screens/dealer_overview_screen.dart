@@ -11,6 +11,9 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../subscriptions/models/feature_lock.dart';
+import '../../subscriptions/providers/subscription_providers.dart';
+import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../models/dealer.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
@@ -483,7 +486,17 @@ class _QuickActionsSection extends ConsumerWidget {
                 icon: Icons.local_shipping_outlined,
                 label: 'Şoförler',
                 accent: AppColors.copper,
-                onTap: () => context.push(AppRoutes.dealerDrivers),
+                onTap: () {
+                  // Şoförlü/ekipli bayi operasyonu = Premium. Pro owner burada
+                  // paywall görür; server zaten korur. Entitlement yüklü
+                  // değilse/premium ise normal geçer.
+                  final e = ref.read(myEntitlementProvider).valueOrNull;
+                  if (e != null && !e.canUseDealerDriverOps) {
+                    showPaywallSheet(context, FeatureLock.dealerDriverOps);
+                    return;
+                  }
+                  context.push(AppRoutes.dealerDrivers);
+                },
               ),
           ],
         ),
