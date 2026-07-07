@@ -81,44 +81,66 @@ void main() {
       expect(e.canAddDealer(0), isFalse); // free bayi açamaz
     });
 
-    test('pro limitleri', () {
+    test('pro limitleri: bayi SINIRSIZ (sayı limiti yok), şoför kapalı', () {
       const e = BusinessEntitlements(
         plan: BusinessPlan.pro,
         effectivePlan: BusinessPlan.pro,
         recipeLimit: 50,
-        dealerLimit: 1,
+        dealerLimit: -1, // Pro sınırsız bayi (fix)
         canUseDebtExpense: true,
       );
       expect(e.canAddRecipe(49), isTrue);
       expect(e.canAddRecipe(50), isFalse);
+      // Pro artık sınırsız bayi açar — sayı limiti YOK.
+      expect(e.dealerEnabled, isTrue);
+      expect(e.dealersUnlimited, isTrue);
       expect(e.canAddDealer(0), isTrue);
-      expect(e.canAddDealer(1), isFalse); // 1 aktif bayi limiti
+      expect(e.canAddDealer(5), isTrue);
+      expect(e.canAddDealer(99), isTrue);
+      // Pro↔Premium ayrımı: şoförlü operasyon.
+      expect(e.canUseDealerDriverOps, isFalse);
       expect(e.canUseDebtExpense, isTrue);
       expect(e.canUseBranches, isFalse);
+    });
+
+    test('free: Bayi Defteri kapalı', () {
+      const e = BusinessEntitlements(
+        plan: BusinessPlan.free,
+        effectivePlan: BusinessPlan.free,
+        dealerLimit: 0,
+      );
+      expect(e.dealerEnabled, isFalse);
+      expect(e.canAddDealer(0), isFalse);
     });
   });
 
   group('LocalSubscriptionRepository (server türetimi aynası)', () {
-    test('free: limitler + feature\'lar kapalı', () async {
-      final repo = LocalSubscriptionRepository(plan: BusinessPlan.free);
-      final e = await repo.myEntitlement();
-      expect(e.effectivePlan, BusinessPlan.free);
-      expect(e.recipeLimit, 5);
-      expect(e.dealerLimit, 0);
-      expect(e.canUseBranches, isFalse);
-      expect(e.canUseDebtExpense, isFalse);
-      expect(e.canUseDealerDriverOps, isFalse);
-    });
+    test(
+      'free: limitler + feature\'lar kapalı (Bayi Defteri kapalı)',
+      () async {
+        final repo = LocalSubscriptionRepository(plan: BusinessPlan.free);
+        final e = await repo.myEntitlement();
+        expect(e.effectivePlan, BusinessPlan.free);
+        expect(e.recipeLimit, 5);
+        expect(e.dealerLimit, 0);
+        expect(e.dealerEnabled, isFalse);
+        expect(e.canUseBranches, isFalse);
+        expect(e.canUseDebtExpense, isFalse);
+        expect(e.canUseDealerDriverOps, isFalse);
+      },
+    );
 
-    test('pro: debt açık, branches/driver kapalı, 1 bayi', () async {
+    test('pro: debt+bayi(sınırsız) açık, branches/driver kapalı', () async {
       final repo = LocalSubscriptionRepository(plan: BusinessPlan.pro);
       final e = await repo.myEntitlement();
       expect(e.effectivePlan, BusinessPlan.pro);
-      expect(e.dealerLimit, 1);
+      expect(e.dealerLimit, -1); // sınırsız bayi (fix)
+      expect(e.dealerEnabled, isTrue);
+      expect(e.dealersUnlimited, isTrue);
       expect(e.recipeLimit, 50);
       expect(e.canUseDebtExpense, isTrue);
       expect(e.canUseBranches, isFalse);
-      expect(e.canUseDealerDriverOps, isFalse);
+      expect(e.canUseDealerDriverOps, isFalse); // şoför Premium
     });
 
     test('premium: hepsi açık, sınırsız', () async {
