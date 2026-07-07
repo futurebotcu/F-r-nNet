@@ -50,6 +50,7 @@ class MarketListing {
     this.districtCode,
     this.mediaList = const <MarketListingMedia>[],
     this.isSavedByMe = false,
+    this.feeStatus = 'not_required',
   });
 
   final String? id;
@@ -131,6 +132,14 @@ class MarketListing {
   /// Detail/card için saves cross-check sonucu (provider doldurur).
   final bool isSavedByMe;
 
+  /// İlan Ücretlendirme V1 — server-side set edilir (client değiştiremez).
+  /// `not_required | pending | paid | waived | grandfathered`.
+  final String feeStatus;
+
+  /// Ücretli ilan ödeme bekliyor mu? (owner kendi ilanında görür; public'e
+  /// pending ilan zaten görünmez — server SELECT gate'i.)
+  bool get isPendingPayment => feeStatus == 'pending';
+
   bool get isEquipmentSale => listingType == 'equipment_sale';
   bool get isBakeryTransfer => listingType == 'bakery_transfer';
   bool get hasMedia => mediaList.isNotEmpty;
@@ -210,6 +219,7 @@ class MarketListing {
       districtCode: districtCode ?? this.districtCode,
       mediaList: mediaList ?? this.mediaList,
       isSavedByMe: isSavedByMe ?? this.isSavedByMe,
+      feeStatus: feeStatus,
     );
   }
 
@@ -283,8 +293,7 @@ class MarketListing {
       district: row['district'] as String?,
       price: (row['price'] as num?)?.toDouble(),
       unit: row['unit'] as String?,
-      contactPreference:
-          (row['contact_preference'] as String?) ?? 'in_app',
+      contactPreference: (row['contact_preference'] as String?) ?? 'in_app',
       isActive: (row['is_active'] as bool?) ?? true,
       authorName: row['author_name'] as String?,
       authorRole: row['author_role'] as String?,
@@ -311,6 +320,7 @@ class MarketListing {
       districtCode: row['district_code'] as String?,
       mediaList: mediaList,
       isSavedByMe: isSavedByMe,
+      feeStatus: (row['fee_status'] as String?) ?? 'not_required',
     );
   }
 }

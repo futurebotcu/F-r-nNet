@@ -14,6 +14,8 @@ import '../../auth/services/auth_required_guard.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../dealers/widgets/dealer_filter_chip.dart';
+import '../../subscriptions/models/listing_fee.dart';
+import '../../subscriptions/widgets/listing_fee_notice.dart';
 import '../models/job_offer_post.dart';
 import '../providers/job_offer_providers.dart';
 
@@ -259,6 +261,11 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ── İlan Ücretlendirme V1 — ücret bilgilendirmesi ──
+                    if (widget.postId == null) ...[
+                      const ListingFeeNotice(kind: ListingKind.jobOffer),
+                      const SizedBox(height: AppSpacing.m),
+                    ],
                     TextFormField(
                       controller: _title,
                       decoration: const InputDecoration(

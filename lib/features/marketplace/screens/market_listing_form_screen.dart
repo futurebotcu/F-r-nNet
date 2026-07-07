@@ -28,6 +28,8 @@ import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../subscriptions/models/listing_fee.dart';
+import '../../subscriptions/widgets/listing_fee_notice.dart';
 import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
@@ -415,6 +417,11 @@ class _MarketListingFormScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ── İlan Ücretlendirme V1 — ücret bilgilendirmesi ──
+                    if (widget.listingId == null) ...[
+                      const ListingFeeNotice(kind: ListingKind.market),
+                      const SizedBox(height: AppSpacing.m),
+                    ],
                     // ── Photos ──
                     _SectionLabel(label: AppStrings.marketListingFieldPhotos),
                     _PhotosRow(

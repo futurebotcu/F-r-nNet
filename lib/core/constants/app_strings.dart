@@ -1798,6 +1798,27 @@ class AppStrings {
   static const String paywallReportBody =
       'Daha uzun rapor geçmişi için paketi yükseltin.';
 
+  // ── İlan Ücretlendirme V1 ──
+  static const String listingFeeFreeSeek = 'İş arama ilanları ücretsizdir.';
+  static const String listingFeeFreePlan =
+      'Planınızla ilan yayınlama ücretsiz.';
+  static const String listingFeePaidTitle =
+      'Bu ilan türü 50 TL yayın ücretlidir.';
+  static const String listingFeePaidBody =
+      'Ödeme tamamlandıktan sonra ilan yayına alınır. Pro ve Premium ticari '
+      'işletmeler ilanları ücretsiz yayınlar.';
+  static const String listingFeeSupplierBody =
+      'Tedarikçi ilanları 50 TL yayın ücretlidir. Ödeme onayından sonra '
+      'yayınlanır.';
+  static const String listingFeeIndividualBody =
+      'Ekipman ve işyeri devri ilanları 50 TL’dir. Ödeme onayından sonra '
+      'yayınlanır.';
+  static const String listingFeePendingBadge = 'Ödeme bekliyor';
+  static const String listingFeePendingNotice =
+      'İlanınız ödeme onayından sonra yayınlanır. Ödeme için destek ile '
+      'iletişime geçin.';
+  static const String listingFeePendingSupportCta = 'Destek ile iletişime geç';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';
