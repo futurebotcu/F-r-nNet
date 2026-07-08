@@ -28,6 +28,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<BusinessEntitlements> myEntitlement() async {
     final eff = _effective;
+    // Tedarikçi etkin planı: trial → PRO (Premium değil); server aynası.
+    final supEff = trialActive ? BusinessPlan.pro : plan;
     return BusinessEntitlements(
       plan: plan,
       effectivePlan: eff,
@@ -49,6 +51,27 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       canUseBranches: eff == BusinessPlan.premium,
       canUseDebtExpense: eff == BusinessPlan.pro || eff == BusinessPlan.premium,
       canUseDealerDriverOps: eff == BusinessPlan.premium,
+      supplierEffectivePlan: supEff,
+      supplierProductLimit: switch (supEff) {
+        BusinessPlan.premium => -1,
+        BusinessPlan.pro => 5,
+        BusinessPlan.free => 1,
+      },
+      supplierCampaignLimit: switch (supEff) {
+        BusinessPlan.premium => -1,
+        BusinessPlan.pro => 3,
+        BusinessPlan.free => 0,
+      },
+      supplierMonthlyReplyLimit: switch (supEff) {
+        BusinessPlan.premium => -1,
+        BusinessPlan.pro => 20,
+        BusinessPlan.free => 3,
+      },
+      supplierCanAddProduct: true,
+      supplierCanAddCampaign: supEff != BusinessPlan.free,
+      supplierCanReplyQuote: true,
+      supplierListingFeeExempt:
+          supEff == BusinessPlan.pro || supEff == BusinessPlan.premium,
     );
   }
 }

@@ -23,6 +23,16 @@ class BusinessEntitlements {
     this.canUseBranches = false,
     this.canUseDebtExpense = false,
     this.canUseDealerDriverOps = false,
+    // Tedarikçi/toptancı (B2B) alanları — yalnız wholesaler için anlamlı;
+    // diğer hesaplarda güvenli free defaultları.
+    this.supplierEffectivePlan = BusinessPlan.free,
+    this.supplierProductLimit = 1,
+    this.supplierCampaignLimit = 0,
+    this.supplierMonthlyReplyLimit = 3,
+    this.supplierCanAddProduct = true,
+    this.supplierCanAddCampaign = false,
+    this.supplierCanReplyQuote = true,
+    this.supplierListingFeeExempt = false,
   });
 
   /// Gerçek plan (trial'dan bağımsız).
@@ -43,6 +53,30 @@ class BusinessEntitlements {
   final bool canUseBranches;
   final bool canUseDebtExpense;
   final bool canUseDealerDriverOps;
+
+  // ── Tedarikçi/toptancı (B2B) — server my_entitlement supplier_* alanları.
+  // Tedarikçi trial = Pro-benzeri (Premium değil); asıl kısıt server-side.
+  /// Tedarikçi etkin planı (trial→pro).
+  final BusinessPlan supplierEffectivePlan;
+
+  /// -1 = sınırsız.
+  final int supplierProductLimit;
+
+  /// -1 = sınırsız.
+  final int supplierCampaignLimit;
+
+  /// -1 = sınırsız.
+  final int supplierMonthlyReplyLimit;
+  final bool supplierCanAddProduct;
+  final bool supplierCanAddCampaign;
+  final bool supplierCanReplyQuote;
+
+  /// Tedarikçi Pro/Premium/trial → ilan yayın ücreti muaf.
+  final bool supplierListingFeeExempt;
+
+  bool get supplierProductsUnlimited => supplierProductLimit < 0;
+  bool get supplierCampaignsUnlimited => supplierCampaignLimit < 0;
+  bool get supplierRepliesUnlimited => supplierMonthlyReplyLimit < 0;
 
   bool get isPremium => effectivePlan == BusinessPlan.premium;
   bool get isPro => effectivePlan == BusinessPlan.pro;
@@ -75,6 +109,21 @@ class BusinessEntitlements {
       canUseDebtExpense: (row['can_use_debt_expense'] as bool?) ?? false,
       canUseDealerDriverOps:
           (row['can_use_dealer_driver_ops'] as bool?) ?? false,
+      supplierEffectivePlan: BusinessPlanMeta.fromKey(
+        row['supplier_effective_plan'] as String?,
+      ),
+      supplierProductLimit:
+          (row['supplier_product_limit'] as num?)?.toInt() ?? 1,
+      supplierCampaignLimit:
+          (row['supplier_campaign_limit'] as num?)?.toInt() ?? 0,
+      supplierMonthlyReplyLimit:
+          (row['supplier_monthly_reply_limit'] as num?)?.toInt() ?? 3,
+      supplierCanAddProduct: (row['supplier_can_add_product'] as bool?) ?? true,
+      supplierCanAddCampaign:
+          (row['supplier_can_add_campaign'] as bool?) ?? false,
+      supplierCanReplyQuote: (row['supplier_can_reply_quote'] as bool?) ?? true,
+      supplierListingFeeExempt:
+          (row['supplier_listing_fee_exempt'] as bool?) ?? false,
     );
   }
 
