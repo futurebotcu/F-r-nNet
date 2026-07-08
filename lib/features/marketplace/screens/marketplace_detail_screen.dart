@@ -23,6 +23,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../messaging/providers/messaging_providers.dart';
 import '../../messaging/repositories/messaging_repository.dart';
+import '../../payments/widgets/listing_payment_button.dart';
 import '../../safety/models/report_models.dart';
 import '../../safety/widgets/block_user_dialog.dart';
 import '../../safety/widgets/report_sheet.dart';
@@ -109,10 +110,9 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                             ref,
                             targetType: ReportTargetType.marketListing,
                             targetId: id,
-                            reportedUserId:
-                                (ownerId == null || ownerId.isEmpty)
-                                    ? null
-                                    : ownerId,
+                            reportedUserId: (ownerId == null || ownerId.isEmpty)
+                                ? null
+                                : ownerId,
                           );
                         }
                         if (v == 'block' &&
@@ -397,6 +397,14 @@ class _DetailBody extends ConsumerWidget {
   const _DetailBody({required this.listing});
   final MarketListing listing;
 
+  bool _isOwnPending(WidgetRef ref) {
+    final me = ref.watch(currentAuthUserProvider);
+    return listing.isPendingPayment &&
+        listing.id != null &&
+        me != null &&
+        me.id == listing.ownerId;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final imageUrls = listing.mediaList
@@ -410,6 +418,21 @@ class _DetailBody extends ConsumerWidget {
       children: [
         MarketplaceImageGallery(imageUrls: imageUrls),
         const SizedBox(height: AppSpacing.m),
+        // Ücretli ilan (50 TL) — owner kendi pending ilanında öder ve yayınlar.
+        if (_isOwnPending(ref)) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pageH,
+              0,
+              AppSpacing.pageH,
+              AppSpacing.s,
+            ),
+            child: ListingPaymentButton(
+              listingKind: 'market',
+              listingId: listing.id ?? '',
+            ),
+          ),
+        ],
         _InfoSection(listing: listing),
         if ((listing.description ?? '').trim().isNotEmpty) ...[
           const Divider(

@@ -1,0 +1,44 @@
+import '../../profile/models/bakery_profile.dart';
+import '../../subscriptions/models/business_plan.dart';
+
+/// Store ödeme akışı sonucu.
+enum PaymentResult { success, cancelled, pending, unavailable, error }
+
+/// Store ödeme servisine soyut erişim (RevenueCat orkestrasyonu).
+///
+/// Resmi ödeme modeli: App Store IAP + Play Billing. Havale/EFT/İyzico/Stripe
+/// YOK. Anahtarlar yoksa [isAvailable] false → UI "hazırlanıyor" gösterir,
+/// SAHTE purchase YAPILMAZ.
+abstract class PaymentService {
+  /// RevenueCat public key mevcut + init başarılı mı?
+  bool get isAvailable;
+
+  /// RevenueCat SDK'yı auth.uid (appUserID) ile başlatır. Anonymous purchase
+  /// açılmaz; logout'ta logOut çağrılır.
+  Future<void> initialize({required String? userId});
+
+  /// Kullanıcı değişince (login/logout) appUserID senkronu.
+  Future<void> setUser(String? userId);
+
+  /// [account] için satın alınabilir planlar. Bireysel → boş.
+  Future<List<BusinessPlan>> availablePlans(AccountType? account);
+
+  /// Plan satın alma akışını başlatır.
+  Future<PaymentResult> purchasePlan({
+    required AccountType account,
+    required BusinessPlan plan,
+  });
+
+  /// Önceki satın alımları geri yükler.
+  Future<PaymentResult> restorePurchases();
+
+  /// Purchase/restore sonrası backend'i RevenueCat ile senkronlar (edge).
+  Future<void> syncEntitlements();
+
+  /// Ücretli ilan (50 TL) için ödeme niyeti oluşturur + purchase akışı.
+  /// listing_id sunucuda intent'e bağlanır; doğrulama edge'de yapılır.
+  Future<PaymentResult> purchaseListingFee({
+    required String listingKind,
+    required String listingId,
+  });
+}

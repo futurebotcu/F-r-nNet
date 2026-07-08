@@ -28,4 +28,23 @@ class AppConfig {
   ///
   /// Manuel setup gereksinimleri için bkz. GOOGLE_APPLE_AUTH_V1_REPORT.md.
   static const String authRedirectUrl = 'firinnet://auth-callback';
+
+  // ── RevenueCat (Store Billing) public SDK anahtarları ──
+  // Public SDK key oldukları için client'ta dart-define ile okunur. Anahtar
+  // yoksa [storePaymentsEnabled] false → ödeme butonları "hazırlanıyor"
+  // gösterir; SAHTE purchase YAPILMAZ. Webhook secret'ları server (edge) env.
+  static const String revenueCatIosApiKey = String.fromEnvironment(
+    'REVENUECAT_IOS_API_KEY',
+    defaultValue: '',
+  );
+  static const String revenueCatAndroidApiKey = String.fromEnvironment(
+    'REVENUECAT_ANDROID_API_KEY',
+    defaultValue: '',
+  );
+
+  /// Store ödemeleri kullanılabilir mi? Supabase açık + en az bir platform
+  /// RevenueCat public key mevcut. (Platform seçimi PaymentService'te.)
+  static bool get storePaymentsEnabled =>
+      supabaseEnabled &&
+      (revenueCatIosApiKey.isNotEmpty || revenueCatAndroidApiKey.isNotEmpty);
 }
