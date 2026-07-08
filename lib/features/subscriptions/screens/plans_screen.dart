@@ -11,6 +11,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/business_plan.dart';
+import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 
 /// Ticari işletme paketleri ekranı (Paywall UI V1).
@@ -40,6 +41,9 @@ class PlansScreen extends ConsumerWidget {
             AppStrings.planProFeatures,
             AppStrings.planPremiumFeatures,
           );
+    final audience = isWholesaler
+        ? PricingAudience.supplier
+        : PricingAudience.bakery;
 
     return PremiumScaffold(
       body: SafeArea(
@@ -78,6 +82,7 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_free'),
               title: AppStrings.planFreeLabel,
+              price: PricingConfig.monthlyLabel(audience, BusinessPlan.free),
               features: freeFeat,
               plan: BusinessPlan.free,
               current: current,
@@ -86,6 +91,7 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_pro'),
               title: AppStrings.planProLabel,
+              price: PricingConfig.monthlyLabel(audience, BusinessPlan.pro),
               features: proFeat,
               plan: BusinessPlan.pro,
               current: current,
@@ -94,6 +100,7 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_premium'),
               title: AppStrings.planPremiumLabel,
+              price: PricingConfig.monthlyLabel(audience, BusinessPlan.premium),
               features: premiumFeat,
               plan: BusinessPlan.premium,
               current: current,
@@ -127,6 +134,18 @@ class PlansScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s),
+                  // Ödeme yok; deneme vurgusu (30 gün ücretsiz).
+                  if (!trialActive)
+                    Text(
+                      AppStrings.plansTrialCta,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.brandInk,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
                   Text(
                     AppStrings.plansComingSoon,
                     textAlign: TextAlign.center,
@@ -206,6 +225,7 @@ class _PlanTile extends StatelessWidget {
   const _PlanTile({
     super.key,
     required this.title,
+    required this.price,
     required this.features,
     required this.plan,
     required this.current,
@@ -214,6 +234,7 @@ class _PlanTile extends StatelessWidget {
   });
 
   final String title;
+  final String price;
   final String features;
   final BusinessPlan plan;
   final BusinessPlan? current;
@@ -281,6 +302,17 @@ class _PlanTile extends StatelessWidget {
                     ),
                   ),
               ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              price,
+              key: ValueKey('plan_price_${plan.name}'),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: AppColors.brandInk,
+                letterSpacing: -0.2,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(

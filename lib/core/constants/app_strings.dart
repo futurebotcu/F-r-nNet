@@ -1745,6 +1745,7 @@ class AppStrings {
       'Deneme süresince tüm Premium özellikler açık.';
   static const String plansSupportCta = 'Destek ile iletişime geç';
   static const String plansComingSoon = 'Satın alma yakında';
+  static const String plansTrialCta = '30 gün ücretsiz dene';
   static const String plansCurrentBadge = 'Mevcut';
   // Plan özellik listeleri (planlar ekranı).
   static const String planFreeFeatures =

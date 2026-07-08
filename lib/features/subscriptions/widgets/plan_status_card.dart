@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/business_entitlements.dart';
 import '../models/business_plan.dart';
+import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 import 'plan_badge.dart';
 
@@ -86,6 +87,17 @@ class PlanStatusCard extends ConsumerWidget {
                       height: 1.35,
                     ),
                   ),
+                  if (_priceHint(e).isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      _priceHint(e),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.brandInk,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -111,6 +123,23 @@ class PlanStatusCard extends ConsumerWidget {
         return (AppStrings.planCardProTitle, AppStrings.planCardProSub);
       case BusinessPlan.free:
         return (AppStrings.planCardFreeTitle, AppStrings.planCardFreeSub);
+    }
+  }
+
+  /// Ticari işletme fiyat ipucu (Paket Fiyatları UI V1). Premium'da boş.
+  String _priceHint(BusinessEntitlements e) {
+    if (e.isTrialActive) {
+      return 'Deneme sonrası Pro ${PricingConfig.bakeryProLabel} · '
+          'Premium ${PricingConfig.bakeryPremiumLabel}';
+    }
+    switch (e.effectivePlan) {
+      case BusinessPlan.free:
+        return 'Pro ${PricingConfig.bakeryProLabel} · '
+            'Premium ${PricingConfig.bakeryPremiumLabel}';
+      case BusinessPlan.pro:
+        return '${PricingConfig.bakeryPremiumHint} ile şube ve şoförlü bayi';
+      case BusinessPlan.premium:
+        return '';
     }
   }
 }

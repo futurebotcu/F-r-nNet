@@ -1,5 +1,6 @@
 import '../../../core/constants/app_strings.dart';
 import 'business_plan.dart';
+import 'pricing_config.dart';
 
 /// Kilitli bir özelliğe basıldığında gösterilecek paywall içeriği.
 ///
@@ -10,6 +11,7 @@ class FeatureLock {
     required this.title,
     required this.body,
     required this.requiredPlan,
+    this.priceHint = '',
   });
 
   final String title;
@@ -17,6 +19,10 @@ class FeatureLock {
 
   /// Bu özelliği açan minimum plan (rozet/etiket için).
   final BusinessPlan requiredPlan;
+
+  /// Paket fiyat ipucu (ör. "Pro paket 299 TL/ay"). Paywall sheet'te gösterilir.
+  /// Fiyatlar [PricingConfig]'ten gelir (Paket Fiyatları UI V1).
+  final String priceHint;
 
   String get requiredPlanTag => requiredPlan == BusinessPlan.premium
       ? AppStrings.paywallPremiumTag
@@ -26,24 +32,28 @@ class FeatureLock {
     title: AppStrings.paywallBranchesTitle,
     body: AppStrings.paywallBranchesBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.bakeryPremiumHint,
   );
 
   static const FeatureLock dealerBook = FeatureLock(
     title: AppStrings.paywallDealerBookTitle,
     body: AppStrings.paywallDealerBookBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.bakeryProHint,
   );
 
   static const FeatureLock dealerDriverOps = FeatureLock(
     title: AppStrings.paywallDealerDriverTitle,
     body: AppStrings.paywallDealerDriverBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.bakeryPremiumHint,
   );
 
   static const FeatureLock debtExpense = FeatureLock(
     title: AppStrings.paywallDebtExpenseTitle,
     body: AppStrings.paywallDebtExpenseBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.bakeryProHint,
   );
 
   /// Free reçete limiti (5) dolunca.
@@ -51,6 +61,7 @@ class FeatureLock {
     title: AppStrings.paywallRecipeFreeTitle,
     body: AppStrings.paywallRecipeFreeBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.bakeryProHint,
   );
 
   /// Pro reçete limiti (50) dolunca.
@@ -58,30 +69,35 @@ class FeatureLock {
     title: AppStrings.paywallRecipeProTitle,
     body: AppStrings.paywallRecipeProBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.bakeryPremiumHint,
   );
 
   static const FeatureLock calculatorPro = FeatureLock(
     title: AppStrings.paywallCalcProTitle,
     body: AppStrings.paywallCalcBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.bakeryProHint,
   );
 
   static const FeatureLock calculatorPremium = FeatureLock(
     title: AppStrings.paywallCalcPremiumTitle,
     body: AppStrings.paywallCalcBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.bakeryPremiumHint,
   );
 
   static const FeatureLock reportPro = FeatureLock(
     title: AppStrings.paywallReportProTitle,
     body: AppStrings.paywallReportBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.bakeryProHint,
   );
 
   static const FeatureLock reportPremium = FeatureLock(
     title: AppStrings.paywallReportPremiumTitle,
     body: AppStrings.paywallReportBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.bakeryPremiumHint,
   );
 
   // ── Tedarikçi / Toptancı (B2B) lock'ları ──
@@ -90,6 +106,7 @@ class FeatureLock {
     title: AppStrings.supPaywallProductFreeTitle,
     body: AppStrings.supPaywallProductFreeBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.supplierProHint,
   );
 
   /// Pro tedarikçi ürün limitine (5) ulaştı → Premium.
@@ -97,6 +114,7 @@ class FeatureLock {
     title: AppStrings.supPaywallProductProTitle,
     body: AppStrings.supPaywallProductProBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.supplierPremiumHint,
   );
 
   /// Free tedarikçi kampanya açamaz → Pro.
@@ -104,6 +122,7 @@ class FeatureLock {
     title: AppStrings.supPaywallCampaignFreeTitle,
     body: AppStrings.supPaywallCampaignFreeBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.supplierProHint,
   );
 
   /// Pro tedarikçi aktif kampanya limitine (3) ulaştı → Premium.
@@ -111,6 +130,7 @@ class FeatureLock {
     title: AppStrings.supPaywallCampaignProTitle,
     body: AppStrings.supPaywallCampaignProBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.supplierPremiumHint,
   );
 
   /// Free tedarikçi aylık teklif cevabı limitine (3) ulaştı → Pro.
@@ -118,6 +138,7 @@ class FeatureLock {
     title: AppStrings.supPaywallReplyFreeTitle,
     body: AppStrings.supPaywallReplyFreeBody,
     requiredPlan: BusinessPlan.pro,
+    priceHint: PricingConfig.supplierProHint,
   );
 
   /// Pro tedarikçi aylık teklif cevabı limitine (20) ulaştı → Premium.
@@ -125,5 +146,6 @@ class FeatureLock {
     title: AppStrings.supPaywallReplyProTitle,
     body: AppStrings.supPaywallReplyProBody,
     requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.supplierPremiumHint,
   );
 }

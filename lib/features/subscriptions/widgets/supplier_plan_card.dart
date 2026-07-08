@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/business_entitlements.dart';
 import '../models/business_plan.dart';
+import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 
 /// Tedarikçi mağaza ekranındaki plan/trial durum kartı + ürün/kampanya/cevap
@@ -109,10 +110,38 @@ class SupplierPlanCard extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             _QuotaRow(label: AppStrings.supQuotaReplies, value: _replyLabel(e)),
+            if (_priceHint(e).isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                _priceHint(e),
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.brandInk,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  /// Tedarikçi fiyat ipucu (Paket Fiyatları UI V1). Premium'da boş.
+  String _priceHint(BusinessEntitlements e) {
+    if (e.isTrialActive) {
+      return 'Deneme sonrası Pro ${PricingConfig.supplierProLabel}';
+    }
+    switch (e.supplierEffectivePlan) {
+      case BusinessPlan.free:
+        return 'Pro ${PricingConfig.supplierProLabel} · '
+            'Premium ${PricingConfig.supplierPremiumLabel}';
+      case BusinessPlan.pro:
+        return 'Premium ${PricingConfig.supplierPremiumLabel} ile sınırsız '
+            'ürün/kampanya/teklif';
+      case BusinessPlan.premium:
+        return '';
+    }
   }
 
   static String _limitLabel(int count, int limit) {
