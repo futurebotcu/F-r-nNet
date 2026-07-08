@@ -1819,6 +1819,61 @@ class AppStrings {
       'iletişime geçin.';
   static const String listingFeePendingSupportCta = 'Destek ile iletişime geç';
 
+  // ── Tedarikçi / Toptancı Paywall UI V1 ──
+  static const String supPlanFreeTitle = 'Free tedarikçi';
+  static const String supPlanFreeSub =
+      '1 ürün, 3 teklif cevabı/ay ve ücretli ilan kullanımı.';
+  static const String supPlanProTitle = 'Pro tedarikçi';
+  static const String supPlanProSub =
+      '5 ürün, 3 kampanya, 20 teklif cevabı/ay ve ücretsiz ilanlar.';
+  static const String supPlanPremiumTitle = 'Premium tedarikçi';
+  static const String supPlanPremiumSub =
+      'Sınırsız ürün, kampanya ve teklif cevabı.';
+  static const String supPlanTrialTitle = 'Deneme sürümündesiniz';
+  static const String supPlanTrialSub =
+      'Tedarikçi denemesi Pro özellikleriyle çalışır.';
+  static const String supQuotaProducts = 'Ürün';
+  static const String supQuotaCampaigns = 'Kampanya';
+  static const String supQuotaReplies = 'Aylık teklif cevabı';
+  static const String supQuotaUnlimited = 'Sınırsız';
+  static const String supQuotaReplyExhausted = 'Bu ayki hakkınız doldu';
+  static const String supPaywallProductFreeTitle =
+      'Free tedarikçiler 1 ürün yayınlayabilir.';
+  static const String supPaywallProductFreeBody =
+      'Daha fazla ürün için Pro’ya geçin. Pro’da 5 ürün, Premium’da sınırsız '
+      'ürün yayınlayabilirsiniz.';
+  static const String supPaywallProductProTitle =
+      'Pro’da 5 ürün yayınlayabilirsiniz.';
+  static const String supPaywallProductProBody =
+      'Sınırsız ürün için Premium’a geçin.';
+  static const String supPaywallCampaignFreeTitle =
+      'Kampanya yayınlama Pro’da açılır.';
+  static const String supPaywallCampaignFreeBody =
+      'Pro’da 3 kampanya, Premium’da sınırsız kampanya yayınlayabilirsiniz.';
+  static const String supPaywallCampaignProTitle =
+      'Pro’da 3 aktif kampanya yayınlayabilirsiniz.';
+  static const String supPaywallCampaignProBody =
+      'Sınırsız kampanya için Premium’a geçin.';
+  static const String supPaywallReplyFreeTitle =
+      'Free tedarikçiler ayda 3 teklif cevabı verebilir.';
+  static const String supPaywallReplyFreeBody =
+      'Daha fazla teklif cevabı için Pro’ya geçin.';
+  static const String supPaywallReplyProTitle =
+      'Pro’da ayda 20 teklif cevabı verebilirsiniz.';
+  static const String supPaywallReplyProBody =
+      'Sınırsız teklif cevabı için Premium’a geçin.';
+  static const String supErrorProductQuota = 'Ürün kotanız doldu.';
+  static const String supErrorCampaignQuota = 'Kampanya kotanız doldu.';
+  static const String supErrorReplyQuota =
+      'Bu ayki teklif cevabı hakkınız doldu.';
+  static const String supPlanFreeFeatures =
+      '1 ürün · kampanya yok · ayda 3 teklif cevabı · ilanlar 50 TL';
+  static const String supPlanProFeatures =
+      '5 ürün · 3 kampanya · ayda 20 teklif cevabı · ilanlar ücretsiz';
+  static const String supPlanPremiumFeatures =
+      'sınırsız ürün · sınırsız kampanya · sınırsız teklif cevabı · '
+      'ilanlar ücretsiz';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';

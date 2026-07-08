@@ -8,6 +8,8 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../profile/models/bakery_profile.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../models/business_plan.dart';
 import '../providers/subscription_providers.dart';
 
@@ -21,8 +23,23 @@ class PlansScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final e = ref.watch(myEntitlementProvider).valueOrNull;
-    final current = e?.effectivePlan;
+    // Tedarikçi (wholesaler) → tedarikçi paketleri + supplier effective plan.
+    final isWholesaler =
+        ref.watch(profileControllerProvider)?.accountType ==
+        AccountType.wholesaler;
+    final current = isWholesaler ? e?.supplierEffectivePlan : e?.effectivePlan;
     final trialActive = e?.isTrialActive ?? false;
+    final (freeFeat, proFeat, premiumFeat) = isWholesaler
+        ? (
+            AppStrings.supPlanFreeFeatures,
+            AppStrings.supPlanProFeatures,
+            AppStrings.supPlanPremiumFeatures,
+          )
+        : (
+            AppStrings.planFreeFeatures,
+            AppStrings.planProFeatures,
+            AppStrings.planPremiumFeatures,
+          );
 
     return PremiumScaffold(
       body: SafeArea(
@@ -49,14 +66,19 @@ class PlansScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageH,
                 ),
-                child: _TrialBanner(daysLeft: e?.daysLeft ?? 0),
+                child: _TrialBanner(
+                  daysLeft: e?.daysLeft ?? 0,
+                  note: isWholesaler
+                      ? AppStrings.supPlanTrialSub
+                      : AppStrings.plansTrialBanner,
+                ),
               ),
             ],
             const SizedBox(height: AppSpacing.m),
             _PlanTile(
               key: const ValueKey('plan_tile_free'),
               title: AppStrings.planFreeLabel,
-              features: AppStrings.planFreeFeatures,
+              features: freeFeat,
               plan: BusinessPlan.free,
               current: current,
               trialActive: trialActive,
@@ -64,7 +86,7 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_pro'),
               title: AppStrings.planProLabel,
-              features: AppStrings.planProFeatures,
+              features: proFeat,
               plan: BusinessPlan.pro,
               current: current,
               trialActive: trialActive,
@@ -72,7 +94,7 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_premium'),
               title: AppStrings.planPremiumLabel,
-              features: AppStrings.planPremiumFeatures,
+              features: premiumFeat,
               plan: BusinessPlan.premium,
               current: current,
               trialActive: trialActive,
@@ -125,9 +147,10 @@ class PlansScreen extends ConsumerWidget {
 }
 
 class _TrialBanner extends StatelessWidget {
-  const _TrialBanner({required this.daysLeft});
+  const _TrialBanner({required this.daysLeft, required this.note});
 
   final int daysLeft;
+  final String note;
 
   @override
   Widget build(BuildContext context) {
@@ -161,9 +184,9 @@ class _TrialBanner extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 1),
-                const Text(
-                  AppStrings.plansTrialBanner,
-                  style: TextStyle(
+                Text(
+                  note,
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFFB45309),
