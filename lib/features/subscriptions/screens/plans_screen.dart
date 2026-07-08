@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../payments/widgets/plan_purchase_actions.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/business_plan.dart';
@@ -25,9 +26,8 @@ class PlansScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final e = ref.watch(myEntitlementProvider).valueOrNull;
     // Tedarikçi (wholesaler) → tedarikçi paketleri + supplier effective plan.
-    final isWholesaler =
-        ref.watch(profileControllerProvider)?.accountType ==
-        AccountType.wholesaler;
+    final account = ref.watch(profileControllerProvider)?.accountType;
+    final isWholesaler = account == AccountType.wholesaler;
     final current = isWholesaler ? e?.supplierEffectivePlan : e?.effectivePlan;
     final trialActive = e?.isTrialActive ?? false;
     final (freeFeat, proFeat, premiumFeat) = isWholesaler
@@ -113,6 +113,9 @@ class PlansScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Store satın alma (RevenueCat) — key yoksa "hazırlanıyor".
+                  PlanPurchaseActions(account: account),
+                  const SizedBox(height: AppSpacing.s),
                   FilledButton(
                     key: const ValueKey('plans_support_cta'),
                     onPressed: () =>

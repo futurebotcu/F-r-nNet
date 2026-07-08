@@ -1746,6 +1746,16 @@ class AppStrings {
   static const String plansSupportCta = 'Destek ile iletişime geç';
   static const String plansComingSoon = 'Satın alma yakında';
   static const String plansTrialCta = '30 gün ücretsiz dene';
+  // Store ödeme (RevenueCat).
+  static const String storePaymentPreparing = 'Mağaza ödemeleri hazırlanıyor.';
+  static const String storePaymentSuccess =
+      'Ödemeniz alındı. Paketiniz birkaç saniye içinde açılacak.';
+  static const String storePaymentFailed = 'Ödeme tamamlanmadı.';
+  static const String storePaymentRestoreCta = 'Satın alımları geri yükle';
+  static const String storePaymentRestored = 'Satın alımlar geri yüklendi.';
+  static const String storePurchaseProCta = 'Pro’ya geç';
+  static const String storePurchasePremiumCta = 'Premium’a geç';
+  static const String storeListingPayCta = 'Öde ve yayınla (50 TL)';
   static const String plansCurrentBadge = 'Mevcut';
   // Plan özellik listeleri (planlar ekranı).
   static const String planFreeFeatures =

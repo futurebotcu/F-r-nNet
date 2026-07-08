@@ -8,6 +8,8 @@
     <!-- Kamera — yalnız fotoğraf/video ÇEKİM aksiyonlarında runtime istenir
          (galeri seçimi izin istemez). -->
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Google Play Billing (RevenueCat store ödemeleri). -->
+    <uses-permission android:name="com.android.vending.BILLING"/>
     <application
         android:label="FırınNet"
         android:name="${applicationName}"
