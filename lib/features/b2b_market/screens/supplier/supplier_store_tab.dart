@@ -15,6 +15,10 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/error_retry_state.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
+import '../../../subscriptions/models/supplier_paywall.dart';
+import '../../../subscriptions/providers/subscription_providers.dart';
+import '../../../subscriptions/widgets/paywall_sheet.dart';
+import '../../../subscriptions/widgets/supplier_plan_card.dart';
 import '../../models/b2b_campaign.dart';
 import '../../models/b2b_product.dart';
 import '../../models/b2b_store.dart';
@@ -60,54 +64,80 @@ class SupplierStoreTab extends ConsumerWidget {
         ),
         children: [
           const _ViewpointStrip(),
-        const SizedBox(height: AppSpacing.m),
-        _StoreHero(store: store),
-        const SizedBox(height: AppSpacing.s),
-        _EditStoreButton(
-          onTap: () => context.push(AppRoutes.b2bStoreEdit),
-        ),
-        const SizedBox(height: AppSpacing.l),
-        _SectionHeader(
-          icon: Icons.star_outline_rounded,
-          title: 'Öne çıkan ürünler',
-          addLabel: 'Ürün ekle',
-          onAdd: () => context.push(AppRoutes.b2bProductNew),
-        ),
-        const SizedBox(height: AppSpacing.s),
-        if (products.isEmpty)
-          const _EmptyHint(text: 'Henüz ürün eklemedin.')
-        else
-          for (final p in products) ...[
-            B2bProductCard(
-              product: p,
-              onEdit: () => context.push(AppRoutes.b2bProductEdit(p.id)),
-              onTogglePublish: () => ref
-                  .read(b2bMarketControllerProvider.notifier)
-                  .setProductPublished(p.id, !p.published),
-            ),
-            const SizedBox(height: AppSpacing.m),
-          ],
-        const SizedBox(height: AppSpacing.m),
-        _SectionHeader(
-          icon: Icons.campaign_outlined,
-          title: 'Aktif kampanyalar',
-          addLabel: 'Kampanya oluştur',
-          onAdd: () => context.push(AppRoutes.b2bCampaignNew),
-        ),
-        const SizedBox(height: AppSpacing.s),
-        if (campaigns.isEmpty)
-          const _EmptyHint(text: 'Henüz kampanya oluşturmadın.')
-        else
-          for (final c in campaigns) ...[
-            B2bCampaignCard(
-              campaign: c,
-              onEdit: () => context.push(AppRoutes.b2bCampaignEdit(c.id)),
-              onTogglePublish: () => ref
-                  .read(b2bMarketControllerProvider.notifier)
-                  .setCampaignPublished(c.id, !c.published),
-            ),
-            const SizedBox(height: AppSpacing.m),
-          ],
+          const SizedBox(height: AppSpacing.m),
+          // Tedarikçi plan/trial kartı + kota göstergeleri (Paywall UI V1).
+          SupplierPlanCard(
+            productCount: products.length,
+            campaignCount: campaigns.where((c) => c.published).length,
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _StoreHero(store: store),
+          const SizedBox(height: AppSpacing.s),
+          _EditStoreButton(onTap: () => context.push(AppRoutes.b2bStoreEdit)),
+          const SizedBox(height: AppSpacing.l),
+          _SectionHeader(
+            icon: Icons.star_outline_rounded,
+            title: 'Öne çıkan ürünler',
+            addLabel: 'Ürün ekle',
+            onAdd: () {
+              // Ürün limiti dolduysa paywall; değilse ekleme ekranı.
+              final e = ref.watch(myEntitlementProvider).valueOrNull;
+              final lock = e == null
+                  ? null
+                  : SupplierPaywall.productLock(e, products.length);
+              if (lock != null) {
+                showPaywallSheet(context, lock);
+                return;
+              }
+              context.push(AppRoutes.b2bProductNew);
+            },
+          ),
+          const SizedBox(height: AppSpacing.s),
+          if (products.isEmpty)
+            const _EmptyHint(text: 'Henüz ürün eklemedin.')
+          else
+            for (final p in products) ...[
+              B2bProductCard(
+                product: p,
+                onEdit: () => context.push(AppRoutes.b2bProductEdit(p.id)),
+                onTogglePublish: () => ref
+                    .read(b2bMarketControllerProvider.notifier)
+                    .setProductPublished(p.id, !p.published),
+              ),
+              const SizedBox(height: AppSpacing.m),
+            ],
+          const SizedBox(height: AppSpacing.m),
+          _SectionHeader(
+            icon: Icons.campaign_outlined,
+            title: 'Aktif kampanyalar',
+            addLabel: 'Kampanya oluştur',
+            onAdd: () {
+              final e = ref.watch(myEntitlementProvider).valueOrNull;
+              final active = campaigns.where((c) => c.published).length;
+              final lock = e == null
+                  ? null
+                  : SupplierPaywall.campaignLock(e, active);
+              if (lock != null) {
+                showPaywallSheet(context, lock);
+                return;
+              }
+              context.push(AppRoutes.b2bCampaignNew);
+            },
+          ),
+          const SizedBox(height: AppSpacing.s),
+          if (campaigns.isEmpty)
+            const _EmptyHint(text: 'Henüz kampanya oluşturmadın.')
+          else
+            for (final c in campaigns) ...[
+              B2bCampaignCard(
+                campaign: c,
+                onEdit: () => context.push(AppRoutes.b2bCampaignEdit(c.id)),
+                onTogglePublish: () => ref
+                    .read(b2bMarketControllerProvider.notifier)
+                    .setCampaignPublished(c.id, !c.published),
+              ),
+              const SizedBox(height: AppSpacing.m),
+            ],
         ],
       ),
     );
@@ -267,7 +297,10 @@ class _EditStoreButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
-          textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 13.5,
+          ),
         ),
       ),
     );
@@ -311,8 +344,10 @@ class _LabeledChips extends StatelessWidget {
           children: [
             for (final v in values)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -374,7 +409,10 @@ class _SectionHeader extends StatelessWidget {
             foregroundColor: AppColors.brandInk,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             minimumSize: const Size(0, 34),
-            textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
           ),
         ),
       ],

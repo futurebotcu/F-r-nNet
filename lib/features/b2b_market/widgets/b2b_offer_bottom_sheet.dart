@@ -21,9 +21,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../subscriptions/models/supplier_paywall.dart';
+import '../../subscriptions/providers/subscription_providers.dart';
+import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../providers/b2b_providers.dart';
 
 enum B2bOfferKind { requestQuote, askPrice, giveOffer, newRequest }
@@ -264,13 +268,24 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
     if (_isReply) {
       missing = _message.text.trim().isEmpty;
     } else {
-      missing = _resolvedCategory().isEmpty ||
+      missing =
+          _resolvedCategory().isEmpty ||
           _quantity.text.trim().isEmpty ||
           _selectedCity == null;
     }
     if (missing) {
       setState(() => _error = 'Lütfen gerekli alanları doldurun.');
       return;
+    }
+    // Tedarikçi teklif cevabı aylık kotası dolduysa paywall (server zaten
+    // korur; hardening bozulmaz). Alıcı talep akışı etkilenmez.
+    if (_isReply) {
+      final e = ref.read(myEntitlementProvider).valueOrNull;
+      final lock = e == null ? null : SupplierPaywall.replyLock(e);
+      if (lock != null) {
+        await showPaywallSheet(context, lock);
+        return;
+      }
     }
     setState(() {
       _submitting = true;
@@ -282,8 +297,9 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
         await ctrl.addQuoteReply(
           quoteRequestId: widget.quoteRequestId ?? '',
           message: _message.text.trim(),
-          priceNote:
-              _priceNote.text.trim().isEmpty ? null : _priceNote.text.trim(),
+          priceNote: _priceNote.text.trim().isEmpty
+              ? null
+              : _priceNote.text.trim(),
           deliveryNote: _deliveryNote.text.trim().isEmpty
               ? null
               : _deliveryNote.text.trim(),
@@ -303,13 +319,24 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
       }
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (_) {
+    } catch (err) {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = 'Gönderilemedi. Lütfen tekrar deneyin.';
+        // Server kota hatası (UI'dan kaçan durum) → temiz mesaj; ham RLS
+        // hatası kullanıcıya gösterilmez.
+        _error = (_isReply && _looksLikeRlsError(err))
+            ? AppStrings.supErrorReplyQuota
+            : 'Gönderilemedi. Lütfen tekrar deneyin.';
       });
     }
+  }
+
+  bool _looksLikeRlsError(Object err) {
+    final s = err.toString().toLowerCase();
+    return s.contains('row-level security') ||
+        s.contains('violates') ||
+        s.contains('policy');
   }
 
   @override
@@ -321,8 +348,9 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
       child: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
+          ),
         ),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.l,
@@ -456,25 +484,25 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
 
   // ---- Tedarikçi cevap alanları ----
   List<Widget> _replyFields() => [
-        _Field(
-          controller: _message,
-          label: 'Mesaj',
-          hint: 'Teklif detayınız…',
-          maxLines: 3,
-        ),
-        const SizedBox(height: AppSpacing.m),
-        _Field(
-          controller: _priceNote,
-          label: 'Fiyat notu (opsiyonel)',
-          hint: 'Ör. ≈ ₺640 / çuval',
-        ),
-        const SizedBox(height: AppSpacing.m),
-        _Field(
-          controller: _deliveryNote,
-          label: 'Teslimat notu (opsiyonel)',
-          hint: 'Ör. Bu hafta teslim',
-        ),
-      ];
+    _Field(
+      controller: _message,
+      label: 'Mesaj',
+      hint: 'Teklif detayınız…',
+      maxLines: 3,
+    ),
+    const SizedBox(height: AppSpacing.m),
+    _Field(
+      controller: _priceNote,
+      label: 'Fiyat notu (opsiyonel)',
+      hint: 'Ör. ≈ ₺640 / çuval',
+    ),
+    const SizedBox(height: AppSpacing.m),
+    _Field(
+      controller: _deliveryNote,
+      label: 'Teslimat notu (opsiyonel)',
+      hint: 'Ör. Bu hafta teslim',
+    ),
+  ];
 
   // ---- Alıcı talebi alanları (kipe göre) ----
   List<Widget> _requestFields(List<String> categories) {
@@ -504,11 +532,7 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
         ),
       ],
       const SizedBox(height: AppSpacing.m),
-      _Field(
-        controller: _quantity,
-        label: 'Miktar',
-        hint: 'Ör. 150 çuval',
-      ),
+      _Field(controller: _quantity, label: 'Miktar', hint: 'Ör. 150 çuval'),
       const SizedBox(height: AppSpacing.m),
       _DropdownField(
         label: 'İl',
@@ -614,8 +638,10 @@ class _DropdownField extends StatelessWidget {
         DropdownButtonFormField<String>(
           initialValue: value,
           isExpanded: true,
-          icon: const Icon(Icons.expand_more_rounded,
-              color: AppColors.textMuted),
+          icon: const Icon(
+            Icons.expand_more_rounded,
+            color: AppColors.textMuted,
+          ),
           style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
           hint: Text(
             hint,
@@ -669,8 +695,11 @@ class _LockedField extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.lock_outline_rounded,
-                  size: 15, color: AppColors.brandLemonPressed),
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 15,
+                color: AppColors.brandLemonPressed,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -709,9 +738,9 @@ class _FieldLabel extends StatelessWidget {
 }
 
 OutlineInputBorder _border(Color color, double width) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppRadius.m),
-      borderSide: BorderSide(color: color, width: width),
-    );
+  borderRadius: BorderRadius.circular(AppRadius.m),
+  borderSide: BorderSide(color: color, width: width),
+);
 
 class _PrivacyHint extends StatelessWidget {
   const _PrivacyHint();
@@ -721,8 +750,11 @@ class _PrivacyHint extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.lock_outline_rounded,
-            size: 14, color: AppColors.textMuted),
+        const Icon(
+          Icons.lock_outline_rounded,
+          size: 14,
+          color: AppColors.textMuted,
+        ),
         const SizedBox(width: 6),
         const Expanded(
           child: Text(

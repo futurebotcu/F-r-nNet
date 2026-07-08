@@ -83,4 +83,47 @@ class FeatureLock {
     body: AppStrings.paywallReportBody,
     requiredPlan: BusinessPlan.premium,
   );
+
+  // ── Tedarikçi / Toptancı (B2B) lock'ları ──
+  /// Free tedarikçi ürün limitine (1) ulaştı → Pro.
+  static const FeatureLock supplierProductFree = FeatureLock(
+    title: AppStrings.supPaywallProductFreeTitle,
+    body: AppStrings.supPaywallProductFreeBody,
+    requiredPlan: BusinessPlan.pro,
+  );
+
+  /// Pro tedarikçi ürün limitine (5) ulaştı → Premium.
+  static const FeatureLock supplierProductPro = FeatureLock(
+    title: AppStrings.supPaywallProductProTitle,
+    body: AppStrings.supPaywallProductProBody,
+    requiredPlan: BusinessPlan.premium,
+  );
+
+  /// Free tedarikçi kampanya açamaz → Pro.
+  static const FeatureLock supplierCampaignFree = FeatureLock(
+    title: AppStrings.supPaywallCampaignFreeTitle,
+    body: AppStrings.supPaywallCampaignFreeBody,
+    requiredPlan: BusinessPlan.pro,
+  );
+
+  /// Pro tedarikçi aktif kampanya limitine (3) ulaştı → Premium.
+  static const FeatureLock supplierCampaignPro = FeatureLock(
+    title: AppStrings.supPaywallCampaignProTitle,
+    body: AppStrings.supPaywallCampaignProBody,
+    requiredPlan: BusinessPlan.premium,
+  );
+
+  /// Free tedarikçi aylık teklif cevabı limitine (3) ulaştı → Pro.
+  static const FeatureLock supplierReplyFree = FeatureLock(
+    title: AppStrings.supPaywallReplyFreeTitle,
+    body: AppStrings.supPaywallReplyFreeBody,
+    requiredPlan: BusinessPlan.pro,
+  );
+
+  /// Pro tedarikçi aylık teklif cevabı limitine (20) ulaştı → Premium.
+  static const FeatureLock supplierReplyPro = FeatureLock(
+    title: AppStrings.supPaywallReplyProTitle,
+    body: AppStrings.supPaywallReplyProBody,
+    requiredPlan: BusinessPlan.premium,
+  );
 }

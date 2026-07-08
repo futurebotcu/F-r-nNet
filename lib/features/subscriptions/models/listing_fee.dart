@@ -24,11 +24,17 @@ class ListingFee {
     required BusinessEntitlements? entitlements,
   }) {
     if (kind == ListingKind.jobSeek) return 0;
-    final exempt =
+    // Ticari işletme Pro/Premium → muaf; tedarikçi Pro/Premium/trial → muaf
+    // (server get_listing_fee_amount_cents aynası).
+    final commercialExempt =
         account == AccountType.commercial &&
         entitlements != null &&
         (entitlements.isPro || entitlements.isPremium);
-    return exempt ? 0 : feeCents;
+    final supplierExempt =
+        account == AccountType.wholesaler &&
+        entitlements != null &&
+        entitlements.supplierListingFeeExempt;
+    return (commercialExempt || supplierExempt) ? 0 : feeCents;
   }
 
   static bool isRequired({
