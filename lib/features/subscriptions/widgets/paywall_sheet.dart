@@ -100,6 +100,28 @@ class _PaywallSheetBody extends StatelessWidget {
                 height: 1.45,
               ),
             ),
+            if (lock.priceHint.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.s),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.sell_outlined,
+                    size: 15,
+                    color: AppColors.brandInk,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    lock.priceHint,
+                    key: const ValueKey('paywall_price_hint'),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.brandInk,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: AppSpacing.l),
             SizedBox(
               width: double.infinity,
