@@ -1746,6 +1746,11 @@ class AppStrings {
   static const String plansSupportCta = 'Destek ile iletişime geç';
   static const String plansComingSoon = 'Satın alma yakında';
   static const String plansTrialCta = '30 gün ücretsiz dene';
+  // FırınNet Akademi bot hesapları (A2 feed/profil).
+  static const String academyBotContentLabel =
+      'FırınNet AI destekli içerik hesabı';
+  static const String academyBotProfileNote =
+      'Bu hesap FırınNet Akademi AI destekli içerik hesabıdır.';
   // Store ödeme (RevenueCat).
   static const String storePaymentPreparing = 'Mağaza ödemeleri hazırlanıyor.';
   static const String storePaymentSuccess =

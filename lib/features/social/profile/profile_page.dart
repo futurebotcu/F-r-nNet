@@ -31,6 +31,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
+import '../../academy/models/academy_bot_profile.dart';
+import '../../academy/providers/academy_providers.dart';
 import '../../worker/models/job_seek_post.dart';
 import '../../worker/providers/worker_providers.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -82,6 +84,11 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
     final recipesAsync = ref.watch(publicRecipesByOwnerProvider(userId));
     final me = ref.watch(currentAuthUserProvider);
     final isSelf = me != null && me.id == userId;
+    // FırınNet Akademi bot profili mi (public academy_bot_profiles). Bot ise
+    // kullanıcı CTA'ları (takip/mesaj) gizlenir, account rozeti yerine AI
+    // notu + bio/topic gösterilir. Geçmiş postlar mevcut owner_id akışıyla.
+    final bot = ref.watch(academyBotProfileProvider(userId)).asData?.value;
+    final isBot = bot != null;
     // Professional Profile Center Sprint 1 — aktif "iş arıyorum" ilanı
     // (varsa) profil vitrininde durum + kart için.
     final jobSeekAsync = ref.watch(activeJobSeekOfProvider(userId));
@@ -173,8 +180,14 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                 detailAsync: detailAsync,
                 isSelf: isSelf,
               ),
-              _AccountTypeBadge(detailAsync: detailAsync),
-              _StatusChip(detailAsync: detailAsync, jobSeekAsync: jobSeekAsync),
+              // Bot: yanıltıcı account rozeti (Bireysel) gizli.
+              if (!isBot) _AccountTypeBadge(detailAsync: detailAsync),
+              if (!isBot)
+                _StatusChip(
+                  detailAsync: detailAsync,
+                  jobSeekAsync: jobSeekAsync,
+                ),
+              if (isBot) _BotInfoSection(bot: bot),
               const SizedBox(height: AppSpacing.s),
               ProfileStatistics(
                 userId: userId,
@@ -196,6 +209,9 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                 ),
                 child: isSelf
                     ? _SelfEditCta(onTap: () => ProfileEditSheet.show(context))
+                    // Bot: takip/mesaj gibi kullanıcı aksiyonları yok.
+                    : isBot
+                    ? const _BotProfileNote()
                     : Row(
                         children: [
                           Expanded(child: FollowButton(userId: userId)),
@@ -491,6 +507,103 @@ class _AccountTypeBadge extends StatelessWidget {
         );
       },
       orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+// ── FırınNet Akademi bot profili ──────────────────────────────────
+
+/// Bot profilinde takip/mesaj yerine sade AI içerik notu.
+class _BotProfileNote extends StatelessWidget {
+  const _BotProfileNote();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('profile_bot_note'),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.softGold.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(
+          color: AppColors.softGold.withValues(alpha: 0.34),
+          width: 0.7,
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome, size: 16, color: AppColors.softGold),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppStrings.academyBotProfileNote,
+              style: const TextStyle(
+                color: AppColors.softGold,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bot profilinde konu etiketi + bio (academy_bot_profiles).
+class _BotInfoSection extends StatelessWidget {
+  const _BotInfoSection({required this.bot});
+  final AcademyBotProfile bot;
+  @override
+  Widget build(BuildContext context) {
+    final hasBio = bot.bio.trim().isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        AppSpacing.xs,
+        AppSpacing.pageH,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              key: const ValueKey('profile_bot_topic'),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.copper.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(
+                  color: AppColors.copper.withValues(alpha: 0.34),
+                  width: 0.6,
+                ),
+              ),
+              child: Text(
+                bot.topic.label,
+                style: const TextStyle(
+                  color: AppColors.copper,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11.5,
+                ),
+              ),
+            ),
+          ),
+          if (hasBio) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              bot.bio,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13.5,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

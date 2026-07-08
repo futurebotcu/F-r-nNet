@@ -29,6 +29,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/tag_chip.dart';
+import '../../academy/providers/academy_providers.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/feed_post.dart';
@@ -317,6 +318,12 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
     // render edilir. Tek post'ta image OR video (V3'te kombo).
     final videoUrl = post.firstVideo?.publicUrl;
     final isOwner = _isOwner();
+    // FırınNet Akademi: post sahibi görünür bir bot ise "AI destekli içerik
+    // hesabı" etiketi. Bot tespiti public academy_bot_profiles setinden
+    // (profiles owner-only olduğu için join edilmez).
+    final isBot =
+        ref.watch(academyBotIdsProvider).asData?.value.contains(post.ownerId) ??
+        false;
     return Container(
       margin: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
@@ -338,12 +345,15 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
           // Repost surfacing — "🔁 <Ad> yeniden paylaştı" attribution satırı.
           if (post.isRepostEntry)
             _RepostAttribution(
-              name: post.repostedByName ?? AppStrings.feedRepostAttributionFallback,
+              name:
+                  post.repostedByName ??
+                  AppStrings.feedRepostAttributionFallback,
             ),
           _Header(
             post: post,
             timeAgo: _timeAgo(post.createdAt),
             isOwner: isOwner,
+            isBot: isBot,
             onAuthorTap: _onAuthorTap,
             onDelete: isOwner ? _onDeleteTap : null,
             onEdit: isOwner
@@ -356,16 +366,15 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             onReport: (isOwner || post.ownerId.isEmpty)
                 ? null
                 : () => showReportSheet(
-                      context,
-                      ref,
-                      targetType: ReportTargetType.feedPost,
-                      targetId: post.id,
-                      reportedUserId: post.ownerId,
-                    ),
+                    context,
+                    ref,
+                    targetType: ReportTargetType.feedPost,
+                    targetId: post.id,
+                    reportedUserId: post.ownerId,
+                  ),
             onBlock: (isOwner || post.ownerId.isEmpty)
                 ? null
-                : () =>
-                    confirmAndBlockUser(context, ref, userId: post.ownerId),
+                : () => confirmAndBlockUser(context, ref, userId: post.ownerId),
           ),
           // Twitter/X: kart gövdesine (metin + etiket + görsel) dokunmak
           // detay sayfasını açar. Action ikonları kendi InkWell'leriyle bu
@@ -467,11 +476,15 @@ class _Header extends StatelessWidget {
     required this.onGoToGroup,
     required this.onReport,
     required this.onBlock,
+    this.isBot = false,
   });
 
   final FeedPost post;
   final String timeAgo;
   final bool isOwner;
+
+  /// Post sahibi görünür bir FırınNet Akademi botu mu (AI etiketi için).
+  final bool isBot;
   final VoidCallback onAuthorTap;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
@@ -553,8 +566,54 @@ class _Header extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // FırınNet Akademi bot → "AI destekli içerik hesabı" etiketi
+                    // (yanıltıcı rol rozeti yerine). Aksi halde rol rozeti.
+                    if (isBot) ...[
+                      Flexible(
+                        child: Container(
+                          key: const ValueKey('feed_academy_bot_badge'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.softGold.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                            border: Border.all(
+                              color: AppColors.softGold.withValues(alpha: 0.4),
+                              width: 0.6,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.auto_awesome,
+                                size: 11,
+                                color: AppColors.softGold,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  AppStrings.academyBotContentLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.softGold,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ]
                     // Feed Premium Sprint - rol rozeti: sade lemon pale pill.
-                    if (post.role.isNotEmpty) ...[
+                    else if (post.role.isNotEmpty) ...[
                       Flexible(
                         child: Container(
                           padding: const EdgeInsets.symmetric(
