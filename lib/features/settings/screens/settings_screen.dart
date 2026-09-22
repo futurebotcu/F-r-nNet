@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -145,7 +147,11 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsTile(
                       icon: Icons.privacy_tip_outlined,
                       title: AppStrings.settingsPrivacy,
-                      onTap: () => context.push(AppRoutes.legalPrivacy),
+                      onTap: () => _openExternalOrFallback(
+                        context,
+                        AppConfig.privacyPolicyUrl,
+                        AppRoutes.legalPrivacy,
+                      ),
                     ),
                     const _TileDivider(),
                     SettingsTile(
@@ -165,8 +171,11 @@ class SettingsScreen extends ConsumerWidget {
                       icon: Icons.auto_delete_outlined,
                       title: AppStrings.settingsAccountDeletion,
                       subtitle: AppStrings.settingsAccountDeletionSubtitle,
-                      onTap: () =>
-                          context.push(AppRoutes.legalAccountDeletion),
+                      onTap: () => _openExternalOrFallback(
+                        context,
+                        AppConfig.accountDeletionUrl,
+                        AppRoutes.legalAccountDeletion,
+                      ),
                     ),
                   ],
                 ),
@@ -204,6 +213,23 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Future<void> _openExternalOrFallback(
+  BuildContext context,
+  String url,
+  String fallbackRoute,
+) async {
+  try {
+    final ok = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (ok) return;
+  } catch (_) {
+    // Fall through to the in-app legal screen.
+  }
+  if (context.mounted) context.push(fallbackRoute);
 }
 
 class _TileDivider extends StatelessWidget {

@@ -13,14 +13,12 @@
     --text-soft: #5a4636;
     --text-muted: #806b58;
     --heading: #4a2e1a;
-    --accent: #b07b3b;
+    --accent: #9f6b2f;
     --accent-soft: #d8b783;
     --border: #d8c7a8;
     --rule: #e8dcc4;
   }
-
   * { box-sizing: border-box; }
-
   html, body {
     margin: 0;
     padding: 0;
@@ -30,22 +28,9 @@
       "Helvetica Neue", Arial, sans-serif;
     font-size: 16px;
     line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
-
-  .page {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 32px 20px 64px;
-  }
-
-  header.hero {
-    border-bottom: 1px solid var(--rule);
-    padding-bottom: 28px;
-    margin-bottom: 36px;
-  }
-
+  .page { max-width: 900px; margin: 0 auto; padding: 32px 20px 64px; }
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 28px; margin-bottom: 34px; }
   .badge {
     display: inline-block;
     padding: 4px 10px;
@@ -53,256 +38,169 @@
     color: var(--heading);
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 1.4px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
     border-radius: 4px;
     margin-bottom: 14px;
   }
-
-  h1 {
-    color: var(--heading);
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-    margin: 0 0 10px;
-    line-height: 1.2;
-  }
-
-  .updated {
-    color: var(--text-muted);
-    font-size: 13.5px;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  h2 {
-    color: var(--heading);
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.2px;
-    margin: 36px 0 12px;
-    line-height: 1.3;
-  }
-
-  h2 .num {
-    display: inline-block;
-    color: var(--accent);
-    font-size: 18px;
-    font-weight: 800;
-    margin-right: 10px;
-    min-width: 28px;
-  }
-
-  h3 {
-    color: var(--text-soft);
-    font-size: 16.5px;
-    font-weight: 700;
-    margin: 22px 0 8px;
-  }
-
-  p {
-    margin: 0 0 14px;
-    color: var(--text-soft);
-  }
-
-  ul {
-    margin: 0 0 16px;
-    padding-left: 22px;
-    color: var(--text-soft);
-  }
-
-  ul li {
-    margin-bottom: 6px;
-  }
-
-  ul li strong {
-    color: var(--heading);
-    font-weight: 700;
-  }
-
-  a {
-    color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  a:hover {
-    color: var(--heading);
-  }
-
+  h1 { color: var(--heading); font-size: 32px; line-height: 1.2; margin: 0 0 10px; }
+  h2 { color: var(--heading); font-size: 22px; line-height: 1.3; margin: 34px 0 12px; }
+  h3 { color: var(--heading); font-size: 17px; margin: 20px 0 8px; }
+  p, li { color: var(--text-soft); }
+  ul { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+  a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+  .updated { color: var(--text-muted); font-size: 13.5px; font-weight: 600; margin: 0; }
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px 22px;
-    margin: 18px 0;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 16px 0;
   }
-
-  .card p:last-child { margin-bottom: 0; }
-
-  footer.foot {
-    margin-top: 56px;
-    padding-top: 22px;
-    border-top: 1px solid var(--rule);
-    color: var(--text-muted);
-    font-size: 13px;
-    text-align: center;
-  }
-
-  /* Mobile fine-tuning */
+  footer { margin-top: 52px; padding-top: 22px; border-top: 1px solid var(--rule); color: var(--text-muted); font-size: 13px; text-align: center; }
   @media (max-width: 540px) {
     .page { padding: 24px 16px 48px; }
     h1 { font-size: 26px; }
-    h2 { font-size: 19px; margin-top: 30px; }
-    h2 .num { font-size: 16px; }
+    h2 { font-size: 19px; }
     body { font-size: 15.5px; }
   }
 </style>
 </head>
 <body>
 <main class="page">
-
-  <header class="hero">
+  <header>
     <span class="badge">Gizlilik Politikası</span>
     <h1>FırınNet Gizlilik Politikası</h1>
-    <p class="updated">Son güncelleme: 17 Mayıs 2026</p>
+    <p class="updated">Son güncelleme: 22 Eylül 2026</p>
   </header>
 
-  <h2><span class="num">1.</span>Giriş</h2>
   <p>
-    FırınNet; fırıncılar, ustalar ve toptancılar için iş, reçete ve paylaşım
-    ağıdır. Bu politika, FırınNet uygulamasını ve ilgili hizmetleri kullanırken
-    hangi bilgilerin toplandığını, nasıl işlendiğini, kimlerle paylaşıldığını
-    ve haklarınızın neler olduğunu açıklar.
+    Bu politika, <strong>FırınNet</strong> mobil uygulamasını kullanırken hangi
+    verilerin işlenebileceğini, bu verilerin neden kullanıldığını, kimlerle
+    paylaşılabileceğini ve hesap/veri silme haklarınızı açıklar.
   </p>
 
-  <h2><span class="num">2.</span>Topladığımız bilgiler</h2>
-  <p>
-    Hizmeti sunabilmek için aşağıdaki bilgileri toplarız:
-  </p>
+  <h2>1. Toplanabilecek veriler</h2>
   <ul>
-    <li><strong>Hesap bilgileri:</strong> E-posta adresi, kullanıcı adı,
-      rol/profil türü (Ticari, Bireysel, Toptancı).</li>
-    <li><strong>Profil bilgileri:</strong> Şehir, meslek rozeti, işletme veya
-      profil bilgisi olarak girdiğin metinler.</li>
-    <li><strong>Kullanıcı içerikleri:</strong> Akış gönderileri, yorumlar, grup
-      üyelikleri, grup ve birebir mesajlar.</li>
-    <li><strong>İşletme modülü verileri:</strong> Bayi/müşteri kayıtları, reçete
-      ve üretim girişleri, teslimat, ödeme, iade, fire ve not kayıtları.</li>
-    <li><strong>Cihaz ve teknik bilgiler:</strong> Oturum bilgileri, hata
-      kayıtları ve güvenlik denetimi için gereken minimum teknik bilgiler.</li>
+    <li><strong>Kimlik doğrulama ve hesap bilgileri:</strong> Supabase Auth
+      üzerinden e-posta adresi, kullanıcı id'si, oturum bilgisi ve giriş yöntemi.
+      Google ile giriş kullanıldığında Google hesabından temel profil/e-posta
+      bilgileri alınabilir. Google şifreniz FırınNet ile paylaşılmaz.</li>
+    <li><strong>Profil bilgileri:</strong> görünen ad, hesap türü, şehir, meslek
+      rozeti, FırınNet ID, avatar ve kullanıcı tarafından girilen profil metinleri.</li>
+    <li><strong>İşletme ve kullanıcı içerikleri:</strong> fırın/panel kayıtları,
+      üretim, fire, reçete, bayi/müşteri, teslimat, ödeme, iade, not, ilan,
+      pazar/B2B içerikleri, gönderi, yorum, beğeni, kaydetme, grup, mesaj ve
+      başvuru gibi uygulamaya kullanıcı tarafından girilen içerikler.</li>
+    <li><strong>Medya dosyaları:</strong> kullanıcı isteğiyle yüklenen avatar,
+      gönderi, hikaye, ilan, mağaza/ürün/kampanya ve mesaj görselleri veya
+      videoları. Galeri/kamera yalnız bu işlem için kullanılır.</li>
+    <li><strong>Bildirim verileri:</strong> uygulama içi bildirimler ve kullanıcı
+      izin verirse cihaz push tokenı. Bu token, bildirim göndermek ve çıkışta
+      pasifleştirmek için saklanır.</li>
+    <li><strong>Ödeme/abonelik verileri:</strong> uygulama içi satın alma veya
+      abonelik kullanıldığında RevenueCat ve mağaza sağlayıcıları üzerinden
+      işlem/abonelik durumu; tam kart bilgisi FırınNet tarafından alınmaz.</li>
+    <li><strong>Teknik veriler:</strong> oturum güvenliği, hata ayıklama ve
+      kararlılık için gerekli sınırlı cihaz/uygulama tanılama verileri. Firebase
+      Crashlytics kullanıcı kimliği bağlamadan crash raporu toplayabilir.</li>
+    <li><strong>Yerel cihaz verileri:</strong> misafir modu ve benzeri uygulama
+      tercihleri cihazda SharedPreferences/yerel saklama ile tutulabilir.</li>
   </ul>
 
-  <h2><span class="num">3.</span>Bilgileri nasıl kullanıyoruz?</h2>
-  <p>
-    Toplanan bilgileri yalnızca aşağıdaki amaçlar için kullanırız:
-  </p>
+  <h2>2. Verilerin kullanım amaçları</h2>
   <ul>
-    <li>Hesap oluşturma, giriş ve oturum yönetimi.</li>
-    <li>Sosyal akış ve grupların çalıştırılması; içeriklerin diğer kullanıcılara
-      doğru sırada ve doğru kapsamda gösterilmesi.</li>
-    <li>Fırın paneli, bayi yönetimi, reçete kütüphanesi ve iş ilanı modüllerinin
-      işletilmesi.</li>
-    <li>Güvenliğin sağlanması ve kötüye kullanım girişimlerinin önlenmesi.</li>
-    <li>Destek talebine yanıt verilmesi ve hesap silme taleplerinin
-      işlenmesi.</li>
+    <li>Hesap oluşturma, giriş, oturum yönetimi ve güvenli kimlik doğrulama.</li>
+    <li>Profil, sosyal akış, gruplar, mesajlaşma, ilanlar, pazar/B2B ve fırın
+      paneli özelliklerinin çalıştırılması.</li>
+    <li>Kullanıcının kendi işletme kayıtlarını ve içeriklerini saklama, listeleme,
+      düzenleme ve silme.</li>
+    <li>Uygulama içi ve cihaz bildirimlerini göndermek.</li>
+    <li>Satın alma/abonelik haklarını doğrulamak ve uygulamak.</li>
+    <li>Güvenlik, kötüye kullanım önleme, hata çözümü, destek ve hesap silme
+      taleplerini yönetmek.</li>
   </ul>
 
-  <h2><span class="num">4.</span>Üçüncü taraf servisler</h2>
-  <p>
-    FırınNet, hizmeti sunabilmek için sınırlı sayıda altyapı hizmetinden
-    yararlanır:
-  </p>
+  <h2>3. Kullanılan üçüncü taraf servisler</h2>
   <ul>
-    <li><strong>Supabase:</strong> Kimlik doğrulama, veritabanı ve sunucu
-      tarafı işlemler (edge function) için kullanılır.</li>
-    <li><strong>Google ile Giriş:</strong> Kullanıcı tercih ederse Google
-      hesabıyla oturum açabilir; Google'dan e-posta ve görünür ad bilgisi
-      alınır.</li>
-    <li><strong>E-posta servisleri:</strong> Hesap doğrulama ve gerekli sistem
-      bildirimleri için.</li>
-  </ul>
-  <p>
-    Bu servislerle paylaşılan bilgiler yalnızca hizmetin işletilmesi için
-    gerekli olanlardır.
-  </p>
-
-  <h2><span class="num">5.</span>Kullanıcı içerikleri ve görünürlük</h2>
-  <ul>
-    <li>Akışta paylaştığın gönderiler, yorumlar ve grup mesajları, kapsamlarına
-      göre diğer kullanıcılar tarafından görülebilir.</li>
-    <li>Özel işletme kayıtların (bayi, reçete, üretim, ödeme/iade vb.)
-      yalnızca senin hesabınla ilişkilidir ve diğer kullanıcılara
-      gösterilmez.</li>
-    <li>Açık/genel paylaşım için işaretlediğin reçeteler diğer kullanıcılar
-      tarafından görülebilir.</li>
+    <li><strong>Supabase:</strong> kimlik doğrulama, veritabanı, storage ve Edge
+      Function altyapısı.</li>
+    <li><strong>Google ile giriş:</strong> kullanıcı seçerse OAuth kimlik
+      doğrulama.</li>
+    <li><strong>Firebase Cloud Messaging:</strong> izin verilen cihazlara push
+      bildirimleri.</li>
+    <li><strong>Firebase Crashlytics:</strong> uygulama çökme raporları ve teknik
+      kararlılık verileri.</li>
+    <li><strong>RevenueCat:</strong> uygulama içi satın alma ve abonelik
+      doğrulama.</li>
+    <li><strong>Google Play / Apple App Store:</strong> mağaza ödeme ve dağıtım
+      altyapısı.</li>
   </ul>
 
-  <h2><span class="num">6.</span>Hesap silme</h2>
-  <ul>
-    <li>Hesabını uygulama içinden <strong>Ayarlar → Hesabımı sil</strong>
-      adımları ile silebilirsin. Onayladıktan sonra hesap ve ilişkili
-      kullanıcı verileri silinir.</li>
-    <li>Uygulamaya erişimin olmadığı durumlar için bu sayfada belirtilen
-      iletişim adresinden hesap silme talebinde bulunabilirsin; ayrıca
-      ayrı bir web silme talebi kanalı sağlanacaktır.</li>
-    <li>Yasal, teknik veya güvenlik gereklilikleri nedeniyle bazı kayıtların
-      sınırlı bir süre saklanması gerekebilir; bu kayıtlar kullanıcının aktif
-      profili olarak değil, denetim ve uyum amacıyla saklanır.</li>
-  </ul>
-
-  <h2><span class="num">7.</span>Veri güvenliği</h2>
+  <h2>4. Veri paylaşımı</h2>
   <p>
-    Verilerin güvenliği için endüstri standardı önlemler uygulanır: aktarımda
-    şifreleme, oturum yönetimi, sunucu tarafı satır düzeyinde erişim kuralları
-    (Row Level Security) ve hassas işlemler için sunucu tarafı kontroller.
-    Buna rağmen internet üzerinden iletilen hiçbir sistem mutlak güvenlik
-    garanti edemez; FırınNet sızıntı veya yetkisiz erişim durumunda gerekli
-    bildirim ve düzeltme adımlarını uygular.
+    Kişisel veriler reklam veya profil satışı amacıyla üçüncü taraflara
+    satılmaz. Veriler yalnız hizmetin çalışması için gerekli altyapı
+    sağlayıcılarıyla, kullanıcının seçtiği görünürlük kapsamında diğer
+    kullanıcılarla veya yasal zorunluluk halinde yetkili mercilerle paylaşılabilir.
   </p>
 
-  <h2><span class="num">8.</span>Çocukların gizliliği</h2>
+  <h2>5. İçerik görünürlüğü</h2>
   <p>
-    FırınNet 13 yaşın altındaki kullanıcılara yönelik bir hizmet değildir.
-    13 yaşın altındaki kişilerden bilinçli olarak kişisel bilgi toplamaz.
-    Bu yaşın altındaki bir kullanıcının kayıt olduğu tespit edilirse hesap
-    silinir.
+    Akış gönderileri, yorumlar, grup içerikleri, ilanlar ve B2B/pazar içerikleri
+    seçilen görünürlük ve ürün tasarımı kapsamında diğer kullanıcılara
+    gösterilebilir. Bayi, üretim, reçete, ödeme/iade, not ve benzeri işletme
+    kayıtları ilgili hesap ve yetki kapsamıyla sınırlıdır.
   </p>
 
-  <h2><span class="num">9.</span>Haklarınız</h2>
-  <ul>
-    <li>Hakkındaki bilgilere <strong>erişim</strong> talep edebilirsin.</li>
-    <li>Yanlış veya eksik bilgilerin <strong>düzeltilmesini</strong>
-      isteyebilirsin.</li>
-    <li>Hesabının ve ilişkili verilerin <strong>silinmesini</strong>
-      isteyebilirsin.</li>
-    <li>Veri işleme ile ilgili sorularını ve <strong>destek
-      taleplerini</strong> aşağıdaki iletişim adresine iletebilirsin.</li>
-  </ul>
+  <h2>6. Veri güvenliği</h2>
+  <p>
+    FırınNet, Supabase Row Level Security kuralları, doğrulanmış oturumlar,
+    server-side Edge Function kontrolleri, HTTPS aktarımı ve en az yetki ilkesi
+    ile verileri korumaya çalışır. Service role/admin anahtarları mobil
+    uygulamaya konmaz. Hiçbir internet tabanlı sistem mutlak güvenlik garantisi
+    veremez.
+  </p>
 
-  <h2><span class="num">10.</span>İletişim</h2>
+  <h2>7. Veri saklama ve silme</h2>
+  <p>
+    Hesap aktif olduğu sürece kullanıcıya bağlı veriler hizmeti sunmak için
+    saklanır. Hesap silindiğinde auth kullanıcısı, profil, kullanıcıya bağlı
+    uygulama kayıtları, push tokenları ve kullanıcı prefix'li storage dosyaları
+    server-side silme akışına alınır. Yasal, güvenlik, muhasebe veya ödeme
+    kayıt bütünlüğü nedeniyle saklanması gereken sınırlı kayıtlar yalnız gerekli
+    süre boyunca tutulabilir.
+  </p>
+
+  <h2>8. Hesap ve veri silme hakkı</h2>
+  <p>
+    Hesabınızı uygulama içinden <strong>Ayarlar → Hesabımı Sil</strong> adımıyla
+    başlatabilirsiniz. Uygulamaya erişiminiz yoksa web üzerinden silme talebi
+    başlatmak için
+    <a href="https://futurebotcu.github.io/F-r-nNet/account-deletion/">Hesap Silme</a>
+    sayfasını kullanabilirsiniz.
+  </p>
+
+  <h2>9. Çocukların gizliliği</h2>
+  <p>
+    FırınNet 13 yaş altındaki çocuklara yönelik değildir ve bu kişilerden
+    bilerek kişisel veri toplamaz.
+  </p>
+
+  <h2>10. İletişim</h2>
   <div class="card">
-    <p>
-      Gizlilik, veri işleme veya hesap silme ile ilgili her türlü talep ve
-      soru için bize şu adresten ulaşabilirsin:
-    </p>
-    <p>
-      <strong>E-posta:</strong>
-      <a href="mailto:fatihkartal75@gmail.com">fatihkartal75@gmail.com</a>
-    </p>
+    <p>Gizlilik, veri işleme veya hesap silme talepleri için:</p>
+    <p><strong>E-posta:</strong> <a href="mailto:fatihkartal75@gmail.com">fatihkartal75@gmail.com</a></p>
   </div>
 
-  <h2><span class="num">11.</span>Değişiklikler</h2>
+  <h2>11. Politika değişiklikleri</h2>
   <p>
-    Bu politika zaman zaman güncellenebilir. Güncellemelerde sayfa başındaki
-    "Son güncelleme" tarihi değiştirilir; önemli değişiklikler için
-    uygulama içinde veya e-posta yoluyla ek bilgilendirme yapılır.
+    Bu politika güncellenebilir. Değişiklik olduğunda bu sayfadaki “Son
+    güncelleme” tarihi yenilenir.
   </p>
 
-  <footer class="foot">
-    © 2026 FırınNet · Tüm hakları saklıdır
-  </footer>
-
+  <footer>© 2026 FırınNet · Tüm hakları saklıdır</footer>
 </main>
 </body>
 </html>

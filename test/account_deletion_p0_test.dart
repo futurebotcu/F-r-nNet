@@ -39,8 +39,9 @@ void main() {
     // Profile ekranları aynı dialog/dialog logic'i kullanır.
     late String src;
     setUpAll(() {
-      src = File('lib/features/auth/services/auth_actions.dart')
-          .readAsStringSync();
+      src = File(
+        'lib/features/auth/services/auth_actions.dart',
+      ).readAsStringSync();
     });
 
     test('public DeleteAccountConfirmDialog tanımlı', () {
@@ -93,10 +94,7 @@ void main() {
       // cleanup (setGuest + clear) mounted guard ÖNCESİ tamamlanır.
       // Snackbar/go ise mounted check sonrasıdır.
       final idxDeleteAwait = src.indexOf('await auth.deleteAccount();');
-      final idxSetGuest = src.indexOf(
-        'setGuest(false)',
-        idxDeleteAwait,
-      );
+      final idxSetGuest = src.indexOf('setGuest(false)', idxDeleteAwait);
       final idxClear = src.indexOf(
         'profileControllerProvider.notifier).clear()',
         idxSetGuest,
@@ -109,46 +107,84 @@ void main() {
         'accountDeleteSuccessSnack',
         idxMountedAfterClear,
       );
-      final idxGo = src.indexOf(
-        'AppRoutes.authEntry',
-        idxSnack,
-      );
+      final idxGo = src.indexOf('AppRoutes.authEntry', idxSnack);
 
-      expect(idxDeleteAwait, greaterThan(-1),
-          reason: 'auth.deleteAccount() await edilmiş olmalı');
-      expect(idxSetGuest, greaterThan(idxDeleteAwait),
-          reason: 'setGuest(false) deleteAccount sonrası çağrılmalı');
-      expect(idxClear, greaterThan(idxSetGuest),
-          reason: 'profileController.clear() setGuest sonrası çağrılmalı');
-      expect(idxMountedAfterClear, greaterThan(idxClear),
-          reason: 'mounted guard clear() sonrası gelmeli (cleanup unconditional)');
-      expect(idxSnack, greaterThan(idxMountedAfterClear),
-          reason: 'success snackbar mounted guard sonrası fire etmeli');
-      expect(idxGo, greaterThan(idxSnack),
-          reason: 'authEntry route snackbar sonrası gelmeli');
+      expect(
+        idxDeleteAwait,
+        greaterThan(-1),
+        reason: 'auth.deleteAccount() await edilmiş olmalı',
+      );
+      expect(
+        idxSetGuest,
+        greaterThan(idxDeleteAwait),
+        reason: 'setGuest(false) deleteAccount sonrası çağrılmalı',
+      );
+      expect(
+        idxClear,
+        greaterThan(idxSetGuest),
+        reason: 'profileController.clear() setGuest sonrası çağrılmalı',
+      );
+      expect(
+        idxMountedAfterClear,
+        greaterThan(idxClear),
+        reason: 'mounted guard clear() sonrası gelmeli (cleanup unconditional)',
+      );
+      expect(
+        idxSnack,
+        greaterThan(idxMountedAfterClear),
+        reason: 'success snackbar mounted guard sonrası fire etmeli',
+      );
+      expect(
+        idxGo,
+        greaterThan(idxSnack),
+        reason: 'authEntry route snackbar sonrası gelmeli',
+      );
     });
   });
 
   group('SettingsScreen delete tile (source) — V1.4', () {
     late String src;
     setUpAll(() {
-      src = File('lib/features/settings/screens/settings_screen.dart')
-          .readAsStringSync();
+      src = File(
+        'lib/features/settings/screens/settings_screen.dart',
+      ).readAsStringSync();
     });
 
     test('Settings "Hesabımı sil" tile performDeleteAccount çağırır', () {
       expect(src.contains('AppStrings.settingsDeleteAccount'), isTrue);
       expect(src.contains('performDeleteAccount(context, ref)'), isTrue);
-      expect(src.contains('danger: true'), isTrue,
-          reason: 'Silme tile danger flag ile kırmızı tonda gösterilmeli');
+      expect(
+        src.contains('danger: true'),
+        isTrue,
+        reason: 'Silme tile danger flag ile kırmızı tonda gösterilmeli',
+      );
+    });
+  });
+
+  group('SettingsScreen legal URL tile (source)', () {
+    late String src;
+    setUpAll(() {
+      src = File(
+        'lib/features/settings/screens/settings_screen.dart',
+      ).readAsStringSync();
+    });
+
+    test('Settings privacy tile opens hosted URL constant', () {
+      expect(src.contains('AppConfig.privacyPolicyUrl'), isTrue);
+      expect(src.contains('AppConfig.accountDeletionUrl'), isTrue);
+      expect(src.contains('launchUrl('), isTrue);
+      expect(src.contains('LaunchMode.externalApplication'), isTrue);
+      expect(src.contains('AppRoutes.legalPrivacy'), isTrue);
+      expect(src.contains('AppRoutes.legalAccountDeletion'), isTrue);
     });
   });
 
   group('delete-account Edge Function (source)', () {
     late String src;
     setUpAll(() {
-      src = File('supabase/functions/delete-account/index.ts')
-          .readAsStringSync();
+      src = File(
+        'supabase/functions/delete-account/index.ts',
+      ).readAsStringSync();
     });
 
     test('service_role yalnız Deno.env.get üzerinden okunur', () {
@@ -159,8 +195,11 @@ void main() {
       );
       // Hardcoded JWT format'ı (eyJ...) kontrol — function'da olmamalı.
       final hasHardcodedJwt = RegExp(r'eyJ[A-Za-z0-9_-]{20,}').hasMatch(src);
-      expect(hasHardcodedJwt, isFalse,
-          reason: 'Function source\'unda hardcoded JWT olmamalı');
+      expect(
+        hasHardcodedJwt,
+        isFalse,
+        reason: 'Function source\'unda hardcoded JWT olmamalı',
+      );
     });
 
     test('caller JWT zorunlu (Authorization Bearer)', () {
@@ -183,10 +222,59 @@ void main() {
       expect(src.contains('searchParams.get'), isFalse);
     });
 
+    test('storage files are cleaned server-side best-effort', () {
+      expect(src.contains('removeUserStorage(adminClient, callerId)'), isTrue);
+      expect(src.contains("'avatars'"), isTrue);
+      expect(src.contains("'feed-media'"), isTrue);
+      expect(src.contains("'market-media'"), isTrue);
+      expect(src.contains("'story-media'"), isTrue);
+      expect(src.contains("'chat-media'"), isTrue);
+      expect(src.contains('adminClient.storage.from(bucket).remove'), isTrue);
+    });
+
     test('verify_jwt + service_role server-side disiplini', () {
       // Caller JWT ayrı bir client'la doğrulanıyor; admin client ayrı.
       expect(src.contains('auth.getUser'), isTrue);
       expect(src.contains('createClient'), isTrue);
+    });
+  });
+
+  group('Hosted legal URLs', () {
+    late String config;
+    late String privacy;
+    late String deletion;
+    setUpAll(() {
+      config = File('lib/core/config/app_config.dart').readAsStringSync();
+      privacy = File('docs/privacy/index.html').readAsStringSync();
+      deletion = File('docs/account-deletion/index.html').readAsStringSync();
+    });
+
+    test('URL constants are defined in one config', () {
+      expect(config.contains('privacyPolicyUrl'), isTrue);
+      expect(config.contains('accountDeletionUrl'), isTrue);
+      expect(
+        config.contains('https://futurebotcu.github.io/F-r-nNet/privacy/'),
+        isTrue,
+      );
+      expect(
+        config.contains(
+          'https://futurebotcu.github.io/F-r-nNet/account-deletion/',
+        ),
+        isTrue,
+      );
+    });
+
+    test('GitHub Pages path files include Google Play content', () {
+      expect(privacy.contains('Gizlilik Politik'), isTrue);
+      expect(privacy.contains('Supabase'), isTrue);
+      expect(privacy.contains('Firebase Cloud Messaging'), isTrue);
+      expect(privacy.contains('RevenueCat'), isTrue);
+      expect(privacy.contains('22 Eyl'), isTrue);
+
+      expect(deletion.contains('Hesap Silme'), isTrue);
+      expect(deletion.contains('mailto:'), isTrue);
+      expect(deletion.contains('HESABIMI'), isTrue);
+      expect(deletion.contains('service role/admin'), isTrue);
     });
   });
 
@@ -203,8 +291,11 @@ void main() {
       final jwtPattern = RegExp(r'eyJ[A-Za-z0-9_-]{40,}\.[A-Za-z0-9_-]+');
       for (final f in files) {
         final content = f.readAsStringSync();
-        expect(jwtPattern.hasMatch(content), isFalse,
-            reason: '${f.path} icinde hardcoded JWT format string olmamali');
+        expect(
+          jwtPattern.hasMatch(content),
+          isFalse,
+          reason: '${f.path} icinde hardcoded JWT format string olmamali',
+        );
       }
     });
 
@@ -219,12 +310,16 @@ void main() {
         final content = f.readAsStringSync();
         // Authorization header'da service role tipi bir literal pattern
         // gerçek kullanım göstergesidir; yorumlarda geçmez.
-        expect(content.contains('"Authorization": "Bearer service_role'),
-            isFalse,
-            reason: '${f.path} icinde Bearer service_role literal olmamali');
-        expect(content.contains("'Authorization': 'Bearer service_role"),
-            isFalse,
-            reason: '${f.path} icinde Bearer service_role literal olmamali');
+        expect(
+          content.contains('"Authorization": "Bearer service_role'),
+          isFalse,
+          reason: '${f.path} icinde Bearer service_role literal olmamali',
+        );
+        expect(
+          content.contains("'Authorization': 'Bearer service_role"),
+          isFalse,
+          reason: '${f.path} icinde Bearer service_role literal olmamali',
+        );
       }
     });
   });

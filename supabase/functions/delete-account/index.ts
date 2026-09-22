@@ -47,6 +47,84 @@ function jsonResponse(payload: unknown, status: number): Response {
   });
 }
 
+async function removeStoragePrefix(
+  adminClient: ReturnType<typeof createClient>,
+  bucket: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedPrefix = prefix.replace(/^\/+|\/+$/g, '');
+  const pending: string[] = [normalizedPrefix];
+
+  while (pending.length > 0) {
+    const current = pending.pop()!;
+    let data;
+    try {
+      const res = await adminClient.storage.from(bucket).list(current, {
+        limit: 1000,
+      });
+      if (res.error || !res.data) continue;
+      data = res.data;
+    } catch (_e) {
+      continue;
+    }
+
+    const files: string[] = [];
+    for (const item of data) {
+      const path = current ? `${current}/${item.name}` : item.name;
+      if (item.id) {
+        files.push(path);
+      } else {
+        pending.push(path);
+      }
+    }
+    if (files.length > 0) {
+      try {
+        await adminClient.storage.from(bucket).remove(files);
+      } catch (_e) {
+        // Best-effort storage cleanup; account deletion must not leak errors.
+      }
+    }
+  }
+}
+
+async function removeUserStorage(
+  adminClient: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<void> {
+  const userPrefixBuckets = [
+    'avatars',
+    'feed-media',
+    'market-media',
+    'story-media',
+  ];
+
+  for (const bucket of userPrefixBuckets) {
+    await removeStoragePrefix(adminClient, bucket, userId);
+  }
+
+  // chat-media paths:
+  //   conversations/{conversationId}/{ownerId}/...
+  //   groups/{groupId}/{ownerId}/...
+  for (const scope of ['conversations', 'groups']) {
+    let data;
+    try {
+      const res = await adminClient.storage.from('chat-media').list(scope, {
+        limit: 1000,
+      });
+      data = res.data;
+    } catch (_e) {
+      continue;
+    }
+    for (const item of data ?? []) {
+      await removeStoragePrefix(
+        adminClient,
+        'chat-media',
+        `${scope}/${item.name}/${userId}`,
+      );
+    }
+  }
+}
+
 Deno.serve(async (req: Request) => {
   // CORS preflight
   if (req.method === 'OPTIONS') {
@@ -99,6 +177,8 @@ Deno.serve(async (req: Request) => {
   const adminClient = createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  await removeUserStorage(adminClient, callerId);
 
   const { error: deleteErr } = await adminClient.auth.admin.deleteUser(callerId);
   if (deleteErr) {

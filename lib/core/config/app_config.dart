@@ -29,6 +29,16 @@ class AppConfig {
   /// Manuel setup gereksinimleri için bkz. GOOGLE_APPLE_AUTH_V1_REPORT.md.
   static const String authRedirectUrl = 'firinnet://auth-callback';
 
+  /// Google Play / GitHub Pages legal URLs.
+  ///
+  /// Özel domain'e geçmeden, Pages `docs/` köküyle servis edilen mevcut
+  /// adresler kullanılır. Uygulama içindeki dış legal linkler bu tek noktadan
+  /// yönetilir.
+  static const String privacyPolicyUrl =
+      'https://futurebotcu.github.io/F-r-nNet/privacy/';
+  static const String accountDeletionUrl =
+      'https://futurebotcu.github.io/F-r-nNet/account-deletion/';
+
   // ── RevenueCat (Store Billing) public SDK anahtarları ──
   // Public SDK key oldukları için client'ta dart-define ile okunur. Anahtar
   // yoksa [storePaymentsEnabled] false → ödeme butonları "hazırlanıyor"
