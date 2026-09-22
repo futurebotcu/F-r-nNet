@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<title>FırınNet Hesap Silme Talebi</title>
+<title>FırınNet Hesap Silme</title>
 <style>
   :root {
     --bg: #faf3e3;
@@ -13,16 +13,14 @@
     --text-soft: #5a4636;
     --text-muted: #806b58;
     --heading: #4a2e1a;
-    --accent: #b07b3b;
+    --accent: #9f6b2f;
     --accent-soft: #d8b783;
     --border: #d8c7a8;
     --rule: #e8dcc4;
     --warn-bg: #fbeed7;
     --warn-border: #e2b97a;
   }
-
   * { box-sizing: border-box; }
-
   html, body {
     margin: 0;
     padding: 0;
@@ -32,22 +30,9 @@
       "Helvetica Neue", Arial, sans-serif;
     font-size: 16px;
     line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
-
-  .page {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 32px 20px 64px;
-  }
-
-  header.hero {
-    border-bottom: 1px solid var(--rule);
-    padding-bottom: 28px;
-    margin-bottom: 36px;
-  }
-
+  .page { max-width: 900px; margin: 0 auto; padding: 32px 20px 64px; }
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 28px; margin-bottom: 34px; }
   .badge {
     display: inline-block;
     padding: 4px 10px;
@@ -55,269 +40,151 @@
     color: var(--heading);
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 1.4px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
     border-radius: 4px;
     margin-bottom: 14px;
   }
-
-  h1 {
-    color: var(--heading);
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-    margin: 0 0 10px;
-    line-height: 1.2;
-  }
-
-  .updated {
-    color: var(--text-muted);
-    font-size: 13.5px;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  h2 {
-    color: var(--heading);
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.2px;
-    margin: 36px 0 12px;
-    line-height: 1.3;
-  }
-
-  h2 .num {
-    display: inline-block;
-    color: var(--accent);
-    font-size: 18px;
-    font-weight: 800;
-    margin-right: 10px;
-    min-width: 28px;
-  }
-
-  h3 {
-    color: var(--text-soft);
-    font-size: 16.5px;
-    font-weight: 700;
-    margin: 22px 0 8px;
-  }
-
-  p {
-    margin: 0 0 14px;
-    color: var(--text-soft);
-  }
-
-  ul, ol {
-    margin: 0 0 16px;
-    padding-left: 22px;
-    color: var(--text-soft);
-  }
-
-  ul li, ol li {
-    margin-bottom: 6px;
-  }
-
-  ul li strong, ol li strong {
-    color: var(--heading);
-    font-weight: 700;
-  }
-
-  a {
-    color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    word-break: break-word;
-  }
-
-  a:hover {
-    color: var(--heading);
-  }
-
+  h1 { color: var(--heading); font-size: 32px; line-height: 1.2; margin: 0 0 10px; }
+  h2 { color: var(--heading); font-size: 22px; line-height: 1.3; margin: 34px 0 12px; }
+  p, li { color: var(--text-soft); }
+  ol, ul { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+  a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+  .updated { color: var(--text-muted); font-size: 13.5px; font-weight: 600; margin: 0; }
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px 22px;
-    margin: 18px 0;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 16px 0;
   }
-
-  .card p:last-child { margin-bottom: 0; }
-
   .warn {
     background: var(--warn-bg);
     border: 1px solid var(--warn-border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    margin: 18px 0;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 16px 0;
   }
-
-  .warn p {
-    color: var(--heading);
-    margin-bottom: 0;
-  }
-
-  .warn strong {
-    color: var(--heading);
+  .button {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
     font-weight: 800;
   }
-
-  .field {
-    display: block;
-    margin: 6px 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      Consolas, monospace;
-    font-size: 14.5px;
-    color: var(--heading);
-  }
-
-  .field-label {
-    color: var(--text-muted);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 2px;
-  }
-
-  footer.foot {
-    margin-top: 56px;
-    padding-top: 22px;
-    border-top: 1px solid var(--rule);
-    color: var(--text-muted);
-    font-size: 13px;
-    text-align: center;
-  }
-
-  footer.foot a {
-    color: var(--text-muted);
-  }
-
+  .field { display: block; margin: 4px 0 10px; font-family: Consolas, monospace; color: var(--heading); }
+  footer { margin-top: 52px; padding-top: 22px; border-top: 1px solid var(--rule); color: var(--text-muted); font-size: 13px; text-align: center; }
   @media (max-width: 540px) {
     .page { padding: 24px 16px 48px; }
     h1 { font-size: 26px; }
-    h2 { font-size: 19px; margin-top: 30px; }
-    h2 .num { font-size: 16px; }
+    h2 { font-size: 19px; }
     body { font-size: 15.5px; }
   }
 </style>
 </head>
 <body>
 <main class="page">
-
-  <header class="hero">
+  <header>
     <span class="badge">Hesap Silme</span>
-    <h1>FırınNet Hesap Silme Talebi</h1>
-    <p class="updated">Son güncelleme: 17 Mayıs 2026</p>
+    <h1>FırınNet Hesap Silme</h1>
+    <p class="updated">Son güncelleme: 22 Eylül 2026</p>
   </header>
 
-  <h2><span class="num">1.</span>Hesabınızı silme</h2>
   <p>
-    FırınNet hesabınızı uygulama içinden silebilirsiniz. Hesap silme işlemi,
-    hesabınızla ilişkili profil ve uygulama verilerinin silinmesini başlatır.
-    Uygulamaya erişiminiz yoksa veya silme işlemini uygulama içinden
-    tamamlayamıyorsanız, bu sayfadaki e-posta kanalıyla da talepte
-    bulunabilirsiniz.
+    Bu sayfa, FırınNet hesabınızı ve ilişkili kişisel verilerinizi nasıl
+    silebileceğinizi açıklar. Hesap silme uygulama içinden doğrudan
+    başlatılabilir; uygulamaya erişiminiz yoksa bu sayfadaki e-posta kanalıyla
+    silme talebi başlatabilirsiniz.
   </p>
 
-  <h2><span class="num">2.</span>Uygulama içinden hesap silme adımları</h2>
+  <h2>1. Uygulama içinden hesap silme</h2>
   <ol>
-    <li>FırınNet uygulamasını açın.</li>
-    <li>Profil veya Ayarlar ekranına gidin.</li>
-    <li><strong>Hesabımı sil</strong> seçeneğine dokunun.</li>
-    <li>Onay ekranında <strong>HESABIMI SİL</strong> ifadesini yazın.</li>
+    <li>FırınNet uygulamasını açın ve hesabınızla giriş yapın.</li>
+    <li><strong>Ayarlar</strong> ekranına gidin.</li>
+    <li><strong>Hesabımı Sil</strong> seçeneğine dokunun.</li>
+    <li>Güvenlik onayı için <strong>HESABIMI SİL</strong> ifadesini yazın.</li>
     <li>Silme işlemini onaylayın.</li>
   </ol>
   <p>
-    Onaylandıktan sonra hesap ve ilişkili kullanıcı verileri sunucu
-    tarafında silme akışına alınır ve uygulama oturumu kapatılır.
+    Uygulama içinden onaylandığında FırınNet, Supabase üzerinde çalışan
+    server-side <strong>delete-account</strong> akışını çağırır. Bu akış
+    kullanıcının oturum tokenını doğrular, yalnız çağıran kullanıcının hesabını
+    siler, ilişkili verileri cascade ile temizler ve mobil uygulamaya
+    service role/admin anahtarı koymaz.
   </p>
 
-  <h2><span class="num">3.</span>Uygulamaya erişemiyorsanız</h2>
+  <h2>2. Uygulamaya erişiminiz yoksa</h2>
   <p>
-    Uygulamaya erişemiyorsanız veya hesabınızı uygulama içinden
-    silemiyorsanız, hesap silme talebinizi e-posta ile iletebilirsiniz.
+    Uygulamaya erişemiyorsanız, hesabınızı kurtaramıyorsanız veya uygulama içi
+    silme işlemini tamamlayamıyorsanız aşağıdaki e-posta bağlantısıyla web
+    üzerinden hesap silme talebi başlatabilirsiniz.
   </p>
   <div class="card">
-    <span class="field-label">E-posta</span>
-    <span class="field"><a href="mailto:fatihkartal75@gmail.com">fatihkartal75@gmail.com</a></span>
-    <span class="field-label" style="margin-top:10px;">E-posta konusu</span>
+    <strong>E-posta:</strong>
+    <span class="field">fatihkartal75@gmail.com</span>
+    <strong>Konu:</strong>
     <span class="field">FırınNet Hesap Silme Talebi</span>
+    <a class="button" href="mailto:fatihkartal75@gmail.com?subject=F%C4%B1r%C4%B1nNet%20Hesap%20Silme%20Talebi&body=F%C4%B1r%C4%B1nNet%20hesab%C4%B1m%C4%B1n%20ve%20ili%C5%9Fkili%20verilerimin%20silinmesini%20istiyorum.%0A%0AHesap%20e-posta%20adresim%3A%20%0AF%C4%B1r%C4%B1nNet%20profil%20ad%C4%B1m%20(varsa)%3A%20%0AEk%20a%C3%A7%C4%B1klama%3A%20">Silme talebi e-postası gönder</a>
   </div>
-  <p><strong>E-postada şu bilgileri belirtin:</strong></p>
+
+  <h2>3. Talepte sağlamanız gereken bilgiler</h2>
   <ul>
-    <li>Hesabınızla ilişkili e-posta adresi.</li>
-    <li>FırınNet kullanıcı/profil adınız (varsa).</li>
-    <li>Talebiniz: <em>hesabımın ve ilişkili verilerimin silinmesini
-      istiyorum.</em></li>
+    <li>FırınNet hesabınızla ilişkili e-posta adresi.</li>
+    <li>Varsa FırınNet profil adınız veya FırınNet ID bilginiz.</li>
+    <li>Açık talep metni: “Hesabımın ve ilişkili verilerimin silinmesini istiyorum.”</li>
+  </ul>
+  <p>
+    Güvenlik nedeniyle talep, hesabın e-posta adresiyle eşleştirilmeye çalışılır.
+    Gerekirse ek doğrulama istenebilir. Yetkisiz veya tutarsız talepler
+    reddedilebilir.
+  </p>
+
+  <h2>4. Hesap silindiğinde silinen veriler</h2>
+  <ul>
+    <li>Supabase Auth kullanıcısı ve oturum bilgileri.</li>
+    <li>Profil bilgileri, e-posta, görünen ad, hesap türü, şehir, meslek rozeti,
+      avatar ve FırınNet ID.</li>
+    <li>Kullanıcıya bağlı fırın/panel, reçete, üretim, fire, bayi/müşteri,
+      teslimat, ödeme, iade, not ve görev kayıtları.</li>
+    <li>Kullanıcı tarafından oluşturulan gönderiler, yorumlar, hikayeler,
+      gruplar, mesajlar, ilanlar, pazar/B2B içerikleri ve başvurular.</li>
+    <li>Kullanıcının cihaz push tokenları ve notification delivery kayıtları.</li>
+    <li>Kullanıcı prefix'iyle yüklenmiş storage dosyaları: avatar, feed medya,
+      story medya, market/B2B medya ve chat medya dosyaları.</li>
   </ul>
 
-  <h2><span class="num">4.</span>Silinen veriler</h2>
+  <h2>5. Saklanabilecek sınırlı veriler</h2>
   <p>
-    Hesap silme onayından sonra şunların silinmesi hedeflenir:
-  </p>
-  <ul>
-    <li><strong>Hesap ve profil bilgileri:</strong> profil adı, e-posta,
-      rol/profil türü.</li>
-    <li><strong>Profil detayları:</strong> şehir, meslek rozeti, işletme/profil
-      bilgileri.</li>
-    <li><strong>Kullanıcıya bağlı sosyal içerikler:</strong> akış
-      gönderileri, yorumlar, grup üyelikleri, grup ve birebir mesajlar.</li>
-    <li><strong>Kullanıcıya bağlı işletme/panel kayıtları:</strong> bayi,
-      reçete, üretim, teslimat, ödeme, iade, fire ve not kayıtları.</li>
-  </ul>
-
-  <h2><span class="num">5.</span>Saklanabilecek sınırlı veriler</h2>
-  <p>
-    Güvenlik, kötüye kullanım önleme, yasal yükümlülükler veya teknik
-    kayıt bütünlüğü için bazı kayıtlar sınırlı bir süre saklanabilir. Bu
-    kayıtlar yalnızca gerekli olduğu ölçüde ve aktif kullanıcı profili
-    olarak değil, denetim/uyum amacıyla tutulur.
+    Yasal, güvenlik, kötüye kullanım önleme, muhasebe/ödeme kayıt bütünlüğü veya
+    mağaza abonelik/işlem doğrulama gereklilikleri nedeniyle bazı kayıtların
+    sınırlı süre tutulması gerekebilir. Bu kayıtlar aktif kullanıcı profili
+    olarak kullanılmaz ve yalnız gerekli amaçla saklanır.
   </p>
 
-  <h2><span class="num">6.</span>İşlem süresi</h2>
+  <h2>6. İşlem süresi</h2>
   <p>
-    Uygulama içinden başlatılan silme işlemi anında işlenir. E-posta ile
-    gelen talepler makul süre içinde incelenir. Kimlik doğrulaması
-    gerekirse sizinle aynı e-posta adresinden iletişime geçilir; tutarsız
-    veya yetkisiz görünen talepler güvenlik gereği reddedilebilir.
+    Uygulama içinden başlatılan silme işlemi doğrulama başarılıysa hemen
+    işlenir. E-posta ile gelen talepler makul süre içinde incelenir ve kimlik
+    doğrulama tamamlandıktan sonra işleme alınır.
   </p>
 
-  <h2><span class="num">7.</span>Önemli not</h2>
   <div class="warn">
-    <p>
-      <strong>Hesap silme işlemi geri alınamayabilir.</strong> Silinen
-      içerikler, kayıtlar ve mesajlar genellikle yeniden oluşturulamaz.
-      Silme işleminden önce gerekli bilgilerinizi dışa aktardığınızdan
-      veya yedeklediğinizden emin olun.
-    </p>
+    <strong>Önemli:</strong> Hesap silme işlemi geri alınamayabilir. Silinen
+    içerikler, kayıtlar, mesajlar ve dosyalar genellikle yeniden oluşturulamaz.
   </div>
 
-  <h2><span class="num">8.</span>İletişim</h2>
-  <div class="card">
-    <p>
-      Hesap silme talebi veya bu süreçle ilgili her türlü soru için bize
-      şu adresten ulaşabilirsiniz:
-    </p>
-    <p>
-      <strong>E-posta:</strong>
-      <a href="mailto:fatihkartal75@gmail.com">fatihkartal75@gmail.com</a>
-    </p>
-  </div>
-
-  <h2><span class="num">9.</span>Gizlilik Politikası</h2>
+  <h2>7. Gizlilik Politikası</h2>
   <p>
-    Verilerinizin nasıl toplandığı, kullanıldığı ve saklandığı hakkında
-    ayrıntılı bilgi için
-    <a href="https://futurebotcu.github.io/F-r-nNet/privacy/">FırınNet
-    Gizlilik Politikası</a> sayfasını inceleyebilirsiniz.
+    Verilerin nasıl işlendiğini görmek için
+    <a href="https://futurebotcu.github.io/F-r-nNet/privacy/">FırınNet Gizlilik Politikası</a>
+    sayfasını inceleyebilirsiniz.
   </p>
 
-  <footer class="foot">
-    © 2026 FırınNet ·
-    <a href="https://futurebotcu.github.io/F-r-nNet/privacy/">Gizlilik
-    Politikası</a>
-  </footer>
-
+  <footer>© 2026 FırınNet · <a href="https://futurebotcu.github.io/F-r-nNet/privacy/">Gizlilik Politikası</a></footer>
 </main>
 </body>
 </html>
