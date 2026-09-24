@@ -1038,13 +1038,89 @@ revoke execute on function public.republish_listing(text, uuid)
 grant execute on function public.republish_listing(text, uuid)
   to authenticated;
 
+-- ESKİ app sürümleri lansmanda ödeme başlatamasın: ilan ödemesi kapalıyken
+-- intent açmak server tarafında reddedilir. Eski app satın almayı ancak
+-- intent aldıktan sonra başlatır → bu guard 50 TL tahsilat yolunu tamamen
+-- kapatır. Gövde önceki tanımla birebir; yalnız guard eklendi.
+create or replace function public.create_listing_payment_intent(
+  p_listing_kind text,
+  p_listing_id uuid
+)
+returns table (intent_id uuid, product_id text, amount_cents integer)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_owner uuid;
+  v_fee_status text;
+  v_existing uuid;
+  v_new uuid;
+begin
+  if v_uid is null then raise exception 'auth required'; end if;
+  if not public.is_listing_payment_enabled() then
+    raise exception 'listing payments disabled';
+  end if;
+  if p_listing_kind not in ('job_offer', 'market') then
+    raise exception 'invalid listing kind';
+  end if;
+
+  if p_listing_kind = 'job_offer' then
+    select owner_id, fee_status into v_owner, v_fee_status
+    from public.job_offer_posts where id = p_listing_id;
+  else
+    select owner_id, fee_status into v_owner, v_fee_status
+    from public.market_listings where id = p_listing_id;
+  end if;
+
+  if v_owner is null then raise exception 'listing not found'; end if;
+  if v_owner <> v_uid then raise exception 'not listing owner'; end if;
+  if v_fee_status <> 'pending' then
+    raise exception 'listing not awaiting payment';
+  end if;
+
+  select id into v_existing from public.listing_payment_intents
+  where owner_id = v_uid and listing_id = p_listing_id and status = 'pending'
+  order by created_at desc limit 1;
+
+  if v_existing is not null then
+    return query select v_existing, 'firinnet_listing_fee_50'::text, 5000;
+    return;
+  end if;
+
+  insert into public.listing_payment_intents
+    (owner_id, listing_kind, listing_id)
+  values (v_uid, p_listing_kind, p_listing_id)
+  returning id into v_new;
+
+  return query select v_new, 'firinnet_listing_fee_50'::text, 5000;
+end;
+$$;
+revoke execute on function
+  public.create_listing_payment_intent(text, uuid) from public, anon;
+grant execute on function
+  public.create_listing_payment_intent(text, uuid) to authenticated;
+
 -- Existing visible listings get an expiry value for deterministic future
 -- behavior, but old creation dates are not used to retroactively hide them.
-select set_config('app.listing_fee_admin', 'on', true);
+-- DİKKAT: session-level (is_local=false) — autocommit'te (psql -f) her
+-- statement ayrı transaction olduğundan local GUC anında sıfırlanır ve
+-- normalize trigger'ı backfill'i sessizce geri alırdı.
+select set_config('app.listing_fee_admin', 'on', false);
 update public.job_offer_posts
   set expires_at = coalesce(expires_at, now() + interval '30 days')
   where expires_at is null;
 update public.market_listings
   set expires_at = coalesce(expires_at, now() + interval '30 days')
   where expires_at is null;
-select set_config('app.listing_fee_admin', 'off', true);
+-- Lansman: ödeme kapalıyken 'pending' ilan bırakılmaz — ücretsiz yayına
+-- çevrilir (waived). Eski app'in "öde ve yayınla" akışına girebileceği hedef
+-- kalmaz; ilanlar görünür olur.
+update public.job_offer_posts
+  set fee_status = 'waived', fee_required = false, fee_amount_cents = 0
+  where fee_status = 'pending';
+update public.market_listings
+  set fee_status = 'waived', fee_required = false, fee_amount_cents = 0
+  where fee_status = 'pending';
+select set_config('app.listing_fee_admin', 'off', false);

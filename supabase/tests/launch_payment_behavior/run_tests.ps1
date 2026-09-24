@@ -15,7 +15,13 @@ param(
   [string]$PgBin = 'C:\Program Files\PostgreSQL\18\bin',
   [int]$Port = 55432,
   [string]$ClusterDir = 'C:\tmp\firinnet-pg-audit\cluster',
-  [switch]$KeepCluster
+  [switch]$KeepCluster,
+  # -Replica: harness yerine canlı katalogdan çıkarılmış production şema
+  # replikasını kullanır (prod_replica_schema.sql). Bu modda foundation
+  # migration atlanır (replika zaten canlı son durumu içerir), migration
+  # öncesi eski-backend pending ilan seed edilir ve 15_old_app_compat.sql
+  # eski uygulama uyumluluk testleri koşulur.
+  [switch]$Replica
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,12 +37,20 @@ foreach ($bin in @($initdb, $pgctl, $psql)) {
   if (-not (Test-Path $bin)) { throw "PostgreSQL binary yok: $bin" }
 }
 
-$migrations = @(
-  (Join-Path $repoRoot 'supabase\migrations\20260712120000_store_payments_foundation_v1.sql'),
-  (Join-Path $repoRoot 'supabase\migrations\20260923120000_launch_premium_and_listing_v1.sql')
-)
-foreach ($m in $migrations) {
-  if (-not (Test-Path $m)) { throw "Migration bulunamadı: $m" }
+if ($Replica) {
+  $schemaFile = Join-Path $scriptDir 'prod_replica_schema.sql'
+  $migrations = @(
+    (Join-Path $repoRoot 'supabase\migrations\20260923120000_launch_premium_and_listing_v1.sql')
+  )
+} else {
+  $schemaFile = Join-Path $scriptDir 'harness_schema.sql'
+  $migrations = @(
+    (Join-Path $repoRoot 'supabase\migrations\20260712120000_store_payments_foundation_v1.sql'),
+    (Join-Path $repoRoot 'supabase\migrations\20260923120000_launch_premium_and_listing_v1.sql')
+  )
+}
+foreach ($m in @($schemaFile) + $migrations) {
+  if (-not (Test-Path $m)) { throw "Dosya bulunamadı: $m" }
 }
 
 function Invoke-Psql {
@@ -81,10 +95,17 @@ try {
   # 2) Test DB + harness + gerçek migration'lar.
   Invoke-Psql @('-d', 'postgres', '-c', "drop database if exists $dbName") 'dropdb'
   Invoke-Psql @('-d', 'postgres', '-c', "create database $dbName") 'createdb'
-  Invoke-Psql @('-d', $dbName, '-f', (Join-Path $scriptDir 'harness_schema.sql')) 'harness'
-  # Migration'lar tam Supabase şeması olmadan uygulanır: fonksiyon gövdeleri
-  # yalnız harness dışı modüllere değinir → gövde doğrulaması kapalı.
+  # Şema + migration'lar tam Supabase kümesi olmadan uygulanır: fonksiyon
+  # gövdeleri kapsam dışı modüllere değinebilir → gövde doğrulaması kapalı.
   $env:PGOPTIONS = '-c check_function_bodies=off'
+  Invoke-Psql @('-d', $dbName, '-f', $schemaFile) 'schema'
+  Write-Host ("Şema yüklendi: " + (Split-Path -Leaf $schemaFile))
+  if ($Replica) {
+    # Migration ÖNCESİ eski-backend durumu: free ticari pending ilan.
+    Invoke-Psql @('-d', $dbName, '-f',
+      (Join-Path $sqlDir '09_pre_seed_old_pending.sql')) '09_pre_seed'
+    Write-Host 'OK: 09_pre_seed_old_pending.sql (migration öncesi)'
+  }
   foreach ($m in $migrations) {
     Invoke-Psql @('-d', $dbName, '-f', $m) ("migration: " + (Split-Path -Leaf $m))
     Write-Host ("Migration uygulandı: " + (Split-Path -Leaf $m))
@@ -92,8 +113,10 @@ try {
   Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
 
   # 3) Sıralı davranış testleri.
-  foreach ($f in @('10_event_claim_retry.sql', '12_subscription_ordering.sql',
-                   '13_promo_and_privileges.sql')) {
+  $sequential = @('10_event_claim_retry.sql', '12_subscription_ordering.sql',
+                  '13_promo_and_privileges.sql')
+  if ($Replica) { $sequential += '15_old_app_compat.sql' }
+  foreach ($f in $sequential) {
     Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir $f)) $f
     Write-Host "OK: $f"
   }
