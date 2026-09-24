@@ -85,6 +85,14 @@ alter table public.user_entitlements
   add column if not exists promo_expires_at timestamptz,
   add column if not exists promo_status text not null default 'not_started';
 
+alter table public.store_payment_events
+  add column if not exists event_timestamp_ms bigint,
+  add column if not exists processing_attempts integer not null default 0,
+  add column if not exists locked_at timestamptz;
+
+alter table public.store_subscription_transactions
+  add column if not exists last_event_timestamp_ms bigint;
+
 alter table public.user_entitlements
   drop constraint if exists user_entitlements_promo_status_chk;
 alter table public.user_entitlements
@@ -94,6 +102,143 @@ alter table public.user_entitlements
 create index if not exists user_entitlements_promo_active_idx
   on public.user_entitlements (promo_status, promo_expires_at)
   where promo_status = 'active';
+
+create index if not exists store_payment_events_processing_idx
+  on public.store_payment_events (processing_status, locked_at);
+
+create or replace function public.claim_store_payment_event(
+  p_provider_event_id text,
+  p_event_type text,
+  p_app_user_id uuid,
+  p_product_id text,
+  p_entitlement_id text,
+  p_transaction_id text,
+  p_original_transaction_id text,
+  p_environment text,
+  p_store text,
+  p_event_timestamp_ms bigint,
+  p_raw_payload jsonb,
+  p_can_process boolean
+)
+returns table (event_id uuid, should_process boolean, current_status text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_row public.store_payment_events%rowtype;
+begin
+  insert into public.store_payment_events
+    (provider_event_id, event_type, app_user_id, product_id, entitlement_id,
+     transaction_id, original_transaction_id, environment, store, raw_payload,
+     event_timestamp_ms, processing_status, processing_attempts, locked_at)
+  values
+    (p_provider_event_id, p_event_type, p_app_user_id, p_product_id,
+     p_entitlement_id, p_transaction_id, p_original_transaction_id,
+     p_environment, p_store, p_raw_payload, p_event_timestamp_ms,
+     case when p_can_process then 'processing' else 'skipped_no_secret' end,
+     case when p_can_process then 1 else 0 end,
+     case when p_can_process then now() else null end)
+  on conflict (provider_event_id) do nothing
+  returning * into v_row;
+
+  if found then
+    return query select v_row.id, p_can_process, v_row.processing_status;
+    return;
+  end if;
+
+  select * into v_row
+  from public.store_payment_events
+  where provider_event_id = p_provider_event_id
+  for update;
+
+  if not found then
+    raise exception 'store payment event claim failed';
+  end if;
+
+  if not p_can_process then
+    if v_row.processing_status <> 'skipped_no_secret' then
+      update public.store_payment_events
+        set processing_status = 'skipped_no_secret',
+            processing_error = null,
+            processed_at = now(),
+            locked_at = null,
+            raw_payload = coalesce(p_raw_payload, raw_payload),
+            event_timestamp_ms = coalesce(
+              p_event_timestamp_ms,
+              event_timestamp_ms
+            )
+      where id = v_row.id
+      returning * into v_row;
+    end if;
+    return query select v_row.id, false, v_row.processing_status;
+    return;
+  end if;
+
+  if v_row.processing_status in (
+    'applied',
+    'recorded_listing_fee_needs_confirm',
+    'skipped_no_secret'
+  ) or v_row.processing_status like 'ignored_%' then
+    return query select v_row.id, false, v_row.processing_status;
+    return;
+  end if;
+
+  if v_row.processing_status = 'processing'
+     and v_row.locked_at is not null
+     and v_row.locked_at > now() - interval '5 minutes' then
+    return query select v_row.id, false, v_row.processing_status;
+    return;
+  end if;
+
+  update public.store_payment_events
+    set processing_status = 'processing',
+        processing_error = null,
+        processing_attempts = processing_attempts + 1,
+        locked_at = now(),
+        raw_payload = coalesce(p_raw_payload, raw_payload),
+        event_timestamp_ms = coalesce(p_event_timestamp_ms, event_timestamp_ms)
+  where id = v_row.id
+  returning * into v_row;
+
+  return query select v_row.id, true, v_row.processing_status;
+end;
+$$;
+revoke execute on function public.claim_store_payment_event(
+  text, text, uuid, text, text, text, text, text, text, bigint, jsonb, boolean
+) from public, anon, authenticated;
+grant execute on function public.claim_store_payment_event(
+  text, text, uuid, text, text, text, text, text, text, bigint, jsonb, boolean
+) to service_role;
+
+create or replace function public.complete_store_payment_event(
+  p_provider_event_id text,
+  p_processing_status text,
+  p_processing_error text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.store_payment_events
+    set processing_status = p_processing_status,
+        processing_error = p_processing_error,
+        processed_at = case
+          when p_processing_status = 'failed' then processed_at else now() end,
+        locked_at = null
+  where provider_event_id = p_provider_event_id;
+
+  if not found then
+    raise exception 'store payment event not found';
+  end if;
+end;
+$$;
+revoke execute on function public.complete_store_payment_event(text, text, text)
+  from public, anon, authenticated;
+grant execute on function public.complete_store_payment_event(text, text, text)
+  to service_role;
 
 create or replace function public.is_launch_promo_active(p_owner_id uuid)
 returns boolean
@@ -462,6 +607,9 @@ grant execute on function public.store_product_mapping(text)
 
 -- apply_store_subscription: yeni null account_type product tüm commercial/
 -- wholesaler hesaplarda çalışır; individual için subscription yok.
+drop function if exists public.apply_store_subscription(
+  uuid, text, text, text, text, text, text, timestamptz, uuid, jsonb
+);
 create or replace function public.apply_store_subscription(
   p_user_id uuid,
   p_product_id text,
@@ -471,6 +619,7 @@ create or replace function public.apply_store_subscription(
   p_transaction_id text default null,
   p_original_transaction_id text default null,
   p_expires_at timestamptz default null,
+  p_event_timestamp_ms bigint default null,
   p_event_id uuid default null,
   p_raw jsonb default null
 )
@@ -488,6 +637,8 @@ declare
   v_active boolean;
   v_existing_status text;
   v_existing_expires_at timestamptz;
+  v_existing_transaction_id text;
+  v_existing_event_timestamp_ms bigint;
 begin
   select account_type, plan, kind into v_acct, v_plan, v_kind
   from public.store_product_mapping(p_product_id);
@@ -505,13 +656,33 @@ begin
   v_effective_acct := coalesce(v_acct, v_user_acct);
   v_active := (p_status = 'active');
 
-  select status, expires_at
-    into v_existing_status, v_existing_expires_at
+  select status, expires_at, transaction_id, last_event_timestamp_ms
+    into
+      v_existing_status,
+      v_existing_expires_at,
+      v_existing_transaction_id,
+      v_existing_event_timestamp_ms
   from public.store_subscription_transactions
   where user_id = p_user_id and product_id = p_product_id;
 
-  -- RevenueCat webhook events can arrive more than once or out of order. Never
-  -- let an older event for the same product shorten a newer active period.
+  -- RevenueCat webhook events can arrive more than once or out of order.
+  -- Official event_timestamp_ms plus transaction id prevents old active events
+  -- from reopening refunded periods while allowing a newer transaction to open.
+  if p_event_timestamp_ms is not null
+     and v_existing_event_timestamp_ms is not null
+     and p_event_timestamp_ms < v_existing_event_timestamp_ms then
+    return 'ignored_stale_subscription_event';
+  end if;
+
+  if v_existing_status = 'refunded'
+     and p_status = 'active'
+     and p_transaction_id is not null
+     and p_transaction_id = v_existing_transaction_id then
+    return 'ignored_refunded_transaction';
+  end if;
+
+  -- Also protect against an old expiration/refund for a previous period closing
+  -- a newer active period if provider timestamps are unavailable.
   if v_existing_status = 'active'
      and v_existing_expires_at is not null
      and p_expires_at is not null
@@ -523,11 +694,13 @@ begin
   insert into public.store_subscription_transactions
     (user_id, account_type, plan, product_id, store, environment,
      transaction_id, original_transaction_id, status, purchased_at,
-     expires_at, cancelled_at, last_event_id, raw_payload)
+     expires_at, cancelled_at, last_event_id, last_event_timestamp_ms,
+     raw_payload)
   values (p_user_id, v_effective_acct, v_plan, p_product_id, p_store,
      p_environment, p_transaction_id, p_original_transaction_id, p_status,
      case when v_active then now() else null end, p_expires_at,
-     case when v_active then null else now() end, p_event_id, p_raw)
+     case when v_active then null else now() end, p_event_id,
+     p_event_timestamp_ms, p_raw)
   on conflict (user_id, product_id) do update set
     status = excluded.status,
     plan = excluded.plan,
@@ -536,6 +709,8 @@ begin
       store_subscription_transactions.transaction_id),
     cancelled_at = case when excluded.status = 'active' then null else now() end,
     last_event_id = excluded.last_event_id,
+    last_event_timestamp_ms = coalesce(excluded.last_event_timestamp_ms,
+      store_subscription_transactions.last_event_timestamp_ms),
     raw_payload = coalesce(excluded.raw_payload,
       store_subscription_transactions.raw_payload),
     updated_at = now();
@@ -574,10 +749,10 @@ begin
 end;
 $$;
 revoke execute on function public.apply_store_subscription(
-  uuid, text, text, text, text, text, text, timestamptz, uuid, jsonb)
+  uuid, text, text, text, text, text, text, timestamptz, bigint, uuid, jsonb)
   from public, anon, authenticated;
 grant execute on function public.apply_store_subscription(
-  uuid, text, text, text, text, text, text, timestamptz, uuid, jsonb)
+  uuid, text, text, text, text, text, text, timestamptz, bigint, uuid, jsonb)
   to service_role;
 
 -- 3) Listing free launch + expiry lifecycle.

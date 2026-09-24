@@ -81,17 +81,34 @@ void main() {
 
     test('stale subscription events cannot shorten active paid access', () {
       final sql = _read(migration);
+      expect(sql.contains('last_event_timestamp_ms'), isTrue);
+      expect(sql.contains('p_event_timestamp_ms'), isTrue);
       expect(sql.contains('v_existing_expires_at > p_expires_at'), isTrue);
       expect(sql.contains('ignored_stale_subscription_event'), isTrue);
+      expect(sql.contains('ignored_refunded_transaction'), isTrue);
       expect(
-        sql.contains('older event for the same product shorten'),
+        sql.contains('Official event_timestamp_ms plus transaction id'),
         isTrue,
       );
     });
+
+    test(
+      'payment event claim supports retry and concurrent duplicate safety',
+      () {
+        final sql = _read(migration);
+        expect(sql.contains('claim_store_payment_event'), isTrue);
+        expect(sql.contains('complete_store_payment_event'), isTrue);
+        expect(sql.contains('processing_attempts'), isTrue);
+        expect(sql.contains("processing_status = 'processing'"), isTrue);
+        expect(sql.contains("processing_status like 'ignored_%'"), isTrue);
+        expect(sql.contains("p_processing_status = 'failed'"), isTrue);
+      },
+    );
   });
 
   group('RevenueCat listing confirmation hardening', () {
     const fn = 'supabase/functions/revenuecat-confirm-listing-payment/index.ts';
+    const webhook = 'supabase/functions/revenuecat-webhook/index.ts';
 
     test('rejects stale/reused consumable transactions', () {
       final src = _read(fn);
@@ -101,6 +118,17 @@ void main() {
       expect(src.contains('.filter((p) => p.ms >= intentCreatedMs)'), isTrue);
       expect(src.contains('provider_transaction_id'), isTrue);
       expect(src.contains('transaction_already_used'), isTrue);
+    });
+
+    test('webhook checks claim, mapping, apply and completion errors', () {
+      final src = _read(webhook);
+      expect(src.contains('claim_store_payment_event'), isTrue);
+      expect(src.contains('complete_store_payment_event'), isTrue);
+      expect(src.contains('mapping_failed'), isTrue);
+      expect(src.contains('apply_failed'), isTrue);
+      expect(src.contains('null_apply_result'), isTrue);
+      expect(src.contains('complete_failed'), isTrue);
+      expect(src.contains('p_event_timestamp_ms: eventTimestampMs'), isTrue);
     });
   });
 }

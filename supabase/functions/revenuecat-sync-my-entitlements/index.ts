@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
       p_transaction_id: null,
       p_original_transaction_id: null,
       p_expires_at: expires ? new Date(expires).toISOString() : null,
+      p_event_timestamp_ms: null,
       p_event_id: null,
       p_raw: info,
     });
