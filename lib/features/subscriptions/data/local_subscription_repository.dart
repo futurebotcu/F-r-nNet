@@ -11,14 +11,17 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     this.plan = BusinessPlan.free,
     this.trialActive = false,
     this.trialDaysLeft = 0,
+    this.canStartPromo = true,
   });
 
   BusinessPlan plan;
   bool trialActive;
   int trialDaysLeft;
+  bool canStartPromo;
   int ensureCalls = 0;
 
-  BusinessPlan get _effective => trialActive ? BusinessPlan.premium : plan;
+  BusinessPlan get _effective =>
+      trialActive || plan == BusinessPlan.pro ? BusinessPlan.premium : plan;
 
   @override
   Future<void> ensureMyEntitlement() async {
@@ -29,7 +32,7 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   Future<BusinessEntitlements> myEntitlement() async {
     final eff = _effective;
     // Tedarikçi etkin planı: trial → PRO (Premium değil); server aynası.
-    final supEff = trialActive ? BusinessPlan.pro : plan;
+    final supEff = eff;
     return BusinessEntitlements(
       plan: plan,
       effectivePlan: eff,
@@ -49,29 +52,44 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
         BusinessPlan.free => 0,
       },
       canUseBranches: eff == BusinessPlan.premium,
-      canUseDebtExpense: eff == BusinessPlan.pro || eff == BusinessPlan.premium,
+      canUseDebtExpense: eff == BusinessPlan.premium,
       canUseDealerDriverOps: eff == BusinessPlan.premium,
       supplierEffectivePlan: supEff,
       supplierProductLimit: switch (supEff) {
         BusinessPlan.premium => -1,
-        BusinessPlan.pro => 5,
+        BusinessPlan.pro => 1,
         BusinessPlan.free => 1,
       },
       supplierCampaignLimit: switch (supEff) {
         BusinessPlan.premium => -1,
-        BusinessPlan.pro => 3,
+        BusinessPlan.pro => 0,
         BusinessPlan.free => 0,
       },
       supplierMonthlyReplyLimit: switch (supEff) {
         BusinessPlan.premium => -1,
-        BusinessPlan.pro => 20,
+        BusinessPlan.pro => 3,
         BusinessPlan.free => 3,
       },
       supplierCanAddProduct: true,
-      supplierCanAddCampaign: supEff != BusinessPlan.free,
+      supplierCanAddCampaign: supEff == BusinessPlan.premium,
       supplierCanReplyQuote: true,
-      supplierListingFeeExempt:
-          supEff == BusinessPlan.pro || supEff == BusinessPlan.premium,
+      supplierListingFeeExempt: supEff == BusinessPlan.premium,
+      promoStatus: trialActive ? 'active' : 'not_started',
+      promoStartedAt: trialActive ? DateTime.now().toUtc() : null,
+      promoExpiresAt: trialActive
+          ? DateTime.now().toUtc().add(Duration(days: trialDaysLeft))
+          : null,
+      canStartPromo: canStartPromo,
     );
+  }
+
+  @override
+  Future<BusinessEntitlements> activateLaunchPremiumPromo() async {
+    if (canStartPromo) {
+      trialActive = true;
+      trialDaysLeft = 92;
+      canStartPromo = false;
+    }
+    return myEntitlement();
   }
 }

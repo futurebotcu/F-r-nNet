@@ -38,8 +38,8 @@ class FeatureLock {
   static const FeatureLock dealerBook = FeatureLock(
     title: AppStrings.paywallDealerBookTitle,
     body: AppStrings.paywallDealerBookBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.bakeryProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   static const FeatureLock dealerDriverOps = FeatureLock(
@@ -52,16 +52,16 @@ class FeatureLock {
   static const FeatureLock debtExpense = FeatureLock(
     title: AppStrings.paywallDebtExpenseTitle,
     body: AppStrings.paywallDebtExpenseBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.bakeryProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   /// Free reçete limiti (5) dolunca.
   static const FeatureLock recipeFree = FeatureLock(
     title: AppStrings.paywallRecipeFreeTitle,
     body: AppStrings.paywallRecipeFreeBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.bakeryProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   /// Pro reçete limiti (50) dolunca.
@@ -75,8 +75,8 @@ class FeatureLock {
   static const FeatureLock calculatorPro = FeatureLock(
     title: AppStrings.paywallCalcProTitle,
     body: AppStrings.paywallCalcBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.bakeryProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   static const FeatureLock calculatorPremium = FeatureLock(
@@ -89,8 +89,8 @@ class FeatureLock {
   static const FeatureLock reportPro = FeatureLock(
     title: AppStrings.paywallReportProTitle,
     body: AppStrings.paywallReportBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.bakeryProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   static const FeatureLock reportPremium = FeatureLock(
@@ -105,8 +105,8 @@ class FeatureLock {
   static const FeatureLock supplierProductFree = FeatureLock(
     title: AppStrings.supPaywallProductFreeTitle,
     body: AppStrings.supPaywallProductFreeBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.supplierProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   /// Pro tedarikçi ürün limitine (5) ulaştı → Premium.
@@ -121,8 +121,8 @@ class FeatureLock {
   static const FeatureLock supplierCampaignFree = FeatureLock(
     title: AppStrings.supPaywallCampaignFreeTitle,
     body: AppStrings.supPaywallCampaignFreeBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.supplierProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   /// Pro tedarikçi aktif kampanya limitine (3) ulaştı → Premium.
@@ -137,8 +137,8 @@ class FeatureLock {
   static const FeatureLock supplierReplyFree = FeatureLock(
     title: AppStrings.supPaywallReplyFreeTitle,
     body: AppStrings.supPaywallReplyFreeBody,
-    requiredPlan: BusinessPlan.pro,
-    priceHint: PricingConfig.supplierProHint,
+    requiredPlan: BusinessPlan.premium,
+    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   /// Pro tedarikçi aylık teklif cevabı limitine (20) ulaştı → Premium.

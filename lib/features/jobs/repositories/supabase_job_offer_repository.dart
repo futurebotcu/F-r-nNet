@@ -27,7 +27,7 @@ class SupabaseJobOfferRepository implements JobOfferRepository {
       'description, salary_min, salary_max, '
       'shift_type, shift_code, experience_required, experience_code, '
       'is_active, contact_preference, contact_phone, '
-      'author_name, author_role, created_at, updated_at';
+      'author_name, author_role, created_at, updated_at, fee_status, expires_at';
 
   @override
   Future<List<JobOfferPost>> listActiveOffers({int limit = 100}) async {
@@ -35,6 +35,7 @@ class SupabaseJobOfferRepository implements JobOfferRepository {
         .from('job_offer_posts')
         .select(_columns)
         .eq('is_active', true)
+        .gt('expires_at', DateTime.now().toUtc().toIso8601String())
         .order('created_at', ascending: false)
         .limit(limit);
     return (rows as List)

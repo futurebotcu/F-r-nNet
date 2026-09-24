@@ -44,7 +44,7 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
       'equipment_included, has_license, area_m2, '
       'contact_phone, contact_whatsapp, view_count, '
       // V1 Market M2 controlled-data fix
-      'country_code, city_code, district_code';
+      'country_code, city_code, district_code, fee_status, expires_at';
 
   static const String _mediaColumns =
       'id, listing_id, owner_id, storage_path, sort_order, '
@@ -152,7 +152,8 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
         .from('market_listings')
         .select(_columns)
         .eq('status', 'active')
-        .eq('is_deleted', false);
+        .eq('is_deleted', false)
+        .gt('expires_at', DateTime.now().toUtc().toIso8601String());
     if (category != null && category.isNotEmpty) {
       q = q.eq('category', category);
     }
@@ -176,7 +177,8 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
         .from('market_listings')
         .select(_columns)
         .eq('status', 'active')
-        .eq('is_deleted', false);
+        .eq('is_deleted', false)
+        .gt('expires_at', DateTime.now().toUtc().toIso8601String());
     if (filters.listingType != null) {
       q = q.eq('listing_type', filters.listingType!);
     }
@@ -303,7 +305,7 @@ class SupabaseMarketListingRepository implements MarketListingRepository {
   @override
   Future<void> setStatus(String id, String status) async {
     final ownerId = _requireUserId();
-    if (!const {'active', 'sold', 'paused'}.contains(status)) {
+    if (!const {'active', 'sold', 'paused', 'expired'}.contains(status)) {
       throw ArgumentError('Geçersiz status: $status');
     }
     final rows = await _client

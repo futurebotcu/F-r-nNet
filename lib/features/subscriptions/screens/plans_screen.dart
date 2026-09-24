@@ -15,35 +15,23 @@ import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 
-/// Ticari işletme paketleri ekranı (Paywall UI V1).
-///
-/// ÖDEME YOK — yalnız Free/Pro/Premium karşılaştırması + trial durumu +
-/// destek yönlendirmesi. Satın alma başlatılmaz.
+/// Commercial package screen. Store prices come from RevenueCat/Google Play;
+/// config prices are fallback copy only.
 class PlansScreen extends ConsumerWidget {
   const PlansScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final e = ref.watch(myEntitlementProvider).valueOrNull;
-    // Tedarikçi (wholesaler) → tedarikçi paketleri + supplier effective plan.
+    final entitlement = ref.watch(myEntitlementProvider).valueOrNull;
     final account = ref.watch(profileControllerProvider)?.accountType;
     final isWholesaler = account == AccountType.wholesaler;
-    final current = isWholesaler ? e?.supplierEffectivePlan : e?.effectivePlan;
-    final trialActive = e?.isTrialActive ?? false;
-    final (freeFeat, proFeat, premiumFeat) = isWholesaler
-        ? (
-            AppStrings.supPlanFreeFeatures,
-            AppStrings.supPlanProFeatures,
-            AppStrings.supPlanPremiumFeatures,
-          )
-        : (
-            AppStrings.planFreeFeatures,
-            AppStrings.planProFeatures,
-            AppStrings.planPremiumFeatures,
-          );
-    final audience = isWholesaler
-        ? PricingAudience.supplier
-        : PricingAudience.bakery;
+    final current = isWholesaler
+        ? entitlement?.supplierEffectivePlan
+        : entitlement?.effectivePlan;
+    final promoActive = entitlement?.isLaunchPromoActive ?? false;
+    final (freeFeatures, premiumFeatures) = isWholesaler
+        ? (AppStrings.supPlanFreeFeatures, AppStrings.supPlanPremiumFeatures)
+        : (AppStrings.planFreeFeatures, AppStrings.planPremiumFeatures);
 
     return PremiumScaffold(
       body: SafeArea(
@@ -55,7 +43,7 @@ class PlansScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
               child: Text(
-                AppStrings.plansSubtitle,
+                AppStrings.plansLaunchSubtitle,
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -64,17 +52,15 @@ class PlansScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            if (trialActive) ...[
+            if (promoActive) ...[
               const SizedBox(height: AppSpacing.m),
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageH,
                 ),
-                child: _TrialBanner(
-                  daysLeft: e?.daysLeft ?? 0,
-                  note: isWholesaler
-                      ? AppStrings.supPlanTrialSub
-                      : AppStrings.plansTrialBanner,
+                child: _PromoBanner(
+                  daysLeft:
+                      entitlement?.promoDaysLeft ?? entitlement?.daysLeft ?? 0,
                 ),
               ),
             ],
@@ -82,29 +68,20 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_free'),
               title: AppStrings.planFreeLabel,
-              price: PricingConfig.monthlyLabel(audience, BusinessPlan.free),
-              features: freeFeat,
+              price: PricingConfig.freeLabel,
+              features: freeFeatures,
               plan: BusinessPlan.free,
               current: current,
-              trialActive: trialActive,
-            ),
-            _PlanTile(
-              key: const ValueKey('plan_tile_pro'),
-              title: AppStrings.planProLabel,
-              price: PricingConfig.monthlyLabel(audience, BusinessPlan.pro),
-              features: proFeat,
-              plan: BusinessPlan.pro,
-              current: current,
-              trialActive: trialActive,
+              promoActive: promoActive,
             ),
             _PlanTile(
               key: const ValueKey('plan_tile_premium'),
               title: AppStrings.planPremiumLabel,
-              price: PricingConfig.monthlyLabel(audience, BusinessPlan.premium),
-              features: premiumFeat,
+              price: PricingConfig.premiumMonthlyLabel,
+              features: premiumFeatures,
               plan: BusinessPlan.premium,
               current: current,
-              trialActive: trialActive,
+              promoActive: promoActive,
               highlight: true,
             ),
             const SizedBox(height: AppSpacing.m),
@@ -113,7 +90,6 @@ class PlansScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Store satın alma (RevenueCat) — key yoksa "hazırlanıyor".
                   PlanPurchaseActions(account: account),
                   const SizedBox(height: AppSpacing.s),
                   FilledButton(
@@ -137,10 +113,9 @@ class PlansScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s),
-                  // Ödeme yok; deneme vurgusu (30 gün ücretsiz).
-                  if (!trialActive)
+                  if (!promoActive)
                     Text(
-                      AppStrings.plansTrialCta,
+                      AppStrings.plansLaunchTrialCta,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 13,
@@ -150,7 +125,7 @@ class PlansScreen extends ConsumerWidget {
                     ),
                   const SizedBox(height: 4),
                   Text(
-                    AppStrings.plansComingSoon,
+                    AppStrings.plansStoreReady,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 12,
@@ -168,16 +143,15 @@ class PlansScreen extends ConsumerWidget {
   }
 }
 
-class _TrialBanner extends StatelessWidget {
-  const _TrialBanner({required this.daysLeft, required this.note});
+class _PromoBanner extends StatelessWidget {
+  const _PromoBanner({required this.daysLeft});
 
   final int daysLeft;
-  final String note;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      key: const ValueKey('plans_trial_banner'),
+      key: const ValueKey('plans_promo_banner'),
       padding: const EdgeInsets.all(AppSpacing.m),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7E6),
@@ -197,7 +171,7 @@ class _TrialBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${AppStrings.planCardTrialTitle} · $daysLeft '
+                  '${AppStrings.planLaunchPromoTitle} - $daysLeft '
                   '${AppStrings.planCardTrialDaysLeft}',
                   style: const TextStyle(
                     fontSize: 13.5,
@@ -206,9 +180,9 @@ class _TrialBanner extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 1),
-                Text(
-                  note,
-                  style: const TextStyle(
+                const Text(
+                  AppStrings.planLaunchPromoSub,
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFFB45309),
@@ -232,7 +206,7 @@ class _PlanTile extends StatelessWidget {
     required this.features,
     required this.plan,
     required this.current,
-    required this.trialActive,
+    required this.promoActive,
     this.highlight = false,
   });
 
@@ -241,16 +215,12 @@ class _PlanTile extends StatelessWidget {
   final String features;
   final BusinessPlan plan;
   final BusinessPlan? current;
-  final bool trialActive;
+  final bool promoActive;
   final bool highlight;
 
   @override
   Widget build(BuildContext context) {
-    // "Mevcut" rozeti: trial aktifken actual plan yerine premium'a değil,
-    // gerçekten seçili plana koymamak için trial'da yalnız premium'u işaretleme
-    // KARMAŞASINDAN kaçın — trial'da hiçbir tile "mevcut" değil (deneme banner'ı
-    // ayrı anlatır).
-    final isCurrent = !trialActive && current == plan;
+    final isCurrent = !promoActive && current == plan;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
@@ -281,7 +251,6 @@ class _PlanTile extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s),
@@ -314,7 +283,6 @@ class _PlanTile extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w900,
                 color: AppColors.brandInk,
-                letterSpacing: -0.2,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),

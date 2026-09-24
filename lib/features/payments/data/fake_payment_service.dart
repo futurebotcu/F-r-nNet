@@ -19,6 +19,7 @@ class FakePaymentService implements PaymentService {
   int syncCalls = 0;
   int listingFeeCalls = 0;
   BusinessPlan? lastPurchasedPlan;
+  String? lastPurchasedProductId;
   String? lastUserId;
 
   @override
@@ -50,6 +51,26 @@ class FakePaymentService implements PaymentService {
     lastPurchasedPlan = plan;
     if (!available) return PaymentResult.unavailable;
     return result;
+  }
+
+  @override
+  Future<PaymentResult> purchaseProduct({required String productId}) async {
+    purchaseCalls++;
+    lastPurchasedProductId = productId;
+    if (!available) return PaymentResult.unavailable;
+    return result;
+  }
+
+  @override
+  Future<Map<String, StorePrice>> fetchStorePrices(List<String> productIds) async {
+    return <String, StorePrice>{
+      for (final p in StoreProductConfig.subscriptions)
+        if (productIds.contains(p.productId))
+          p.productId: StorePrice(
+            productId: p.productId,
+            priceLabel: p.priceLabel,
+          ),
+    };
   }
 
   @override

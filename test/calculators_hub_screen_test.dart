@@ -226,12 +226,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('free ticari: Pro aracı (Maliyet/Kâr) tıklanınca paywall', (
+  testWidgets('free ticari: Premium aracı (Maliyet/Kâr) tıklanınca paywall', (
     tester,
   ) async {
     await pumpCommercialPlan(tester, BusinessPlan.free);
-    // Kilit rozeti "Pro" görünür (en az bir kart).
-    expect(find.text(AppStrings.paywallProTag), findsAtLeastNWidgets(1));
+    // Lansman modelinde eski Pro aracı merkezi Premium kapısına bağlıdır.
+    expect(find.text(AppStrings.paywallPremiumTag), findsAtLeastNWidgets(1));
     await tester.tap(find.text(AppStrings.calcCostProfitTitle).first);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('paywall_sheet')), findsOneWidget);

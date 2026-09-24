@@ -23,4 +23,14 @@ class SupabaseSubscriptionRepository implements SubscriptionRepository {
       (rows.first as Map).cast<String, dynamic>(),
     );
   }
+
+  @override
+  Future<BusinessEntitlements> activateLaunchPremiumPromo() async {
+    await _client.rpc('activate_launch_premium_promo');
+    final rows = await _client.rpc('my_entitlement');
+    if (rows is! List || rows.isEmpty) return BusinessEntitlements.free;
+    return BusinessEntitlements.fromRow(
+      (rows.first as Map).cast<String, dynamic>(),
+    );
+  }
 }

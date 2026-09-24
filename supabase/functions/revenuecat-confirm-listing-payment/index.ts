@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   // Intent'i yükle + owner doğrula.
   const { data: intent } = await db
     .from("listing_payment_intents")
-    .select("id, owner_id, status")
+    .select("id, owner_id, status, created_at")
     .eq("id", intentId)
     .maybeSingle();
   if (!intent || intent.owner_id !== uid) {
@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
 
   // RevenueCat non-subscription purchase doğrula.
   let txId = "";
+  let purchasedAtMs = 0;
   try {
     const resp = await fetch(
       `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
@@ -112,9 +113,25 @@ Deno.serve(async (req) => {
         Array<Record<string, unknown>>
       >;
       const purchases = nonSubs[LISTING_PRODUCT] ?? [];
-      if (purchases.length > 0) {
-        const last = purchases[purchases.length - 1];
-        txId = String(last.id ?? last.store_transaction_id ?? "verified");
+      const intentCreatedMs = Date.parse(String(intent.created_at));
+      const candidates = purchases
+        .map((p) => {
+          const ms = Number(
+            p.purchase_date_ms ??
+              p.purchased_at_ms ??
+              p.store_transaction_purchase_date_ms ??
+              0,
+          ) || Date.parse(String(
+            p.purchase_date ?? p.purchased_at ?? p.store_transaction_purchase_date ?? "",
+          ));
+          return { purchase: p, ms: Number.isFinite(ms) ? ms : 0 };
+        })
+        .filter((p) => p.ms >= intentCreatedMs)
+        .sort((a, b) => b.ms - a.ms);
+      if (candidates.length > 0) {
+        const last = candidates[0].purchase;
+        txId = String(last.id ?? last.store_transaction_id ?? "");
+        purchasedAtMs = candidates[0].ms;
       }
     }
   } catch (_) {
@@ -124,10 +141,23 @@ Deno.serve(async (req) => {
     );
   }
 
-  if (!txId) {
+  if (!txId || purchasedAtMs <= 0) {
     return new Response(
       JSON.stringify({ ok: false, note: "purchase_not_found" }),
       { headers: cors },
+    );
+  }
+
+  const { data: used } = await db
+    .from("listing_payment_intents")
+    .select("id")
+    .eq("provider_transaction_id", txId)
+    .neq("id", intentId)
+    .maybeSingle();
+  if (used) {
+    return new Response(
+      JSON.stringify({ ok: false, note: "transaction_already_used" }),
+      { status: 409, headers: cors },
     );
   }
 

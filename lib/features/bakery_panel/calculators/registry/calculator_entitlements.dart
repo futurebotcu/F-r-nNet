@@ -58,11 +58,13 @@ class CalculatorEntitlements {
         return null;
       case CalculatorMinPlan.pro:
         // Pro veya Premium (trial→premium) açar.
-        return (entitlements.isPro || entitlements.isPremium)
+        return entitlements.canUsePremiumFeature
             ? null
             : FeatureLock.calculatorPro;
       case CalculatorMinPlan.premium:
-        return entitlements.isPremium ? null : FeatureLock.calculatorPremium;
+        return entitlements.canUsePremiumFeature
+            ? null
+            : FeatureLock.calculatorPremium;
     }
   }
 }

@@ -157,7 +157,14 @@ class RoleDashboardScreen extends ConsumerWidget {
     // Kilitli ticari modül → navigasyon yerine paywall (server zaten korur).
     final lock = _lockFor(card.route, entitlements);
     if (lock != null) {
-      showPaywallSheet(context, lock.$1);
+      final route = card.route!;
+      showPaywallSheet(
+        context,
+        lock.$1,
+        onUnlocked: () {
+          if (context.mounted) context.push(route);
+        },
+      );
       return;
     }
     final route = card.route!;

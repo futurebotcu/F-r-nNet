@@ -1,23 +1,6 @@
-// FırınNet — revenuecat-webhook Edge Function
-//
-// RevenueCat webhook → user_entitlements / listing ödeme senkronizasyonu.
-// Resmi ödeme modeli: App Store IAP + Play Billing, orkestrasyon RevenueCat.
-// Havale/EFT/İyzico/Stripe YOK.
-//
-// Güvenlik (fail-closed):
-//   - Authorization header == REVENUECAT_WEBHOOK_AUTH_TOKEN zorunlu.
-//     Secret set edilmişse ve eşleşmezse → 401. Secret YOKSA hiçbir ödeme
-//     APPLY edilmez (yalnız event kaydı, processing_status=skipped_no_secret).
-//   - REVENUECAT_WEBHOOK_SIGNING_SECRET set ise raw body üzerinden
-//     HMAC-SHA256 doğrulanır (timing-safe). Eşleşmezse → 401.
-//   - provider_event_id UNIQUE → duplicate event idempotent (200).
-//   - Bilinmeyen event/product → kaydedilir + ignore (crash yok).
-//   - Ödeme YALNIZ apply_store_subscription / mark_listing_fee_paid_from_store
-//     (service_role) ile uygulanır. Client asla apply edemez.
-//
-// NOT: Listing fee (consumable) webhook'ta intent'e eşlenemez (korelasyon yok)
-// → yalnız kaydedilir; asıl publish authenticated revenuecat-confirm-listing-
-// payment (RevenueCat REST doğrulamalı) ile yapılır.
+// FirinNet - RevenueCat webhook -> entitlements/payment event log.
+// Applies only authenticated RevenueCat webhook events. Client never applies
+// subscriptions directly; all writes go through service_role RPCs.
 
 // deno-lint-ignore-file
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -31,6 +14,11 @@ const SERVICE_KEY =
   Deno.env.get("EDGE_SERVICE_ROLE_KEY") ??
   "";
 
+// RevenueCat, 2xx dışındaki cevaplara artan gecikmeyle sınırlı sayıda retry
+// yapar. Yapılandırma eksiğinde (backend/secret yok) 200 dönmek olayı kalıcı
+// kaybettirir → bu durumlarda 503 dönülür ki RevenueCat retry etsin.
+const SIGNATURE_TOLERANCE_MS = 72 * 60 * 60 * 1000;
+
 const ACTIVE_TYPES = new Set([
   "INITIAL_PURCHASE",
   "RENEWAL",
@@ -41,7 +29,7 @@ const ACTIVE_TYPES = new Set([
 const TERMINAL_STATUS: Record<string, string> = {
   EXPIRATION: "expired",
   REFUND: "refunded",
-  // CANCELLATION = auto-renew off; erişim expiry'e kadar sürer → downgrade YOK.
+  // CANCELLATION means auto-renew disabled; access remains until expiration.
 };
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -69,6 +57,31 @@ async function hmacHex(secret: string, body: string): Promise<string> {
     .join("");
 }
 
+function parseSignature(header: string): { timestamp: string; v1: string } | null {
+  const parts = header.split(",").map((p) => p.trim());
+  const map = new Map<string, string>();
+  for (const part of parts) {
+    const idx = part.indexOf("=");
+    if (idx > 0) map.set(part.slice(0, idx), part.slice(idx + 1));
+  }
+  const timestamp = map.get("t") ?? "";
+  const v1 = map.get("v1") ?? "";
+  return timestamp && v1 ? { timestamp, v1 } : null;
+}
+
+function uuidOrNull(value: unknown): string | null {
+  const s = String(value ?? "");
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      .test(s)
+    ? s
+    : null;
+}
+
+function numberOrNull(value: unknown): number | null {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok");
   if (req.method !== "POST") {
@@ -77,12 +90,11 @@ Deno.serve(async (req) => {
 
   const rawBody = await req.text();
 
-  // 1) Authorization header doğrula (fail-closed).
   const auth = req.headers.get("authorization") ?? "";
   const secretPresent = AUTH_TOKEN.length > 0;
   if (secretPresent) {
     const expected = `Bearer ${AUTH_TOKEN}`;
-    const alt = AUTH_TOKEN; // dashboard bazen "Bearer" olmadan set eder
+    const alt = AUTH_TOKEN;
     if (!timingSafeEqual(auth, expected) && !timingSafeEqual(auth, alt)) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401,
@@ -90,27 +102,46 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 2) HMAC imza doğrula (secret varsa).
   if (SIGNING_SECRET.length > 0) {
     const sigHeader =
+      req.headers.get("x-revenuecat-webhook-signature") ??
       req.headers.get("x-revenuecat-signature") ??
       req.headers.get("x-signature") ??
       "";
-    const computed = await hmacHex(SIGNING_SECRET, rawBody);
-    if (!timingSafeEqual(sigHeader.toLowerCase(), computed.toLowerCase())) {
+    const parsed = parseSignature(sigHeader);
+    const computed = parsed
+      ? await hmacHex(SIGNING_SECRET, `${parsed.timestamp}.${rawBody}`)
+      : await hmacHex(SIGNING_SECRET, rawBody);
+    const expected = parsed?.v1 ?? sigHeader;
+    if (!timingSafeEqual(expected.toLowerCase(), computed.toLowerCase())) {
       return new Response(JSON.stringify({ error: "bad_signature" }), {
         status: 401,
       });
     }
+    if (parsed) {
+      // Replay koruması: imzalı timestamp toleransın dışındaysa reddet.
+      // Tolerans, RevenueCat'in retry penceresinden geniştir; event id
+      // idempotency'si tolere edilen replay'leri zaten no-op yapar.
+      const tsRaw = Number(parsed.timestamp);
+      const tsMs = tsRaw > 1e12 ? tsRaw : tsRaw * 1000;
+      if (
+        !Number.isFinite(tsMs) ||
+        Math.abs(Date.now() - tsMs) > SIGNATURE_TOLERANCE_MS
+      ) {
+        return new Response(JSON.stringify({ error: "stale_signature" }), {
+          status: 401,
+        });
+      }
+    }
   }
 
-  // 3) Parse.
   let payload: Record<string, unknown>;
   try {
     payload = JSON.parse(rawBody);
   } catch (_) {
     return new Response(JSON.stringify({ error: "bad_json" }), { status: 400 });
   }
+
   const event = (payload.event ?? {}) as Record<string, unknown>;
   const eventId = String(event.id ?? "");
   if (!eventId) {
@@ -120,93 +151,143 @@ Deno.serve(async (req) => {
   }
 
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    // Altyapı hazır değil → sessiz 200 (fake apply yok).
-    return new Response(JSON.stringify({ ok: true, note: "no_backend" }));
+    // Yapılandırma hatası: 200 dönülürse RevenueCat retry etmez ve olay hiç
+    // kayıt edilmeden kaybolur. 503 → RevenueCat retry eder.
+    return new Response(JSON.stringify({ error: "no_backend" }), {
+      status: 503,
+    });
   }
   const db = createClient(SUPABASE_URL, SERVICE_KEY);
 
   const eventType = String(event.type ?? "");
   const productId = String(event.product_id ?? "");
   const appUserId = String(event.app_user_id ?? "");
-  const expiresAtMs = event.expiration_at_ms as number | undefined;
-  const expiresAt = expiresAtMs
-    ? new Date(expiresAtMs).toISOString()
+  const appUserUuid = uuidOrNull(appUserId);
+  const eventTimestampMs = numberOrNull(event.event_timestamp_ms);
+  const expiresAtMs = numberOrNull(event.expiration_at_ms);
+  const expiresAt = expiresAtMs ? new Date(expiresAtMs).toISOString() : null;
+  const entitlementId = Array.isArray(event.entitlement_ids)
+    ? (event.entitlement_ids as string[]).join(",")
     : null;
+  const transactionId = (event.transaction_id as string) ?? null;
+  const originalTransactionId =
+    (event.original_transaction_id as string) ?? null;
+  const environment = (event.environment as string) ?? null;
+  const store = (event.store as string) ?? null;
 
-  // 4) Event kaydı (idempotent — UNIQUE provider_event_id).
-  const { error: insErr } = await db.from("store_payment_events").insert({
-    provider_event_id: eventId,
-    event_type: eventType,
-    app_user_id: appUserId || null,
-    product_id: productId || null,
-    entitlement_id: Array.isArray(event.entitlement_ids)
-      ? (event.entitlement_ids as string[]).join(",")
-      : null,
-    transaction_id: (event.transaction_id as string) ?? null,
-    original_transaction_id:
-      (event.original_transaction_id as string) ?? null,
-    environment: (event.environment as string) ?? null,
-    store: (event.store as string) ?? null,
-    raw_payload: payload,
-    processing_status: secretPresent ? "received" : "skipped_no_secret",
-  });
-  if (insErr) {
-    // Duplicate (unique violation) → idempotent success.
-    if (insErr.code === "23505") {
-      return new Response(JSON.stringify({ ok: true, duplicate: true }));
-    }
-    return new Response(JSON.stringify({ error: "db" }), { status: 500 });
+  async function complete(status: string, error: string | null = null) {
+    return await db.rpc("complete_store_payment_event", {
+      p_provider_event_id: eventId,
+      p_processing_status: status,
+      p_processing_error: error,
+    });
   }
 
-  // Secret yoksa apply etme (fail-closed) — event kaydı yeterli.
+  const { data: claimRows, error: claimErr } = await db.rpc(
+    "claim_store_payment_event",
+    {
+      p_provider_event_id: eventId,
+      p_event_type: eventType,
+      p_app_user_id: appUserUuid,
+      p_product_id: productId || null,
+      p_entitlement_id: entitlementId,
+      p_transaction_id: transactionId,
+      p_original_transaction_id: originalTransactionId,
+      p_environment: environment,
+      p_store: store,
+      p_event_timestamp_ms: eventTimestampMs,
+      p_raw_payload: payload,
+      p_can_process: secretPresent,
+    },
+  );
+  if (claimErr) {
+    return new Response(JSON.stringify({ error: "claim_failed" }), {
+      status: 500,
+    });
+  }
+  const claim = Array.isArray(claimRows) ? claimRows[0] : claimRows;
+
   if (!secretPresent) {
-    return new Response(JSON.stringify({ ok: true, note: "no_secret" }));
+    // Olay 'skipped_no_secret' olarak kaydedildi (kanıt/replay için) ama
+    // doğrulanamadı → uygulanmadı. 503 dönülür ki RevenueCat retry etsin;
+    // secret yapılandırılınca aynı event id yeniden işlenebilir (claim
+    // 'skipped_no_secret' durumunu final saymaz).
+    return new Response(JSON.stringify({ error: "no_secret" }), {
+      status: 503,
+    });
   }
 
-  // 5) Product mapping.
-  const { data: mapRows } = await db.rpc("store_product_mapping", {
+  if (!claim?.should_process) {
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        duplicate: true,
+        result: claim?.current_status ?? "already_handled",
+      }),
+    );
+  }
+
+  const { data: mapRows, error: mapErr } = await db.rpc("store_product_mapping", {
     p_product_id: productId,
   });
+  if (mapErr) {
+    await complete("failed", `mapping:${mapErr.message}`);
+    return new Response(JSON.stringify({ error: "mapping_failed" }), {
+      status: 500,
+    });
+  }
   const mapping = Array.isArray(mapRows) ? mapRows[0] : null;
 
   let status = "unknown";
   let result = "ignored";
 
-  if (mapping?.kind === "subscription" && appUserId) {
+  if (mapping?.kind === "subscription" && appUserUuid) {
     if (ACTIVE_TYPES.has(eventType)) status = "active";
     else if (TERMINAL_STATUS[eventType]) status = TERMINAL_STATUS[eventType];
     else if (eventType === "CANCELLATION") status = "active";
     else status = "unknown";
 
     if (status === "active" || TERMINAL_STATUS[eventType]) {
-      const { data: applyRes } = await db.rpc("apply_store_subscription", {
-        p_user_id: appUserId,
-        p_product_id: productId,
-        p_status: status,
-        p_store: (event.store as string) ?? null,
-        p_environment: (event.environment as string) ?? null,
-        p_transaction_id: (event.transaction_id as string) ?? null,
-        p_original_transaction_id:
-          (event.original_transaction_id as string) ?? null,
-        p_expires_at: expiresAt,
-        p_event_id: null,
-        p_raw: payload,
-      });
-      result = String(applyRes ?? "applied");
+      const { data: applyRes, error: applyErr } = await db.rpc(
+        "apply_store_subscription",
+        {
+          p_user_id: appUserUuid,
+          p_product_id: productId,
+          p_status: status,
+          p_store: store,
+          p_environment: environment,
+          p_transaction_id: transactionId,
+          p_original_transaction_id: originalTransactionId,
+          p_expires_at: expiresAt,
+          p_event_timestamp_ms: eventTimestampMs,
+          p_event_id: null,
+          p_raw: payload,
+        },
+      );
+      if (applyErr || typeof applyRes !== "string") {
+        const detail = applyErr?.message ?? "null_apply_result";
+        await complete("failed", `apply:${detail}`);
+        return new Response(JSON.stringify({ error: "apply_failed" }), {
+          status: 500,
+        });
+      }
+      result = applyRes;
     } else {
       result = "ignored_status";
     }
   } else if (mapping?.kind === "listing_fee") {
-    // Consumable → intent korelasyonu yok; yalnız kaydedilir.
     result = "recorded_listing_fee_needs_confirm";
   } else {
     result = "ignored_unknown_product";
   }
 
-  await db
-    .from("store_payment_events")
-    .update({ processing_status: result, processed_at: new Date().toISOString() })
-    .eq("provider_event_id", eventId);
+  const finalStatus = result.startsWith("applied_") ? "applied" : result;
+  const { error: completeErr } = await complete(finalStatus);
+  if (completeErr) {
+    return new Response(JSON.stringify({ error: "complete_failed" }), {
+      status: 500,
+    });
+  }
 
   return new Response(JSON.stringify({ ok: true, result }));
 });

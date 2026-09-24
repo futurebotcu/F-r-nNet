@@ -6,14 +6,15 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../profile/models/bakery_profile.dart';
-import '../../subscriptions/models/business_plan.dart';
+import '../../subscriptions/models/pricing_config.dart';
 import '../../subscriptions/providers/subscription_providers.dart';
 import '../data/payment_service.dart';
+import '../models/store_product_config.dart';
 import '../providers/payment_providers.dart';
 
-/// PlansScreen'de store satın alma aksiyonları. Ödeme kullanılamıyorsa
-/// (RevenueCat key yok) "hazırlanıyor" gösterir; SAHTE purchase YAPILMAZ.
-/// Bireysel hesapta subscription satışı yok → hiçbir şey render etmez.
+/// PlansScreen'de store satin alma aksiyonlari. Yeni modelde yalniz Premium
+/// aylik/yillik satilir. Store localized price varsa UI onu kullanir; config
+/// fiyatlari yalniz fallback'tir.
 class PlanPurchaseActions extends ConsumerStatefulWidget {
   const PlanPurchaseActions({super.key, required this.account});
 
@@ -26,6 +27,7 @@ class PlanPurchaseActions extends ConsumerStatefulWidget {
 
 class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
   bool _busy = false;
+  Map<String, StorePrice> _prices = const <String, StorePrice>{};
 
   bool get _isSubscriber =>
       widget.account == AccountType.commercial ||
@@ -34,29 +36,56 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
   @override
   void initState() {
     super.initState();
-    // RevenueCat'i mevcut kullanıcıyla başlat (key yoksa no-op).
-    final userId = ref.read(currentAuthUserProvider)?.id;
-    ref.read(paymentServiceProvider).initialize(userId: userId);
+    Future.microtask(_initAndLoadPrices);
   }
 
-  Future<void> _purchase(BusinessPlan plan) async {
-    final account = widget.account;
-    if (account == null || _busy) return;
-    setState(() => _busy = true);
+  Future<void> _initAndLoadPrices() async {
+    if (!_isSubscriber) return;
+    final userId = ref.read(currentAuthUserProvider)?.id;
+    if (userId == null) return;
     final service = ref.read(paymentServiceProvider);
-    final result = await service.purchasePlan(account: account, plan: plan);
+    await service.initialize(userId: userId);
+    if (!mounted || !service.isAvailable) return;
+    try {
+      final ids = StoreProductConfig.premiumProductIdsFor(widget.account);
+      final prices = await service.fetchStorePrices(ids);
+      if (mounted) setState(() => _prices = prices);
+    } catch (_) {
+      // Fallback labels remain visible; purchase flow will surface real errors.
+    }
+  }
+
+  Future<void> _purchase(String productId) async {
+    if (_busy) return;
+    final userId = ref.read(currentAuthUserProvider)?.id;
+    if (userId == null) {
+      _snack(AppStrings.authGuestDataWriteBlock);
+      return;
+    }
+    setState(() => _busy = true);
+    await ref.read(paymentServiceProvider).initialize(userId: userId);
+    final result = await ref
+        .read(paymentServiceProvider)
+        .purchaseProduct(productId: productId);
     if (!mounted) return;
     setState(() => _busy = false);
     _feedback(result);
-    if (result == PaymentResult.success) {
+    if (result == PaymentResult.success || result == PaymentResult.pending) {
       ref.invalidate(myEntitlementProvider);
     }
   }
 
   Future<void> _restore() async {
     if (_busy) return;
+    final userId = ref.read(currentAuthUserProvider)?.id;
+    if (userId == null) {
+      _snack(AppStrings.authGuestDataWriteBlock);
+      return;
+    }
     setState(() => _busy = true);
-    final result = await ref.read(paymentServiceProvider).restorePurchases();
+    final service = ref.read(paymentServiceProvider);
+    await service.initialize(userId: userId);
+    final result = await service.restorePurchases();
     if (!mounted) return;
     setState(() => _busy = false);
     if (result == PaymentResult.success) {
@@ -90,10 +119,10 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
   @override
   Widget build(BuildContext context) {
     if (!_isSubscriber) return const SizedBox.shrink();
-    final available = ref.watch(paymentServiceProvider).isAvailable;
+    final service = ref.watch(paymentServiceProvider);
+    final available = service.isAvailable;
 
     if (!available) {
-      // Ödeme hazır değil → bilgilendirme (fake purchase yok).
       return Text(
         AppStrings.storePaymentPreparing,
         key: const ValueKey('store_payment_preparing'),
@@ -106,19 +135,27 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
       );
     }
 
+    final monthly = StoreProductConfig.premiumMonthly;
+    final yearly = StoreProductConfig.premiumYearly;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buyButton(
-          key: 'buy_pro',
-          label: AppStrings.storePurchaseProCta,
-          onTap: () => _purchase(BusinessPlan.pro),
+          key: 'buy_premium_monthly',
+          label: AppStrings.storePurchaseMonthlyCta,
+          price:
+              _prices[monthly]?.priceLabel ?? PricingConfig.premiumMonthlyLabel,
+          onTap: () => _purchase(monthly),
         ),
         const SizedBox(height: AppSpacing.s),
         _buyButton(
-          key: 'buy_premium',
-          label: AppStrings.storePurchasePremiumCta,
-          onTap: () => _purchase(BusinessPlan.premium),
+          key: 'buy_premium_yearly',
+          label: AppStrings.storePurchaseYearlyCta,
+          price:
+              _prices[yearly]?.priceLabel ?? PricingConfig.premiumYearlyLabel,
+          badge: AppStrings.storePurchaseYearlySavings,
+          onTap: () => _purchase(yearly),
         ),
         const SizedBox(height: AppSpacing.s),
         TextButton(
@@ -133,7 +170,9 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
   Widget _buyButton({
     required String key,
     required String label,
+    required String price,
     required VoidCallback onTap,
+    String? badge,
   }) {
     return FilledButton(
       key: ValueKey(key),
@@ -141,14 +180,32 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.brandInk,
         foregroundColor: AppColors.brandLemon,
-        minimumSize: const Size.fromHeight(50),
+        minimumSize: const Size.fromHeight(54),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: Text(
+              '$label · $price',
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14.5,
+              ),
+            ),
+          ),
+          if (badge != null) ...[
+            const SizedBox(width: 8),
+            Text(
+              badge,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+            ),
+          ],
+        ],
       ),
     );
   }

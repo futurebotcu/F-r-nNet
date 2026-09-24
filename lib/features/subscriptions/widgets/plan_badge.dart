@@ -30,9 +30,9 @@ class PlanBadge extends StatelessWidget {
   }
 
   static (String, Color, Color) _style(BusinessEntitlements e) {
-    if (e.isTrialActive) {
+    if (e.isLaunchPromoActive) {
       return (
-        AppStrings.planTrialLabel,
+        AppStrings.planLaunchPromoLabel,
         const Color(0xFFFFF7E6),
         const Color(0xFFB45309),
       );

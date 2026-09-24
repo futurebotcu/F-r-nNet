@@ -11,12 +11,8 @@ import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 
-/// Tedarikçi mağaza ekranındaki plan/trial durum kartı + ürün/kampanya/cevap
-/// kota göstergeleri. Karta basınca Paketler ekranı açılır.
-///
-/// Kota kaynakları: ürün/kampanya CANLI liste sayısı (dışarıdan verilir);
-/// aylık teklif cevabı için server-hesaplı [BusinessEntitlements] alanları.
-/// Asıl kısıt server-side; bu yalnız bilgilendirme.
+/// Supplier plan/status card. It mirrors server-computed limits; server RLS/RPC
+/// remains the source of truth for paid feature access.
 class SupplierPlanCard extends ConsumerWidget {
   const SupplierPlanCard({
     super.key,
@@ -41,7 +37,7 @@ class SupplierPlanCard extends ConsumerWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.l),
           boxShadow: AppShadow.card,
-          border: e.isTrialActive
+          border: e.isLaunchPromoActive
               ? Border.all(color: AppColors.brandLemon, width: 1.4)
               : null,
         ),
@@ -58,7 +54,7 @@ class SupplierPlanCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                   child: Icon(
-                    e.isTrialActive
+                    e.isLaunchPromoActive
                         ? Icons.auto_awesome_rounded
                         : Icons.storefront_outlined,
                     size: 20,
@@ -98,7 +94,6 @@ class SupplierPlanCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.m),
-            // Kota satırları: full-width (dar ekran + 1.3x'te taşmaz).
             _QuotaRow(
               label: AppStrings.supQuotaProducts,
               value: _limitLabel(productCount, e.supplierProductLimit),
@@ -127,21 +122,13 @@ class SupplierPlanCard extends ConsumerWidget {
     );
   }
 
-  /// Tedarikçi fiyat ipucu (Paket Fiyatları UI V1). Premium'da boş.
   String _priceHint(BusinessEntitlements e) {
-    if (e.isTrialActive) {
-      return 'Deneme sonrası Pro ${PricingConfig.supplierProLabel}';
+    if (e.isLaunchPromoActive) {
+      return '${e.promoDaysLeft} ${AppStrings.planCardTrialDaysLeft}';
     }
-    switch (e.supplierEffectivePlan) {
-      case BusinessPlan.free:
-        return 'Pro ${PricingConfig.supplierProLabel} · '
-            'Premium ${PricingConfig.supplierPremiumLabel}';
-      case BusinessPlan.pro:
-        return 'Premium ${PricingConfig.supplierPremiumLabel} ile sınırsız '
-            'ürün/kampanya/teklif';
-      case BusinessPlan.premium:
-        return '';
-    }
+    if (e.canUsePremiumFeature) return '';
+    return 'Premium ${PricingConfig.premiumMonthlyLabel} / '
+        '${PricingConfig.premiumYearlyLabel}';
   }
 
   static String _limitLabel(int count, int limit) {
@@ -156,11 +143,11 @@ class SupplierPlanCard extends ConsumerWidget {
   }
 
   (String, String) _copy(BusinessEntitlements e) {
-    if (e.isTrialActive) {
-      return (
-        AppStrings.supPlanTrialTitle,
-        '${e.daysLeft} gün · ${AppStrings.supPlanTrialSub}',
-      );
+    if (e.isLaunchPromoActive) {
+      return (AppStrings.planLaunchPromoTitle, AppStrings.planLaunchPromoSub);
+    }
+    if (e.canUsePremiumFeature) {
+      return (AppStrings.supPlanPremiumTitle, AppStrings.supPlanPremiumSub);
     }
     switch (e.supplierEffectivePlan) {
       case BusinessPlan.premium:
@@ -183,7 +170,7 @@ class _QuotaRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
+        const Icon(
           Icons.check_circle_outline_rounded,
           size: 14,
           color: AppColors.textMuted,
