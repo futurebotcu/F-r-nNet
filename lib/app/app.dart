@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import '../core/constants/app_strings.dart';
 import '../features/auth/models/auth_user.dart';
 import '../features/auth/providers/auth_providers.dart';
 import '../features/notifications/push/push_notification_service.dart';
+import '../features/payments/providers/payment_providers.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -37,6 +40,10 @@ class _FirinNetAppState extends ConsumerState<FirinNetApp> {
       if (ref.read(currentAuthUserProvider) != null) {
         PushNotificationService.registerForUser();
       }
+      final userId = ref.read(currentAuthUserProvider)?.id;
+      if (userId != null) {
+        unawaited(ref.read(paymentServiceProvider).initialize(userId: userId));
+      }
     });
   }
 
@@ -51,6 +58,11 @@ class _FirinNetAppState extends ConsumerState<FirinNetApp> {
       // FN-AUDIT-008 — oturum değişince (login/logout) router guard'ı yeniden
       // değerlendir: çıkışta korumalı ekranda kalan kullanıcı /auth'a düşer.
       if (prev?.id != next?.id) {
+        final paymentService = ref.read(paymentServiceProvider);
+        unawaited(paymentService.setUser(next?.id));
+        if (next?.id != null) {
+          unawaited(paymentService.initialize(userId: next?.id));
+        }
         _router.refresh();
       }
     });

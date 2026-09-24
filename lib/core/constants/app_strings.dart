@@ -1721,12 +1721,12 @@ class AppStrings {
   static const String planFreeLabel = 'Free';
   static const String planProLabel = 'Pro';
   static const String planPremiumLabel = 'Premium';
-  static const String planTrialLabel = 'Deneme';
+  static const String planTrialLabel = 'Ücretsiz Kullanım';
   // Panel plan/trial kartı.
-  static const String planCardTrialTitle = 'Deneme sürümündesiniz';
+  static const String planCardTrialTitle = 'Premium — Ücretsiz Kullanım';
   static const String planCardTrialDaysLeft = 'gün kaldı';
   static const String planCardTrialSub =
-      'Deneme boyunca Premium özellikleri kullanabilirsiniz.';
+      'Ücretsiz kullanım boyunca Premium özellikleri kullanabilirsiniz.';
   static const String planCardFreeTitle = 'Free plan';
   static const String planCardFreeSub =
       'Temel Fırın Defteri, 5 reçete ve temel hesaplamalar açık.';
@@ -1740,12 +1740,12 @@ class AppStrings {
   // Planlar ekranı.
   static const String plansTitle = 'Paketler';
   static const String plansSubtitle =
-      'İşletmene uygun paketi seç. Ödeme yakında; şimdilik deneme sürümü açık.';
+      'Premium özellikler için aylık veya yıllık paketi seç. İlk 3 ay ücretsiz kullanım kart gerektirmez.';
   static const String plansTrialBanner =
-      'Deneme süresince tüm Premium özellikler açık.';
+      'Ücretsiz kullanım boyunca tüm Premium özellikler açık.';
   static const String plansSupportCta = 'Destek ile iletişime geç';
-  static const String plansComingSoon = 'Satın alma yakında';
-  static const String plansTrialCta = '30 gün ücretsiz dene';
+  static const String plansComingSoon = 'Google Play ile satın al';
+  static const String plansTrialCta = 'İlk 3 ay ücretsiz kullan';
   // Store ödeme (RevenueCat).
   static const String storePaymentPreparing = 'Mağaza ödemeleri hazırlanıyor.';
   static const String storePaymentSuccess =
@@ -1753,8 +1753,8 @@ class AppStrings {
   static const String storePaymentFailed = 'Ödeme tamamlanmadı.';
   static const String storePaymentRestoreCta = 'Satın alımları geri yükle';
   static const String storePaymentRestored = 'Satın alımlar geri yüklendi.';
-  static const String storePurchaseProCta = 'Pro’ya geç';
-  static const String storePurchasePremiumCta = 'Premium’a geç';
+  static const String storePurchaseProCta = 'Aylık Premium';
+  static const String storePurchasePremiumCta = 'Yıllık Premium';
   static const String storeListingPayCta = 'Öde ve yayınla (50 TL)';
   static const String plansCurrentBadge = 'Mevcut';
   // Plan özellik listeleri (planlar ekranı).
@@ -1769,13 +1769,40 @@ class AppStrings {
       'tüm hesaplamalar · sınırsız geçmiş · ileri raporlar';
   // Paywall sheet genel.
   static const String paywallUpgradeCta = 'Paketleri incele';
+  static const String paywallPromoCta = 'Ücretsiz Kullanmaya Başla';
+  static const String paywallPromoTitle = 'Bu bir Premium özellik';
+  static const String paywallPromoBody =
+      'FırınNet’in Premium özelliklerini ilk 3 ay boyunca tamamen ücretsiz ve sınırsız kullanabilirsin.';
+  static const String paywallPromoBulletAll = 'Tüm Premium özellikler açık';
+  static const String paywallPromoBulletCard = 'Kart bilgisi gerekmez';
+  static const String paywallPromoBulletPayment = 'Ödeme yöntemi gerekmez';
+  static const String paywallPromoBulletNoRenew = 'Otomatik ücretlendirme yok';
+  static const String paywallPromoFailed =
+      'Ücretsiz kullanım başlatılamadı. Lütfen tekrar dene.';
+  static const String planLaunchPromoLabel = 'Ücretsiz Kullanım';
+  static const String planLaunchPromoTitle =
+      'Premium — Ücretsiz Kullanım';
+  static const String planLaunchPromoSub =
+      'Tüm Premium özellikler ücretsiz kullanım boyunca açık.';
+  static const String plansLaunchSubtitle =
+      'Premium özellikler için aylık veya yıllık paketi seç. İlk 3 ay ücretsiz kullanım kart gerektirmez.';
+  static const String plansLaunchTrialCta =
+      'İlk 3 ay ücretsiz kullanım kart veya ödeme yöntemi istemez.';
+  static const String plansStoreReady =
+      'Satın alma Google Play üzerinden güvenli şekilde yapılır.';
+  static const String storePurchaseMonthlyCta = 'Aylık Premium';
+  static const String storePurchaseYearlyCta = 'Yıllık Premium';
+  static const String storePurchaseYearlySavings = '2 Ay Bizden';
+  static const String listingLaunchFreeBody =
+      'Lansman döneminde ilan yayınlama ücretsizdir. Ödeme ekranı açılmaz.';
   static const String paywallProTag = 'Pro';
   static const String paywallPremiumTag = 'Premium';
   // Modül paywall metinleri.
   static const String paywallBranchesTitle = 'Şube Yönetimi Premium’da açılır.';
   static const String paywallBranchesBody =
       'Şube, personel, süreç ve aktivite takibi için Premium’a geçin.';
-  static const String paywallDealerBookTitle = 'Bayi Defteri Pro’da açılır.';
+  static const String paywallDealerBookTitle =
+      'Bayi Defteri Premium’da açılır.';
   static const String paywallDealerBookBody =
       'Pro’da sınırsız bayi defteri tutabilir, tahsilat/iade/hareketleri '
       'yönetebilirsiniz. (Bayi Defteri tek kullanıcı/işletme sahibi '
@@ -1785,25 +1812,25 @@ class AppStrings {
   static const String paywallDealerDriverBody =
       'Şoför daveti, atama ve scoped erişim Premium paketindedir.';
   static const String paywallDebtExpenseTitle =
-      'Borç-Gider kayıtları Pro’da açılır.';
+      'Borç-Gider kayıtları Premium’da açılır.';
   static const String paywallDebtExpenseBody =
       'Borç, gider ve personel ödeme kayıtlarını Pro veya Premium ile '
       'takip edin.';
   static const String paywallRecipeFreeTitle =
       '5 reçeteye kadar ücretsiz kullanabilirsiniz.';
   static const String paywallRecipeFreeBody =
-      'Daha fazla reçete için Pro’ya geçin.';
+      'Daha fazla reçete için Premium’a geçin.';
   static const String paywallRecipeProTitle =
-      '50 reçeteye kadar Pro’da kullanabilirsiniz.';
+      'Sınırsız reçete Premium’da açılır.';
   static const String paywallRecipeProBody =
       'Sınırsız reçete için Premium’a geçin.';
-  static const String paywallCalcProTitle = 'Bu hesaplama Pro’da açılır.';
+  static const String paywallCalcProTitle = 'Bu hesaplama Premium’da açılır.';
   static const String paywallCalcPremiumTitle =
       'Bu hesaplama Premium’da açılır.';
   static const String paywallCalcBody =
       'Daha fazla karar-odaklı hesaplama için paketi yükseltin.';
   static const String paywallReportProTitle =
-      'Son 30 gün raporu Pro’da açılır.';
+      'Gelişmiş raporlar Premium’da açılır.';
   static const String paywallReportPremiumTitle =
       'Sınırsız geçmiş Premium’da açılır.';
   static const String paywallReportBody =
@@ -1834,15 +1861,15 @@ class AppStrings {
   static const String supPlanFreeTitle = 'Free tedarikçi';
   static const String supPlanFreeSub =
       '1 ürün, 3 teklif cevabı/ay ve ücretli ilan kullanımı.';
-  static const String supPlanProTitle = 'Pro tedarikçi';
+  static const String supPlanProTitle = 'Eski Pro tedarikçi';
   static const String supPlanProSub =
       '5 ürün, 3 kampanya, 20 teklif cevabı/ay ve ücretsiz ilanlar.';
   static const String supPlanPremiumTitle = 'Premium tedarikçi';
   static const String supPlanPremiumSub =
       'Sınırsız ürün, kampanya ve teklif cevabı.';
-  static const String supPlanTrialTitle = 'Deneme sürümündesiniz';
+  static const String supPlanTrialTitle = 'Premium — Ücretsiz Kullanım';
   static const String supPlanTrialSub =
-      'Tedarikçi denemesi Pro özellikleriyle çalışır.';
+      'Tedarikçi Premium özellikleri ücretsiz kullanım boyunca açık.';
   static const String supQuotaProducts = 'Ürün';
   static const String supQuotaCampaigns = 'Kampanya';
   static const String supQuotaReplies = 'Aylık teklif cevabı';
@@ -1851,26 +1878,26 @@ class AppStrings {
   static const String supPaywallProductFreeTitle =
       'Free tedarikçiler 1 ürün yayınlayabilir.';
   static const String supPaywallProductFreeBody =
-      'Daha fazla ürün için Pro’ya geçin. Pro’da 5 ürün, Premium’da sınırsız '
-      'ürün yayınlayabilirsiniz.';
+      'Daha fazla ürün için Premium’a geçin. Premium’da sınırsız ürün '
+      'yayınlayabilirsiniz.';
   static const String supPaywallProductProTitle =
-      'Pro’da 5 ürün yayınlayabilirsiniz.';
+      'Sınırsız ürün Premium’da açılır.';
   static const String supPaywallProductProBody =
       'Sınırsız ürün için Premium’a geçin.';
   static const String supPaywallCampaignFreeTitle =
-      'Kampanya yayınlama Pro’da açılır.';
+      'Kampanya yayınlama Premium’da açılır.';
   static const String supPaywallCampaignFreeBody =
-      'Pro’da 3 kampanya, Premium’da sınırsız kampanya yayınlayabilirsiniz.';
+      'Premium’da sınırsız kampanya yayınlayabilirsiniz.';
   static const String supPaywallCampaignProTitle =
-      'Pro’da 3 aktif kampanya yayınlayabilirsiniz.';
+      'Sınırsız kampanya Premium’da açılır.';
   static const String supPaywallCampaignProBody =
       'Sınırsız kampanya için Premium’a geçin.';
   static const String supPaywallReplyFreeTitle =
       'Free tedarikçiler ayda 3 teklif cevabı verebilir.';
   static const String supPaywallReplyFreeBody =
-      'Daha fazla teklif cevabı için Pro’ya geçin.';
+      'Daha fazla teklif cevabı için Premium’a geçin.';
   static const String supPaywallReplyProTitle =
-      'Pro’da ayda 20 teklif cevabı verebilirsiniz.';
+      'Sınırsız teklif cevabı Premium’da açılır.';
   static const String supPaywallReplyProBody =
       'Sınırsız teklif cevabı için Premium’a geçin.';
   static const String supErrorProductQuota = 'Ürün kotanız doldu.';

@@ -4,6 +4,13 @@ import '../../subscriptions/models/business_plan.dart';
 /// Store ödeme akışı sonucu.
 enum PaymentResult { success, cancelled, pending, unavailable, error }
 
+class StorePrice {
+  const StorePrice({required this.productId, required this.priceLabel});
+
+  final String productId;
+  final String priceLabel;
+}
+
 /// Store ödeme servisine soyut erişim (RevenueCat orkestrasyonu).
 ///
 /// Resmi ödeme modeli: App Store IAP + Play Billing. Havale/EFT/İyzico/Stripe
@@ -28,6 +35,12 @@ abstract class PaymentService {
     required AccountType account,
     required BusinessPlan plan,
   });
+
+  Future<PaymentResult> purchaseProduct({
+    required String productId,
+  });
+
+  Future<Map<String, StorePrice>> fetchStorePrices(List<String> productIds);
 
   /// Önceki satın alımları geri yükler.
   Future<PaymentResult> restorePurchases();

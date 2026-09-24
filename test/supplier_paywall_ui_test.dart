@@ -14,12 +14,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Tedarikçi/Toptancı Paywall UI V1 — helper + widget testleri.
-/// Asıl kısıt server-side (RLS smoke 7 grup PASS); bu yalnız UX.
-Future<BusinessEntitlements> _entOf(BusinessPlan plan, {bool trial = false}) =>
+Future<BusinessEntitlements> _entOf(BusinessPlan plan, {bool promo = false}) =>
     LocalSubscriptionRepository(
       plan: plan,
-      trialActive: trial,
+      trialActive: promo,
       trialDaysLeft: 30,
     ).myEntitlement();
 
@@ -28,8 +26,8 @@ class _FixedProfile extends ProfileController {
     state = BakeryProfile(
       displayName: 'T',
       accountType: account,
-      city: 'İstanbul',
-      roleBadge: 'Tedarikçi',
+      city: 'Istanbul',
+      roleBadge: 'Tedarikci',
       email: 't@t.com',
     );
   }
@@ -37,7 +35,7 @@ class _FixedProfile extends ProfileController {
 
 void main() {
   group('SupplierPaywall.productLock', () {
-    test('free: 0<1 açık, 1 dolu → Pro lock', () async {
+    test('free: first product open, second product locked', () async {
       final e = await _entOf(BusinessPlan.free);
       expect(SupplierPaywall.productLock(e, 0), isNull);
       expect(
@@ -45,43 +43,43 @@ void main() {
         FeatureLock.supplierProductFree,
       );
     });
-    test('pro: <5 açık, 5 dolu → Premium lock', () async {
+
+    test('legacy pro: backward compatibility unlocks Premium limits', () async {
       final e = await _entOf(BusinessPlan.pro);
-      expect(SupplierPaywall.productLock(e, 4), isNull);
-      expect(SupplierPaywall.productLock(e, 5), FeatureLock.supplierProductPro);
+      expect(SupplierPaywall.productLock(e, 999), isNull);
     });
-    test('premium/trial: daima açık', () async {
+
+    test('premium and launch promo are unlimited', () async {
       expect(
         SupplierPaywall.productLock(await _entOf(BusinessPlan.premium), 999),
         isNull,
       );
-      final trial = await _entOf(BusinessPlan.free, trial: true);
-      // Trial = Pro-like → 5 limit.
-      expect(SupplierPaywall.productLock(trial, 4), isNull);
       expect(
-        SupplierPaywall.productLock(trial, 5),
-        FeatureLock.supplierProductPro,
+        SupplierPaywall.productLock(
+          await _entOf(BusinessPlan.free, promo: true),
+          999,
+        ),
+        isNull,
       );
     });
   });
 
   group('SupplierPaywall.campaignLock', () {
-    test('free: daima kilitli (limit 0) → Pro', () async {
-      final e = await _entOf(BusinessPlan.free);
-      expect(
-        SupplierPaywall.campaignLock(e, 0),
-        FeatureLock.supplierCampaignFree,
-      );
-    });
-    test('pro: <3 açık, 3 dolu → Premium', () async {
-      final e = await _entOf(BusinessPlan.pro);
-      expect(SupplierPaywall.campaignLock(e, 2), isNull);
-      expect(
-        SupplierPaywall.campaignLock(e, 3),
-        FeatureLock.supplierCampaignPro,
-      );
-    });
-    test('premium: sınırsız açık', () async {
+    test(
+      'free campaign creation requires Premium; legacy pro is open',
+      () async {
+        expect(
+          SupplierPaywall.campaignLock(await _entOf(BusinessPlan.free), 0),
+          FeatureLock.supplierCampaignFree,
+        );
+        expect(
+          SupplierPaywall.campaignLock(await _entOf(BusinessPlan.pro), 0),
+          isNull,
+        );
+      },
+    );
+
+    test('premium is unlimited', () async {
       expect(
         SupplierPaywall.campaignLock(await _entOf(BusinessPlan.premium), 50),
         isNull,
@@ -89,10 +87,11 @@ void main() {
     });
   });
 
-  group('SupplierPaywall.replyLock (server bool)', () {
-    test('canReply true → açık; false → plana göre lock', () async {
-      final free = await _entOf(BusinessPlan.free); // canReply true default
+  group('SupplierPaywall.replyLock', () {
+    test('server bool controls reply gate', () async {
+      final free = await _entOf(BusinessPlan.free);
       expect(SupplierPaywall.replyLock(free), isNull);
+
       const exhaustedFree = BusinessEntitlements(
         supplierEffectivePlan: BusinessPlan.free,
         supplierCanReplyQuote: false,
@@ -101,6 +100,7 @@ void main() {
         SupplierPaywall.replyLock(exhaustedFree),
         FeatureLock.supplierReplyFree,
       );
+
       const exhaustedPro = BusinessEntitlements(
         supplierEffectivePlan: BusinessPlan.pro,
         supplierCanReplyQuote: false,
@@ -112,8 +112,8 @@ void main() {
     });
   });
 
-  group('ListingFee — wholesaler muafiyeti', () {
-    test('free wholesaler market 50 TL', () async {
+  group('ListingFee launch period', () {
+    test('market listings are free while launch flag is off', () async {
       final e = await _entOf(BusinessPlan.free);
       expect(
         ListingFee.amountCents(
@@ -121,36 +121,11 @@ void main() {
           account: AccountType.wholesaler,
           entitlements: e,
         ),
-        5000,
+        0,
       );
     });
-    test('pro/premium/trial wholesaler market ücretsiz', () async {
-      for (final e in [
-        await _entOf(BusinessPlan.pro),
-        await _entOf(BusinessPlan.premium),
-        await _entOf(BusinessPlan.free, trial: true),
-      ]) {
-        expect(
-          ListingFee.amountCents(
-            kind: ListingKind.market,
-            account: AccountType.wholesaler,
-            entitlements: e,
-          ),
-          0,
-          reason: e.supplierEffectivePlan.toString(),
-        );
-      }
-    });
-    test('commercial/bireysel ilan kuralları bozulmadı', () async {
-      final freeComm = await _entOf(BusinessPlan.free);
-      expect(
-        ListingFee.amountCents(
-          kind: ListingKind.market,
-          account: AccountType.commercial,
-          entitlements: freeComm,
-        ),
-        5000,
-      );
+
+    test('job seek remains free', () {
       expect(
         ListingFee.amountCents(
           kind: ListingKind.jobSeek,
@@ -165,7 +140,7 @@ void main() {
   Future<void> pumpCard(
     WidgetTester tester,
     BusinessPlan plan, {
-    bool trial = false,
+    bool promo = false,
     int products = 0,
     int campaigns = 0,
     double textScale = 1.0,
@@ -183,7 +158,7 @@ void main() {
           subscriptionRepositoryProvider.overrideWithValue(
             LocalSubscriptionRepository(
               plan: plan,
-              trialActive: trial,
+              trialActive: promo,
               trialDaysLeft: 21,
             ),
           ),
@@ -202,40 +177,31 @@ void main() {
   }
 
   group('SupplierPlanCard', () {
-    testWidgets('free: başlık + kota (1 ürün / 0 kampanya)', (tester) async {
+    testWidgets('free: title and free quotas', (tester) async {
       await pumpCard(tester, BusinessPlan.free, products: 1);
       expect(find.byKey(const ValueKey('supplier_plan_card')), findsOneWidget);
       expect(find.text(AppStrings.supPlanFreeTitle), findsOneWidget);
-      expect(find.text('1 / 1'), findsOneWidget); // ürün
-      expect(find.text('0 / 0'), findsOneWidget); // kampanya
+      expect(find.text('1 / 1'), findsOneWidget);
+      expect(find.text('0 / 0'), findsOneWidget);
     });
 
-    testWidgets('pro: başlık + 5/3/20 kotaları', (tester) async {
-      await pumpCard(tester, BusinessPlan.pro, products: 2, campaigns: 1);
-      expect(find.text(AppStrings.supPlanProTitle), findsOneWidget);
-      expect(find.text('2 / 5'), findsOneWidget);
-      expect(find.text('1 / 3'), findsOneWidget);
-    });
-
-    testWidgets('premium: sınırsız kotalar', (tester) async {
+    testWidgets('premium: unlimited quotas', (tester) async {
       await pumpCard(tester, BusinessPlan.premium);
       expect(find.text(AppStrings.supPlanPremiumTitle), findsOneWidget);
       expect(find.text(AppStrings.supQuotaUnlimited), findsWidgets);
     });
 
-    testWidgets('trial: Pro-like deneme metni (Premium değil)', (tester) async {
-      await pumpCard(tester, BusinessPlan.free, trial: true);
-      expect(find.text(AppStrings.supPlanTrialTitle), findsOneWidget);
-      // Trial'da tedarikçi limitleri Pro (5) — sınırsız DEĞİL.
-      expect(find.text('0 / 5'), findsOneWidget);
+    testWidgets('launch promo: premium free usage copy', (tester) async {
+      await pumpCard(tester, BusinessPlan.free, promo: true);
+      expect(find.text(AppStrings.planLaunchPromoTitle), findsOneWidget);
+      expect(find.text(AppStrings.supQuotaUnlimited), findsWidgets);
     });
 
-    testWidgets('320dp + 1.3x taşma yapmaz', (tester) async {
+    testWidgets('320dp + 1.3x does not overflow', (tester) async {
       await pumpCard(
         tester,
-        BusinessPlan.pro,
-        products: 3,
-        campaigns: 2,
+        BusinessPlan.free,
+        products: 1,
         textScale: 1.3,
         size: const Size(320, 900),
       );
@@ -243,7 +209,7 @@ void main() {
     });
   });
 
-  group('PlansScreen — wholesaler tedarikçi paketleri', () {
+  group('PlansScreen supplier/commercial packages', () {
     Future<void> pumpPlans(WidgetTester tester, AccountType account) async {
       tester.view.physicalSize = const Size(390, 2600);
       tester.view.devicePixelRatio = 1.0;
@@ -265,18 +231,22 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('wholesaler tedarikçi özelliklerini gösterir', (tester) async {
+    testWidgets('wholesaler shows simplified Free + Premium offer', (
+      tester,
+    ) async {
       await pumpPlans(tester, AccountType.wholesaler);
       expect(find.text(AppStrings.supPlanFreeFeatures), findsOneWidget);
-      expect(find.text(AppStrings.supPlanProFeatures), findsOneWidget);
       expect(find.text(AppStrings.supPlanPremiumFeatures), findsOneWidget);
+      expect(find.text(AppStrings.supPlanProFeatures), findsNothing);
     });
 
-    testWidgets('commercial metinleri bozulmaz + "1 bayi" yok', (tester) async {
+    testWidgets('commercial shows simplified Free + Premium offer', (
+      tester,
+    ) async {
       await pumpPlans(tester, AccountType.commercial);
-      expect(find.text(AppStrings.planProFeatures), findsOneWidget);
-      expect(AppStrings.planProFeatures.contains('1 bayi'), isFalse);
-      expect(AppStrings.planProFeatures.contains('sınırsız bayi'), isTrue);
+      expect(find.text(AppStrings.planFreeFeatures), findsOneWidget);
+      expect(find.text(AppStrings.planPremiumFeatures), findsOneWidget);
+      expect(find.text(AppStrings.planProFeatures), findsNothing);
     });
   });
 }

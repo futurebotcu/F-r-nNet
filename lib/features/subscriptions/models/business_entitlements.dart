@@ -33,6 +33,10 @@ class BusinessEntitlements {
     this.supplierCanAddCampaign = false,
     this.supplierCanReplyQuote = true,
     this.supplierListingFeeExempt = false,
+    this.promoStatus = 'not_started',
+    this.promoStartedAt,
+    this.promoExpiresAt,
+    this.canStartPromo = true,
   });
 
   /// Gerçek plan (trial'dan bağımsız).
@@ -73,12 +77,25 @@ class BusinessEntitlements {
 
   /// Tedarikçi Pro/Premium/trial → ilan yayın ücreti muaf.
   final bool supplierListingFeeExempt;
+  final String promoStatus;
+  final DateTime? promoStartedAt;
+  final DateTime? promoExpiresAt;
+  final bool canStartPromo;
 
   bool get supplierProductsUnlimited => supplierProductLimit < 0;
   bool get supplierCampaignsUnlimited => supplierCampaignLimit < 0;
   bool get supplierRepliesUnlimited => supplierMonthlyReplyLimit < 0;
 
   bool get isPremium => effectivePlan == BusinessPlan.premium;
+  bool get canUsePremiumFeature => effectivePlan == BusinessPlan.premium;
+  bool get isLaunchPromoActive =>
+      promoStatus == 'active' && promoExpiresAt != null;
+  int get promoDaysLeft {
+    final expires = promoExpiresAt;
+    if (expires == null) return daysLeft;
+    final diff = expires.difference(DateTime.now().toUtc()).inDays;
+    return diff < 0 ? 0 : diff;
+  }
   bool get isPro => effectivePlan == BusinessPlan.pro;
   bool get isFree => effectivePlan == BusinessPlan.free;
   bool get recipesUnlimited => recipeLimit < 0;
@@ -124,6 +141,17 @@ class BusinessEntitlements {
       supplierCanReplyQuote: (row['supplier_can_reply_quote'] as bool?) ?? true,
       supplierListingFeeExempt:
           (row['supplier_listing_fee_exempt'] as bool?) ?? false,
+      promoStatus: (row['promo_status'] as String?) ??
+          (((row['is_trial_active'] as bool?) ?? false)
+              ? 'active'
+              : 'not_started'),
+      promoStartedAt: row['promo_started_at'] == null
+          ? null
+          : DateTime.tryParse(row['promo_started_at'] as String),
+      promoExpiresAt: row['promo_expires_at'] == null
+          ? null
+          : DateTime.tryParse(row['promo_expires_at'] as String),
+      canStartPromo: (row['can_start_promo'] as bool?) ?? true,
     );
   }
 

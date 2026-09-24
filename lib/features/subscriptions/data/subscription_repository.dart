@@ -11,4 +11,8 @@ abstract class SubscriptionRepository {
   /// Çağıranın entitlement satırı yoksa oluşturur (ticari → 30 gün trial).
   /// İdempotent; panel girişinde güvenle çağrılır.
   Future<void> ensureMyEntitlement();
+
+  /// Launch Premium promosunu server-side baslatir. Store/RevenueCat satin alma
+  /// akisi baslatmaz; RPC idempotenttir.
+  Future<BusinessEntitlements> activateLaunchPremiumPromo();
 }

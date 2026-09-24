@@ -84,12 +84,20 @@ Deno.serve(async (req) => {
   >;
   const now = Date.now();
   let appliedPlan = "free";
-
-  for (const [productId, info] of Object.entries(subs)) {
+  const entries = Object.entries(subs).map(([productId, info]) => {
     const expires = info.expires_date
       ? Date.parse(String(info.expires_date))
       : 0;
-    const active = expires > now;
+    return { productId, info, expires, active: expires > now };
+  });
+  const activeEntries = entries
+    .filter((e) => e.active)
+    .sort((a, b) => b.expires - a.expires);
+  const entriesToApply = activeEntries.length > 0
+    ? [activeEntries[0]]
+    : entries.sort((a, b) => b.expires - a.expires);
+
+  for (const { productId, info, expires, active } of entriesToApply) {
     const status = active ? "active" : "expired";
     const { data: applyRes } = await db.rpc("apply_store_subscription", {
       p_user_id: uid,

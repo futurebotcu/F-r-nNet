@@ -31,14 +31,22 @@ foreach ($line in (Get-Content $envFile -Encoding UTF8)) {
 
 $url = $config['SUPABASE_URL']
 $key = $config['SUPABASE_ANON_KEY']
+$revenueCatAndroidKey = $config['REVENUECAT_ANDROID_API_KEY']
 
 if ([string]::IsNullOrWhiteSpace($url) -or [string]::IsNullOrWhiteSpace($key)) {
     Write-Host "ERROR: .env.local icinde SUPABASE_URL veya SUPABASE_ANON_KEY bos." -ForegroundColor Red
     exit 1
 }
 
+if ([string]::IsNullOrWhiteSpace($revenueCatAndroidKey)) {
+    Write-Host "ERROR: .env.local icinde REVENUECAT_ANDROID_API_KEY bos." -ForegroundColor Red
+    Write-Host "Production AAB odeme ozelligi kapali uretilmesin diye build durduruldu." -ForegroundColor Yellow
+    exit 1
+}
+
 Write-Host "SUPABASE_URL present: yes"
 Write-Host "SUPABASE_ANON_KEY present: yes"
+Write-Host "REVENUECAT_ANDROID_API_KEY present: yes"
 Write-Host "Baslat: flutter build appbundle --release"
 Write-Host ""
 Write-Host "NOT: Android release signing config (android/key.properties + signingConfig)" -ForegroundColor Yellow
@@ -49,7 +57,8 @@ Push-Location $repoRoot
 try {
     $urlArg = "--dart-define=SUPABASE_URL=$url"
     $keyArg = "--dart-define=SUPABASE_ANON_KEY=$key"
-    & flutter build appbundle --release $urlArg $keyArg
+    $rcAndroidArg = "--dart-define=REVENUECAT_ANDROID_API_KEY=$revenueCatAndroidKey"
+    & flutter build appbundle --release $urlArg $keyArg $rcAndroidArg
 } finally {
     Pop-Location
 }

@@ -81,6 +81,9 @@ void main() {
       final src = _read('scripts/run_supabase_android.ps1');
       expect(src.contains('--dart-define=SUPABASE_URL='), isTrue);
       expect(src.contains('--dart-define=SUPABASE_ANON_KEY='), isTrue);
+      expect(src.contains('--dart-define=REVENUECAT_ANDROID_API_KEY='), isTrue);
+      expect(src.contains(r"$config['REVENUECAT_ANDROID_API_KEY']"), isTrue);
+      expect(src.contains('REVENUECAT_ANDROID_API_KEY present:'), isTrue);
       expect(src.contains('IsNullOrWhiteSpace'), isTrue);
       expect(src.contains('exit 1'), isTrue);
       // Secret echo yok:
@@ -100,6 +103,9 @@ void main() {
       final src = _read('scripts/build_release_supabase_aab.ps1');
       expect(src.contains('--dart-define=SUPABASE_URL='), isTrue);
       expect(src.contains('--dart-define=SUPABASE_ANON_KEY='), isTrue);
+      expect(src.contains('--dart-define=REVENUECAT_ANDROID_API_KEY='), isTrue);
+      expect(src.contains(r"$config['REVENUECAT_ANDROID_API_KEY']"), isTrue);
+      expect(src.contains('REVENUECAT_ANDROID_API_KEY present:'), isTrue);
       expect(src.contains('IsNullOrWhiteSpace'), isTrue);
       expect(src.contains('exit 1'), isTrue);
       expect(
@@ -110,6 +116,13 @@ void main() {
       expect(
         RegExp(r'Write-(Host|Output)\s+.*\$key\b', caseSensitive: false)
             .hasMatch(src),
+        isFalse,
+      );
+      expect(
+        RegExp(
+          r'Write-(Host|Output)\s+.*\$revenueCatAndroidKey\b',
+          caseSensitive: false,
+        ).hasMatch(src),
         isFalse,
       );
     });

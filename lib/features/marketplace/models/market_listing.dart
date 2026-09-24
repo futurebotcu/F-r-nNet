@@ -51,6 +51,7 @@ class MarketListing {
     this.mediaList = const <MarketListingMedia>[],
     this.isSavedByMe = false,
     this.feeStatus = 'not_required',
+    this.expiresAt,
   });
 
   final String? id;
@@ -135,6 +136,7 @@ class MarketListing {
   /// İlan Ücretlendirme V1 — server-side set edilir (client değiştiremez).
   /// `not_required | pending | paid | waived | grandfathered`.
   final String feeStatus;
+  final DateTime? expiresAt;
 
   /// Ücretli ilan ödeme bekliyor mu? (owner kendi ilanında görür; public'e
   /// pending ilan zaten görünmez — server SELECT gate'i.)
@@ -220,6 +222,7 @@ class MarketListing {
       mediaList: mediaList ?? this.mediaList,
       isSavedByMe: isSavedByMe ?? this.isSavedByMe,
       feeStatus: feeStatus,
+      expiresAt: expiresAt,
     );
   }
 
@@ -321,6 +324,7 @@ class MarketListing {
       mediaList: mediaList,
       isSavedByMe: isSavedByMe,
       feeStatus: (row['fee_status'] as String?) ?? 'not_required',
+      expiresAt: parse(row['expires_at'] as String?),
     );
   }
 }

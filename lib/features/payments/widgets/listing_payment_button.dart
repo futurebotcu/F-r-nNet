@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../data/payment_service.dart';
 import '../providers/payment_providers.dart';
 
@@ -32,12 +33,18 @@ class _ListingPaymentButtonState extends ConsumerState<ListingPaymentButton> {
 
   Future<void> _pay() async {
     if (_busy) return;
+    final userId = ref.read(currentAuthUserProvider)?.id;
+    if (userId == null) {
+      _snack(AppStrings.authGuestDataWriteBlock);
+      return;
+    }
     final service = ref.read(paymentServiceProvider);
     if (!service.isAvailable) {
       _snack(AppStrings.storePaymentPreparing);
       return;
     }
     setState(() => _busy = true);
+    await service.initialize(userId: userId);
     final result = await service.purchaseListingFee(
       listingKind: widget.listingKind,
       listingId: widget.listingId,

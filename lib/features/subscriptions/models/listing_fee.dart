@@ -17,6 +17,7 @@ class ListingFee {
 
   /// Sabit ücret (kuruş) — 50 TL.
   static const int feeCents = 5000;
+  static const bool launchListingPaymentsEnabled = false;
 
   static int amountCents({
     required ListingKind kind,
@@ -24,6 +25,7 @@ class ListingFee {
     required BusinessEntitlements? entitlements,
   }) {
     if (kind == ListingKind.jobSeek) return 0;
+    if (!launchListingPaymentsEnabled) return 0;
     // Ticari işletme Pro/Premium → muaf; tedarikçi Pro/Premium/trial → muaf
     // (server get_listing_fee_amount_cents aynası).
     final commercialExempt =
@@ -51,6 +53,7 @@ class ListingFee {
     required BusinessEntitlements? entitlements,
   }) {
     if (kind == ListingKind.jobSeek) return AppStrings.listingFeeFreeSeek;
+    if (!launchListingPaymentsEnabled) return AppStrings.listingLaunchFreeBody;
     final free =
         amountCents(kind: kind, account: account, entitlements: entitlements) ==
         0;

@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart' show PlatformException;
-import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
@@ -10,12 +10,10 @@ import '../../subscriptions/models/business_plan.dart';
 import '../models/store_product_config.dart';
 import 'payment_service.dart';
 
-/// RevenueCat tabanlı store ödeme servisi (App Store IAP + Play Billing).
+/// RevenueCat tabanli store odeme servisi (App Store IAP + Play Billing).
 ///
-/// Yalnız RevenueCat public key mevcutsa etkin. Entitlement client'ta
-/// UYGULANMAZ — purchase sonrası backend edge (revenuecat-sync-my-entitlements /
-/// revenuecat-confirm-listing-payment) doğrular ve uygular. Client sadece
-/// satın alma akışını tetikler + sync çağırır.
+/// Entitlement client'ta uygulanmaz. Satin alma/restore sonrasi backend Edge
+/// Function RevenueCat REST ile dogrular ve user_entitlements kaynagini gunceller.
 class RevenueCatPaymentService implements PaymentService {
   RevenueCatPaymentService(this._db);
 
@@ -36,18 +34,27 @@ class RevenueCatPaymentService implements PaymentService {
       await setUser(userId);
       return;
     }
-    final config = PurchasesConfiguration(_platformKey)..appUserID = userId;
-    await Purchases.configure(config);
+    final config = rc.PurchasesConfiguration(_platformKey)..appUserID = userId;
+    await rc.Purchases.configure(config);
     _configured = true;
+  }
+
+  Future<void> _ensureConfigured() async {
+    if (_configured) return;
+    final userId = _db.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('RevenueCat requires an authenticated user');
+    }
+    await initialize(userId: userId);
   }
 
   @override
   Future<void> setUser(String? userId) async {
     if (!isAvailable || !_configured) return;
     if (userId == null) {
-      await Purchases.logOut();
+      await rc.Purchases.logOut();
     } else {
-      await Purchases.logIn(userId);
+      await rc.Purchases.logIn(userId);
     }
   }
 
@@ -55,7 +62,7 @@ class RevenueCatPaymentService implements PaymentService {
   Future<List<BusinessPlan>> availablePlans(AccountType? account) async {
     return StoreProductConfig.subscriptionsFor(
       account,
-    ).map((p) => p.plan!).toList(growable: false);
+    ).map((p) => p.plan!).toSet().toList(growable: false);
   }
 
   @override
@@ -66,9 +73,19 @@ class RevenueCatPaymentService implements PaymentService {
     if (!isAvailable) return PaymentResult.unavailable;
     final productId = StoreProductConfig.productIdFor(account, plan);
     if (productId == null) return PaymentResult.error;
+    return purchaseProduct(productId: productId);
+  }
+
+  @override
+  Future<PaymentResult> purchaseProduct({required String productId}) async {
+    if (!isAvailable) return PaymentResult.unavailable;
     final result = await _purchaseProductId(productId);
     if (result == PaymentResult.success) {
-      await syncEntitlements();
+      try {
+        await syncEntitlements();
+      } catch (_) {
+        return PaymentResult.pending;
+      }
     }
     return result;
   }
@@ -77,7 +94,8 @@ class RevenueCatPaymentService implements PaymentService {
   Future<PaymentResult> restorePurchases() async {
     if (!isAvailable) return PaymentResult.unavailable;
     try {
-      await Purchases.restorePurchases();
+      await _ensureConfigured();
+      await rc.Purchases.restorePurchases();
       await syncEntitlements();
       return PaymentResult.success;
     } catch (_) {
@@ -87,10 +105,10 @@ class RevenueCatPaymentService implements PaymentService {
 
   @override
   Future<void> syncEntitlements() async {
-    try {
-      await _db.functions.invoke('revenuecat-sync-my-entitlements');
-    } catch (_) {
-      // Sessiz — entitlement provider ayrıca yeniden okunur.
+    final res = await _db.functions.invoke('revenuecat-sync-my-entitlements');
+    final data = res.data;
+    if (data is Map && data['ok'] == false) {
+      throw StateError('entitlement sync failed');
     }
   }
 
@@ -100,7 +118,6 @@ class RevenueCatPaymentService implements PaymentService {
     required String listingId,
   }) async {
     if (!isAvailable) return PaymentResult.unavailable;
-    // 1) Sunucuda ödeme niyeti (owner + pending doğrular).
     final intentRows = await _db.rpc(
       'create_listing_payment_intent',
       params: {'p_listing_kind': listingKind, 'p_listing_id': listingId},
@@ -110,36 +127,65 @@ class RevenueCatPaymentService implements PaymentService {
         : null;
     if (intent == null) return PaymentResult.error;
     final intentId = intent['intent_id'] as String?;
-    // 2) Consumable purchase.
+    if (intentId == null) return PaymentResult.error;
+
+    // Network failure sonrasi tekrar butona basilirse once mevcut purchase'i
+    // confirm etmeyi deneriz; basarisizsa yeni store purchase baslar.
+    final recovery = await _confirmListingPayment(intentId);
+    if (recovery == PaymentResult.success) return PaymentResult.success;
+
     final result = await _purchaseProductId(StoreProductConfig.listingFee);
-    if (result != PaymentResult.success || intentId == null) return result;
-    // 3) Backend doğrulama + ilan public (edge, RevenueCat REST).
-    try {
-      await _db.functions.invoke(
-        'revenuecat-confirm-listing-payment',
-        body: {'intent_id': intentId},
-      );
-    } catch (_) {
-      // Doğrulama beklemede — webhook idempotent geçebilir.
-      return PaymentResult.pending;
-    }
-    return PaymentResult.success;
+    if (result != PaymentResult.success) return result;
+    return _confirmListingPayment(intentId);
   }
 
   Future<PaymentResult> _purchaseProductId(String productId) async {
     try {
-      final products = await Purchases.getProducts([productId]);
+      await _ensureConfigured();
+      final products = await rc.Purchases.getProducts([productId]);
       if (products.isEmpty) return PaymentResult.error;
-      await Purchases.purchase(PurchaseParams.storeProduct(products.first));
+      await rc.Purchases.purchase(
+        rc.PurchaseParams.storeProduct(products.first),
+      );
       return PaymentResult.success;
     } on PlatformException catch (e) {
-      final code = PurchasesErrorHelper.getErrorCode(e);
-      if (code == PurchasesErrorCode.purchaseCancelledError) {
+      final code = rc.PurchasesErrorHelper.getErrorCode(e);
+      if (code == rc.PurchasesErrorCode.purchaseCancelledError) {
         return PaymentResult.cancelled;
       }
       return PaymentResult.error;
     } catch (_) {
       return PaymentResult.error;
     }
+  }
+
+  Future<PaymentResult> _confirmListingPayment(String intentId) async {
+    try {
+      final res = await _db.functions.invoke(
+        'revenuecat-confirm-listing-payment',
+        body: {'intent_id': intentId},
+      );
+      final data = res.data;
+      if (data is Map && data['ok'] == true) return PaymentResult.success;
+      return PaymentResult.pending;
+    } catch (_) {
+      return PaymentResult.pending;
+    }
+  }
+
+  @override
+  Future<Map<String, StorePrice>> fetchStorePrices(
+    List<String> productIds,
+  ) async {
+    if (!isAvailable || productIds.isEmpty) return const <String, StorePrice>{};
+    await _ensureConfigured();
+    final products = await rc.Purchases.getProducts(productIds);
+    return <String, StorePrice>{
+      for (final p in products)
+        p.identifier: StorePrice(
+          productId: p.identifier,
+          priceLabel: p.priceString,
+        ),
+    };
   }
 }

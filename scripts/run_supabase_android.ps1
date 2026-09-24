@@ -37,14 +37,21 @@ foreach ($line in (Get-Content $envFile -Encoding UTF8)) {
 
 $url = $config['SUPABASE_URL']
 $key = $config['SUPABASE_ANON_KEY']
+$revenueCatAndroidKey = $config['REVENUECAT_ANDROID_API_KEY']
 
 if ([string]::IsNullOrWhiteSpace($url) -or [string]::IsNullOrWhiteSpace($key)) {
     Write-Host "ERROR: .env.local icinde SUPABASE_URL veya SUPABASE_ANON_KEY bos." -ForegroundColor Red
     exit 1
 }
 
+if ([string]::IsNullOrWhiteSpace($revenueCatAndroidKey)) {
+    Write-Host "ERROR: .env.local icinde REVENUECAT_ANDROID_API_KEY bos." -ForegroundColor Red
+    exit 1
+}
+
 Write-Host "SUPABASE_URL present: yes"
 Write-Host "SUPABASE_ANON_KEY present: yes"
+Write-Host "REVENUECAT_ANDROID_API_KEY present: yes"
 
 if (-not $DeviceId) {
     Write-Host ""
@@ -63,7 +70,8 @@ Push-Location $repoRoot
 try {
     $urlArg = "--dart-define=SUPABASE_URL=$url"
     $keyArg = "--dart-define=SUPABASE_ANON_KEY=$key"
-    & flutter run -d $DeviceId $urlArg $keyArg
+    $rcAndroidArg = "--dart-define=REVENUECAT_ANDROID_API_KEY=$revenueCatAndroidKey"
+    & flutter run -d $DeviceId $urlArg $keyArg $rcAndroidArg
 } finally {
     Pop-Location
 }

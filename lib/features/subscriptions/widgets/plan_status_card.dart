@@ -12,9 +12,7 @@ import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 import 'plan_badge.dart';
 
-/// Ticari panelde gösterilen plan/trial durum kartı. Karta basınca Paketler
-/// ekranı açılır. Entitlement yüklenmeden/başarısızsa hiçbir şey göstermez
-/// (panel bozulmaz).
+/// Panelde kullanicinin guncel Premium/launch promo durumunu gosterir.
 class PlanStatusCard extends ConsumerWidget {
   const PlanStatusCard({super.key});
 
@@ -33,7 +31,7 @@ class PlanStatusCard extends ConsumerWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.l),
           boxShadow: AppShadow.card,
-          border: e.isTrialActive
+          border: e.isLaunchPromoActive
               ? Border.all(color: AppColors.brandLemon, width: 1.4)
               : null,
         ),
@@ -47,7 +45,7 @@ class PlanStatusCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppRadius.m),
               ),
               child: Icon(
-                e.isTrialActive
+                e.isLaunchPromoActive
                     ? Icons.auto_awesome_rounded
                     : Icons.workspace_premium_outlined,
                 size: 20,
@@ -109,11 +107,11 @@ class PlanStatusCard extends ConsumerWidget {
   }
 
   (String, String) _copy(BusinessEntitlements e) {
-    if (e.isTrialActive) {
+    if (e.isLaunchPromoActive) {
       return (
-        AppStrings.planCardTrialTitle,
+        AppStrings.planLaunchPromoTitle,
         '${e.daysLeft} ${AppStrings.planCardTrialDaysLeft} · '
-            '${AppStrings.planCardTrialSub}',
+            '${AppStrings.planLaunchPromoSub}',
       );
     }
     switch (e.effectivePlan) {
@@ -126,18 +124,17 @@ class PlanStatusCard extends ConsumerWidget {
     }
   }
 
-  /// Ticari işletme fiyat ipucu (Paket Fiyatları UI V1). Premium'da boş.
   String _priceHint(BusinessEntitlements e) {
-    if (e.isTrialActive) {
-      return 'Deneme sonrası Pro ${PricingConfig.bakeryProLabel} · '
-          'Premium ${PricingConfig.bakeryPremiumLabel}';
+    if (e.isLaunchPromoActive) {
+      return 'Sonrasında aylık ${PricingConfig.premiumMonthlyLabel} · '
+          'yıllık ${PricingConfig.premiumYearlyLabel}';
     }
     switch (e.effectivePlan) {
       case BusinessPlan.free:
-        return 'Pro ${PricingConfig.bakeryProLabel} · '
-            'Premium ${PricingConfig.bakeryPremiumLabel}';
+        return 'Premium ${PricingConfig.premiumMonthlyLabel} · '
+            '${PricingConfig.premiumYearlyLabel}';
       case BusinessPlan.pro:
-        return '${PricingConfig.bakeryPremiumHint} ile şube ve şoförlü bayi';
+        return '${PricingConfig.premiumMonthlyHint} ile tüm Premium özellikler';
       case BusinessPlan.premium:
         return '';
     }

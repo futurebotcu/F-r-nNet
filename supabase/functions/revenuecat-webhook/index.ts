@@ -69,6 +69,18 @@ async function hmacHex(secret: string, body: string): Promise<string> {
     .join("");
 }
 
+function parseSignature(header: string): { timestamp: string; v1: string } | null {
+  const parts = header.split(",").map((p) => p.trim());
+  const map = new Map<string, string>();
+  for (const part of parts) {
+    const idx = part.indexOf("=");
+    if (idx > 0) map.set(part.slice(0, idx), part.slice(idx + 1));
+  }
+  const timestamp = map.get("t") ?? "";
+  const v1 = map.get("v1") ?? "";
+  return timestamp && v1 ? { timestamp, v1 } : null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok");
   if (req.method !== "POST") {
@@ -93,11 +105,16 @@ Deno.serve(async (req) => {
   // 2) HMAC imza doğrula (secret varsa).
   if (SIGNING_SECRET.length > 0) {
     const sigHeader =
+      req.headers.get("x-revenuecat-webhook-signature") ??
       req.headers.get("x-revenuecat-signature") ??
       req.headers.get("x-signature") ??
       "";
-    const computed = await hmacHex(SIGNING_SECRET, rawBody);
-    if (!timingSafeEqual(sigHeader.toLowerCase(), computed.toLowerCase())) {
+    const parsed = parseSignature(sigHeader);
+    const computed = parsed
+      ? await hmacHex(SIGNING_SECRET, `${parsed.timestamp}.${rawBody}`)
+      : await hmacHex(SIGNING_SECRET, rawBody);
+    const expected = parsed?.v1 ?? sigHeader;
+    if (!timingSafeEqual(expected.toLowerCase(), computed.toLowerCase())) {
       return new Response(JSON.stringify({ error: "bad_signature" }), {
         status: 401,
       });
