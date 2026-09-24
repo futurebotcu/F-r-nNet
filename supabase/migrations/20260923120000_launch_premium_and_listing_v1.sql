@@ -175,10 +175,12 @@ begin
     return;
   end if;
 
+  -- 'skipped_no_secret' final DEĞİLDİR: secret sonradan yapılandırılınca
+  -- aynı event id'nin retry/replay'i normal işleme alınır (p_can_process
+  -- true olduğunda aşağıdaki reclaim yolu locked_at=null satırı devralır).
   if v_row.processing_status in (
     'applied',
-    'recorded_listing_fee_needs_confirm',
-    'skipped_no_secret'
+    'recorded_listing_fee_needs_confirm'
   ) or v_row.processing_status like 'ignored_%' then
     return query select v_row.id, false, v_row.processing_status;
     return;
@@ -639,6 +641,8 @@ declare
   v_existing_expires_at timestamptz;
   v_existing_transaction_id text;
   v_existing_event_timestamp_ms bigint;
+  v_has_open_period boolean;
+  v_period_ends_at timestamptz;
 begin
   select account_type, plan, kind into v_acct, v_plan, v_kind
   from public.store_product_mapping(p_product_id);
@@ -681,9 +685,26 @@ begin
     return 'ignored_refunded_transaction';
   end if;
 
+  -- REST snapshot (sync) çağrıları transaction id taşımayabilir. Refund
+  -- sonrası, yeni dönemi KANITLAMAYAN (tx id'siz ve süresi refund edilen
+  -- döneme eşit/daha kısa) bir active snapshot aynı dönemi yeniden açamaz.
+  -- Gerçek yeni satın alma daha ileri bir expires_at ile gelir ve geçer.
+  if v_existing_status = 'refunded'
+     and p_status = 'active'
+     and p_transaction_id is null
+     and (p_expires_at is null
+          or (v_existing_expires_at is not null
+              and p_expires_at <= v_existing_expires_at)) then
+    return 'ignored_refunded_transaction';
+  end if;
+
   -- Also protect against an old expiration/refund for a previous period closing
-  -- a newer active period if provider timestamps are unavailable.
-  if v_existing_status = 'active'
+  -- a newer active period if provider timestamps are unavailable. Yalnız
+  -- timestamp'siz (REST snapshot) çağrılar için: resmi event_timestamp_ms
+  -- varsa sıralamayı yukarıdaki guard belirler — daha YENİ bir REFUND/
+  -- EXPIRATION olayı dönemi meşru şekilde kısaltabilmelidir.
+  if (p_event_timestamp_ms is null or v_existing_event_timestamp_ms is null)
+     and v_existing_status = 'active'
      and v_existing_expires_at is not null
      and p_expires_at is not null
      and v_existing_expires_at > p_expires_at
@@ -716,17 +737,34 @@ begin
     updated_at = now();
 
   if v_active then
+    -- Aylık↔yıllık geçişte (PRODUCT_CHANGE vb.) eski ürünün active olayı
+    -- entitlement dönemini KISALTAMAZ: dönem sonu, kullanıcının tüm geçerli
+    -- aboneliklerinin en geniş expires_at değeridir.
+    select
+      bool_or(s.expires_at is null),
+      max(s.expires_at)
+    into v_has_open_period, v_period_ends_at
+    from public.store_subscription_transactions s
+    where s.user_id = p_user_id
+      and s.status = 'active'
+      and (s.expires_at is null or s.expires_at > now());
+    if coalesce(v_has_open_period, false) then
+      v_period_ends_at := null;
+    else
+      v_period_ends_at := coalesce(v_period_ends_at, p_expires_at);
+    end if;
+
     update public.user_entitlements set
       plan = v_plan, source = 'iap',
       current_period_started_at = now(),
-      current_period_ends_at = p_expires_at,
+      current_period_ends_at = v_period_ends_at,
       updated_at = now()
     where owner_id = p_user_id;
     if not found then
       insert into public.user_entitlements
         (owner_id, plan, source, current_period_started_at,
          current_period_ends_at)
-      values (p_user_id, v_plan, 'iap', now(), p_expires_at);
+      values (p_user_id, v_plan, 'iap', now(), v_period_ends_at);
     end if;
     return 'applied_active_' || v_plan;
   end if;
@@ -738,6 +776,24 @@ begin
       and s.status = 'active'
       and (s.expires_at is null or s.expires_at > now())
   ) then
+    -- Diğer geçerli aboneliğin dönemini entitlement'a geri yaz (heal):
+    -- entitlement daha önce yanlışlıkla kısalmışsa burada düzelir.
+    select
+      bool_or(s.expires_at is null),
+      max(s.expires_at)
+    into v_has_open_period, v_period_ends_at
+    from public.store_subscription_transactions s
+    where s.user_id = p_user_id
+      and s.product_id <> p_product_id
+      and s.status = 'active'
+      and (s.expires_at is null or s.expires_at > now());
+    update public.user_entitlements set
+      plan = 'premium', source = 'iap',
+      current_period_ends_at = case
+        when coalesce(v_has_open_period, false) then null
+        else v_period_ends_at end,
+      updated_at = now()
+    where owner_id = p_user_id;
     return 'ignored_other_active_subscription';
   end if;
 

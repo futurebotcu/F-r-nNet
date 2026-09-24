@@ -14,6 +14,11 @@ const SERVICE_KEY =
   Deno.env.get("EDGE_SERVICE_ROLE_KEY") ??
   "";
 
+// RevenueCat, 2xx dışındaki cevaplara artan gecikmeyle sınırlı sayıda retry
+// yapar. Yapılandırma eksiğinde (backend/secret yok) 200 dönmek olayı kalıcı
+// kaybettirir → bu durumlarda 503 dönülür ki RevenueCat retry etsin.
+const SIGNATURE_TOLERANCE_MS = 72 * 60 * 60 * 1000;
+
 const ACTIVE_TYPES = new Set([
   "INITIAL_PURCHASE",
   "RENEWAL",
@@ -113,6 +118,21 @@ Deno.serve(async (req) => {
         status: 401,
       });
     }
+    if (parsed) {
+      // Replay koruması: imzalı timestamp toleransın dışındaysa reddet.
+      // Tolerans, RevenueCat'in retry penceresinden geniştir; event id
+      // idempotency'si tolere edilen replay'leri zaten no-op yapar.
+      const tsRaw = Number(parsed.timestamp);
+      const tsMs = tsRaw > 1e12 ? tsRaw : tsRaw * 1000;
+      if (
+        !Number.isFinite(tsMs) ||
+        Math.abs(Date.now() - tsMs) > SIGNATURE_TOLERANCE_MS
+      ) {
+        return new Response(JSON.stringify({ error: "stale_signature" }), {
+          status: 401,
+        });
+      }
+    }
   }
 
   let payload: Record<string, unknown>;
@@ -131,7 +151,11 @@ Deno.serve(async (req) => {
   }
 
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    return new Response(JSON.stringify({ ok: true, note: "no_backend" }));
+    // Yapılandırma hatası: 200 dönülürse RevenueCat retry etmez ve olay hiç
+    // kayıt edilmeden kaybolur. 503 → RevenueCat retry eder.
+    return new Response(JSON.stringify({ error: "no_backend" }), {
+      status: 503,
+    });
   }
   const db = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -182,6 +206,17 @@ Deno.serve(async (req) => {
     });
   }
   const claim = Array.isArray(claimRows) ? claimRows[0] : claimRows;
+
+  if (!secretPresent) {
+    // Olay 'skipped_no_secret' olarak kaydedildi (kanıt/replay için) ama
+    // doğrulanamadı → uygulanmadı. 503 dönülür ki RevenueCat retry etsin;
+    // secret yapılandırılınca aynı event id yeniden işlenebilir (claim
+    // 'skipped_no_secret' durumunu final saymaz).
+    return new Response(JSON.stringify({ error: "no_secret" }), {
+      status: 503,
+    });
+  }
+
   if (!claim?.should_process) {
     return new Response(
       JSON.stringify({
@@ -190,10 +225,6 @@ Deno.serve(async (req) => {
         result: claim?.current_status ?? "already_handled",
       }),
     );
-  }
-
-  if (!secretPresent) {
-    return new Response(JSON.stringify({ ok: true, note: "no_secret" }));
   }
 
   const { data: mapRows, error: mapErr } = await db.rpc("store_product_mapping", {

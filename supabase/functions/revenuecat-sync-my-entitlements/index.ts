@@ -84,12 +84,16 @@ Deno.serve(async (req) => {
   >;
   const now = Date.now();
   let appliedPlan = "free";
-  const entries = Object.entries(subs).map(([productId, info]) => {
-    const expires = info.expires_date
-      ? Date.parse(String(info.expires_date))
-      : 0;
-    return { productId, info, expires, active: expires > now };
-  });
+  const entries = Object.entries(subs)
+    // Refund edilmiş abonelik snapshot'tan uygulanmaz: webhook'un yazdığı
+    // 'refunded' durumunu ezip aynı dönemi yeniden açamaz/başkalaştıramaz.
+    .filter(([, info]) => !info.refunded_at)
+    .map(([productId, info]) => {
+      const expires = info.expires_date
+        ? Date.parse(String(info.expires_date))
+        : 0;
+      return { productId, info, expires, active: expires > now };
+    });
   const activeEntries = entries
     .filter((e) => e.active)
     .sort((a, b) => b.expires - a.expires);
@@ -105,8 +109,9 @@ Deno.serve(async (req) => {
       p_status: status,
       p_store: (info.store as string) ?? null,
       p_environment: (info.is_sandbox ? "sandbox" : "production"),
-      p_transaction_id: null,
-      p_original_transaction_id: null,
+      p_transaction_id: (info.store_transaction_id as string) ?? null,
+      p_original_transaction_id: (info.original_transaction_id as string) ??
+        null,
       p_expires_at: expires ? new Date(expires).toISOString() : null,
       p_event_timestamp_ms: null,
       p_event_id: null,
