@@ -12,13 +12,23 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     this.trialActive = false,
     this.trialDaysLeft = 0,
     this.canStartPromo = true,
+    this.supplierLaunchFreeUntil,
   });
 
   BusinessPlan plan;
   bool trialActive;
   int trialDaysLeft;
   bool canStartPromo;
+
+  /// Tedarikçi Lansman Kampanyası aynası: dolu + gelecekte ise kampanya
+  /// aktif sayılır (server ortak penceresinin local karşılığı).
+  DateTime? supplierLaunchFreeUntil;
   int ensureCalls = 0;
+
+  bool get _supplierLaunchActive {
+    final until = supplierLaunchFreeUntil;
+    return until != null && DateTime.now().toUtc().isBefore(until.toUtc());
+  }
 
   BusinessPlan get _effective =>
       trialActive || plan == BusinessPlan.pro ? BusinessPlan.premium : plan;
@@ -31,8 +41,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<BusinessEntitlements> myEntitlement() async {
     final eff = _effective;
-    // Tedarikçi etkin planı: trial → PRO (Premium değil); server aynası.
-    final supEff = eff;
+    // Tedarikçi etkin planı: kampanya aktifse premium (server aynası).
+    final supEff = _supplierLaunchActive ? BusinessPlan.premium : eff;
     return BusinessEntitlements(
       plan: plan,
       effectivePlan: eff,
@@ -80,6 +90,8 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
           ? DateTime.now().toUtc().add(Duration(days: trialDaysLeft))
           : null,
       canStartPromo: canStartPromo,
+      supplierLaunchFreeActive: _supplierLaunchActive,
+      supplierLaunchFreeUntil: supplierLaunchFreeUntil,
     );
   }
 
@@ -91,5 +103,15 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       canStartPromo = false;
     }
     return myEntitlement();
+  }
+
+  bool supplierLaunchNoticeSeen = false;
+
+  @override
+  Future<bool> hasSeenSupplierLaunchNotice() async => supplierLaunchNoticeSeen;
+
+  @override
+  Future<void> markSupplierLaunchNoticeSeen() async {
+    supplierLaunchNoticeSeen = true;
   }
 }

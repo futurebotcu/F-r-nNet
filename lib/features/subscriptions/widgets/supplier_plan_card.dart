@@ -10,6 +10,7 @@ import '../models/business_entitlements.dart';
 import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
+import 'supplier_launch_gift_sheet.dart';
 
 /// Supplier plan/status card. It mirrors server-computed limits; server RLS/RPC
 /// remains the source of truth for paid feature access.
@@ -27,6 +28,19 @@ class SupplierPlanCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final e = ref.watch(myEntitlementProvider).valueOrNull;
     if (e == null) return const SizedBox.shrink();
+
+    // Mağazam sekmesi de kampanya penceresindeki tedarikçinin kesin uğrağı —
+    // bilgilendirme pop-up'ı burada da ilk uygun oturumda tetiklenir
+    // (oturum + server 'görüldü' kaydıyla çift gösterim engellenir).
+    final launchUntil = e.supplierLaunchFreeUntil;
+    final launchActive = e.supplierLaunchFreeActive && launchUntil != null;
+    if (launchActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          maybeShowSupplierLaunchGiftSheet(context, ref);
+        }
+      });
+    }
 
     final (title, sub) = _copy(e);
     return GestureDetector(
@@ -116,6 +130,37 @@ class SupplierPlanCard extends ConsumerWidget {
                 ),
               ),
             ],
+            if (launchActive) ...[
+              const SizedBox(height: AppSpacing.s),
+              GestureDetector(
+                key: const ValueKey('supplier_launch_details_link'),
+                // Kampanya açıklaması istenildiğinde yeniden açılabilir.
+                onTap: () => showSupplierLaunchGiftSheet(
+                  context,
+                  freeUntil: launchUntil,
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.card_giftcard_rounded,
+                      size: 14,
+                      color: AppColors.brandInk,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      AppStrings.supplierLaunchDetailsCta,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.brandInk,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -123,6 +168,9 @@ class SupplierPlanCard extends ConsumerWidget {
   }
 
   String _priceHint(BusinessEntitlements e) {
+    // Kampanya döneminde fiyat ipucu gösterilmez (dönem sonunda paketler
+    // hatırlatma akışıyla bildirilir).
+    if (e.supplierLaunchFreeActive) return '';
     if (e.isLaunchPromoActive) {
       return '${e.promoDaysLeft} ${AppStrings.planCardTrialDaysLeft}';
     }
@@ -143,6 +191,14 @@ class SupplierPlanCard extends ConsumerWidget {
   }
 
   (String, String) _copy(BusinessEntitlements e) {
+    final launchUntil = e.supplierLaunchFreeUntil;
+    if (e.supplierLaunchFreeActive && launchUntil != null) {
+      return (
+        AppStrings.supplierLaunchPlanTitle,
+        '${formatSupplierLaunchDate(launchUntil)} '
+            '${AppStrings.supplierLaunchFreeUntilSuffix}',
+      );
+    }
     if (e.isLaunchPromoActive) {
       return (AppStrings.planLaunchPromoTitle, AppStrings.planLaunchPromoSub);
     }

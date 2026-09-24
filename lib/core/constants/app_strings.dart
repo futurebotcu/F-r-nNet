@@ -1912,6 +1912,30 @@ class AppStrings {
       'sınırsız ürün · sınırsız kampanya · sınırsız teklif cevabı · '
       'ilanlar ücretsiz';
 
+  // ── Tedarikçi Lansman Kampanyası (ortak bitiş tarihli ücretsiz dönem) ──
+  static const String supplierLaunchGiftTitle =
+      'Tedarikçilere özel lansman hediyesi';
+
+  /// Vurgulu tarih satırı: '{tarih} $supplierLaunchGiftFreeSuffix'.
+  static const String supplierLaunchGiftFreeSuffix =
+      'tarihine kadar tamamen ücretsiz';
+  static const String supplierLaunchGiftBody =
+      "FırınNet'in tedarikçilere sunduğu tüm özellikleri lansmana özel "
+      'ücretsiz kullanın.';
+  static const String supplierLaunchGiftContinueInfo =
+      'Ücretsiz dönem sona ermeden önce size hatırlatma yapacak, devam '
+      'edebileceğiniz paketleri ve fiyatlarını bildireceğiz. Dilerseniz size '
+      'uygun paketi seçerek ücretli devam edebilirsiniz.';
+  static const String supplierLaunchGiftAssurance =
+      'Onayınız olmadan ücret alınmaz veya ücretli abonelik başlatılmaz.';
+  static const String supplierLaunchGiftCta = 'Ücretsiz kullanmaya başla';
+  static const String supplierLaunchPlanTitle = 'Tedarikçi Premium';
+
+  /// Plan kartı/banner alt metni: '{tarih} $supplierLaunchFreeUntilSuffix'.
+  static const String supplierLaunchFreeUntilSuffix =
+      'tarihine kadar ücretsiz';
+  static const String supplierLaunchDetailsCta = 'Kampanya detayları';
+
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';
   static const String calcCatBossCostTitle = 'Patron Maliyet ve Kâr';

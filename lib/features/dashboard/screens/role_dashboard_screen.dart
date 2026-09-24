@@ -19,6 +19,7 @@ import '../../subscriptions/models/feature_lock.dart';
 import '../../subscriptions/providers/subscription_providers.dart';
 import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../../subscriptions/widgets/plan_status_card.dart';
+import '../../subscriptions/widgets/supplier_launch_gift_sheet.dart';
 import '../services/role_panel_cards.dart';
 
 /// Panel tab'ının yeni kök ekranı.
@@ -40,6 +41,17 @@ class RoleDashboardScreen extends ConsumerWidget {
     final entitlements = account == AccountType.commercial
         ? ref.watch(myEntitlementProvider).valueOrNull
         : null;
+    // Tedarikçi Lansman Kampanyası — kampanya penceresindeki toptancıya
+    // bilgilendirme pop-up'ı ilk uygun oturumda bir kez gösterilir (kalıcı
+    // görüldü kaydı server-side; kampanya hakkı pop-up'tan bağımsızdır).
+    if (account == AccountType.wholesaler) {
+      ref.watch(myEntitlementProvider);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          maybeShowSupplierLaunchGiftSheet(context, ref);
+        }
+      });
+    }
     var cards = RolePanelCards.forAccount(account);
     // Şube Yönetimi V1 — bireyselde "Şube İşlerim" YALNIZ aktif şube
     // üyeliği (veya bekleyen davet) varsa görünür; yoksa hiçbir şube

@@ -33,4 +33,34 @@ class SupabaseSubscriptionRepository implements SubscriptionRepository {
       (rows.first as Map).cast<String, dynamic>(),
     );
   }
+
+  static const String _supplierLaunchCampaignKey = 'supplier_launch_v1';
+  static const String _supplierLaunchPopupNoticeKey = 'popup_ack';
+
+  @override
+  Future<bool> hasSeenSupplierLaunchNotice() async {
+    final rows = await _client
+        .from('user_campaign_notices')
+        .select('notice_key')
+        .eq('campaign_key', _supplierLaunchCampaignKey)
+        .eq('notice_key', _supplierLaunchPopupNoticeKey)
+        .limit(1);
+    return rows.isNotEmpty;
+  }
+
+  @override
+  Future<void> markSupplierLaunchNoticeSeen() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    // ON CONFLICT DO NOTHING — tekrar açılış/cihaz değişimi idempotenttir.
+    await _client.from('user_campaign_notices').upsert(
+      {
+        'user_id': userId,
+        'campaign_key': _supplierLaunchCampaignKey,
+        'notice_key': _supplierLaunchPopupNoticeKey,
+      },
+      onConflict: 'user_id,campaign_key,notice_key',
+      ignoreDuplicates: true,
+    );
+  }
 }

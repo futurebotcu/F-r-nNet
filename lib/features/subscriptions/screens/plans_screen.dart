@@ -14,6 +14,7 @@ import '../../profile/providers/profile_provider.dart';
 import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
+import '../widgets/supplier_launch_gift_sheet.dart';
 
 /// Commercial package screen. Store prices come from RevenueCat/Google Play;
 /// config prices are fallback copy only.
@@ -52,7 +53,19 @@ class PlansScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            if (promoActive) ...[
+            if (isWholesaler &&
+                (entitlement?.supplierLaunchFreeActive ?? false) &&
+                entitlement?.supplierLaunchFreeUntil != null) ...[
+              const SizedBox(height: AppSpacing.m),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                ),
+                child: _SupplierLaunchBanner(
+                  freeUntil: entitlement!.supplierLaunchFreeUntil!,
+                ),
+              ),
+            ] else if (promoActive) ...[
               const SizedBox(height: AppSpacing.m),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -131,6 +144,68 @@ class PlansScreen extends ConsumerWidget {
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tedarikçi Lansman Kampanyası bilgisi — abonelik ekranında kampanya
+/// boyunca görünür; açıklama pop-up'ı buradan yeniden açılabilir.
+class _SupplierLaunchBanner extends StatelessWidget {
+  const _SupplierLaunchBanner({required this.freeUntil});
+
+  final DateTime freeUntil;
+
+  @override
+  Widget build(BuildContext context) {
+    final dateLabel = formatSupplierLaunchDate(freeUntil);
+    return GestureDetector(
+      key: const ValueKey('plans_supplier_launch_banner'),
+      onTap: () => showSupplierLaunchGiftSheet(context, freeUntil: freeUntil),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.brandLemonPale,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          border: Border.all(color: AppColors.brandLemon),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.card_giftcard_rounded,
+              size: 18,
+              color: AppColors.brandInk,
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${AppStrings.supplierLaunchPlanTitle} — $dateLabel '
+                    '${AppStrings.supplierLaunchFreeUntilSuffix}',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.brandInk,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  const Text(
+                    AppStrings.supplierLaunchDetailsCta,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                      decoration: TextDecoration.underline,
+                      height: 1.35,
                     ),
                   ),
                 ],
