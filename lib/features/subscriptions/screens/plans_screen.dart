@@ -14,6 +14,8 @@ import '../../profile/providers/profile_provider.dart';
 import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
+import '../widgets/commercial_launch_sheet.dart'
+    show formatCommercialLaunchDay;
 import '../widgets/supplier_launch_gift_sheet.dart';
 
 /// Commercial package screen. Store prices come from RevenueCat/Google Play;
@@ -39,6 +41,12 @@ class PlansScreen extends ConsumerWidget {
     final launchActive = isWholesaler &&
         (entitlement?.supplierLaunchFreeActive ?? false) &&
         entitlement?.supplierLaunchFreeUntil != null;
+    final isCommercial = account == AccountType.commercial;
+    // Ticari kayıt bazlı ücretsiz ay + lansman fiyat dönemi bilgisi.
+    final freePeriodActive =
+        isCommercial && (entitlement?.freePeriodActive ?? false);
+    final launchPriceUntil =
+        isCommercial ? entitlement?.launchPriceUntil : null;
     final (freeFeatures, premiumFeatures) = isWholesaler
         ? (AppStrings.supPlanFreeFeatures, AppStrings.supPlanPremiumFeatures)
         : (AppStrings.planFreeFeatures, AppStrings.planPremiumFeatures);
@@ -76,6 +84,18 @@ class PlansScreen extends ConsumerWidget {
                   freeUntil: entitlement!.supplierLaunchFreeUntil!,
                 ),
               ),
+            ] else if (freePeriodActive &&
+                entitlement?.freePeriodEndsAt != null) ...[
+              const SizedBox(height: AppSpacing.m),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                ),
+                child: _FreePeriodBanner(
+                  daysLeft: entitlement!.freePeriodDaysLeft,
+                  endsAt: entitlement.freePeriodEndsAt!,
+                ),
+              ),
             ] else if (promoActive && !isWholesaler) ...[
               const SizedBox(height: AppSpacing.m),
               Padding(
@@ -92,7 +112,11 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_free'),
               title: AppStrings.planFreeLabel,
-              price: PricingConfig.freeLabel,
+              // Ticaride "Her zaman ücretsiz" vurgusu (temel özellikler
+              // dönemden bağımsız açık kalır).
+              price: isCommercial
+                  ? AppStrings.planFreeAlwaysLabel
+                  : PricingConfig.freeLabel,
               features: freeFeatures,
               plan: BusinessPlan.free,
               current: current,
@@ -111,6 +135,25 @@ class PlansScreen extends ConsumerWidget {
               promoActive: promoActive,
               highlight: true,
             ),
+            if (launchPriceUntil != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Text(
+                  '${AppStrings.paywallLaunchPricePrefix}'
+                  '${formatCommercialLaunchDay(launchPriceUntil)}'
+                  '${AppStrings.paywallLaunchPriceSuffix}',
+                  key: const ValueKey('plans_launch_price_note'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.m),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
@@ -170,6 +213,64 @@ class PlansScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Ticari ücretsiz ay banner'ı — dönem boyunca Paketler ekranında görünür.
+class _FreePeriodBanner extends StatelessWidget {
+  const _FreePeriodBanner({required this.daysLeft, required this.endsAt});
+
+  final int daysLeft;
+  final DateTime endsAt;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('plans_free_period_banner'),
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.brandLemonPale,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.brandLemon),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.card_giftcard_rounded,
+            size: 18,
+            color: AppColors.brandInk,
+          ),
+          const SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${AppStrings.commercialFreePeriodTitle} - $daysLeft '
+                  '${AppStrings.planCardTrialDaysLeft}',
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.brandInk,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  '${formatCommercialLaunchDay(endsAt)} '
+                  '${AppStrings.commercialFreePeriodSubSuffix}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

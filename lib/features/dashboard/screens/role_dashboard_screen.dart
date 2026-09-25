@@ -17,6 +17,7 @@ import '../../profile/providers/profile_provider.dart';
 import '../../subscriptions/models/business_entitlements.dart';
 import '../../subscriptions/models/feature_lock.dart';
 import '../../subscriptions/providers/subscription_providers.dart';
+import '../../subscriptions/widgets/commercial_launch_sheet.dart';
 import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../../subscriptions/widgets/plan_status_card.dart';
 import '../../subscriptions/widgets/supplier_launch_gift_sheet.dart';
@@ -41,6 +42,15 @@ class RoleDashboardScreen extends ConsumerWidget {
     final entitlements = account == AccountType.commercial
         ? ref.watch(myEntitlementProvider).valueOrNull
         : null;
+    // Ticari Lansman Modeli — dönem durumuna göre (hoş geldin / son 3 gün /
+    // dönem bitti) bilgilendirme pop-up'ı ilk uygun oturumda bir kez.
+    if (account == AccountType.commercial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          maybeShowCommercialLaunchSheet(context, ref);
+        }
+      });
+    }
     // Tedarikçi Lansman Kampanyası — kampanya penceresindeki toptancıya
     // bilgilendirme pop-up'ı ilk uygun oturumda bir kez gösterilir (kalıcı
     // görüldü kaydı server-side; kampanya hakkı pop-up'tan bağımsızdır).

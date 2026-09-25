@@ -21,25 +21,23 @@ begin
       'CONC2: eşzamanlı teslimde attempts=% (1 bekleniyordu)', v_attempts;
   end if;
 
-  -- Promo: iki eşzamanlı aktivasyondan tam olarak BİRİ activated=true;
-  -- her iki oturum aynı bitiş tarihini görür.
+  -- Promo (ticari lansman modeli): CTA ticari hesapta yeni promo BAŞLATMAZ —
+  -- eşzamanlı iki deneme de activated=false döner ve DB'ye yazmaz.
   select count(*), count(*) filter (where a = 'true')
   into n_rows, n_true
   from public.test_results where label like 'conc_promo_%';
-  if n_rows <> 2 or n_true <> 1 then
+  if n_rows <> 2 or n_true <> 0 then
     raise exception
-      'CONC3: promo satır=% activated=% (2/1 bekleniyordu)', n_rows, n_true;
+      'CONC3: promo satır=% activated=% (2/0 bekleniyordu)', n_rows, n_true;
   end if;
-  if (select count(distinct c) from public.test_results
-      where label like 'conc_promo_%') <> 1 then
-    raise exception 'CONC4: eşzamanlı promo farklı bitiş tarihleri üretti';
+  select coalesce(
+    (select e.promo_status from public.user_entitlements e
+     where e.owner_id = '00000000-0000-4000-8000-000000000006'),
+    'not_started')
+  into v_status;
+  if v_status <> 'not_started' then
+    raise exception 'CONC5: ticari CTA promo alanı yazdı: %', v_status;
   end if;
-  select promo_status into v_status
-  from public.user_entitlements
-  where owner_id = '00000000-0000-4000-8000-000000000006';
-  if v_status <> 'active' then
-    raise exception 'CONC5: promo DB durumu active değil: %', v_status;
-  end if;
-  raise notice 'PASS 14 eşzamanlı claim + promo';
+  raise notice 'PASS 14 eşzamanlı claim + ticari promo engeli';
 end
 $$;

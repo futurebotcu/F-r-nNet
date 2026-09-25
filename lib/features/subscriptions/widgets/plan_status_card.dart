@@ -10,6 +10,8 @@ import '../models/business_entitlements.dart';
 import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
+import 'commercial_launch_sheet.dart'
+    show formatCommercialLaunchDay, isCommercialFreePeriodEnding;
 import 'plan_badge.dart';
 
 /// Panelde kullanicinin guncel Premium/launch promo durumunu gosterir.
@@ -31,8 +33,13 @@ class PlanStatusCard extends ConsumerWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.l),
           boxShadow: AppShadow.card,
-          border: e.isLaunchPromoActive
-              ? Border.all(color: AppColors.brandLemon, width: 1.4)
+          border: (e.freePeriodActive || e.isLaunchPromoActive)
+              ? Border.all(
+                  color: isCommercialFreePeriodEnding(e)
+                      ? AppColors.softGold
+                      : AppColors.brandLemon,
+                  width: 1.4,
+                )
               : null,
         ),
         padding: const EdgeInsets.all(AppSpacing.l),
@@ -45,9 +52,11 @@ class PlanStatusCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppRadius.m),
               ),
               child: Icon(
-                e.isLaunchPromoActive
-                    ? Icons.auto_awesome_rounded
-                    : Icons.workspace_premium_outlined,
+                e.freePeriodActive
+                    ? Icons.card_giftcard_rounded
+                    : (e.isLaunchPromoActive
+                          ? Icons.auto_awesome_rounded
+                          : Icons.workspace_premium_outlined),
                 size: 20,
                 color: AppColors.brandInk,
               ),
@@ -107,6 +116,17 @@ class PlanStatusCard extends ConsumerWidget {
   }
 
   (String, String) _copy(BusinessEntitlements e) {
+    // Ticari lansman ücretsiz ayı — kart aynı zamanda "bitişe yaklaşma"
+    // banner'ı görevi görür (son 3 günde vurgulu kenarlık + kalan gün).
+    final freeEnds = e.freePeriodEndsAt;
+    if (e.freePeriodActive && freeEnds != null) {
+      return (
+        AppStrings.commercialFreePeriodTitle,
+        '${e.freePeriodDaysLeft} ${AppStrings.planCardTrialDaysLeft} · '
+            '${formatCommercialLaunchDay(freeEnds)} '
+            '${AppStrings.commercialFreePeriodSubSuffix}',
+      );
+    }
     if (e.isLaunchPromoActive) {
       return (
         AppStrings.planLaunchPromoTitle,
@@ -125,6 +145,14 @@ class PlanStatusCard extends ConsumerWidget {
   }
 
   String _priceHint(BusinessEntitlements e) {
+    final priceUntil = e.launchPriceUntil;
+    if (e.freePeriodActive) {
+      if (priceUntil == null) return '';
+      return '${AppStrings.commercialAfterPrefix}'
+          '${formatCommercialLaunchDay(priceUntil)}'
+          '${AppStrings.commercialPriceMid}'
+          '${PricingConfig.premiumMonthlyLabel}';
+    }
     if (e.isLaunchPromoActive) {
       return 'Sonrasında aylık ${PricingConfig.premiumMonthlyLabel} · '
           'yıllık ${PricingConfig.premiumYearlyLabel}';

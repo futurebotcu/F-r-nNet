@@ -8,14 +8,19 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/feature_lock.dart';
 import '../providers/subscription_providers.dart';
+import 'commercial_launch_sheet.dart' show formatCommercialLaunchDay;
 
 /// Kilitli bir özelliğe basıldığında açılan bilgilendirme sheet'i.
 ///
-/// Ödeme YOK — yalnız hangi paketin açtığını anlatır + Paketler ekranına
-/// yönlendirir. Asıl kısıt server-side'da.
+/// Ödeme YOK — yalnız hangi paketin açtığını, temel özelliklerin ücretsiz
+/// kaldığını ve lansman fiyatını anlatır + Paketler ekranına yönlendirir.
+/// Asıl kısıt server-side'da. (Eski CTA promosu kaldırıldı: ücretsiz dönem
+/// artık kayıt bazlı otomatiktir.)
 Future<void> showPaywallSheet(
   BuildContext context,
   FeatureLock lock, {
+  // Eski promo akışının kalıntısı — CTA promo kaldırıldığı için sheet
+  // içinde kilit AÇILMAZ; parametre çağıran API'ler bozulmasın diye durur.
   VoidCallback? onUnlocked,
 }) {
   return showModalBottomSheet<void>(
@@ -26,49 +31,19 @@ Future<void> showPaywallSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
-    builder: (sheetContext) => _PaywallSheetBody(
-      lock: lock,
-      onUnlocked: onUnlocked,
-    ),
+    builder: (sheetContext) => _PaywallSheetBody(lock: lock),
   );
 }
 
-class _PaywallSheetBody extends ConsumerStatefulWidget {
-  const _PaywallSheetBody({required this.lock, this.onUnlocked});
+class _PaywallSheetBody extends ConsumerWidget {
+  const _PaywallSheetBody({required this.lock});
 
   final FeatureLock lock;
-  final VoidCallback? onUnlocked;
 
   @override
-  ConsumerState<_PaywallSheetBody> createState() => _PaywallSheetBodyState();
-}
-
-class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
-  bool _busy = false;
-
-  Future<void> _startPromo() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    try {
-      final repo = ref.read(subscriptionRepositoryProvider);
-      await repo.activateLaunchPremiumPromo();
-      ref.invalidate(myEntitlementProvider);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      widget.onUnlocked?.call();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.paywallPromoFailed)),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final entitlement = ref.watch(myEntitlementProvider).valueOrNull;
-    final showPromo = entitlement?.canStartPromo ?? true;
+    final launchPriceUntil = entitlement?.launchPriceUntil;
     return SafeArea(
       top: false,
       child: Padding(
@@ -108,9 +83,7 @@ class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
-                    showPromo
-                        ? AppStrings.paywallPremiumTag
-                        : widget.lock.requiredPlanTag,
+                    lock.requiredPlanTag,
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -122,7 +95,7 @@ class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
             ),
             const SizedBox(height: AppSpacing.m),
             Text(
-              showPromo ? AppStrings.paywallPromoTitle : widget.lock.title,
+              lock.title,
               style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
@@ -132,7 +105,7 @@ class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              showPromo ? AppStrings.paywallPromoBody : widget.lock.body,
+              lock.body,
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w500,
@@ -140,13 +113,7 @@ class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
                 height: 1.45,
               ),
             ),
-            if (showPromo) ...[
-              const SizedBox(height: AppSpacing.s),
-              const _PromoBullet(AppStrings.paywallPromoBulletAll),
-              const _PromoBullet(AppStrings.paywallPromoBulletCard),
-              const _PromoBullet(AppStrings.paywallPromoBulletPayment),
-              const _PromoBullet(AppStrings.paywallPromoBulletNoRenew),
-            ] else if (widget.lock.priceHint.isNotEmpty) ...[
+            if (lock.priceHint.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.s),
               Row(
                 children: [
@@ -157,7 +124,7 @@ class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    widget.lock.priceHint,
+                    lock.priceHint,
                     key: const ValueKey('paywall_price_hint'),
                     style: const TextStyle(
                       fontSize: 13,
@@ -168,18 +135,54 @@ class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
                 ],
               ),
             ],
+            if (launchPriceUntil != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${AppStrings.paywallLaunchPricePrefix}'
+                '${formatCommercialLaunchDay(launchPriceUntil)}'
+                '${AppStrings.paywallLaunchPriceSuffix}',
+                key: const ValueKey('paywall_launch_price_until'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.s),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Expanded(
+                  child: Text(
+                    AppStrings.paywallBasicsStayFree,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textMuted,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.l),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 key: const ValueKey('paywall_view_plans'),
-                onPressed: _busy ? null : () {
-                  if (showPromo) {
-                    _startPromo();
-                  } else {
-                    Navigator.of(context).pop();
-                    GoRouter.of(context).push(AppRoutes.plans);
-                  }
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  GoRouter.of(context).push(AppRoutes.plans);
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -189,45 +192,14 @@ class _PaywallSheetBodyState extends ConsumerState<_PaywallSheetBody> {
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                 ),
-                child: Text(
-                  showPromo
-                      ? AppStrings.paywallPromoCta
-                      : AppStrings.paywallUpgradeCta,
+                child: const Text(
+                  AppStrings.paywallUpgradeCta,
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PromoBullet extends StatelessWidget {
-  const _PromoBullet(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 5),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle_rounded, size: 16, color: Colors.green),
-          const SizedBox(width: 7),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

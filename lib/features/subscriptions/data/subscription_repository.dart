@@ -25,4 +25,12 @@ abstract class SubscriptionRepository {
   /// başlatmaz — yalnız bilgilendirme kaydıdır; kampanya hakkı bu kayda
   /// bağlı değildir (server uygun hesaplara doğrudan uygular).
   Future<void> markSupplierLaunchNoticeSeen();
+
+  /// Ticari lansman bilgilendirme pop-up'ları (welcome/ending/ended) bu
+  /// kullanıcı+tür için gösterildi mi? Kalıcı kayıt server-side'dadır.
+  Future<bool> hasSeenCommercialLaunchNotice(String noticeKey);
+
+  /// Ticari lansman pop-up görüldü işaretini kalıcı yazar (idempotent);
+  /// ödeme/abonelik başlatmaz, hak bu kayda bağlı değildir.
+  Future<void> markCommercialLaunchNoticeSeen(String noticeKey);
 }

@@ -30,6 +30,14 @@ class PlanBadge extends StatelessWidget {
   }
 
   static (String, Color, Color) _style(BusinessEntitlements e) {
+    // Ticari lansman ücretsiz ayı (kayıt bazlı otomatik dönem).
+    if (e.freePeriodActive) {
+      return (
+        AppStrings.commercialFreePeriodBadge,
+        const Color(0xFFFFF7E6),
+        const Color(0xFFB45309),
+      );
+    }
     if (e.isLaunchPromoActive) {
       return (
         AppStrings.planLaunchPromoLabel,

@@ -287,6 +287,8 @@ begin
 end
 $$;
 
+-- Ticari lansman modeli: CTA ticaride de yeni promo başlatmaz; mevcut
+-- aktif promo hakkının korunması manuel set ile temsil edilir (S8c).
 begin;
 select set_config(
   'request.jwt.claim.sub', '00000000-0000-4000-8000-000000000013', true);
@@ -295,13 +297,21 @@ do $$
 declare r record;
 begin
   select * into r from public.activate_launch_premium_promo();
-  if r.activated is distinct from true or r.promo_status <> 'active' then
-    raise exception 'S8b: ticari promo başlatılamadı: %', r;
+  if r.activated then
+    raise exception 'S8b: ticari CTA promo başlattı (yeni modelde kapalı)';
   end if;
-  raise notice 'PASS 16-S8b ticari promo korunuyor';
+  raise notice 'PASS 16-S8b ticari CTA promo başlatmaz';
 end
 $$;
 commit;
+
+set role service_role;
+update public.user_entitlements
+  set promo_status = 'active',
+      promo_started_at = now() - interval '1 day',
+      promo_expires_at = now() + interval '60 days'
+  where owner_id = '00000000-0000-4000-8000-000000000013';
+reset role;
 
 -- S8c: MEVCUT AKTİF kişisel promo tedarikçi haklarını AÇMAZ (ortak bitişi
 -- uzatamaz); aynı promo ticari hesapta premium açmaya devam eder.

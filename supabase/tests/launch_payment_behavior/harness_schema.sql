@@ -31,7 +31,8 @@ grant usage on schema public to anon, authenticated, service_role;
 -- 2) auth şeması mock'u. auth.uid() GUC üzerinden test kullanıcısını okur.
 create schema if not exists auth;
 create table if not exists auth.users (
-  id uuid primary key
+  id uuid primary key,
+  created_at timestamptz not null default now()
 );
 create or replace function auth.uid()
 returns uuid

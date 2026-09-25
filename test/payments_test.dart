@@ -73,7 +73,7 @@ void main() {
         byId[StoreProductConfig.premiumYearly]!.priceLabel,
         PricingConfig.premiumYearlyLabel,
       );
-      expect(PricingConfig.premiumYearlySavings, 998);
+      expect(PricingConfig.premiumYearlySavingsCents, 99998);
     });
 
     test(

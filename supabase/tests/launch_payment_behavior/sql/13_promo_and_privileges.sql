@@ -1,6 +1,8 @@
 -- Launch promo + yetki/güvenlik davranış testleri.
 
--- P1) Promo aktivasyonu idempotent; ikinci çağrı aynı bitişi döner.
+-- P1) Ticari lansman modeli: CTA promosu ticari hesapta YENİ aktivasyon
+-- VERMEZ (activated=false, alan yazılmaz). Mevcut aktif promo hakkı ise
+-- korunur (aşağıda manuel set ile doğrulanır).
 begin;
 select set_config(
   'request.jwt.claim.sub', '00000000-0000-4000-8000-000000000005', true);
@@ -8,28 +10,38 @@ set local role authenticated;
 do $$
 declare
   r1 record;
-  r2 record;
 begin
   select * into r1 from public.activate_launch_premium_promo();
-  if r1.activated is distinct from true or r1.promo_status <> 'active' then
-    raise exception 'P1a: ilk aktivasyon başarısız: % %',
-      r1.activated, r1.promo_status;
+  if r1.activated then
+    raise exception 'P1a: ticari CTA yeni promo başlattı';
   end if;
-  if r1.promo_expires_at is distinct from
-     (r1.promo_started_at + interval '3 months') then
-    raise exception 'P1b: promo süresi 3 takvim ayı değil';
-  end if;
-
-  select * into r2 from public.activate_launch_premium_promo();
-  if r2.activated then
-    raise exception 'P1c: ikinci aktivasyon yeniden başlattı';
-  end if;
-  if r2.promo_expires_at is distinct from r1.promo_expires_at then
-    raise exception 'P1d: ikinci çağrı farklı bitiş döndürdü';
+  if r1.promo_status <> 'not_started' or r1.promo_started_at is not null then
+    raise exception 'P1b: ticari CTA promo alanlarını değiştirdi: %', r1;
   end if;
 end
 $$;
 commit;
+
+do $$
+begin
+  if exists (select 1 from public.user_entitlements
+             where owner_id = '00000000-0000-4000-8000-000000000005'
+               and (promo_status <> 'not_started'
+                    or promo_started_at is not null)) then
+    raise exception 'P1c: ticari CTA DB promo alanlarına yazdı';
+  end if;
+end
+$$;
+
+-- Mevcut aktif promo hakkı korunur: manuel (backoffice benzeri) set edilen
+-- promo effective planı premium yapar.
+set role service_role;
+update public.user_entitlements
+  set promo_status = 'active',
+      promo_started_at = now() - interval '1 day',
+      promo_expires_at = now() + interval '89 days'
+  where owner_id = '00000000-0000-4000-8000-000000000005';
+reset role;
 
 -- P2) Promo aktifken effective plan premium; my_entitlement tutarlı.
 begin;
@@ -49,7 +61,7 @@ end
 $$;
 commit;
 
--- P3) Süresi dolan promo yeniden BAŞLAMAZ.
+-- P3) Süresi dolan promo yeniden BAŞLAMAZ (ticari CTA zaten pasif).
 update public.user_entitlements
   set promo_expires_at = now() - interval '1 hour'
   where owner_id = '00000000-0000-4000-8000-000000000005';
@@ -65,9 +77,6 @@ begin
   select * into r from public.activate_launch_premium_promo();
   if r.activated then
     raise exception 'P3a: süresi dolan promo yeniden başladı';
-  end if;
-  if r.promo_status <> 'expired' then
-    raise exception 'P3b: promo_status expired değil: %', r.promo_status;
   end if;
 end
 $$;
