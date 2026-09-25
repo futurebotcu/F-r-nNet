@@ -4,44 +4,46 @@ import 'business_plan.dart';
 /// (toptancı) arasında farklıdır.
 enum PricingAudience { bakery, supplier }
 
-/// Paket fiyatları — TEK KAYNAK (Paket Fiyatları UI V1).
+/// Paket fiyatları — TEK KAYNAK (Lansman fiyatlandırması).
 ///
-/// Yalnız görüntüleme metinleri; ödeme entegrasyonu YOK. Fiyatlar UI içinde
-/// dağınık hard-code EDİLMEZ — buradan gelir.
+/// Yalnız FALLBACK görüntüleme metinleri; gerçek fiyat MAĞAZADAN gelir
+/// (RevenueCat priceString) ve UI önce onu gösterir. Kuruş hassasiyeti için
+/// tutarlar KURUŞ cinsindendir. Fiyatlar UI içinde dağınık hard-code
+/// EDİLMEZ — buradan gelir.
 class PricingConfig {
   const PricingConfig._();
 
   static const String currency = 'TL';
 
-  // Aylık fiyatlar (TL).
-  static const int bakeryProMonthly = premiumMonthly;
-  static const int bakeryPremiumMonthly = premiumMonthly;
-  static const int supplierProMonthly = premiumMonthly;
-  static const int supplierPremiumMonthly = premiumMonthly;
-  static const int paidListingFee = 50;
-  static const int premiumMonthly = 499;
-  static const int premiumYearly = 4990;
-  static const int premiumYearlyRegular = 5988;
-  static const int premiumYearlySavings = 998;
+  // Tutarlar (KURUŞ). Lansman fiyatı: aylık 499,99 TL · yıllık 4.999,90 TL.
+  static const int premiumMonthlyCents = 49999;
+  static const int premiumYearlyCents = 499990;
 
-  // Biçimli etiketler ("2.999 TL / ay" → binlik ayracı nokta).
-  static const String bakeryProLabel = premiumMonthlyLabel;
-  static const String bakeryPremiumLabel = premiumMonthlyLabel;
-  static const String supplierProLabel = premiumMonthlyLabel;
-  static const String supplierPremiumLabel = premiumMonthlyLabel;
-  static const String premiumMonthlyLabel = '499 TL / ay';
-  static const String premiumYearlyLabel = '4.990 TL / yıl';
+  /// Yıllığın aylık x12 karşılığı (indirimsiz) ve "2 Ay Bizden" tasarrufu.
+  static const int premiumYearlyRegularCents = 599988;
+  static const int premiumYearlySavingsCents = 99998;
+  static const int paidListingFeeCents = 5000;
+
+  // Biçimli etiketler (fallback — mağaza fiyatı varsa o gösterilir).
+  static const String premiumMonthlyLabel = '499,99 TL / ay';
+  static const String premiumYearlyLabel = '4.999,90 TL / yıl';
   static const String premiumYearlySavingsLabel = '2 Ay Bizden';
   static const String freeLabel = '0 TL';
   static const String paidListingLabel = '50 TL';
 
-  /// Paywall/plan kartı fiyat ipuçları (ör. "Pro paket 299 TL/ay").
+  // Hesap-tipi alias'ları (tek Premium modeli — hepsi aynı etikete bağlı).
+  static const String bakeryProLabel = premiumMonthlyLabel;
+  static const String bakeryPremiumLabel = premiumMonthlyLabel;
+  static const String supplierProLabel = premiumMonthlyLabel;
+  static const String supplierPremiumLabel = premiumMonthlyLabel;
+
+  /// Paywall/plan kartı fiyat ipuçları.
+  static const String premiumMonthlyHint = 'Premium 499,99 TL/ay';
+  static const String premiumYearlyHint = 'Premium 4.999,90 TL/yıl';
   static const String bakeryProHint = premiumMonthlyHint;
   static const String bakeryPremiumHint = premiumMonthlyHint;
   static const String supplierProHint = premiumMonthlyHint;
   static const String supplierPremiumHint = premiumMonthlyHint;
-  static const String premiumMonthlyHint = 'Premium 499 TL/ay';
-  static const String premiumYearlyHint = 'Premium 4.990 TL/yıl';
 
   /// [audience] + [plan] için aylık fiyat etiketi.
   static String monthlyLabel(PricingAudience audience, BusinessPlan plan) {

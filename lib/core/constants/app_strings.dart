@@ -1769,25 +1769,25 @@ class AppStrings {
       'tüm hesaplamalar · sınırsız geçmiş · ileri raporlar';
   // Paywall sheet genel.
   static const String paywallUpgradeCta = 'Paketleri incele';
-  static const String paywallPromoCta = 'Ücretsiz Kullanmaya Başla';
-  static const String paywallPromoTitle = 'Bu bir Premium özellik';
-  static const String paywallPromoBody =
-      'FırınNet’in Premium özelliklerini ilk 3 ay boyunca tamamen ücretsiz ve sınırsız kullanabilirsin.';
-  static const String paywallPromoBulletAll = 'Tüm Premium özellikler açık';
-  static const String paywallPromoBulletCard = 'Kart bilgisi gerekmez';
-  static const String paywallPromoBulletPayment = 'Ödeme yöntemi gerekmez';
-  static const String paywallPromoBulletNoRenew = 'Otomatik ücretlendirme yok';
-  static const String paywallPromoFailed =
-      'Ücretsiz kullanım başlatılamadı. Lütfen tekrar dene.';
+
+  /// Paywall alt notu: temel özellikler her zaman ücretsizdir.
+  static const String paywallBasicsStayFree =
+      'Temel özellikler her zaman ücretsiz kalır.';
+
+  /// Paywall lansman fiyat satırı: '$paywallLaunchPricePrefix{gün}'
+  /// '$paywallLaunchPriceSuffix' (tarih server config'inden, İstanbul günü).
+  static const String paywallLaunchPricePrefix = 'Lansman fiyatı ';
+  static const String paywallLaunchPriceSuffix =
+      ' tarihine kadar geçerlidir.';
   static const String planLaunchPromoLabel = 'Ücretsiz Kullanım';
   static const String planLaunchPromoTitle =
       'Premium — Ücretsiz Kullanım';
   static const String planLaunchPromoSub =
       'Tüm Premium özellikler ücretsiz kullanım boyunca açık.';
   static const String plansLaunchSubtitle =
-      'Premium özellikler için aylık veya yıllık paketi seç. İlk 3 ay ücretsiz kullanım kart gerektirmez.';
+      'Premium özellikler için aylık veya yıllık paketi seç.';
   static const String plansLaunchTrialCta =
-      'İlk 3 ay ücretsiz kullanım kart veya ödeme yöntemi istemez.';
+      'Onayın olmadan ücret alınmaz; kart bilgisi istenmez.';
   static const String plansStoreReady =
       'Satın alma Google Play üzerinden güvenli şekilde yapılır.';
   static const String storePurchaseMonthlyCta = 'Aylık Premium';
@@ -1939,6 +1939,76 @@ class AppStrings {
   static const String supplierLaunchDetailsCta = 'Kampanya detayları';
   static const String supplierPriceComingSoon =
       'Paket fiyatları ücretsiz dönem bitmeden açıklanacak';
+
+  // ── Ticari Lansman Modeli (kayıt bazlı 1 ay ücretsiz + lansman fiyatı) ──
+  /// Hoş geldin başlığı: '$commercialWelcomePrefix{son gün}'
+  /// ' $commercialWelcomeSuffix'.
+  static const String commercialWelcomePrefix =
+      '1 ay boyunca tüm Premium özellikler ücretsiz — ';
+  static const String commercialWelcomeSuffix = 'gününe kadar.';
+
+  /// Bitişe yaklaşırken (son 3 gün): '{N} $commercialEndingDays{son gün}…'.
+  static const String commercialEndingPrefix =
+      'Ücretsiz Premium dönemin bitmesine ';
+  static const String commercialEndingMid = ' gün kaldı — ';
+
+  static const String commercialBasicsHeader =
+      'Ücretsiz dönemden sonra temel özellikler her zaman ücretsiz kalır:';
+
+  /// Temel (her zaman ücretsiz) özellikler — TEK KAYNAK. Koddaki gerçek
+  /// Free kapsamı: sosyal yüzey herkese açık, ilanlar lansmanda ücretsiz,
+  /// Fırın Defteri temel + 7 gün rapor + 5 reçete + temel hesaplar
+  /// (planFreeFeatures ile tutarlı).
+  static const List<String> commercialBasicsList = <String>[
+    'Sosyal akış ve gruplar',
+    'İş ve pazar ilanları',
+    'Temel Fırın Defteri',
+    '7 günlük rapor',
+    '5 reçete',
+    'Temel hesaplama araçları',
+  ];
+
+  /// Lansman fiyat cümlesi: '$commercialPricePrefix{gün}'
+  /// '$commercialPriceMid{fiyat}. $commercialPriceAssurance'.
+  static const String commercialPricePrefix =
+      "Premium'a devam etmek istersen lansman fiyatı ";
+  static const String commercialPriceMid = ' tarihine kadar aylık ';
+  static const String commercialPriceAssurance =
+      'Onayın olmadan hiçbir ücret alınmaz, kart bilgisi istenmez.';
+
+  static const String commercialEndedTitle =
+      'Ücretsiz Premium dönemin sona erdi';
+  static const String commercialEndedKeepHeader =
+      'Şunlar ücretsiz olarak açık kalmaya devam ediyor:';
+  static const String commercialEndedLockedHeader =
+      'Kapanan Premium özellikler:';
+
+  /// Kapanan Premium özellikler — koddaki gerçek kilitler
+  /// (FeatureLock/has_business_feature) ile tutarlı TEK KAYNAK.
+  static const List<String> commercialPremiumLockedList = <String>[
+    'Şube Yönetimi',
+    'Bayi Defteri (şoförlü operasyon dahil)',
+    'Borç-Gider kayıtları',
+    'Sınırsız reçete',
+    'Gelişmiş hesaplamalar',
+    'Uzun rapor geçmişi',
+  ];
+
+  static const String commercialEndedContinuePremium = "Premium'a devam et";
+  static const String commercialEndedStayFree = 'Ücretsiz devam et';
+  static const String commercialWelcomeCta = 'Harika, başlayalım';
+
+  /// PlanStatusCard / PlansScreen ücretsiz dönem durumu.
+  static const String commercialFreePeriodTitle = 'Premium — Ücretsiz Dönem';
+
+  /// Alt metin: '{N} gün kaldı · {son gün} $commercialFreePeriodSubSuffix'.
+  static const String commercialFreePeriodSubSuffix =
+      'gününe kadar tüm Premium özellikler açık.';
+
+  /// Fiyat ipucu: '$commercialAfterPrefix{gün}$commercialPriceMid{fiyat}'.
+  static const String commercialAfterPrefix = 'Sonrasında ';
+  static const String commercialFreePeriodBadge = 'Ücretsiz Dönem';
+  static const String planFreeAlwaysLabel = 'Her zaman ücretsiz';
 
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';

@@ -14,6 +14,9 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     this.canStartPromo = true,
     this.supplierLaunchFreeUntil,
     this.subscriptionPurchaseAllowed = true,
+    this.commercialFreeStartedAt,
+    this.commercialFreeEndsAt,
+    this.launchPriceUntil,
   });
 
   BusinessPlan plan;
@@ -27,15 +30,33 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
 
   /// Server satın alma uygunluğu aynası (kampanya aktifken daima false).
   bool subscriptionPurchaseAllowed;
+
+  /// Ticari lansman ücretsiz ay aynası (kayıt bazlı pencere).
+  DateTime? commercialFreeStartedAt;
+  DateTime? commercialFreeEndsAt;
+  DateTime? launchPriceUntil;
   int ensureCalls = 0;
+
+  bool get _commercialFreeActive {
+    final ends = commercialFreeEndsAt;
+    if (ends == null) return false;
+    final now = DateTime.now().toUtc();
+    final started = commercialFreeStartedAt;
+    if (started != null && now.isBefore(started.toUtc())) return false;
+    return now.isBefore(ends.toUtc());
+  }
 
   bool get _supplierLaunchActive {
     final until = supplierLaunchFreeUntil;
     return until != null && DateTime.now().toUtc().isBefore(until.toUtc());
   }
 
+  // Server sırası aynası: ödenmiş (plan) → aktif promo (trialActive) →
+  // kayıt bazlı ücretsiz ay → free.
   BusinessPlan get _effective =>
-      trialActive || plan == BusinessPlan.pro ? BusinessPlan.premium : plan;
+      trialActive || plan == BusinessPlan.pro || _commercialFreeActive
+      ? BusinessPlan.premium
+      : plan;
 
   @override
   Future<void> ensureMyEntitlement() async {
@@ -102,6 +123,18 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       supplierLaunchFreeUntil: supplierLaunchFreeUntil,
       subscriptionPurchaseAllowed:
           _supplierLaunchActive ? false : subscriptionPurchaseAllowed,
+      freePeriodActive: _commercialFreeActive,
+      freePeriodStartedAt: commercialFreeStartedAt,
+      freePeriodEndsAt: commercialFreeEndsAt,
+      freePeriodDaysLeft: _commercialFreeActive
+          ? (commercialFreeEndsAt!
+                      .toUtc()
+                      .difference(DateTime.now().toUtc())
+                      .inSeconds /
+                  86400)
+              .ceil()
+          : 0,
+      launchPriceUntil: launchPriceUntil,
     );
   }
 
@@ -123,5 +156,17 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> markSupplierLaunchNoticeSeen() async {
     supplierLaunchNoticeSeen = true;
+  }
+
+  /// Ticari lansman pop-up görüldü kayıtları (tür bazında).
+  final Set<String> commercialNoticesSeen = <String>{};
+
+  @override
+  Future<bool> hasSeenCommercialLaunchNotice(String noticeKey) async =>
+      commercialNoticesSeen.contains(noticeKey);
+
+  @override
+  Future<void> markCommercialLaunchNoticeSeen(String noticeKey) async {
+    commercialNoticesSeen.add(noticeKey);
   }
 }

@@ -54,40 +54,39 @@ void main() {
     });
   });
 
-  group('showPaywallSheet launch promo', () {
-    testWidgets('CTA starts promo and continues callback', (tester) async {
-      var continued = false;
-      final repo = LocalSubscriptionRepository(plan: BusinessPlan.free);
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [subscriptionRepositoryProvider.overrideWithValue(repo)],
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => ElevatedButton(
-                  onPressed: () => showPaywallSheet(
-                    context,
-                    FeatureLock.branches,
-                    onUnlocked: () => continued = true,
+  group('showPaywallSheet (ticari lansman modeli)', () {
+    testWidgets(
+      'promo CTA yok; kilit bilgisi + Paketleri incele; promo başlatılmaz',
+      (tester) async {
+        final repo = LocalSubscriptionRepository(plan: BusinessPlan.free);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [subscriptionRepositoryProvider.overrideWithValue(repo)],
+            child: MaterialApp(
+              home: Scaffold(
+                body: Builder(
+                  builder: (context) => ElevatedButton(
+                    onPressed: () =>
+                        showPaywallSheet(context, FeatureLock.branches),
+                    child: const Text('open'),
                   ),
-                  child: const Text('open'),
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
-      expect(find.text(AppStrings.paywallPromoTitle), findsOneWidget);
-      expect(find.text(AppStrings.paywallPromoCta), findsOneWidget);
+        );
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+        // Eski "Ücretsiz Kullanmaya Başla" promo akışı kaldırıldı.
+        expect(find.text('Ücretsiz Kullanmaya Başla'), findsNothing);
+        expect(find.text(FeatureLock.branches.title), findsOneWidget);
+        expect(find.text(AppStrings.paywallBasicsStayFree), findsOneWidget);
+        expect(find.text(AppStrings.paywallUpgradeCta), findsOneWidget);
 
-      await tester.tap(find.text(AppStrings.paywallPromoCta));
-      await tester.pumpAndSettle();
-      expect(continued, isTrue);
-      final e = await repo.myEntitlement();
-      expect(e.isLaunchPromoActive, isTrue);
-    });
+        final e = await repo.myEntitlement();
+        expect(e.isLaunchPromoActive, isFalse);
+      },
+    );
   });
 
   group('CalculatorEntitlements premium gate', () {

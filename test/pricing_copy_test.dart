@@ -11,6 +11,7 @@ import 'package:firin_defter/features/subscriptions/widgets/paywall_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class _FixedProfile extends ProfileController {
   _FixedProfile(super.ref, AccountType account) {
@@ -25,46 +26,67 @@ class _FixedProfile extends ProfileController {
 }
 
 void main() {
+  setUpAll(() => initializeDateFormatting('tr_TR'));
+
   group('PricingConfig launch Premium fallback', () {
-    test('new fallback prices and yearly saving are centralized', () {
-      expect(PricingConfig.premiumMonthly, 499);
-      expect(PricingConfig.premiumYearly, 4990);
-      expect(PricingConfig.premiumYearlyRegular, 5988);
-      expect(PricingConfig.premiumYearlySavings, 998);
-      expect(PricingConfig.premiumMonthlyLabel, '499 TL / ay');
-      expect(PricingConfig.premiumYearlyLabel, '4.990 TL / yıl');
+    test('lansman fiyatları kuruş hassasiyetiyle tek kaynaktan', () {
+      expect(PricingConfig.premiumMonthlyCents, 49999);
+      expect(PricingConfig.premiumYearlyCents, 499990);
+      expect(PricingConfig.premiumYearlyRegularCents, 599988);
+      expect(PricingConfig.premiumYearlySavingsCents, 99998);
+      expect(PricingConfig.premiumMonthlyLabel, '499,99 TL / ay');
+      expect(PricingConfig.premiumYearlyLabel, '4.999,90 TL / yıl');
       expect(PricingConfig.premiumYearlySavingsLabel, '2 Ay Bizden');
     });
   });
 
-  group('Paywall sheet launch promo copy', () {
-    testWidgets('first premium gate offers free usage, not store purchase', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            subscriptionRepositoryProvider.overrideWithValue(
-              LocalSubscriptionRepository(plan: BusinessPlan.free),
-            ),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => ElevatedButton(
-                  onPressed: () => showPaywallSheet(context, FeatureLock.branches),
-                  child: const Text('open'),
+  group('Paywall sheet lansman kopyası', () {
+    testWidgets(
+      'kilit: promo CTA YOK; lansman fiyatı + temel özellik notu var',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              subscriptionRepositoryProvider.overrideWithValue(
+                LocalSubscriptionRepository(
+                  plan: BusinessPlan.free,
+                  launchPriceUntil:
+                      DateTime.parse('2027-10-01T00:00:00+03:00'),
+                ),
+              ),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                body: Builder(
+                  builder: (context) => ElevatedButton(
+                    onPressed: () =>
+                        showPaywallSheet(context, FeatureLock.branches),
+                    child: const Text('open'),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
-      expect(find.text(AppStrings.paywallPromoTitle), findsOneWidget);
-      expect(find.text(AppStrings.paywallPromoCta), findsOneWidget);
-      expect(find.text(AppStrings.paywallPromoBulletCard), findsOneWidget);
-      expect(find.text(AppStrings.paywallPromoBulletNoRenew), findsOneWidget);
-    });
+        );
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+        // Eski CTA promosu kaldırıldı: ücretsiz dönem kayıt bazlı otomatik.
+        expect(find.text('Ücretsiz Kullanmaya Başla'), findsNothing);
+        expect(find.textContaining('3 ay'), findsNothing);
+        expect(find.text(FeatureLock.branches.title), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('paywall_price_hint')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('499,99'), findsOneWidget);
+        expect(find.text(AppStrings.paywallBasicsStayFree), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('paywall_launch_price_until')),
+          findsOneWidget,
+        );
+        expect(find.text(AppStrings.paywallUpgradeCta), findsOneWidget);
+      },
+    );
   });
 
   group('PlansScreen launch prices', () {
@@ -85,15 +107,23 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('commercial shows Free + Premium fallback price, not old Pro price', (tester) async {
-      await pumpPlans(tester, AccountType.commercial);
-      expect(find.byKey(const ValueKey('plan_tile_free')), findsOneWidget);
-      expect(find.byKey(const ValueKey('plan_tile_premium')), findsOneWidget);
-      expect(find.byKey(const ValueKey('plan_tile_pro')), findsNothing);
-      expect(find.text('0 TL'), findsOneWidget);
-      expect(find.text(PricingConfig.premiumMonthlyLabel), findsOneWidget);
-      expect(find.text(AppStrings.plansLaunchTrialCta), findsOneWidget);
-    });
+    testWidgets(
+      'commercial: Free "Her zaman ücretsiz" + Premium lansman fiyatı',
+      (tester) async {
+        await pumpPlans(tester, AccountType.commercial);
+        expect(find.byKey(const ValueKey('plan_tile_free')), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('plan_tile_premium')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('plan_tile_pro')), findsNothing);
+        expect(find.text(AppStrings.planFreeAlwaysLabel), findsOneWidget);
+        expect(find.text(PricingConfig.premiumMonthlyLabel), findsOneWidget);
+        expect(find.text(AppStrings.plansLaunchTrialCta), findsOneWidget);
+        // Eski "3 ay" dili yok.
+        expect(find.textContaining('3 ay'), findsNothing);
+      },
+    );
 
     testWidgets('supplier uses same simplified Premium offer', (tester) async {
       await pumpPlans(tester, AccountType.wholesaler);

@@ -40,6 +40,11 @@ class BusinessEntitlements {
     this.supplierLaunchFreeActive = false,
     this.supplierLaunchFreeUntil,
     this.subscriptionPurchaseAllowed = true,
+    this.freePeriodActive = false,
+    this.freePeriodStartedAt,
+    this.freePeriodEndsAt,
+    this.freePeriodDaysLeft = 0,
+    this.launchPriceUntil,
   });
 
   /// Gerçek plan (trial'dan bağımsız).
@@ -101,6 +106,20 @@ class BusinessEntitlements {
   /// false: UI satın alma/fiyat göstermez, ödeme servisi mağaza çağrısını
   /// başlatmaz. Eski backend alanı döndürmezse true (mevcut davranış).
   final bool subscriptionPurchaseAllowed;
+
+  // ── Ticari Lansman Modeli — kayıt bazlı OTOMATİK 1 aylık ücretsiz Premium
+  // dönemi (yalnız commercial'da dolu). Süre/hak tamamen server'dadır.
+  final bool freePeriodActive;
+  final DateTime? freePeriodStartedAt;
+
+  /// Ücretsiz dönemin bitiş ANI (hariç). Dolu + geçmişse dönem sona ermiştir
+  /// (bitiş pop-up'ı bu durumla tetiklenir).
+  final DateTime? freePeriodEndsAt;
+  final int freePeriodDaysLeft;
+
+  /// Lansman fiyatının geçerli olduğu son an (hariç) — yalnız bilgilendirme
+  /// metinleri için (fiyatı mağaza belirler).
+  final DateTime? launchPriceUntil;
 
   bool get supplierProductsUnlimited => supplierProductLimit < 0;
   bool get supplierCampaignsUnlimited => supplierCampaignLimit < 0;
@@ -179,6 +198,17 @@ class BusinessEntitlements {
           : DateTime.tryParse(row['supplier_launch_free_until'] as String),
       subscriptionPurchaseAllowed:
           (row['subscription_purchase_allowed'] as bool?) ?? true,
+      freePeriodActive: (row['free_period_active'] as bool?) ?? false,
+      freePeriodStartedAt: row['free_period_started_at'] == null
+          ? null
+          : DateTime.tryParse(row['free_period_started_at'] as String),
+      freePeriodEndsAt: row['free_period_ends_at'] == null
+          ? null
+          : DateTime.tryParse(row['free_period_ends_at'] as String),
+      freePeriodDaysLeft: (row['free_period_days_left'] as num?)?.toInt() ?? 0,
+      launchPriceUntil: row['launch_price_until'] == null
+          ? null
+          : DateTime.tryParse(row['launch_price_until'] as String),
     );
   }
 

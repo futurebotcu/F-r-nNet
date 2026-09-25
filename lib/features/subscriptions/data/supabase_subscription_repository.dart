@@ -36,31 +36,48 @@ class SupabaseSubscriptionRepository implements SubscriptionRepository {
 
   static const String _supplierLaunchCampaignKey = 'supplier_launch_v1';
   static const String _supplierLaunchPopupNoticeKey = 'popup_ack';
+  static const String _commercialLaunchCampaignKey = 'commercial_launch_v1';
 
-  @override
-  Future<bool> hasSeenSupplierLaunchNotice() async {
+  Future<bool> _hasSeenNotice(String campaignKey, String noticeKey) async {
     final rows = await _client
         .from('user_campaign_notices')
         .select('notice_key')
-        .eq('campaign_key', _supplierLaunchCampaignKey)
-        .eq('notice_key', _supplierLaunchPopupNoticeKey)
+        .eq('campaign_key', campaignKey)
+        .eq('notice_key', noticeKey)
         .limit(1);
     return rows.isNotEmpty;
   }
 
-  @override
-  Future<void> markSupplierLaunchNoticeSeen() async {
+  Future<void> _markNoticeSeen(String campaignKey, String noticeKey) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return;
     // ON CONFLICT DO NOTHING — tekrar açılış/cihaz değişimi idempotenttir.
     await _client.from('user_campaign_notices').upsert(
       {
         'user_id': userId,
-        'campaign_key': _supplierLaunchCampaignKey,
-        'notice_key': _supplierLaunchPopupNoticeKey,
+        'campaign_key': campaignKey,
+        'notice_key': noticeKey,
       },
       onConflict: 'user_id,campaign_key,notice_key',
       ignoreDuplicates: true,
     );
   }
+
+  @override
+  Future<bool> hasSeenSupplierLaunchNotice() =>
+      _hasSeenNotice(_supplierLaunchCampaignKey, _supplierLaunchPopupNoticeKey);
+
+  @override
+  Future<void> markSupplierLaunchNoticeSeen() => _markNoticeSeen(
+        _supplierLaunchCampaignKey,
+        _supplierLaunchPopupNoticeKey,
+      );
+
+  @override
+  Future<bool> hasSeenCommercialLaunchNotice(String noticeKey) =>
+      _hasSeenNotice(_commercialLaunchCampaignKey, noticeKey);
+
+  @override
+  Future<void> markCommercialLaunchNoticeSeen(String noticeKey) =>
+      _markNoticeSeen(_commercialLaunchCampaignKey, noticeKey);
 }
