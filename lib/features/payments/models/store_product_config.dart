@@ -131,10 +131,13 @@ class StoreProductConfig {
       storeIdentifier.split(':').first;
 
   /// Play Console'daki base plan kimlikleri (RevenueCat ürün tanımıyla
-  /// birebir: firinnet_premium_monthly:monthly / firinnet_premium_yearly:yearly).
+  /// birebir: firinnet_premium_monthly:monthly / firinnet_premium_yearly:annual;
+  /// yıllık ürünün eski "yearly" base planı yanlış süreli açıldığı için
+  /// devre dışı, aktif base plan "annual"). Bu harita yalnız TERCİH sırasıdır:
+  /// eşleşmezse selectStoreIdentifier ürünün mevcut base planına düşer.
   static const Map<String, String> googleBasePlanIds = <String, String>{
     premiumMonthly: 'monthly',
-    premiumYearly: 'yearly',
+    premiumYearly: 'annual',
   };
 
   /// getProducts sonucu [identifiers] içinden [productId] için satın alınacak

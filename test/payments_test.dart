@@ -32,7 +32,7 @@ class _SuffixedPricesPaymentService extends FakePaymentService {
           priceLabel: '₺123,45',
         ),
         StorePrice(
-          productId: 'firinnet_premium_yearly:yearly',
+          productId: 'firinnet_premium_yearly:annual',
           priceLabel: '₺1.234,56',
         ),
       ],
@@ -166,7 +166,7 @@ void main() {
       // Yanlış ürün asla seçilmez.
       expect(
         StoreProductConfig.selectStoreIdentifier(
-          ['firinnet_premium_yearly:yearly'],
+          ['firinnet_premium_yearly:annual'],
           StoreProductConfig.premiumMonthly,
         ),
         isNull,
@@ -183,8 +183,8 @@ void main() {
             priceLabel: '₺499,99',
           ),
           StorePrice(
-            productId: 'firinnet_premium_yearly:yearly',
-            priceLabel: '₺4.999,99',
+            productId: 'firinnet_premium_yearly:annual',
+            priceLabel: '₺4.999,90',
           ),
         ],
         preferred: StoreProductConfig.selectStoreIdentifier,
@@ -196,7 +196,7 @@ void main() {
       );
       expect(
         prices[StoreProductConfig.premiumYearly]?.priceLabel,
-        '₺4.999,99',
+        '₺4.999,90',
       );
       // Plain identifier dönerse (iOS/legacy) aynen çalışır.
       final plain = mapStorePrices(
