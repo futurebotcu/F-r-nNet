@@ -15,6 +15,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Store'un Google formatında ('id:basePlan') identifier döndürdüğü durumu
+/// taklit eder; gerçek servis gibi mapStorePrices ile eşler.
+class _SuffixedPricesPaymentService extends FakePaymentService {
+  _SuffixedPricesPaymentService() : super(available: true);
+
+  @override
+  Future<Map<String, StorePrice>> fetchStorePrices(
+    List<String> productIds,
+  ) async {
+    return mapStorePrices(
+      productIds,
+      const [
+        StorePrice(
+          productId: 'firinnet_premium_monthly:monthly',
+          priceLabel: '₺123,45',
+        ),
+        StorePrice(
+          productId: 'firinnet_premium_yearly:yearly',
+          priceLabel: '₺1.234,56',
+        ),
+      ],
+      preferred: StoreProductConfig.selectStoreIdentifier,
+    );
+  }
+}
+
 class _FixedProfile extends ProfileController {
   _FixedProfile(super.ref, AccountType? account) {
     state = account == null
@@ -91,6 +117,100 @@ void main() {
         );
       },
     );
+  });
+
+  group('Google Play product id formatı (id:basePlan)', () {
+    test('normalizeProductId suffix atar, plain/legacy dokunmaz', () {
+      expect(
+        StoreProductConfig.normalizeProductId('firinnet_premium_monthly:monthly'),
+        StoreProductConfig.premiumMonthly,
+      );
+      expect(
+        StoreProductConfig.normalizeProductId(StoreProductConfig.premiumYearly),
+        StoreProductConfig.premiumYearly,
+      );
+      expect(
+        StoreProductConfig.normalizeProductId(StoreProductConfig.listingFee),
+        StoreProductConfig.listingFee,
+      );
+    });
+
+    test('selectStoreIdentifier: birebir > beklenen base plan > herhangi', () {
+      // iOS/legacy: birebir eşleşme öncelikli.
+      expect(
+        StoreProductConfig.selectStoreIdentifier(
+          ['firinnet_premium_monthly'],
+          StoreProductConfig.premiumMonthly,
+        ),
+        'firinnet_premium_monthly',
+      );
+      // Google: beklenen base plan seçilir (başka base plan varsa bile).
+      expect(
+        StoreProductConfig.selectStoreIdentifier(
+          [
+            'firinnet_premium_monthly:offer_x',
+            'firinnet_premium_monthly:monthly',
+          ],
+          StoreProductConfig.premiumMonthly,
+        ),
+        'firinnet_premium_monthly:monthly',
+      );
+      // Beklenen base plan yoksa ürünün mevcut base planı.
+      expect(
+        StoreProductConfig.selectStoreIdentifier(
+          ['firinnet_premium_yearly:promo'],
+          StoreProductConfig.premiumYearly,
+        ),
+        'firinnet_premium_yearly:promo',
+      );
+      // Yanlış ürün asla seçilmez.
+      expect(
+        StoreProductConfig.selectStoreIdentifier(
+          ['firinnet_premium_yearly:yearly'],
+          StoreProductConfig.premiumMonthly,
+        ),
+        isNull,
+      );
+    });
+
+    test('mapStorePrices: fiyat hem id hem id:basePlan anahtarıyla bulunur',
+        () {
+      final prices = mapStorePrices(
+        [StoreProductConfig.premiumMonthly, StoreProductConfig.premiumYearly],
+        const [
+          StorePrice(
+            productId: 'firinnet_premium_monthly:monthly',
+            priceLabel: '₺499,99',
+          ),
+          StorePrice(
+            productId: 'firinnet_premium_yearly:yearly',
+            priceLabel: '₺4.999,99',
+          ),
+        ],
+        preferred: StoreProductConfig.selectStoreIdentifier,
+      );
+      expect(prices[StoreProductConfig.premiumMonthly]?.priceLabel, '₺499,99');
+      expect(
+        prices['firinnet_premium_monthly:monthly']?.priceLabel,
+        '₺499,99',
+      );
+      expect(
+        prices[StoreProductConfig.premiumYearly]?.priceLabel,
+        '₺4.999,99',
+      );
+      // Plain identifier dönerse (iOS/legacy) aynen çalışır.
+      final plain = mapStorePrices(
+        [StoreProductConfig.premiumMonthly],
+        const [
+          StorePrice(
+            productId: 'firinnet_premium_monthly',
+            priceLabel: r'$4.99',
+          ),
+        ],
+        preferred: StoreProductConfig.selectStoreIdentifier,
+      );
+      expect(plain[StoreProductConfig.premiumMonthly]?.priceLabel, r'$4.99');
+    });
   });
 
   group('FakePaymentService', () {
@@ -171,6 +291,36 @@ void main() {
     testWidgets('individual account has no purchase actions', (tester) async {
       await pumpActions(tester, AccountType.individual, available: true);
       expect(find.byKey(const ValueKey('buy_premium_monthly')), findsNothing);
+    });
+
+    testWidgets('Play id:basePlan fiyatları butonlarda görünür', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            profileControllerProvider.overrideWith(
+              (ref) => _FixedProfile(ref, AccountType.commercial),
+            ),
+            currentAuthUserProvider.overrideWithValue(
+              const AuthUser(id: 'u1', email: 'u@test.local'),
+            ),
+            paymentServiceProvider.overrideWithValue(
+              _SuffixedPricesPaymentService(),
+            ),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: PlanPurchaseActions(account: AccountType.commercial),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Sentinel fiyatlar config fallback'lerinden farklı → butondaki değer
+      // kesin olarak store'dan (id:basePlan eşlemesinden) gelmiştir.
+      expect(find.textContaining('₺123,45'), findsOneWidget);
+      expect(find.textContaining('₺1.234,56'), findsOneWidget);
     });
   });
 

@@ -166,11 +166,16 @@ class RevenueCatPaymentService implements PaymentService {
   Future<PaymentResult> _purchaseProductId(String productId) async {
     try {
       await _ensureConfigured();
+      // Google Play (Şubat 2023+) her base planı ayrı StoreProduct olarak
+      // 'id:basePlan' identifier'ıyla döndürür; doğru base plan seçilir.
       final products = await rc.Purchases.getProducts([productId]);
-      if (products.isEmpty) return PaymentResult.error;
-      await rc.Purchases.purchase(
-        rc.PurchaseParams.storeProduct(products.first),
+      final selected = StoreProductConfig.selectStoreIdentifier(
+        [for (final p in products) p.identifier],
+        productId,
       );
+      if (selected == null) return PaymentResult.error;
+      final product = products.firstWhere((p) => p.identifier == selected);
+      await rc.Purchases.purchase(rc.PurchaseParams.storeProduct(product));
       return PaymentResult.success;
     } on PlatformException catch (e) {
       final code = rc.PurchasesErrorHelper.getErrorCode(e);
@@ -204,12 +209,15 @@ class RevenueCatPaymentService implements PaymentService {
     if (!isAvailable || productIds.isEmpty) return const <String, StorePrice>{};
     await _ensureConfigured();
     final products = await rc.Purchases.getProducts(productIds);
-    return <String, StorePrice>{
-      for (final p in products)
-        p.identifier: StorePrice(
-          productId: p.identifier,
-          priceLabel: p.priceString,
-        ),
-    };
+    // Hem ham identifier ('id:basePlan') hem base id anahtarıyla eşlenir;
+    // UI base id ile bakar (StoreProductConfig sabitleri).
+    return mapStorePrices(
+      productIds,
+      [
+        for (final p in products)
+          StorePrice(productId: p.identifier, priceLabel: p.priceString),
+      ],
+      preferred: StoreProductConfig.selectStoreIdentifier,
+    );
   }
 }
