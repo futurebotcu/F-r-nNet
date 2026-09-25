@@ -32,9 +32,11 @@ Korunan gelecek altyapısı:
 ## Google Play Console
 
 1. `firinnet_premium_monthly` subscription ürününü oluştur.
-2. Aylık base plan: 499 TL/ay.
+2. Aylık base plan (id: `monthly`): 499 TL/ay.
 3. `firinnet_premium_yearly` subscription ürününü oluştur.
-4. Yıllık base plan: 4.990 TL/yıl.
+4. Yıllık base plan (id: `annual`): 4.990 TL/yıl. NOT: eski `yearly` base
+   planı yanlışlıkla aylık süreli açıldığı için devre dışı bırakıldı;
+   RevenueCat ürünü `firinnet_premium_yearly:annual`.
 5. `firinnet_listing_fee_50` one-time in-app product olarak kalabilir; lansman döneminde uygulama bunu başlatmaz.
 6. License tester hesaplarını ekle.
 7. Internal testing track ile test satın alması yap.
@@ -44,7 +46,7 @@ Korunan gelecek altyapısı:
 1. Android app package: `com.firinnet.firin_defter`.
 2. iOS app bundle kullanılıyorsa ilgili bundle ID ile ayrı app oluştur.
 3. Entitlement önerisi: `premium`.
-4. `firinnet_premium_monthly` ve `firinnet_premium_yearly` ürünlerini `premium` entitlement'a bağla.
+4. `firinnet_premium_monthly:monthly` ve `firinnet_premium_yearly:annual` ürünlerini `premium` entitlement'a bağla (Google ürün kimliği `productId:basePlanId`).
 5. Offering/package: monthly ve yearly package.
 6. Public SDK keys:
    - Android: `REVENUECAT_ANDROID_API_KEY`

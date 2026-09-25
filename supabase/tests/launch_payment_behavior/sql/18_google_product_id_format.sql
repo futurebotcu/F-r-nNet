@@ -42,11 +42,20 @@ begin
       v_plan, v_kind;
   end if;
 
+  -- Yıllık ürünün aktif base planı "annual" (eski "yearly" devre dışı);
+  -- normalizasyon base plan kimliğinden bağımsızdır, ikisi de çözülür.
+  select plan, kind into v_plan, v_kind
+  from public.store_product_mapping('firinnet_premium_yearly:annual');
+  if v_plan is distinct from 'premium'
+     or v_kind is distinct from 'subscription' then
+    raise exception 'G1b: suffix''li premium yearly (annual) çözülmedi';
+  end if;
+
   select plan, kind into v_plan, v_kind
   from public.store_product_mapping('firinnet_premium_yearly:yearly');
   if v_plan is distinct from 'premium'
      or v_kind is distinct from 'subscription' then
-    raise exception 'G1b: suffix''li premium yearly çözülmedi';
+    raise exception 'G1b2: eski yearly base plan kimliği çözülmedi';
   end if;
 
   select plan, kind into v_plan, v_kind
