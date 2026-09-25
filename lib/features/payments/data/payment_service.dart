@@ -11,6 +11,38 @@ class StorePrice {
   final String priceLabel;
 }
 
+/// Store'dan dönen fiyatları istenen ürün id'lerine eşler. Google Play
+/// identifier'ı 'id:basePlan' formatında gelebilir; her fiyat hem ham
+/// identifier hem base ürün id anahtarıyla erişilebilir olur (UI base id ile
+/// bakar). Aynı ürünün birden fazla base planı dönerse [preferred] seçimi
+/// (örn. 'id:monthly') base id anahtarını belirler.
+Map<String, StorePrice> mapStorePrices(
+  List<String> requestedIds,
+  List<StorePrice> storePrices, {
+  String? Function(List<String> identifiers, String productId)? preferred,
+}) {
+  final identifiers = <String>[for (final p in storePrices) p.productId];
+  final byIdentifier = <String, StorePrice>{
+    for (final p in storePrices) p.productId: p,
+  };
+  final result = <String, StorePrice>{...byIdentifier};
+  for (final requested in requestedIds) {
+    final selected = preferred?.call(identifiers, requested) ??
+        identifiers.firstWhere(
+          (id) => id == requested || id.startsWith('$requested:'),
+          orElse: () => '',
+        );
+    final price = byIdentifier[selected];
+    if (price != null) {
+      result[requested] = StorePrice(
+        productId: requested,
+        priceLabel: price.priceLabel,
+      );
+    }
+  }
+  return result;
+}
+
 /// Store ödeme servisine soyut erişim (RevenueCat orkestrasyonu).
 ///
 /// Resmi ödeme modeli: App Store IAP + Play Billing. Havale/EFT/İyzico/Stripe

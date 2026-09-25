@@ -20,6 +20,12 @@ yalnız SQL metin kontratıdır; davranış kanıtı BU pakettir.
     biri kapanırken diğer geçerli abonelik korunur (heal dahil)
   - tx id'siz/timestamp'siz REST snapshot (sync yolu) refund edilmiş dönemi
     yeniden açamaz; daha ileri expires'lı gerçek repurchase snapshot'ı açar
+- Google Play `productId:basePlanId` formatı (`18_google_product_id_format.sql`,
+  `20260927090000_revenuecat_google_product_id_v1.sql`):
+  - mapping suffix'li/plain/legacy id'leri aynı ürüne çözer; listing fee korunur
+  - suffix'li id ile Premium açılır; satır normalize kimlikle yazılır (tekillik)
+  - format karışımında stale/refund/snapshot/aylık↔yıllık guard'ları çalışır
+  - hesap tipi kuralları (toptancı bakery ürünü alamaz vb.) suffix'li id'de aynı
 - Promo (`activate_launch_premium_promo`):
   - idempotent; **eşzamanlı** aktivasyon tek başlangıç/bitiş üretir
   - süresi dolan promo yeniden başlamaz

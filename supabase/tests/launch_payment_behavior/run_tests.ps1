@@ -42,7 +42,8 @@ if ($Replica) {
   $migrations = @(
     (Join-Path $repoRoot 'supabase\migrations\20260923120000_launch_premium_and_listing_v1.sql'),
     (Join-Path $repoRoot 'supabase\migrations\20260925090000_supplier_launch_campaign_v1.sql'),
-    (Join-Path $repoRoot 'supabase\migrations\20260926090000_commercial_launch_pricing_v1.sql')
+    (Join-Path $repoRoot 'supabase\migrations\20260926090000_commercial_launch_pricing_v1.sql'),
+    (Join-Path $repoRoot 'supabase\migrations\20260927090000_revenuecat_google_product_id_v1.sql')
   )
 } else {
   $schemaFile = Join-Path $scriptDir 'harness_schema.sql'
@@ -50,7 +51,8 @@ if ($Replica) {
     (Join-Path $repoRoot 'supabase\migrations\20260712120000_store_payments_foundation_v1.sql'),
     (Join-Path $repoRoot 'supabase\migrations\20260923120000_launch_premium_and_listing_v1.sql'),
     (Join-Path $repoRoot 'supabase\migrations\20260925090000_supplier_launch_campaign_v1.sql'),
-    (Join-Path $repoRoot 'supabase\migrations\20260926090000_commercial_launch_pricing_v1.sql')
+    (Join-Path $repoRoot 'supabase\migrations\20260926090000_commercial_launch_pricing_v1.sql'),
+    (Join-Path $repoRoot 'supabase\migrations\20260927090000_revenuecat_google_product_id_v1.sql')
   )
 }
 foreach ($m in @($schemaFile) + $migrations) {
@@ -122,6 +124,7 @@ try {
   if ($Replica) { $sequential += '15_old_app_compat.sql' }
   $sequential += '16_supplier_launch_campaign.sql'
   $sequential += '17_commercial_launch_pricing.sql'
+  $sequential += '18_google_product_id_format.sql'
   foreach ($f in $sequential) {
     Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir $f)) $f
     Write-Host "OK: $f"

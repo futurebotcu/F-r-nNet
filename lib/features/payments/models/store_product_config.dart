@@ -123,4 +123,36 @@ class StoreProductConfig {
 
   static List<String> premiumProductIdsFor(AccountType? account) =>
       subscriptionsFor(account).map((p) => p.productId).toList(growable: false);
+
+  /// Google Play, Şubat 2023 sonrası aboneliklerde store identifier'ı
+  /// 'productId:basePlanId' formatında raporlar (SDK StoreProduct.identifier
+  /// dahil). Eşleme her yerde base ürün id üzerinden yapılır.
+  static String normalizeProductId(String storeIdentifier) =>
+      storeIdentifier.split(':').first;
+
+  /// Play Console'daki base plan kimlikleri (RevenueCat ürün tanımıyla
+  /// birebir: firinnet_premium_monthly:monthly / firinnet_premium_yearly:yearly).
+  static const Map<String, String> googleBasePlanIds = <String, String>{
+    premiumMonthly: 'monthly',
+    premiumYearly: 'yearly',
+  };
+
+  /// getProducts sonucu [identifiers] içinden [productId] için satın alınacak
+  /// store identifier'ı seçer. Öncelik: birebir eşleşme (legacy/iOS) →
+  /// beklenen base plan ('id:basePlan') → ürünün herhangi bir base planı.
+  /// Eşleşme yoksa null (yanlış ürün asla satın alınmaz).
+  static String? selectStoreIdentifier(
+    List<String> identifiers,
+    String productId,
+  ) {
+    if (identifiers.contains(productId)) return productId;
+    final basePlan = googleBasePlanIds[productId];
+    if (basePlan != null && identifiers.contains('$productId:$basePlan')) {
+      return '$productId:$basePlan';
+    }
+    for (final id in identifiers) {
+      if (id.startsWith('$productId:')) return id;
+    }
+    return null;
+  }
 }

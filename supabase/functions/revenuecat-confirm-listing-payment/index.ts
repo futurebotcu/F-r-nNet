@@ -112,7 +112,12 @@ Deno.serve(async (req) => {
         string,
         Array<Record<string, unknown>>
       >;
-      const purchases = nonSubs[LISTING_PRODUCT] ?? [];
+      // Google ürün anahtarı 'productId:basePlanId' formatında gelebilir
+      // (consumable'da beklenmez ama format değişimine dayanıklı olsun).
+      const listingKey = Object.keys(nonSubs).find(
+        (k) => k.split(":")[0] === LISTING_PRODUCT,
+      );
+      const purchases = (listingKey ? nonSubs[listingKey] : undefined) ?? [];
       const intentCreatedMs = Date.parse(String(intent.created_at));
       const candidates = purchases
         .map((p) => {
