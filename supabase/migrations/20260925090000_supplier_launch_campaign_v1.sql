@@ -16,12 +16,21 @@
 -- kendiliğinden geri döner; veri silinmez, hesap kapanmaz.
 
 -- ────────────────────────────────────────────────────────────────────────
--- 1) Merkezi kampanya konfigürasyonu (pasif başlar; operatör doldurur).
---    supplier_launch_free_until boşsa start + 1 takvim yılı (Istanbul).
+-- 1) Merkezi kampanya konfigürasyonu.
+--    * Bitiş SABİTTİR ve tek doğruluk kaynağı bu config anahtarıdır:
+--      2027-10-01T00:00:00+03:00 (Europe/Istanbul, bu an HARİÇ) —
+--      "30 Eylül 2027 günü sonuna kadar ücretsiz". Kayıt tarihine veya
+--      lansmana yıl eklenmesine bağlı DEĞİLDİR (türetme yok).
+--    * Başlangıç henüz belirlenmedi → null; başlangıç tanımlanana kadar
+--      kampanya ve hatırlatmalar PASİF kalır.
+--    * supplier_paid_packages_published: tedarikçi ücretli paket/fiyatları
+--      yayımlandı mı? (Satın alma uygunluğunun server kaynağı; false iken
+--      tedarikçiye abonelik satışı kapalıdır.)
 -- ────────────────────────────────────────────────────────────────────────
 insert into public.app_runtime_config (key, value) values
   ('supplier_launch_free_start', 'null'::jsonb),
-  ('supplier_launch_free_until', 'null'::jsonb)
+  ('supplier_launch_free_until', '"2027-10-01T00:00:00+03:00"'::jsonb),
+  ('supplier_paid_packages_published', 'false'::jsonb)
 on conflict (key) do nothing;
 
 create or replace function public.supplier_launch_free_start()
@@ -38,6 +47,7 @@ revoke execute on function public.supplier_launch_free_start()
 grant execute on function public.supplier_launch_free_start()
   to authenticated, service_role;
 
+-- Yalnız config'ten okunur; "start + 1 yıl" TÜRETİMİ YOKTUR.
 create or replace function public.supplier_launch_free_until()
 returns timestamptz
 language sql
@@ -45,12 +55,7 @@ stable
 security definer
 set search_path = ''
 as $$
-  select coalesce(
-    public.app_config_timestamptz('supplier_launch_free_until', null),
-    ((public.app_config_timestamptz('supplier_launch_free_start', null)
-        at time zone 'Europe/Istanbul') + interval '1 year')
-      at time zone 'Europe/Istanbul'
-  );
+  select public.app_config_timestamptz('supplier_launch_free_until', null);
 $$;
 revoke execute on function public.supplier_launch_free_until()
   from public, anon;
@@ -58,7 +63,8 @@ grant execute on function public.supplier_launch_free_until()
   to authenticated, service_role;
 
 -- Kampanya penceresi + rol kontrolü. Ortak bitiş: kayıt tarihinden bağımsız,
--- sonradan katılan da aynı bitişe kadar yararlanır.
+-- sonradan katılan da aynı bitişe kadar yararlanır. Başlangıç VE bitiş
+-- tanımlı olmadıkça kampanya etkinleşmez (tarih uydurulmaz).
 create or replace function public.is_supplier_launch_free_active(
   p_owner_id uuid
 )
@@ -72,9 +78,9 @@ declare
   v_start timestamptz := public.supplier_launch_free_start();
   v_until timestamptz := public.supplier_launch_free_until();
 begin
-  if v_until is null then return false; end if;
+  if v_start is null or v_until is null then return false; end if;
+  if now() < v_start then return false; end if;
   if now() >= v_until then return false; end if;
-  if v_start is not null and now() < v_start then return false; end if;
   return exists (
     select 1 from public.profiles p
     where p.id = p_owner_id and p.account_type = 'wholesaler'
@@ -92,8 +98,15 @@ grant execute on function public.is_supplier_launch_free_active(uuid)
 --    ilan muafiyeti zaten effective_supplier_plan üzerinden türediği için
 --    tek noktadan açılır; RLS/guard'lar (anonimlik, reply hardening, tek
 --    teklif kuralı) aynen yürürlükte kalır.
+--
+--    KRİTİK: Tedarikçi için kampanya dışında yalnız GERÇEK ÖDENMİŞ abonelik
+--    premium açar — kişisel 3 aylık promo tedarikçi haklarını AÇMAZ (ortak
+--    bitiş kişisel promoyla uzatılamaz; mevcut aktif promolar dahil).
+--    Ticari/bireysel hesapların promo davranışı DEĞİŞMEZ.
 -- ────────────────────────────────────────────────────────────────────────
-create or replace function public.effective_supplier_plan(p_owner_id uuid)
+
+-- Promo HARİÇ, yalnız ödenmiş abonelik dönemine dayalı plan.
+create or replace function public.paid_business_plan(p_owner_id uuid)
 returns text
 language sql
 stable
@@ -101,14 +114,142 @@ security definer
 set search_path = ''
 as $$
   select case
-    when public.is_supplier_launch_free_active(p_owner_id) then 'premium'
-    else public.current_business_plan(p_owner_id)
-  end;
+    when coalesce(e.plan, 'free') in ('premium', 'pro')
+      and (e.current_period_ends_at is null or e.current_period_ends_at > now())
+      then 'premium'
+    else 'free'
+  end
+  from (select p_owner_id as id) x
+  left join public.user_entitlements e on e.owner_id = x.id;
+$$;
+revoke execute on function public.paid_business_plan(uuid) from public, anon;
+grant execute on function public.paid_business_plan(uuid)
+  to authenticated, service_role;
+
+create or replace function public.effective_supplier_plan(p_owner_id uuid)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_acct text;
+begin
+  if public.is_supplier_launch_free_active(p_owner_id) then
+    return 'premium';
+  end if;
+  select account_type into v_acct
+  from public.profiles where id = p_owner_id;
+  if v_acct = 'wholesaler' then
+    -- Kampanya dışında yalnız ödenmiş abonelik; kişisel promo sayılmaz.
+    return public.paid_business_plan(p_owner_id);
+  end if;
+  return public.current_business_plan(p_owner_id);
+end;
 $$;
 revoke execute on function public.effective_supplier_plan(uuid)
   from public, anon;
 grant execute on function public.effective_supplier_plan(uuid)
   to authenticated, service_role;
+
+-- Tedarikçi kişisel promo BAŞLATAMAZ (yeni başlatma engeli; mevcut aktif
+-- promoların etkisi yukarıda paid_business_plan ile zaten dışlanır).
+-- Ticari/bireysel akış 20260923 tanımıyla birebir aynıdır; ortak
+-- premium_promo_months ayarına dokunulmaz.
+create or replace function public.activate_launch_premium_promo()
+returns table (
+  promo_status text,
+  promo_started_at timestamptz,
+  promo_expires_at timestamptz,
+  days_left integer,
+  activated boolean
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_acct text;
+  v_months int;
+  v_started timestamptz;
+  v_expires timestamptz;
+  v_status text;
+begin
+  if v_uid is null then raise exception 'auth required'; end if;
+
+  perform public.ensure_my_entitlement();
+
+  select p.account_type into v_acct
+  from public.profiles p where p.id = v_uid;
+  if v_acct = 'wholesaler' then
+    select coalesce(e.promo_status, 'not_started'),
+           e.promo_started_at, e.promo_expires_at
+      into v_status, v_started, v_expires
+      from public.user_entitlements e
+      where e.owner_id = v_uid;
+    return query select
+      coalesce(v_status, 'not_started'), v_started, v_expires, 0, false;
+    return;
+  end if;
+
+  v_months := public.app_config_int('premium_promo_months', 3);
+
+  select e.promo_status, e.promo_started_at, e.promo_expires_at
+  into v_status, v_started, v_expires
+  from public.user_entitlements e
+  where e.owner_id = v_uid
+  for update;
+
+  if v_status = 'active' and v_expires > now() then
+    return query select
+      v_status, v_started, v_expires,
+      ceil(extract(epoch from (v_expires - now())) / 86400.0)::int,
+      false;
+    return;
+  end if;
+
+  if v_status in ('active', 'used') or v_started is not null then
+    update public.user_entitlements e
+      set promo_status = case
+          when e.promo_expires_at is not null and e.promo_expires_at <= now()
+          then 'expired' else e.promo_status end,
+          updated_at = now()
+      where e.owner_id = v_uid;
+    select e.promo_status, e.promo_started_at, e.promo_expires_at
+      into v_status, v_started, v_expires
+      from public.user_entitlements e
+      where e.owner_id = v_uid;
+    return query select v_status, v_started, v_expires, 0, false;
+    return;
+  end if;
+
+  v_started := now();
+  v_expires := v_started + make_interval(months => v_months);
+
+  update public.user_entitlements e
+    set promo_status = 'active',
+        promo_started_at = v_started,
+        promo_expires_at = v_expires,
+        source = 'system',
+        updated_at = now()
+    where e.owner_id = v_uid
+      and e.promo_status = 'not_started'
+      and e.promo_started_at is null;
+
+  return query select
+    'active'::text,
+    v_started,
+    v_expires,
+    ceil(extract(epoch from (v_expires - now())) / 86400.0)::int,
+    true;
+end;
+$$;
+revoke execute on function public.activate_launch_premium_promo()
+  from public, anon;
+grant execute on function public.activate_launch_premium_promo()
+  to authenticated;
 
 -- ────────────────────────────────────────────────────────────────────────
 -- 3) my_entitlement: kampanya alanları (yalnız sona EK kolon — eski client
@@ -141,7 +282,8 @@ returns table (
   promo_expires_at timestamptz,
   can_start_promo boolean,
   supplier_launch_free_active boolean,
-  supplier_launch_free_until timestamptz
+  supplier_launch_free_until timestamptz,
+  subscription_purchase_allowed boolean
 )
 language sql
 stable
@@ -186,11 +328,23 @@ as $$
     coalesce(me.promo_status, 'not_started'),
     me.promo_started_at,
     me.promo_expires_at,
+    -- Tedarikçi kişisel promo başlatamaz (kampanya modeli).
     coalesce(me.promo_status, 'not_started') = 'not_started'
-      and me.promo_started_at is null,
+      and me.promo_started_at is null
+      and me.acct is distinct from 'wholesaler',
     public.is_supplier_launch_free_active(auth.uid()),
     case when me.acct = 'wholesaler'
-      then public.supplier_launch_free_until() else null end
+      then public.supplier_launch_free_until() else null end,
+    -- Abonelik satın alma uygunluğu (server kararı; client + ödeme servisi
+    -- mağaza çağrısından önce bunu kontrol eder): ticari → serbest;
+    -- tedarikçi → kampanya dışı VE paketler yayımlanmışsa; bireysel → yok.
+    case
+      when me.acct = 'commercial' then true
+      when me.acct = 'wholesaler' then
+        (not public.is_supplier_launch_free_active(auth.uid()))
+        and public.app_config_bool('supplier_paid_packages_published', false)
+      else false
+    end
   from me;
 $$;
 revoke execute on function public.my_entitlement() from public, anon;
@@ -260,8 +414,9 @@ declare
   v_count int := 0;
   r record;
 begin
-  if v_until is null or now() >= v_until then return 0; end if;
-  if v_start is not null and now() < v_start then return 0; end if;
+  -- Başlangıç VE bitiş tanımlı değilse hatırlatma da etkinleşmez.
+  if v_start is null or v_until is null then return 0; end if;
+  if now() < v_start or now() >= v_until then return 0; end if;
 
   if now() >= v_until - interval '7 days' then
     v_notice := 'reminder_7d';
@@ -273,10 +428,13 @@ begin
     return 0;
   end if;
 
+  -- Bitiş anı HARİÇ → kullanıcıya son ÜCRETSİZ GÜN gösterilir
+  -- (2027-10-01T00:00+03 → "30.09.2027 günü sonuna kadar").
   v_date_label := to_char(
-    v_until at time zone 'Europe/Istanbul', 'DD.MM.YYYY');
+    (v_until at time zone 'Europe/Istanbul') - interval '1 second',
+    'DD.MM.YYYY');
   v_body := 'Lansmana özel ücretsiz kullanım ' || v_date_label ||
-    ' tarihinde sona eriyor. Dilerseniz size uygun paketi Paketler ' ||
+    ' günü sonunda sona eriyor. Dilerseniz size uygun paketi Paketler ' ||
     'ekranından inceleyip ücretli devam edebilirsiniz. Onayınız olmadan ' ||
     'ücret alınmaz veya abonelik başlatılmaz.';
 

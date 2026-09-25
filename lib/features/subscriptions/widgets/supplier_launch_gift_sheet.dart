@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../providers/subscription_providers.dart';
 
 /// Tedarikçi Lansman Kampanyası bilgilendirme pop-up'ı.
@@ -38,8 +39,17 @@ Future<void> showSupplierLaunchGiftSheet(
   });
 }
 
-String formatSupplierLaunchDate(DateTime date) =>
-    DateFormat('d MMMM yyyy', 'tr_TR').format(date.toLocal());
+/// Bitiş anı HARİÇTİR; kullanıcıya son ÜCRETSİZ GÜN gösterilir ve tarih
+/// CİHAZ saat diliminden bağımsız Europe/Istanbul'a göre hesaplanır
+/// (Türkiye 2016'dan beri sabit UTC+3, DST yok):
+/// 2027-10-01T00:00+03 → "30 Eylül 2027".
+String formatSupplierLaunchDate(DateTime until) {
+  final istanbul = until.toUtc().add(const Duration(hours: 3));
+  final lastFreeMoment = istanbul.subtract(const Duration(seconds: 1));
+  return DateFormat('d MMMM yyyy', 'tr_TR').format(
+    DateTime(lastFreeMoment.year, lastFreeMoment.month, lastFreeMoment.day),
+  );
+}
 
 class SupplierLaunchGiftSheetBody extends StatelessWidget {
   const SupplierLaunchGiftSheetBody({super.key, required this.freeUntil});
@@ -201,14 +211,15 @@ class SupplierLaunchGiftSheetBody extends StatelessWidget {
   }
 }
 
-/// Oturum içi çift tetiklemeye karşı koruma (iki yüzey aynı anda isterse).
-/// Kalıcı "görüldü" kaydı server-side'dadır; bu yalnız aynı oturumda async
-/// yarışları keser.
-bool _sessionAttempted = false;
+/// Oturum içi çift tetiklemeye karşı koruma — KULLANICI BAZLI: aynı cihazda
+/// hesap değişince ikinci kullanıcı bilgilendirmeyi görebilir. Kalıcı
+/// "görüldü" kaydı server-side'dadır; geçici bağlantı hatası kalıcı görüldü
+/// sayılmaz (yalnız o oturumda tek deneme — kontrolsüz pop-up döngüsü yok).
+String? _sessionAttemptedUserId;
 
 @visibleForTesting
 void resetSupplierLaunchGiftSessionGuard() {
-  _sessionAttempted = false;
+  _sessionAttemptedUserId = null;
 }
 
 /// Kampanya penceresindeki tedarikçiye pop-up'ı İLK uygun oturumda bir kez
@@ -218,13 +229,14 @@ Future<void> maybeShowSupplierLaunchGiftSheet(
   BuildContext context,
   WidgetRef ref,
 ) async {
-  if (_sessionAttempted) return;
+  final userId = ref.read(currentAuthUserProvider)?.id;
+  if (userId == null || _sessionAttemptedUserId == userId) return;
   final entitlement = ref.read(myEntitlementProvider).valueOrNull;
   if (entitlement == null) return;
   final freeUntil = entitlement.supplierLaunchFreeUntil;
   // Kampanya bitmiş/pasif veya tarih yapılandırılmamış → gösterme.
   if (!entitlement.supplierLaunchFreeActive || freeUntil == null) return;
-  _sessionAttempted = true;
+  _sessionAttemptedUserId = userId;
 
   final repo = ref.read(subscriptionRepositoryProvider);
   try {

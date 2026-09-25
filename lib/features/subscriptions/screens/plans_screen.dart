@@ -30,6 +30,15 @@ class PlansScreen extends ConsumerWidget {
         ? entitlement?.supplierEffectivePlan
         : entitlement?.effectivePlan;
     final promoActive = entitlement?.isLaunchPromoActive ?? false;
+    // Tedarikçi: kişisel promo modeli geçerli değil (kampanya modeli);
+    // satın alma/fiyat yalnız server "uygun" derse gösterilir (yüklenene
+    // kadar fail-closed).
+    final purchaseAllowed = isWholesaler
+        ? (entitlement?.subscriptionPurchaseAllowed ?? false)
+        : true;
+    final launchActive = isWholesaler &&
+        (entitlement?.supplierLaunchFreeActive ?? false) &&
+        entitlement?.supplierLaunchFreeUntil != null;
     final (freeFeatures, premiumFeatures) = isWholesaler
         ? (AppStrings.supPlanFreeFeatures, AppStrings.supPlanPremiumFeatures)
         : (AppStrings.planFreeFeatures, AppStrings.planPremiumFeatures);
@@ -41,21 +50,23 @@ class PlansScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
           children: [
             const FirinNetHeader(title: AppStrings.plansTitle),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: Text(
-                AppStrings.plansLaunchSubtitle,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                  height: 1.4,
+            // "İlk 3 ay ücretsiz" promo dili tedarikçiye gösterilmez.
+            if (!isWholesaler)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                ),
+                child: Text(
+                  AppStrings.plansLaunchSubtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
                 ),
               ),
-            ),
-            if (isWholesaler &&
-                (entitlement?.supplierLaunchFreeActive ?? false) &&
-                entitlement?.supplierLaunchFreeUntil != null) ...[
+            if (launchActive) ...[
               const SizedBox(height: AppSpacing.m),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -65,7 +76,7 @@ class PlansScreen extends ConsumerWidget {
                   freeUntil: entitlement!.supplierLaunchFreeUntil!,
                 ),
               ),
-            ] else if (promoActive) ...[
+            ] else if (promoActive && !isWholesaler) ...[
               const SizedBox(height: AppSpacing.m),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -90,7 +101,10 @@ class PlansScreen extends ConsumerWidget {
             _PlanTile(
               key: const ValueKey('plan_tile_premium'),
               title: AppStrings.planPremiumLabel,
-              price: PricingConfig.premiumMonthlyLabel,
+              // Tedarikçi fiyatı yayımlanmadan ortak 499 TL yansıtılmaz.
+              price: purchaseAllowed
+                  ? PricingConfig.premiumMonthlyLabel
+                  : AppStrings.supplierPriceComingSoon,
               features: premiumFeatures,
               plan: BusinessPlan.premium,
               current: current,
@@ -103,8 +117,12 @@ class PlansScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  PlanPurchaseActions(account: account),
-                  const SizedBox(height: AppSpacing.s),
+                  // Satın alma çağrısı yalnız server uygun derse (asıl
+                  // engel ödeme servisinde de var — çift katman).
+                  if (purchaseAllowed) ...[
+                    PlanPurchaseActions(account: account),
+                    const SizedBox(height: AppSpacing.s),
+                  ],
                   FilledButton(
                     key: const ValueKey('plans_support_cta'),
                     onPressed: () =>
@@ -126,7 +144,7 @@ class PlansScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s),
-                  if (!promoActive)
+                  if (!promoActive && !isWholesaler)
                     Text(
                       AppStrings.plansLaunchTrialCta,
                       textAlign: TextAlign.center,
@@ -137,15 +155,16 @@ class PlansScreen extends ConsumerWidget {
                       ),
                     ),
                   const SizedBox(height: 4),
-                  Text(
-                    AppStrings.plansStoreReady,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
+                  if (purchaseAllowed)
+                    Text(
+                      AppStrings.plansStoreReady,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

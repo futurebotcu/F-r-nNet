@@ -1,4 +1,9 @@
 import 'package:firin_defter/core/constants/app_strings.dart';
+import 'package:firin_defter/features/auth/models/auth_user.dart';
+import 'package:firin_defter/features/auth/providers/auth_providers.dart';
+import 'package:firin_defter/features/payments/data/fake_payment_service.dart';
+import 'package:firin_defter/features/payments/data/payment_service.dart';
+import 'package:firin_defter/features/payments/models/store_product_config.dart';
 import 'package:firin_defter/features/profile/models/bakery_profile.dart';
 import 'package:firin_defter/features/profile/providers/profile_provider.dart';
 import 'package:firin_defter/features/subscriptions/data/local_subscription_repository.dart';
@@ -24,14 +29,40 @@ class _FixedProfile extends ProfileController {
   }
 }
 
+/// Geçici bağlantı hatası simülasyonu: "görüldü" okuma/yazma başarısız.
+class _FlakyNoticeRepo extends LocalSubscriptionRepository {
+  _FlakyNoticeRepo({super.supplierLaunchFreeUntil});
+
+  int seenChecks = 0;
+
+  @override
+  Future<bool> hasSeenSupplierLaunchNotice() async {
+    seenChecks++;
+    throw StateError('network down');
+  }
+}
+
 void main() {
-  final until = DateTime.utc(2027, 10, 1, 12);
+  // KESİN KURAL: sunucu bitişi 2027-10-01T00:00:00+03:00 (bu an hariç) →
+  // kullanıcıya "30 Eylül 2027 günü sonuna kadar" gösterilir.
+  final until = DateTime.parse('2027-10-01T00:00:00+03:00');
   late String untilLabel;
   setUpAll(() async {
     await initializeDateFormatting('tr_TR');
     untilLabel = formatSupplierLaunchDate(until);
   });
   setUp(resetSupplierLaunchGiftSessionGuard);
+
+  const authOverrideUser = AuthUser(id: 'u-test', email: 't@t.com');
+
+  test('bitiş günü İstanbul saatine göre 30 Eylül; cihaz dilimi etkisiz', () {
+    expect(untilLabel, '30 Eylül 2027');
+    // Aynı anın farklı gösterimleri (UTC / +12) aynı günü üretir.
+    expect(
+      formatSupplierLaunchDate(until.toUtc()),
+      '30 Eylül 2027',
+    );
+  });
 
   group('SupplierLaunchGiftSheetBody', () {
     Future<void> pumpSheet(
@@ -55,14 +86,14 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('başlık, gerçek bitiş tarihi, güvence ve CTA görünür', (
+    testWidgets('başlık, açık bitiş metni, güvence ve CTA görünür', (
       tester,
     ) async {
       await pumpSheet(tester);
       expect(find.text(AppStrings.supplierLaunchGiftTitle), findsOneWidget);
       expect(
         find.text(
-          '$untilLabel ${AppStrings.supplierLaunchGiftFreeSuffix}',
+          '30 Eylül 2027 ${AppStrings.supplierLaunchGiftFreeSuffix}',
         ),
         findsOneWidget,
       );
@@ -75,6 +106,7 @@ void main() {
       expect(find.text(AppStrings.supplierLaunchGiftCta), findsOneWidget);
       // Fiyat/satın alma yüzeyi YOK (yalnız bilgilendirme).
       expect(find.textContaining('TL'), findsNothing);
+      expect(find.textContaining('499'), findsNothing);
     });
 
     testWidgets('küçük ekran + 1.3x yazı taşmaz', (tester) async {
@@ -88,14 +120,26 @@ void main() {
       WidgetTester tester, {
       DateTime? freeUntil,
       bool alreadySeen = false,
+      String userId = 'u-test',
+      LocalSubscriptionRepository? repoOverride,
     }) async {
-      final repo = LocalSubscriptionRepository(
-        plan: BusinessPlan.free,
-        supplierLaunchFreeUntil: freeUntil,
-      )..supplierLaunchNoticeSeen = alreadySeen;
+      final repo = repoOverride ??
+          (LocalSubscriptionRepository(
+            plan: BusinessPlan.free,
+            supplierLaunchFreeUntil: freeUntil,
+          )..supplierLaunchNoticeSeen = alreadySeen);
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [subscriptionRepositoryProvider.overrideWithValue(repo)],
+          // Aynı testte ikinci pumpHost (hesap değişimi / yeni oturum)
+          // ESKİ ProviderScope container'ını yeniden kullanmasın diye
+          // repo örneğine bağlı key → taze override'lar.
+          key: ValueKey('scope-$userId-${identityHashCode(repo)}'),
+          overrides: [
+            currentAuthUserProvider.overrideWith(
+              (_) => AuthUser(id: userId, email: 't@t.com'),
+            ),
+            subscriptionRepositoryProvider.overrideWithValue(repo),
+          ],
           child: MaterialApp(
             home: Consumer(
               builder: (context, ref, _) {
@@ -119,13 +163,12 @@ void main() {
       return repo;
     }
 
+    final activeUntil = DateTime.now().toUtc().add(const Duration(days: 200));
+
     testWidgets(
       'kampanya aktif + görülmemiş → bir kez gösterir ve kalıcı işaretler',
       (tester) async {
-        final repo = await pumpHost(
-          tester,
-          freeUntil: DateTime.now().toUtc().add(const Duration(days: 200)),
-        );
+        final repo = await pumpHost(tester, freeUntil: activeUntil);
         await tester.tap(find.byKey(const ValueKey('trigger')));
         await tester.pumpAndSettle();
         expect(find.text(AppStrings.supplierLaunchGiftTitle), findsOneWidget);
@@ -150,14 +193,56 @@ void main() {
       },
     );
 
+    testWidgets(
+      'aynı cihazda hesap değişimi: ikinci kullanıcı bilgilendirmeyi görür',
+      (tester) async {
+        await pumpHost(tester, freeUntil: activeUntil, userId: 'user-a');
+        await tester.tap(find.byKey(const ValueKey('trigger')));
+        await tester.pumpAndSettle();
+        expect(find.text(AppStrings.supplierLaunchGiftTitle), findsOneWidget);
+        await tester.tap(
+          find.byKey(const ValueKey('supplier_launch_gift_cta')),
+        );
+        await tester.pumpAndSettle();
+
+        // Oturum guard'ı SIFIRLANMADAN kullanıcı değişir (user-b, kendi
+        // server kaydı görülmemiş) → pop-up yeniden gösterilir.
+        await pumpHost(tester, freeUntil: activeUntil, userId: 'user-b');
+        await tester.tap(find.byKey(const ValueKey('trigger')));
+        await tester.pumpAndSettle();
+        expect(find.text(AppStrings.supplierLaunchGiftTitle), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'geçici bağlantı hatası: kalıcı görüldü sayılmaz, oturum içinde '
+      'kontrolsüz döngü oluşmaz',
+      (tester) async {
+        final flaky = _FlakyNoticeRepo(supplierLaunchFreeUntil: activeUntil);
+        await pumpHost(tester, repoOverride: flaky);
+        await tester.tap(find.byKey(const ValueKey('trigger')));
+        await tester.pumpAndSettle();
+        expect(find.text(AppStrings.supplierLaunchGiftTitle), findsNothing);
+        expect(flaky.supplierLaunchNoticeSeen, isFalse);
+        // Aynı oturumda tekrar tetik → yeni deneme YOK (döngü koruması).
+        await tester.tap(find.byKey(const ValueKey('trigger')));
+        await tester.pumpAndSettle();
+        expect(flaky.seenChecks, 1);
+
+        // Bağlantı düzelen YENİ oturumda pop-up gösterilir (kalıcı görüldü
+        // yazılmamıştı).
+        resetSupplierLaunchGiftSessionGuard();
+        await pumpHost(tester, freeUntil: activeUntil);
+        await tester.tap(find.byKey(const ValueKey('trigger')));
+        await tester.pumpAndSettle();
+        expect(find.text(AppStrings.supplierLaunchGiftTitle), findsOneWidget);
+      },
+    );
+
     testWidgets('daha önce görüldüyse (cihaz değişimi) tekrar açılmaz', (
       tester,
     ) async {
-      await pumpHost(
-        tester,
-        freeUntil: DateTime.now().toUtc().add(const Duration(days: 200)),
-        alreadySeen: true,
-      );
+      await pumpHost(tester, freeUntil: activeUntil, alreadySeen: true);
       await tester.tap(find.byKey(const ValueKey('trigger')));
       await tester.pumpAndSettle();
       expect(find.text(AppStrings.supplierLaunchGiftTitle), findsNothing);
@@ -190,6 +275,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            currentAuthUserProvider.overrideWith((_) => authOverrideUser),
             subscriptionRepositoryProvider.overrideWithValue(
               LocalSubscriptionRepository(
                 plan: BusinessPlan.free,
@@ -208,7 +294,7 @@ void main() {
     }
 
     testWidgets(
-      'kampanyada: Tedarikçi Premium + bitiş tarihi + sınırsız kotalar + '
+      'kampanyada: Tedarikçi Premium + açık bitiş + sınırsız kotalar + '
       'fiyat ipucu yok + detay linki',
       (tester) async {
         await pumpCard(tester, freeUntil: until);
@@ -242,9 +328,7 @@ void main() {
       expect(find.text(AppStrings.supplierLaunchGiftTitle), findsOneWidget);
     });
 
-    testWidgets('kampanya yokken free kart + fiyat ipucu korunur', (
-      tester,
-    ) async {
+    testWidgets('kampanya yokken free kart korunur', (tester) async {
       await pumpCard(tester);
       expect(find.text(AppStrings.supPlanFreeTitle), findsOneWidget);
       expect(
@@ -254,11 +338,12 @@ void main() {
     });
   });
 
-  group('PlansScreen kampanya banner', () {
+  group('PlansScreen tedarikçi görünümü', () {
     Future<void> pumpPlans(
       WidgetTester tester,
       AccountType account, {
       DateTime? freeUntil,
+      bool purchaseAllowed = true,
     }) async {
       tester.view.physicalSize = const Size(390, 2600);
       tester.view.devicePixelRatio = 1.0;
@@ -267,6 +352,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            currentAuthUserProvider.overrideWith((_) => authOverrideUser),
             profileControllerProvider.overrideWith(
               (ref) => _FixedProfile(ref, account),
             ),
@@ -274,6 +360,7 @@ void main() {
               LocalSubscriptionRepository(
                 plan: BusinessPlan.free,
                 supplierLaunchFreeUntil: freeUntil,
+                subscriptionPurchaseAllowed: purchaseAllowed,
               )..supplierLaunchNoticeSeen = true,
             ),
           ],
@@ -283,22 +370,50 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('wholesaler + kampanya → ücretsiz dönem banner’ı', (
-      tester,
-    ) async {
-      await pumpPlans(tester, AccountType.wholesaler, freeUntil: until);
-      expect(
-        find.byKey(const ValueKey('plans_supplier_launch_banner')),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          '${AppStrings.supplierLaunchPlanTitle} — $untilLabel '
-          '${AppStrings.supplierLaunchFreeUntilSuffix}',
-        ),
-        findsOneWidget,
-      );
-    });
+    testWidgets(
+      'wholesaler + kampanya → banner + fiyat/satın alma/"3 ay" YOK',
+      (tester) async {
+        await pumpPlans(tester, AccountType.wholesaler, freeUntil: until);
+        expect(
+          find.byKey(const ValueKey('plans_supplier_launch_banner')),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            '${AppStrings.supplierLaunchPlanTitle} — $untilLabel '
+            '${AppStrings.supplierLaunchFreeUntilSuffix}',
+          ),
+          findsOneWidget,
+        );
+        // Ortak 499 fiyatı, mağaza CTA'ları ve "3 ay ücretsiz" dili yok.
+        expect(find.textContaining('499'), findsNothing);
+        expect(find.byKey(const ValueKey('buy_premium_monthly')), findsNothing);
+        expect(
+          find.byKey(const ValueKey('store_payment_preparing')),
+          findsNothing,
+        );
+        expect(find.text(AppStrings.plansLaunchSubtitle), findsNothing);
+        expect(find.text(AppStrings.plansLaunchTrialCta), findsNothing);
+        expect(
+          find.text(AppStrings.supplierPriceComingSoon),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'wholesaler + paketler yayımlanmamış (kampanya dışı) → fiyat yok',
+      (tester) async {
+        await pumpPlans(
+          tester,
+          AccountType.wholesaler,
+          purchaseAllowed: false,
+        );
+        expect(find.textContaining('499'), findsNothing);
+        expect(find.byKey(const ValueKey('buy_premium_monthly')), findsNothing);
+        expect(find.text(AppStrings.supplierPriceComingSoon), findsOneWidget);
+      },
+    );
 
     testWidgets('banner tap kampanya açıklamasını açar', (tester) async {
       await pumpPlans(tester, AccountType.wholesaler, freeUntil: until);
@@ -317,7 +432,7 @@ void main() {
       );
     });
 
-    testWidgets('commercial kampanyadan etkilenmez (banner yok)', (
+    testWidgets('commercial davranışı korunur (banner yok, fiyat var)', (
       tester,
     ) async {
       await pumpPlans(tester, AccountType.commercial, freeUntil: until);
@@ -325,6 +440,50 @@ void main() {
         find.byKey(const ValueKey('plans_supplier_launch_banner')),
         findsNothing,
       );
+      expect(find.text(AppStrings.plansLaunchSubtitle), findsOneWidget);
+      expect(find.textContaining('499'), findsWidgets);
+    });
+  });
+
+  group('Ödeme servisi satın alma uygunluğu (server kararı)', () {
+    test('uygun değilken abonelik mağaza çağrısına ULAŞMAZ', () async {
+      final svc = FakePaymentService(
+        available: true,
+        subscriptionPurchaseAllowed: false,
+      );
+      final r = await svc.purchaseProduct(
+        productId: StoreProductConfig.premiumMonthly,
+      );
+      expect(r, PaymentResult.unavailable);
+      expect(svc.purchaseCalls, 0);
+
+      final r2 = await svc.purchasePlan(
+        account: AccountType.wholesaler,
+        plan: BusinessPlan.premium,
+      );
+      expect(r2, PaymentResult.unavailable);
+      expect(svc.purchaseCalls, 0);
+    });
+
+    test('uygunken abonelik satın alma çalışmaya devam eder', () async {
+      final svc = FakePaymentService(available: true);
+      final r = await svc.purchaseProduct(
+        productId: StoreProductConfig.premiumMonthly,
+      );
+      expect(r, PaymentResult.success);
+      expect(svc.purchaseCalls, 1);
+    });
+
+    test('ilan ücreti akışı abonelik gate’inden bağımsız', () async {
+      final svc = FakePaymentService(
+        available: true,
+        subscriptionPurchaseAllowed: false,
+      );
+      final r = await svc.purchaseProduct(
+        productId: StoreProductConfig.listingFee,
+      );
+      expect(r, PaymentResult.success);
+      expect(svc.purchaseCalls, 1);
     });
   });
 }

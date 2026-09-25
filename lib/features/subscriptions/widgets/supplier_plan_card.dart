@@ -51,7 +51,7 @@ class SupplierPlanCard extends ConsumerWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.l),
           boxShadow: AppShadow.card,
-          border: e.isLaunchPromoActive
+          border: launchActive
               ? Border.all(color: AppColors.brandLemon, width: 1.4)
               : null,
         ),
@@ -68,8 +68,8 @@ class SupplierPlanCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                   child: Icon(
-                    e.isLaunchPromoActive
-                        ? Icons.auto_awesome_rounded
+                    launchActive
+                        ? Icons.card_giftcard_rounded
                         : Icons.storefront_outlined,
                     size: 20,
                     color: AppColors.brandInk,
@@ -168,13 +168,11 @@ class SupplierPlanCard extends ConsumerWidget {
   }
 
   String _priceHint(BusinessEntitlements e) {
-    // Kampanya döneminde fiyat ipucu gösterilmez (dönem sonunda paketler
-    // hatırlatma akışıyla bildirilir).
-    if (e.supplierLaunchFreeActive) return '';
-    if (e.isLaunchPromoActive) {
-      return '${e.promoDaysLeft} ${AppStrings.planCardTrialDaysLeft}';
-    }
-    if (e.canUsePremiumFeature) return '';
+    // Tedarikçiye fiyat YALNIZ server "paketler yayımlandı + satın alma
+    // uygun" derse gösterilir; kampanya döneminde ve fiyatlar
+    // yayımlanmadan asla (499 TL gibi ortak fiyatlar yansıtılmaz).
+    if (!e.subscriptionPurchaseAllowed) return '';
+    if (e.supplierEffectivePlan == BusinessPlan.premium) return '';
     return 'Premium ${PricingConfig.premiumMonthlyLabel} / '
         '${PricingConfig.premiumYearlyLabel}';
   }
@@ -190,6 +188,8 @@ class SupplierPlanCard extends ConsumerWidget {
     return '${e.supplierMonthlyReplyLimit}';
   }
 
+  // Tedarikçi kartı YALNIZ supplierEffectivePlan'ı yansıtır: kişisel promo
+  // tedarikçi haklarını açmadığı için promo kopyası burada gösterilmez.
   (String, String) _copy(BusinessEntitlements e) {
     final launchUntil = e.supplierLaunchFreeUntil;
     if (e.supplierLaunchFreeActive && launchUntil != null) {
@@ -198,12 +198,6 @@ class SupplierPlanCard extends ConsumerWidget {
         '${formatSupplierLaunchDate(launchUntil)} '
             '${AppStrings.supplierLaunchFreeUntilSuffix}',
       );
-    }
-    if (e.isLaunchPromoActive) {
-      return (AppStrings.planLaunchPromoTitle, AppStrings.planLaunchPromoSub);
-    }
-    if (e.canUsePremiumFeature) {
-      return (AppStrings.supPlanPremiumTitle, AppStrings.supPlanPremiumSub);
     }
     switch (e.supplierEffectivePlan) {
       case BusinessPlan.premium:

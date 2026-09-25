@@ -9,10 +9,15 @@ class FakePaymentService implements PaymentService {
   FakePaymentService({
     this.available = false,
     this.result = PaymentResult.success,
+    this.subscriptionPurchaseAllowed = true,
   });
 
   bool available;
   PaymentResult result;
+
+  /// Server `subscription_purchase_allowed` aynası: false ise abonelik
+  /// satın alma mağaza çağrısına hiç ulaşmaz (gerçek servis davranışı).
+  bool subscriptionPurchaseAllowed;
 
   int purchaseCalls = 0;
   int restoreCalls = 0;
@@ -47,6 +52,7 @@ class FakePaymentService implements PaymentService {
     required AccountType account,
     required BusinessPlan plan,
   }) async {
+    if (!subscriptionPurchaseAllowed) return PaymentResult.unavailable;
     purchaseCalls++;
     lastPurchasedPlan = plan;
     if (!available) return PaymentResult.unavailable;
@@ -55,6 +61,10 @@ class FakePaymentService implements PaymentService {
 
   @override
   Future<PaymentResult> purchaseProduct({required String productId}) async {
+    if (productId != StoreProductConfig.listingFee &&
+        !subscriptionPurchaseAllowed) {
+      return PaymentResult.unavailable;
+    }
     purchaseCalls++;
     lastPurchasedProductId = productId;
     if (!available) return PaymentResult.unavailable;

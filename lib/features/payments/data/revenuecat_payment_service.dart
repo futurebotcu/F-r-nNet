@@ -76,9 +76,33 @@ class RevenueCatPaymentService implements PaymentService {
     return purchaseProduct(productId: productId);
   }
 
+  /// Abonelik satın alma uygunluğu — SERVER kararı (my_entitlement).
+  /// Mağaza satın alma çağrısından ÖNCE kontrol edilir: tedarikçide kampanya
+  /// süresince ve paket fiyatları yayımlanana kadar server false döner →
+  /// store purchase hiç başlatılmaz (yalnız buton gizleme değil).
+  /// Hata → fail-closed (satın alma başlatılmaz, kullanıcı tekrar dener);
+  /// alan dönmeyen eski backend → mevcut davranış korunur.
+  Future<bool> _subscriptionPurchaseAllowed() async {
+    try {
+      final rows = await _db.rpc('my_entitlement');
+      if (rows is List && rows.isNotEmpty) {
+        final allowed =
+            (rows.first as Map)['subscription_purchase_allowed'] as bool?;
+        return allowed ?? true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Future<PaymentResult> purchaseProduct({required String productId}) async {
     if (!isAvailable) return PaymentResult.unavailable;
+    if (productId != StoreProductConfig.listingFee &&
+        !await _subscriptionPurchaseAllowed()) {
+      return PaymentResult.unavailable;
+    }
     final result = await _purchaseProductId(productId);
     if (result == PaymentResult.success) {
       try {
