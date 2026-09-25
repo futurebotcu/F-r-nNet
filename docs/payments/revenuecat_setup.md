@@ -10,8 +10,8 @@ Yeni satış modeli:
 
 | Product ID | Paket | Fiyat |
 |---|---|---|
-| `firinnet_premium_monthly` | Premium aylık | 499 TL/ay |
-| `firinnet_premium_yearly` | Premium yıllık | 4.990 TL/yıl |
+| `firinnet_premium_monthly` | Premium aylık | 499,99 TL/ay |
+| `firinnet_premium_yearly` | Premium yıllık | 4.999,90 TL/yıl |
 
 Legacy transaction uyumluluğu için backend mapping bu eski ID'leri okumaya devam
 eder, ancak yeni UI bunları satmaz:
@@ -32,9 +32,9 @@ Korunan gelecek altyapısı:
 ## Google Play Console
 
 1. `firinnet_premium_monthly` subscription ürününü oluştur.
-2. Aylık base plan (id: `monthly`): 499 TL/ay.
+2. Aylık base plan (id: `monthly`): 499,99 TL/ay.
 3. `firinnet_premium_yearly` subscription ürününü oluştur.
-4. Yıllık base plan (id: `annual`): 4.990 TL/yıl. NOT: eski `yearly` base
+4. Yıllık base plan (id: `annual`): 4.999,90 TL/yıl. NOT: eski `yearly` base
    planı yanlışlıkla aylık süreli açıldığı için devre dışı bırakıldı;
    RevenueCat ürünü `firinnet_premium_yearly:annual`.
 5. `firinnet_listing_fee_50` one-time in-app product olarak kalabilir; lansman döneminde uygulama bunu başlatmaz.

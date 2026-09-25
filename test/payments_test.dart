@@ -184,7 +184,7 @@ void main() {
           ),
           StorePrice(
             productId: 'firinnet_premium_yearly:annual',
-            priceLabel: '₺4.999,99',
+            priceLabel: '₺4.999,90',
           ),
         ],
         preferred: StoreProductConfig.selectStoreIdentifier,
@@ -196,7 +196,7 @@ void main() {
       );
       expect(
         prices[StoreProductConfig.premiumYearly]?.priceLabel,
-        '₺4.999,99',
+        '₺4.999,90',
       );
       // Plain identifier dönerse (iOS/legacy) aynen çalışır.
       final plain = mapStorePrices(
