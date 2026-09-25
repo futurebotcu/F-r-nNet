@@ -12,13 +12,27 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     this.trialActive = false,
     this.trialDaysLeft = 0,
     this.canStartPromo = true,
+    this.supplierLaunchFreeUntil,
+    this.subscriptionPurchaseAllowed = true,
   });
 
   BusinessPlan plan;
   bool trialActive;
   int trialDaysLeft;
   bool canStartPromo;
+
+  /// Tedarikçi Lansman Kampanyası aynası: dolu + gelecekte ise kampanya
+  /// aktif sayılır (server ortak penceresinin local karşılığı).
+  DateTime? supplierLaunchFreeUntil;
+
+  /// Server satın alma uygunluğu aynası (kampanya aktifken daima false).
+  bool subscriptionPurchaseAllowed;
   int ensureCalls = 0;
+
+  bool get _supplierLaunchActive {
+    final until = supplierLaunchFreeUntil;
+    return until != null && DateTime.now().toUtc().isBefore(until.toUtc());
+  }
 
   BusinessPlan get _effective =>
       trialActive || plan == BusinessPlan.pro ? BusinessPlan.premium : plan;
@@ -31,8 +45,12 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<BusinessEntitlements> myEntitlement() async {
     final eff = _effective;
-    // Tedarikçi etkin planı: trial → PRO (Premium değil); server aynası.
-    final supEff = eff;
+    // Tedarikçi etkin planı (server aynası): kampanya aktifse premium;
+    // aksi halde YALNIZ ödenmiş plan — kişisel promo/trial tedarikçi
+    // haklarını AÇMAZ (ortak bitiş uzatılamaz).
+    final supEff = _supplierLaunchActive
+        ? BusinessPlan.premium
+        : (plan == BusinessPlan.free ? BusinessPlan.free : BusinessPlan.premium);
     return BusinessEntitlements(
       plan: plan,
       effectivePlan: eff,
@@ -80,6 +98,10 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
           ? DateTime.now().toUtc().add(Duration(days: trialDaysLeft))
           : null,
       canStartPromo: canStartPromo,
+      supplierLaunchFreeActive: _supplierLaunchActive,
+      supplierLaunchFreeUntil: supplierLaunchFreeUntil,
+      subscriptionPurchaseAllowed:
+          _supplierLaunchActive ? false : subscriptionPurchaseAllowed,
     );
   }
 
@@ -91,5 +113,15 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
       canStartPromo = false;
     }
     return myEntitlement();
+  }
+
+  bool supplierLaunchNoticeSeen = false;
+
+  @override
+  Future<bool> hasSeenSupplierLaunchNotice() async => supplierLaunchNoticeSeen;
+
+  @override
+  Future<void> markSupplierLaunchNoticeSeen() async {
+    supplierLaunchNoticeSeen = true;
   }
 }

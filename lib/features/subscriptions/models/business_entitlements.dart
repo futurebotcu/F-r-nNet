@@ -37,6 +37,9 @@ class BusinessEntitlements {
     this.promoStartedAt,
     this.promoExpiresAt,
     this.canStartPromo = true,
+    this.supplierLaunchFreeActive = false,
+    this.supplierLaunchFreeUntil,
+    this.subscriptionPurchaseAllowed = true,
   });
 
   /// Gerçek plan (trial'dan bağımsız).
@@ -81,6 +84,23 @@ class BusinessEntitlements {
   final DateTime? promoStartedAt;
   final DateTime? promoExpiresAt;
   final bool canStartPromo;
+
+  // ── Tedarikçi Lansman Kampanyası — server-side ortak pencere. Süre ve
+  // hak kontrolü tamamen server'dadır (cihaz saatiyle uzatılamaz); client
+  // bu alanları yalnız bilgilendirme UI'ı için kullanır.
+  /// Kampanya şu an bu kullanıcı için aktif mi (yalnız wholesaler'da true
+  /// olabilir).
+  final bool supplierLaunchFreeActive;
+
+  /// Ortak ücretsiz dönem bitişi (yalnız wholesaler'da dolu; tarih
+  /// yapılandırılmadıysa null — UI hiçbir kampanya yüzeyi göstermez).
+  final DateTime? supplierLaunchFreeUntil;
+
+  /// Abonelik satın alma uygunluğu — SERVER kararı (my_entitlement).
+  /// Tedarikçide kampanya süresince ve paket fiyatları yayımlanana kadar
+  /// false: UI satın alma/fiyat göstermez, ödeme servisi mağaza çağrısını
+  /// başlatmaz. Eski backend alanı döndürmezse true (mevcut davranış).
+  final bool subscriptionPurchaseAllowed;
 
   bool get supplierProductsUnlimited => supplierProductLimit < 0;
   bool get supplierCampaignsUnlimited => supplierCampaignLimit < 0;
@@ -152,6 +172,13 @@ class BusinessEntitlements {
           ? null
           : DateTime.tryParse(row['promo_expires_at'] as String),
       canStartPromo: (row['can_start_promo'] as bool?) ?? true,
+      supplierLaunchFreeActive:
+          (row['supplier_launch_free_active'] as bool?) ?? false,
+      supplierLaunchFreeUntil: row['supplier_launch_free_until'] == null
+          ? null
+          : DateTime.tryParse(row['supplier_launch_free_until'] as String),
+      subscriptionPurchaseAllowed:
+          (row['subscription_purchase_allowed'] as bool?) ?? true,
     );
   }
 

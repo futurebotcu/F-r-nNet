@@ -49,17 +49,19 @@ void main() {
       expect(SupplierPaywall.productLock(e, 999), isNull);
     });
 
-    test('premium and launch promo are unlimited', () async {
+    test('premium is unlimited; personal promo does NOT unlock supplier', () async {
       expect(
         SupplierPaywall.productLock(await _entOf(BusinessPlan.premium), 999),
         isNull,
       );
+      // Kampanya modeli: kişisel 3 aylık promo tedarikçi haklarını AÇMAZ
+      // (ortak bitiş kişisel promoyla uzatılamaz).
       expect(
         SupplierPaywall.productLock(
           await _entOf(BusinessPlan.free, promo: true),
-          999,
+          1,
         ),
-        isNull,
+        FeatureLock.supplierProductFree,
       );
     });
   });
@@ -191,11 +193,16 @@ void main() {
       expect(find.text(AppStrings.supQuotaUnlimited), findsWidgets);
     });
 
-    testWidgets('launch promo: premium free usage copy', (tester) async {
-      await pumpCard(tester, BusinessPlan.free, promo: true);
-      expect(find.text(AppStrings.planLaunchPromoTitle), findsOneWidget);
-      expect(find.text(AppStrings.supQuotaUnlimited), findsWidgets);
-    });
+    testWidgets(
+      'personal promo does not change supplier card (free copy stays)',
+      (tester) async {
+        await pumpCard(tester, BusinessPlan.free, promo: true);
+        // Kişisel promo tedarikçi kartını premium'a çevirmez.
+        expect(find.text(AppStrings.planLaunchPromoTitle), findsNothing);
+        expect(find.text(AppStrings.supPlanFreeTitle), findsOneWidget);
+        expect(find.text(AppStrings.supQuotaUnlimited), findsNothing);
+      },
+    );
 
     testWidgets('320dp + 1.3x does not overflow', (tester) async {
       await pumpCard(

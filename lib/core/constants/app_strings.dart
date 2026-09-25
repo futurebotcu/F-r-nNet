@@ -1860,7 +1860,7 @@ class AppStrings {
   // ── Tedarikçi / Toptancı Paywall UI V1 ──
   static const String supPlanFreeTitle = 'Free tedarikçi';
   static const String supPlanFreeSub =
-      '1 ürün, 3 teklif cevabı/ay ve ücretli ilan kullanımı.';
+      '1 ürün, ayda 3 teklif cevabı; ilanlar lansmanda ücretsiz.';
   static const String supPlanProTitle = 'Eski Pro tedarikçi';
   static const String supPlanProSub =
       '5 ürün, 3 kampanya, 20 teklif cevabı/ay ve ücretsiz ilanlar.';
@@ -1905,12 +1905,40 @@ class AppStrings {
   static const String supErrorReplyQuota =
       'Bu ayki teklif cevabı hakkınız doldu.';
   static const String supPlanFreeFeatures =
-      '1 ürün · kampanya yok · ayda 3 teklif cevabı · ilanlar 50 TL';
+      '1 ürün · kampanya yok · ayda 3 teklif cevabı · ilanlar ücretsiz';
   static const String supPlanProFeatures =
       '5 ürün · 3 kampanya · ayda 20 teklif cevabı · ilanlar ücretsiz';
   static const String supPlanPremiumFeatures =
       'sınırsız ürün · sınırsız kampanya · sınırsız teklif cevabı · '
       'ilanlar ücretsiz';
+
+  // ── Tedarikçi Lansman Kampanyası (ortak bitiş tarihli ücretsiz dönem) ──
+  static const String supplierLaunchGiftTitle =
+      'Tedarikçilere özel lansman hediyesi';
+
+  /// Vurgulu tarih satırı: '{son ücretsiz gün} $supplierLaunchGiftFreeSuffix'
+  /// (ör. "30 Eylül 2027 günü sonuna kadar tamamen ücretsiz").
+  static const String supplierLaunchGiftFreeSuffix =
+      'günü sonuna kadar tamamen ücretsiz';
+  static const String supplierLaunchGiftBody =
+      "FırınNet'in tedarikçilere sunduğu tüm özellikleri lansmana özel "
+      'ücretsiz kullanın.';
+  static const String supplierLaunchGiftContinueInfo =
+      'Ücretsiz dönem sona ermeden önce size hatırlatma yapacak, devam '
+      'edebileceğiniz paketleri ve fiyatlarını bildireceğiz. Dilerseniz size '
+      'uygun paketi seçerek ücretli devam edebilirsiniz.';
+  static const String supplierLaunchGiftAssurance =
+      'Onayınız olmadan ücret alınmaz veya ücretli abonelik başlatılmaz.';
+  static const String supplierLaunchGiftCta = 'Ücretsiz kullanmaya başla';
+  static const String supplierLaunchPlanTitle = 'Tedarikçi Premium';
+
+  /// Plan kartı/banner alt metni: '{son ücretsiz gün}
+  /// $supplierLaunchFreeUntilSuffix'.
+  static const String supplierLaunchFreeUntilSuffix =
+      'günü sonuna kadar ücretsiz';
+  static const String supplierLaunchDetailsCta = 'Kampanya detayları';
+  static const String supplierPriceComingSoon =
+      'Paket fiyatları ücretsiz dönem bitmeden açıklanacak';
 
   static const String calcCatDailyQuickTitle = 'Günlük Hızlı Hesaplar';
   static const String calcCatProductionTitle = 'Üretim ve Reçete';

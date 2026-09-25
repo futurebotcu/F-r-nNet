@@ -15,4 +15,14 @@ abstract class SubscriptionRepository {
   /// Launch Premium promosunu server-side baslatir. Store/RevenueCat satin alma
   /// akisi baslatmaz; RPC idempotenttir.
   Future<BusinessEntitlements> activateLaunchPremiumPromo();
+
+  /// Tedarikçi lansman kampanyası bilgilendirme pop-up'ı bu kullanıcı için
+  /// daha önce gösterildi mi? Kalıcı kayıt server-side'dadır (cihaz
+  /// değişiminde tekrar açılmaz).
+  Future<bool> hasSeenSupplierLaunchNotice();
+
+  /// Pop-up görüldü işaretini kalıcı yazar (idempotent). Satın alma/abonelik
+  /// başlatmaz — yalnız bilgilendirme kaydıdır; kampanya hakkı bu kayda
+  /// bağlı değildir (server uygun hesaplara doğrudan uygular).
+  Future<void> markSupplierLaunchNoticeSeen();
 }

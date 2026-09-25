@@ -101,51 +101,47 @@ class FeatureLock {
   );
 
   // ── Tedarikçi / Toptancı (B2B) lock'ları ──
-  /// Free tedarikçi ürün limitine (1) ulaştı → Pro.
+  // Tedarikçi paket fiyatları henüz YAYIMLANMADI → paywall'da fiyat ipucu
+  // gösterilmez (499 TL gibi ortak fiyatlar tedarikçiye yansıtılmaz).
+  /// Free tedarikçi ürün limitine (1) ulaştı → Premium.
   static const FeatureLock supplierProductFree = FeatureLock(
     title: AppStrings.supPaywallProductFreeTitle,
     body: AppStrings.supPaywallProductFreeBody,
     requiredPlan: BusinessPlan.premium,
-    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
-  /// Pro tedarikçi ürün limitine (5) ulaştı → Premium.
+  /// Eski Pro tedarikçi ürün limiti → Premium.
   static const FeatureLock supplierProductPro = FeatureLock(
     title: AppStrings.supPaywallProductProTitle,
     body: AppStrings.supPaywallProductProBody,
     requiredPlan: BusinessPlan.premium,
-    priceHint: PricingConfig.supplierPremiumHint,
   );
 
-  /// Free tedarikçi kampanya açamaz → Pro.
+  /// Free tedarikçi kampanya açamaz → Premium.
   static const FeatureLock supplierCampaignFree = FeatureLock(
     title: AppStrings.supPaywallCampaignFreeTitle,
     body: AppStrings.supPaywallCampaignFreeBody,
     requiredPlan: BusinessPlan.premium,
-    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
-  /// Pro tedarikçi aktif kampanya limitine (3) ulaştı → Premium.
+  /// Eski Pro tedarikçi kampanya limiti → Premium.
   static const FeatureLock supplierCampaignPro = FeatureLock(
     title: AppStrings.supPaywallCampaignProTitle,
     body: AppStrings.supPaywallCampaignProBody,
     requiredPlan: BusinessPlan.premium,
-    priceHint: PricingConfig.supplierPremiumHint,
   );
 
-  /// Free tedarikçi aylık teklif cevabı limitine (3) ulaştı → Pro.
+  /// Free tedarikçi aylık teklif cevabı limitine (3) ulaştı → Premium.
   static const FeatureLock supplierReplyFree = FeatureLock(
     title: AppStrings.supPaywallReplyFreeTitle,
     body: AppStrings.supPaywallReplyFreeBody,
     requiredPlan: BusinessPlan.premium,
-    priceHint: PricingConfig.premiumMonthlyHint,
   );
 
-  /// Pro tedarikçi aylık teklif cevabı limitine (20) ulaştı → Premium.
+  /// Eski Pro tedarikçi teklif cevabı limiti → Premium.
   static const FeatureLock supplierReplyPro = FeatureLock(
     title: AppStrings.supPaywallReplyProTitle,
     body: AppStrings.supPaywallReplyProBody,
     requiredPlan: BusinessPlan.premium,
-    priceHint: PricingConfig.supplierPremiumHint,
   );
 }

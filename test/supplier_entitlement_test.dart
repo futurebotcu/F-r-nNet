@@ -87,18 +87,25 @@ void main() {
       expect(e.supplierListingFeeExempt, isTrue);
     });
 
-    test('launch promo unlocks Premium for supplier as well', () async {
-      final e = await LocalSubscriptionRepository(
-        plan: BusinessPlan.free,
-        trialActive: true,
-        trialDaysLeft: 30,
-      ).myEntitlement();
-      expect(e.isLaunchPromoActive, isTrue);
-      expect(e.effectivePlan, BusinessPlan.premium);
-      expect(e.supplierEffectivePlan, BusinessPlan.premium);
-      expect(e.supplierProductsUnlimited, isTrue);
-      expect(e.supplierListingFeeExempt, isTrue);
-    });
+    test(
+      'personal launch promo does NOT unlock supplier rights '
+      '(ortak kampanya bitişi kişisel promoyla uzatılamaz)',
+      () async {
+        final e = await LocalSubscriptionRepository(
+          plan: BusinessPlan.free,
+          trialActive: true,
+          trialDaysLeft: 30,
+        ).myEntitlement();
+        // Ticari taraf promodan premium olur (davranış korunur)...
+        expect(e.isLaunchPromoActive, isTrue);
+        expect(e.effectivePlan, BusinessPlan.premium);
+        // ...ama tedarikçi hakları YALNIZ kampanya penceresi veya ödenmiş
+        // abonelikle açılır.
+        expect(e.supplierEffectivePlan, BusinessPlan.free);
+        expect(e.supplierProductsUnlimited, isFalse);
+        expect(e.supplierListingFeeExempt, isFalse);
+      },
+    );
   });
 
   group('Commercial regression', () {

@@ -975,6 +975,31 @@ grant execute on function public.store_product_mapping(text) to authenticated, s
 revoke execute on function public.normalize_listing_fee() from public, anon, authenticated;
 
 -- ── 10) Test kullanıcıları + sonuç panosu ──
+-- Bildirim tablosu (canlı DDL aynası — supplier launch hatırlatma testleri).
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  recipient_id uuid not null references public.profiles(id) on delete cascade,
+  actor_id uuid references public.profiles(id) on delete set null,
+  type text not null,
+  title text not null,
+  body text not null,
+  entity_type text,
+  entity_id uuid,
+  route text,
+  metadata jsonb not null default '{}'::jsonb,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table public.notifications enable row level security;
+drop policy if exists notifications_select_own on public.notifications;
+create policy notifications_select_own on public.notifications
+  for select to authenticated using (recipient_id = auth.uid());
+revoke all on public.notifications from anon, public;
+revoke insert, update, delete, truncate, references, trigger
+  on public.notifications from authenticated;
+grant select on public.notifications to authenticated;
+grant select, insert, update, delete on public.notifications to service_role;
+
 insert into auth.users (id) values
   ('00000000-0000-4000-8000-000000000001'),
   ('00000000-0000-4000-8000-000000000002'),
@@ -983,7 +1008,9 @@ insert into auth.users (id) values
   ('00000000-0000-4000-8000-000000000005'),
   ('00000000-0000-4000-8000-000000000006'),
   ('00000000-0000-4000-8000-000000000007'),
-  ('00000000-0000-4000-8000-000000000008')
+  ('00000000-0000-4000-8000-000000000008'),
+  ('00000000-0000-4000-8000-000000000009'),
+  ('00000000-0000-4000-8000-000000000010')
 on conflict do nothing;
 
 insert into public.profiles (id, display_name, account_type) values
@@ -994,7 +1021,9 @@ insert into public.profiles (id, display_name, account_type) values
   ('00000000-0000-4000-8000-000000000005', 'Test Beş', 'commercial'),
   ('00000000-0000-4000-8000-000000000006', 'Test Altı', 'commercial'),
   ('00000000-0000-4000-8000-000000000007', 'Eski App Ticari', 'commercial'),
-  ('00000000-0000-4000-8000-000000000008', 'Ziyaretçi', 'individual')
+  ('00000000-0000-4000-8000-000000000008', 'Ziyaretçi', 'individual'),
+  ('00000000-0000-4000-8000-000000000009', 'Toptancı Dokuz', 'wholesaler'),
+  ('00000000-0000-4000-8000-000000000010', 'Bireysel On', 'individual')
 on conflict do nothing;
 
 create table if not exists public.test_results (
