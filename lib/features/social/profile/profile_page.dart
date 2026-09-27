@@ -25,6 +25,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../academy/providers/academy_providers.dart';
+import '../../academy/screens/academy_page.dart' show AcademyAiBadge;
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -174,6 +176,29 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                 isSelf: isSelf,
               ),
               _AccountTypeBadge(detailAsync: detailAsync),
+              // Akademi/Mizah botu ise AI rozeti (bot ayırt edilebilir).
+              Consumer(
+                builder: (context, ref, _) {
+                  final bot = ref
+                      .watch(academyBotProfileProvider(userId))
+                      .valueOrNull;
+                  if (bot == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      left: AppSpacing.pageH,
+                      top: AppSpacing.xs,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: AcademyAiBadge(
+                        label: bot.isHumor
+                            ? AppStrings.academyHumorBadge
+                            : AppStrings.academyAiBadge,
+                      ),
+                    ),
+                  );
+                },
+              ),
               _StatusChip(detailAsync: detailAsync, jobSeekAsync: jobSeekAsync),
               const SizedBox(height: AppSpacing.s),
               ProfileStatistics(
@@ -196,17 +221,30 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                 ),
                 child: isSelf
                     ? _SelfEditCta(onTap: () => ProfileEditSheet.show(context))
-                    : Row(
-                        children: [
-                          Expanded(child: FollowButton(userId: userId)),
-                          const SizedBox(width: AppSpacing.s),
-                          Expanded(
-                            child: _ProfileMessageCta(
-                              onTap: () =>
-                                  _openProfileChat(context, ref, userId),
-                            ),
-                          ),
-                        ],
+                    : Consumer(
+                        builder: (context, ref, _) {
+                          // Bot profili: DM yalnız allow_dm=true botta
+                          // (Mizah). Diğer botlarda Mesaj butonu gizlenir
+                          // (asıl sınır server RPC'sinde — çift katman).
+                          final bot = ref
+                              .watch(academyBotProfileProvider(userId))
+                              .valueOrNull;
+                          final dmAllowed = bot == null || bot.allowDm;
+                          return Row(
+                            children: [
+                              Expanded(child: FollowButton(userId: userId)),
+                              if (dmAllowed) ...[
+                                const SizedBox(width: AppSpacing.s),
+                                Expanded(
+                                  child: _ProfileMessageCta(
+                                    onTap: () => _openProfileChat(
+                                        context, ref, userId),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        },
                       ),
               ),
 

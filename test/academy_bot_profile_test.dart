@@ -19,10 +19,13 @@ void main() {
       expect(AcademyTopicMeta.fromKey('bilinmeyen'), AcademyTopic.akademi);
     });
 
-    test('11 konu + label', () {
-      expect(AcademyTopic.values.length, 11);
+    test('22 konu (11 eski + 11 V1 kanonik) + label', () {
+      // V1 içerik motoru taksonomisi eski anahtarları KORUYARAK genişledi.
+      expect(AcademyTopic.values.length, 22);
       expect(AcademyTopic.fuarSektor.label, 'Fuar & Sektör');
       expect(AcademyTopic.maliyet.label, 'Maliyet');
+      expect(AcademyTopic.ekmekFermantasyon.label, 'Ekmek ve Fermantasyon');
+      expect(AcademyTopic.mizah.label, 'Mizah');
     });
   });
 

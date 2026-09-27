@@ -1961,6 +1961,24 @@ class AppStrings {
       " günü sonuna kadar FırınNet'in tüm özellikleri senin için ücretsiz; "
       'onayın olmadan hiçbir ücret alınmaz.';
 
+  // ── FırınNet Akademi (bot içerikleri + toplu profil sayfası) ──
+  static const String academyTitle = 'FırınNet Akademi';
+  static const String academyBio =
+      'Fırıncılar için kaynaklı mesleki bilgi ve sektör gelişmeleri. '
+      'İçerikler yapay zekâ destekli Akademi botları tarafından hazırlanır.';
+  static const String academyAiBadge = 'Akademi • AI';
+  static const String academyHumorBadge = 'Mizah • AI';
+  static const String academyFilterAll = 'Tümü';
+  static const String academyEmpty =
+      'Henüz Akademi içeriği yok. Yakında burada mesleki bilgi ve '
+      'sektör gündemi paylaşılacak.';
+  static const String academyLoadError =
+      'Akademi içerikleri yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+  static const String academyRetryCta = 'Tekrar dene';
+  static const String academyBotDmClosed =
+      'Bu Akademi botu mesaj almıyor; içeriklerine Akademi sayfasından '
+      'ulaşabilirsin.';
+
   // ── Ticari Lansman Modeli (kayıt bazlı 1 ay ücretsiz + lansman fiyatı) ──
   /// Hoş geldin başlığı: '$commercialWelcomePrefix{son gün}'
   /// ' $commercialWelcomeSuffix'.

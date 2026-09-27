@@ -13,6 +13,10 @@ class AcademyBotProfile {
     this.isVisible = true,
     this.postingEnabled = true,
     this.dailyPostLimit = 1,
+    this.subtopics = const <String>[],
+    this.isHumor = false,
+    this.allowDm = false,
+    this.displayOrder = 100,
   });
 
   /// `profiles.id` (aynı zamanda `feed_posts.owner_id` bot postları için).
@@ -29,6 +33,12 @@ class AcademyBotProfile {
   final bool postingEnabled;
   final int dailyPostLimit;
 
+  /// V1 içerik motoru alanları (eski backend'de yoklar → güvenli default).
+  final List<String> subtopics;
+  final bool isHumor;
+  final bool allowDm;
+  final int displayOrder;
+
   bool get unlimitedDaily => dailyPostLimit <= 0;
 
   factory AcademyBotProfile.fromRow(Map<String, dynamic> row) {
@@ -41,6 +51,13 @@ class AcademyBotProfile {
       isVisible: (row['is_visible'] as bool?) ?? true,
       postingEnabled: (row['posting_enabled'] as bool?) ?? true,
       dailyPostLimit: (row['daily_post_limit'] as num?)?.toInt() ?? 1,
+      subtopics: (row['subtopics'] as List?)
+              ?.whereType<String>()
+              .toList(growable: false) ??
+          const <String>[],
+      isHumor: (row['is_humor'] as bool?) ?? false,
+      allowDm: (row['allow_dm'] as bool?) ?? false,
+      displayOrder: (row['display_order'] as num?)?.toInt() ?? 100,
     );
   }
 }
@@ -58,6 +75,18 @@ enum AcademyTopic {
   trend,
   hijyen,
   fuarSektor,
+  // V1 kanonik konular (içerik motoru taksonomisi).
+  ekmekFermantasyon,
+  unTahil,
+  turkUrunleri,
+  pastacilik,
+  firinTeknoloji,
+  hijyenKalite,
+  isletme,
+  sektorGundemi,
+  bilimArge,
+  ustalikDunya,
+  mizah,
 }
 
 extension AcademyTopicMeta on AcademyTopic {
@@ -86,6 +115,28 @@ extension AcademyTopicMeta on AcademyTopic {
         return 'trend';
       case AcademyTopic.hijyen:
         return 'hijyen';
+      case AcademyTopic.ekmekFermantasyon:
+        return 'ekmek_fermantasyon';
+      case AcademyTopic.unTahil:
+        return 'un_tahil';
+      case AcademyTopic.turkUrunleri:
+        return 'turk_urunleri';
+      case AcademyTopic.pastacilik:
+        return 'pastacilik';
+      case AcademyTopic.firinTeknoloji:
+        return 'firin_teknoloji';
+      case AcademyTopic.hijyenKalite:
+        return 'hijyen_kalite';
+      case AcademyTopic.isletme:
+        return 'isletme';
+      case AcademyTopic.sektorGundemi:
+        return 'sektor_gundemi';
+      case AcademyTopic.bilimArge:
+        return 'bilim_arge';
+      case AcademyTopic.ustalikDunya:
+        return 'ustalik_dunya';
+      case AcademyTopic.mizah:
+        return 'mizah';
     }
   }
 
@@ -113,6 +164,28 @@ extension AcademyTopicMeta on AcademyTopic {
         return 'Hijyen';
       case AcademyTopic.fuarSektor:
         return 'Fuar & Sektör';
+      case AcademyTopic.ekmekFermantasyon:
+        return 'Ekmek ve Fermantasyon';
+      case AcademyTopic.unTahil:
+        return 'Un ve Tahıl';
+      case AcademyTopic.turkUrunleri:
+        return "Türkiye'nin Unlu Mamulleri";
+      case AcademyTopic.pastacilik:
+        return 'Pastacılık ve Yeni Ürünler';
+      case AcademyTopic.firinTeknoloji:
+        return 'Fırın ve Üretim Teknolojisi';
+      case AcademyTopic.hijyenKalite:
+        return 'Hijyen ve Kalite';
+      case AcademyTopic.isletme:
+        return 'Fırın İşletmeciliği';
+      case AcademyTopic.sektorGundemi:
+        return 'Sektör Gündemi';
+      case AcademyTopic.bilimArge:
+        return 'Bilim ve Ar-Ge';
+      case AcademyTopic.ustalikDunya:
+        return 'Ustalık ve Dünya Ekmekleri';
+      case AcademyTopic.mizah:
+        return 'Mizah';
     }
   }
 

@@ -29,6 +29,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/tag_chip.dart';
+import '../../academy/providers/academy_providers.dart';
+import '../../academy/screens/academy_page.dart' show AcademyAiBadge;
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/feed_post.dart';
@@ -87,6 +89,15 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
 
   void _onAuthorTap() {
     if (post.ownerId.isEmpty) return;
+    // Akademi botuna dokunuş → tüm Akademi içeriklerinin toplu sayfası.
+    // Mizah botu kendi kimliğiyle normal profil sayfasına gider.
+    final bot = ref
+        .read(academyBotsByIdProvider)
+        .valueOrNull?[post.ownerId];
+    if (bot != null && !bot.isHumor) {
+      context.push(AppRoutes.academy);
+      return;
+    }
     context.push('${AppRoutes.userPublicProfile}/${post.ownerId}');
   }
 
@@ -344,6 +355,13 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             post: post,
             timeAgo: _timeAgo(post.createdAt),
             isOwner: isOwner,
+            academyBadge: switch (ref
+                .watch(academyBotsByIdProvider)
+                .valueOrNull?[post.ownerId]) {
+              null => null,
+              final bot when bot.isHumor => AppStrings.academyHumorBadge,
+              _ => AppStrings.academyAiBadge,
+            },
             onAuthorTap: _onAuthorTap,
             onDelete: isOwner ? _onDeleteTap : null,
             onEdit: isOwner
@@ -462,6 +480,7 @@ class _Header extends StatelessWidget {
     required this.timeAgo,
     required this.isOwner,
     required this.onAuthorTap,
+    this.academyBadge,
     required this.onDelete,
     required this.onEdit,
     required this.onGoToGroup,
@@ -473,6 +492,9 @@ class _Header extends StatelessWidget {
   final String timeAgo;
   final bool isOwner;
   final VoidCallback onAuthorTap;
+
+  /// Bot içeriği rozeti ('Akademi • AI' / 'Mizah • AI'); null → insan.
+  final String? academyBadge;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
   final VoidCallback? onGoToGroup;
@@ -545,6 +567,10 @@ class _Header extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         _TypeBadge(type: post.type),
+                        if (academyBadge != null) ...[
+                          const SizedBox(width: 4),
+                          AcademyAiBadge(label: academyBadge!),
+                        ],
                       ],
                     ),
                   ),
