@@ -85,6 +85,12 @@
   **Kapsam dışı bırakılanlar (bilinçli, raporda)**: görsel üretimi
   (info-card dahil) v1'de YOK → metin-postu; JS-render/OCR/video yok.
 
+- **Faz 4** (513beac): Flutter — AcademyPage (/academy, filtre+sayfalama+
+  boş/hata), SocialPostCard bot rozeti + akademi yönlendirme, profil AI
+  rozeti + Mesaj gating, model 22 konu; academy testleri 13/13, analyze 0.
+- Örnek içerikler: `docs/academy/sample_posts.md` (biçim örneği; model
+  üretimi DEĞİL — anahtar yok).
+
 ## Sıradaki adım (Faz 4-6)
 
 1. Flutter: `lib/features/academy/` okuma katmanı (PR #102 deseni güncel
