@@ -1940,6 +1940,27 @@ class AppStrings {
   static const String supplierPriceComingSoon =
       'Paket fiyatları ücretsiz dönem bitmeden açıklanacak';
 
+  // ── Bireysel Lansman Bilgilendirmesi (ücretsiz dönem, satın alma yok) ──
+  static const String individualLaunchTitle = 'FırınNet senin için ücretsiz';
+
+  /// Vurgulu tarih satırı: '{son ücretsiz gün} $individualLaunchFreeSuffix'
+  /// (ör. "30 Eylül 2027 günü sonuna kadar tamamen ücretsiz").
+  static const String individualLaunchFreeSuffix =
+      'günü sonuna kadar tamamen ücretsiz';
+  static const String individualLaunchBody =
+      "Bu tarihe kadar FırınNet'in tüm özelliklerini tamamen ücretsiz "
+      'kullanabilirsin. Bu süre boyunca hiçbir özellik ücretli olmayacak.';
+  static const String individualLaunchAssurance =
+      'İleride yeni ücretli özellikler eklenirse sana önceden haber '
+      'vereceğiz. Mevcut ücretsiz özelliklerin ücretli hale gelmesi için '
+      'önce bilgilendirileceksin; onayın olmadan hiçbir ücret alınmaz.';
+  static const String individualLaunchCta = 'Anladım';
+
+  /// Plan ekranı kalıcı notu: '{son ücretsiz gün}$individualLaunchNoteSuffix'.
+  static const String individualLaunchNoteSuffix =
+      " günü sonuna kadar FırınNet'in tüm özellikleri senin için ücretsiz; "
+      'onayın olmadan hiçbir ücret alınmaz.';
+
   // ── Ticari Lansman Modeli (kayıt bazlı 1 ay ücretsiz + lansman fiyatı) ──
   /// Hoş geldin başlığı: '$commercialWelcomePrefix{son gün}'
   /// ' $commercialWelcomeSuffix'.

@@ -17,6 +17,7 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
     this.commercialFreeStartedAt,
     this.commercialFreeEndsAt,
     this.launchPriceUntil,
+    this.individualFreeUntil,
   });
 
   BusinessPlan plan;
@@ -35,6 +36,9 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   DateTime? commercialFreeStartedAt;
   DateTime? commercialFreeEndsAt;
   DateTime? launchPriceUntil;
+
+  /// Bireysel lansman bilgilendirme aynası (server config karşılığı).
+  DateTime? individualFreeUntil;
   int ensureCalls = 0;
 
   bool get _commercialFreeActive {
@@ -135,6 +139,7 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
               .ceil()
           : 0,
       launchPriceUntil: launchPriceUntil,
+      individualFreeUntil: individualFreeUntil,
     );
   }
 
@@ -168,5 +173,16 @@ class LocalSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> markCommercialLaunchNoticeSeen(String noticeKey) async {
     commercialNoticesSeen.add(noticeKey);
+  }
+
+  bool individualLaunchNoticeSeen = false;
+
+  @override
+  Future<bool> hasSeenIndividualLaunchNotice() async =>
+      individualLaunchNoticeSeen;
+
+  @override
+  Future<void> markIndividualLaunchNoticeSeen() async {
+    individualLaunchNoticeSeen = true;
   }
 }

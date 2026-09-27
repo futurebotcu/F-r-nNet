@@ -80,4 +80,16 @@ class SupabaseSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> markCommercialLaunchNoticeSeen(String noticeKey) =>
       _markNoticeSeen(_commercialLaunchCampaignKey, noticeKey);
+
+  static const String _individualLaunchCampaignKey = 'individual_launch_v1';
+
+  @override
+  Future<bool> hasSeenIndividualLaunchNotice() =>
+      _hasSeenNotice(_individualLaunchCampaignKey, _supplierLaunchPopupNoticeKey);
+
+  @override
+  Future<void> markIndividualLaunchNoticeSeen() => _markNoticeSeen(
+        _individualLaunchCampaignKey,
+        _supplierLaunchPopupNoticeKey,
+      );
 }

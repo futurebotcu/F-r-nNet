@@ -45,6 +45,7 @@ class BusinessEntitlements {
     this.freePeriodEndsAt,
     this.freePeriodDaysLeft = 0,
     this.launchPriceUntil,
+    this.individualFreeUntil,
   });
 
   /// Gerçek plan (trial'dan bağımsız).
@@ -120,6 +121,12 @@ class BusinessEntitlements {
   /// Lansman fiyatının geçerli olduğu son an (hariç) — yalnız bilgilendirme
   /// metinleri için (fiyatı mağaza belirler).
   final DateTime? launchPriceUntil;
+
+  // ── Bireysel Lansman Bilgilendirmesi — yalnız bireyselde dolu. Bu tarihe
+  // (hariç) kadar bireysel hesapta ücretli özellik/satın alma YOKTUR; asıl
+  // karar server'dadır (subscription_purchase_allowed bireyselde false).
+  /// Bireysel ücretsiz dönem bitiş ANI (hariç); eski backend'de null.
+  final DateTime? individualFreeUntil;
 
   bool get supplierProductsUnlimited => supplierProductLimit < 0;
   bool get supplierCampaignsUnlimited => supplierCampaignLimit < 0;
@@ -209,6 +216,9 @@ class BusinessEntitlements {
       launchPriceUntil: row['launch_price_until'] == null
           ? null
           : DateTime.tryParse(row['launch_price_until'] as String),
+      individualFreeUntil: row['individual_free_until'] == null
+          ? null
+          : DateTime.tryParse(row['individual_free_until'] as String),
     );
   }
 
