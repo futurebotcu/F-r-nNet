@@ -1,4 +1,4 @@
-# Akademi içerik motoru davranış testleri — İZOLE lokal PostgreSQL.
+﻿# Akademi içerik motoru davranış testleri — İZOLE lokal PostgreSQL.
 #
 # Kullanım (repo kökünden):
 #   powershell -File supabase\tests\academy_engine\run_tests.ps1
@@ -30,7 +30,8 @@ $schemaFile = Join-Path $scriptDir 'harness_schema.sql'
 $migrations = @(
   (Join-Path $repoRoot 'supabase\migrations\20260713090000_academy_bot_profiles_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260929090000_academy_content_engine_v1.sql'),
-  (Join-Path $repoRoot 'supabase\migrations\20260929100000_academy_sources_seed_v1.sql')
+  (Join-Path $repoRoot 'supabase\migrations\20260929100000_academy_sources_seed_v1.sql'),
+  (Join-Path $repoRoot 'supabase\migrations\20260929110000_academy_cron_v1.sql')
 )
 foreach ($m in @($schemaFile) + $migrations) {
   if (-not (Test-Path $m)) { throw "Dosya bulunamadı: $m" }
@@ -88,7 +89,7 @@ try {
 
   $sequential = @('01_seed_idempotent.sql', '02_rls_privileges.sql',
                   '03_queue.sql', '04_publish.sql', '05_humor_guards.sql',
-                  '06_dm_rules.sql', '07_sources_seed.sql')
+                  '06_dm_rules.sql', '07_sources_seed.sql', '08_cron_tick.sql')
   foreach ($f in $sequential) {
     Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir $f)) $f
     Write-Host "OK: $f"

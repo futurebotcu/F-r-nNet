@@ -68,9 +68,46 @@
 
 ## Tamamlananlar
 
-- 2026-09-28: Keşif tamamlandı (yukarıdaki tablo). Branch:
-  `feature/academy-engine-v1`.
+- 2026-09-28: Keşif (yukarıdaki tablo). Branch `feature/academy-engine-v1`.
+- **Faz 1** (26f5d65): `20260929090000_academy_content_engine_v1.sql` —
+  tablolar+RLS+RPC'ler+11 bot seed; DM bot istisnası; izole PG paketi
+  `supabase/tests/academy_engine/` (01-06).
+- **Faz 2** (80f7d90): 41 aday kaynak (`sources_candidates.json` → üretilen
+  `20260929100000_academy_sources_seed_v1.sql`, 70 bot eşleştirmesi);
+  canlı probe `scripts/academy_probe_sources.ps1` →
+  `source_verification.json`: **feed=7 sitemap=12 html=13 unreachable=9 /41**.
+- **Faz 3**: `supabase/functions/academy-worker/` (lib.ts saf mantık +
+  index.ts IO; deno test 12/12), `20260929110000_academy_cron_v1.sql`
+  (academy_cron_tick + pg_cron 30dk, Vault academy_worker_url/key,
+  fail-soft), PG testleri 07-08. DeepSeek: model env `DEEPSEEK_MODEL`
+  (varsayılan `deepseek-flash`; resmî docs 2026-09: deepseek-flash /
+  deepseek-v4-pro), `response_format json_object`, bütçe sayaçları.
+  **Kapsam dışı bırakılanlar (bilinçli, raporda)**: görsel üretimi
+  (info-card dahil) v1'de YOK → metin-postu; JS-render/OCR/video yok.
 
-## Sıradaki adım
+## Sıradaki adım (Faz 4-6)
 
-- Faz 1 migration + seed + RLS + izole PG testleri.
+1. Flutter: `lib/features/academy/` okuma katmanı (PR #102 deseni güncel
+   main'e yeniden yazılır: AcademyRepository/Supabase/providers + model
+   subtopics/is_humor/allow_dm alanları) + feed kartında AI/Akademi rozeti
+   (`social_post_card.dart`) + `/academy` toplu profil sayfası (konu
+   filtreleri = bot chip'leri, cursor sayfalama feed_posts owner_id in
+   botIds, boş/hata/loading) + router + profil sayfasında bot davranışı
+   (academyBotProfileProvider; bot profilinde DM butonu yalnız allow_dm).
+2. Flutter testleri: academy sayfa/rozet/filtre/sayfalama/boş-hata;
+   mevcut 2497 test regresyonsuz; analyze.
+3. PR aç (feature/academy-engine-v1), CI, teslim raporu (3-durum:
+   kod/dış entegrasyon/canlı işletim). MERGE + prod migration + deploy +
+   cron/vault/secret kurulumu = KULLANICI ONAYI (canlı yayın yetkisi yok).
+
+## Kurulum (canlı etkinleştirme — henüz YAPILMADI)
+
+1. `supabase functions deploy academy-worker` (verify_jwt default ON kalsın
+   mı? Hayır: cron token'la çağırır → `--no-verify-jwt` gerek).
+2. Secrets: `ACADEMY_WORKER_TOKEN` (rastgele), `DEEPSEEK_API_KEY`,
+   (ops) `DEEPSEEK_MODEL`.
+3. Vault: `academy_worker_url` = https://<ref>.supabase.co/functions/v1/academy-worker,
+   `academy_worker_key` = ACADEMY_WORKER_TOKEN değeri.
+4. Migration'lar prod'a; `academy_enabled=true` (dry_run=true ile önce
+   kuru koşu; feed'e yayın için `academy_dry_run=false`).
+5. Acil durdurma: `academy_enabled=false` (tick+publish+humor hepsi durur).
