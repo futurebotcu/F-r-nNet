@@ -26,6 +26,14 @@ yalnız SQL metin kontratıdır; davranış kanıtı BU pakettir.
   - suffix'li id ile Premium açılır; satır normalize kimlikle yazılır (tekillik)
   - format karışımında stale/refund/snapshot/aylık↔yıllık guard'ları çalışır
   - hesap tipi kuralları (toptancı bakery ürünü alamaz vb.) suffix'li id'de aynı
+- Bireysel Lansman Bilgilendirmesi (`19_individual_launch_notice.sql`,
+  `20260928090000_individual_launch_notice_v1.sql`):
+  - `individual_launch_free_until` config tek kaynak; okuyucu parametre almaz
+  - bireyselde `subscription_purchase_allowed` her koşulda false; özellik
+    kilidi ve ilan ücreti yok; `individual_free_until` yalnız bireyselde dolu
+  - ack RLS: kendi `popup_ack` idempotent; başkası adına / reminder reddedilir
+  - tedarikçi ve ticari `my_entitlement` davranışı birebir aynı (yeni alan
+    iş hesaplarında null)
 - Promo (`activate_launch_premium_promo`):
   - idempotent; **eşzamanlı** aktivasyon tek başlangıç/bitiş üretir
   - süresi dolan promo yeniden başlamaz

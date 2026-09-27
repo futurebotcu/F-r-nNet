@@ -16,6 +16,8 @@ import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 import '../widgets/commercial_launch_sheet.dart'
     show formatCommercialLaunchDay;
+import '../widgets/individual_launch_sheet.dart'
+    show formatIndividualLaunchDate;
 import '../widgets/supplier_launch_gift_sheet.dart';
 
 /// Commercial package screen. Store prices come from RevenueCat/Google Play;
@@ -32,10 +34,17 @@ class PlansScreen extends ConsumerWidget {
         ? entitlement?.supplierEffectivePlan
         : entitlement?.effectivePlan;
     final promoActive = entitlement?.isLaunchPromoActive ?? false;
+    final isIndividual =
+        account == null || account == AccountType.individual;
+    // Bireysel ücretsiz dönem notu (server tarihi; eski backend'de null →
+    // hiçbir bireysel kampanya yüzeyi gösterilmez).
+    final individualFreeUntil =
+        isIndividual ? entitlement?.individualFreeUntil : null;
     // Tedarikçi: kişisel promo modeli geçerli değil (kampanya modeli);
     // satın alma/fiyat yalnız server "uygun" derse gösterilir (yüklenene
-    // kadar fail-closed).
-    final purchaseAllowed = isWholesaler
+    // kadar fail-closed). Bireysel: server kararı (ücretsiz dönemde her
+    // koşulda false) — satın alma/fiyat/mağaza yüzeyi gösterilmez.
+    final purchaseAllowed = isWholesaler || isIndividual
         ? (entitlement?.subscriptionPurchaseAllowed ?? false)
         : true;
     final launchActive = isWholesaler &&
@@ -58,8 +67,10 @@ class PlansScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
           children: [
             const FirinNetHeader(title: AppStrings.plansTitle),
-            // "İlk 3 ay ücretsiz" promo dili tedarikçiye gösterilmez.
-            if (!isWholesaler)
+            // "İlk 3 ay ücretsiz" promo dili tedarikçiye gösterilmez;
+            // bireysel ücretsiz dönem notu varken de gösterilmez (dönem
+            // boyunca zaten her şey ücretsiz — çelişkili dil olmasın).
+            if (!isWholesaler && individualFreeUntil == null)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.pageH,
@@ -74,6 +85,15 @@ class PlansScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            if (individualFreeUntil != null) ...[
+              const SizedBox(height: AppSpacing.m),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                ),
+                child: _IndividualLaunchNote(freeUntil: individualFreeUntil),
+              ),
+            ],
             if (launchActive) ...[
               const SizedBox(height: AppSpacing.m),
               Padding(
@@ -187,7 +207,9 @@ class PlansScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s),
-                  if (!promoActive && !isWholesaler)
+                  if (!promoActive &&
+                      !isWholesaler &&
+                      individualFreeUntil == null)
                     Text(
                       AppStrings.plansLaunchTrialCta,
                       textAlign: TextAlign.center,
@@ -268,6 +290,50 @@ class _FreePeriodBanner extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bireysel ücretsiz dönem kalıcı notu — plan ekranında tarih boyunca
+/// görünür (satın alma/fiyat yüzeyi açmaz, yalnız bilgilendirir).
+class _IndividualLaunchNote extends StatelessWidget {
+  const _IndividualLaunchNote({required this.freeUntil});
+
+  final DateTime freeUntil;
+
+  @override
+  Widget build(BuildContext context) {
+    final dateLabel = formatIndividualLaunchDate(freeUntil);
+    return Container(
+      key: const ValueKey('plans_individual_free_note'),
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.brandLemonPale,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.brandLemon),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.favorite_rounded,
+            size: 18,
+            color: AppColors.brandInk,
+          ),
+          const SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: Text(
+              '$dateLabel${AppStrings.individualLaunchNoteSuffix}',
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.brandInk,
+                height: 1.35,
+              ),
             ),
           ),
         ],

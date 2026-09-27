@@ -18,6 +18,7 @@ import '../../subscriptions/models/business_entitlements.dart';
 import '../../subscriptions/models/feature_lock.dart';
 import '../../subscriptions/providers/subscription_providers.dart';
 import '../../subscriptions/widgets/commercial_launch_sheet.dart';
+import '../../subscriptions/widgets/individual_launch_sheet.dart';
 import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../../subscriptions/widgets/plan_status_card.dart';
 import '../../subscriptions/widgets/supplier_launch_gift_sheet.dart';
@@ -59,6 +60,17 @@ class RoleDashboardScreen extends ConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           maybeShowSupplierLaunchGiftSheet(context, ref);
+        }
+      });
+    }
+    // Bireysel Lansman Bilgilendirmesi — ücretsiz dönem pop-up'ı ilk uygun
+    // oturumda bir kez (kalıcı görüldü kaydı server-side; dönem hakkı
+    // pop-up'tan bağımsızdır, server bireysele zaten ücret uygulamaz).
+    if (account == AccountType.individual) {
+      ref.watch(myEntitlementProvider);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          maybeShowIndividualLaunchSheet(context, ref);
         }
       });
     }

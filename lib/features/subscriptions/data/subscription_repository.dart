@@ -33,4 +33,14 @@ abstract class SubscriptionRepository {
   /// Ticari lansman pop-up görüldü işaretini kalıcı yazar (idempotent);
   /// ödeme/abonelik başlatmaz, hak bu kayda bağlı değildir.
   Future<void> markCommercialLaunchNoticeSeen(String noticeKey);
+
+  /// Bireysel lansman bilgilendirme pop-up'ı bu kullanıcı için daha önce
+  /// gösterildi mi? Kalıcı kayıt server-side'dadır (cihaz değişiminde
+  /// tekrar açılmaz).
+  Future<bool> hasSeenIndividualLaunchNotice();
+
+  /// Bireysel pop-up görüldü işaretini kalıcı yazar (idempotent); satın
+  /// alma/abonelik başlatmaz — bireysel ücretsiz dönem bu kayda bağlı
+  /// değildir (server zaten ücret uygulamaz).
+  Future<void> markIndividualLaunchNoticeSeen();
 }
