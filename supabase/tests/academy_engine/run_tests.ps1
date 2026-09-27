@@ -29,7 +29,8 @@ foreach ($bin in @($initdb, $pgctl, $psql)) {
 $schemaFile = Join-Path $scriptDir 'harness_schema.sql'
 $migrations = @(
   (Join-Path $repoRoot 'supabase\migrations\20260713090000_academy_bot_profiles_v1.sql'),
-  (Join-Path $repoRoot 'supabase\migrations\20260929090000_academy_content_engine_v1.sql')
+  (Join-Path $repoRoot 'supabase\migrations\20260929090000_academy_content_engine_v1.sql'),
+  (Join-Path $repoRoot 'supabase\migrations\20260929100000_academy_sources_seed_v1.sql')
 )
 foreach ($m in @($schemaFile) + $migrations) {
   if (-not (Test-Path $m)) { throw "Dosya bulunamadı: $m" }
@@ -78,15 +79,16 @@ try {
     Invoke-Psql @('-d', $dbName, '-f', $m) ("migration: " + (Split-Path -Leaf $m))
     Write-Host ("Migration uygulandı: " + (Split-Path -Leaf $m))
   }
-  # İdempotency kanıtı: engine migration'ı İKİNCİ KEZ uygulanır — hata yok,
-  # seed kopyası yok (01 testi sayıları doğrular).
-  Invoke-Psql @('-d', $dbName, '-f', $migrations[1]) 'migration (2. kez)'
-  Write-Host 'Migration 2. kez uygulandı (idempotency)'
+  # İdempotency kanıtı: engine + sources seed İKİNCİ KEZ uygulanır — hata
+  # yok, seed kopyası yok (01/07 testleri sayıları doğrular).
+  Invoke-Psql @('-d', $dbName, '-f', $migrations[1]) 'engine (2. kez)'
+  Invoke-Psql @('-d', $dbName, '-f', $migrations[2]) 'sources (2. kez)'
+  Write-Host 'Migrationlar 2. kez uygulandı (idempotency)'
   Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
 
   $sequential = @('01_seed_idempotent.sql', '02_rls_privileges.sql',
                   '03_queue.sql', '04_publish.sql', '05_humor_guards.sql',
-                  '06_dm_rules.sql')
+                  '06_dm_rules.sql', '07_sources_seed.sql')
   foreach ($f in $sequential) {
     Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir $f)) $f
     Write-Host "OK: $f"
