@@ -149,6 +149,23 @@ Deno.test("H2: iletişim/giriş/çerez/kontakt sayfaları KANIT DEĞİL", () => 
     assert(!isLikelyArticle(c.page, c.html, c.url),
       "kanıt sayılmamalıydı: " + c.url);
   }
+  // İkinci sızıntı sınıfı: kurumsal biyografi/tanıtım + DE gizlilik.
+  const corp = [
+    pageOf("Başkan", "<p>" + "Başkanımızın özgeçmişi ve görevleri. "
+      .repeat(40) + "</p>", "https://kosgeb.gov.tr/site/tr/genel/" +
+      "liste/6164/baskan"),
+    pageOf("Bakan", "<p>" + "Bakanın kariyeri ve görev süresi. "
+      .repeat(40) + "</p>", "https://iskur.gov.tr/kurumsal/bakan/"),
+    pageOf("Über uns", "<p>" + "Unsere Firmengruppe und Geschichte. "
+      .repeat(40) + "</p>", "https://ireks.com/firmengruppe/ueber-uns"),
+    pageOf("Datenschutz: Enstitü", "<p>" +
+      "Datenschutzerklärung und Rechte. ".repeat(40) + "</p>",
+      "https://mri.bund.de/de/datenschutz/"),
+  ];
+  for (const c of corp) {
+    assert(!isLikelyArticle(c.page, c.html, c.url),
+      "kurumsal/biyografi/gizlilik kanıt sayılmamalıydı: " + c.url);
+  }
 });
 
 Deno.test("H2: gerçek haber/evergreen/üretici teknik dokümanı KABUL", () => {

@@ -15,6 +15,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
+  BAKERY_TOPICAL_RE,
   buildDraftPrompt,
   buildHumorPrompt,
   checkClaimsAgainstSource,
@@ -322,6 +323,11 @@ async function proveContent(
   if (!isLikelyArticle(page, r.text, articleUrl)) {
     return { ok: false, len: page.text.length };
   }
+  // Konu uygunluğu: kurumsal biyografi/tanıtım gibi alakasız sayfalar
+  // kaynak KANITI olamaz (sonraki makale adayı denenir).
+  if (!BAKERY_TOPICAL_RE.test(page.title + " " + page.text)) {
+    return { ok: false, len: page.text.length };
+  }
   await c.from("academy_content_items").update({
     full_text: page.text.slice(0, 60000),
     status: "read",
@@ -472,6 +478,7 @@ async function handleArchiveScan(c: any, payload: any): Promise<string> {
   let added = 0;
   let proved = (src.content_proof as any)?.v === 2;
   for (const a of r.articles) {
+    if (!BAKERY_TOPICAL_RE.test(a.title + " " + a.text)) continue;
     const inserted = await insertItem(c, src, {
       title: a.title,
       link: a.url,

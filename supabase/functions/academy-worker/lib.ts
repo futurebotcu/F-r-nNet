@@ -554,9 +554,14 @@ export function extractPublishedAt(html: string): string | null {
 // Tür kara-kalıpları: iletişim/giriş/üyelik/çerez/gizlilik/arama/sepet
 // gibi sayfalar hangi uzunlukta olursa olsun İÇERİK KANITI değildir.
 const NON_CONTENT_PATH_RE =
-  /(iletisim|ilet%c4%b0sim|contact|kontakt|impressum|login|log-?in|sign-?in|signin|giris|giri%c5%9f|register|kayit|uyelik|uye(\/|$)|\/user(\/|$)|account|notification|bildirim|cerez|%c3%a7erez|cookie|privacy|gizlilik|kvkk|terms|kosullar|kullanim-sartlari|search|arama\b|\/tag(\/|$)|sepet|cart|checkout|basket|form(ular)?(\/|$)|password|sifre)/i;
+  /(iletisim|ilet%c4%b0sim|contact|kontakt|impressum|imprint|login|log-?in|sign-?in|signin|giris|giri%c5%9f|register|kayit|uyelik|uye(\/|$)|\/user(\/|$)|account|notification|bildirim|cerez|%c3%a7erez|cookie|privacy|gizlilik|datenschutz|kvkk|terms|agb\b|kosullar|kullanim-sartlari|search|arama\b|\/tag(\/|$)|sepet|cart|checkout|basket|form(ular)?(\/|$)|password|sifre|hakkimizda|hakk%c4%b1m%c4%b1zda|about-?us|ueber-uns|uber-uns|firmengruppe|kurumsal\/(bakan|baskan|yonetim)|(^|\/)(bakan|baskan|yonetim|board|management|team|karriere|career|jobs)(\/|$|\?))/i;
 const NON_CONTENT_TITLE_RE =
-  /^(iletişim|contact|kontakt\w*|giriş|login|sign in|üye\w*|kayıt|register|çerez\w*|cookie\w*|gizlilik\w*|privacy\w*|kvkk|arama|search|bildirim\w*|notification\w*|sepet\w*|cart|404|sayfa bulunamadı|page not found|error)\b/i;
+  /^(iletişim|contact|kontakt\w*|giriş|login|sign in|üye\w*|kayıt|register|çerez\w*|cookie\w*|gizlilik\w*|privacy\w*|datenschutz\w*|kvkk|impressum|arama|search|bildirim\w*|notification\w*|sepet\w*|cart|hakkımızda|about us|über uns|yönetim\w*|başkan\w*|bakan\b|board|management|team|kariyer\w*|career\w*|404|sayfa bulunamadı|page not found|error)\b/i;
+
+/** Fırıncılık/gıda konu uygunluğu — kaynak KANITI için içerik bu alanla
+ * ilgili olmalı (kurumsal biyografi/tanıtım sayfası kanıt değildir). */
+export const BAKERY_TOPICAL_RE =
+  /(ekmek|hamur|\bun\b|una |unlu|fırın|maya\b|fermantasyon|pasta|börek|simit|poğaça|bread|dough|flour|bak(e|ing|ery)|yeast|sourdough|pastry|croissant|wheat|buğday|grain|tahıl|cereal|gıda|food|mill|değirmen|hijyen|hygiene|haccp|enzim|enzyme|gluten|protein|oven|knet|teig|backware|mehl|boulanger|farine|pain\b|levain)/i;
 
 /** Menü/çerez/iletişim/giriş/kategori/hata sayfası İÇERİK KANITI
  * sayılmaz. Tür (URL+başlık) + yapı (form/paragraf/bağlantı yoğunluğu) +

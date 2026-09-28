@@ -6,6 +6,7 @@
 // urlset/HTML) — robots + SSRF + makale-kalite (isLikelyArticle) aynı.
 // Rapor: docs/academy/source_verification.json (makinece okunabilir).
 import {
+  BAKERY_TOPICAL_RE,
   discoverArticles,
   extractPage,
   extractPublishedAt,
@@ -94,6 +95,7 @@ for (const s of data.sources) {
       if (!art || art.status !== 200) continue;
       const page = extractPage(art.text, link);
       if (!isLikelyArticle(page, art.text, link)) continue;
+      if (!BAKERY_TOPICAL_RE.test(page.title + " " + page.text)) continue;
       const pub = it.publishedAt ?? extractPublishedAt(art.text);
       proof = {
         v: 2,
@@ -105,7 +107,7 @@ for (const s of data.sources) {
             Date.now() - Date.parse(pub) < 60 * 86400_000
           ? "news"
           : "evergreen",
-        topical: TOPICAL_RE.test(page.text),
+        topical: BAKERY_TOPICAL_RE.test(page.title + " " + page.text),
         method: "rss_item->extractPage",
       };
       break;
@@ -130,8 +132,10 @@ for (const s of data.sources) {
       });
       method = r.note;
       cursor = r.nextCursor as Record<string, unknown>;
-      if (r.articles.length > 0) {
-        const a = r.articles[0];
+      const a0 = r.articles.find((x) =>
+        BAKERY_TOPICAL_RE.test(x.title + " " + x.text));
+      if (a0) {
+        const a = a0;
         proof = {
           v: 2,
           url: a.url,
@@ -142,7 +146,7 @@ for (const s of data.sources) {
               Date.now() - Date.parse(a.publishedAt) < 60 * 86400_000
             ? "news"
             : "evergreen",
-          topical: TOPICAL_RE.test(a.text),
+          topical: BAKERY_TOPICAL_RE.test(a.title + " " + a.text),
           method: "discover:" + r.note,
         };
       }
