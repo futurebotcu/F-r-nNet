@@ -1,11 +1,12 @@
 {
     "summary":  {
-                    "generated_at":  "2026-09-27T22:51:36.9704307Z",
-                    "candidates_total":  41,
-                    "reachable_feed":  7,
-                    "reachable_sitemap":  12,
-                    "reachable_html":  13,
-                    "unreachable":  9,
+                    "generated_at":  "2026-09-28T06:34:37.2041848Z",
+                    "candidates_total":  91,
+                    "content_proved":  11,
+                    "reachable_feed":  5,
+                    "reachable_sitemap":  28,
+                    "reachable_html":  28,
+                    "unreachable":  19,
                     "note":  "reachable_* = eriÅŸim kanÄ±tÄ±; AKTÄ°F kaynak sayÄ±lmak iÃ§in worker iÃ§erik Ã§Ä±karÄ±mÄ± (baÅŸlÄ±k+kanonik URL+tarih+metin) ayrÄ±ca kanÄ±tlanmalÄ±dÄ±r. Lisans/kullanÄ±m koÅŸulu onayÄ± DEÄÄ°LDÄ°R."
                 },
     "sources":  [
@@ -37,7 +38,8 @@
                                            "status":  200,
                                            "content_type":  "application/rss+xml; charset=UTF-8",
                                            "kind":  "feed",
-                                           "note":  "items=10 title=True date=True"
+                                           "note":  "items=10 title=True date=True",
+                                           "first_link":  "https://asbe.org/2022/10/26/peter-rasmussen/"
                                        },
                                        {
                                            "url":  "https://asbe.org/sitemap.xml",
@@ -48,9 +50,18 @@
                                            "note":  "locs=11"
                                        }
                                    ],
-                        "verdict":  "reachable_feed",
-                        "verdict_reason":  "Ã§alÄ±ÅŸan RSS/Atom bulundu",
-                        "probed_at":  "2026-09-27T22:47:16.5054431Z"
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:22:11.7163893Z",
+                        "content_proof":  {
+                                              "url":  "https://asbe.org/2022/10/26/peter-rasmussen/",
+                                              "title":  "Peter Rasmussen | American Society of Baking",
+                                              "text_len":  890,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:22:24.4035688Z",
+                                              "ok":  true
+                                          }
                     },
                     {
                         "slug":  "bakerpedia",
@@ -82,7 +93,8 @@
                                            "status":  200,
                                            "content_type":  "application/rss+xml; charset=UTF-8",
                                            "kind":  "feed",
-                                           "note":  "items=8 title=True date=True"
+                                           "note":  "items=8 title=True date=True",
+                                           "first_link":  "https://bakerpedia.com/how-flour-quality-makes-or-breaks-every-bake/"
                                        },
                                        {
                                            "url":  "https://bakerpedia.com/sitemap_index.xml",
@@ -93,9 +105,18 @@
                                            "note":  "locs=10"
                                        }
                                    ],
-                        "verdict":  "reachable_feed",
-                        "verdict_reason":  "Ã§alÄ±ÅŸan RSS/Atom bulundu",
-                        "probed_at":  "2026-09-27T22:47:22.7388207Z"
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:22:24.4157318Z",
+                        "content_proof":  {
+                                              "url":  "https://bakerpedia.com/how-flour-quality-makes-or-breaks-every-bake/",
+                                              "title":  "How Flour Quality Makes or Breaks Every Bake | BAKERpedia",
+                                              "text_len":  7798,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:22:38.4182434Z",
+                                              "ok":  true
+                                          }
                     },
                     {
                         "slug":  "lesaffre",
@@ -124,7 +145,8 @@
                                            "status":  200,
                                            "content_type":  "application/rss+xml; charset=UTF-8",
                                            "kind":  "feed",
-                                           "note":  "items=10 title=True date=True"
+                                           "note":  "items=10 title=True date=True",
+                                           "first_link":  "https://www.lesaffre.com/press-room/lesaffre-and-the-es-group-in-partnership-with-dalkia-are-taking-a-major-step-forward-in-the-industrial-decarbonization-of-the-strasbourg-region/"
                                        },
                                        {
                                            "url":  "https://www.lesaffre.com/sitemap_index.xml",
@@ -135,9 +157,18 @@
                                            "note":  "locs=9"
                                        }
                                    ],
-                        "verdict":  "reachable_feed",
-                        "verdict_reason":  "Ã§alÄ±ÅŸan RSS/Atom bulundu",
-                        "probed_at":  "2026-09-27T22:47:28.9906310Z"
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:22:38.4212407Z",
+                        "content_proof":  {
+                                              "url":  "https://www.lesaffre.com/press-room/lesaffre-and-the-es-group-in-partnership-with-dalkia-are-taking-a-major-step-forward-in-the-industrial-decarbonization-of-the-strasbourg-region/",
+                                              "title":  "Lesaffre and the ÉS Group, in partnership with Dalkia, are taking a major step forward in the industrial decarbonization of the Strasbourg region - Lesaffre",
+                                              "text_len":  4494,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:22:45.4035352Z",
+                                              "ok":  true
+                                          }
                     },
                     {
                         "slug":  "lallemand_baking",
@@ -179,7 +210,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:47:34.0848303Z"
+                        "probed_at":  "2026-09-28T06:22:45.4061590Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "tusaf",
@@ -222,7 +254,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:47:37.5971126Z"
+                        "probed_at":  "2026-09-28T06:22:48.6391180Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "tabader",
@@ -264,7 +297,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:47:42.0713938Z"
+                        "probed_at":  "2026-09-28T06:22:53.3821215Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "icc_cereal",
@@ -307,7 +341,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:47:48.0489485Z"
+                        "probed_at":  "2026-09-28T06:23:13.1180449Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "ksu_grain",
@@ -350,7 +385,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:47:52.1069387Z"
+                        "probed_at":  "2026-09-28T06:23:16.8470444Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "pakmaya",
@@ -393,7 +429,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:47:59.6287894Z"
+                        "probed_at":  "2026-09-28T06:23:30.1471993Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "soke_un",
@@ -436,7 +473,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:48:02.2029130Z"
+                        "probed_at":  "2026-09-28T06:23:32.5279938Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "sinangil",
@@ -450,36 +488,37 @@
                                        "turk_urunleri",
                                        "un_tahil"
                                    ],
-                        "robots":  "missing_or_error",
+                        "robots":  "present",
                         "probes":  [
                                        {
                                            "url":  "https://www.sinangil.com.tr/",
-                                           "ok":  false,
-                                           "status":  null,
-                                           "content_type":  null,
-                                           "kind":  "unknown",
-                                           "note":  "The operation has timed out."
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
                                        },
                                        {
                                            "url":  "https://www.sinangil.com.tr/feed/",
-                                           "ok":  false,
-                                           "status":  null,
-                                           "content_type":  null,
-                                           "kind":  "unknown",
-                                           "note":  "The operation has timed out."
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
                                        },
                                        {
                                            "url":  "https://www.sinangil.com.tr/sitemap.xml",
-                                           "ok":  false,
-                                           "status":  null,
-                                           "content_type":  null,
-                                           "kind":  "unknown",
-                                           "note":  "The operation has timed out."
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=85"
                                        }
                                    ],
-                        "verdict":  "unreachable",
-                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:48:05.2170873Z"
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:23:36.4101599Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "ekmek_dunyasi",
@@ -522,7 +561,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:49:06.7570372Z"
+                        "probed_at":  "2026-09-28T06:23:42.5155332Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "puratos",
@@ -557,7 +597,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:49:10.2737398Z"
+                        "probed_at":  "2026-09-28T06:23:46.3226811Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "ireks",
@@ -600,7 +641,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:49:15.3094982Z"
+                        "probed_at":  "2026-09-28T06:23:50.0274020Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "zeelandia",
@@ -634,7 +676,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:49:35.5215965Z"
+                        "probed_at":  "2026-09-28T06:24:10.1317251Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "dawn_foods",
@@ -668,7 +711,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:49:38.7740796Z"
+                        "probed_at":  "2026-09-28T06:24:21.6681340Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "miwe",
@@ -710,7 +754,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:49:45.8227723Z"
+                        "probed_at":  "2026-09-28T06:24:34.2782160Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "fritsch",
@@ -744,7 +789,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:49:49.9846070Z"
+                        "probed_at":  "2026-09-28T06:24:37.9149574Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "rondo",
@@ -779,7 +825,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:49:52.7092206Z"
+                        "probed_at":  "2026-09-28T06:24:42.2473397Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "buhler",
@@ -822,7 +869,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:49:59.1436969Z"
+                        "probed_at":  "2026-09-28T06:24:50.3798891Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "tarim_orman",
@@ -865,7 +913,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:50:03.7400120Z"
+                        "probed_at":  "2026-09-28T06:24:59.0535981Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "aib",
@@ -898,16 +947,17 @@
                                        },
                                        {
                                            "url":  "https://www.aibinternational.com/sitemap.xml",
-                                           "ok":  true,
-                                           "status":  200,
-                                           "content_type":  "application/xml; charset=utf-8",
-                                           "kind":  "sitemap",
-                                           "note":  "locs=26"
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "The operation has timed out."
                                        }
                                    ],
-                        "verdict":  "reachable_sitemap",
-                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:50:07.5290635Z"
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:25:05.2113242Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "campden_bri",
@@ -950,7 +1000,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:50:13.4411445Z"
+                        "probed_at":  "2026-09-28T06:25:26.1009575Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "efsa",
@@ -993,7 +1044,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:50:19.7872534Z"
+                        "probed_at":  "2026-09-28T06:25:30.5890796Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "kosgeb",
@@ -1022,7 +1074,8 @@
                                            "status":  200,
                                            "content_type":  "text/xml",
                                            "kind":  "feed",
-                                           "note":  "items=50 title=True date=True"
+                                           "note":  "items=50 title=True date=True",
+                                           "first_link":  "http://www.kosgeb.gov.tr/site/tr/genel/detay/9491/tunus-10-uluslararasi-yedek-parca-ekipman-ve-endustriyel-hizmetler-fuari-sapri2026"
                                        },
                                        {
                                            "url":  "https://www.kosgeb.gov.tr/sitemap.xml",
@@ -1033,9 +1086,18 @@
                                            "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
                                        }
                                    ],
-                        "verdict":  "reachable_feed",
-                        "verdict_reason":  "Ã§alÄ±ÅŸan RSS/Atom bulundu",
-                        "probed_at":  "2026-09-27T22:50:24.0408988Z"
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:25:34.8624754Z",
+                        "content_proof":  {
+                                              "url":  "http://www.kosgeb.gov.tr/site/tr/genel/detay/9491/tunus-10-uluslararasi-yedek-parca-ekipman-ve-endustriyel-hizmetler-fuari-sapri2026",
+                                              "title":  "Tunus 10. Uluslararası Yedek Parça, Ekipman ve Endüstriyel Hizmetler Fuarı (SAPRI2026) - KOSGEB T.C. Küçük ve Orta Ölçekli İşletmeleri Geliştirme ve Destekleme İdaresi Başkanlığı",
+                                              "text_len":  1815,
+                                              "date_found":  false,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:25:49.5530638Z",
+                                              "ok":  true
+                                          }
                     },
                     {
                         "slug":  "tesk",
@@ -1078,7 +1140,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:50:27.4536012Z"
+                        "probed_at":  "2026-09-28T06:25:49.5576623Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "rba",
@@ -1120,7 +1183,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:50:31.5845566Z"
+                        "probed_at":  "2026-09-28T06:25:52.3739967Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "tuik",
@@ -1163,7 +1227,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:50:37.9250160Z"
+                        "probed_at":  "2026-09-28T06:25:57.6979066Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "tmo",
@@ -1198,7 +1263,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:50:41.3364116Z"
+                        "probed_at":  "2026-09-28T06:26:02.6154340Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "bbm_magazine",
@@ -1241,7 +1307,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:50:44.3416363Z"
+                        "probed_at":  "2026-09-28T06:26:09.0956568Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "baking_business",
@@ -1283,7 +1350,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:50:46.1643193Z"
+                        "probed_at":  "2026-09-28T06:26:10.7173256Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "british_baker",
@@ -1326,7 +1394,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:50:50.4865899Z"
+                        "probed_at":  "2026-09-28T06:26:15.6142933Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "tubitak_mam",
@@ -1368,7 +1437,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:50:53.4218837Z"
+                        "probed_at":  "2026-09-28T06:26:18.5494262Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "gida_dergisi",
@@ -1411,7 +1481,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:50:59.0978182Z"
+                        "probed_at":  "2026-09-28T06:26:30.9362389Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "wageningen",
@@ -1453,7 +1524,8 @@
                                    ],
                         "verdict":  "unreachable",
                         "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
-                        "probed_at":  "2026-09-27T22:51:02.2954805Z"
+                        "probed_at":  "2026-09-28T06:26:36.5740811Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "inrae",
@@ -1495,7 +1567,8 @@
                                    ],
                         "verdict":  "reachable_sitemap",
                         "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
-                        "probed_at":  "2026-09-27T22:51:07.1914294Z"
+                        "probed_at":  "2026-09-28T06:26:43.9024252Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "sfbi",
@@ -1525,7 +1598,8 @@
                                            "status":  200,
                                            "content_type":  "application/rss+xml; charset=UTF-8",
                                            "kind":  "feed",
-                                           "note":  "items=2 title=True date=True"
+                                           "note":  "items=2 title=True date=True",
+                                           "first_link":  "https://sfbi.com/modern-bread-viennoiserie/"
                                        },
                                        {
                                            "url":  "https://sfbi.com/sitemap.xml",
@@ -1537,8 +1611,17 @@
                                        }
                                    ],
                         "verdict":  "reachable_feed",
-                        "verdict_reason":  "Ã§alÄ±ÅŸan RSS/Atom bulundu",
-                        "probed_at":  "2026-09-27T22:51:12.3145495Z"
+                        "verdict_reason":  "RSS/Atom var; makale Ã§Ä±karÄ±mÄ± henÃ¼z kanÄ±tlanmadÄ±",
+                        "probed_at":  "2026-09-28T06:26:49.6915702Z",
+                        "content_proof":  {
+                                              "url":  "https://sfbi.com/modern-bread-viennoiserie/",
+                                              "title":  "Modern Bread \u0026amp; Viennoiserie - San Francisco Baking Institute",
+                                              "text_len":  12,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:26:58.8077270Z",
+                                              "ok":  false
+                                          }
                     },
                     {
                         "slug":  "richemont",
@@ -1568,7 +1651,8 @@
                                            "status":  200,
                                            "content_type":  "application/rss+xml; charset=UTF-8",
                                            "kind":  "feed",
-                                           "note":  "items=1 title=True date=True"
+                                           "note":  "items=1 title=True date=True",
+                                           "first_link":  "https://richemont.swiss/jubilaeum-vom-20/"
                                        },
                                        {
                                            "url":  "https://richemont.swiss/sitemap.xml",
@@ -1580,8 +1664,17 @@
                                        }
                                    ],
                         "verdict":  "reachable_feed",
-                        "verdict_reason":  "Ã§alÄ±ÅŸan RSS/Atom bulundu",
-                        "probed_at":  "2026-09-27T22:51:18.8401520Z"
+                        "verdict_reason":  "RSS/Atom var; makale Ã§Ä±karÄ±mÄ± henÃ¼z kanÄ±tlanmadÄ±",
+                        "probed_at":  "2026-09-28T06:26:58.8097361Z",
+                        "content_proof":  {
+                                              "url":  "https://richemont.swiss/jubilaeum-vom-20/",
+                                              "title":  "",
+                                              "text_len":  0,
+                                              "date_found":  false,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:27:03.3639148Z",
+                                              "ok":  false
+                                          }
                     },
                     {
                         "slug":  "bbga",
@@ -1624,7 +1717,8 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:51:22.6052655Z"
+                        "probed_at":  "2026-09-28T06:27:03.3674428Z",
+                        "content_proof":  null
                     },
                     {
                         "slug":  "king_arthur_pro",
@@ -1654,7 +1748,8 @@
                                            "status":  200,
                                            "content_type":  "application/rss+xml; charset=utf-8",
                                            "kind":  "feed",
-                                           "note":  "items=20 title=True date=True"
+                                           "note":  "items=20 title=True date=True",
+                                           "first_link":  "https://www.kingarthurbaking.com/blog/2026/09/24/apple-cider-vinegar-recipes"
                                        },
                                        {
                                            "url":  "https://www.kingarthurbaking.com/sitemap.xml",
@@ -1665,9 +1760,18 @@
                                            "note":  "locs=4"
                                        }
                                    ],
-                        "verdict":  "reachable_feed",
-                        "verdict_reason":  "Ã§alÄ±ÅŸan RSS/Atom bulundu",
-                        "probed_at":  "2026-09-27T22:51:29.3471532Z"
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:27:09.0452720Z",
+                        "content_proof":  {
+                                              "url":  "https://www.kingarthurbaking.com/blog/2026/09/24/apple-cider-vinegar-recipes",
+                                              "title":  "This fall, reach for this unlikely apple ingredient",
+                                              "text_len":  407,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:27:16.6898259Z",
+                                              "ok":  true
+                                          }
                     },
                     {
                         "slug":  "halk_ekmek_ist",
@@ -1702,7 +1806,1956 @@
                                    ],
                         "verdict":  "reachable_html",
                         "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
-                        "probed_at":  "2026-09-27T22:51:34.4966429Z"
+                        "probed_at":  "2026-09-28T06:27:16.6928250Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "aacc_cereals",
+                        "name":  "Cereals \u0026 Grains Association (AACC)",
+                        "domain":  "cerealsgrains.org",
+                        "country":  "US",
+                        "lang":  "en",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "un_tahil",
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.cerealsgrains.org/",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       },
+                                       {
+                                           "url":  "https://www.cerealsgrains.org/news/Pages/default.aspx",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       },
+                                       {
+                                           "url":  "https://www.cerealsgrains.org/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:27:19.9132564Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "world_grain",
+                        "name":  "World Grain (Sosland)",
+                        "domain":  "world-grain.com",
+                        "country":  "US",
+                        "lang":  "en",
+                        "type":  "news",
+                        "commercial":  false,
+                        "topics":  [
+                                       "un_tahil",
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.world-grain.com/",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       },
+                                       {
+                                           "url":  "https://www.world-grain.com/rss/articles",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml; charset=utf-8",
+                                           "kind":  "feed",
+                                           "note":  "items=30 title=True date=True",
+                                           "first_link":  "https://www.world-grain.com/articles/23262-ifeeder-looks-to-expand-partnerships-feed-research"
+                                       },
+                                       {
+                                           "url":  "https://www.world-grain.com/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       }
+                                   ],
+                        "verdict":  "reachable_feed",
+                        "verdict_reason":  "RSS/Atom var; makale Ã§Ä±karÄ±mÄ± henÃ¼z kanÄ±tlanmadÄ±",
+                        "probed_at":  "2026-09-28T06:27:25.2267740Z",
+                        "content_proof":  {
+                                              "url":  "https://www.world-grain.com/articles/23262-ifeeder-looks-to-expand-partnerships-feed-research",
+                                              "ok":  false,
+                                              "error":  "article_fetch_failed status=403",
+                                              "checked_at":  "2026-09-28T06:27:31.7529023Z"
+                                          }
+                    },
+                    {
+                        "slug":  "miller_magazine",
+                        "name":  "Miller Magazine / Değirmenci Dergisi",
+                        "domain":  "millermagazine.com",
+                        "country":  "TR",
+                        "lang":  "en",
+                        "type":  "news",
+                        "commercial":  false,
+                        "topics":  [
+                                       "un_tahil",
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://millermagazine.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://millermagazine.com/feed/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://millermagazine.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=295"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:27:31.7555587Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "bakeryandsnacks",
+                        "name":  "BakeryAndSnacks (William Reed)",
+                        "domain":  "bakeryandsnacks.com",
+                        "country":  "UK",
+                        "lang":  "en",
+                        "type":  "news",
+                        "commercial":  false,
+                        "topics":  [
+                                       "sektor_gundemi",
+                                       "pastacilik"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.bakeryandsnacks.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.bakeryandsnacks.com/Info/Latest-News",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "İstek durduruldu: Bağlantı beklenmedik bir şekilde kapatıldı."
+                                       },
+                                       {
+                                           "url":  "https://www.bakeryandsnacks.com/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "İstek durduruldu: Bağlantı beklenmedik bir şekilde kapatıldı."
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:27:43.9056624Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "bake_mag",
+                        "name":  "Bake Magazine (Sosland)",
+                        "domain":  "bakemag.com",
+                        "country":  "US",
+                        "lang":  "en",
+                        "type":  "news",
+                        "commercial":  false,
+                        "topics":  [
+                                       "pastacilik",
+                                       "isletme"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.bakemag.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.bakemag.com/rss/articles",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml; charset=utf-8",
+                                           "kind":  "feed",
+                                           "note":  "items=30 title=True date=True",
+                                           "first_link":  "https://www.bakemag.com/articles/22056-holland-america-line-taps-magnolia-bakerys-banana-pudding-bar-for-caribbean-cruises"
+                                       },
+                                       {
+                                           "url":  "https://www.bakemag.com/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       }
+                                   ],
+                        "verdict":  "reachable_feed",
+                        "verdict_reason":  "RSS/Atom var; makale Ã§Ä±karÄ±mÄ± henÃ¼z kanÄ±tlanmadÄ±",
+                        "probed_at":  "2026-09-28T06:28:08.7228348Z",
+                        "content_proof":  {
+                                              "url":  "https://www.bakemag.com/articles/22056-holland-america-line-taps-magnolia-bakerys-banana-pudding-bar-for-caribbean-cruises",
+                                              "ok":  false,
+                                              "error":  "article_fetch_failed status=403",
+                                              "checked_at":  "2026-09-28T06:28:15.4236631Z"
+                                          }
+                    },
+                    {
+                        "slug":  "gida_teknolojisi",
+                        "name":  "Gıda Teknolojisi Dergisi",
+                        "domain":  "gidateknolojisi.com.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "news",
+                        "commercial":  false,
+                        "topics":  [
+                                       "bilim_arge",
+                                       "hijyen_kalite",
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.gidateknolojisi.com.tr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.gidateknolojisi.com.tr/feed/",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       },
+                                       {
+                                           "url":  "https://www.gidateknolojisi.com.tr/rss.xml",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:28:15.4266918Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "tff_firincilar",
+                        "name":  "Türkiye Fırıncılar Federasyonu",
+                        "domain":  "tff.org.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "sektor_gundemi",
+                                       "isletme",
+                                       "turk_urunleri"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.tff.org.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027www.tff.org.tr\u0027"
+                                       },
+                                       {
+                                           "url":  "https://tff.org.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027tff.org.tr\u0027"
+                                       },
+                                       {
+                                           "url":  "https://www.tff.org.tr/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027www.tff.org.tr\u0027"
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:28:21.4767171Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "ist_firincilar_odasi",
+                        "name":  "İstanbul Fırıncılar Odası",
+                        "domain":  "istanbulfirincilarodasi.org.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "isletme",
+                                       "turk_urunleri"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.istanbulfirincilarodasi.org.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027www.istanbulfirincilarodasi.org.tr\u0027"
+                                       },
+                                       {
+                                           "url":  "https://istanbulfirincilarodasi.org.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027istanbulfirincilarodasi.org.tr\u0027"
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:28:23.1902220Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "ticaret_bakanligi",
+                        "name":  "T.C. Ticaret Bakanlığı",
+                        "domain":  "ticaret.gov.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "isletme",
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.ticaret.gov.tr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.ticaret.gov.tr/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:28:24.5781439Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "fao",
+                        "name":  "FAO (BM Gıda ve Tarım Örgütü)",
+                        "domain":  "fao.org",
+                        "country":  "INT",
+                        "lang":  "en",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "un_tahil",
+                                       "sektor_gundemi",
+                                       "hijyen_kalite"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.fao.org/newsroom/en",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.fao.org/feeds/fao-newsroom-rss",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/rss+xml",
+                                           "kind":  "feed",
+                                           "note":  "items=16 title=True date=True",
+                                           "first_link":  "https://www.fao.org/newsroom/detail/sudan--fao-launches-nationwide-livestock-vaccination-campaign-to-protect-food-security-and-livelihoods-amid-conflict/en"
+                                       },
+                                       {
+                                           "url":  "https://www.fao.org/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       }
+                                   ],
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:28:27.1505945Z",
+                        "content_proof":  {
+                                              "url":  "https://www.fao.org/newsroom/detail/sudan--fao-launches-nationwide-livestock-vaccination-campaign-to-protect-food-security-and-livelihoods-amid-conflict/en",
+                                              "title":  "Sudan: FAO launches nationwide livestock vaccination campaign to protect food security and livelihoods amid conflict",
+                                              "text_len":  7251,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:28:34.1986202Z",
+                                              "ok":  true
+                                          }
+                    },
+                    {
+                        "slug":  "codex",
+                        "name":  "Codex Alimentarius",
+                        "domain":  "fao.org",
+                        "country":  "INT",
+                        "lang":  "en",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "hijyen_kalite"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.fao.org/fao-who-codexalimentarius/news-and-events/en/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:28:34.2015896Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "who_food",
+                        "name":  "WHO Food Safety",
+                        "domain":  "who.int",
+                        "country":  "INT",
+                        "lang":  "en",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "hijyen_kalite"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.who.int/health-topics/food-safety",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.who.int/rss-feeds/news-english.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/rss+xml",
+                                           "kind":  "feed",
+                                           "note":  "items=9 title=True date=True",
+                                           "first_link":  "https://www.who.int/news/item/25-02-2026-who-director-general-visits-jordan-to-recognize-strong-collaboration-on-health-system-delivery--emergency-relief-and-advancing-mental-health"
+                                       }
+                                   ],
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:28:35.6939194Z",
+                        "content_proof":  {
+                                              "url":  "https://www.who.int/news/item/25-02-2026-who-director-general-visits-jordan-to-recognize-strong-collaboration-on-health-system-delivery--emergency-relief-and-advancing-mental-health",
+                                              "title":  "WHO Director-General visits Jordan to recognize strong collaboration on health system delivery, emergency relief and advancing mental health",
+                                              "text_len":  5381,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:28:44.7627487Z",
+                                              "ok":  true
+                                          }
+                    },
+                    {
+                        "slug":  "fda_food",
+                        "name":  "U.S. FDA Food",
+                        "domain":  "fda.gov",
+                        "country":  "US",
+                        "lang":  "en",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "hijyen_kalite"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.fda.gov/food",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/food/rss.xml",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:28:44.7688260Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "bfr",
+                        "name":  "BfR (Alman Risk Değerlendirme Enstitüsü)",
+                        "domain":  "bfr.bund.de",
+                        "country":  "DE",
+                        "lang":  "de",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "hijyen_kalite",
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.bfr.bund.de/de/start.html",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.bfr.bund.de/de/rss.html",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:28:53.5336455Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "mri_bund",
+                        "name":  "Max Rubner-Institut (Detmold tahıl)",
+                        "domain":  "mri.bund.de",
+                        "country":  "DE",
+                        "lang":  "de",
+                        "type":  "academic",
+                        "commercial":  false,
+                        "topics":  [
+                                       "un_tahil",
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.mri.bund.de/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.mri.bund.de/de/aktuelles/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:28:58.8255162Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "cimmyt",
+                        "name":  "CIMMYT (Buğday Araştırma)",
+                        "domain":  "cimmyt.org",
+                        "country":  "MX",
+                        "lang":  "en",
+                        "type":  "academic",
+                        "commercial":  false,
+                        "topics":  [
+                                       "un_tahil",
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.cimmyt.org/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.cimmyt.org/feed/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/rss+xml; charset=UTF-8",
+                                           "kind":  "feed",
+                                           "note":  "items=6 title=True date=True",
+                                           "first_link":  "https://www.cimmyt.org/news/multifunctional-landscapes-begin-with-behavior-change/"
+                                       },
+                                       {
+                                           "url":  "https://www.cimmyt.org/sitemap_index.xml",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "İstek durduruldu: Bağlantı beklenmedik bir şekilde kapatıldı."
+                                       }
+                                   ],
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:29:05.0449087Z",
+                        "content_proof":  {
+                                              "url":  "https://www.cimmyt.org/news/multifunctional-landscapes-begin-with-behavior-change/",
+                                              "title":  "Multifunctional landscapes begin with behavior change",
+                                              "text_len":  9640,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:29:37.3370690Z",
+                                              "ok":  true
+                                          }
+                    },
+                    {
+                        "slug":  "uswheat",
+                        "name":  "U.S. Wheat Associates",
+                        "domain":  "uswheat.org",
+                        "country":  "US",
+                        "lang":  "en",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "un_tahil",
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.uswheat.org/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.uswheat.org/feed/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/rss+xml; charset=UTF-8",
+                                           "kind":  "feed",
+                                           "note":  "items=10 title=True date=True",
+                                           "first_link":  "https://uswheat.org/u-s-wheat-associates-welcomes-provisions-permanently-moving-food-for-peace-to-usda-in-senate-version-of-the-farm-bill/"
+                                       },
+                                       {
+                                           "url":  "https://www.uswheat.org/sitemap_index.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml; charset=UTF-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=30"
+                                       }
+                                   ],
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:29:37.3458006Z",
+                        "content_proof":  {
+                                              "url":  "https://uswheat.org/u-s-wheat-associates-welcomes-provisions-permanently-moving-food-for-peace-to-usda-in-senate-version-of-the-farm-bill/",
+                                              "title":  "U.S. Wheat Welcomes Provisions Moving Food for Peace to USDA",
+                                              "text_len":  4417,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:29:44.6413482Z",
+                                              "ok":  true
+                                          }
+                    },
+                    {
+                        "slug":  "mdpi_foods",
+                        "name":  "MDPI Foods (açık erişim dergi)",
+                        "domain":  "mdpi.com",
+                        "country":  "CH",
+                        "lang":  "en",
+                        "type":  "academic",
+                        "commercial":  false,
+                        "topics":  [
+                                       "bilim_arge",
+                                       "hijyen_kalite"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.mdpi.com/journal/foods",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       },
+                                       {
+                                           "url":  "https://www.mdpi.com/rss/journal/foods",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:29:44.6442546Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "inbp",
+                        "name":  "INBP (Fransa Ulusal Fırıncılık Enstitüsü)",
+                        "domain":  "inbp.com",
+                        "country":  "FR",
+                        "lang":  "fr",
+                        "type":  "edu",
+                        "commercial":  true,
+                        "topics":  [
+                                       "ustalik_dunya",
+                                       "pastacilik"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.inbp.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.inbp.com/actualites/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "İstek durduruldu: Bağlantı beklenmedik bir şekilde kapatıldı."
+                                       },
+                                       {
+                                           "url":  "https://www.inbp.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml; charset=UTF-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=5"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:29:47.6322839Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "akademie_weinheim",
+                        "name":  "Akademie Deutsches Bäckerhandwerk Weinheim",
+                        "domain":  "akademie-weinheim.de",
+                        "country":  "DE",
+                        "lang":  "de",
+                        "type":  "edu",
+                        "commercial":  true,
+                        "topics":  [
+                                       "ustalik_dunya"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.akademie-weinheim.de/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.akademie-weinheim.de/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml;charset=utf-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=3"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:30:00.6791892Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "baeckerhandwerk",
+                        "name":  "Zentralverband des Deutschen Bäckerhandwerks",
+                        "domain":  "baeckerhandwerk.de",
+                        "country":  "DE",
+                        "lang":  "de",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "sektor_gundemi",
+                                       "ustalik_dunya",
+                                       "isletme"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.baeckerhandwerk.de/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.baeckerhandwerk.de/feed/",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       },
+                                       {
+                                           "url":  "https://www.baeckerhandwerk.de/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml;charset=utf-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=3"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:30:03.9968816Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "webbaecker",
+                        "name":  "WebBäcker / ABZ haber",
+                        "domain":  "webbaecker.de",
+                        "country":  "DE",
+                        "lang":  "de",
+                        "type":  "news",
+                        "commercial":  false,
+                        "topics":  [
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.webbaecker.de/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.webbaecker.de/feed/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/rss+xml; charset=UTF-8",
+                                           "kind":  "feed",
+                                           "note":  "items=57 title=True date=True",
+                                           "first_link":  "https://www.webbaecker.de/nicht-nur-fuers-stadion-loaded-lentil-walking-tacos/"
+                                       }
+                                   ],
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:30:10.5660035Z",
+                        "content_proof":  {
+                                              "url":  "https://www.webbaecker.de/nicht-nur-fuers-stadion-loaded-lentil-walking-tacos/",
+                                              "title":  "Nicht nur fürs Stadion: Loaded Lentil Walking Tacos \u0026#8211; WebBaecker",
+                                              "text_len":  3498,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:30:17.0386875Z",
+                                              "ok":  true
+                                          }
+                    },
+                    {
+                        "slug":  "boulangerie_conf",
+                        "name":  "Confédération Nationale de la Boulangerie (FR)",
+                        "domain":  "boulangerie.org",
+                        "country":  "FR",
+                        "lang":  "fr",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "sektor_gundemi",
+                                       "ustalik_dunya"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.boulangerie.org/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "The operation has timed out."
+                                       },
+                                       {
+                                           "url":  "https://www.boulangerie.org/feed/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml;charset=UTF-8",
+                                           "kind":  "feed",
+                                           "note":  "items=10 title=True date=True",
+                                           "first_link":  "https://boulangerie.org/blog/2026/09/24/j-5-avant-le-concours-national-un-des-meilleurs-apprentis-de-france-boulangerie-2/?utm_source=rss\u0026#038;utm_medium=rss\u0026#038;utm_campaign=j-5-avant-le-concours-national-un-des-meilleurs-apprentis-de-france-boulangerie-2"
+                                       }
+                                   ],
+                        "verdict":  "reachable_feed",
+                        "verdict_reason":  "RSS/Atom var; makale Ã§Ä±karÄ±mÄ± henÃ¼z kanÄ±tlanmadÄ±",
+                        "probed_at":  "2026-09-28T06:30:17.0432204Z",
+                        "content_proof":  {
+                                              "url":  "https://boulangerie.org/blog/2026/09/24/j-5-avant-le-concours-national-un-des-meilleurs-apprentis-de-france-boulangerie-2/?utm_source=rss\u0026#038;utm_medium=rss\u0026#038;utm_campaign=j-5-avant-le-concours-national-un-des-meilleurs-apprentis-de-france-boulangerie-2",
+                                              "title":  "J-5 avant le Concours National \u0026quot;Un des Meilleurs Apprentis de France\u0026quot; Boulangerie - Confédération Nationale de la Boulangerie-Pâtisserie Française",
+                                              "text_len":  103,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:30:36.5878379Z",
+                                              "ok":  false
+                                          }
+                    },
+                    {
+                        "slug":  "ab_mauri",
+                        "name":  "AB Mauri",
+                        "domain":  "abmauri.com",
+                        "country":  "UK",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.abmauri.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.abmauri.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=32"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:30:36.5888041Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "angel_yeast",
+                        "name":  "Angel Yeast",
+                        "domain":  "angelyeast.com",
+                        "country":  "CN",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://en.angelyeast.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://en.angelyeast.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml; charset=utf-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=355"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:30:39.8704407Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "bakels",
+                        "name":  "Bakels Group",
+                        "domain":  "bakels.com",
+                        "country":  "CH",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "pastacilik",
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.bakels.com/",
+                                           "ok":  false,
+                                           "status":  403,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (403) Yasak."
+                                       },
+                                       {
+                                           "url":  "https://www.bakels.com/sitemap_index.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml; charset=UTF-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=5"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:30:51.9050570Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "corbion",
+                        "name":  "Corbion (fermantasyon/raf ömrü)",
+                        "domain":  "corbion.com",
+                        "country":  "NL",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "hijyen_kalite",
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.corbion.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.corbion.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml; charset=utf-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=324"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:30:56.4151004Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "novonesis_baking",
+                        "name":  "Novonesis (enzim/baking)",
+                        "domain":  "novonesis.com",
+                        "country":  "DK",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "bilim_arge",
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.novonesis.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.novonesis.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=343"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:30:59.8401969Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "wp_bakery",
+                        "name":  "WP Bakery Group",
+                        "domain":  "wp-l.com",
+                        "country":  "DE",
+                        "lang":  "de",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.wp-l.com/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucuya bağlanılamıyor"
+                                       },
+                                       {
+                                           "url":  "https://www.wp-l.com/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucuya bağlanılamıyor"
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:31:08.5830774Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "wachtel",
+                        "name":  "Wachtel (fırınlar)",
+                        "domain":  "wachtel.de",
+                        "country":  "DE",
+                        "lang":  "de",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.wachtel.de/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.wachtel.de/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml;charset=utf-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=1"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:31:15.9667312Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "sveba_dahlen",
+                        "name":  "Sveba Dahlen",
+                        "domain":  "sveba-dahlen.com",
+                        "country":  "SE",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.sveba-dahlen.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.sveba-dahlen.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml; charset=utf-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=173"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:31:18.9043359Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "rademaker",
+                        "name":  "Rademaker",
+                        "domain":  "rademaker.com",
+                        "country":  "NL",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji",
+                                       "pastacilik"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.rademaker.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.rademaker.com/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "İstek durduruldu: Bağlantı beklenmedik bir şekilde kapatıldı."
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:31:26.2588977Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "mecatherm",
+                        "name":  "Mecatherm",
+                        "domain":  "mecatherm.fr",
+                        "country":  "FR",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.mecatherm.fr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.mecatherm.fr/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:31:43.9289237Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "diosna",
+                        "name":  "DIOSNA (yoğurma/starter)",
+                        "domain":  "diosna.com",
+                        "country":  "DE",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji",
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.diosna.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.diosna.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml;charset=utf-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=1"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:31:47.0111908Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "fimak",
+                        "name":  "FİMAK Fırın Makinaları",
+                        "domain":  "fimak.com.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji",
+                                       "turk_urunleri"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.fimak.com.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027www.fimak.com.tr\u0027"
+                                       },
+                                       {
+                                           "url":  "https://www.fimak.com.tr/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027www.fimak.com.tr\u0027"
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:31:52.3532086Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "porlanmaz",
+                        "name":  "Porlanmaz Fırın Makinaları",
+                        "domain":  "porlanmaz.com",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.porlanmaz.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://porlanmaz.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:31:53.4404227Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "mateka",
+                        "name":  "Mateka Ekipman",
+                        "domain":  "mateka.com.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "firin_teknoloji"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.mateka.com.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "The operation has timed out."
+                                       },
+                                       {
+                                           "url":  "https://mateka.com.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "The operation has timed out."
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:31:56.4374513Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "lesaffre_tr",
+                        "name":  "Lesaffre Türkiye",
+                        "domain":  "lesaffre.com.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "ekmek_fermantasyon",
+                                       "turk_urunleri"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.lesaffre.com.tr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.lesaffre.com.tr/feed/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/rss+xml; charset=UTF-8",
+                                           "kind":  "feed",
+                                           "note":  "items=10 title=True date=True",
+                                           "first_link":  "https://lesaffre.com.tr/ekmegin-sampiyonlari-bakery-masters-ta-bulusuyor/"
+                                       },
+                                       {
+                                           "url":  "https://www.lesaffre.com.tr/sitemap_index.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml; charset=UTF-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=11"
+                                       }
+                                   ],
+                        "verdict":  "content_proved",
+                        "verdict_reason":  "feed + gerÃ§ek makale Ã§Ä±karÄ±mÄ± doÄŸrulandÄ±",
+                        "probed_at":  "2026-09-28T06:32:42.8725974Z",
+                        "content_proof":  {
+                                              "url":  "https://lesaffre.com.tr/ekmegin-sampiyonlari-bakery-masters-ta-bulusuyor/",
+                                              "title":  "“Ekmeğin Şampiyonları” Bakery Masters’ta Buluşuyor",
+                                              "text_len":  6243,
+                                              "date_found":  true,
+                                              "method":  "rss_item-\u003ehtml_extract",
+                                              "checked_at":  "2026-09-28T06:32:51.5316749Z",
+                                              "ok":  true
+                                          }
+                    },
+                    {
+                        "slug":  "ulker_pro",
+                        "name":  "Ülker (kurumsal/inovasyon)",
+                        "domain":  "ulker.com.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "pastacilik",
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.ulker.com.tr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.ulker.com.tr/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=2"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:32:51.5346794Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "eti_kurumsal",
+                        "name":  "ETİ (kurumsal)",
+                        "domain":  "etietieti.com",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "pastacilik"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.etietieti.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.etietieti.com/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "application/xml",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=1"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:33:04.0074658Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "itu_gida",
+                        "name":  "İTÜ Gıda Mühendisliği",
+                        "domain":  "gidamuh.itu.edu.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "academic",
+                        "commercial":  false,
+                        "topics":  [
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://gidamuh.itu.edu.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027gidamuh.itu.edu.tr\u0027"
+                                       },
+                                       {
+                                           "url":  "https://gidamuh.itu.edu.tr/haberler",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027gidamuh.itu.edu.tr\u0027"
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:33:07.8153884Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "hacettepe_gida",
+                        "name":  "Hacettepe Gıda Mühendisliği",
+                        "domain":  "fde.hacettepe.edu.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "academic",
+                        "commercial":  false,
+                        "topics":  [
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://fde.hacettepe.edu.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027fde.hacettepe.edu.tr\u0027"
+                                       },
+                                       {
+                                           "url":  "http://www.fde.hacettepe.edu.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak ad çözülemedi: \u0027www.fde.hacettepe.edu.tr\u0027"
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:33:08.8787668Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "ankara_gida",
+                        "name":  "Ankara Üniversitesi Gıda Mühendisliği",
+                        "domain":  "eng.ankara.edu.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "academic",
+                        "commercial":  false,
+                        "topics":  [
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://eng.ankara.edu.tr/gida/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucuya bağlanılamıyor"
+                                       },
+                                       {
+                                           "url":  "https://eng.ankara.edu.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucuya bağlanılamıyor"
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:33:10.0142802Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "ege_gida",
+                        "name":  "Ege Üniversitesi Gıda Mühendisliği",
+                        "domain":  "food.ege.edu.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "academic",
+                        "commercial":  false,
+                        "topics":  [
+                                       "bilim_arge"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://food.ege.edu.tr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://food.ege.edu.tr/tr-11821/duyurular.html",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:33:18.7476507Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "tse",
+                        "name":  "Türk Standardları Enstitüsü (TSE)",
+                        "domain":  "tse.org.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "hijyen_kalite",
+                                       "isletme"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.tse.org.tr/",
+                                           "ok":  false,
+                                           "status":  null,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "The operation has timed out."
+                                       },
+                                       {
+                                           "url":  "https://www.tse.org.tr/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml; charset=UTF-8",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=13"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:33:22.0982568Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "tobb",
+                        "name":  "TOBB",
+                        "domain":  "tobb.org.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "isletme",
+                                       "sektor_gundemi"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.tobb.org.tr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.tobb.org.tr/Sayfalar/AnaSayfa.php",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=UTF-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:33:55.8129400Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "iskur",
+                        "name":  "İŞKUR (istihdam/teşvik)",
+                        "domain":  "iskur.gov.tr",
+                        "country":  "TR",
+                        "lang":  "tr",
+                        "type":  "gov",
+                        "commercial":  false,
+                        "topics":  [
+                                       "isletme"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.iskur.gov.tr/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.iskur.gov.tr/sitemap.xml",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/xml",
+                                           "kind":  "sitemap",
+                                           "note":  "locs=262"
+                                       }
+                                   ],
+                        "verdict":  "reachable_sitemap",
+                        "verdict_reason":  "sitemap eriÅŸilebilir (iÃ§erik Ã§Ä±karÄ±mÄ± ayrÄ±ca kanÄ±tlanmalÄ±)",
+                        "probed_at":  "2026-09-28T06:33:59.2839657Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "ibp_bbga_formula",
+                        "name":  "BBGA Formula Exchange",
+                        "domain":  "bbga.org",
+                        "country":  "US",
+                        "lang":  "en",
+                        "type":  "association",
+                        "commercial":  false,
+                        "topics":  [
+                                       "ustalik_dunya",
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.bbga.org/formulas/",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       }
+                                   ],
+                        "verdict":  "unreachable",
+                        "verdict_reason":  "hiÃ§bir probe URL eriÅŸilemedi",
+                        "probed_at":  "2026-09-28T06:34:07.6869359Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "sourdough_lib",
+                        "name":  "Puratos Sourdough Library",
+                        "domain":  "questforsourdough.com",
+                        "country":  "BE",
+                        "lang":  "en",
+                        "type":  "vendor",
+                        "commercial":  true,
+                        "topics":  [
+                                       "ekmek_fermantasyon",
+                                       "ustalik_dunya"
+                                   ],
+                        "robots":  "missing_or_error",
+                        "probes":  [
+                                       {
+                                           "url":  "https://www.questforsourdough.com/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html; charset=utf-8",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "https://www.questforsourdough.com/sitemap.xml",
+                                           "ok":  false,
+                                           "status":  404,
+                                           "content_type":  null,
+                                           "kind":  "unknown",
+                                           "note":  "Uzak sunucu hata döndürdü: (404) Bulunamadı."
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:34:11.1006243Z",
+                        "content_proof":  null
+                    },
+                    {
+                        "slug":  "theartisan_net",
+                        "name":  "The Artisan (teknik ekmek arşivi)",
+                        "domain":  "theartisan.net",
+                        "country":  "US",
+                        "lang":  "en",
+                        "type":  "archive",
+                        "commercial":  false,
+                        "topics":  [
+                                       "ustalik_dunya",
+                                       "ekmek_fermantasyon"
+                                   ],
+                        "robots":  "present",
+                        "probes":  [
+                                       {
+                                           "url":  "http://www.theartisan.net/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html",
+                                           "kind":  "html",
+                                           "note":  null
+                                       },
+                                       {
+                                           "url":  "http://theartisan.net/",
+                                           "ok":  true,
+                                           "status":  200,
+                                           "content_type":  "text/html",
+                                           "kind":  "html",
+                                           "note":  null
+                                       }
+                                   ],
+                        "verdict":  "reachable_html",
+                        "verdict_reason":  "sayfa eriÅŸilebilir; feed bulunamadÄ±",
+                        "probed_at":  "2026-09-28T06:34:20.7460851Z",
+                        "content_proof":  null
                     }
                 ]
 }
