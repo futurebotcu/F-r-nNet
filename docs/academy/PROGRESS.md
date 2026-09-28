@@ -106,6 +106,36 @@
    kod/dış entegrasyon/canlı işletim). MERGE + prod migration + deploy +
    cron/vault/secret kurulumu = KULLANICI ONAYI (canlı yayın yetkisi yok).
 
+## V1.1 tamamlama turu — eksik listesi (2026-09-28, head 50352bc)
+
+Durum doğrulaması: yerel=uzak=PR#110 head 50352bc; main 6c878c1; harici
+(ChatGPT) değişiklik GitHub'a ULAŞMAMIŞ; PR #102 açık bırakıldı.
+
+- [ ] P1 DB: complete_job stale-worker guard'ı; jobs dedupe index'i PARTIAL
+  (queued/running) → dry-run→canlı + ertesi-gün + anahtar-sonrası yeniden
+  kuyruklama açılır; publish/humor günlük sayaçlarına advisory lock (yarış);
+  yayında kullanıcı-görünür KAYNAK atfı (ad+doğrulanmış URL+ticari not+tarih
+  bağlamı); academy_extend_lease; mizah reply/DM RPC'leri (gönderim-anı
+  yeniden doğrulama + tek-seviye yorum + duplicate-event).
+- [ ] P2 Worker: bütçe günü Istanbul (UTC bug); per-feed-URL ETag/LM
+  (kaynak-geneli tek etag bug'ı); robots.txt disallow uygulaması; indirme
+  sırasında akış boyut sınırı; kaynak 'active' YALNIZ gerçek makale
+  çıkarımından sonra; bot seçimi adil dağılım (ilk-konu bug'ı); claim batch
+  küçült + iş başına lease uzatma (sıralı işleme süre aşımı); iddia-kaynak
+  otomatik denetimi (sayı/oran metinde yoksa publishable=false); uydurma URL
+  reddi domain değil doğrulanmış-URL bazlı; arşiv tarama cursor'u.
+- [ ] P3 Görsel: resvg-wasm + gömülü TTF ile deterministik PNG bilgi/mizah
+  kartı (sarı-beyaz, TR karakter); storage→academy_media→feed_media hattı;
+  en az 1 Akademi + 1 Mizah kartı GERÇEK render + gözle kontrol.
+- [ ] P4 Mizah B–E: kendi postuna yorum cevabı, DM cevabı, kendiliğinden
+  yorum tetiği (maintenance event tarama), izinli kendiliğinden DM; tümü
+  gönderim anında yeniden doğrulama + testler.
+- [ ] P5 Kaynak: 41→80-100 aday (publisher_group tekilleştirme, TR somut);
+  probe v2 içerik-çıkarım kanıtı (örnek URL+başlık+metin uzunluğu+tarih) →
+  canlı rapor; seed yenile.
+- [ ] P6 Flutter: Ayarlar'da mizah yorum/DM tercihleri (prefs tablosu RLS'i
+  hazır); tüm test paketleri; PR güncelle; kanıtlı rapor.
+
 ## Kurulum (canlı etkinleştirme — henüz YAPILMADI)
 
 1. `supabase functions deploy academy-worker` (verify_jwt default ON kalsın

@@ -126,9 +126,28 @@ create table if not exists public.feed_comments (
   owner_id uuid not null references public.profiles(id) on delete cascade,
   text text not null,
   author_name text not null default '',
+  parent_comment_id uuid references public.feed_comments(id)
+    on delete cascade,
   is_deleted boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Prod tek-seviye cevap kuralı aynası (20260621120000).
+create or replace function public.enforce_single_level_comment_reply()
+returns trigger language plpgsql security definer as $$
+begin
+  if new.parent_comment_id is not null then
+    if not exists (select 1 from public.feed_comments p
+      where p.id = new.parent_comment_id
+        and p.parent_comment_id is null and p.post_id = new.post_id) then
+      raise exception 'reply parent must be a top-level comment on same post';
+    end if;
+  end if;
+  return new;
+end; $$;
+drop trigger if exists trg_fc_single_level on public.feed_comments;
+create trigger trg_fc_single_level before insert on public.feed_comments
+  for each row execute function public.enforce_single_level_comment_reply();
 alter table public.feed_comments enable row level security;
 create policy feed_comments_insert_self on public.feed_comments
   for insert to authenticated with check (owner_id = auth.uid());
@@ -168,6 +187,17 @@ create table if not exists public.conversation_participants (
 );
 grant select, insert on public.conversations,
   public.conversation_participants to authenticated, service_role;
+
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null
+    references public.conversations(id) on delete cascade,
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null,
+  message_type text not null default 'text',
+  created_at timestamptz not null default now()
+);
+grant select, insert on public.messages to authenticated, service_role;
 
 -- ── app_runtime_config + okuyucular (20260923 aynası) ──
 create table if not exists public.app_runtime_config (

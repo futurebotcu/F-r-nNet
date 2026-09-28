@@ -111,4 +111,45 @@ begin
   raise notice 'PASS 04 yayın (dry-run/kill-switch/idempotent/sınırlar)';
 end
 $$;
+
+-- P7: kullanıcı-görünür KAYNAK atfı — ad + doğrulanmış URL + ticari not +
+-- haberde tarih; URL sicilden gelir (taslak gövdesinden değil).
+do $$
+declare
+  v_src uuid; v_item uuid; v_draft uuid; r record; v_text text;
+begin
+  insert into public.academy_sources (slug, name, domain, is_commercial,
+    topics, status)
+  values ('attr_test', 'Atıf Testi Kurumu', 'attr-test.example',
+    true, array['un_tahil'], 'active')
+  returning id into v_src;
+  insert into public.academy_content_items (source_id, canonical_url, url,
+    title, published_at, content_kind, status, full_text)
+  values (v_src, 'https://attr-test.example/makale-1',
+    'https://attr-test.example/makale-1', 'Makale',
+    '2026-09-20T08:00:00Z', 'news', 'assigned', 'metin')
+  returning id into v_item;
+  insert into public.academy_drafts (content_item_id, bot_key, kind, title,
+    body, publishable, status, idempotency_key, date_context)
+  values (v_item, 'un_tahil', 'news', 'Atıf başlığı', 'Gövde metni burada.',
+    true, 'media_ready', 'p-attr', '20 Eylül 2026')
+  returning id into v_draft;
+
+  select * into r from public.academy_publish_draft(v_draft);
+  if r.result <> 'published' then
+    raise exception 'P7a: atıf yayını: %', r.result;
+  end if;
+  select text into v_text from public.feed_posts where id = r.post_id;
+  if v_text not like '%Kaynak: Atıf Testi Kurumu (üretici içeriği)%' then
+    raise exception 'P7b: kaynak adı/ticari not yok: %', v_text;
+  end if;
+  if v_text not like '%https://attr-test.example/makale-1%' then
+    raise exception 'P7c: doğrulanmış kaynak URL yok';
+  end if;
+  if v_text not like '%Tarih: 20 Eylül 2026%' then
+    raise exception 'P7d: haber tarih bağlamı yok';
+  end if;
+  raise notice 'PASS 04-P7 kaynak atfı';
+end
+$$;
 reset role;

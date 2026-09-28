@@ -260,8 +260,13 @@ create table if not exists public.academy_jobs (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Dedupe YALNIZ bekleyen/çalışan işlerde: tamamlanan (succeeded/dead) iş
+-- aynı anahtarla yeniden kuyruklamayı ENGELLEMEZ — dry-run→canlı geçişi,
+-- günlük sınırdan ertelenen taslak ve anahtar-sonrası toparlanma çalışır.
+drop index if exists academy_jobs_dedupe_uq;
 create unique index if not exists academy_jobs_dedupe_uq
-  on public.academy_jobs (dedupe_key) where dedupe_key is not null;
+  on public.academy_jobs (dedupe_key)
+  where dedupe_key is not null and status in ('queued', 'running');
 create index if not exists academy_jobs_ready_idx
   on public.academy_jobs (status, run_after, priority);
 alter table public.academy_jobs enable row level security;
@@ -363,9 +368,9 @@ begin
     (job_type, payload, run_after, priority, dedupe_key, max_attempts)
   values (p_job_type, p_payload, p_run_after, p_priority, p_dedupe_key,
           p_max_attempts)
-  on conflict (dedupe_key) where dedupe_key is not null do nothing
+  on conflict do nothing -- arbiter: partial dedupe index (queued/running)
   returning id into v_id;
-  return v_id; -- null = dedupe (zaten kuyrukta)
+  return v_id; -- null = dedupe (zaten kuyrukta/çalışıyor)
 end;
 $$;
 
@@ -421,6 +426,16 @@ begin
   select * into v_job from public.academy_jobs where id = p_job_id
     for update;
   if not found then return 'not_found'; end if;
+  -- Bayat worker koruması: lease'i başka worker devraldıysa eski worker
+  -- işi complete EDEMEZ (çifte tamamlama / geç yan etki engeli).
+  if v_job.status = 'running'
+     and v_job.locked_by is distinct from p_worker then
+    insert into public.academy_job_runs
+      (job_id, worker, started_at, finished_at, outcome, error)
+    values (p_job_id, coalesce(p_worker, ''), now(), now(),
+            'stale_worker_rejected', p_error);
+    return 'stale_worker';
+  end if;
 
   if p_outcome = 'succeeded' then
     v_final := 'succeeded';
@@ -449,6 +464,28 @@ begin
   values (p_job_id, coalesce(p_worker, v_job.locked_by, ''),
           coalesce(v_job.locked_at, now()), now(), v_final, p_error);
   return v_final;
+end;
+$$;
+
+-- Lease uzatma (heartbeat): uzun süren iş, sahipliği koruyarak süre alır.
+create or replace function public.academy_extend_lease(
+  p_job_id bigint,
+  p_worker text,
+  p_lease_seconds int default 120
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare v_ok boolean;
+begin
+  update public.academy_jobs
+     set lease_until = now() + make_interval(secs => p_lease_seconds),
+         updated_at = now()
+   where id = p_job_id and status = 'running' and locked_by = p_worker
+  returning true into v_ok;
+  return coalesce(v_ok, false);
 end;
 $$;
 
@@ -527,9 +564,12 @@ begin
     return query select 'dry_run_done'::text, null::uuid; return;
   end if;
 
-  -- Günlük bot sınırı (Europe/Istanbul günü).
+  -- Günlük bot sınırı (Europe/Istanbul günü). Paralel publish çağrılarının
+  -- sayacı yarış koşuluyla aşmaması için bot+gün bazlı advisory kilit.
   v_today_start := date_trunc('day',
     now() at time zone 'Europe/Istanbul') at time zone 'Europe/Istanbul';
+  perform pg_advisory_xact_lock(hashtextextended(
+    'academy_publish:' || v_draft.bot_key || ':' || v_today_start::date, 0));
   select count(*) into v_bot_today from public.academy_drafts d
    where d.bot_key = v_draft.bot_key and d.status = 'published'
      and d.updated_at >= v_today_start;
@@ -553,6 +593,34 @@ begin
   v_text := v_draft.title || E'\n\n' || v_draft.body ||
     case when v_draft.practical_notes <> ''
       then E'\n\n' || v_draft.practical_notes else '' end;
+  -- Kullanıcı-görünür KAYNAK atfı: ad + DOĞRULANMIŞ URL sicilden (modelden
+  -- asla); ticari kaynak notu + haberde tarih bağlamı. Mizahta kaynak yok.
+  if v_draft.content_item_id is not null then
+    declare
+      v_src_name text;
+      v_src_commercial boolean;
+      v_item_url text;
+      v_item_published timestamptz;
+    begin
+      select s.name, s.is_commercial, i.canonical_url, i.published_at
+        into v_src_name, v_src_commercial, v_item_url, v_item_published
+        from public.academy_content_items i
+        join public.academy_sources s on s.id = i.source_id
+       where i.id = v_draft.content_item_id;
+      if v_src_name is not null then
+        v_text := v_text || E'\n\n' || 'Kaynak: ' || v_src_name ||
+          case when v_src_commercial then ' (üretici içeriği)' else '' end ||
+          case when v_item_url is not null and v_item_url <> ''
+            then E'\n' || v_item_url else '' end;
+        if v_draft.kind = 'news' then
+          v_text := v_text || E'\n' || 'Tarih: ' ||
+            coalesce(nullif(v_draft.date_context, ''),
+              coalesce(to_char(v_item_published, 'DD.MM.YYYY'),
+                'kaynakta belirtilmemiş'));
+        end if;
+      end if;
+    end;
+  end if;
   insert into public.feed_posts (owner_id, type, text, tags)
   values (v_bot.profile_id, 'announcement', v_text, v_draft.tags)
   returning id into v_post;
@@ -638,6 +706,17 @@ begin
 end;
 $$;
 
+-- Mizah günlük yorum sayacı yarışına karşı gün-bazlı advisory kilit anahtarı.
+create or replace function public.academy_humor_day_lock()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  select pg_advisory_xact_lock(hashtextextended('academy_humor:' ||
+    (now() at time zone 'Europe/Istanbul')::date, 0));
+$$;
+
 create or replace function public.academy_humor_publish_comment(
   p_post_id uuid,
   p_body text,
@@ -670,6 +749,8 @@ begin
   if v_owner is null then
     return query select 'post_gone'::text, null::uuid; return;
   end if;
+  -- Paralel çağrılar günlük sınırı yarışla aşamasın.
+  perform public.academy_humor_day_lock();
   v_guard := public.academy_humor_can_comment(v_owner);
   if v_guard <> 'ok' then
     return query select ('blocked_' || v_guard)::text, null::uuid; return;
@@ -690,6 +771,173 @@ begin
     (kind, target_user_id, post_id, comment_id, event_key)
   values ('comment', v_owner, p_post_id, v_comment, p_event_key);
   return query select 'published'::text, v_comment;
+end;
+$$;
+
+-- Mizah YANIT (B): kendi gönderisindeki yoruma / kendisine verilen cevaba
+-- tek-seviye kuralına uygun cevap. Gönderim ANINDA yeniden doğrulama:
+-- yorum/gönderi silinmemiş, engel yok, bot-bot yok, duplicate-event yok.
+-- (72 saat/duyuru sınırı KENDİLİĞİNDEN yorum içindir; kullanıcı botla
+-- konuşmayı kendisi başlattığı için burada uygulanmaz.)
+create or replace function public.academy_humor_publish_reply(
+  p_parent_comment_id uuid,
+  p_body text,
+  p_event_key text
+)
+returns table (result text, comment_id uuid)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_bot public.academy_bot_profiles;
+  v_parent record;
+  v_reply_to uuid;
+  v_comment uuid;
+begin
+  select * into v_bot from public.academy_bot_profiles
+    where is_humor and is_active limit 1;
+  if not found then
+    return query select 'no_humor_bot'::text, null::uuid; return;
+  end if;
+  if exists (select 1 from public.academy_humor_interactions
+             where event_key = p_event_key) then
+    return query select 'duplicate_event'::text, null::uuid; return;
+  end if;
+  select c.id, c.owner_id, c.post_id, c.parent_comment_id, c.is_deleted,
+         p.is_deleted as post_deleted, p.owner_id as post_owner
+    into v_parent
+    from public.feed_comments c
+    join public.feed_posts p on p.id = c.post_id
+   where c.id = p_parent_comment_id;
+  if not found or v_parent.is_deleted or v_parent.post_deleted then
+    return query select 'comment_gone'::text, null::uuid; return;
+  end if;
+  if v_parent.owner_id = v_bot.profile_id then
+    return query select 'blocked_self_reply'::text, null::uuid; return;
+  end if;
+  -- bot-bot döngüsü yok
+  if exists (select 1 from public.profiles
+             where id = v_parent.owner_id and is_bot) then
+    return query select 'blocked_target_is_bot'::text, null::uuid; return;
+  end if;
+  -- çift yön engel
+  if exists (select 1 from public.user_blocks
+             where (blocker_id = v_parent.owner_id
+                    and blocked_user_id = v_bot.profile_id)
+                or (blocker_id = v_bot.profile_id
+                    and blocked_user_id = v_parent.owner_id)) then
+    return query select 'blocked_blocked'::text, null::uuid; return;
+  end if;
+  if not public.app_config_bool('academy_enabled', false) then
+    return query select 'blocked_academy_disabled'::text, null::uuid; return;
+  end if;
+  if public.app_config_bool('academy_dry_run', true) then
+    return query select 'dry_run_done'::text, null::uuid; return;
+  end if;
+
+  -- Tek-seviye kuralı: parent bir cevapsa, botun cevabı ÜST yoruma bağlanır.
+  v_reply_to := coalesce(v_parent.parent_comment_id, v_parent.id);
+  insert into public.feed_comments (post_id, owner_id, text,
+    parent_comment_id)
+  values (v_parent.post_id, v_bot.profile_id, p_body, v_reply_to)
+  returning id into v_comment;
+  insert into public.academy_humor_interactions
+    (kind, target_user_id, post_id, comment_id, event_key)
+  values ('reply', v_parent.owner_id, v_parent.post_id, v_comment,
+          p_event_key);
+  return query select 'published'::text, v_comment;
+end;
+$$;
+
+-- Mizah DM (C/E): var olan konuşmaya cevap; kendiliğinden İLK mesaj yalnız
+-- açık kullanıcı izniyle (allow_humor_dm). Gönderim anında yeniden doğrulama.
+create or replace function public.academy_humor_send_dm(
+  p_conversation_id uuid,
+  p_body text,
+  p_event_key text,
+  p_proactive boolean default false
+)
+returns table (result text, message_id uuid)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_bot public.academy_bot_profiles;
+  v_other uuid;
+  v_msg uuid;
+begin
+  select * into v_bot from public.academy_bot_profiles
+    where is_humor and is_active limit 1;
+  if not found then
+    return query select 'no_humor_bot'::text, null::uuid; return;
+  end if;
+  if exists (select 1 from public.academy_humor_interactions
+             where event_key = p_event_key) then
+    return query select 'duplicate_event'::text, null::uuid; return;
+  end if;
+  -- Bot bu konuşmanın katılımcısı olmalı; karşı taraf tek ve bot olmamalı.
+  if not exists (select 1 from public.conversation_participants
+                 where conversation_id = p_conversation_id
+                   and user_id = v_bot.profile_id) then
+    return query select 'not_participant'::text, null::uuid; return;
+  end if;
+  select user_id into v_other from public.conversation_participants
+   where conversation_id = p_conversation_id
+     and user_id <> v_bot.profile_id
+   limit 1;
+  if v_other is null then
+    return query select 'no_counterpart'::text, null::uuid; return;
+  end if;
+  if exists (select 1 from public.profiles
+             where id = v_other and is_bot) then
+    return query select 'blocked_target_is_bot'::text, null::uuid; return;
+  end if;
+  if exists (select 1 from public.user_blocks
+             where (blocker_id = v_other
+                    and blocked_user_id = v_bot.profile_id)
+                or (blocker_id = v_bot.profile_id
+                    and blocked_user_id = v_other)) then
+    return query select 'blocked_blocked'::text, null::uuid; return;
+  end if;
+  if p_proactive then
+    -- Kendiliğinden DM: varsayılan KAPALI; açık, geri alınabilir izin şart.
+    if not exists (select 1 from public.academy_engagement_prefs
+                   where user_id = v_other and allow_humor_dm) then
+      return query select 'blocked_dm_not_opted_in'::text, null::uuid;
+      return;
+    end if;
+  else
+    -- Cevap: kullanıcı konuşmada bottan SONRA en az bir mesaj yazmış olmalı
+    -- (kullanıcının başlattığı/sürdürdüğü sohbet; boşuna takip mesajı yok).
+    if not exists (
+      select 1 from public.messages m
+       where m.conversation_id = p_conversation_id
+         and m.sender_id = v_other
+         and m.created_at > coalesce((
+           select max(created_at) from public.messages
+            where conversation_id = p_conversation_id
+              and sender_id = v_bot.profile_id), '-infinity'::timestamptz)
+    ) then
+      return query select 'no_pending_user_message'::text, null::uuid;
+      return;
+    end if;
+  end if;
+  if not public.app_config_bool('academy_enabled', false) then
+    return query select 'blocked_academy_disabled'::text, null::uuid; return;
+  end if;
+  if public.app_config_bool('academy_dry_run', true) then
+    return query select 'dry_run_done'::text, null::uuid; return;
+  end if;
+
+  insert into public.messages (conversation_id, sender_id, content)
+  values (p_conversation_id, v_bot.profile_id, p_body)
+  returning id into v_msg;
+  insert into public.academy_humor_interactions
+    (kind, target_user_id, conversation_id, event_key)
+  values ('dm', v_other, p_conversation_id, p_event_key);
+  return query select 'published'::text, v_msg;
 end;
 $$;
 
@@ -824,6 +1072,25 @@ revoke execute on function public.academy_humor_publish_comment(
   uuid, text, text) from public, anon, authenticated;
 grant execute on function public.academy_humor_publish_comment(
   uuid, text, text) to service_role;
+
+revoke execute on function public.academy_extend_lease(bigint, text, int)
+  from public, anon, authenticated;
+grant execute on function public.academy_extend_lease(bigint, text, int)
+  to service_role;
+
+revoke execute on function public.academy_humor_day_lock()
+  from public, anon, authenticated;
+grant execute on function public.academy_humor_day_lock() to service_role;
+
+revoke execute on function public.academy_humor_publish_reply(
+  uuid, text, text) from public, anon, authenticated;
+grant execute on function public.academy_humor_publish_reply(
+  uuid, text, text) to service_role;
+
+revoke execute on function public.academy_humor_send_dm(
+  uuid, text, text, boolean) from public, anon, authenticated;
+grant execute on function public.academy_humor_send_dm(
+  uuid, text, text, boolean) to service_role;
 
 -- ────────────────────────────────────────────────────────────────────────
 -- 11) 11 bot idempotent seed (sabit UUID'ler; giriş-kapalı sistem hesabı).

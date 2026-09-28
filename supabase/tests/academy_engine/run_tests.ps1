@@ -88,8 +88,9 @@ try {
   Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
 
   $sequential = @('01_seed_idempotent.sql', '02_rls_privileges.sql',
-                  '03_queue.sql', '04_publish.sql', '05_humor_guards.sql',
-                  '06_dm_rules.sql', '07_sources_seed.sql', '08_cron_tick.sql')
+                  '07_sources_seed.sql', '03_queue.sql', '04_publish.sql',
+                  '05_humor_guards.sql', '06_dm_rules.sql',
+                  '08_cron_tick.sql', '09_humor_dialogs.sql')
   foreach ($f in $sequential) {
     Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir $f)) $f
     Write-Host "OK: $f"

@@ -74,7 +74,50 @@ begin
   v := public.academy_incr_usage('llm_requests', 3);
   if v <> 5 then raise exception 'Q4a: usage sayacı % (5)', v; end if;
 
-  raise notice 'PASS 03 kuyruk + lease + retry + sayaç';
+  -- Q5: BAYAT WORKER devralınan işi complete EDEMEZ.
+  v_id := public.academy_enqueue_job('maintenance', '{}'::jsonb, now(), 100,
+    'dedupe-k3', 5);
+  perform public.academy_claim_jobs('w-old', 1, 60);
+  update public.academy_jobs set lease_until = now() - interval '1 second'
+    where id = v_id;
+  perform public.academy_claim_jobs('w-new', 1, 60); -- devralma
+  if public.academy_complete_job(v_id, 'succeeded', null, 60, 'w-old')
+     <> 'stale_worker' then
+    raise exception 'Q5a: bayat worker complete edebildi';
+  end if;
+  select * into j from public.academy_jobs where id = v_id;
+  if j.status <> 'running' or j.locked_by <> 'w-new' then
+    raise exception 'Q5b: bayat complete işi bozdu: %', j;
+  end if;
+  if public.academy_complete_job(v_id, 'succeeded', null, 60, 'w-new')
+     <> 'succeeded' then
+    raise exception 'Q5c: sahip worker complete edemedi';
+  end if;
+
+  -- Q6: PARTIAL dedupe — tamamlanan iş aynı anahtarla YENİDEN kuyruklanır
+  -- (dry-run→canlı, ertesi gün, anahtar-sonrası toparlanma senaryoları).
+  v := public.academy_enqueue_job('maintenance', '{}'::jsonb, now(), 100,
+    'dedupe-k3', 5);
+  if v is null then
+    raise exception 'Q6a: tamamlanan iş dedupe anahtarını kilitledi';
+  end if;
+  -- ama kuyruktayken hâlâ dedupe.
+  if public.academy_enqueue_job('maintenance', '{}'::jsonb, now(), 100,
+    'dedupe-k3', 5) is not null then
+    raise exception 'Q6b: kuyruktaki iş dedupe delindi';
+  end if;
+
+  -- Q7: lease heartbeat yalnız sahibine.
+  perform public.academy_claim_jobs('w-hb', 1, 30);
+  if not public.academy_extend_lease(v, 'w-hb', 300) then
+    raise exception 'Q7a: sahip lease uzatamadı';
+  end if;
+  if public.academy_extend_lease(v, 'w-other', 300) then
+    raise exception 'Q7b: yabancı worker lease uzatabildi';
+  end if;
+  perform public.academy_complete_job(v, 'succeeded', null, 60, 'w-hb');
+
+  raise notice 'PASS 03 kuyruk + lease + retry + sayaç + stale/dedupe/hb';
 end
 $$;
 reset role;
