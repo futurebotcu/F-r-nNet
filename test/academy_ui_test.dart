@@ -3,6 +3,7 @@ import 'package:firin_defter/features/academy/data/academy_repository.dart';
 import 'package:firin_defter/features/academy/models/academy_bot_profile.dart';
 import 'package:firin_defter/features/academy/providers/academy_providers.dart';
 import 'package:firin_defter/features/academy/screens/academy_page.dart';
+import 'package:firin_defter/features/academy/widgets/humor_prefs_tiles.dart';
 import 'package:firin_defter/features/auth/providers/auth_providers.dart';
 import 'package:firin_defter/features/feed/models/feed_post.dart';
 import 'package:firin_defter/features/feed/models/post_type.dart';
@@ -165,6 +166,48 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(AppStrings.academyAiBadge), findsNothing);
       expect(find.text(AppStrings.academyHumorBadge), findsNothing);
+    });
+  });
+
+  group('HumorPrefsTiles (Ayarlar anahtarları)', () {
+    testWidgets('DM varsayılan KAPALI; anahtarlar repo tercihi yazar', (
+      tester,
+    ) async {
+      final repo = LocalAcademyRepository(bots: [_bot()]);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            academyRepositoryProvider.overrideWithValue(repo),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: HumorPrefsTiles()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Varsayılanlar: yorum açık, kendiliğinden DM KAPALI.
+      final dmSwitch = tester.widget<SwitchListTile>(
+        find.byKey(const ValueKey('humor_pref_dm')),
+      );
+      expect(dmSwitch.value, isFalse);
+      final cSwitch = tester.widget<SwitchListTile>(
+        find.byKey(const ValueKey('humor_pref_comments')),
+      );
+      expect(cSwitch.value, isTrue);
+
+      // DM iznini aç → repoya yazılır; kapat → geri alınır.
+      await tester.tap(find.byKey(const ValueKey('humor_pref_dm')));
+      await tester.pumpAndSettle();
+      expect(repo.prefs.allowDm, isTrue);
+      expect(repo.prefsWrites, 1);
+      await tester.tap(find.byKey(const ValueKey('humor_pref_dm')));
+      await tester.pumpAndSettle();
+      expect(repo.prefs.allowDm, isFalse);
+
+      // Yorum iznini kapat.
+      await tester.tap(find.byKey(const ValueKey('humor_pref_comments')));
+      await tester.pumpAndSettle();
+      expect(repo.prefs.allowComments, isFalse);
     });
   });
 

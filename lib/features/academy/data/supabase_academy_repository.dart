@@ -36,4 +36,32 @@ class SupabaseAcademyRepository implements AcademyRepository {
     if (row == null) return null;
     return AcademyBotProfile.fromRow(row);
   }
+
+  @override
+  Future<HumorPrefs> humorPrefs() async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return const HumorPrefs();
+    final row = await _client
+        .from('academy_engagement_prefs')
+        .select('allow_humor_comments, allow_humor_dm')
+        .eq('user_id', uid)
+        .maybeSingle();
+    if (row == null) return const HumorPrefs();
+    return HumorPrefs(
+      allowComments: (row['allow_humor_comments'] as bool?) ?? true,
+      allowDm: (row['allow_humor_dm'] as bool?) ?? false,
+    );
+  }
+
+  @override
+  Future<void> setHumorPrefs(HumorPrefs prefs) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return;
+    await _client.from('academy_engagement_prefs').upsert({
+      'user_id': uid,
+      'allow_humor_comments': prefs.allowComments,
+      'allow_humor_dm': prefs.allowDm,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }, onConflict: 'user_id');
+  }
 }

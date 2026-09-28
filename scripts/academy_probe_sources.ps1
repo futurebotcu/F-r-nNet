@@ -38,6 +38,13 @@ function Probe-Url {
       $hasDate = $body -match '(pubDate|published|updated|dc:date)'
       $r.note = "items=$items title=$hasTitle date=$hasDate"
       if ($items -lt 1) { $r.kind = 'feed_empty' }
+      # İlk makale linki (içerik-çıkarım kanıtı için).
+      $im = [regex]::Match($body,
+        '<item[\s>][\s\S]*?<link>\s*([^<\s]+)\s*</link>')
+      if (-not $im.Success) {
+        $im = [regex]::Match($body, '<entry[\s>][\s\S]*?<link[^>]*href="([^"]+)"')
+      }
+      if ($im.Success) { $r.first_link = $im.Groups[1].Value }
     } elseif ($body -match '<(urlset|sitemapindex)[\s>]') {
       $r.kind = 'sitemap'
       $r.note = 'locs=' + ([regex]::Matches($body, '<loc>')).Count
@@ -81,12 +88,73 @@ foreach ($s in $data.sources) {
     Start-Sleep -Milliseconds $DelayMs
   }
 
+  # İÇERİK-ÇIKARIM KANITI: feed bulunduysa ilk makaleyi gerçekten oku;
+  # başlık + ana metin uzunluğu + tarih var/yok kaydet. (RSS bulunması
+  # tek başına 'active' kanıtı DEĞİLDİR — bkz. verdict açıklaması.)
+  $entry.content_proof = $null
+  $firstLink = ($entry.probes | Where-Object { $_.first_link } |
+    Select-Object -First 1).first_link
+  if ($firstLink) {
+    Start-Sleep -Milliseconds $DelayMs
+    $art = Probe-Url $firstLink
+    if ($art.ok -and $art.status -eq 200) {
+      try {
+        $resp2 = Invoke-WebRequest -Uri $firstLink -TimeoutSec $TimeoutSec `
+          -MaximumRedirection 5 -UserAgent $UA -UseBasicParsing
+        $html = $resp2.Content
+        $t = [regex]::Match($html,
+          '<meta[^>]+property="og:title"[^>]+content="([^"]*)"')
+        if (-not $t.Success) {
+          $t = [regex]::Match($html, '<title[^>]*>([\s\S]*?)</title>')
+        }
+        $scope = [regex]::Match($html, '<article[\s>][\s\S]*?</article>')
+        if (-not $scope.Success) {
+          $scope = [regex]::Match($html, '<main[\s>][\s\S]*?</main>')
+        }
+        $inner = if ($scope.Success) { $scope.Value } else { $html }
+        $textOnly = ($inner -replace '<script[\s\S]*?</script>', ' ' `
+          -replace '<style[\s\S]*?</style>', ' ' -replace '<[^>]+>', ' ' `
+          -replace '\s+', ' ').Trim()
+        $dateFound = [bool]([regex]::IsMatch($html,
+          '(article:published_time|datePublished|<time[^>]+datetime=)'))
+        $entry.content_proof = [ordered]@{
+          url = $firstLink
+          title = ($t.Groups[1].Value.Trim() -replace '\s+', ' ')
+          text_len = $textOnly.Length
+          date_found = $dateFound
+          method = 'rss_item->html_extract'
+          checked_at = (Get-Date).ToUniversalTime().ToString('o')
+          ok = ($textOnly.Length -ge 300 -and $t.Success)
+        }
+      } catch {
+        $entry.content_proof = [ordered]@{
+          url = $firstLink; ok = $false
+          error = $_.Exception.Message
+          checked_at = (Get-Date).ToUniversalTime().ToString('o')
+        }
+      }
+    } else {
+      $entry.content_proof = [ordered]@{
+        url = $firstLink; ok = $false
+        error = 'article_fetch_failed status=' + $art.status
+        checked_at = (Get-Date).ToUniversalTime().ToString('o')
+      }
+    }
+  }
+
   # Karar: feed (başlık+tarih+item'lı) → active_feed adayı;
   # sitemap/html erişilebilir → active_html adayı (metin çıkarımı worker'da
   # kanıtlanana dek 'reachable'); hiçbiri → degraded.
   switch ($bestKind) {
-    'feed'    { $entry.verdict = 'reachable_feed'
-                $entry.verdict_reason = 'çalışan RSS/Atom bulundu' }
+    'feed'    { if ($entry.content_proof -and $entry.content_proof.ok) {
+                  $entry.verdict = 'content_proved'
+                  $entry.verdict_reason =
+                    'feed + gerçek makale çıkarımı doğrulandı'
+                } else {
+                  $entry.verdict = 'reachable_feed'
+                  $entry.verdict_reason =
+                    'RSS/Atom var; makale çıkarımı henüz kanıtlanmadı'
+                } }
     'sitemap' { $entry.verdict = 'reachable_sitemap'
                 $entry.verdict_reason = 'sitemap erişilebilir (içerik çıkarımı ayrıca kanıtlanmalı)' }
     'html'    { $entry.verdict = 'reachable_html'
@@ -100,6 +168,7 @@ foreach ($s in $data.sources) {
 $summary = [ordered]@{
   generated_at = (Get-Date).ToUniversalTime().ToString('o')
   candidates_total = $results.Count
+  content_proved = @($results | Where-Object { $_.verdict -eq 'content_proved' }).Count
   reachable_feed = @($results | Where-Object { $_.verdict -eq 'reachable_feed' }).Count
   reachable_sitemap = @($results | Where-Object { $_.verdict -eq 'reachable_sitemap' }).Count
   reachable_html = @($results | Where-Object { $_.verdict -eq 'reachable_html' }).Count

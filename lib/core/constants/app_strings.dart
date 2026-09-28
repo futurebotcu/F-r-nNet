@@ -1975,6 +1975,15 @@ class AppStrings {
   static const String academyLoadError =
       'Akademi içerikleri yüklenemedi. Bağlantını kontrol edip tekrar dene.';
   static const String academyRetryCta = 'Tekrar dene';
+  static const String settingsSectionHumor = 'FırınNet Mizah';
+  static const String humorPrefCommentsTitle = 'Mizah yorumları';
+  static const String humorPrefCommentsSubtitle =
+      'FırınNet Mizah botu paylaşımlarına ara sıra espirili yorum '
+      'bırakabilir.';
+  static const String humorPrefDmTitle = 'Mizah mesajları';
+  static const String humorPrefDmSubtitle =
+      'Bot sana kendiliğinden mesaj gönderebilir (varsayılan kapalı; '
+      'istediğin an geri alabilirsin).';
   static const String academyBotDmClosed =
       'Bu Akademi botu mesaj almıyor; içeriklerine Akademi sayfasından '
       'ulaşabilirsin.';

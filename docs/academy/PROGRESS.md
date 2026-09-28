@@ -106,7 +106,17 @@
    kod/dış entegrasyon/canlı işletim). MERGE + prod migration + deploy +
    cron/vault/secret kurulumu = KULLANICI ONAYI (canlı yayın yetkisi yok).
 
-## V1.1 tamamlama turu — eksik listesi (2026-09-28, head 50352bc)
+## V1.1 tamamlama turu — SONUÇ (2026-09-28)
+
+Tüm P1–P6 maddeleri uygulandı (aşağıdaki liste artık DONE durum kaydıdır):
+P1 ad7a06e, P2+P3 a8b6a94, P5/P6 sonraki commit. Kanıtlar: PG paketi 9
+dosya ALL PASS (91 kaynak/155 eşleştirme, stale-worker, partial-dedupe,
+atıf, B/C/E diyalogları); deno 18/18 + typecheck; kartlar GERÇEK render
+(docs/academy/preview/*.png — TR karakter/taşma gözle OK); analyze 0.
+Kalan canlı doğrulamalar (anahtar/deploy gerektirir): gerçek DeepSeek
+çağrısı, prod Storage yüklemesi, cihazda feed görünümü.
+
+## V1.1 orijinal eksik listesi (kapatıldı — tarihçe)
 
 Durum doğrulaması: yerel=uzak=PR#110 head 50352bc; main 6c878c1; harici
 (ChatGPT) değişiklik GitHub'a ULAŞMAMIŞ; PR #102 açık bırakıldı.

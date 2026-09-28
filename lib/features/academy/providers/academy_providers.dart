@@ -31,6 +31,11 @@ final academyBotsByIdProvider =
   return {for (final b in bots) b.profileId: b};
 });
 
+/// Kullanıcının mizah etkileşim tercihleri (Ayarlar anahtarları).
+final humorPrefsProvider = FutureProvider.autoDispose<HumorPrefs>((ref) {
+  return ref.watch(academyRepositoryProvider).humorPrefs();
+});
+
 /// Belirli bir profilin bot metadata'sı (profil sayfası davranışı).
 final academyBotProfileProvider = FutureProvider.family
     .autoDispose<AcademyBotProfile?, String>((ref, userId) async {
