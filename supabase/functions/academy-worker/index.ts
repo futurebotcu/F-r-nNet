@@ -17,6 +17,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   BAKERY_TOPICAL_RE,
   buildDraftPrompt,
+  decodeBody,
   buildHumorPrompt,
   checkClaimsAgainstSource,
   discoverArticles,
@@ -137,7 +138,9 @@ async function safeFetch(
     }
     return {
       status: resp.status,
-      text: new TextDecoder().decode(buf),
+      // TR siteleri icin charset tespiti (windows-1254/iso-8859-9):
+      // UTF-8 varsayimi basliklari bozar ve tur denetimini kacirtir.
+      text: decodeBody(buf, resp.headers.get("content-type")),
       headers: resp.headers,
     };
   }

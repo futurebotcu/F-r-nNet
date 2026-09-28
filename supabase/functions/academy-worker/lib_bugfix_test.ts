@@ -162,6 +162,14 @@ Deno.test("H2: iletişim/giriş/çerez/kontakt sayfaları KANIT DEĞİL", () => 
       "Datenschutzerklärung und Rechte. ".repeat(40) + "</p>",
       "https://mri.bund.de/de/datenschutz/"),
   ];
+  corp.push(
+    pageOf("Genel Müdür Samet Güneş", "<p>" +
+      "Genel müdürümüzün özgeçmişi. ".repeat(40) + "</p>",
+      "https://iskur.gov.tr/kurumsal/genel-mudur/"),
+    pageOf("Tarihçe - KOSGEB", "<p>" +
+      "Kurumumuzun kuruluş tarihçesi ve gelişimi. ".repeat(40) + "</p>",
+      "https://kosgeb.gov.tr/site/tr/genel/tarihce"),
+  );
   for (const c of corp) {
     assert(!isLikelyArticle(c.page, c.html, c.url),
       "kurumsal/biyografi/gizlilik kanıt sayılmamalıydı: " + c.url);
@@ -304,4 +312,26 @@ Deno.test("H3: reddedilen sayfa İLERLEME sayılır; alt-sitemap geçişi " +
   eq(all.filter((t) => t === "Makale 1").length, 1,
     "dupe URL tek makale üretir");
   assert(all.includes("Makale 2"), "alt-sitemap geçişinde kayıp yok");
+});
+
+Deno.test("H2: TR windows-1254 charset — başlık doğru çözülür ve tür " +
+  "kalıbı kaçmaz", async () => {
+  const { decodeBody, detectCharset } = await import("./lib.ts");
+  // 'Genel Müdür' windows-1254 baytları (ü=0xFC).
+  const bytes = new Uint8Array([
+    ...new TextEncoder().encode("<html><head><title>Genel M"),
+    0xFC,
+    ...new TextEncoder().encode("d"),
+    0xFC,
+    ...new TextEncoder().encode("r</title></head><body><p>"),
+    ...new TextEncoder().encode("ozgecmis ".repeat(60)),
+    ...new TextEncoder().encode("</p></body></html>"),
+  ]);
+  eq(detectCharset("text/html; charset=iso-8859-9", ""), "windows-1254",
+    "iso-8859-9 → windows-1254");
+  const html = decodeBody(bytes, "text/html; charset=iso-8859-9");
+  assert(html.includes("Genel Müdür"), "başlık doğru çözüldü: " + html.slice(0, 60));
+  const page = extractPage(html, "https://x.gov.tr/kurumsal/gm");
+  assert(!isLikelyArticle(page, html, "https://x.gov.tr/kurumsal/gm"),
+    "çözülen 'Genel Müdür' başlığı türe takılmalı");
 });

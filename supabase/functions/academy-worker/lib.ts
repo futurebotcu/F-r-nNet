@@ -100,6 +100,45 @@ export function stripTags(html: string): string {
   );
 }
 
+/** Charset tespiti: Content-Type başlığı → <meta charset>. TR siteleri
+ * sık windows-1254/iso-8859-9 kullanır; UTF-8 varsayımı başlıkları bozar
+ * ('Genel M�d�r') ve tür/kalıp denetimlerini KAÇIRTIR. */
+export function detectCharset(
+  contentType: string | null,
+  asciiHead: string,
+): string {
+  const pick = (s: string): string | null => {
+    const m = s.match(/charset\s*=\s*["']?([\w-]+)/i);
+    if (!m) return null;
+    const cs = m[1].toLowerCase();
+    if (cs === "iso-8859-9" || cs === "windows-1254" || cs === "latin5") {
+      return "windows-1254";
+    }
+    if (cs === "iso-8859-1" || cs === "windows-1252" || cs === "latin1") {
+      return "windows-1252";
+    }
+    if (cs.startsWith("utf")) return "utf-8";
+    return cs;
+  };
+  return pick(contentType ?? "") ?? pick(asciiHead.slice(0, 2048)) ??
+    "utf-8";
+}
+
+/** Gövdeyi doğru charset ile metne çevirir (bilinmeyen charset → utf-8). */
+export function decodeBody(
+  bytes: Uint8Array,
+  contentType: string | null,
+): string {
+  const head = new TextDecoder("ascii", { fatal: false })
+    .decode(bytes.slice(0, 2048));
+  const cs = detectCharset(contentType, head);
+  try {
+    return new TextDecoder(cs).decode(bytes);
+  } catch (_) {
+    return new TextDecoder("utf-8").decode(bytes);
+  }
+}
+
 export interface ExtractedPage {
   title: string;
   canonicalUrl: string | null;
@@ -554,9 +593,9 @@ export function extractPublishedAt(html: string): string | null {
 // Tür kara-kalıpları: iletişim/giriş/üyelik/çerez/gizlilik/arama/sepet
 // gibi sayfalar hangi uzunlukta olursa olsun İÇERİK KANITI değildir.
 const NON_CONTENT_PATH_RE =
-  /(iletisim|ilet%c4%b0sim|contact|kontakt|impressum|imprint|login|log-?in|sign-?in|signin|giris|giri%c5%9f|register|kayit|uyelik|uye(\/|$)|\/user(\/|$)|account|notification|bildirim|cerez|%c3%a7erez|cookie|privacy|gizlilik|datenschutz|kvkk|terms|agb\b|kosullar|kullanim-sartlari|search|arama\b|\/tag(\/|$)|sepet|cart|checkout|basket|form(ular)?(\/|$)|password|sifre|hakkimizda|hakk%c4%b1m%c4%b1zda|about-?us|ueber-uns|uber-uns|firmengruppe|kurumsal\/(bakan|baskan|yonetim)|(^|\/)(bakan|baskan|yonetim|board|management|team|karriere|career|jobs)(\/|$|\?))/i;
+  /(iletisim|ilet%c4%b0sim|contact|kontakt|impressum|imprint|login|log-?in|sign-?in|signin|giris|giri%c5%9f|register|kayit|uyelik|uye(\/|$)|\/user(\/|$)|account|notification|bildirim|cerez|%c3%a7erez|cookie|privacy|gizlilik|datenschutz|kvkk|terms|agb\b|kosullar|kullanim-sartlari|search|arama\b|\/tag(\/|$)|sepet|cart|checkout|basket|form(ular)?(\/|$)|password|sifre|hakkimizda|hakk%c4%b1m%c4%b1zda|about-?us|ueber-uns|uber-uns|firmengruppe|kurumsal\/(bakan|baskan|yonetim)|(^|\/)(bakan|baskan|genel-mudur|mudurumuz|yonetim|board|management|team|karriere|career|jobs|tarihce|history|geschichte|misyon|vizyon|mission|vision)(\/|$|\?))/i;
 const NON_CONTENT_TITLE_RE =
-  /^(iletişim|contact|kontakt\w*|giriş|login|sign in|üye\w*|kayıt|register|çerez\w*|cookie\w*|gizlilik\w*|privacy\w*|datenschutz\w*|kvkk|impressum|arama|search|bildirim\w*|notification\w*|sepet\w*|cart|hakkımızda|about us|über uns|yönetim\w*|başkan\w*|bakan\b|board|management|team|kariyer\w*|career\w*|404|sayfa bulunamadı|page not found|error)\b/i;
+  /^(iletişim|contact|kontakt\w*|giriş|login|sign in|üye\w*|kayıt|register|çerez\w*|cookie\w*|gizlilik\w*|privacy\w*|datenschutz\w*|kvkk|impressum|arama|search|bildirim\w*|notification\w*|sepet\w*|cart|hakkımızda|about us|über uns|yönetim\w*|başkan\w*|bakan\b|genel müdür\w*|müdürümüz|genel kurul\w*|icra komitesi|tarihçe\w*|history|geschichte|misyon\w*|vizyon\w*|board|management|team|kariyer\w*|career\w*|404|sayfa bulunamadı|page not found|error)\b/i;
 
 /** Fırıncılık/gıda konu uygunluğu — kaynak KANITI için içerik bu alanla
  * ilgili olmalı (kurumsal biyografi/tanıtım sayfası kanıt değildir). */

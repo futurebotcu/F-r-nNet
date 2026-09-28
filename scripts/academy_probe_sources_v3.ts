@@ -7,6 +7,7 @@
 // Rapor: docs/academy/source_verification.json (makinece okunabilir).
 import {
   BAKERY_TOPICAL_RE,
+  decodeBody,
   discoverArticles,
   extractPage,
   extractPublishedAt,
@@ -35,7 +36,11 @@ async function get(
       headers: { "User-Agent": UA },
       redirect: "follow",
     });
-    const text = (await r.text()).slice(0, 1_500_000);
+    const buf = new Uint8Array(await r.arrayBuffer());
+    const text = decodeBody(
+      buf.slice(0, 1_500_000),
+      r.headers.get("content-type"),
+    );
     return { status: r.status, text };
   } catch (_) {
     return null;
