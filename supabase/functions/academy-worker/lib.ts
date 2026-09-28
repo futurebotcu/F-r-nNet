@@ -212,120 +212,313 @@ export function parseSitemapLocs(xml: string, max = 500): string[] {
 //      iddia quote'uyla ya kaynakla kapsanmalı; teknik içerik boş claims
 //      ile denetimi AŞAMAZ; desteksiz gıda güvenliği içeriği reddedilir.
 
-const UNIT_CLASSES: Record<string, string[]> = {
-  temp: ["°c", "°f", "derece", "santigrat"],
-  mass: ["kg", "gram", "gr", "mg", " g "],
-  vol: ["ml", "litre", " lt ", " l "],
-  pct: ["%", "yüzde", "percent"],
-  time: [
-    "saniye", " sn", "dakika", " dk", "saat", "hour", "minute", "min ",
-    "gün", "hafta", " ay ", "yıl", "day", "week", "month", "year",
-  ],
-  ppm: ["ppm"],
-};
+// Birim modeli: token → boyut + taban çarpan. Birimi DEĞİŞTİRMEK ile
+// miktarı değiştirmek ayrılır: 20 g = 0.02 kg (eşdeğer) ama 20 g ≠ 20 kg
+// ve 20 dk ≠ 20 saat. °C dönüşümsüz eşitlik; °F ayrı boyut (belirsiz).
+const UNIT_TOKENS: { tok: string; dim: string; factor: number }[] = [
+  { tok: "kilogram", dim: "mass", factor: 1000 },
+  { tok: "kg", dim: "mass", factor: 1000 },
+  { tok: "grams", dim: "mass", factor: 1 },
+  { tok: "gram", dim: "mass", factor: 1 },
+  { tok: "gr", dim: "mass", factor: 1 },
+  { tok: "mg", dim: "mass", factor: 0.001 },
+  { tok: "g", dim: "mass", factor: 1 },
+  { tok: "millilitre", dim: "vol", factor: 1 },
+  { tok: "ml", dim: "vol", factor: 1 },
+  { tok: "litre", dim: "vol", factor: 1000 },
+  { tok: "lt", dim: "vol", factor: 1000 },
+  { tok: "l", dim: "vol", factor: 1000 },
+  { tok: "saniye", dim: "time", factor: 1 / 60 },
+  { tok: "seconds", dim: "time", factor: 1 / 60 },
+  { tok: "second", dim: "time", factor: 1 / 60 },
+  { tok: "sn", dim: "time", factor: 1 / 60 },
+  { tok: "dakika", dim: "time", factor: 1 },
+  { tok: "minutes", dim: "time", factor: 1 },
+  { tok: "minute", dim: "time", factor: 1 },
+  { tok: "min", dim: "time", factor: 1 },
+  { tok: "dk", dim: "time", factor: 1 },
+  { tok: "saat", dim: "time", factor: 60 },
+  { tok: "hours", dim: "time", factor: 60 },
+  { tok: "hour", dim: "time", factor: 60 },
+  { tok: "hr", dim: "time", factor: 60 },
+  { tok: "gün", dim: "time", factor: 1440 },
+  { tok: "days", dim: "time", factor: 1440 },
+  { tok: "day", dim: "time", factor: 1440 },
+  { tok: "hafta", dim: "time", factor: 10080 },
+  { tok: "week", dim: "time", factor: 10080 },
+  { tok: "°f", dim: "tempF", factor: 1 },
+  { tok: "fahrenheit", dim: "tempF", factor: 1 },
+  { tok: "°c", dim: "temp", factor: 1 },
+  { tok: "derece", dim: "temp", factor: 1 },
+  { tok: "santigrat", dim: "temp", factor: 1 },
+  { tok: "celsius", dim: "temp", factor: 1 },
+  { tok: "%", dim: "pct", factor: 1 },
+  { tok: "yüzde", dim: "pct", factor: 1 },
+  { tok: "percent", dim: "pct", factor: 1 },
+  { tok: "ppm", dim: "ppm", factor: 1 },
+];
 
 function normText(s: string): string {
   return s.toLocaleLowerCase("tr-TR").replace(/\s+/g, " ").trim();
 }
 
-/** Metindeki (sayı, birim-sınıfı) çiftleri; birimsizler unit=null. */
-export function extractNumberUnits(
-  text: string,
-): { num: string; unit: string | null }[] {
+export interface Quantity {
+  num: string;
+  dim: string | null;
+  base: number; // dim varsa taban birim değeri
+  index: number;
+}
+
+/** Metindeki miktarlar: sayı + (en uzun eşleşen) birim → boyut+taban. */
+export function extractQuantities(text: string): Quantity[] {
   const t = normText(text).replace(/(\d),(\d)/g, "$1.$2");
-  const out: { num: string; unit: string | null }[] = [];
+  const out: Quantity[] = [];
   const re = /(?<![\d.])(\d+(?:\.\d+)?)(?![\d.])/g;
   for (const m of t.matchAll(re)) {
     const idx = (m.index ?? 0) + m[1].length;
-    const after = t.slice(idx, idx + 14);
-    let unit: string | null = null;
-    for (const [cls, toks] of Object.entries(UNIT_CLASSES)) {
-      if (toks.some((tok) => after.startsWith(tok.trim()) ||
-        after.startsWith(" " + tok.trim()))) {
-        unit = cls;
-        break;
+    const after = t.slice(idx, idx + 16).replace(/^\s+/, " ");
+    let best: { dim: string; factor: number } | null = null;
+    let bestLen = 0;
+    for (const u of UNIT_TOKENS) {
+      const cand = after.startsWith(u.tok)
+        ? u.tok.length
+        : (after.startsWith(" " + u.tok) ? u.tok.length + 1 : 0);
+      if (cand > 0) {
+        // Harfle biten token'dan sonra harf sürüyorsa bu başka bir
+        // kelimedir ('gram'≠'gramaj', 'g'≠'gün'); en uzun eşleşme kazanır
+        // (böylece ' gün' hiçbir zaman ' g' olarak okunmaz).
+        const tail = after.slice(cand, cand + 1);
+        if (/[\p{L}]/u.test(u.tok.slice(-1)) && /[\p{L}]/u.test(tail)) {
+          continue;
+        }
+        if (cand > bestLen) {
+          best = { dim: u.dim, factor: u.factor };
+          bestLen = cand;
+        }
       }
     }
-    out.push({ num: m[1], unit });
+    const value = Number(m[1]);
+    out.push({
+      num: m[1],
+      dim: best?.dim ?? null,
+      base: best ? value * best.factor : value,
+      index: m.index ?? 0,
+    });
   }
   return out;
 }
 
-function numInText(text: string, num: string, unitClass: string | null,
-): boolean {
-  const t = normText(text).replace(/(\d),(\d)/g, "$1.$2");
-  const re = new RegExp(
-    "(?<![\\d.])" + num.replace(".", "\\.") + "(?![\\d.])", "g");
-  for (const m of t.matchAll(re)) {
-    if (unitClass === null) return true;
-    const after = t.slice((m.index ?? 0) + num.length,
-      (m.index ?? 0) + num.length + 14);
-    const toks = UNIT_CLASSES[unitClass] ?? [];
-    if (toks.some((tok) => after.startsWith(tok.trim()) ||
-      after.startsWith(" " + tok.trim()))) return true;
+/** Miktar eşdeğerliği: aynı boyut + taban değerde ~eşitlik. */
+function quantitySupported(q: Quantity, inText: string): boolean {
+  const cands = extractQuantities(inText);
+  if (q.dim === null) {
+    // Birimsiz sayı: metinde tam-sayı sınırıyla geçmesi yeterli.
+    const t = normText(inText).replace(/(\d),(\d)/g, "$1.$2");
+    return new RegExp(
+      "(?<![\\d.])" + q.num.replace(".", "\\.") + "(?![\\d.])",
+    ).test(t);
   }
-  return false;
+  return cands.some((c) =>
+    c.dim === q.dim &&
+    Math.abs(c.base - q.base) <= Math.max(Math.abs(q.base) * 0.001, 1e-9)
+  );
+}
+
+// Olumsuzluk/yön işaretleri (TR fiil olumsuzu -mAmAlI kalıbı + yaygın
+// kelimeler + EN). Yalnız YÖN ÇATIŞMASINI yakalamak için kullanılır.
+const NEG_RE =
+  /(m[ae]m[ae]l[ıi]|m[ae]y[ıi]n(ız)?\b|\bdeğil\b|\byok(tur)?\b|\basla\b|\bsakın\b|önerilmez|tavsiye edilmez|kaçının|yapılmaz|kullanılmaz|edilmez|\bnot\b|\bnever\b|\bavoid\b|should not|must not|do not|don't|shouldn't|mustn't)/i;
+
+function isNegated(s: string): boolean {
+  return NEG_RE.test(normText(s));
+}
+
+// Malzeme/işlem bağlamı: iki dilli eş kümeler (dar gıda/fırın alanı).
+// Kaynaktaki UN miktarı MAYA iddiasını doğrulamaz; TR özet ↔ EN quote
+// eşleşmesi bu sözlük üzerinden kurulur. Eşleşme kurulamazsa iddia
+// 'uncertain' sayılır ve YAYIMLANMAZ (belirsiz içerik çıkmaz).
+// MADDE grupları: iddianın hangi malzemeden bahsettiği. Kaynaktaki UN
+// miktarı MAYA iddiasını doğrulamaz: claim'de madde varsa ve quote'ta
+// BAŞKA maddeler geçiyorsa kesişim şarttır.
+const SUBSTANCE_LEX: string[][] = [
+  ["maya", "yeast"],
+  ["un ", "una ", "unu", "unun", "flour"],
+  ["hamur", "dough"],
+  ["su ", "suy", "water"],
+  ["tuz", "salt"],
+  ["şeker", "sugar"],
+  ["süt", "milk"],
+  ["yağ", "oil", "butter"],
+  ["ekmek", "bread", "loaf"],
+  ["protein"],
+  ["gluten"],
+  ["buhar", "steam"],
+  ["malzeme", "ingredient"],
+];
+// SÜREÇ/BAĞLAM grupları: işlem, süre, ölçüm bağlamı.
+const PROCESS_LEX: string[][] = [
+  ["fermantasyon", "fermentation", "ferment"],
+  ["sıcaklık", "temperature", "derece", "°c"],
+  ["fırın", "oven", "bakes", "baking", "pişir"],
+  ["parti", "batch"],
+  ["ağırlı", "weigh"],
+  ["dinlendir", "beklet", "rest", "hold"],
+  ["karıştır", "mix", "knead", "yoğur"],
+  ["ekle", "add"],
+  ["aşama", "adım", "stage", "step", "phase"],
+  ["işlem", "süreç", "process", "kayd", "kayıt", "record", "not"],
+  ["süre", "sür", "time", "duration", "last", "minute", "dakika", "saat",
+    "hour"],
+  ["nem", "humidity", "hydration", "hidrasyon"],
+  ["şekillendir", "shap"],
+  ["standart", "spesifikasyon", "threshold", "sınır", "limit"],
+];
+
+function groupsIn(lex: string[][], text: string): Set<number> {
+  const t = normText(text);
+  const hit = new Set<number>();
+  lex.forEach((group, gi) => {
+    if (group.some((w) => t.includes(w))) hit.add(gi);
+  });
+  return hit;
 }
 
 const FOOD_SAFETY_RE =
   /(hijyen|sanitasyon|dezenfek|sterili|bakteri|küf|maya sayısı|salmonella|listeria|e\.?\s?coli|patojen|zehirlen|çapraz bulaş|raf ömrü|saklama (süresi|sıcaklığı)|gıda güvenliği)/i;
 
+export type ClaimVerdict = "supported" | "rejected" | "uncertain";
+
 export function checkClaimsAgainstSource(
   claims: { claim: string; quote?: string }[],
   sourceText: string,
   visibleText: string,
-): { ok: boolean; reason: string; failed: string[] } {
+): {
+  ok: boolean;
+  reason: string;
+  failed: string[];
+  verdicts: ClaimVerdict[];
+} {
   const src = normText(sourceText);
   const failed: string[] = [];
+  const verdicts: ClaimVerdict[] = [];
 
-  // 1-2) Her iddia: quote kaynakta + sayı/birim quote içinde doğrulanır.
+  // 1) Her iddia atomik değerlendirilir → supported/rejected/uncertain.
+  //    rejected VEYA uncertain → yayın YOK (belirsiz iddia çıkmaz).
   for (const c of claims) {
     const quote = normText(c.quote ?? "");
     if (quote.length < 25) {
+      verdicts.push("rejected");
       failed.push(c.claim + " [quote_missing]");
       continue;
     }
     if (!src.includes(quote)) {
+      verdicts.push("rejected");
       failed.push(c.claim + " [quote_not_in_source]");
       continue;
     }
-    for (const nu of extractNumberUnits(c.claim)) {
-      if (!numInText(quote, nu.num, nu.unit)) {
-        failed.push(c.claim + ` [num_unit:${nu.num}/${nu.unit ?? "-"}]`);
+    // Yön/olumsuzluk: claim ile quote zıt kutuplu olamaz
+    // (bekletilmemelidir ≠ bekletilmelidir).
+    if (isNegated(c.claim) !== isNegated(quote)) {
+      verdicts.push("rejected");
+      failed.push(c.claim + " [direction_conflict]");
+      continue;
+    }
+    // Miktarlar: boyut korunur + taban değer eşdeğer (20 g = 0.02 kg;
+    // 20 g ≠ 20 kg; 20 dk ≠ 20 saat; °F belirsiz).
+    let quantOk = true;
+    let quantUncertain = false;
+    for (const q of extractQuantities(c.claim)) {
+      if (q.dim === "tempF") {
+        quantUncertain = true;
+        continue;
+      }
+      if (!quantitySupported(q, quote)) {
+        quantOk = false;
+        failed.push(c.claim + ` [quantity:${q.num}/${q.dim ?? "-"}]`);
         break;
       }
     }
+    if (!quantOk) {
+      verdicts.push("rejected");
+      continue;
+    }
+    // Malzeme/işlem bağlamı (iki dilli sözlük → doğru TR özet + EN quote
+    // geçer):
+    //  - Claim'de MADDE var ve quote'ta da madde(ler) geçiyorsa kesişim
+    //    ŞART: kaynaktaki UN miktarı MAYA iddiasını doğrulamaz → red.
+    //  - Quote hiç madde içermiyorsa süreç bağlamı (dinlendir/rest,
+    //    süre...) kesişimi yeterli; o da yoksa 'uncertain'.
+    const cs = groupsIn(SUBSTANCE_LEX, c.claim);
+    const qs = groupsIn(SUBSTANCE_LEX, quote);
+    const cp = groupsIn(PROCESS_LEX, c.claim);
+    const qp = groupsIn(PROCESS_LEX, quote);
+    const substanceOverlap = [...cs].some((g) => qs.has(g));
+    const processOverlap = [...cp].some((g) => qp.has(g));
+    if (cs.size > 0 && qs.size > 0 && !substanceOverlap) {
+      verdicts.push("rejected");
+      failed.push(c.claim + " [substance_mismatch]");
+      continue;
+    }
+    if (!substanceOverlap && !processOverlap) {
+      if (cs.size > 0 || cp.size > 0 ||
+          extractQuantities(c.claim).some((q) => q.dim !== null)) {
+        verdicts.push("uncertain");
+        failed.push(c.claim + " [context_mismatch]");
+        continue;
+      }
+    }
+    if (quantUncertain) {
+      verdicts.push("uncertain");
+      failed.push(c.claim + " [uncertain]");
+      continue;
+    }
+    verdicts.push("supported");
   }
-  if (failed.length > 0) {
-    return { ok: false, reason: "claims_unverified", failed };
+  if (verdicts.some((v) => v === "rejected")) {
+    return { ok: false, reason: "claims_rejected", failed, verdicts };
+  }
+  if (verdicts.some((v) => v === "uncertain")) {
+    return { ok: false, reason: "claims_uncertain", failed, verdicts };
   }
 
-  // 3) Teknik (birimli sayı) veya gıda-güvenliği içeriği boş claims'le
-  //    denetimi AŞAMAZ (kapsam kontrolünden önce, net nedenle).
-  const visibleNums = extractNumberUnits(visibleText)
-    .filter((n) => n.unit !== null);
+  // 2) Teknik (birimli sayı) veya gıda-güvenliği içeriği boş claims'le
+  //    denetimi AŞAMAZ.
+  const visibleQs = extractQuantities(visibleText)
+    .filter((q) => q.dim !== null);
   if (claims.length === 0) {
-    if (visibleNums.length > 0) {
-      return { ok: false, reason: "claims_missing_technical", failed: [] };
+    if (visibleQs.length > 0) {
+      return {
+        ok: false,
+        reason: "claims_missing_technical",
+        failed: [],
+        verdicts,
+      };
     }
     if (FOOD_SAFETY_RE.test(visibleText)) {
-      return { ok: false, reason: "food_safety_unsupported", failed: [] };
+      return {
+        ok: false,
+        reason: "food_safety_unsupported",
+        failed: [],
+        verdicts,
+      };
     }
-    return { ok: true, reason: "", failed: [] };
+    return { ok: true, reason: "", failed: [], verdicts };
   }
-  // 4) Görünür metin kapsamı: birimli sayılar iddia/kaynakla kapsanmalı.
+  // 3) Görünür metin kapsamı: başlık+gövde+pratik nottaki birimli sayılar
+  //    iddia quote'ları veya kaynakla EŞDEĞER-miktar olarak kapsanmalı —
+  //    claims'e tek doğru iddia koyup gövdeye desteksiz sayı eklenemez.
   const quotesJoined = claims.map((c) => c.quote ?? "").join("\n");
-  for (const nu of visibleNums) {
-    if (!numInText(quotesJoined, nu.num, nu.unit) &&
-        !numInText(src, nu.num, nu.unit)) {
+  for (const q of visibleQs) {
+    if (!quantitySupported(q, quotesJoined) && !quantitySupported(q, src)) {
       return {
         ok: false,
         reason: "uncovered_number",
-        failed: [`${nu.num}/${nu.unit}`],
+        failed: [`${q.num}/${q.dim}`],
+        verdicts,
       };
     }
   }
-  return { ok: true, reason: "", failed: [] };
+  return { ok: true, reason: "", failed: [], verdicts };
 }
 
 // ── Adil bot seçimi: kaynağın eşleştiği botlardan bugün en az taslak
@@ -358,20 +551,53 @@ export function extractPublishedAt(html: string): string | null {
   return Number.isFinite(t) ? new Date(t).toISOString() : null;
 }
 
-/** Menü/çerez/kategori/hata sayfası İÇERİK KANITI sayılmaz. */
-export function isLikelyArticle(page: ExtractedPage, html: string): boolean {
+// Tür kara-kalıpları: iletişim/giriş/üyelik/çerez/gizlilik/arama/sepet
+// gibi sayfalar hangi uzunlukta olursa olsun İÇERİK KANITI değildir.
+const NON_CONTENT_PATH_RE =
+  /(iletisim|ilet%c4%b0sim|contact|kontakt|impressum|login|log-?in|sign-?in|signin|giris|giri%c5%9f|register|kayit|uyelik|uye(\/|$)|\/user(\/|$)|account|notification|bildirim|cerez|%c3%a7erez|cookie|privacy|gizlilik|kvkk|terms|kosullar|kullanim-sartlari|search|arama\b|\/tag(\/|$)|sepet|cart|checkout|basket|form(ular)?(\/|$)|password|sifre)/i;
+const NON_CONTENT_TITLE_RE =
+  /^(iletişim|contact|kontakt\w*|giriş|login|sign in|üye\w*|kayıt|register|çerez\w*|cookie\w*|gizlilik\w*|privacy\w*|kvkk|arama|search|bildirim\w*|notification\w*|sepet\w*|cart|404|sayfa bulunamadı|page not found|error)\b/i;
+
+/** Menü/çerez/iletişim/giriş/kategori/hata sayfası İÇERİK KANITI
+ * sayılmaz. Tür (URL+başlık) + yapı (form/paragraf/bağlantı yoğunluğu) +
+ * metin niteliği BİRLİKTE değerlendirilir; akademik/teknik sayfalar
+ * `article` etiketi yok diye reddedilmez. */
+export function isLikelyArticle(
+  page: ExtractedPage,
+  html: string,
+  url = "",
+): boolean {
   if (!page.title || page.text.length < 400) return false;
-  const t = page.text.toLocaleLowerCase("tr-TR");
-  if (/^(404|sayfa bulunamadı|page not found|error)/.test(
-    page.title.toLocaleLowerCase("tr-TR"))) return false;
-  // Çerez/menü ağırlıklı sayfa: ilk 300 karakter çerez metniyse reddet.
-  if (/(çerez|cookie)/.test(t.slice(0, 300)) && page.text.length < 1200) {
+  const title = normText(page.title);
+  const path = (() => {
+    try {
+      return new URL(url).pathname + "?";
+    } catch (_) {
+      return url;
+    }
+  })();
+  // 1) Sayfa TÜRÜ: iletişim/giriş/çerez/gizlilik/arama vb. → red
+  //    (uzunluktan bağımsız; İŞKUR çerez politikası gibi uzun metinler
+  //    dahil).
+  if (NON_CONTENT_PATH_RE.test(path) || NON_CONTENT_TITLE_RE.test(title)) {
     return false;
   }
-  // Kategori/arşiv sayfası: bağlantı yoğunluğu yüksek, paragraf az.
+  const t = page.text.toLocaleLowerCase("tr-TR");
+  if (/(çerez|cookie) politik/.test(t.slice(0, 400))) return false;
+  // 2) Form-ağırlıklı sayfa (kontakt/login/kayıt formları): alan çok,
+  //    gerçek metin görece kısa → red.
+  const formInputs =
+    (html.match(/<(input|select|textarea)[\s>]/gi) ?? []).length;
+  if (formInputs >= 3 && page.text.length < 2500) return false;
+  // 3) Kategori/arşiv: bağlantı yoğunluğu yüksek, akan metin az.
   const linkCount = (html.match(/<a\s/gi) ?? []).length;
   const linkDensity = linkCount / Math.max(page.text.length / 100, 1);
   if (linkDensity > 3) return false;
+  // 4) Metin niteliği: hiç paragraf yapısı yok + kısa → gerçek gövde
+  //    değil (uzun akademik/teknik sayfalar text>=800 ile geçer).
+  const pCount = (html.match(/<p[\s>]/gi) ?? []).length;
+  const hasMain = /<(article|main)[\s>]/i.test(html);
+  if (!hasMain && pCount === 0 && page.text.length < 800) return false;
   return true;
 }
 
@@ -462,14 +688,23 @@ export async function discoverArticles(opts: {
     const r = await fetchFn(u);
     return r && r.status === 200 && r.text ? r.text : null;
   };
+  const seenUrls = new Set<string>();
   const tryArticle = async (u: string) => {
-    if (articles.length >= opts.maxArticles) return;
+    // Yinelenen URL: tur içinde ikinci kez fetch/işleme YOK (DB tarafı
+    // da canonical_url unique ile idempotent).
+    if (seenUrls.has(u)) return;
+    seenUrls.add(u);
     const html = await get(u);
-    if (!html) return;
+    if (!html) return; // geçici hata/robots/limit — döngüsel taramada
+    // sonraki tam turda yeniden denenir (cursor cycle_complete→reset).
     const page = extractPage(html, u);
-    if (!isLikelyArticle(page, html)) return;
+    if (!isLikelyArticle(page, html, u)) return; // kalıcı red → ilerleme
     const canonical = page.canonicalUrl && isAllowedUrl(page.canonicalUrl,
       domain) ? page.canonicalUrl : u;
+    if (canonical !== u) {
+      if (seenUrls.has(canonical)) return; // aynı içerik farklı adres
+      seenUrls.add(canonical);
+    }
     articles.push({
       url: canonical,
       title: page.title,
@@ -512,7 +747,10 @@ export async function discoverArticles(opts: {
     }
   }
 
-  // 2) Aktif alt-sitemap'ten sınırlı parti işle; cursor doğru ilerler.
+  // 2) Alt-sitemap'lerde ilerle. Cursor YALNIZ gerçekten DENENEN bağlantı
+  //    kadar ilerler: maxArticles/maxFetch sınırında ilk denenmemiş
+  //    bağlantı korunur (okunmamış makale ATLANMAZ). Kalıcı reddedilen
+  //    sayfa ilerleme sayılır; bir alt sitemap bitince sonrakine geçilir.
   const maps = cursor.sitemaps ?? [];
   let si = cursor.si ?? 0;
   let offset = cursor.offset ?? 0;
@@ -531,16 +769,18 @@ export async function discoverArticles(opts: {
       offset = 0;
       continue;
     }
-    const batch = locs.slice(offset, offset + 8);
-    for (const l of batch) {
+    let attempted = 0;
+    for (const l of locs.slice(offset)) {
+      if (articles.length >= opts.maxArticles ||
+          fetches >= opts.maxFetch) break;
+      attempted++;
       await tryArticle(l);
     }
-    offset += batch.length;
+    offset += attempted;
     if (offset >= locs.length) {
       si++;
       offset = 0;
     }
-    break; // tur başına tek sitemap partisi (sınırlı tarama)
   }
   const done = si >= maps.length;
   return {

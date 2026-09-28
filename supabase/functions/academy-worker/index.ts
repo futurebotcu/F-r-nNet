@@ -319,7 +319,7 @@ async function proveContent(
     return { ok: false, len: 0 };
   }
   const page = extractPage(r.text, articleUrl);
-  if (!isLikelyArticle(page, r.text)) {
+  if (!isLikelyArticle(page, r.text, articleUrl)) {
     return { ok: false, len: page.text.length };
   }
   await c.from("academy_content_items").update({
@@ -329,6 +329,7 @@ async function proveContent(
   }).eq("canonical_url", articleUrl).eq("source_id", src.id);
   await c.from("academy_sources").update({
     content_proof: {
+      v: 2, // doğrulama sürümü — eski (v'siz) kanıtlar geçersiz sayılır
       url: articleUrl,
       title: page.title.slice(0, 200),
       text_len: page.text.length,
@@ -397,7 +398,7 @@ async function handleScanSource(c: any, payload: any): Promise<string> {
   // 'active' YALNIZ gerçek makale çıkarım kanıtından sonra (RSS bulunması
   // tek başına yeterli DEĞİL). İlk makale başarısızsa SONRAKİLER denenir
   // (tek kötü sayfa kaynağı kilitlemez).
-  let proved = Boolean((src.content_proof as any)?.url);
+  let proved = (src.content_proof as any)?.v === 2;
   for (const link of newLinks.slice(0, 3)) {
     if (proved) break;
     proved = (await proveContent(c, src, link)).ok;
@@ -469,7 +470,7 @@ async function handleArchiveScan(c: any, payload: any): Promise<string> {
   });
   if (budgetHit && r.articles.length === 0) return "budget_fetch";
   let added = 0;
-  let proved = Boolean((src.content_proof as any)?.url);
+  let proved = (src.content_proof as any)?.v === 2;
   for (const a of r.articles) {
     const inserted = await insertItem(c, src, {
       title: a.title,
@@ -488,6 +489,7 @@ async function handleArchiveScan(c: any, payload: any): Promise<string> {
       proved = true;
       await c.from("academy_sources").update({
         content_proof: {
+          v: 2,
           url: a.url,
           title: a.title.slice(0, 200),
           text_len: a.text.length,

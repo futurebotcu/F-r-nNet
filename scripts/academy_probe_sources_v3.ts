@@ -15,6 +15,10 @@ import {
   robotsAllows,
 } from "../supabase/functions/academy-worker/lib.ts";
 
+// Konu uygunluğu (rapor alanı): fırıncılık/gıda sözlüğü.
+const TOPICAL_RE =
+  /(ekmek|hamur|un|una |fırın|maya|fermantasyon|pastane|börek|simit|bread|dough|flour|bak(e|ing|ery)|yeast|pastry|wheat|buğday|grain|tahıl|gıda|food|mill|değirmen|hijyen|hygiene)/i;
+
 const UA =
   "FirinNetAcademyBot/1.1 (+https://firinnet.app; kaynak-dogrulama)";
 const TIMEOUT = 15000;
@@ -89,12 +93,19 @@ for (const s of data.sources) {
       const art = await get(link);
       if (!art || art.status !== 200) continue;
       const page = extractPage(art.text, link);
-      if (!isLikelyArticle(page, art.text)) continue;
+      if (!isLikelyArticle(page, art.text, link)) continue;
+      const pub = it.publishedAt ?? extractPublishedAt(art.text);
       proof = {
+        v: 2,
         url: page.canonicalUrl ?? link,
         title: page.title.slice(0, 200),
         text_len: page.text.length,
-        published_at: it.publishedAt ?? extractPublishedAt(art.text),
+        published_at: pub,
+        content_type: pub &&
+            Date.now() - Date.parse(pub) < 60 * 86400_000
+          ? "news"
+          : "evergreen",
+        topical: TOPICAL_RE.test(page.text),
         method: "rss_item->extractPage",
       };
       break;
@@ -122,10 +133,16 @@ for (const s of data.sources) {
       if (r.articles.length > 0) {
         const a = r.articles[0];
         proof = {
+          v: 2,
           url: a.url,
           title: a.title.slice(0, 200),
           text_len: a.text.length,
           published_at: a.publishedAt,
+          content_type: a.publishedAt &&
+              Date.now() - Date.parse(a.publishedAt) < 60 * 86400_000
+            ? "news"
+            : "evergreen",
+          topical: TOPICAL_RE.test(a.text),
           method: "discover:" + r.note,
         };
       }
@@ -154,10 +171,12 @@ for (const r of proved) {
 const report = {
   summary: {
     generated_at: new Date().toISOString(),
+    proof_version: 2,
     method_note:
-      "Doğrulama worker ile AYNI çıkarım kodunu kullanır (lib.ts). " +
-      "content_proved = gerçek makale (başlık+ana metin+robots+SSRF) " +
-      "kanıtı; lisans/kullanım koşulu onayı DEĞİLDİR.",
+      "v2: Doğrulama worker ile AYNI çıkarım kodunu kullanır (lib.ts); " +
+      "iletişim/giriş/çerez/kontakt/arama sayfaları KANIT SAYILMAZ. " +
+      "content_proved = gerçek makale (başlık+ana metin+robots+SSRF); " +
+      "lisans/kullanım koşulu onayı DEĞİLDİR.",
     candidates_total: results.length,
     content_proved: proved.length,
     reachable_feed_unproved:

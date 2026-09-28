@@ -182,7 +182,7 @@ Deno.test("İddia denetimi: quote kaynakta + sayı/birim korunur", () => {
     src,
     "Sıcaklık 20°C tutulur.",
   );
-  assert(!wrongUnit.ok && wrongUnit.reason === "claims_unverified",
+  assert(!wrongUnit.ok && wrongUnit.reason === "claims_rejected",
     "kg→°C birim ihlali reddedilmeli");
 
   // "100" içinde "10" sayı eşleşmesi SAYILMAZ (tam-sayı sınırı).
@@ -341,8 +341,9 @@ Deno.test("Keşif: sitemapindex → TÜM alt sitemap'lerde cursor ilerler; " +
     "https://kaynak.org/makale/a1": ARTICLE_HTML("a1"),
     "https://kaynak.org/makale/b1": ARTICLE_HTML("b1"),
   };
-  // 1. tur: index çözülür ve İLK alt sitemap partisi aynı turda işlenir.
-  let r = await discoverArticles({
+  // Tek turda index çözülür ve sınırlar elverdiği sürece TÜM alt
+  // sitemap'ler kayıpsız işlenir; döngü sonunda cursor tamamlanır.
+  const r = await discoverArticles({
     domain: "kaynak.org",
     startUrls: ["https://kaynak.org/sitemap.xml"],
     cursor: {},
@@ -351,24 +352,11 @@ Deno.test("Keşif: sitemapindex → TÜM alt sitemap'lerde cursor ilerler; " +
     maxFetch: 10,
     maxArticles: 5,
   });
-  eq(r.articles.length, 1, "a1 bulundu");
+  eq(r.articles.length, 2, "a1 + b1 (alt-sitemap geçişi kayıpsız)");
   eq(r.articles[0].title, "a1", "başlık");
+  eq(r.articles[1].title, "b1", "ikinci alt sitemap makalesi");
   assert(r.articles[0].text.length >= 400, "ana metin");
   eq(r.articles[0].publishedAt, "2026-09-20T08:00:00.000Z", "tarih meta");
-  eq(r.nextCursor.sitemaps?.length, 2, "iki alt sitemap keşfedildi");
-  eq(r.nextCursor.si, 1,
-    "cursor İKİNCİ alt sitemap'e geçti (ilk alt dosyada takılmadı)");
-  // 2. tur: sm-b işlenir → b1 + döngü tamamlanır (sonsuz tekrar yok).
-  r = await discoverArticles({
-    domain: "kaynak.org",
-    startUrls: ["https://kaynak.org/sitemap.xml"],
-    cursor: r.nextCursor,
-    fetchFn: fakeFetch(map),
-    robotsTxt: null,
-    maxFetch: 10,
-    maxArticles: 5,
-  });
-  eq(r.articles[0]?.title, "b1", "ikinci alt sitemap makalesi");
   assert(Boolean(r.nextCursor.done_at), "döngü tamamlandı işareti");
 });
 
