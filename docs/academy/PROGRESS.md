@@ -106,6 +106,20 @@
    kod/dış entegrasyon/canlı işletim). MERGE + prod migration + deploy +
    cron/vault/secret kurulumu = KULLANICI ONAYI (canlı yayın yetkisi yok).
 
+## V1.1 devam turu — 6 hata sınıfı kapatıldı (2026-09-28, 28ba3c8+d9784e4)
+
+1. dry_run_done→canlı: publish RPC aynı taslağı güncel şartlarla yayımlar
+   (PG 04-P8). 2. RSS'siz keşif: discoverArticles (sitemapindex tümü
+   cursor'la, HTML keşfi, kategori/çerez reddi) — probe v3 AYNI worker
+   koduyla canlı: **53/91 içerik-kanıtlı** (konu başına 4-14; zayıflar
+   turk_urunleri 4, ustalik_dunya 5). 3. İddia denetimi: quote-kanıt +
+   tam-sayı sınırı + birim sınıfı + boş-claims/teknik reddi + tüm görünür
+   alanlar. 4. Kart hatasında media_ready YOK + publish medya satırını
+   doğrular (04-P9). 5. Q8-Q11: max-attempt dead+neden, config_blocked
+   toparlanma, dead-döngü koruması, degraded ×4 backoff. 6. Tek cron
+   isteği (tick_and_process), sohbet önceliği, cooldown, turlar-arası
+   yayın aralığı, atomik bütçe, genel tavan (04-P10). PG 9/9, deno 24/24.
+
 ## V1.1 tamamlama turu — SONUÇ (2026-09-28)
 
 Tüm P1–P6 maddeleri uygulandı (aşağıdaki liste artık DONE durum kaydıdır):
