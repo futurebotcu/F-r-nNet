@@ -141,6 +141,116 @@ export async function textFingerprint(text: string): Promise<string> {
     .map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// ── robots.txt (basit, güvenli-taraflı): UA grubumuz veya * için
+//    Disallow/Allow öneklerini uygular; en uzun eşleşme kazanır. ─────
+export function robotsAllows(
+  robotsTxt: string,
+  path: string,
+  userAgentToken = "firinnetacademybot",
+): boolean {
+  const lines = robotsTxt.split(/\r?\n/);
+  let applies = false;
+  let anyGroupSeen = false;
+  const rules: { allow: boolean; prefix: string }[] = [];
+  const starRules: { allow: boolean; prefix: string }[] = [];
+  let inStar = false;
+  for (const raw of lines) {
+    const line = raw.replace(/#.*$/, "").trim();
+    if (!line) continue;
+    const m = line.match(/^([A-Za-z-]+)\s*:\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    const val = m[2].trim();
+    if (key === "user-agent") {
+      anyGroupSeen = true;
+      const ua = val.toLowerCase();
+      applies = ua === "*" ? false : userAgentToken.includes(ua) ||
+        ua.includes(userAgentToken);
+      inStar = ua === "*";
+      continue;
+    }
+    if (key === "disallow" || key === "allow") {
+      const rule = { allow: key === "allow", prefix: val };
+      if (applies) rules.push(rule);
+      if (inStar) starRules.push(rule);
+    }
+  }
+  const effective = rules.length > 0 ? rules : starRules;
+  if (!anyGroupSeen || effective.length === 0) return true;
+  let best: { allow: boolean; prefix: string } | null = null;
+  for (const r of effective) {
+    if (r.prefix === "") {
+      // "Disallow:" (boş) = her şeye izin.
+      if (!r.allow) continue;
+    }
+    if (path.startsWith(r.prefix)) {
+      if (!best || r.prefix.length > best.prefix.length) best = r;
+    }
+  }
+  return best ? best.allow : true;
+}
+
+// ── Sitemap: <loc> URL'leri (urlset + sitemapindex) ──────────────────
+export function parseSitemapLocs(xml: string, max = 500): string[] {
+  const locs: string[] = [];
+  for (const m of xml.matchAll(/<loc>\s*([^<\s][^<]*?)\s*<\/loc>/gi)) {
+    locs.push(decodeEntities(m[1]));
+    if (locs.length >= max) break;
+  }
+  return locs;
+}
+
+// ── Otomatik iddia-kanıt denetimi (modelin publishable'ı YETMEZ) ────
+// Deterministik: iddiadaki sayısal değerler (sıcaklık/süre/oran/yıl)
+// kaynak metinde geçmeli; sayısız iddiada anlamlı kelimelerin çoğunluğu
+// kaynakta bulunmalı. Başarısız iddia → yayın reddi (nedenli).
+export function checkClaimsAgainstSource(
+  claims: { claim: string }[],
+  sourceText: string,
+): { ok: boolean; failed: string[] } {
+  const norm = (s: string) =>
+    s.toLocaleLowerCase("tr-TR").replace(/[,]/g, ".").replace(/\s+/g, " ");
+  const src = norm(sourceText);
+  const failed: string[] = [];
+  for (const c of claims) {
+    const claim = norm(c.claim);
+    const nums = claim.match(/\d+(?:\.\d+)?/g) ?? [];
+    if (nums.length > 0) {
+      const missing = nums.filter((n) => !src.includes(n));
+      if (missing.length > 0) {
+        failed.push(c.claim);
+        continue;
+      }
+    } else {
+      const words = claim.split(/[^\p{L}\d]+/u)
+        .filter((w) => w.length >= 5);
+      if (words.length === 0) continue;
+      const hit = words.filter((w) => src.includes(w)).length;
+      if (hit / words.length < 0.5) failed.push(c.claim);
+    }
+  }
+  return { ok: failed.length === 0, failed };
+}
+
+// ── Adil bot seçimi: kaynağın eşleştiği botlardan bugün en az taslak
+//    üretmiş olanı seç (ilk-konu tekeli yok). ────────────────────────
+export function pickFairBot(
+  candidateBotKeys: string[],
+  todayDraftCounts: Record<string, number>,
+): string | null {
+  if (candidateBotKeys.length === 0) return null;
+  let best = candidateBotKeys[0];
+  for (const k of candidateBotKeys) {
+    if ((todayDraftCounts[k] ?? 0) < (todayDraftCounts[best] ?? 0)) best = k;
+  }
+  return best;
+}
+
+/** Europe/Istanbul günü (sabit UTC+3; bütçe/limit günleriyle tutarlı). */
+export function istanbulDay(nowMs: number): string {
+  return new Date(nowMs + 3 * 3600_000).toISOString().slice(0, 10);
+}
+
 // ── DeepSeek taslak şeması doğrulama ─────────────────────────────────
 export interface DraftOutput {
   kind: "news" | "evergreen" | "commercial_note";
@@ -161,13 +271,12 @@ export interface DraftOutput {
  *  - zorunlu alanlar + tipler; başlık/gövde boş olamaz
  *  - claims içindeki source_slug BİLİNEN kaynak sluglarından olmalı
  *    (modelin uydurduğu kaynak reddedilir)
- *  - gövdede http(s) URL varsa yalnız bilinen kaynak alanlarına ait olabilir
- *    (uydurulmuş URL reddedilir)
+ *  - gövde/başlıkta HİÇBİR URL kabul edilmez (aynı alan adında uydurulmuş
+ *    makale URL'si dahil) — doğrulanmış kaynak bağlantısını SUNUCU ekler.
  */
 export function validateDraftOutput(
   raw: string,
   knownSlugs: Set<string>,
-  knownDomains: string[],
 ): { ok: true; draft: DraftOutput } | { ok: false; reason: string } {
   let j: Record<string, unknown>;
   try {
@@ -199,12 +308,10 @@ export function validateDraftOutput(
     }
     claims.push({ claim: cc.claim, source_slug: cc.source_slug });
   }
-  // Uydurulmuş URL reddi.
-  const urls = (title + "\n" + body).match(/https?:\/\/[^\s)"'<>]+/g) ?? [];
-  for (const u of urls) {
-    if (!knownDomains.some((d) => isAllowedUrl(u, d))) {
-      return { ok: false, reason: "fabricated_url" };
-    }
+  // URL reddi: model metne link KOYAMAZ (aynı alan adındaki uydurma makale
+  // URL'si de reddedilir); doğrulanmış kaynak bağlantısını sunucu ekler.
+  if (/https?:\/\//i.test(title + "\n" + body)) {
+    return { ok: false, reason: "fabricated_url" };
   }
   return {
     ok: true,

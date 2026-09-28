@@ -118,6 +118,10 @@ create table if not exists public.academy_sources (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Arşiv (evergreen) taraması ilerleme kaydı: {sitemap_url, offset, done_at}.
+alter table public.academy_sources
+  add column if not exists archive_cursor jsonb not null default '{}'::jsonb,
+  add column if not exists content_proof jsonb not null default '{}'::jsonb;
 alter table public.academy_sources enable row level security;
 revoke all on public.academy_sources from public, anon, authenticated;
 grant select, insert, update, delete on public.academy_sources to service_role;
@@ -241,10 +245,7 @@ grant select, insert, update, delete on public.academy_media to service_role;
 -- ────────────────────────────────────────────────────────────────────────
 create table if not exists public.academy_jobs (
   id bigint generated always as identity primary key,
-  job_type text not null
-    check (job_type in ('scan_source','archive_scan','classify','draft',
-                        'media','publish','humor_post','humor_comment',
-                        'humor_reply','maintenance')),
+  job_type text not null,
   payload jsonb not null default '{}'::jsonb,
   dedupe_key text,
   priority int not null default 100,
@@ -269,6 +270,16 @@ create unique index if not exists academy_jobs_dedupe_uq
   where dedupe_key is not null and status in ('queued', 'running');
 create index if not exists academy_jobs_ready_idx
   on public.academy_jobs (status, run_after, priority);
+-- job_type CHECK ayrı constraint olarak (yeniden çalıştırılabilir güncelleme).
+alter table public.academy_jobs
+  drop constraint if exists academy_jobs_type_chk;
+alter table public.academy_jobs
+  drop constraint if exists academy_jobs_job_type_check;
+alter table public.academy_jobs
+  add constraint academy_jobs_type_chk
+  check (job_type in ('scan_source','archive_scan','classify','draft',
+                      'media','publish','humor_post','humor_comment',
+                      'humor_reply','humor_dm','maintenance'));
 alter table public.academy_jobs enable row level security;
 revoke all on public.academy_jobs from public, anon, authenticated;
 grant select, insert, update, delete on public.academy_jobs to service_role;

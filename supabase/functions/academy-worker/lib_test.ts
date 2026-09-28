@@ -4,14 +4,20 @@
 // gömülü talimatların VERİ olarak kalması.
 import {
   buildDraftPrompt,
+  checkClaimsAgainstSource,
   extractPage,
   isAllowedUrl,
   isSeriousUserPost,
+  istanbulDay,
   parseFeed,
+  parseSitemapLocs,
+  pickFairBot,
+  robotsAllows,
   textFingerprint,
   validateDraftOutput,
   validateHumorOutput,
 } from "./lib.ts";
+import { wrapText } from "./card.ts";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error("ASSERT: " + msg);
@@ -95,7 +101,6 @@ Deno.test("Parmak izi: aynı normalize metin aynı hash → tek adaya düşer",
   });
 
 const KNOWN = new Set(["tusaf"]);
-const DOMAINS = ["tusaf.org"];
 const GOOD = JSON.stringify({
   kind: "news",
   topic: "un_tahil",
@@ -111,28 +116,102 @@ const GOOD = JSON.stringify({
 });
 
 Deno.test("Taslak şeması: geçerli çıktı kabul", () => {
-  const v = validateDraftOutput(GOOD, KNOWN, DOMAINS);
+  const v = validateDraftOutput(GOOD, KNOWN);
   assert(v.ok, "geçerli kabul edilmeli");
 });
 
 Deno.test("Taslak şeması: bozuk JSON / boş / kısa gövde red", () => {
-  assert(!validateDraftOutput("{oops", KNOWN, DOMAINS).ok, "bozuk json");
-  assert(!validateDraftOutput("", KNOWN, DOMAINS).ok, "boş");
+  assert(!validateDraftOutput("{oops", KNOWN).ok, "bozuk json");
+  assert(!validateDraftOutput("", KNOWN).ok, "boş");
   const short = JSON.parse(GOOD);
   short.body = "çok kısa";
-  assert(!validateDraftOutput(JSON.stringify(short), KNOWN, DOMAINS).ok,
+  assert(!validateDraftOutput(JSON.stringify(short), KNOWN).ok,
     "kısa gövde");
 });
 
-Deno.test("Taslak şeması: uydurulmuş kaynak/URL reddedilir", () => {
-  const fake = JSON.parse(GOOD);
-  fake.claims = [{ claim: "x", source_slug: "uydurma_kurum" }];
-  const v1 = validateDraftOutput(JSON.stringify(fake), KNOWN, DOMAINS);
-  assert(!v1.ok && v1.reason === "unknown_claim_source", "uydurma kaynak");
-  const fakeUrl = JSON.parse(GOOD);
-  fakeUrl.body = "B".repeat(100) + " bkz https://sahte-site.com/arastirma";
-  const v2 = validateDraftOutput(JSON.stringify(fakeUrl), KNOWN, DOMAINS);
-  assert(!v2.ok && v2.reason === "fabricated_url", "uydurma URL");
+Deno.test("Taslak şeması: uydurma kaynak + HER URL (aynı domain dahil) red",
+  () => {
+    const fake = JSON.parse(GOOD);
+    fake.claims = [{ claim: "x", source_slug: "uydurma_kurum" }];
+    const v1 = validateDraftOutput(JSON.stringify(fake), KNOWN);
+    assert(!v1.ok && v1.reason === "unknown_claim_source", "uydurma kaynak");
+    const fakeUrl = JSON.parse(GOOD);
+    fakeUrl.body = "B".repeat(100) + " bkz https://sahte-site.com/arastirma";
+    const v2 = validateDraftOutput(JSON.stringify(fakeUrl), KNOWN);
+    assert(!v2.ok && v2.reason === "fabricated_url", "uydurma URL");
+    // AYNI kaynak alanındaki uydurma makale URL'si de reddedilir.
+    const sameDomain = JSON.parse(GOOD);
+    sameDomain.body = "B".repeat(100) +
+      " bkz https://tusaf.org/uydurma-makale";
+    const v3 = validateDraftOutput(JSON.stringify(sameDomain), KNOWN);
+    assert(!v3.ok && v3.reason === "fabricated_url", "aynı-domain uydurma");
+  });
+
+Deno.test("İddia-kanıt denetimi: sayılar kaynakta yoksa RED", () => {
+  const src = "Protein alt sınırı yüzde 11.5 olarak güncellendi; " +
+    "fermantasyon 18 saat önerilir.";
+  const ok = checkClaimsAgainstSource(
+    [{ claim: "Protein alt sınırı %11,5" }, { claim: "18 saat öneri" }],
+    src,
+  );
+  assert(ok.ok, "kaynaklı iddialar geçmeli");
+  const bad = checkClaimsAgainstSource(
+    [{ claim: "Fırın sıcaklığı 240 derece olmalı" }],
+    src,
+  );
+  assert(!bad.ok && bad.failed.length === 1, "kaynaksız sayı reddi");
+  const wordy = checkClaimsAgainstSource(
+    [{ claim: "glutensiz üretimde ksantan zorunludur" }],
+    src,
+  );
+  assert(!wordy.ok, "kaynakta geçmeyen kelime iddiası reddi");
+});
+
+Deno.test("robots.txt: bizim UA grubu + * grubu + Allow üstünlüğü", () => {
+  const txt = [
+    "User-agent: *",
+    "Disallow: /private/",
+    "Allow: /private/public-report",
+    "",
+    "User-agent: FirinNetAcademyBot",
+    "Disallow: /uye/",
+  ].join("\n");
+  eq(robotsAllows(txt, "/haber/1"), true, "serbest yol");
+  eq(robotsAllows(txt, "/uye/panel"), false, "bize özel disallow");
+  // Bize özel grup varken * kuralları uygulanmaz (standart davranış).
+  eq(robotsAllows(txt, "/private/x"), true, "grup önceliği");
+  const star = "User-agent: *\nDisallow: /gizli/\nAllow: /gizli/acik";
+  eq(robotsAllows(star, "/gizli/dosya"), false, "star disallow");
+  eq(robotsAllows(star, "/gizli/acik/rapor"), true, "allow uzun eşleşme");
+  eq(robotsAllows("", "/x"), true, "boş robots → izin");
+});
+
+Deno.test("Sitemap loc çıkarımı", () => {
+  const sm = `<urlset><url><loc>https://a.org/1</loc></url>
+    <url><loc> https://a.org/2 </loc></url></urlset>`;
+  const locs = parseSitemapLocs(sm);
+  eq(locs.length, 2, "loc sayısı");
+  eq(locs[1], "https://a.org/2", "trim");
+});
+
+Deno.test("Adil bot seçimi: bugün en az üretmiş bot", () => {
+  eq(pickFairBot(["a", "b", "c"], { a: 2, b: 0, c: 1 }), "b", "en az");
+  eq(pickFairBot([], {}), null, "aday yok");
+});
+
+Deno.test("İstanbul günü: UTC 22:00 → ertesi gün (bütçe tutarlılığı)", () => {
+  const utc22 = Date.parse("2026-09-28T22:30:00Z");
+  eq(istanbulDay(utc22), "2026-09-29", "UTC akşamı IST ertesi gün");
+  eq(istanbulDay(Date.parse("2026-09-28T10:00:00Z")), "2026-09-28", "gündüz");
+});
+
+Deno.test("Kart metin sarma: uzun kelime kısaltma + satır sınırı", () => {
+  const lines = wrapText(
+    "Soğuk fermantasyonda süre sıcaklık dengesi ve alveol yapısı", 20, 3);
+  assert(lines.length <= 3, "satır sınırı");
+  assert(lines.every((l) => l.length <= 20), "genişlik sınırı");
+  const longWord = wrapText("çokuzunbirkelimedirbubölünmeli", 10, 2);
+  assert(longWord[0].endsWith("…"), "uzun kelime kısaltıldı");
 });
 
 Deno.test("Prompt: kaynak metin VERİ bloğunda; gömülü talimat sınırlı", () => {
