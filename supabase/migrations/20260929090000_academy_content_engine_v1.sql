@@ -33,6 +33,7 @@ insert into public.app_runtime_config (key, value) values
   ('academy_enabled',                     'false'::jsonb),
   ('academy_dry_run',                     'true'::jsonb),
   ('academy_daily_post_target',           '6'::jsonb),
+  ('academy_daily_post_hard_cap',         '10'::jsonb),
   ('academy_bot_daily_post_cap',          '2'::jsonb),
   ('academy_humor_daily_post_cap',        '1'::jsonb),
   ('academy_humor_daily_comment_cap',     '3'::jsonb),
@@ -360,13 +361,16 @@ grant select, insert, update, delete on public.academy_engagement_prefs
 -- ────────────────────────────────────────────────────────────────────────
 -- 6) İş kuyruğu RPC'leri (YALNIZ service_role).
 -- ────────────────────────────────────────────────────────────────────────
+drop function if exists public.academy_enqueue_job(
+  text, jsonb, timestamptz, int, text, int);
 create or replace function public.academy_enqueue_job(
   p_job_type text,
   p_payload jsonb default '{}'::jsonb,
   p_run_after timestamptz default now(),
   p_priority int default 100,
   p_dedupe_key text default null,
-  p_max_attempts int default 5
+  p_max_attempts int default 5,
+  p_cooldown_seconds int default 0
 )
 returns bigint
 language plpgsql
@@ -375,13 +379,32 @@ set search_path = ''
 as $$
 declare v_id bigint;
 begin
+  if p_dedupe_key is not null then
+    -- Cooldown: aynı anahtarla yeni TAMAMLANMIŞ iş varsa yeniden üretme
+    -- (günlük/haftalık işler her maintenance turunda çoğalmaz).
+    if p_cooldown_seconds > 0 and exists (
+      select 1 from public.academy_jobs
+       where dedupe_key = p_dedupe_key
+         and status in ('succeeded', 'dead')
+         and updated_at > now() - make_interval(secs => p_cooldown_seconds)
+    ) then
+      return null;
+    end if;
+    -- Dead-döngü koruması: partial dedupe, dead işin aynı anahtarla sonsuz
+    -- yeniden üretilip deneme sınırını DOLANMASINA izin vermez.
+    if (select count(*) from public.academy_jobs
+         where dedupe_key = p_dedupe_key and status = 'dead'
+           and updated_at > now() - interval '24 hours') >= 3 then
+      return null;
+    end if;
+  end if;
   insert into public.academy_jobs
     (job_type, payload, run_after, priority, dedupe_key, max_attempts)
   values (p_job_type, p_payload, p_run_after, p_priority, p_dedupe_key,
           p_max_attempts)
   on conflict do nothing -- arbiter: partial dedupe index (queued/running)
   returning id into v_id;
-  return v_id; -- null = dedupe (zaten kuyrukta/çalışıyor)
+  return v_id; -- null = dedupe/cooldown/dead-guard
 end;
 $$;
 
@@ -396,6 +419,16 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- Deneme sınırı dolmuş süresi-geçmiş işler DEVRALINMAZ: worker her
+  -- turda çökse bile iş sınırda durur ve nedeni görünür kalır.
+  update public.academy_jobs
+     set status = 'dead',
+         last_error = coalesce(last_error, '') ||
+           ' [lease_expired_max_attempts]',
+         locked_by = null, lease_until = null, updated_at = now()
+   where status = 'running' and lease_until is not null
+     and lease_until < now() and attempts >= max_attempts;
+
   return query
   update public.academy_jobs j
      set status = 'running',
@@ -406,10 +439,11 @@ begin
          updated_at = now()
    where j.id in (
      select id from public.academy_jobs
-      where (status = 'queued' and run_after <= now())
+      where ((status = 'queued' and run_after <= now())
          -- süresi geçmiş lease → yarıda kalan işi devral
          or (status = 'running' and lease_until is not null
-             and lease_until < now())
+             and lease_until < now()))
+        and attempts < max_attempts
       order by priority asc, run_after asc
       for update skip locked
       limit greatest(p_limit, 1)
@@ -451,6 +485,18 @@ begin
   if p_outcome = 'succeeded' then
     v_final := 'succeeded';
     update public.academy_jobs set status = 'succeeded', last_error = null,
+      locked_by = null, lease_until = null, updated_at = now()
+      where id = p_job_id;
+  elsif p_outcome = 'config_blocked' then
+    -- GİDERİLEBİLİR yapılandırma engeli (ör. LLM anahtarı yok): kalıcı
+    -- içerik hatasından AYRI — iş kaybolmaz, deneme sayacı sıfırlanır,
+    -- uzun aralıkla bekler; anahtar tanımlanınca kendiliğinden işlenir.
+    v_final := 'config_blocked';
+    update public.academy_jobs set status = 'queued',
+      attempts = 0,
+      last_error = p_error,
+      run_after = now() + make_interval(
+        secs => greatest(p_retry_delay_seconds, 3600)),
       locked_by = null, lease_until = null, updated_at = now()
       where id = p_job_id;
   elsif p_outcome = 'dead'
@@ -548,7 +594,10 @@ begin
   if v_draft.post_id is not null then
     return query select 'already_published'::text, v_draft.post_id; return;
   end if;
-  if v_draft.status in ('published','dry_run_done','rejected','failed') then
+  -- 'dry_run_done' TERMİNAL DEĞİLDİR: canlı kipe geçilince aynı taslak,
+  -- güncel şartlar (kill-switch/bot/medya/sınırlar) YENİDEN kontrol
+  -- edilerek yayımlanabilir. Terminal: published/rejected/failed.
+  if v_draft.status in ('published','rejected','failed') then
     return query select ('ignored_status_' || v_draft.status)::text,
       null::uuid; return;
   end if;
@@ -575,6 +624,17 @@ begin
     return query select 'dry_run_done'::text, null::uuid; return;
   end if;
 
+  -- MEDYA ZORUNLU (server-side): kart üretilmemiş taslak yayımlanamaz —
+  -- görsel hatasında sessiz görselsiz yayın açığı yok. Taslak medya
+  -- aşamasına geri düşer (media işi sınırlı retry ile yeniden dener).
+  if not exists (select 1 from public.academy_media
+                 where draft_id = p_draft_id and status = 'ready') then
+    update public.academy_drafts set status = 'checked',
+      status_reason = 'media_missing', updated_at = now()
+      where id = p_draft_id;
+    return query select 'blocked_media_missing'::text, null::uuid; return;
+  end if;
+
   -- Günlük bot sınırı (Europe/Istanbul günü). Paralel publish çağrılarının
   -- sayacı yarış koşuluyla aşmaması için bot+gün bazlı advisory kilit.
   v_today_start := date_trunc('day',
@@ -598,6 +658,20 @@ begin
       updated_at = now()
       where id = p_draft_id;
     return query select 'deferred_daily_cap'::text, null::uuid; return;
+  end if;
+
+  -- GENEL günlük ÜST SINIR (hedef != tavan): tüm botların toplam yayını.
+  perform pg_advisory_xact_lock(hashtextextended(
+    'academy_publish_global:' || v_today_start::date, 0));
+  if (select count(*) from public.academy_drafts d
+       where d.status = 'published' and d.updated_at >= v_today_start)
+     >= public.app_config_int('academy_daily_post_hard_cap', 10) then
+    update public.academy_drafts set status = 'scheduled',
+      status_reason = 'global_cap_reached',
+      scheduled_for = v_today_start + interval '1 day',
+      updated_at = now()
+      where id = p_draft_id;
+    return query select 'deferred_global_cap'::text, null::uuid; return;
   end if;
 
   -- Yayın: feed_posts + feed_media tek transaksiyonda (fonksiyon gövdesi).
@@ -1050,9 +1124,10 @@ $function$;
 -- 10) RPC grant hijyeni: motor RPC'leri YALNIZ service_role.
 -- ────────────────────────────────────────────────────────────────────────
 revoke execute on function public.academy_enqueue_job(
-  text, jsonb, timestamptz, int, text, int) from public, anon, authenticated;
+  text, jsonb, timestamptz, int, text, int, int)
+  from public, anon, authenticated;
 grant execute on function public.academy_enqueue_job(
-  text, jsonb, timestamptz, int, text, int) to service_role;
+  text, jsonb, timestamptz, int, text, int, int) to service_role;
 
 revoke execute on function public.academy_claim_jobs(text, int, int)
   from public, anon, authenticated;

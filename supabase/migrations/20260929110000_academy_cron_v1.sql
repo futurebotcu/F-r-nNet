@@ -32,17 +32,14 @@ begin
     return 'no_vault_secrets';
   end if;
   begin
-    -- 1) Orkestrasyon (işleri kuyruklar), 2) bir parti iş tüket.
+    -- TEK istek: orkestrasyon + tüketim aynı invocation'da
+    -- (schedule/consume yarış koşulu yok).
     perform net.http_post(
       url := v_url,
       headers := jsonb_build_object('Content-Type', 'application/json',
         'Authorization', 'Bearer ' || v_key),
-      body := jsonb_build_object('action', 'tick'));
-    perform net.http_post(
-      url := v_url,
-      headers := jsonb_build_object('Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || v_key),
-      body := jsonb_build_object('max_jobs', 8));
+      body := jsonb_build_object('action', 'tick_and_process',
+        'max_jobs', 5));
   exception when others then
     return 'http_error';
   end;

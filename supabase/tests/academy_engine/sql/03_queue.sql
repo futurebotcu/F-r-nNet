@@ -117,7 +117,75 @@ begin
   end if;
   perform public.academy_complete_job(v, 'succeeded', null, 60, 'w-hb');
 
-  raise notice 'PASS 03 kuyruk + lease + retry + sayaç + stale/dedupe/hb';
+  -- Q8 (bug #5): sınırdaki süresi-dolmuş iş DEVRALINMAZ → dead + neden.
+  v := public.academy_enqueue_job('maintenance', '{}'::jsonb, now(), 100,
+    'crashloop-k1', 2);
+  perform public.academy_claim_jobs('w-c1', 1, 30);   -- attempts 1
+  update public.academy_jobs set lease_until = now() - interval '1 second'
+    where id = v;
+  perform public.academy_claim_jobs('w-c2', 1, 30);   -- attempts 2 (max)
+  update public.academy_jobs set lease_until = now() - interval '1 second'
+    where id = v;
+  select count(*) into n from public.academy_claim_jobs('w-c3', 5, 30);
+  if n <> 0 then
+    raise exception 'Q8a: sınır dolmuş iş yine devralındı';
+  end if;
+  select * into j from public.academy_jobs where id = v;
+  if j.status <> 'dead'
+     or j.last_error not like '%lease_expired_max_attempts%' then
+    raise exception 'Q8b: çökme döngüsü dead+nedenle durmadı: %', j;
+  end if;
+
+  -- Q9 (bug #5): giderilebilir yapılandırma engeli — config_blocked işi
+  -- kaybetmez, attempts sıfırlar, uzun aralıkla kuyrukta tutar.
+  v := public.academy_enqueue_job('draft', '{}'::jsonb, now(), 100,
+    'cfg-k1', 3);
+  perform public.academy_claim_jobs('w-cfg', 1, 30);
+  if public.academy_complete_job(v, 'config_blocked', 'no_llm_key', 7200,
+     'w-cfg') <> 'config_blocked' then
+    raise exception 'Q9a: config_blocked yolu yok';
+  end if;
+  select * into j from public.academy_jobs where id = v;
+  if j.status <> 'queued' or j.attempts <> 0 or j.run_after <= now() then
+    raise exception 'Q9b: config_blocked toparlanma durumu yanlış: %', j;
+  end if;
+  -- "Anahtar tanımlandı" simülasyonu: bekleme kaldır → iş işlenebilir.
+  update public.academy_jobs set run_after = now() where id = v;
+  select count(*) into n from public.academy_claim_jobs('w-cfg', 1, 30);
+  if n <> 1 then raise exception 'Q9c: anahtar sonrası claim edilemedi';
+  end if;
+  perform public.academy_complete_job(v, 'succeeded', null, 60, 'w-cfg');
+
+  -- Q10 (bug #6): cooldown — başarıdan sonra aynı anahtar yeniden üretilmez.
+  v := public.academy_enqueue_job('archive_scan', '{}'::jsonb, now(), 100,
+    'cool-k1', 3, 3600);
+  perform public.academy_claim_jobs('w-cd', 1, 30);
+  perform public.academy_complete_job(v, 'succeeded', null, 60, 'w-cd');
+  if public.academy_enqueue_job('archive_scan', '{}'::jsonb, now(), 100,
+     'cool-k1', 3, 3600) is not null then
+    raise exception 'Q10a: cooldown delindi (haftalık iş çoğaldı)';
+  end if;
+  -- cooldown=0 ile (partial dedupe davranışı) yeniden üretilebilir.
+  if public.academy_enqueue_job('archive_scan', '{}'::jsonb, now(), 100,
+     'cool-k1', 3, 0) is null then
+    raise exception 'Q10b: cooldown=0 yolu bozuldu';
+  end if;
+
+  -- Q11 (bug #5): dead-döngü koruması — 3 dead sonrası aynı anahtar
+  -- yeniden kuyruklanamaz (sınır dolanılamaz).
+  for n in 1..3 loop
+    v := public.academy_enqueue_job('maintenance', '{}'::jsonb, now(), 100,
+      'deadloop-k1', 1);
+    perform public.academy_claim_jobs('w-dl', 1, 30);
+    perform public.academy_complete_job(v, 'failed', 'kalıcı hata', 60,
+      'w-dl');
+  end loop;
+  if public.academy_enqueue_job('maintenance', '{}'::jsonb, now(), 100,
+     'deadloop-k1', 1) is not null then
+    raise exception 'Q11a: dead-döngü koruması yok';
+  end if;
+
+  raise notice 'PASS 03 kuyruk (lease/stale/dedupe/hb/crash/config/cooldown)';
 end
 $$;
 reset role;

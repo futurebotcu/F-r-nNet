@@ -108,7 +108,11 @@ const GOOD = JSON.stringify({
   body: "B".repeat(120),
   practical_notes: "Fırında protein değerini spesifikasyonla karşılaştırın.",
   tags: ["un"],
-  claims: [{ claim: "Protein alt sınırı güncellendi", source_slug: "tusaf" }],
+  claims: [{
+    claim: "Protein alt sınırı güncellendi",
+    source_slug: "tusaf",
+    quote: "the minimum protein threshold was updated for bread flour",
+  }],
   date_context: "22 Eylül 2026 duyurusu",
   image_brief: "un çuvalları",
   uncertainties: "",
@@ -132,7 +136,11 @@ Deno.test("Taslak şeması: bozuk JSON / boş / kısa gövde red", () => {
 Deno.test("Taslak şeması: uydurma kaynak + HER URL (aynı domain dahil) red",
   () => {
     const fake = JSON.parse(GOOD);
-    fake.claims = [{ claim: "x", source_slug: "uydurma_kurum" }];
+    fake.claims = [{
+      claim: "x",
+      source_slug: "uydurma_kurum",
+      quote: "some quoted passage from somewhere else entirely",
+    }];
     const v1 = validateDraftOutput(JSON.stringify(fake), KNOWN);
     assert(!v1.ok && v1.reason === "unknown_claim_source", "uydurma kaynak");
     const fakeUrl = JSON.parse(GOOD);
@@ -147,25 +155,106 @@ Deno.test("Taslak şeması: uydurma kaynak + HER URL (aynı domain dahil) red",
     assert(!v3.ok && v3.reason === "fabricated_url", "aynı-domain uydurma");
   });
 
-Deno.test("İddia-kanıt denetimi: sayılar kaynakta yoksa RED", () => {
-  const src = "Protein alt sınırı yüzde 11.5 olarak güncellendi; " +
-    "fermantasyon 18 saat önerilir.";
-  const ok = checkClaimsAgainstSource(
-    [{ claim: "Protein alt sınırı %11,5" }, { claim: "18 saat öneri" }],
+Deno.test("İddia denetimi: quote kaynakta + sayı/birim korunur", () => {
+  const src = "Cold fermentation of the dough works best when the batch " +
+    "weighs about 20 kg and rests for 18 hours in the cooler at a stable " +
+    "temperature; the minimum protein threshold is 11.5 percent.";
+  // TR özet + İngilizce quote KABUL (çeviri kelime-eşleşmesine bağlı değil).
+  const good = checkClaimsAgainstSource(
+    [{
+      claim: "Parti ağırlığı yaklaşık 20 kg",
+      quote: "the batch weighs about 20 kg and rests for 18 hours",
+    }, {
+      claim: "Protein alt sınırı %11,5",
+      quote: "the minimum protein threshold is 11.5 percent",
+    }],
     src,
+    "Parti 20 kg olmalı; protein %11.5 sınırı korunur.",
   );
-  assert(ok.ok, "kaynaklı iddialar geçmeli");
-  const bad = checkClaimsAgainstSource(
-    [{ claim: "Fırın sıcaklığı 240 derece olmalı" }],
+  assert(good.ok, "TR özet + EN quote kabul: " + good.failed.join(","));
+
+  // Kaynaktaki "20 kg", "20°C" iddiasını DOĞRULAYAMAZ (birim sınıfı).
+  const wrongUnit = checkClaimsAgainstSource(
+    [{
+      claim: "Dinlendirme sıcaklığı 20°C",
+      quote: "the batch weighs about 20 kg and rests for 18 hours",
+    }],
     src,
+    "Sıcaklık 20°C tutulur.",
   );
-  assert(!bad.ok && bad.failed.length === 1, "kaynaksız sayı reddi");
-  const wordy = checkClaimsAgainstSource(
-    [{ claim: "glutensiz üretimde ksantan zorunludur" }],
+  assert(!wrongUnit.ok && wrongUnit.reason === "claims_unverified",
+    "kg→°C birim ihlali reddedilmeli");
+
+  // "100" içinde "10" sayı eşleşmesi SAYILMAZ (tam-sayı sınırı).
+  const src100 = "The oven program uses 100 minutes for the full cycle.";
+  const boundary = checkClaimsAgainstSource(
+    [{
+      claim: "Program 10 dakika sürer",
+      quote: "The oven program uses 100 minutes for the full cycle",
+    }],
+    src100,
+    "Program 10 dakika sürer.",
+  );
+  assert(!boundary.ok, "100 içinde 10 eşleşmesi reddedilmeli");
+
+  // Uydurma/parafraz quote (kaynakta yok) reddedilir.
+  const fakeQuote = checkClaimsAgainstSource(
+    [{
+      claim: "18 saat dinlendirme",
+      quote: "hamur on sekiz saat dinlendirilir ve sonra pişirilir",
+    }],
     src,
+    "18 saat dinlendirin.",
   );
-  assert(!wordy.ok, "kaynakta geçmeyen kelime iddiası reddi");
+  assert(!fakeQuote.ok, "kaynakta olmayan quote reddedilmeli");
 });
+
+Deno.test("İddia denetimi: boş claims teknik/gıda-güvenliği içeriği " +
+  "GEÇEMEZ; görünür metindeki kapsanmayan sayı reddedilir", () => {
+  const src = "General notes about bakery routines without figures.";
+  const emptyTech = checkClaimsAgainstSource(
+    [],
+    src,
+    "Fırını 240°C ısıtın ve 25 dakika pişirin.",
+  );
+  assert(!emptyTech.ok && emptyTech.reason === "claims_missing_technical",
+    "teknik gövde boş claims ile geçti");
+  const emptyFood = checkClaimsAgainstSource(
+    [],
+    src,
+    "Çapraz bulaşmayı önlemek için tezgahı dezenfekte edin.",
+  );
+  assert(!emptyFood.ok && emptyFood.reason === "food_safety_unsupported",
+    "desteksiz gıda güvenliği içeriği geçti");
+  // Sayısız, güvenlik-dışı içerik boş claims ile geçebilir.
+  const plain = checkClaimsAgainstSource([], src,
+    "Tezgah düzeni sabah işlerini kolaylaştırır.");
+  assert(plain.ok, "masum içerik gereksiz reddedildi");
+  // practical_notes'taki kapsanmayan birimli sayı yakalanır.
+  const uncovered = checkClaimsAgainstSource(
+    [{
+      claim: "Genel bilgi",
+      quote: "General notes about bakery routines without figures",
+    }],
+    src,
+    "Not: mayayı 35°C suda açın.",
+  );
+  assert(!uncovered.ok && uncovered.reason === "uncovered_number",
+    "kapsanmayan sayı geçti");
+});
+
+Deno.test("validateDraftOutput: practical_notes içindeki URL de reddedilir",
+  () => {
+    const withUrl = JSON.parse(GOOD);
+    withUrl.practical_notes = "Ayrıntı: https://tusaf.org/gizli-link";
+    const v = validateDraftOutput(JSON.stringify(withUrl), KNOWN);
+    assert(!v.ok && v.reason === "fabricated_url",
+      "practical_notes URL bypass'ı");
+    const noQuote = JSON.parse(GOOD);
+    noQuote.claims = [{ claim: "x", source_slug: "tusaf" }];
+    assert(!validateDraftOutput(JSON.stringify(noQuote), KNOWN).ok,
+      "quote'suz claim şekli reddedilmeli");
+  });
 
 Deno.test("robots.txt: bizim UA grubu + * grubu + Allow üstünlüğü", () => {
   const txt = [
@@ -203,6 +292,179 @@ Deno.test("İstanbul günü: UTC 22:00 → ertesi gün (bütçe tutarlılığı)
   const utc22 = Date.parse("2026-09-28T22:30:00Z");
   eq(istanbulDay(utc22), "2026-09-29", "UTC akşamı IST ertesi gün");
   eq(istanbulDay(Date.parse("2026-09-28T10:00:00Z")), "2026-09-28", "gündüz");
+});
+
+// ── RSS'siz keşif zinciri (fetch-enjekteli worker akışı) ────────────
+import {
+  discoverArticles,
+  discoverHtmlLinks,
+  extractPublishedAt,
+  isLikelyArticle,
+} from "./lib.ts";
+
+const ARTICLE_HTML = (title: string, extra = "") => `<html><head>
+  <title>${title}</title>
+  <meta property="article:published_time" content="2026-09-20T08:00:00Z"/>
+  <link rel="canonical" href="https://kaynak.org/makale/${title}"/></head>
+  <body><article><h1>${title}</h1>
+  <p>${"Fermantasyon süreci hakkında ayrıntılı teknik anlatım. ".repeat(20)}
+  ${extra}</p></article></body></html>`;
+
+const CATEGORY_HTML = `<html><head><title>Haberler</title></head><body>
+  ${Array.from({ length: 60 }, (_, i) =>
+    `<a href="/makale/x${i}">Başlık ${i}</a>`).join(" kısa metin ")}
+  </body></html>`;
+
+const COOKIE_HTML = `<html><head><title>Site</title></head><body>
+  <p>Bu site çerez kullanır. Çerez politikamızı kabul edin. Cookie
+  ayarlarını yönetin. Devam etmek için onaylayın.</p></body></html>`;
+
+function fakeFetch(map: Record<string, string>): (u: string) =>
+  Promise<{ status: number; text: string } | null> {
+  return (u: string) =>
+    Promise.resolve(
+      map[u] !== undefined ? { status: 200, text: map[u] } : null,
+    );
+}
+
+Deno.test("Keşif: sitemapindex → TÜM alt sitemap'lerde cursor ilerler; " +
+  "gerçek makale kanıtı çıkar", async () => {
+  const map: Record<string, string> = {
+    "https://kaynak.org/sitemap.xml": `<sitemapindex>
+      <sitemap><loc>https://kaynak.org/sm-a.xml</loc></sitemap>
+      <sitemap><loc>https://kaynak.org/sm-b.xml</loc></sitemap>
+      </sitemapindex>`,
+    "https://kaynak.org/sm-a.xml": `<urlset>
+      <url><loc>https://kaynak.org/makale/a1</loc></url></urlset>`,
+    "https://kaynak.org/sm-b.xml": `<urlset>
+      <url><loc>https://kaynak.org/makale/b1</loc></url></urlset>`,
+    "https://kaynak.org/makale/a1": ARTICLE_HTML("a1"),
+    "https://kaynak.org/makale/b1": ARTICLE_HTML("b1"),
+  };
+  // 1. tur: index çözülür ve İLK alt sitemap partisi aynı turda işlenir.
+  let r = await discoverArticles({
+    domain: "kaynak.org",
+    startUrls: ["https://kaynak.org/sitemap.xml"],
+    cursor: {},
+    fetchFn: fakeFetch(map),
+    robotsTxt: null,
+    maxFetch: 10,
+    maxArticles: 5,
+  });
+  eq(r.articles.length, 1, "a1 bulundu");
+  eq(r.articles[0].title, "a1", "başlık");
+  assert(r.articles[0].text.length >= 400, "ana metin");
+  eq(r.articles[0].publishedAt, "2026-09-20T08:00:00.000Z", "tarih meta");
+  eq(r.nextCursor.sitemaps?.length, 2, "iki alt sitemap keşfedildi");
+  eq(r.nextCursor.si, 1,
+    "cursor İKİNCİ alt sitemap'e geçti (ilk alt dosyada takılmadı)");
+  // 2. tur: sm-b işlenir → b1 + döngü tamamlanır (sonsuz tekrar yok).
+  r = await discoverArticles({
+    domain: "kaynak.org",
+    startUrls: ["https://kaynak.org/sitemap.xml"],
+    cursor: r.nextCursor,
+    fetchFn: fakeFetch(map),
+    robotsTxt: null,
+    maxFetch: 10,
+    maxArticles: 5,
+  });
+  eq(r.articles[0]?.title, "b1", "ikinci alt sitemap makalesi");
+  assert(Boolean(r.nextCursor.done_at), "döngü tamamlandı işareti");
+});
+
+Deno.test("Keşif: kategori/çerez sayfası KANIT sayılmaz; robots ve " +
+  "maxFetch sınırı uygulanır", async () => {
+  const map: Record<string, string> = {
+    "https://kaynak.org/sitemap.xml": `<urlset>
+      <url><loc>https://kaynak.org/kategori</loc></url>
+      <url><loc>https://kaynak.org/cerez</loc></url>
+      <url><loc>https://kaynak.org/uye/makale</loc></url>
+      <url><loc>https://kaynak.org/makale/ok</loc></url></urlset>`,
+    "https://kaynak.org/kategori": CATEGORY_HTML,
+    "https://kaynak.org/cerez": COOKIE_HTML,
+    "https://kaynak.org/uye/makale": ARTICLE_HTML("gizli"),
+    "https://kaynak.org/makale/ok": ARTICLE_HTML("ok"),
+  };
+  const robots = "User-agent: *\nDisallow: /uye/";
+  const seen: string[] = [];
+  const counting = (u: string) => {
+    seen.push(u);
+    return fakeFetch(map)(u);
+  };
+  let r = await discoverArticles({
+    domain: "kaynak.org",
+    startUrls: ["https://kaynak.org/sitemap.xml"],
+    cursor: {},
+    fetchFn: counting,
+    robotsTxt: robots,
+    maxFetch: 10,
+    maxArticles: 5,
+  });
+  r = await discoverArticles({
+    domain: "kaynak.org",
+    startUrls: ["https://kaynak.org/sitemap.xml"],
+    cursor: r.nextCursor,
+    fetchFn: counting,
+    robotsTxt: robots,
+    maxFetch: 10,
+    maxArticles: 5,
+  });
+  eq(r.articles.length, 1, "yalnız gerçek makale");
+  eq(r.articles[0].title, "ok", "kategori/çerez elendi");
+  assert(!seen.includes("https://kaynak.org/uye/makale"),
+    "robots disallow yolu HİÇ istenmedi");
+  // maxFetch: sınırsız tarama yok.
+  const limited = await discoverArticles({
+    domain: "kaynak.org",
+    startUrls: ["https://kaynak.org/sitemap.xml"],
+    cursor: {},
+    fetchFn: fakeFetch(map),
+    robotsTxt: null,
+    maxFetch: 1,
+    maxArticles: 5,
+  });
+  assert(limited.fetches <= 1, "maxFetch aşıldı");
+});
+
+Deno.test("Keşif: sitemap yoksa izinli HTML bağlantı keşfi çalışır",
+  async () => {
+    const home = `<html><body>
+      <a href="/makale/derin/analiz-yazisi">Analiz</a>
+      <a href="/hakkimizda">Kurumsal</a>
+      <a href="https://baska.com/x/y">dış</a></body></html>`;
+    const map: Record<string, string> = {
+      "https://kaynak.org/": home,
+      "https://kaynak.org/makale/derin/analiz-yazisi":
+        ARTICLE_HTML("analiz"),
+    };
+    const r = await discoverArticles({
+      domain: "kaynak.org",
+      startUrls: ["https://kaynak.org/"],
+      cursor: {},
+      fetchFn: fakeFetch(map),
+      robotsTxt: null,
+      maxFetch: 10,
+      maxArticles: 3,
+    });
+    eq(r.articles.length, 1, "html-link makalesi");
+    eq(r.note, "html_links", "yöntem notu");
+    const links = discoverHtmlLinks(home, "https://kaynak.org/",
+      "kaynak.org");
+    assert(!links.some((l) => l.includes("baska.com")), "alan dışı elendi");
+  });
+
+Deno.test("isLikelyArticle + extractPublishedAt sınır durumları", () => {
+  const good = ARTICLE_HTML("t");
+  assert(isLikelyArticle(extractPage(good, "https://kaynak.org/x"), good),
+    "gerçek makale kabul");
+  assert(!isLikelyArticle(
+    extractPage(CATEGORY_HTML, "https://k.org/c"), CATEGORY_HTML),
+    "kategori reddi");
+  assert(!isLikelyArticle(
+    extractPage(COOKIE_HTML, "https://k.org/z"), COOKIE_HTML),
+    "çerez sayfası reddi");
+  eq(extractPublishedAt("<html><p>tarihsiz</p></html>"), null,
+    "tarih yoksa NULL (uydurulmaz)");
 });
 
 Deno.test("Kart metin sarma: uzun kelime kısaltma + satır sınırı", () => {

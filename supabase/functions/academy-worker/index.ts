@@ -9,8 +9,8 @@
 // publish (idempotent RPC), humor_post/comment/reply/dm, maintenance.
 //
 // Dayanıklılık: küçük claim partisi + iş başına lease heartbeat; bütçe
-// aşımı ertesi İstanbul gününe retry; anahtar yokken dead (partial dedupe
-// sayesinde anahtar gelince maintenance yeniden kuyruklar).
+// aşımı ertesi İstanbul gününe retry; anahtar yokken config_blocked
+// (iş kaybolmaz, anahtar tanımlanınca kendiliğinden devam eder).
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -18,12 +18,13 @@ import {
   buildDraftPrompt,
   buildHumorPrompt,
   checkClaimsAgainstSource,
+  discoverArticles,
   extractPage,
   isAllowedUrl,
+  isLikelyArticle,
   isSeriousUserPost,
   istanbulDay,
   parseFeed,
-  parseSitemapLocs,
   pickFairBot,
   robotsAllows,
   textFingerprint,
@@ -142,6 +143,21 @@ async function safeFetch(
   return null;
 }
 
+/** Bütçeli fetch: her istek ATOMİK rezervasyonla sayılır. */
+async function fetchBudgeted(
+  c: any,
+  url: string,
+  domain: string,
+  headers: Record<string, string> = {},
+): Promise<
+  { status: number; text: string; headers: Headers } | "budget" | null
+> {
+  if (!(await reserveBudget(c, "fetches", "academy_daily_fetch_cap", 2000))) {
+    return "budget";
+  }
+  return await safeFetch(url, domain, headers);
+}
+
 // robots.txt önbelleği (invocation ömrü) + kontrol.
 const robotsCache = new Map<string, string | null>();
 async function robotsOk(domain: string, url: string): Promise<boolean> {
@@ -167,12 +183,21 @@ async function usageToday(c: any, metric: string): Promise<number> {
     .eq("metric", metric).eq("day", istDay()).maybeSingle();
   return Number(data?.value ?? 0);
 }
-async function budgetOk(c: any, metric: string, capKey: string,
-  dflt: number): Promise<boolean> {
-  return (await usageToday(c, metric)) < (await cfgInt(c, capKey, dflt));
+async function incrUsage(c: any, metric: string, delta = 1): Promise<number> {
+  const { data } = await c.rpc("academy_incr_usage", {
+    p_metric: metric,
+    p_delta: delta,
+  });
+  return Number(data ?? 0);
 }
-async function incrUsage(c: any, metric: string, delta = 1) {
-  await c.rpc("academy_incr_usage", { p_metric: metric, p_delta: delta });
+/** ATOMİK bütçe rezervasyonu: önce say, sonra karşılaştır — paralel
+ * worker'lar yarışla üst sınırı AŞAMAZ (sayaç artışı geri alınmaz; sınır
+ * en fazla worker sayısı kadar erken kapanır, asla geç kapanmaz). */
+async function reserveBudget(c: any, metric: string, capKey: string,
+  dflt: number, delta = 1): Promise<boolean> {
+  const cap = await cfgInt(c, capKey, dflt);
+  const v = await incrUsage(c, metric, delta);
+  return v <= cap;
 }
 /** Ertesi İstanbul gününe kadar saniye (bütçe retry'ı için). */
 function secsToNextIstDay(): number {
@@ -193,10 +218,16 @@ async function deepseek(
   { ok: false; reason: string }
 > {
   if (!DEEPSEEK_KEY) return { ok: false, reason: "no_key" };
-  if (!(await budgetOk(c, "llm_requests", "academy_daily_llm_request_cap",
-    200))) return { ok: false, reason: "budget_requests" };
-  if (!(await budgetOk(c, "llm_tokens", "academy_daily_llm_token_cap",
-    400000))) return { ok: false, reason: "budget_tokens" };
+  // Atomik rezervasyon (yarışla aşım yok). Token bütçesi istek ÖNCESİ
+  // bilinemez → istek kapısı + gerçek kullanım sonradan sayaca eklenir.
+  if ((await usageToday(c, "llm_tokens")) >=
+      (await cfgInt(c, "academy_daily_llm_token_cap", 400000))) {
+    return { ok: false, reason: "budget_tokens" };
+  }
+  if (!(await reserveBudget(c, "llm_requests",
+    "academy_daily_llm_request_cap", 200))) {
+    return { ok: false, reason: "budget_requests" };
+  }
   const model = await cfgStr(c, "academy_llm_model",
     Deno.env.get("DEEPSEEK_MODEL") ?? "deepseek-flash");
   const ctl = new AbortController();
@@ -226,7 +257,6 @@ async function deepseek(
     return { ok: false, reason: "network" };
   }
   clearTimeout(t);
-  await incrUsage(c, "llm_requests", 1);
   if (resp.status === 429) return { ok: false, reason: "rate_limited" };
   if (!resp.ok) return { ok: false, reason: `http_${resp.status}` };
   let j: any;
@@ -276,18 +306,20 @@ async function insertItem(c: any, src: any, it: {
   return !error; // unique ihlali = zaten var → tek adaya düşer
 }
 
-/** İçerik KANITI: gerçek makale sayfasından başlık+≥300 karakter metin. */
+/** İçerik KANITI: gerçek makale sayfası — başlık + ana metin; menü/çerez/
+ * kategori sayfası kanıt SAYILMAZ (isLikelyArticle). */
 async function proveContent(
   c: any,
   src: any,
   articleUrl: string,
 ): Promise<{ ok: boolean; len: number }> {
   if (!(await robotsOk(src.domain, articleUrl))) return { ok: false, len: 0 };
-  const r = await safeFetch(articleUrl, src.domain);
-  await incrUsage(c, "fetches", 1);
-  if (!r || r.status !== 200 || !r.text) return { ok: false, len: 0 };
+  const r = await fetchBudgeted(c, articleUrl, src.domain);
+  if (r === "budget" || !r || r.status !== 200 || !r.text) {
+    return { ok: false, len: 0 };
+  }
   const page = extractPage(r.text, articleUrl);
-  if (page.text.length < 300 || !page.title) {
+  if (!isLikelyArticle(page, r.text)) {
     return { ok: false, len: page.text.length };
   }
   await c.from("academy_content_items").update({
@@ -313,13 +345,11 @@ async function handleScanSource(c: any, payload: any): Promise<string> {
   if (!["candidate", "active", "degraded"].includes(src.status)) {
     return "source_" + src.status;
   }
-  if (!(await budgetOk(c, "fetches", "academy_daily_fetch_cap", 2000))) {
-    return "budget_fetch";
-  }
   const feeds = normalizeFeedEntries(src.feed_urls);
   let found = 0;
   let anySuccess = false;
-  let firstNewLink: string | null = null;
+  let sawFeed = false;
+  const newLinks: string[] = [];
   const updatedFeeds: FeedEntry[] = [];
   for (const f of feeds) {
     const entry: FeedEntry = { url: f.url, etag: f.etag, lm: f.lm };
@@ -329,11 +359,12 @@ async function handleScanSource(c: any, payload: any): Promise<string> {
     const headers: Record<string, string> = {};
     if (f.etag) headers["If-None-Match"] = f.etag;
     if (f.lm) headers["If-Modified-Since"] = f.lm;
-    const r = await safeFetch(f.url, src.domain, headers);
-    await incrUsage(c, "fetches", 1);
+    const r = await fetchBudgeted(c, f.url, src.domain, headers);
+    if (r === "budget") return "budget_fetch";
     if (!r) continue;
     if (r.status === 304) {
       anySuccess = true; // değişiklik yok — başarı sayılır, yönlendirme DEĞİL
+      sawFeed = true;
       continue;
     }
     if (r.status !== 200 || !r.text) continue;
@@ -341,21 +372,35 @@ async function handleScanSource(c: any, payload: any): Promise<string> {
     entry.etag = r.headers.get("etag") ?? f.etag;
     entry.lm = r.headers.get("last-modified") ?? f.lm;
     if (/<(rss|feed)[\s>]/i.test(r.text)) {
+      sawFeed = true;
       for (const it of parseFeed(r.text).slice(0, 25)) {
         const link = new URL(it.link, f.url).toString();
         if (!isAllowedUrl(link, src.domain)) continue;
         if (await insertItem(c, src, { ...it, link })) {
           found++;
-          firstNewLink ??= link;
+          newLinks.push(link);
         }
       }
     }
   }
+  // RSS'siz kaynak İLK KEZ devreye girebilsin: feed yoksa keşif hattına
+  // (sitemap index/urlset/HTML) hemen bir arşiv işi kuyruklanır.
+  if (!sawFeed) {
+    await c.rpc("academy_enqueue_job", {
+      p_job_type: "archive_scan",
+      p_payload: { source_id: src.id },
+      p_dedupe_key: `archive:${src.slug}:bootstrap`,
+      p_priority: 150,
+      p_cooldown_seconds: 6 * 3600,
+    });
+  }
   // 'active' YALNIZ gerçek makale çıkarım kanıtından sonra (RSS bulunması
-  // tek başına yeterli DEĞİL).
+  // tek başına yeterli DEĞİL). İlk makale başarısızsa SONRAKİLER denenir
+  // (tek kötü sayfa kaynağı kilitlemez).
   let proved = Boolean((src.content_proof as any)?.url);
-  if (!proved && firstNewLink) {
-    proved = (await proveContent(c, src, firstNewLink)).ok;
+  for (const link of newLinks.slice(0, 3)) {
+    if (proved) break;
+    proved = (await proveContent(c, src, link)).ok;
   }
   await c.from("academy_sources").update({
     feed_urls: updatedFeeds,
@@ -381,63 +426,97 @@ async function handleScanSource(c: any, payload: any): Promise<string> {
     : "scan_failed";
 }
 
-/** Haftalık arşiv: sitemap'ten cursor'la SINIRLI parti; siteyi baştan
- * indirmez, ilerlemeyi archive_cursor'da tutar. */
+/** Arşiv/keşif: RSS'siz kaynaklar dahil — sitemap index (TÜM alt
+ * sitemap'ler cursor'la) → urlset → izinli HTML bağlantı keşfi. Gerçek
+ * makale çıkarımı burada yapılır (menü/kategori/çerez kanıt sayılmaz);
+ * kaynak İLK kanıtla candidate→active olur. Sınırlı parti; ilerleme
+ * archive_cursor'da. */
 async function handleArchiveScan(c: any, payload: any): Promise<string> {
   const { data: src } = await c.from("academy_sources").select("*")
     .eq("id", payload.source_id).maybeSingle();
   if (!src) return "source_not_found";
-  if (!["active", "candidate"].includes(src.status)) {
+  if (!["active", "candidate", "degraded"].includes(src.status)) {
     return "source_" + src.status;
   }
-  if (!(await budgetOk(c, "fetches", "academy_daily_fetch_cap", 2000))) {
-    return "budget_fetch";
-  }
-  const cursor = (src.archive_cursor ?? {}) as {
-    sitemap_url?: string; offset?: number;
-  };
-  const smUrl = cursor.sitemap_url ??
-    `https://${src.domain}/sitemap.xml`;
-  if (!(await robotsOk(src.domain, smUrl))) return "robots_disallow";
-  const r = await safeFetch(smUrl, src.domain);
-  await incrUsage(c, "fetches", 1);
-  if (!r || r.status !== 200 || !r.text) return "sitemap_unreachable";
-  let locs = parseSitemapLocs(r.text);
-  // sitemapindex ise ilk alt sitemap'e in.
-  if (/<sitemapindex[\s>]/i.test(r.text) && locs.length > 0) {
-    const sub = locs.find((l) => isAllowedUrl(l, src.domain));
-    if (!sub) return "sitemap_empty";
-    const r2 = await safeFetch(sub, src.domain);
-    await incrUsage(c, "fetches", 1);
-    if (!r2 || r2.status !== 200) return "sitemap_unreachable";
-    locs = parseSitemapLocs(r2.text);
-  }
-  const offset = cursor.offset ?? 0;
-  const batch = locs.slice(offset, offset + 10)
-    .filter((l) => isAllowedUrl(l, src.domain));
+  // robots bir kez çekilir; discoverArticles aynı metni tüm keşifte
+  // uygular (yönlendirme hedefleri safeFetch'te ayrıca doğrulanır).
+  await robotsOk(src.domain, `https://${src.domain}/`);
+  const robotsTxt = robotsCache.get(src.domain) ?? null;
+  const feeds = normalizeFeedEntries(src.feed_urls).map((f) => f.url);
+  const startUrls = [
+    ...feeds.filter((u) => /sitemap|\.xml/i.test(u)),
+    `https://${src.domain}/sitemap.xml`,
+    `https://${src.domain}/sitemap_index.xml`,
+    ...feeds.filter((u) => !/sitemap|\.xml|rss|feed|atom/i.test(u)),
+    `https://${src.domain}/`,
+  ];
+  let budgetHit = false;
+  const r = await discoverArticles({
+    domain: src.domain,
+    startUrls,
+    cursor: (src.archive_cursor ?? {}) as Record<string, unknown>,
+    fetchFn: async (u: string) => {
+      const rr = await fetchBudgeted(c, u, src.domain);
+      if (rr === "budget") {
+        budgetHit = true;
+        return null;
+      }
+      return rr ? { status: rr.status, text: rr.text } : null;
+    },
+    robotsTxt,
+    maxFetch: 12,
+    maxArticles: 5,
+  });
+  if (budgetHit && r.articles.length === 0) return "budget_fetch";
   let added = 0;
-  for (const link of batch) {
-    if (!(await robotsOk(src.domain, link))) continue;
-    if (
-      await insertItem(c, src, {
-        title: link.split("/").filter(Boolean).pop() ?? link,
-        link,
-        publishedAt: null, // tarih makale sayfasından; UYDURULMAZ
-        summary: "",
-        kindHint: "evergreen",
-      })
-    ) added++;
+  let proved = Boolean((src.content_proof as any)?.url);
+  for (const a of r.articles) {
+    const inserted = await insertItem(c, src, {
+      title: a.title,
+      link: a.url,
+      publishedAt: a.publishedAt, // kaynaktan; yoksa NULL (uydurulmaz)
+      summary: a.text.slice(0, 500),
+      kindHint: "evergreen",
+    });
+    if (!inserted) continue;
+    added++;
+    await c.from("academy_content_items").update({
+      full_text: a.text.slice(0, 60000),
+      status: "read",
+    }).eq("canonical_url", a.url).eq("source_id", src.id);
+    if (!proved) {
+      proved = true;
+      await c.from("academy_sources").update({
+        content_proof: {
+          url: a.url,
+          title: a.title.slice(0, 200),
+          text_len: a.text.length,
+          method: r.note,
+          at: new Date().toISOString(),
+        },
+      }).eq("id", src.id);
+    }
   }
   await c.from("academy_sources").update({
-    archive_cursor: {
-      sitemap_url: smUrl,
-      offset: offset + batch.length >= locs.length
-        ? 0
-        : offset + batch.length,
-      done_at: new Date().toISOString(),
-    },
+    archive_cursor: r.nextCursor,
+    last_attempt_at: new Date().toISOString(),
+    ...(added > 0 || r.note !== "no_sitemap_no_html"
+      ? {
+        last_success_at: new Date().toISOString(),
+        consecutive_failures: 0,
+        ...(proved && src.status !== "active"
+          ? { status: "active", status_reason: null }
+          : {}),
+      }
+      : {
+        consecutive_failures: (src.consecutive_failures ?? 0) + 1,
+        last_error: "discovery_" + r.note,
+        status: (src.consecutive_failures ?? 0) + 1 >= 5
+          ? "degraded"
+          : src.status,
+      }),
   }).eq("id", src.id);
-  return `archive_added_${added}`;
+  return `archive_added_${added}_${r.note}${proved ? "_proved" : ""}`;
 }
 
 // ── Taslak üretimi ───────────────────────────────────────────────────
@@ -460,8 +539,8 @@ async function handleDraft(c: any, payload: any): Promise<string> {
       }).eq("id", item.id);
       return "rejected_robots";
     }
-    const r = await safeFetch(item.url, src.domain);
-    await incrUsage(c, "fetches", 1);
+    const r0 = await fetchBudgeted(c, item.url, src.domain);
+    const r = r0 === "budget" ? null : r0;
     if (r && r.status === 200 && r.text) {
       const page = extractPage(r.text, item.url);
       fullText = page.text;
@@ -517,7 +596,7 @@ async function handleDraft(c: any, payload: any): Promise<string> {
   });
   const r = await deepseek(c, prompt.system, prompt.user, 1800);
   if (!r.ok) {
-    if (r.reason === "no_key") return "dead_no_llm_key";
+    if (r.reason === "no_key") return "config_no_llm_key";
     if (r.reason.startsWith("budget")) return "budget_" + r.reason;
     return "llm_" + r.reason;
   }
@@ -529,13 +608,20 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     return "invalid_output_" + v.reason;
   }
   const d = v.draft;
-  // OTOMATİK iddia-kanıt denetimi: modelin publishable demesi YETMEZ.
-  const evidence = checkClaimsAgainstSource(d.claims, fullText);
+  // OTOMATİK iddia-kanıt denetimi: quote kaynakta + sayı/birim korunur +
+  // başlık/gövde/pratik not birlikte kapsanır (modelin publishable'ı ve
+  // ikinci bir modelin onayı YETMEZ — deterministik).
+  const evidence = checkClaimsAgainstSource(
+    d.claims,
+    fullText,
+    d.title + "\n" + d.body + "\n" + d.practical_notes,
+  );
   const publishable = d.publishable && evidence.ok;
   const statusReason = !d.publishable
     ? "model_not_publishable"
     : (!evidence.ok
-      ? ("claims_unverified: " + evidence.failed.join(" | ").slice(0, 300))
+      ? (evidence.reason + ": " +
+        evidence.failed.join(" | ").slice(0, 280))
       : null);
 
   const { error } = await c.from("academy_drafts").insert({
@@ -602,13 +688,14 @@ async function handleMedia(c: any, payload: any): Promise<string> {
       body: draft.body,
     });
   } catch (e) {
-    // Kart üretilemedi → görselsiz yayına düş (fail-soft; tekrar deneme
-    // harcaması yok). Neden kaydedilir.
+    // Kart üretilemedi → taslak MEDYA HAZIR SAYILMAZ (görselsiz sessiz
+    // yayın açığı yok); hata kaydedilir, iş sınırlı retry ile yeniden
+    // dener, diğer işler etkilenmez. Yayın RPC'si de hazır medya satırını
+    // sunucu tarafında ayrıca doğrular.
     await c.from("academy_drafts").update({
-      status: "media_ready",
-      status_reason: "card_failed: " + String(e).slice(0, 200),
+      status_reason: "card_render_failed: " + String(e).slice(0, 200),
     }).eq("id", draft.id);
-    return "card_failed_text_only";
+    return "card_render_failed";
   }
   const path = `${bot.profile_id}/academy/${draft.id}/card.png`;
   const up = await c.storage.from("feed-media").upload(path, png, {
@@ -648,7 +735,7 @@ async function handleHumorPost(c: any, payload: any): Promise<string> {
   const prompt = buildHumorPrompt();
   const r = await deepseek(c, prompt.system, prompt.user, 500);
   if (!r.ok) {
-    return r.reason === "no_key" ? "dead_no_llm_key" : "llm_" + r.reason;
+    return r.reason === "no_key" ? "config_no_llm_key" : "llm_" + r.reason;
   }
   const v = validateHumorOutput(r.content);
   if (!v.ok) return "invalid_output_" + v.reason;
@@ -707,7 +794,7 @@ async function handleHumorComment(c: any, payload: any): Promise<string> {
     300,
   );
   if (!r.ok) {
-    return r.reason === "no_key" ? "dead_no_llm_key" : "llm_" + r.reason;
+    return r.reason === "no_key" ? "config_no_llm_key" : "llm_" + r.reason;
   }
   const v = validateHumorOutput(r.content);
   if (!v.ok) return "invalid_output_" + v.reason;
@@ -737,7 +824,7 @@ async function handleHumorReply(c: any, payload: any): Promise<string> {
     300,
   );
   if (!r.ok) {
-    return r.reason === "no_key" ? "dead_no_llm_key" : "llm_" + r.reason;
+    return r.reason === "no_key" ? "config_no_llm_key" : "llm_" + r.reason;
   }
   const v = validateHumorOutput(r.content);
   if (!v.ok) return "invalid_output_" + v.reason;
@@ -796,7 +883,7 @@ async function handleHumorDm(c: any, payload: any): Promise<string> {
     300,
   );
   if (!r.ok) {
-    return r.reason === "no_key" ? "dead_no_llm_key" : "llm_" + r.reason;
+    return r.reason === "no_key" ? "config_no_llm_key" : "llm_" + r.reason;
   }
   const v = validateHumorOutput(r.content);
   if (!v.ok) return "invalid_output_" + v.reason;
@@ -821,34 +908,43 @@ async function handleMaintenance(c: any): Promise<string> {
   const day = istDay();
   const parts: string[] = [];
 
-  // 1) Vadesi gelen kaynaklar → scan_source.
+  // 1) Vadesi gelen kaynaklar → scan_source. DEGRADED kaynaklar kalıcı
+  // olarak unutulmaz: interval×4 backoff ile yeniden denenir
+  // (paused/blocked OTOMATİK açılmaz). Cooldown, başarılı taramanın aynı
+  // saat diliminde yeniden üretilmesini engeller.
   const { data: due } = await c.from("academy_sources")
     .select("id, slug, check_interval_minutes, last_attempt_at, status")
-    .in("status", ["candidate", "active"]).limit(200);
+    .in("status", ["candidate", "active", "degraded"]).limit(200);
   let scans = 0;
   for (const s of due ?? []) {
     const last = s.last_attempt_at ? Date.parse(s.last_attempt_at) : 0;
-    if (now.getTime() - last < s.check_interval_minutes * 60000) continue;
+    const factor = s.status === "degraded" ? 4 : 1;
+    const intervalMs = s.check_interval_minutes * 60000 * factor;
+    if (now.getTime() - last < intervalMs) continue;
     await c.rpc("academy_enqueue_job", {
       p_job_type: "scan_source",
       p_payload: { source_id: s.id },
       p_dedupe_key: `scan:${s.slug}:${slot}`,
+      p_priority: 120,
+      p_cooldown_seconds: Math.floor(intervalMs / 1000) - 300,
     });
     scans++;
   }
   parts.push(`scan_${scans}`);
 
-  // 2) Haftalık arşiv keşfi (aktif kaynaklarda, ISO-hafta dedupe).
-  const week = `${now.getUTCFullYear()}w${
-    Math.ceil(((now.getTime() / 86400000) % 365) / 7)}`;
-  const { data: actives } = await c.from("academy_sources")
-    .select("id, slug").eq("status", "active").limit(100);
-  for (const s of actives ?? []) {
+  // 2) Arşiv/keşif: RSS'siz CANDIDATE kaynaklar da dahil (ilk devreye
+  // girme yolu). Haftalık tekrar cooldown ile (başarı sonrası 6 gün) —
+  // her maintenance turunda yeniden üretilmez.
+  const { data: discos } = await c.from("academy_sources")
+    .select("id, slug")
+    .in("status", ["candidate", "active", "degraded"]).limit(200);
+  for (const s of discos ?? []) {
     await c.rpc("academy_enqueue_job", {
       p_job_type: "archive_scan",
       p_payload: { source_id: s.id },
-      p_dedupe_key: `archive:${s.slug}:${week}`,
+      p_dedupe_key: `archive:${s.slug}`,
       p_priority: 200,
+      p_cooldown_seconds: 6 * 86400,
     });
   }
 
@@ -863,6 +959,7 @@ async function handleMaintenance(c: any): Promise<string> {
       p_job_type: "draft",
       p_payload: { item_id: it.id },
       p_dedupe_key: `draft:${it.id}`,
+      p_priority: 90,
       p_max_attempts: 3,
     });
   }
@@ -875,6 +972,7 @@ async function handleMaintenance(c: any): Promise<string> {
       p_job_type: "media",
       p_payload: { draft_id: d.id },
       p_dedupe_key: `media:${d.id}`,
+      p_priority: 85,
       p_max_attempts: 3,
     });
   }
@@ -889,25 +987,35 @@ async function handleMaintenance(c: any): Promise<string> {
     .in("status", readyStatuses)
     .or(`scheduled_for.is.null,scheduled_for.lte.${now.toISOString()}`)
     .limit(target);
-  let i = 0;
+  // Yayın aralığı FARKLI maintenance turlarında da korunur: taban zaman,
+  // bugünkü SON yayının zamanından türetilir (feed tek dakikada dolmaz).
+  const gapMs = 90 * 60000;
+  const { data: lastPub } = await c.from("academy_drafts")
+    .select("updated_at").eq("status", "published")
+    .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+  const lastMs = lastPub ? Date.parse(lastPub.updated_at) : 0;
+  let base = Math.max(now.getTime(), lastMs + gapMs);
   for (const d of ready ?? []) {
-    const runAfter = new Date(now.getTime() + i * 90 * 60000).toISOString();
     await c.rpc("academy_enqueue_job", {
       p_job_type: "publish",
       p_payload: { draft_id: d.id },
-      p_run_after: runAfter,
+      p_run_after: new Date(base).toISOString(),
       p_dedupe_key: `publish:${d.id}`,
+      p_priority: 80,
       p_max_attempts: 3,
     });
-    i++;
+    base += gapMs;
   }
 
-  // 6) Günde bir mizah gönderisi.
+  // 6) Günde bir mizah gönderisi (başarı sonrası cooldown — aynı gün
+  // yeniden üretilmez; partial dedupe yalnız queued/running'i kilitler).
   await c.rpc("academy_enqueue_job", {
     p_job_type: "humor_post",
     p_payload: {},
     p_dedupe_key: `humor:${day}`,
+    p_priority: 70,
     p_max_attempts: 2,
+    p_cooldown_seconds: 20 * 3600,
   });
 
   // 7) Mizah B: bot postlarına gelen yeni üst-yorum/cevaplara yanıt işleri.
@@ -930,6 +1038,7 @@ async function handleMaintenance(c: any): Promise<string> {
           p_job_type: "humor_reply",
           p_payload: { comment_id: cm.id, event_key: `reply:${cm.id}` },
           p_dedupe_key: `hreply:${cm.id}`,
+          p_priority: 40,
           p_max_attempts: 2,
         });
       }
@@ -955,6 +1064,7 @@ async function handleMaintenance(c: any): Promise<string> {
           proactive: false,
         },
         p_dedupe_key: `hdm:${lastMsg.id}`,
+        p_priority: 40,
         p_max_attempts: 2,
       });
     }
@@ -980,6 +1090,7 @@ async function handleMaintenance(c: any): Promise<string> {
           p_job_type: "humor_comment",
           p_payload: { post_id: p.id, event_key: `spont:${p.id}` },
           p_dedupe_key: `hspont:${p.id}`,
+          p_priority: 60,
           p_max_attempts: 2,
         });
         if (id.data != null) {
@@ -1013,6 +1124,7 @@ async function handleMaintenance(c: any): Promise<string> {
               proactive: true,
             },
             p_dedupe_key: `pdm:${u.user_id}:${day}`,
+            p_priority: 50,
             p_max_attempts: 1,
           });
           if (id.data != null) {
@@ -1057,9 +1169,12 @@ Deno.serve(async (req) => {
   // heartbeat ile süre uzatılır.
   const maxJobs = Math.min(Number(body.max_jobs ?? 3), 5);
 
-  if (body.action === "tick") {
-    const r = await handleMaintenance(c);
-    return new Response(JSON.stringify({ ok: true, tick: r }));
+  let tickResult: string | null = null;
+  if (body.action === "tick" || body.action === "tick_and_process") {
+    tickResult = await handleMaintenance(c);
+    if (body.action === "tick") {
+      return new Response(JSON.stringify({ ok: true, tick: tickResult }));
+    }
   }
 
   const { data: jobs, error } = await c.rpc("academy_claim_jobs", {
@@ -1123,16 +1238,22 @@ Deno.serve(async (req) => {
         default:
           detail = "unknown_job_type";
       }
-      if (detail.startsWith("dead_")) {
-        outcome = "dead"; // kalıcı engel (anahtar yok) — dedupe partial
-        // olduğu için anahtar gelince maintenance yeniden kuyruklar.
+      if (detail.startsWith("config_")) {
+        // Giderilebilir yapılandırma engeli (ör. LLM anahtarı yok):
+        // iş KAYBOLMAZ; attempts sıfırlanıp uzun aralıkla bekler,
+        // anahtar tanımlanınca kendiliğinden devam eder.
+        outcome = "config_blocked";
+        retryDelay = 6 * 3600;
+      } else if (detail.startsWith("dead_")) {
+        outcome = "dead";
       } else if (detail.startsWith("budget_")) {
         outcome = "failed"; // bütçe: ertesi İstanbul gününde yeniden dene
         retryDelay = secsToNextIstDay();
       } else if (
         detail.startsWith("llm_") || detail === "scan_failed" ||
         detail === "publish_rpc_error" || detail === "rpc_error" ||
-        detail === "storage_upload_failed" || detail === "media_insert_failed"
+        detail === "storage_upload_failed" ||
+        detail === "media_insert_failed" || detail === "card_render_failed"
       ) {
         outcome = "failed";
       } else {
@@ -1154,6 +1275,7 @@ Deno.serve(async (req) => {
   return new Response(
     JSON.stringify({
       ok: true,
+      tick: tickResult,
       processed: Object.keys(results).length,
       results,
     }),
