@@ -3,6 +3,37 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## AŞAMA 1 — zayıf bot güçlendirme SONUÇ (2026-09-29)
+
+Hedef: isletme/turk_urunleri/ustalik_dunya ≥5 içerik-kanıtlı. Sonuç:
+**113 aday → 43 içerik-kanıtlı / 7 feed-kanıtsız / 5 blocked_or_limited /
+58 kanıtsız.** Konu başına: ekmek_fermantasyon 11, sektor_gundemi 10,
+ustalik_dunya 10, firin_teknoloji 9, hijyen_kalite 8, bilim_arge 7,
+pastacilik 7, **turk_urunleri 6, isletme 5, un_tahil 5** — üç zayıf konu
+hedefi karşıladı. 22 yeni aday eklendi (yalnız yeniler tarandı, ONLY
+filtresiyle; tam tarama TEKRARLANMADI); kanıt kuralları değişmedi.
+
+Bu sırada bulunan ve kırmızı-test-önce kapatılan YENİ hatalar (deno 44/44):
+- **H4 kapsam seçimi**: extractPage ilk `<article>`'ı alıyordu — çoğu
+  sitede o teaser kartı (47 karakterlik "gövde" → gerçek makale RED).
+  `scopeContent` artık en uzun article/main bloğunu seçer; linkDensity/
+  form/paragraf ölçümleri de AYNI kapsamda (site menüsünün 300 linki doğru
+  makaleyi reddettiremez; kategori listelemesi hâlâ RED). Bu düzeltme
+  theperfectloaf/chainbaker/bakefromscratch/breadtopia'yı kanıta çevirdi.
+- **H4d canonical-kök**: her sayfada köke işaret eden bozuk canonical
+  makale URL'sini "/" yapıyordu → artık yok sayılır.
+- **Kalıp sızıntıları**: hakkında/yayın ilkeleri/kalite-çevre yönetimi/
+  media-center/üyelik-etkinlik dışı kurumsal sayfalar; `kurumsal/` yolu
+  artık bütünüyle içerik-dışı. Ayrıca Python `\b`→backspace tuzağı regex'e
+  görünmez 0x08 sokmuştu (4 adet) — temizlendi, test ediliyor.
+
+Dürüstlük notları: world_bakers/craft_bakers_uk kanıtları etkinlik duyurusu
+(sınıf: gerçek içerik, sınırda); oztiryakiler kanıtı şirket basın haberi;
+uno_tr/akmaya/ozmaya/dunya_gida bağlantı hatası (status 0) — kanıtsız;
+snack_bakery/ulusoy_un 403 → blocked_or_limited (kanıtlı SAYILMAZ);
+food_business_news/degirmenci_dergisi kanıt çıkarılamadı. Seed migration
+113 aday/mapping'e genişletildi (PG paketi yeniden koşuldu).
+
 ## 3. tur — üç doğrulanmış hata + kanıt kalitesi SONUÇ (2026-09-29)
 
 Üç hata kırmızı-test-önce kapatıldı (`lib_bugfix_test.ts` düzeltme öncesi

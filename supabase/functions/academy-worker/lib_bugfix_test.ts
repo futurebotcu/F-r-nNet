@@ -342,3 +342,64 @@ Deno.test("H2: iştirakler/kurum-ana-sayfa başlıkları kanıt değil", () => {
     "https://kosgeb.gov.tr/site/tr/genel/istirakler");
   assert(!isLikelyArticle(c.page, c.html, c.url), "iştirakler reddi");
 });
+
+// ── H4: kapsam seçimi — ilk <article> teaser'ı gerçek gövdeyi gölgeliyor ──
+Deno.test("H4a: kısa teaser article + uzun gerçek article → uzun gövde seçilir", () => {
+  const long = "Ekşi maya fermantasyonunda sıcaklık kontrolü hamurun gelişimini belirler. ".repeat(60);
+  const html = `<html><head><title>Ekşi Maya Rehberi</title></head><body>
+    <article><a href="/x">İlgili yazı: bagel</a></article>
+    <article><h1>Ekşi Maya Rehberi</h1><p>${long}</p></article></body></html>`;
+  const page = extractPage(html, "https://ornek.com/eksi-maya-rehberi/");
+  assert(page.text.length > 2000, `gövde kısa kaldı: ${page.text.length}`);
+  assert(isLikelyArticle(page, html, "https://ornek.com/eksi-maya-rehberi/"), "makale reddedildi");
+});
+
+Deno.test("H4b: yoğun site menüsü makale dışındaysa linkDensity makaleyi reddetmez", () => {
+  const nav = Array.from({ length: 300 }, (_, i) => `<a href="/n${i}">x</a>`).join("");
+  const body = "Tam buğday unuyla hamur hidrasyonu ve yoğurma süresi üzerine ayrıntılı inceleme. ".repeat(50);
+  const html = `<html><head><title>Hamur Hidrasyonu</title></head><body>
+    <nav>${nav}</nav><main><h1>Hamur Hidrasyonu</h1><p>${body}</p></main></body></html>`;
+  const page = extractPage(html, "https://ornek.com/hamur-hidrasyonu/");
+  assert(isLikelyArticle(page, html, "https://ornek.com/hamur-hidrasyonu/"),
+    "menü linkleri makaleyi reddettirdi");
+});
+
+Deno.test("H4c: kategori/listeleme sayfası hâlâ RED (article'sız çok-link)", () => {
+  const links = Array.from({ length: 80 }, (_, i) =>
+    `<a href="/tarif${i}">Tarif ${i} ekmek</a>`).join(" ");
+  const html = `<html><head><title>Category: Recipes</title></head><body>${links}
+    <p>${"Ekmek tarifleri listesi. ".repeat(30)}</p></body></html>`;
+  const page = extractPage(html, "https://ornek.com/category/recipes/");
+  assert(!isLikelyArticle(page, html, "https://ornek.com/category/recipes/"), "listeleme kabul edildi");
+});
+
+Deno.test("H4d: köke işaret eden canonical yok sayılır (makale URL'si korunur)", () => {
+  const html = `<html><head><title>Tam Buğday Sandviç Ekmeği</title>
+    <link rel="canonical" href="https://ornek.com/"/></head>
+    <body><article><p>${"Hamur mayalama ve pişirme adımları. ".repeat(30)}</p></article></body></html>`;
+  const p = extractPage(html, "https://ornek.com/ww-subs/");
+  assert(p.canonicalUrl === null, "kök canonical yok sayılmalı");
+});
+
+Deno.test("H2: Hakkında / Kalite Yönetimi kurumsal sayfaları kanıt değil", () => {
+  const a = pageOf("Hakkında - Gıda Hattı", "<p>" +
+    "Kuruluşumuz gıda haberciliği yapar. ".repeat(40) + "</p>",
+    "https://gidahatti.com/bilgi/kurulus");
+  assert(!isLikelyArticle(a.page, a.html, a.url), "hakkında reddi");
+  const b = pageOf("Mauri Maya | Global Deneyim", "<p>" +
+    "Kalite yönetim sistemimiz un ve maya üretimini kapsar. ".repeat(40) + "</p>",
+    "https://mauri.com.tr/tr/kurumsal/KaliteYonetimi");
+  assert(!isLikelyArticle(b.page, b.html, b.url), "kalite yönetimi reddi");
+});
+
+Deno.test("H2: kurumsal/ yolu ve medya-merkezi/yayın-ilkeleri kanıt değil", () => {
+  for (const [title, url] of [
+    ["Mauri Maya | Global Deneyim", "https://mauri.com.tr/tr/kurumsal/CevreYonetimi"],
+    ["Media Center", "https://americanbakers.org/about/media-center"],
+    ["Yayın İlkeleri - Gıda Hattı", "https://gidahatti.com/bilgi/yayin-ilkeleri"],
+  ]) {
+    const c = pageOf(title, "<p>" +
+      "Ekmek ve unlu mamuller sektörü hakkında kurumsal metin. ".repeat(40) + "</p>", url);
+    assert(!isLikelyArticle(c.page, c.html, c.url), "kabul edildi: " + url);
+  }
+});

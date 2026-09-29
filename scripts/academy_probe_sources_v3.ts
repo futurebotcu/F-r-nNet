@@ -61,9 +61,16 @@ async function get(
 const data = JSON.parse(
   await Deno.readTextFile("docs/academy/sources_candidates.json"),
 );
+// ONLY=slug1,slug2 → yalnız bu adaylar taranır, sonuç mevcut rapora
+// MERGE edilir (tam tarama tekrarlanmaz).
+const only = (Deno.env.get("ONLY") ?? "").split(",").map((x) => x.trim())
+  .filter(Boolean);
+const targets = only.length
+  ? data.sources.filter((s: { slug: string }) => only.includes(s.slug))
+  : data.sources;
 const results: Record<string, unknown>[] = [];
 
-for (const s of data.sources) {
+for (const s of targets) {
   console.log("probe:", s.slug);
   const entry: Record<string, unknown> = {
     slug: s.slug,
@@ -186,7 +193,20 @@ for (const s of data.sources) {
   results.push(entry);
 }
 
-const proved = results.filter((r) => r.verdict === "content_proved");
+// ONLY modunda: mevcut rapor korunur, taranan slug'lar güncellenir.
+let merged = results;
+if (only.length) {
+  const prev = JSON.parse(
+    await Deno.readTextFile("docs/academy/source_verification.json"),
+  );
+  const bySlug = new Map(
+    (prev.sources as Record<string, unknown>[]).map((r) => [r.slug, r]),
+  );
+  for (const r of results) bySlug.set(r.slug as string, r);
+  merged = [...bySlug.values()];
+}
+const resultsAll = merged;
+const proved = resultsAll.filter((r) => r.verdict === "content_proved");
 const perTopic: Record<string, number> = {};
 for (const r of proved) {
   for (const t of r.topics as string[]) perTopic[t] = (perTopic[t] ?? 0) + 1;
@@ -200,16 +220,16 @@ const report = {
       "iletişim/giriş/çerez/kontakt/arama sayfaları KANIT SAYILMAZ. " +
       "content_proved = gerçek makale (başlık+ana metin+robots+SSRF); " +
       "lisans/kullanım koşulu onayı DEĞİLDİR.",
-    candidates_total: results.length,
+    candidates_total: resultsAll.length,
     content_proved: proved.length,
     reachable_feed_unproved:
-      results.filter((r) => r.verdict === "reachable_feed").length,
-    unproved: results.filter((r) => r.verdict === "unproved").length,
+      resultsAll.filter((r) => r.verdict === "reachable_feed").length,
+    unproved: resultsAll.filter((r) => r.verdict === "unproved").length,
     blocked_or_limited:
-      results.filter((r) => r.verdict === "blocked_or_limited").length,
+      resultsAll.filter((r) => r.verdict === "blocked_or_limited").length,
     proved_per_topic: perTopic,
   },
-  sources: results,
+  sources: resultsAll,
 };
 await Deno.writeTextFile(
   "docs/academy/source_verification.json",

@@ -145,6 +145,32 @@ export interface ExtractedPage {
   text: string;
 }
 
+/** İçerik kapsamı: TÜM <article>/<main> blokları içinden metni en uzun
+ * olanı seçer. İlk <article> çoğu sitede teaser/ilgili-yazı kartıdır;
+ * ilkini almak 47 karakterlik "gövde" üretip gerçek makaleyi reddettirir.
+ * En iyi blok bile çok kısaysa sayfanın tamamına düşer. */
+export function scopeContent(html: string): string {
+  const blocks = [
+    ...(html.match(/<article[\s>][\s\S]*?<\/article>/gi) ?? []),
+    ...(html.match(/<main[\s>][\s\S]*?<\/main>/gi) ?? []),
+  ];
+  let best = "";
+  let bestLen = 0;
+  for (const b of blocks) {
+    const len = stripTags(b).length;
+    if (len > bestLen) {
+      best = b;
+      bestLen = len;
+    }
+  }
+  if (!best) return html;
+  // Çok kısa blok (teaser/JS-kabuk): sayfanın geri kalanı belirgin şekilde
+  // daha uzunsa gövdeye düş; değilse kısa ama gerçek makaleyi koru (nav
+  // sızdırmamak için).
+  if (bestLen < 300 && stripTags(html).length > bestLen * 3) return html;
+  return best;
+}
+
 export function extractPage(html: string, url: string): ExtractedPage {
   const ogTitle = html.match(
     /<meta[^>]+property="og:title"[^>]+content="([^"]*)"/i,
@@ -152,13 +178,18 @@ export function extractPage(html: string, url: string): ExtractedPage {
   const title = decodeEntities(
     (ogTitle ?? tagTextGlobal(html, "title")).trim(),
   ).slice(0, 300);
-  const canonical = html.match(
+  let canonical = html.match(
     /<link[^>]+rel="canonical"[^>]+href="([^"]+)"/i,
   )?.[1] ?? null;
-  // <article>/<main> varsa oradan, yoksa body'den.
-  const scoped = html.match(/<article[\s>][\s\S]*?<\/article>/i)?.[0] ??
-    html.match(/<main[\s>][\s\S]*?<\/main>/i)?.[0] ?? html;
-  const text = stripTags(scoped).slice(0, 20000);
+  // Yanlış yapılandırılmış siteler her sayfada canonical'ı kök URL'ye
+  // işaret ettirir; makale URL'sini kökle DEĞİŞTİRMEK kanıtı/atfı bozar.
+  try {
+    if (
+      canonical && new URL(canonical).pathname === "/" &&
+      url && new URL(url).pathname !== "/"
+    ) canonical = null;
+  } catch (_) { /* bozuk canonical → yok say */ }
+  const text = stripTags(scopeContent(html)).slice(0, 20000);
   return { title, canonicalUrl: canonical, text, };
 }
 
@@ -593,9 +624,9 @@ export function extractPublishedAt(html: string): string | null {
 // Tür kara-kalıpları: iletişim/giriş/üyelik/çerez/gizlilik/arama/sepet
 // gibi sayfalar hangi uzunlukta olursa olsun İÇERİK KANITI değildir.
 const NON_CONTENT_PATH_RE =
-  /(iletisim|ilet%c4%b0sim|contact|kontakt|impressum|imprint|login|log-?in|sign-?in|signin|giris|giri%c5%9f|register|kayit|uyelik|uye(\/|$)|\/user(\/|$)|account|notification|bildirim|cerez|%c3%a7erez|cookie|privacy|gizlilik|datenschutz|kvkk|terms|agb\b|kosullar|kullanim-sartlari|search|arama\b|\/tag(\/|$)|sepet|cart|checkout|basket|form(ular)?(\/|$)|password|sifre|hakkimizda|hakk%c4%b1m%c4%b1zda|about-?us|ueber-uns|uber-uns|firmengruppe|kurumsal\/(bakan|baskan|yonetim)|(^|\/)(bakan|baskan|genel-mudur|mudurumuz|yonetim|board|management|team|karriere|career|jobs|tarihce|history|geschichte|misyon|vizyon|mission|vision|kurucu\w*|biz-kimiz|who-we-are|how-?we-?work|about-\w+|membership|join-renew|job-?openings?)(\/|$|\?))/i;
+  /(iletisim|ilet%c4%b0sim|contact|kontakt|impressum|imprint|login|log-?in|sign-?in|signin|giris|giri%c5%9f|register|kayit|uyelik|uye(\/|$)|\/user(\/|$)|account|notification|bildirim|cerez|%c3%a7erez|cookie|privacy|gizlilik|datenschutz|kvkk|terms|agb\b|kosullar|kullanim-sartlari|search|arama\b|\/tag(\/|$)|sepet|cart|checkout|basket|form(ular)?(\/|$)|password|sifre|hakkimizda|hakk%c4%b1m%c4%b1zda|about-?us|ueber-uns|uber-uns|firmengruppe|kurumsal\/|(^|\/)(bakan|baskan|genel-mudur|mudurumuz|yonetim|board|management|team|karriere|career|jobs|tarihce|history|geschichte|misyon|vizyon|mission|vision|kurucu\w*|biz-kimiz|who-we-are|how-?we-?work|about-\w+|membership|join-renew|job-?openings?|veri-politikasi|data-policy|yayin-ilkeleri|media-cent(er|re)|press-?room|basin-odasi|musteri-?memnuniyeti|customer-satisfaction)|\/(category|kategori|tag|etiket)\/(\/|$|\?))/i;
 const NON_CONTENT_TITLE_RE =
-  /^(iletişim|contact|kontakt\w*|giriş|login|sign in|üye\w*|kayıt|register|çerez\w*|cookie\w*|gizlilik\w*|privacy\w*|datenschutz\w*|kvkk|impressum|arama|search|bildirim\w*|notification\w*|sepet\w*|cart|hakkımızda|about us|über uns|yönetim\w*|başkan\w*|bakan\b|genel müdür\w*|müdürümüz|genel kurul\w*|icra komitesi|(?:i|İ|i̇)ştirak\w*|subsidiar\w*|teşkilat\w*|TEŞKİLAT\w*|kurucu\w*|founder\w*|our organi[sz]ation\w*|join \/ renew|membership|üyelik|job.?opening\w*|job.?posting\w*|haberler|^news$|aktuelles|tarihçe\w*|history|geschichte|misyon\w*|vizyon\w*|board|management|team|kariyer\w*|career\w*|404|sayfa bulunamadı|page not found|error)\b/i;
+  /^(iletişim|contact|kontakt\w*|giriş|login|sign in|üye\w*|kayıt|register|çerez\w*|cookie\w*|gizlilik\w*|privacy\w*|datenschutz\w*|kvkk|impressum|arama|search|bildirim\w*|notification\w*|sepet\w*|cart|hakkımızda|about us|über uns|yönetim\w*|başkan\w*|bakan\b|genel müdür\w*|müdürümüz|genel kurul\w*|icra komitesi|(?:i|İ|i̇)ştirak\w*|subsidiar\w*|teşkilat\w*|TEŞKİLAT\w*|kurucu\w*|founder\w*|our organi[sz]ation\w*|join \/ renew|membership|üyelik|job.?opening\w*|job.?posting\w*|haberler\b|^news$|aktuelles\b|veri politika\w*|data policy|yay(ı|i)n (İ|i|ı)lkeleri|media cent(er|re)|press room|editorial polic\w*|(ç|c)evre y(ö|o)netimi|m(ü|u)şteri memnuniyeti|customer satisfaction|kalite (politika|y(ö|o)netim)\w*|hakk(ı|i)nda\b|quality policy|category:|kategori:|arşiv\b|archive:|tarihçe\w*|history|geschichte|misyon\w*|vizyon\w*|board|management|team|kariyer\w*|career\w*|404|sayfa bulunamadı|page not found|error)\b/i;
 
 /** Fırıncılık/gıda konu uygunluğu — kaynak KANITI için içerik bu alanla
  * ilgili olmalı (kurumsal biyografi/tanıtım sayfası kanıt değildir). */
@@ -629,12 +660,16 @@ export function isLikelyArticle(
   const t = page.text.toLocaleLowerCase("tr-TR");
   if (/(çerez|cookie) politik/.test(t.slice(0, 400))) return false;
   // 2) Form-ağırlıklı sayfa (kontakt/login/kayıt formları): alan çok,
-  //    gerçek metin görece kısa → red.
+  //    gerçek metin görece kısa → red. Yapı ölçümleri İÇERİK KAPSAMI
+  //    üzerinden yapılır: site menüsündeki yüzlerce link/form alanı doğru
+  //    kapsamlanmış bir makaleyi reddettirmemeli (extractPage ile aynı
+  //    kapsam).
+  const scoped = scopeContent(html);
   const formInputs =
-    (html.match(/<(input|select|textarea)[\s>]/gi) ?? []).length;
+    (scoped.match(/<(input|select|textarea)[\s>]/gi) ?? []).length;
   if (formInputs >= 3 && page.text.length < 2500) return false;
   // 3) Kategori/arşiv: bağlantı yoğunluğu yüksek, akan metin az.
-  const linkCount = (html.match(/<a\s/gi) ?? []).length;
+  const linkCount = (scoped.match(/<a\s/gi) ?? []).length;
   const linkDensity = linkCount / Math.max(page.text.length / 100, 1);
   if (linkDensity > 3) return false;
   // 4) Metin niteliği: hiç paragraf yapısı yok + kısa → gerçek gövde
