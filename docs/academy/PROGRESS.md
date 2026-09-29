@@ -3,6 +3,34 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## AŞAMA 2 — merge + prod migration SONUÇ (2026-09-29)
+
+PR #110 squash-merge edildi (main `fa20760`); 3 academy migration prod'a
+MCP ile uygulandı (`academy_content_engine_v1`, `academy_sources_seed_v1`,
+`academy_cron_v1`). Ön koşullar: prod `find_or_create_direct_conversation`
+tanımı migration ÖNCESİ `pg_get_functiondef` ile alındı
+(rollback/…prod_snapshot_20260929.sql) ve repo ugc_safety_v1_1 tanımıyla
+birebir aynı çıktı (fark yok); prod migration listesi karşılaştırıldı —
+uygulananlar YALNIZ bu 3'ü (not: 3 eski prod migration'ının repo dosyası
+yok — b2b_revoke_trigger_fn_execute, b2b_quote_leads_denorm,
+expire_old_listings_daily_cron — geçmişte MCP ile doğrudan uygulanmış,
+bilinen sapma). Tam DB yedeği MEVCUT ARAÇLARLA ALINAMADI/teyit edilemedi
+(MCP'de backup API yok, CLI bağlantısız, PAT izole) — telafi: değişen tek
+nesnenin birebir snapshot'ı + imza-bağımsız tam rollback SQL'i
+(rollback/academy_full_rollback.sql; cron adı academy-worker-tick).
+
+Prod doğrulama (hepsi PASS): 12 academy tablosu hepsi RLS'li; 12 RPC;
+`academy_enabled=false` + `academy_dry_run=true`; cron `academy-worker-tick`
+kayıtlı ve `academy_cron_tick()` = 'disabled' (kill-switch no-op); 11 bot
+hesabı parolasız (giriş kapalı) + profiles.is_bot=true; 113 kaynak / 199
+eşleştirme (hepsi candidate). DM smoke (gerçek 2 test kullanıcısı, auth
+bağlamı simüle, oluşan konuşmalar silindi): kullanıcı-kullanıcı DM açıldı +
+idempotent; akademi botuna (allow_dm=false) DM RED; Mizah botuna DM açıldı.
+Security advisör: academy'ye özgü YENİ sorun yok (RLS-no-policy INFO'ları
+bilinçli deny-by-default; motor RPC'leri authenticated'a kapalı).
+
+Sistem hâlâ TAM KAPALI: worker deploy edilmedi, Vault boş, secrets yok.
+
 ## AŞAMA 1 — zayıf bot güçlendirme SONUÇ (2026-09-29)
 
 Hedef: isletme/turk_urunleri/ustalik_dunya ≥5 içerik-kanıtlı. Sonuç:

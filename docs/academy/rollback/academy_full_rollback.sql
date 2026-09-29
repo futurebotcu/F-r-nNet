@@ -10,7 +10,7 @@
 
 -- 1) Cron işini kaldır (yoksa sessiz geç).
 do $$ begin
-  perform cron.unschedule('academy-tick');
+  perform cron.unschedule('academy-worker-tick');
 exception when others then null; end $$;
 drop function if exists public.academy_cron_tick();
 
