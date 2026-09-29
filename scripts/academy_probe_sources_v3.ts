@@ -24,6 +24,11 @@ const TOPICAL_RE =
 const UA =
   "FirinNetAcademyBot/1.1 (+https://firinnet.app; kaynak-dogrulama)";
 const TIMEOUT = 15000;
+// Nezaket gecikmesi: hizli ardisik tam taramalar CDN engeline takiliyor
+// (unproved patlamasi); worker cron'u zaten yavas, probe da yavaslar.
+const DELAY_MS = 400;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+let lastStatus = 0;
 
 async function get(
   url: string,
@@ -41,8 +46,12 @@ async function get(
       buf.slice(0, 1_500_000),
       r.headers.get("content-type"),
     );
+    lastStatus = r.status;
+    await sleep(DELAY_MS);
     return { status: r.status, text };
   } catch (_) {
+    lastStatus = 0;
+    await sleep(DELAY_MS);
     return null;
   } finally {
     clearTimeout(t);
@@ -160,9 +169,14 @@ for (const s of data.sources) {
   }
 
   entry.content_proof = proof;
+  entry.last_http_status = lastStatus;
   entry.verdict = proof
     ? "content_proved"
-    : (feedSeen ? "reachable_feed" : "unproved");
+    : (feedSeen
+      ? "reachable_feed"
+      : ([403, 429, 503].includes(lastStatus)
+        ? "blocked_or_limited"
+        : "unproved"));
   entry.verdict_reason = proof
     ? "gerçek makale çıkarımı worker koduyla doğrulandı"
     : (feedSeen
@@ -191,6 +205,8 @@ const report = {
     reachable_feed_unproved:
       results.filter((r) => r.verdict === "reachable_feed").length,
     unproved: results.filter((r) => r.verdict === "unproved").length,
+    blocked_or_limited:
+      results.filter((r) => r.verdict === "blocked_or_limited").length,
     proved_per_topic: perTopic,
   },
   sources: results,

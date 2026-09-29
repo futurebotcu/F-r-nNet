@@ -3,6 +3,46 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## 3. tur — üç doğrulanmış hata + kanıt kalitesi SONUÇ (2026-09-29)
+
+Üç hata kırmızı-test-önce kapatıldı (`lib_bugfix_test.ts` düzeltme öncesi
+9/12 FAIL → sonrası deno 38/38 + typecheck temiz; PG paketi 9/9):
+
+- **H1 iddia denetimi**: birim SINIF+ÇARPAN modeli (g↔kg, dk↔saat artık
+  dönüşümle eşdeğer; 20 g ↔ 0.02 kg KABUL, 30 dk ≠ 30 saat RED), olumsuzluk
+  yönü XOR (bekletilmemelidir ≠ bekletilmelidir → RED), madde sözlüğü
+  (un miktarı maya iddiasını DOĞRULAYAMAZ; süreç-kelime örtüşmesi maskeyi
+  kaldırıldı), TR-özet + EN-quote kabulü korundu.
+- **H2 sahte içerik kanıtı**: iletişim/giriş/çerez/kontaktformular +
+  kurumsal biyografi (başkan/bakan/genel müdür/kurucu) + über-uns/
+  Datenschutz/tarihçe/teşkilat/iştirakler + üyelik/iş-ilanı/haber-listesi/
+  ana-sayfa sayfaları KANIT DEĞİL (`isLikelyArticle` tür+yapı denetimi,
+  `BAKERY_TOPICAL_RE` konu şartı, proof v:2 — eski kanıtlar kaynağı
+  aktive edemez). TR charset düzeltmesi (windows-1254/iso-8859-9 →
+  `detectCharset`/`decodeBody`) başlık kalıplarının kaçmasını bitirdi.
+- **H3 keşif cursor'u**: `discoverArticles` cursor'u artık DENENEN link
+  sayısı kadar ilerler (10 link/maxArticles=5 → cursor 5; 6-10 sonraki
+  turda okunur, atlama yok).
+
+**Kaynak doğrulama (canlı, worker koduyla aynı çıkarım, nezaket gecikmeli
+tek koşu + 3 aşamalı ölçüt-yeniden-değerlendirme — tarama TEKRARLANMADI):**
+91 aday → **32 içerik-kanıtlı** / 7 feed-erişilir-kanıtsız /
+**3 blocked_or_limited** (soke_un 403, miwe 503, mdpi_foods 403 — kanıtlı
+sayılmaz) / 49 kanıtsız. Konu başına: ekmek_fermantasyon 8, hijyen_kalite 8,
+bilim_arge 7, firin_teknoloji 7, sektor_gundemi 9, un_tahil 5, pastacilik 5,
+turk_urunleri 3, ustalik_dunya 3, isletme 2. Önceki 52/53 sayıları kurumsal
+ana-sayfa/üyelik/ilan/listeleme kanıtları içeriyordu; yeniden değerlendirme
+bunları `content_proof_rejected` alanına düşürdü. Sınırda kalan 2 kayıt
+(tuik Alo-124 kurumsal sayfası, codex Arapça haber listelemesi) raporda
+işaretli; üretici ürün/teknik sayfaları bilinçli olarak kanıt SAYILIR
+(atıfta "üretici içeriği" notu var). Zayıf botlar (isletme 2, turk_urunleri
+3, ustalik_dunya 3) canlı öncesi aday genişletme ister — motor kanıtsız
+kaynağı zaten aktive etmez, bu bir blocker değil kapasite notudur.
+
+Kalan canlı doğrulamalar değişmedi: gerçek DeepSeek çağrısı (anahtar yok),
+Storage/feed yayını (deploy yok), cihaz görünümü. Sistem OFF
+(`academy_enabled=false`, `academy_dry_run=true`).
+
 ## Mevcut durum tablosu (keşif — 2026-09-28, main 6c878c1)
 
 | Bileşen | Durum | Kaynak |

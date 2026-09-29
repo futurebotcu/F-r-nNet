@@ -335,3 +335,10 @@ Deno.test("H2: TR windows-1254 charset — başlık doğru çözülür ve tür "
   assert(!isLikelyArticle(page, html, "https://x.gov.tr/kurumsal/gm"),
     "çözülen 'Genel Müdür' başlığı türe takılmalı");
 });
+
+Deno.test("H2: iştirakler/kurum-ana-sayfa başlıkları kanıt değil", () => {
+  const c = pageOf("İştiraklerimiz - KOSGEB", "<p>" +
+    "Kurum iştiraklerinin listesi ve payları. ".repeat(40) + "</p>",
+    "https://kosgeb.gov.tr/site/tr/genel/istirakler");
+  assert(!isLikelyArticle(c.page, c.html, c.url), "iştirakler reddi");
+});
