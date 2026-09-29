@@ -606,7 +606,7 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     publishedAt: item.published_at,
     text: fullText,
   });
-  const r = await deepseek(c, prompt.system, prompt.user, 1800);
+  const r = await deepseek(c, prompt.system, prompt.user, 4000);
   if (!r.ok) {
     if (r.reason === "no_key") return "config_no_llm_key";
     if (r.reason.startsWith("budget")) return "budget_" + r.reason;
@@ -916,7 +916,6 @@ async function handleMaintenance(c: any): Promise<string> {
   if (!enabled) return "academy_disabled";
   const dryRun = await cfgBool(c, "academy_dry_run", true);
   const now = new Date();
-  const slot = now.toISOString().slice(0, 13);
   const day = istDay();
   const parts: string[] = [];
 
@@ -936,7 +935,7 @@ async function handleMaintenance(c: any): Promise<string> {
     await c.rpc("academy_enqueue_job", {
       p_job_type: "scan_source",
       p_payload: { source_id: s.id },
-      p_dedupe_key: `scan:${s.slug}:${slot}`,
+      p_dedupe_key: `scan:${s.slug}`,
       p_priority: 120,
       p_cooldown_seconds: Math.floor(intervalMs / 1000) - 300,
     });
