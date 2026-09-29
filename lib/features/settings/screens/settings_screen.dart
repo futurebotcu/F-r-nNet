@@ -9,6 +9,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../academy/widgets/humor_prefs_tiles.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
@@ -96,6 +97,16 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+
+            // ───── FırınNet Mizah tercihleri (açık, geri alınabilir izin)
+            const SectionLabel(title: AppStrings.settingsSectionHumor),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+              child: PremiumCard(
+                padding: EdgeInsets.zero,
+                child: HumorPrefsTiles(),
               ),
             ),
 

@@ -1,0 +1,2762 @@
+{
+ "summary": {
+  "generated_at": "2026-09-29T15:44:03.370Z",
+  "proof_version": 2,
+  "method_note": "v2: Doğrulama worker ile AYNI çıkarım kodunu kullanır (lib.ts); iletişim/giriş/çerez/kontakt/arama sayfaları KANIT SAYILMAZ. content_proved = gerçek makale (başlık+ana metin+robots+SSRF); lisans/kullanım koşulu onayı DEĞİLDİR.",
+  "candidates_total": 113,
+  "content_proved": 43,
+  "reachable_feed_unproved": 7,
+  "unproved": 58,
+  "blocked_or_limited": 5,
+  "proved_per_topic": {
+   "bilim_arge": 7,
+   "ekmek_fermantasyon": 11,
+   "firin_teknoloji": 9,
+   "hijyen_kalite": 8,
+   "isletme": 5,
+   "pastacilik": 7,
+   "sektor_gundemi": 10,
+   "turk_urunleri": 6,
+   "un_tahil": 5,
+   "ustalik_dunya": 10
+  }
+ },
+ "sources": [
+  {
+   "slug": "asb",
+   "name": "American Society of Baking",
+   "domain": "asbe.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "ekmek_fermantasyon",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:28:15.419Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "reachable_feed",
+   "verdict_reason": "feed erişildi; makale kanıtı çıkarılamadı"
+  },
+  {
+   "slug": "bakerpedia",
+   "name": "BAKERpedia",
+   "domain": "bakerpedia.com",
+   "country": "US",
+   "lang": "en",
+   "type": "archive",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ekmek_fermantasyon",
+    "un_tahil",
+    "firin_teknoloji",
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:28:53.725Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://bakerpedia.com/how-flour-quality-makes-or-breaks-every-bake/",
+    "title": "How Flour Quality Makes or Breaks Every Bake | BAKERpedia",
+    "text_len": 7794,
+    "published_at": "2026-09-23T11:55:38.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "lesaffre",
+   "name": "Lesaffre",
+   "domain": "lesaffre.com",
+   "country": "FR",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:28:59.777Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: başlık tür-kalıbı/kurum-ana-sayfa — kanıt geçersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.lesaffre.com/press-room/lesaffre-and-the-es-group-in-partnership-with-dalkia-are-taking-a-major-step-forward-in-the-industrial-decarbonization-of-the-strasbourg-region/",
+    "title": "Lesaffre and the ÉS Group, in partnership with Dalkia, are taking a major step forward in the industrial decarbonization of the Strasbourg region - Lesaffre",
+    "text_len": 4494,
+    "published_at": "2026-09-23T08:17:30.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   }
+  },
+  {
+   "slug": "lallemand_baking",
+   "name": "Lallemand Baking",
+   "domain": "lallemandbaking.com",
+   "country": "CA",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:29:03.694Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.lallemandbaking.com/en/canada/industrial-bakers/bakers-yeast/",
+    "title": "Baker's Yeast",
+    "text_len": 3230,
+    "published_at": "2024-02-26T18:31:20.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "tusaf",
+   "name": "Türkiye Un Sanayicileri Federasyonu (TUSAF)",
+   "domain": "tusaf.org",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:29:10.807Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "tabader",
+   "name": "Tahıl ve Bakliyat İşleme Teknolojileri Derneği (TABADER)",
+   "domain": "tabader.org",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil"
+   ],
+   "probed_at": "2026-09-29T14:29:15.150Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://tabader.org/blog/haberler/1",
+    "title": "Haberler | TABADER",
+    "text_len": 5260,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "icc_cereal",
+   "name": "International Association for Cereal Science and Technology (ICC)",
+   "domain": "icc.or.at",
+   "country": "AT",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:29:19.699Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: başlık tür-kalıbı/kurum-ana-sayfa — kanıt geçersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://icc.or.at/general-information-about-icc/who-we-are",
+    "title": "International Association for Cereal Science and Technology - Who we are",
+    "text_len": 3500,
+    "published_at": "1969-12-31T22:00:00.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "ksu_grain",
+   "name": "Kansas State University Grain Science",
+   "domain": "grains.k-state.edu",
+   "country": "US",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:29:29.148Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.grains.k-state.edu/",
+    "title": "Grain and Food Science",
+    "text_len": 1276,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:in_progress"
+   }
+  },
+  {
+   "slug": "pakmaya",
+   "name": "Pakmaya",
+   "domain": "pakmaya.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:29:37.633Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.pakmaya.com.tr/tr/urunler/firincilik/mayalar",
+    "title": "Mayalar",
+    "text_len": 9687,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "soke_un",
+   "name": "Söke Un",
+   "domain": "soke.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "un_tahil"
+   ],
+   "probed_at": "2026-09-29T14:29:42.341Z",
+   "content_proof": null,
+   "last_http_status": 403,
+   "verdict": "blocked_or_limited",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "sinangil",
+   "name": "Sinangil Un",
+   "domain": "sinangil.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "un_tahil"
+   ],
+   "probed_at": "2026-09-29T14:29:47.173Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "ekmek_dunyasi",
+   "name": "Ekmek Dünyası",
+   "domain": "ekmekdunyasi.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:32:05.890Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.ekmekdunyasi.com/haber/ambalajin-onunde-yeni-bir-donem-mi-basliyor-6aa658c51b158",
+    "title": "AMBALAJIN ÖNÜNDE YENİ BİR DÖNEM Mİ BAŞLIYOR? - Ekmek Dünyası",
+    "text_len": 6417,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "puratos",
+   "name": "Puratos",
+   "domain": "puratos.com",
+   "country": "BE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:32:10.572Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.puratos.com/about-puratos/our-organization",
+    "title": "Our Organisation",
+    "text_len": 5966,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "ireks",
+   "name": "IREKS",
+   "domain": "ireks.com",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:32:13.912Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.ireks.com/produkte/zutaten-fuer-brot-und-kleingebaeck",
+    "title": "Zutaten für Brot & Kleingebäck",
+    "text_len": 12866,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "zeelandia",
+   "name": "Zeelandia",
+   "domain": "zeelandia.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:32:24.568Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.zeelandia.com/campaigns/gluten-free",
+    "title": "Gluten-free",
+    "text_len": 2670,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "dawn_foods",
+   "name": "Dawn Foods",
+   "domain": "dawnfoods.com",
+   "country": "US",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:32:28.169Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "miwe",
+   "name": "MIWE",
+   "domain": "miwe.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:32:34.758Z",
+   "content_proof": null,
+   "last_http_status": 503,
+   "verdict": "blocked_or_limited",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "fritsch",
+   "name": "FRITSCH Bakery Technologies",
+   "domain": "fritsch-group.com",
+   "country": "DE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:32:40.098Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.fritsch-group.com/int/en/added-value",
+    "title": "Added value",
+    "text_len": 12237,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "rondo",
+   "name": "RONDO",
+   "domain": "rondo-online.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:32:45.428Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.rondo-online.com/int/en/services/rondo-original-spare-parts",
+    "title": "Spare parts for RONDO bakery machines and industrial lines",
+    "text_len": 7777,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "buhler",
+   "name": "Bühler Group",
+   "domain": "buhlergroup.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji",
+    "un_tahil"
+   ],
+   "probed_at": "2026-09-29T14:32:51.439Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: başlık tür-kalıbı/kurum-ana-sayfa — kanıt geçersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.buhlergroup.com/content/buhlergroup/global/en/homepage.html",
+    "title": "Bühler Group | Innovations for a better world",
+    "text_len": 11593,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "tarim_orman",
+   "name": "T.C. Tarım ve Orman Bakanlığı",
+   "domain": "tarimorman.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:32:55.137Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: baslik tur-kalibi/kurum-ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://sp2.tarimorman.gov.tr:443/",
+    "title": "T.C. TARIM VE ORMAN BAKANLIĞI",
+    "text_len": 12139,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "aib",
+   "name": "AIB International",
+   "domain": "aibinternational.com",
+   "country": "US",
+   "lang": "en",
+   "type": "edu",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:33:00.283Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://aibinternational.com/en-emea/collections/gmp-sanitation-training",
+    "title": "GMP/Sanitation Training",
+    "text_len": 4597,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "campden_bri",
+   "name": "Campden BRI",
+   "domain": "campdenbri.co.uk",
+   "country": "UK",
+   "lang": "en",
+   "type": "academic",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:33:11.752Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.campdenbri.co.uk/topics/cereals",
+    "title": "Cereals, milling and baking from Campden BRI",
+    "text_len": 12718,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "efsa",
+   "name": "European Food Safety Authority (EFSA)",
+   "domain": "efsa.europa.eu",
+   "country": "EU",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:33:21.115Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.efsa.europa.eu/en/howwework/independentscience",
+    "title": "Trusted science",
+    "text_len": 9009,
+    "published_at": "2026-06-19T12:00:00.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "kosgeb",
+   "name": "KOSGEB",
+   "domain": "kosgeb.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme"
+   ],
+   "probed_at": "2026-09-29T14:33:29.973Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: baslik tur-kalibi/kurum-ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.kosgeb.gov.tr/site/tr/genel/liste/39/istirakler",
+    "title": "İştiraklerimiz - KOSGEB T.C. Küçük ve Orta Ölçekli İşletmeleri Geliştirme ve Destekleme İdaresi Başkanlığı",
+    "text_len": 6553,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "tesk",
+   "name": "Türkiye Esnaf ve Sanatkarları Konfederasyonu (TESK)",
+   "domain": "tesk.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:33:42.408Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "rba",
+   "name": "Retail Bakers of America",
+   "domain": "retailbakersofamerica.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme"
+   ],
+   "probed_at": "2026-09-29T14:33:55.498Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://retailbakersofamerica.org/membership/join-renew",
+    "title": "Join / Renew Today - Retail Bakers of America RBA",
+    "text_len": 3633,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "tuik",
+   "name": "TÜİK",
+   "domain": "tuik.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:34:02.308Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.tuik.gov.tr/Kurumsal/Alo_124",
+    "title": "T&#xFC;rkiye &#x130;statistik Kurumu (T&#xDC;&#x130;K)",
+    "text_len": 11294,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "tmo",
+   "name": "Toprak Mahsulleri Ofisi (TMO)",
+   "domain": "tmo.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi",
+    "un_tahil"
+   ],
+   "probed_at": "2026-09-29T14:34:05.953Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "bbm_magazine",
+   "name": "BBM Magazine (Değirmencilik/Bakery)",
+   "domain": "bbm-magazine.com",
+   "country": "TR",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "parantez",
+   "topics": [
+    "sektor_gundemi",
+    "un_tahil"
+   ],
+   "probed_at": "2026-09-29T14:34:11.654Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "baking_business",
+   "name": "Baking Business (Sosland)",
+   "domain": "bakingbusiness.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "sosland",
+   "topics": [
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:34:47.227Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "british_baker",
+   "name": "British Baker",
+   "domain": "bakeryinfo.co.uk",
+   "country": "UK",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:35:00.987Z",
+   "content_proof": null,
+   "last_http_status": 202,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "tubitak_mam",
+   "name": "TÜBİTAK MAM",
+   "domain": "mam.tubitak.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:35:06.158Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://mam.tubitak.gov.tr/gundem/haberler/",
+    "title": "Haberler &mdash; TÜBİTAK MAM",
+    "text_len": 15612,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "gida_dergisi",
+   "name": "GIDA / The Journal of Food (DergiPark)",
+   "domain": "dergipark.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge",
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:35:11.158Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "wageningen",
+   "name": "Wageningen University & Research",
+   "domain": "wur.nl",
+   "country": "NL",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:35:20.939Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.wur.nl/en/news-insights",
+    "title": "News and insights",
+    "text_len": 19172,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "inrae",
+   "name": "INRAE",
+   "domain": "inrae.fr",
+   "country": "FR",
+   "lang": "fr",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:35:30.515Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.inrae.fr/actualites/pourquoi-y-t-il-du-cadmium-sols-comment-retrouve-t-lalimentation",
+    "title": "Pourquoi y a-t-il du cadmium dans les sols et comment le retrouve-t-on dans l’alimentation ?",
+    "text_len": 20000,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "sfbi",
+   "name": "San Francisco Baking Institute (SFBI)",
+   "domain": "sfbi.com",
+   "country": "US",
+   "lang": "en",
+   "type": "edu",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:35:35.628Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "reachable_feed",
+   "verdict_reason": "feed erişildi; makale kanıtı çıkarılamadı"
+  },
+  {
+   "slug": "richemont",
+   "name": "Richemont Fachschule",
+   "domain": "richemont.swiss",
+   "country": "CH",
+   "lang": "de",
+   "type": "edu",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:35:56.597Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "reachable_feed",
+   "verdict_reason": "feed erişildi; makale kanıtı çıkarılamadı"
+  },
+  {
+   "slug": "bbga",
+   "name": "Bread Bakers Guild of America",
+   "domain": "bbga.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:36:08.324Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.bbga.org/Job-Openings/13679846",
+    "title": "The Bread Bakers Guild of America - Graphic Designer / Project Manager for Annual Calendar Development",
+    "text_len": 7135,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "king_arthur_pro",
+   "name": "King Arthur Baking Professional",
+   "domain": "kingarthurbaking.com",
+   "country": "US",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:36:16.391Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "reachable_feed",
+   "verdict_reason": "feed erişildi; makale kanıtı çıkarılamadı"
+  },
+  {
+   "slug": "halk_ekmek_ist",
+   "name": "İstanbul Halk Ekmek",
+   "domain": "ihe.istanbul",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:36:29.358Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: başlık tür-kalıbı/kurum-ana-sayfa — kanıt geçersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.ihe.istanbul/Sayfalar/Detay/25",
+    "title": "İstanbul Halk Ekmek A.Ş.",
+    "text_len": 2857,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "aacc_cereals",
+   "name": "Cereals & Grains Association (AACC)",
+   "domain": "cerealsgrains.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:36:37.295Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: başlık tür-kalıbı/kurum-ana-sayfa — kanıt geçersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.cerealsgrains.org:443/about/Pages/default.aspx",
+    "title": "Cereals & Grains Association",
+    "text_len": 4887,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "world_grain",
+   "name": "World Grain (Sosland)",
+   "domain": "world-grain.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "sosland",
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:36:49.842Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "reachable_feed",
+   "verdict_reason": "feed erişildi; makale kanıtı çıkarılamadı"
+  },
+  {
+   "slug": "miller_magazine",
+   "name": "Miller Magazine / Değirmenci Dergisi",
+   "domain": "millermagazine.com",
+   "country": "TR",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "parantez",
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:37:05.458Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://millermagazine.com/magazine/issue-201/",
+    "title": "Miller Magazine 201 - Sebtember 2026",
+    "text_len": 470,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "bakeryandsnacks",
+   "name": "BakeryAndSnacks (William Reed)",
+   "domain": "bakeryandsnacks.com",
+   "country": "UK",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:37:14.376Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "bake_mag",
+   "name": "Bake Magazine (Sosland)",
+   "domain": "bakemag.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "sosland",
+   "topics": [
+    "pastacilik",
+    "isletme"
+   ],
+   "probed_at": "2026-09-29T14:37:26.679Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "reachable_feed",
+   "verdict_reason": "feed erişildi; makale kanıtı çıkarılamadı"
+  },
+  {
+   "slug": "gida_teknolojisi",
+   "name": "Gıda Teknolojisi Dergisi",
+   "domain": "gidateknolojisi.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge",
+    "hijyen_kalite",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:37:55.999Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.gidateknolojisi.com.tr/blog/rss/all.rss",
+    "title": "Gıda Teknolojisi",
+    "text_len": 20000,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "tff_firincilar",
+   "name": "Türkiye Fırıncılar Federasyonu",
+   "domain": "tff.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi",
+    "isletme",
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T14:38:23.799Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "ist_firincilar_odasi",
+   "name": "İstanbul Fırıncılar Odası",
+   "domain": "istanbulfirincilarodasi.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T14:38:51.059Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "ticaret_bakanligi",
+   "name": "T.C. Ticaret Bakanlığı",
+   "domain": "ticaret.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:39:33.843Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "fao",
+   "name": "FAO (BM Gıda ve Tarım Örgütü)",
+   "domain": "fao.org",
+   "country": "INT",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi",
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:39:40.422Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.fao.org/newsroom/detail/reducing-food-loss-and-waste-to-protect-forests-and-transform-agrifood-systems/en",
+    "title": "Reducing food loss and waste to protect forests and transform agrifood systems",
+    "text_len": 4956,
+    "published_at": "2026-09-29T12:00:00.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "codex",
+   "name": "Codex Alimentarius",
+   "domain": "fao.org",
+   "country": "INT",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": "fao",
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:39:43.098Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.fao.org/fao-who-codexalimentarius/news-and-events/ar/",
+    "title": "أخبار وأحداث&nbsp;&#124; CODEXALIMENTARIUS FAO-WHO",
+    "text_len": 8891,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "who_food",
+   "name": "WHO Food Safety",
+   "domain": "who.int",
+   "country": "INT",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:39:46.036Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "reachable_feed",
+   "verdict_reason": "feed erişildi; makale kanıtı çıkarılamadı"
+  },
+  {
+   "slug": "fda_food",
+   "name": "U.S. FDA Food",
+   "domain": "fda.gov",
+   "country": "US",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:39:56.626Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+    "title": "Recalls, Market Withdrawals, & Safety Alerts",
+    "text_len": 3407,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "bfr",
+   "name": "BfR (Alman Risk Değerlendirme Enstitüsü)",
+   "domain": "bfr.bund.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:40:02.223Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "mri_bund",
+   "name": "Max Rubner-Institut (Detmold tahıl)",
+   "domain": "mri.bund.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:40:10.730Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "cimmyt",
+   "name": "CIMMYT (Buğday Araştırma)",
+   "domain": "cimmyt.org",
+   "country": "MX",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:40:20.385Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.cimmyt.org/news/multifunctional-landscapes-begin-with-behavior-change/",
+    "title": "Multifunctional landscapes begin with behavior change",
+    "text_len": 9634,
+    "published_at": "2026-09-25T22:21:52.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "uswheat",
+   "name": "U.S. Wheat Associates",
+   "domain": "uswheat.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:40:26.162Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://uswheat.org/wheat-groups-celebrate-food-for-peace-shipments-at-the-port-of-new-orleans/",
+    "title": "Wheat Groups Celebrate Food for Peace Shipments at the Port of New Orleans",
+    "text_len": 11721,
+    "published_at": "2026-08-05T18:55:26.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "mdpi_foods",
+   "name": "MDPI Foods (açık erişim dergi)",
+   "domain": "mdpi.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge",
+    "hijyen_kalite"
+   ],
+   "probed_at": "2026-09-29T14:40:30.457Z",
+   "content_proof": null,
+   "last_http_status": 403,
+   "verdict": "blocked_or_limited",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "inbp",
+   "name": "INBP (Fransa Ulusal Fırıncılık Enstitüsü)",
+   "domain": "inbp.com",
+   "country": "FR",
+   "lang": "fr",
+   "type": "edu",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:40:34.361Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.inbp.com/actus-inbp/catalogue-inbp-2022-un-choix-remarquable/",
+    "title": "Catalogue INBP 2022 : un choix remarquable - INBP",
+    "text_len": 2879,
+    "published_at": "2021-11-29T14:16:17.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "akademie_weinheim",
+   "name": "Akademie Deutsches Bäckerhandwerk Weinheim",
+   "domain": "akademie-weinheim.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "edu",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya"
+   ],
+   "probed_at": "2026-09-29T14:40:46.254Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "baeckerhandwerk",
+   "name": "Zentralverband des Deutschen Bäckerhandwerks",
+   "domain": "baeckerhandwerk.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi",
+    "ustalik_dunya",
+    "isletme"
+   ],
+   "probed_at": "2026-09-29T14:40:54.128Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.baeckerhandwerk.de/service/betriebswirtschaft-und-technik",
+    "title": "Betriebswirtschaft und -technik - Zentralverband des Deutschen Bäckerhandwerks",
+    "text_len": 4461,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "webbaecker",
+   "name": "WebBäcker / ABZ haber",
+   "domain": "webbaecker.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:41:01.378Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.webbaecker.de/worldskills-shanghai-2026-gingen-erfolgreich-zu-ende/",
+    "title": "WorldSkills Shanghai 2026 gingen erfolgreich zu Ende &#8211; WebBaecker",
+    "text_len": 6488,
+    "published_at": "2026-09-28T22:02:27.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "discover:in_progress"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "boulangerie_conf",
+   "name": "Confédération Nationale de la Boulangerie (FR)",
+   "domain": "boulangerie.org",
+   "country": "FR",
+   "lang": "fr",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi",
+    "ustalik_dunya"
+   ],
+   "probed_at": "2026-09-29T14:41:09.457Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://boulangerie.org/communiquer/les-savoir-faire-artisanaux-et-la-culture-de-la-baguette-de-pain-a-lunesco/",
+    "title": "Les « savoir-faire artisanaux et la culture de la baguette de pain » à l&#039;Unesco - Confédération Nationale de la Boulangerie-Pâtisserie Française",
+    "text_len": 5054,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "ab_mauri",
+   "name": "AB Mauri",
+   "domain": "abmauri.com",
+   "country": "UK",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:41:20.480Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: başlık tür-kalıbı/kurum-ana-sayfa — kanıt geçersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.abmauri.com/responsibility/environment-and-natural-resources",
+    "title": "AB Mauri | Protecting the environment and natural resouces",
+    "text_len": 4765,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "angel_yeast",
+   "name": "Angel Yeast",
+   "domain": "angelyeast.com",
+   "country": "CN",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:41:23.861Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "bakels",
+   "name": "Bakels Group",
+   "domain": "bakels.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:41:50.982Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "corbion",
+   "name": "Corbion (fermantasyon/raf ömrü)",
+   "domain": "corbion.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:42:02.575Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.corbion.com/en/markets/food",
+    "title": "Food ingredients supplier | Corbion",
+    "text_len": 16686,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "novonesis_baking",
+   "name": "Novonesis (enzim/baking)",
+   "domain": "novonesis.com",
+   "country": "DK",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:42:08.247Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.novonesis.com/en/biosolutions",
+    "title": "There&#x27;s a biosolution for (almost) everything",
+    "text_len": 7667,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "wp_bakery",
+   "name": "WP Bakery Group",
+   "domain": "wp-l.com",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:42:17.641Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "wachtel",
+   "name": "Wachtel (fırınlar)",
+   "domain": "wachtel.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:42:30.394Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.wachtel.de/backoefen/ladenbackoefen",
+    "title": "Passgenaue Ladenbacköfen für ihre Bäckerei &#124; Ladenbacköfen",
+    "text_len": 4128,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "sveba_dahlen",
+   "name": "Sveba Dahlen",
+   "domain": "sveba-dahlen.com",
+   "country": "SE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:42:34.691Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "rademaker",
+   "name": "Rademaker",
+   "domain": "rademaker.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:42:41.514Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://rademaker.com/bakery-equipment/radini/radini-sheeting-laminating/",
+    "title": "Radini Laminating & Sheeting Line | Rademaker",
+    "text_len": 13973,
+    "published_at": "2026-04-07T12:08:11.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "mecatherm",
+   "name": "Mecatherm",
+   "domain": "mecatherm.fr",
+   "country": "FR",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:42:51.159Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.mecatherm.fr/services/cle-en-main.html",
+    "title": "Clé en main | Mecatherm",
+    "text_len": 2877,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "diosna",
+   "name": "DIOSNA (yoğurma/starter)",
+   "domain": "diosna.com",
+   "country": "DE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:42:58.910Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.diosna.com/industries/pre-dough/",
+    "title": "Diosna: Pre-dough",
+    "text_len": 3287,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "fimak",
+   "name": "FİMAK Fırın Makinaları",
+   "domain": "fimak.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji",
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T14:43:02.706Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "porlanmaz",
+   "name": "Porlanmaz Fırın Makinaları",
+   "domain": "porlanmaz.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:43:37.441Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.porlanmaz.com/u_doner-arabali-firin-doner-firin-doner-firin-fiyatlari-doner-arabali-ekmek-firini_9_tr.html",
+    "title": "Döner Arabalı Fırın",
+    "text_len": 5540,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:in_progress"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "mateka",
+   "name": "Mateka Ekipman",
+   "domain": "mateka.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probed_at": "2026-09-29T14:43:48.565Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "lesaffre_tr",
+   "name": "Lesaffre Türkiye",
+   "domain": "lesaffre.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": "lesaffre",
+   "topics": [
+    "ekmek_fermantasyon",
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T14:45:36.518Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://lesaffre.com.tr/ekmegin-sampiyonlari-bakery-masters-ta-bulusuyor/",
+    "title": "“Ekmeğin Şampiyonları” Bakery Masters’ta Buluşuyor",
+    "text_len": 6243,
+    "published_at": "2017-10-23T14:57:00.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "ulker_pro",
+   "name": "Ülker (kurumsal/inovasyon)",
+   "domain": "ulker.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:45:41.696Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.ulker.com.tr/tr/ulker-hakkinda/kurucumuz",
+    "title": "Kurucumuz | Ülker",
+    "text_len": 15755,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "eti_kurumsal",
+   "name": "ETİ (kurumsal)",
+   "domain": "etietieti.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T14:45:50.620Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.etietieti.com/tr-tr/biz-kimiz/teknoloji",
+    "title": "Teknoloji ve Yatırımlar - ETİ",
+    "text_len": 1867,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "itu_gida",
+   "name": "İTÜ Gıda Mühendisliği",
+   "domain": "gidamuh.itu.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:46:03.076Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "hacettepe_gida",
+   "name": "Hacettepe Gıda Mühendisliği",
+   "domain": "fde.hacettepe.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:46:21.881Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "ankara_gida",
+   "name": "Ankara Üniversitesi Gıda Mühendisliği",
+   "domain": "eng.ankara.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:47:04.676Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "ege_gida",
+   "name": "Ege Üniversitesi Gıda Mühendisliği",
+   "domain": "food.ege.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probed_at": "2026-09-29T14:47:22.928Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://food.ege.edu.tr/tr-1037/.html",
+    "title": "Gıda Mühendisliği Bölümü - EÜ Mühendislik Fakültesi",
+    "text_len": 6555,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "tse",
+   "name": "Türk Standardları Enstitüsü (TSE)",
+   "domain": "tse.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "hijyen_kalite",
+    "isletme"
+   ],
+   "probed_at": "2026-09-29T14:47:30.237Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "tobb",
+   "name": "TOBB",
+   "domain": "tobb.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T14:49:18.321Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "iskur",
+   "name": "İŞKUR (istihdam/teşvik)",
+   "domain": "iskur.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme"
+   ],
+   "probed_at": "2026-09-29T14:49:23.730Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: baslik tur-kalibi/kurum-ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.iskur.gov.tr/kurumsal/teskilat-yapisi/",
+    "title": "Teşkilat Yapısı",
+    "text_len": 11978,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "ibp_bbga_formula",
+   "name": "BBGA Formula Exchange",
+   "domain": "bbga.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": "bbga",
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:49:28.891Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: uyelik/ilan/kurucu/kurumsal-tanitim/listeleme/ana-sayfa - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://bbga.org/Job-Openings/13679846",
+    "title": "The Bread Bakers Guild of America - Graphic Designer / Project Manager for Annual Calendar Development",
+    "text_len": 7135,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "sourdough_lib",
+   "name": "Puratos Sourdough Library",
+   "domain": "questforsourdough.com",
+   "country": "BE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": "puratos",
+   "topics": [
+    "ekmek_fermantasyon",
+    "ustalik_dunya"
+   ],
+   "probed_at": "2026-09-29T14:49:37.452Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "theartisan_net",
+   "name": "The Artisan (teknik ekmek arşivi)",
+   "domain": "theartisan.net",
+   "country": "US",
+   "lang": "en",
+   "type": "archive",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T14:49:41.975Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "snack_bakery",
+   "name": "Snack Food & Wholesale Bakery",
+   "domain": "snackandbakery.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T15:31:25.471Z",
+   "content_proof": null,
+   "last_http_status": 403,
+   "verdict": "blocked_or_limited",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "bakers_journal",
+   "name": "Bakers Journal",
+   "domain": "bakersjournal.com",
+   "country": "CA",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "ustalik_dunya"
+   ],
+   "probed_at": "2026-09-29T15:22:03.526Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.bakersjournal.com/looking-for-a-new-challenge-enter-the-bakery-cup-of-canada-competition/",
+    "title": "Looking for a new challenge? Enter the Bakery Cup of Canada competition",
+    "text_len": 13437,
+    "published_at": "2026-09-22T21:02:50.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "world_bakers",
+   "name": "World Bakers",
+   "domain": "worldbakers.com",
+   "country": "INT",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T15:31:36.484Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.worldbakers.com/event-details/food-tech-expo-2026/",
+    "title": "Food Tech Expo 2026",
+    "text_len": 612,
+    "published_at": "2026-11-17T00:00:00.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "uno_tr",
+   "name": "Uno Ekmek",
+   "domain": "uno.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T15:31:40.648Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "torku",
+   "name": "Torku",
+   "domain": "torku.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T15:22:27.071Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://torku.com.tr/torku-biskuviler-ve-gofretler",
+    "title": "Bisküvi ve Gofret Ürünleri",
+    "text_len": 5302,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:in_progress"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "akmaya",
+   "name": "Akmaya",
+   "domain": "akmaya.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T15:31:44.755Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "ozmaya",
+   "name": "Özmaya",
+   "domain": "ozmaya.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": "lesaffre",
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T15:31:48.832Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "ulusoy_un",
+   "name": "Ulusoy Un",
+   "domain": "ulusoyun.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "un_tahil"
+   ],
+   "probed_at": "2026-09-29T15:31:52.587Z",
+   "content_proof": null,
+   "last_http_status": 403,
+   "verdict": "blocked_or_limited",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "dunya_gida",
+   "name": "Dünya Gıda",
+   "domain": "dunyagida.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T15:31:57.061Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "gida_hatti",
+   "name": "Gıda Hattı",
+   "domain": "gidahatti.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "sektor_gundemi",
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T15:40:34.513Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: yayin ilkeleri politika sayfasi - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://www.gidahatti.com/bilgi/yayin-ilkeleri",
+    "title": "Yayın İlkeleri - Gıda Hattı",
+    "text_len": 3302,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "mauri_tr",
+   "name": "AB Mauri Türkiye",
+   "domain": "mauri.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T15:40:46.026Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: kurumsal/ cevre yonetimi sayfasi - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://mauri.com.tr/tr/kurumsal/CevreYonetimi",
+    "title": "Mauri Maya | Global Deneyim, Lokal Uzmanlık",
+    "text_len": 4060,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "perfect_loaf",
+   "name": "The Perfect Loaf",
+   "domain": "theperfectloaf.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T15:32:11.176Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.theperfectloaf.com/the-grain-gathering-2026/",
+    "title": "The Grain Gathering 2026: What a Home Baker Brings Back from the Breadlab | The Perfect Loaf",
+    "text_len": 20000,
+    "published_at": "2026-08-06T20:41:14.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "breadtopia",
+   "name": "Breadtopia",
+   "domain": "breadtopia.com",
+   "country": "US",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T15:32:14.584Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://breadtopia.com/acadian-ployes/",
+    "title": "Acadian Ployes",
+    "text_len": 4788,
+    "published_at": "2026-09-26T09:17:55.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "chainbaker",
+   "name": "ChainBaker",
+   "domain": "chainbaker.com",
+   "country": "UK",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probed_at": "2026-09-29T15:40:51.528Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.chainbaker.com/ww-subs/",
+    "title": "How to Make Soft & Bouncy Whole Wheat Subs - ChainBaker",
+    "text_len": 4497,
+    "published_at": "2025-05-11T15:00:00.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "weekend_bakery",
+   "name": "Weekend Bakery",
+   "domain": "weekendbakery.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "archive",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probed_at": "2026-09-29T15:23:58.283Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.weekendbakery.com/posts/the-temperature-equation-timing-your-fermentation/",
+    "title": "The Temperature Equation: Timing Your Fermentation &#8211; Weekend Bakery",
+    "text_len": 13175,
+    "published_at": "2026-04-27T14:43:43.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "bake_from_scratch",
+   "name": "Bake from Scratch",
+   "domain": "bakefromscratch.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "pastacilik",
+    "ustalik_dunya"
+   ],
+   "probed_at": "2026-09-29T15:32:26.344Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://bakefromscratch.com/toasted-milk-tres-leches-cake/",
+    "title": "Toasted Milk Tres Leches Cake - Bake from Scratch",
+    "text_len": 4601,
+    "published_at": "2026-09-25T15:48:12.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "food_business_news",
+   "name": "Food Business News",
+   "domain": "foodbusinessnews.net",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": "sosland",
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T15:40:58.946Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  },
+  {
+   "slug": "americanbakers",
+   "name": "American Bakers Association",
+   "domain": "americanbakers.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T15:41:14.838Z",
+   "content_proof": null,
+   "last_http_status": 200,
+   "verdict": "unproved",
+   "verdict_reason": "reeval: media-center kurumsal hub - kanit gecersiz",
+   "content_proof_rejected": {
+    "v": 2,
+    "url": "https://americanbakers.org/about/media-center",
+    "title": "Media Center",
+    "text_len": 7768,
+    "published_at": "2026-09-18T12:00:00.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "discover:html_links"
+   }
+  },
+  {
+   "slug": "craft_bakers_uk",
+   "name": "Craft Bakers Association",
+   "domain": "craftbakersassociation.co.uk",
+   "country": "UK",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": null,
+   "topics": [
+    "isletme",
+    "ustalik_dunya"
+   ],
+   "probed_at": "2026-09-29T15:41:23.082Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://www.craftbakersassociation.co.uk/events/business-day-2026",
+    "title": "Business Day 2026 &mdash; Craft Bakers Association",
+    "text_len": 4366,
+    "published_at": "2026-09-16T00:00:00.000Z",
+    "content_type": "news",
+    "topical": true,
+    "method": "discover:html_links"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "simfer",
+   "name": "Simfer",
+   "domain": "simfer.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji",
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T15:41:27.917Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://simfer.com.tr/firinda-palamut-tarifi",
+    "title": "Fırında Balık Palamut Tarifi Nasıl Yapılır?",
+    "text_len": 4594,
+    "published_at": null,
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "discover:in_progress"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "oztiryakiler",
+   "name": "Öztiryakiler",
+   "domain": "oztiryakiler.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": null,
+   "topics": [
+    "firin_teknoloji",
+    "turk_urunleri"
+   ],
+   "probed_at": "2026-09-29T15:41:37.480Z",
+   "content_proof": {
+    "v": 2,
+    "url": "https://oztiryakiler.com.tr/basinda-biz/oztiryakiler-sektorunde-ihracatta-yine-zirvede/",
+    "title": "Öztiryakiler, sektöründe ihracatta yine zirvede |",
+    "text_len": 1405,
+    "published_at": "2026-06-19T05:20:26.000Z",
+    "content_type": "evergreen",
+    "topical": true,
+    "method": "rss_item->extractPage"
+   },
+   "last_http_status": 200,
+   "verdict": "content_proved",
+   "verdict_reason": "gerçek makale çıkarımı worker koduyla doğrulandı"
+  },
+  {
+   "slug": "degirmenci_dergisi",
+   "name": "Değirmenci Dergisi",
+   "domain": "degirmencidergisi.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": true,
+   "publisher_group": "parantez",
+   "topics": [
+    "un_tahil",
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "probed_at": "2026-09-29T15:41:44.629Z",
+   "content_proof": null,
+   "last_http_status": 0,
+   "verdict": "unproved",
+   "verdict_reason": "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı (no_sitemap_no_html)"
+  }
+ ]
+}

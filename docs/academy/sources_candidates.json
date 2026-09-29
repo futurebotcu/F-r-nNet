@@ -1,0 +1,1979 @@
+{
+ "comment": "FırınNet Akademi aday kaynak sicili. Bu liste ARAŞTIRILACAK adaylardır; status alanı probe (scripts/academy_probe_sources.ps1) sonucuyla docs/academy/source_verification.json içinde raporlanır. Otomatik erişim/lisans onayı DEĞİLDİR.",
+ "version": 1,
+ "sources": [
+  {
+   "slug": "asb",
+   "name": "American Society of Baking",
+   "domain": "asbe.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "ekmek_fermantasyon",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://asbe.org/",
+    "https://asbe.org/feed/",
+    "https://asbe.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bakerpedia",
+   "name": "BAKERpedia",
+   "domain": "bakerpedia.com",
+   "country": "US",
+   "lang": "en",
+   "type": "archive",
+   "commercial": true,
+   "topics": [
+    "ekmek_fermantasyon",
+    "un_tahil",
+    "firin_teknoloji",
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://bakerpedia.com/",
+    "https://bakerpedia.com/feed/",
+    "https://bakerpedia.com/sitemap_index.xml"
+   ]
+  },
+  {
+   "slug": "lesaffre",
+   "name": "Lesaffre",
+   "domain": "lesaffre.com",
+   "country": "FR",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.lesaffre.com/",
+    "https://www.lesaffre.com/feed/",
+    "https://www.lesaffre.com/sitemap_index.xml"
+   ]
+  },
+  {
+   "slug": "lallemand_baking",
+   "name": "Lallemand Baking",
+   "domain": "lallemandbaking.com",
+   "country": "CA",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.lallemandbaking.com/en/global/",
+    "https://www.lallemandbaking.com/feed/",
+    "https://www.lallemandbaking.com/sitemap_index.xml"
+   ]
+  },
+  {
+   "slug": "tusaf",
+   "name": "Türkiye Un Sanayicileri Federasyonu (TUSAF)",
+   "domain": "tusaf.org",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.tusaf.org/",
+    "https://www.tusaf.org/feed/",
+    "https://www.tusaf.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "tabader",
+   "name": "Tahıl ve Bakliyat İşleme Teknolojileri Derneği (TABADER)",
+   "domain": "tabader.org",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "un_tahil"
+   ],
+   "probe": [
+    "https://tabader.org/",
+    "https://tabader.org/feed/",
+    "https://tabader.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "icc_cereal",
+   "name": "International Association for Cereal Science and Technology (ICC)",
+   "domain": "icc.or.at",
+   "country": "AT",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://icc.or.at/",
+    "https://icc.or.at/feed/",
+    "https://icc.or.at/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "ksu_grain",
+   "name": "Kansas State University Grain Science",
+   "domain": "grains.k-state.edu",
+   "country": "US",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.grains.k-state.edu/",
+    "https://www.grains.k-state.edu/feed/",
+    "https://www.k-state.edu/media/newsreleases/rss.xml"
+   ]
+  },
+  {
+   "slug": "pakmaya",
+   "name": "Pakmaya",
+   "domain": "pakmaya.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.pakmaya.com.tr/",
+    "https://www.pakmaya.com.tr/feed/",
+    "https://www.pakmaya.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "soke_un",
+   "name": "Söke Un",
+   "domain": "soke.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "un_tahil"
+   ],
+   "probe": [
+    "https://www.soke.com.tr/",
+    "https://www.soke.com.tr/feed/",
+    "https://www.soke.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "sinangil",
+   "name": "Sinangil Un",
+   "domain": "sinangil.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "un_tahil"
+   ],
+   "probe": [
+    "https://www.sinangil.com.tr/",
+    "https://www.sinangil.com.tr/feed/",
+    "https://www.sinangil.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "ekmek_dunyasi",
+   "name": "Ekmek Dünyası",
+   "domain": "ekmekdunyasi.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": false,
+   "topics": [
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.ekmekdunyasi.com/",
+    "https://www.ekmekdunyasi.com/feed/",
+    "https://www.ekmekdunyasi.com/rss.xml"
+   ]
+  },
+  {
+   "slug": "puratos",
+   "name": "Puratos",
+   "domain": "puratos.com",
+   "country": "BE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "pastacilik",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.puratos.com/",
+    "https://www.puratos.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "ireks",
+   "name": "IREKS",
+   "domain": "ireks.com",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "pastacilik",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.ireks.com/",
+    "https://www.ireks.de/",
+    "https://www.ireks.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "zeelandia",
+   "name": "Zeelandia",
+   "domain": "zeelandia.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.zeelandia.com/",
+    "https://www.zeelandia.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "dawn_foods",
+   "name": "Dawn Foods",
+   "domain": "dawnfoods.com",
+   "country": "US",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.dawnfoods.com/",
+    "https://www.dawnfoods.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "miwe",
+   "name": "MIWE",
+   "domain": "miwe.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.miwe.de/",
+    "https://www.miwe.com/",
+    "https://www.miwe.de/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "fritsch",
+   "name": "FRITSCH Bakery Technologies",
+   "domain": "fritsch-group.com",
+   "country": "DE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.fritsch-group.com/",
+    "https://www.fritsch-group.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "rondo",
+   "name": "RONDO",
+   "domain": "rondo-online.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.rondo-online.com/",
+    "https://www.rondo-online.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "buhler",
+   "name": "Bühler Group",
+   "domain": "buhlergroup.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji",
+    "un_tahil"
+   ],
+   "probe": [
+    "https://www.buhlergroup.com/",
+    "https://www.buhlergroup.com/content/buhlergroup/global/en/homepage.html",
+    "https://www.buhlergroup.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "tarim_orman",
+   "name": "T.C. Tarım ve Orman Bakanlığı",
+   "domain": "tarimorman.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "hijyen_kalite",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.tarimorman.gov.tr/",
+    "https://www.tarimorman.gov.tr/Rss",
+    "https://www.tarimorman.gov.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "aib",
+   "name": "AIB International",
+   "domain": "aibinternational.com",
+   "country": "US",
+   "lang": "en",
+   "type": "edu",
+   "commercial": true,
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://www.aibinternational.com/",
+    "https://www.aibinternational.com/feed/",
+    "https://www.aibinternational.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "campden_bri",
+   "name": "Campden BRI",
+   "domain": "campdenbri.co.uk",
+   "country": "UK",
+   "lang": "en",
+   "type": "academic",
+   "commercial": true,
+   "topics": [
+    "hijyen_kalite",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.campdenbri.co.uk/",
+    "https://www.campdenbri.co.uk/rss/all.xml",
+    "https://www.campdenbri.co.uk/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "efsa",
+   "name": "European Food Safety Authority (EFSA)",
+   "domain": "efsa.europa.eu",
+   "country": "EU",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "hijyen_kalite",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.efsa.europa.eu/",
+    "https://www.efsa.europa.eu/en/rss",
+    "https://www.efsa.europa.eu/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "kosgeb",
+   "name": "KOSGEB",
+   "domain": "kosgeb.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "isletme"
+   ],
+   "probe": [
+    "https://www.kosgeb.gov.tr/",
+    "https://www.kosgeb.gov.tr/site/tr/genel/rss",
+    "https://www.kosgeb.gov.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "tesk",
+   "name": "Türkiye Esnaf ve Sanatkarları Konfederasyonu (TESK)",
+   "domain": "tesk.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.tesk.org.tr/",
+    "https://www.tesk.org.tr/feed/",
+    "https://www.tesk.org.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "rba",
+   "name": "Retail Bakers of America",
+   "domain": "retailbakersofamerica.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "isletme"
+   ],
+   "probe": [
+    "https://retailbakersofamerica.org/",
+    "https://retailbakersofamerica.org/feed/",
+    "https://retailbakersofamerica.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "tuik",
+   "name": "TÜİK",
+   "domain": "tuik.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.tuik.gov.tr/",
+    "https://data.tuik.gov.tr/RssFeed/GetRssFeed?dilId=1",
+    "https://www.tuik.gov.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "tmo",
+   "name": "Toprak Mahsulleri Ofisi (TMO)",
+   "domain": "tmo.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "sektor_gundemi",
+    "un_tahil"
+   ],
+   "probe": [
+    "https://www.tmo.gov.tr/",
+    "https://www.tmo.gov.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bbm_magazine",
+   "name": "BBM Magazine (Değirmencilik/Bakery)",
+   "domain": "bbm-magazine.com",
+   "country": "TR",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "parantez",
+   "topics": [
+    "sektor_gundemi",
+    "un_tahil"
+   ],
+   "probe": [
+    "https://www.bbm-magazine.com/",
+    "https://www.bbm-magazine.com/feed/",
+    "https://www.bbm-magazine.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "baking_business",
+   "name": "Baking Business (Sosland)",
+   "domain": "bakingbusiness.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "sosland",
+   "topics": [
+    "sektor_gundemi",
+    "isletme"
+   ],
+   "probe": [
+    "https://www.bakingbusiness.com/",
+    "https://www.bakingbusiness.com/rss/topic/298",
+    "https://www.bakingbusiness.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "british_baker",
+   "name": "British Baker",
+   "domain": "bakeryinfo.co.uk",
+   "country": "UK",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "topics": [
+    "sektor_gundemi",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.bakeryinfo.co.uk/",
+    "https://www.bakeryinfo.co.uk/rss",
+    "https://www.bakeryinfo.co.uk/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "tubitak_mam",
+   "name": "TÜBİTAK MAM",
+   "domain": "mam.tubitak.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://mam.tubitak.gov.tr/",
+    "https://mam.tubitak.gov.tr/tr/haberler",
+    "https://mam.tubitak.gov.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "gida_dergisi",
+   "name": "GIDA / The Journal of Food (DergiPark)",
+   "domain": "dergipark.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge",
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://dergipark.org.tr/tr/pub/gida",
+    "https://dergipark.org.tr/tr/pub/gida/rss",
+    "https://dergipark.org.tr/tr/pub/gida/archive"
+   ]
+  },
+  {
+   "slug": "wageningen",
+   "name": "Wageningen University & Research",
+   "domain": "wur.nl",
+   "country": "NL",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.wur.nl/en.htm",
+    "https://www.wur.nl/en/rss.htm",
+    "https://www.wur.nl/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "inrae",
+   "name": "INRAE",
+   "domain": "inrae.fr",
+   "country": "FR",
+   "lang": "fr",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.inrae.fr/",
+    "https://www.inrae.fr/actualites/flux.rss",
+    "https://www.inrae.fr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "sfbi",
+   "name": "San Francisco Baking Institute (SFBI)",
+   "domain": "sfbi.com",
+   "country": "US",
+   "lang": "en",
+   "type": "edu",
+   "commercial": true,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://sfbi.com/",
+    "https://sfbi.com/feed/",
+    "https://sfbi.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "richemont",
+   "name": "Richemont Fachschule",
+   "domain": "richemont.swiss",
+   "country": "CH",
+   "lang": "de",
+   "type": "edu",
+   "commercial": true,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://richemont.swiss/",
+    "https://richemont.swiss/feed/",
+    "https://richemont.swiss/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bbga",
+   "name": "Bread Bakers Guild of America",
+   "domain": "bbga.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.bbga.org/",
+    "https://www.bbga.org/feed/",
+    "https://www.bbga.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "king_arthur_pro",
+   "name": "King Arthur Baking Professional",
+   "domain": "kingarthurbaking.com",
+   "country": "US",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.kingarthurbaking.com/pro",
+    "https://www.kingarthurbaking.com/blog/feed",
+    "https://www.kingarthurbaking.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "halk_ekmek_ist",
+   "name": "İstanbul Halk Ekmek",
+   "domain": "ihe.istanbul",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.ihe.istanbul/",
+    "https://www.ihe.istanbul/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "aacc_cereals",
+   "name": "Cereals & Grains Association (AACC)",
+   "domain": "cerealsgrains.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.cerealsgrains.org/",
+    "https://www.cerealsgrains.org/news/Pages/default.aspx",
+    "https://www.cerealsgrains.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "world_grain",
+   "name": "World Grain (Sosland)",
+   "domain": "world-grain.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "sosland",
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.world-grain.com/",
+    "https://www.world-grain.com/rss/articles",
+    "https://www.world-grain.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "miller_magazine",
+   "name": "Miller Magazine / Değirmenci Dergisi",
+   "domain": "millermagazine.com",
+   "country": "TR",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "parantez",
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://millermagazine.com/",
+    "https://millermagazine.com/feed/",
+    "https://millermagazine.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bakeryandsnacks",
+   "name": "BakeryAndSnacks (William Reed)",
+   "domain": "bakeryandsnacks.com",
+   "country": "UK",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "topics": [
+    "sektor_gundemi",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.bakeryandsnacks.com/",
+    "https://www.bakeryandsnacks.com/Info/Latest-News",
+    "https://www.bakeryandsnacks.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bake_mag",
+   "name": "Bake Magazine (Sosland)",
+   "domain": "bakemag.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "publisher_group": "sosland",
+   "topics": [
+    "pastacilik",
+    "isletme"
+   ],
+   "probe": [
+    "https://www.bakemag.com/",
+    "https://www.bakemag.com/rss/articles",
+    "https://www.bakemag.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "gida_teknolojisi",
+   "name": "Gıda Teknolojisi Dergisi",
+   "domain": "gidateknolojisi.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": false,
+   "topics": [
+    "bilim_arge",
+    "hijyen_kalite",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.gidateknolojisi.com.tr/",
+    "https://www.gidateknolojisi.com.tr/feed/",
+    "https://www.gidateknolojisi.com.tr/rss.xml"
+   ]
+  },
+  {
+   "slug": "tff_firincilar",
+   "name": "Türkiye Fırıncılar Federasyonu",
+   "domain": "tff.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "sektor_gundemi",
+    "isletme",
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://www.tff.org.tr/",
+    "https://tff.org.tr/",
+    "https://www.tff.org.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "ist_firincilar_odasi",
+   "name": "İstanbul Fırıncılar Odası",
+   "domain": "istanbulfirincilarodasi.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "isletme",
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://www.istanbulfirincilarodasi.org.tr/",
+    "https://istanbulfirincilarodasi.org.tr/"
+   ]
+  },
+  {
+   "slug": "ticaret_bakanligi",
+   "name": "T.C. Ticaret Bakanlığı",
+   "domain": "ticaret.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.ticaret.gov.tr/",
+    "https://www.ticaret.gov.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "fao",
+   "name": "FAO (BM Gıda ve Tarım Örgütü)",
+   "domain": "fao.org",
+   "country": "INT",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi",
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://www.fao.org/newsroom/en",
+    "https://www.fao.org/feeds/fao-newsroom-rss",
+    "https://www.fao.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "codex",
+   "name": "Codex Alimentarius",
+   "domain": "fao.org",
+   "country": "INT",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "publisher_group": "fao",
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://www.fao.org/fao-who-codexalimentarius/news-and-events/en/"
+   ]
+  },
+  {
+   "slug": "who_food",
+   "name": "WHO Food Safety",
+   "domain": "who.int",
+   "country": "INT",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://www.who.int/health-topics/food-safety",
+    "https://www.who.int/rss-feeds/news-english.xml"
+   ]
+  },
+  {
+   "slug": "fda_food",
+   "name": "U.S. FDA Food",
+   "domain": "fda.gov",
+   "country": "US",
+   "lang": "en",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://www.fda.gov/food",
+    "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/food/rss.xml"
+   ]
+  },
+  {
+   "slug": "bfr",
+   "name": "BfR (Alman Risk Değerlendirme Enstitüsü)",
+   "domain": "bfr.bund.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "hijyen_kalite",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.bfr.bund.de/de/start.html",
+    "https://www.bfr.bund.de/de/rss.html"
+   ]
+  },
+  {
+   "slug": "mri_bund",
+   "name": "Max Rubner-Institut (Detmold tahıl)",
+   "domain": "mri.bund.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.mri.bund.de/",
+    "https://www.mri.bund.de/de/aktuelles/"
+   ]
+  },
+  {
+   "slug": "cimmyt",
+   "name": "CIMMYT (Buğday Araştırma)",
+   "domain": "cimmyt.org",
+   "country": "MX",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://www.cimmyt.org/",
+    "https://www.cimmyt.org/feed/",
+    "https://www.cimmyt.org/sitemap_index.xml"
+   ]
+  },
+  {
+   "slug": "uswheat",
+   "name": "U.S. Wheat Associates",
+   "domain": "uswheat.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "un_tahil",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.uswheat.org/",
+    "https://www.uswheat.org/feed/",
+    "https://www.uswheat.org/sitemap_index.xml"
+   ]
+  },
+  {
+   "slug": "mdpi_foods",
+   "name": "MDPI Foods (açık erişim dergi)",
+   "domain": "mdpi.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge",
+    "hijyen_kalite"
+   ],
+   "probe": [
+    "https://www.mdpi.com/journal/foods",
+    "https://www.mdpi.com/rss/journal/foods"
+   ]
+  },
+  {
+   "slug": "inbp",
+   "name": "INBP (Fransa Ulusal Fırıncılık Enstitüsü)",
+   "domain": "inbp.com",
+   "country": "FR",
+   "lang": "fr",
+   "type": "edu",
+   "commercial": true,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.inbp.com/",
+    "https://www.inbp.com/actualites/",
+    "https://www.inbp.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "akademie_weinheim",
+   "name": "Akademie Deutsches Bäckerhandwerk Weinheim",
+   "domain": "akademie-weinheim.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "edu",
+   "commercial": true,
+   "topics": [
+    "ustalik_dunya"
+   ],
+   "probe": [
+    "https://www.akademie-weinheim.de/",
+    "https://www.akademie-weinheim.de/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "baeckerhandwerk",
+   "name": "Zentralverband des Deutschen Bäckerhandwerks",
+   "domain": "baeckerhandwerk.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "sektor_gundemi",
+    "ustalik_dunya",
+    "isletme"
+   ],
+   "probe": [
+    "https://www.baeckerhandwerk.de/",
+    "https://www.baeckerhandwerk.de/feed/",
+    "https://www.baeckerhandwerk.de/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "webbaecker",
+   "name": "WebBäcker / ABZ haber",
+   "domain": "webbaecker.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "news",
+   "commercial": false,
+   "topics": [
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.webbaecker.de/",
+    "https://www.webbaecker.de/feed/"
+   ]
+  },
+  {
+   "slug": "boulangerie_conf",
+   "name": "Confédération Nationale de la Boulangerie (FR)",
+   "domain": "boulangerie.org",
+   "country": "FR",
+   "lang": "fr",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "sektor_gundemi",
+    "ustalik_dunya"
+   ],
+   "probe": [
+    "https://www.boulangerie.org/",
+    "https://www.boulangerie.org/feed/"
+   ]
+  },
+  {
+   "slug": "ab_mauri",
+   "name": "AB Mauri",
+   "domain": "abmauri.com",
+   "country": "UK",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.abmauri.com/",
+    "https://www.abmauri.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "angel_yeast",
+   "name": "Angel Yeast",
+   "domain": "angelyeast.com",
+   "country": "CN",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://en.angelyeast.com/",
+    "https://en.angelyeast.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bakels",
+   "name": "Bakels Group",
+   "domain": "bakels.com",
+   "country": "CH",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "pastacilik",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.bakels.com/",
+    "https://www.bakels.com/sitemap_index.xml"
+   ]
+  },
+  {
+   "slug": "corbion",
+   "name": "Corbion (fermantasyon/raf ömrü)",
+   "domain": "corbion.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "hijyen_kalite",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.corbion.com/",
+    "https://www.corbion.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "novonesis_baking",
+   "name": "Novonesis (enzim/baking)",
+   "domain": "novonesis.com",
+   "country": "DK",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "bilim_arge",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.novonesis.com/",
+    "https://www.novonesis.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "wp_bakery",
+   "name": "WP Bakery Group",
+   "domain": "wp-l.com",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.wp-l.com/",
+    "https://www.wp-l.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "wachtel",
+   "name": "Wachtel (fırınlar)",
+   "domain": "wachtel.de",
+   "country": "DE",
+   "lang": "de",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.wachtel.de/",
+    "https://www.wachtel.de/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "sveba_dahlen",
+   "name": "Sveba Dahlen",
+   "domain": "sveba-dahlen.com",
+   "country": "SE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.sveba-dahlen.com/",
+    "https://www.sveba-dahlen.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "rademaker",
+   "name": "Rademaker",
+   "domain": "rademaker.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.rademaker.com/",
+    "https://www.rademaker.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "mecatherm",
+   "name": "Mecatherm",
+   "domain": "mecatherm.fr",
+   "country": "FR",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.mecatherm.fr/",
+    "https://www.mecatherm.fr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "diosna",
+   "name": "DIOSNA (yoğurma/starter)",
+   "domain": "diosna.com",
+   "country": "DE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.diosna.com/",
+    "https://www.diosna.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "fimak",
+   "name": "FİMAK Fırın Makinaları",
+   "domain": "fimak.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji",
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://www.fimak.com.tr/",
+    "https://www.fimak.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "porlanmaz",
+   "name": "Porlanmaz Fırın Makinaları",
+   "domain": "porlanmaz.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.porlanmaz.com/",
+    "https://porlanmaz.com/"
+   ]
+  },
+  {
+   "slug": "mateka",
+   "name": "Mateka Ekipman",
+   "domain": "mateka.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji"
+   ],
+   "probe": [
+    "https://www.mateka.com.tr/",
+    "https://mateka.com.tr/"
+   ]
+  },
+  {
+   "slug": "lesaffre_tr",
+   "name": "Lesaffre Türkiye",
+   "domain": "lesaffre.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": "lesaffre",
+   "topics": [
+    "ekmek_fermantasyon",
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://www.lesaffre.com.tr/",
+    "https://www.lesaffre.com.tr/feed/",
+    "https://www.lesaffre.com.tr/sitemap_index.xml"
+   ]
+  },
+  {
+   "slug": "ulker_pro",
+   "name": "Ülker (kurumsal/inovasyon)",
+   "domain": "ulker.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "pastacilik",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.ulker.com.tr/",
+    "https://www.ulker.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "eti_kurumsal",
+   "name": "ETİ (kurumsal)",
+   "domain": "etietieti.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "pastacilik"
+   ],
+   "probe": [
+    "https://www.etietieti.com/",
+    "https://www.etietieti.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "itu_gida",
+   "name": "İTÜ Gıda Mühendisliği",
+   "domain": "gidamuh.itu.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://gidamuh.itu.edu.tr/",
+    "https://gidamuh.itu.edu.tr/haberler"
+   ]
+  },
+  {
+   "slug": "hacettepe_gida",
+   "name": "Hacettepe Gıda Mühendisliği",
+   "domain": "fde.hacettepe.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://fde.hacettepe.edu.tr/",
+    "http://www.fde.hacettepe.edu.tr/"
+   ]
+  },
+  {
+   "slug": "ankara_gida",
+   "name": "Ankara Üniversitesi Gıda Mühendisliği",
+   "domain": "eng.ankara.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://eng.ankara.edu.tr/gida/",
+    "https://eng.ankara.edu.tr/"
+   ]
+  },
+  {
+   "slug": "ege_gida",
+   "name": "Ege Üniversitesi Gıda Mühendisliği",
+   "domain": "food.ege.edu.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "academic",
+   "commercial": false,
+   "topics": [
+    "bilim_arge"
+   ],
+   "probe": [
+    "https://food.ege.edu.tr/",
+    "https://food.ege.edu.tr/tr-11821/duyurular.html"
+   ]
+  },
+  {
+   "slug": "tse",
+   "name": "Türk Standardları Enstitüsü (TSE)",
+   "domain": "tse.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "hijyen_kalite",
+    "isletme"
+   ],
+   "probe": [
+    "https://www.tse.org.tr/",
+    "https://www.tse.org.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "tobb",
+   "name": "TOBB",
+   "domain": "tobb.org.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://www.tobb.org.tr/",
+    "https://www.tobb.org.tr/Sayfalar/AnaSayfa.php"
+   ]
+  },
+  {
+   "slug": "iskur",
+   "name": "İŞKUR (istihdam/teşvik)",
+   "domain": "iskur.gov.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "gov",
+   "commercial": false,
+   "topics": [
+    "isletme"
+   ],
+   "probe": [
+    "https://www.iskur.gov.tr/",
+    "https://www.iskur.gov.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "ibp_bbga_formula",
+   "name": "BBGA Formula Exchange",
+   "domain": "bbga.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "publisher_group": "bbga",
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://www.bbga.org/formulas/"
+   ]
+  },
+  {
+   "slug": "sourdough_lib",
+   "name": "Puratos Sourdough Library",
+   "domain": "questforsourdough.com",
+   "country": "BE",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "publisher_group": "puratos",
+   "topics": [
+    "ekmek_fermantasyon",
+    "ustalik_dunya"
+   ],
+   "probe": [
+    "https://www.questforsourdough.com/",
+    "https://www.questforsourdough.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "theartisan_net",
+   "name": "The Artisan (teknik ekmek arşivi)",
+   "domain": "theartisan.net",
+   "country": "US",
+   "lang": "en",
+   "type": "archive",
+   "commercial": false,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "http://www.theartisan.net/",
+    "http://theartisan.net/"
+   ]
+  },
+  {
+   "slug": "snack_bakery",
+   "name": "Snack Food & Wholesale Bakery",
+   "domain": "snackandbakery.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://snackandbakery.com/",
+    "https://snackandbakery.com/feed/",
+    "https://snackandbakery.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bakers_journal",
+   "name": "Bakers Journal",
+   "domain": "bakersjournal.com",
+   "country": "CA",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "isletme",
+    "ustalik_dunya"
+   ],
+   "probe": [
+    "https://bakersjournal.com/",
+    "https://bakersjournal.com/feed/",
+    "https://bakersjournal.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "world_bakers",
+   "name": "World Bakers",
+   "domain": "worldbakers.com",
+   "country": "INT",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://worldbakers.com/",
+    "https://worldbakers.com/feed/",
+    "https://worldbakers.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "uno_tr",
+   "name": "Uno Ekmek",
+   "domain": "uno.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://uno.com.tr/",
+    "https://uno.com.tr/feed/",
+    "https://uno.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "torku",
+   "name": "Torku",
+   "domain": "torku.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://torku.com.tr/",
+    "https://torku.com.tr/feed/",
+    "https://torku.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "akmaya",
+   "name": "Akmaya",
+   "domain": "akmaya.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://akmaya.com.tr/",
+    "https://akmaya.com.tr/feed/",
+    "https://akmaya.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "ozmaya",
+   "name": "Özmaya",
+   "domain": "ozmaya.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "publisher_group": "lesaffre",
+   "probe": [
+    "https://ozmaya.com.tr/",
+    "https://ozmaya.com.tr/feed/",
+    "https://ozmaya.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "ulusoy_un",
+   "name": "Ulusoy Un",
+   "domain": "ulusoyun.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "un_tahil"
+   ],
+   "probe": [
+    "https://ulusoyun.com.tr/",
+    "https://ulusoyun.com.tr/feed/",
+    "https://ulusoyun.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "dunya_gida",
+   "name": "Dünya Gıda",
+   "domain": "dunyagida.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://dunyagida.com.tr/",
+    "https://dunyagida.com.tr/feed/",
+    "https://dunyagida.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "gida_hatti",
+   "name": "Gıda Hattı",
+   "domain": "gidahatti.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "sektor_gundemi",
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://gidahatti.com/",
+    "https://gidahatti.com/feed/",
+    "https://gidahatti.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "mauri_tr",
+   "name": "AB Mauri Türkiye",
+   "domain": "mauri.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "turk_urunleri",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://mauri.com.tr/",
+    "https://mauri.com.tr/feed/",
+    "https://mauri.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "perfect_loaf",
+   "name": "The Perfect Loaf",
+   "domain": "theperfectloaf.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://theperfectloaf.com/",
+    "https://theperfectloaf.com/feed/",
+    "https://theperfectloaf.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "breadtopia",
+   "name": "Breadtopia",
+   "domain": "breadtopia.com",
+   "country": "US",
+   "lang": "en",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://breadtopia.com/",
+    "https://breadtopia.com/feed/",
+    "https://breadtopia.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "chainbaker",
+   "name": "ChainBaker",
+   "domain": "chainbaker.com",
+   "country": "UK",
+   "lang": "en",
+   "type": "news",
+   "commercial": false,
+   "topics": [
+    "ustalik_dunya",
+    "ekmek_fermantasyon"
+   ],
+   "probe": [
+    "https://chainbaker.com/",
+    "https://chainbaker.com/feed/",
+    "https://chainbaker.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "weekend_bakery",
+   "name": "Weekend Bakery",
+   "domain": "weekendbakery.com",
+   "country": "NL",
+   "lang": "en",
+   "type": "archive",
+   "commercial": false,
+   "topics": [
+    "ustalik_dunya",
+    "pastacilik"
+   ],
+   "probe": [
+    "https://weekendbakery.com/",
+    "https://weekendbakery.com/feed/",
+    "https://weekendbakery.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "bake_from_scratch",
+   "name": "Bake from Scratch",
+   "domain": "bakefromscratch.com",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "pastacilik",
+    "ustalik_dunya"
+   ],
+   "probe": [
+    "https://bakefromscratch.com/",
+    "https://bakefromscratch.com/feed/",
+    "https://bakefromscratch.com/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "food_business_news",
+   "name": "Food Business News",
+   "domain": "foodbusinessnews.net",
+   "country": "US",
+   "lang": "en",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "publisher_group": "sosland",
+   "probe": [
+    "https://foodbusinessnews.net/",
+    "https://foodbusinessnews.net/feed/",
+    "https://foodbusinessnews.net/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "americanbakers",
+   "name": "American Bakers Association",
+   "domain": "americanbakers.org",
+   "country": "US",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "isletme",
+    "sektor_gundemi"
+   ],
+   "probe": [
+    "https://americanbakers.org/",
+    "https://americanbakers.org/feed/",
+    "https://americanbakers.org/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "craft_bakers_uk",
+   "name": "Craft Bakers Association",
+   "domain": "craftbakersassociation.co.uk",
+   "country": "UK",
+   "lang": "en",
+   "type": "association",
+   "commercial": false,
+   "topics": [
+    "isletme",
+    "ustalik_dunya"
+   ],
+   "probe": [
+    "https://craftbakersassociation.co.uk/",
+    "https://craftbakersassociation.co.uk/feed/",
+    "https://craftbakersassociation.co.uk/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "simfer",
+   "name": "Simfer",
+   "domain": "simfer.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji",
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://simfer.com.tr/",
+    "https://simfer.com.tr/feed/",
+    "https://simfer.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "oztiryakiler",
+   "name": "Öztiryakiler",
+   "domain": "oztiryakiler.com.tr",
+   "country": "TR",
+   "lang": "tr",
+   "type": "vendor",
+   "commercial": true,
+   "topics": [
+    "firin_teknoloji",
+    "turk_urunleri"
+   ],
+   "probe": [
+    "https://oztiryakiler.com.tr/",
+    "https://oztiryakiler.com.tr/feed/",
+    "https://oztiryakiler.com.tr/sitemap.xml"
+   ]
+  },
+  {
+   "slug": "degirmenci_dergisi",
+   "name": "Değirmenci Dergisi",
+   "domain": "degirmencidergisi.com",
+   "country": "TR",
+   "lang": "tr",
+   "type": "news",
+   "commercial": true,
+   "topics": [
+    "un_tahil",
+    "turk_urunleri",
+    "sektor_gundemi"
+   ],
+   "publisher_group": "parantez",
+   "probe": [
+    "https://degirmencidergisi.com/",
+    "https://degirmencidergisi.com/feed/",
+    "https://degirmencidergisi.com/sitemap.xml"
+   ]
+  }
+ ]
+}

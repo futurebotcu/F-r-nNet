@@ -113,6 +113,7 @@ import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/profile/screens/create_profile_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/professional_cv_screen.dart';
+import '../../features/academy/screens/academy_page.dart';
 import '../../features/social/profile/profile_page.dart';
 import '../../features/social/profile/user_list_page.dart';
 import '../../features/safety/screens/blocked_users_screen.dart';
@@ -289,6 +290,9 @@ class AppRoutes {
   // tab path'i (`/profile`) own-only; bu path başkasının profilini görmek
   // için. Yol kısa (`/u/:userId`) — gelecekte share URL şablonu için iyi.
   static const String userPublicProfile = '/u';
+
+  // FırınNet Akademi — tüm Akademi bot içeriklerinin toplu profil sayfası.
+  static const String academy = '/academy';
 
   // V1 Donor-First Social Rebuild — yeni composer ekranı (post oluşturma).
   // SocialFeedPage'deki FAB bu route'a push eder.
@@ -567,6 +571,11 @@ GoRouter createRouter({bool Function()? isAuthed}) {
         path: '${AppRoutes.userPublicProfile}/:userId',
         builder: (_, state) =>
             SocialProfilePage(userId: state.pathParameters['userId']!),
+      ),
+      // FırınNet Akademi — bot içerikleri toplu sayfası.
+      GoRoute(
+        path: AppRoutes.academy,
+        builder: (_, __) => const AcademyPage(),
       ),
       // F2 — Followers list (`/u/:userId/followers`).
       GoRoute(

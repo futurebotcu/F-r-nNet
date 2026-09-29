@@ -1,0 +1,238 @@
+// deno run --allow-net --allow-read --allow-write --allow-env \
+//   scripts/academy_probe_sources_v3.ts
+//
+// Kaynak adaylarını WORKER İLE AYNI ÇIKARIM KODUYLA (lib.ts) salt-okunur
+// doğrular: RSS varsa feed→makale; yoksa discoverArticles (sitemap index/
+// urlset/HTML) — robots + SSRF + makale-kalite (isLikelyArticle) aynı.
+// Rapor: docs/academy/source_verification.json (makinece okunabilir).
+import {
+  BAKERY_TOPICAL_RE,
+  decodeBody,
+  discoverArticles,
+  extractPage,
+  extractPublishedAt,
+  isAllowedUrl,
+  isLikelyArticle,
+  parseFeed,
+  robotsAllows,
+} from "../supabase/functions/academy-worker/lib.ts";
+
+// Konu uygunluğu (rapor alanı): fırıncılık/gıda sözlüğü.
+const TOPICAL_RE =
+  /(ekmek|hamur|un|una |fırın|maya|fermantasyon|pastane|börek|simit|bread|dough|flour|bak(e|ing|ery)|yeast|pastry|wheat|buğday|grain|tahıl|gıda|food|mill|değirmen|hijyen|hygiene)/i;
+
+const UA =
+  "FirinNetAcademyBot/1.1 (+https://firinnet.app; kaynak-dogrulama)";
+const TIMEOUT = 15000;
+// Nezaket gecikmesi: hizli ardisik tam taramalar CDN engeline takiliyor
+// (unproved patlamasi); worker cron'u zaten yavas, probe da yavaslar.
+const DELAY_MS = 400;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+let lastStatus = 0;
+
+async function get(
+  url: string,
+): Promise<{ status: number; text: string } | null> {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), TIMEOUT);
+  try {
+    const r = await fetch(url, {
+      signal: ctl.signal,
+      headers: { "User-Agent": UA },
+      redirect: "follow",
+    });
+    const buf = new Uint8Array(await r.arrayBuffer());
+    const text = decodeBody(
+      buf.slice(0, 1_500_000),
+      r.headers.get("content-type"),
+    );
+    lastStatus = r.status;
+    await sleep(DELAY_MS);
+    return { status: r.status, text };
+  } catch (_) {
+    lastStatus = 0;
+    await sleep(DELAY_MS);
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+const data = JSON.parse(
+  await Deno.readTextFile("docs/academy/sources_candidates.json"),
+);
+// ONLY=slug1,slug2 → yalnız bu adaylar taranır, sonuç mevcut rapora
+// MERGE edilir (tam tarama tekrarlanmaz).
+const only = (Deno.env.get("ONLY") ?? "").split(",").map((x) => x.trim())
+  .filter(Boolean);
+const targets = only.length
+  ? data.sources.filter((s: { slug: string }) => only.includes(s.slug))
+  : data.sources;
+const results: Record<string, unknown>[] = [];
+
+for (const s of targets) {
+  console.log("probe:", s.slug);
+  const entry: Record<string, unknown> = {
+    slug: s.slug,
+    name: s.name,
+    domain: s.domain,
+    country: s.country,
+    lang: s.lang,
+    type: s.type,
+    commercial: s.commercial,
+    publisher_group: s.publisher_group ?? null,
+    topics: s.topics,
+    probed_at: new Date().toISOString(),
+  };
+  // robots (worker ile aynı uygulanır)
+  const robots = await get(`https://${s.domain}/robots.txt`);
+  const robotsTxt = robots && robots.status === 200 ? robots.text : null;
+  const allow = (u: string) => {
+    if (!isAllowedUrl(u, s.domain)) return false;
+    if (!robotsTxt) return true;
+    try {
+      return robotsAllows(robotsTxt, new URL(u).pathname);
+    } catch (_) {
+      return false;
+    }
+  };
+
+  let proof: Record<string, unknown> | null = null;
+  let method = "";
+  let feedSeen = false;
+
+  // 1) RSS/Atom yolu
+  for (const u of s.probe as string[]) {
+    if (proof) break;
+    if (!allow(u)) continue;
+    const r = await get(u);
+    if (!r || r.status !== 200 || !r.text) continue;
+    if (!/<(rss|feed)[\s>]/i.test(r.text)) continue;
+    feedSeen = true;
+    for (const it of parseFeed(r.text).slice(0, 3)) {
+      const link = new URL(it.link, u).toString();
+      if (!allow(link)) continue;
+      const art = await get(link);
+      if (!art || art.status !== 200) continue;
+      const page = extractPage(art.text, link);
+      if (!isLikelyArticle(page, art.text, link)) continue;
+      if (!BAKERY_TOPICAL_RE.test(page.title + " " + page.text)) continue;
+      const pub = it.publishedAt ?? extractPublishedAt(art.text);
+      proof = {
+        v: 2,
+        url: page.canonicalUrl ?? link,
+        title: page.title.slice(0, 200),
+        text_len: page.text.length,
+        published_at: pub,
+        content_type: pub &&
+            Date.now() - Date.parse(pub) < 60 * 86400_000
+          ? "news"
+          : "evergreen",
+        topical: BAKERY_TOPICAL_RE.test(page.title + " " + page.text),
+        method: "rss_item->extractPage",
+      };
+      break;
+    }
+  }
+  // 2) RSS yoksa/kanıt çıkmadıysa: worker keşif çekirdeği (sitemap/HTML).
+  if (!proof) {
+    let cursor: Record<string, unknown> = {};
+    for (let round = 0; round < 3 && !proof; round++) {
+      const r = await discoverArticles({
+        domain: s.domain,
+        startUrls: [
+          ...(s.probe as string[]),
+          `https://${s.domain}/sitemap.xml`,
+          `https://${s.domain}/`,
+        ],
+        cursor,
+        fetchFn: get,
+        robotsTxt,
+        maxFetch: 10,
+        maxArticles: 1,
+      });
+      method = r.note;
+      cursor = r.nextCursor as Record<string, unknown>;
+      const a0 = r.articles.find((x) =>
+        BAKERY_TOPICAL_RE.test(x.title + " " + x.text));
+      if (a0) {
+        const a = a0;
+        proof = {
+          v: 2,
+          url: a.url,
+          title: a.title.slice(0, 200),
+          text_len: a.text.length,
+          published_at: a.publishedAt,
+          content_type: a.publishedAt &&
+              Date.now() - Date.parse(a.publishedAt) < 60 * 86400_000
+            ? "news"
+            : "evergreen",
+          topical: BAKERY_TOPICAL_RE.test(a.title + " " + a.text),
+          method: "discover:" + r.note,
+        };
+      }
+      if ((r.nextCursor as { done_at?: string }).done_at) break;
+    }
+  }
+
+  entry.content_proof = proof;
+  entry.last_http_status = lastStatus;
+  entry.verdict = proof
+    ? "content_proved"
+    : (feedSeen
+      ? "reachable_feed"
+      : ([403, 429, 503].includes(lastStatus)
+        ? "blocked_or_limited"
+        : "unproved"));
+  entry.verdict_reason = proof
+    ? "gerçek makale çıkarımı worker koduyla doğrulandı"
+    : (feedSeen
+      ? "feed erişildi; makale kanıtı çıkarılamadı"
+      : "feed/sitemap/HTML üzerinden makale kanıtı çıkarılamadı" +
+        (method ? ` (${method})` : ""));
+  results.push(entry);
+}
+
+// ONLY modunda: mevcut rapor korunur, taranan slug'lar güncellenir.
+let merged = results;
+if (only.length) {
+  const prev = JSON.parse(
+    await Deno.readTextFile("docs/academy/source_verification.json"),
+  );
+  const bySlug = new Map(
+    (prev.sources as Record<string, unknown>[]).map((r) => [r.slug, r]),
+  );
+  for (const r of results) bySlug.set(r.slug as string, r);
+  merged = [...bySlug.values()];
+}
+const resultsAll = merged;
+const proved = resultsAll.filter((r) => r.verdict === "content_proved");
+const perTopic: Record<string, number> = {};
+for (const r of proved) {
+  for (const t of r.topics as string[]) perTopic[t] = (perTopic[t] ?? 0) + 1;
+}
+const report = {
+  summary: {
+    generated_at: new Date().toISOString(),
+    proof_version: 2,
+    method_note:
+      "v2: Doğrulama worker ile AYNI çıkarım kodunu kullanır (lib.ts); " +
+      "iletişim/giriş/çerez/kontakt/arama sayfaları KANIT SAYILMAZ. " +
+      "content_proved = gerçek makale (başlık+ana metin+robots+SSRF); " +
+      "lisans/kullanım koşulu onayı DEĞİLDİR.",
+    candidates_total: resultsAll.length,
+    content_proved: proved.length,
+    reachable_feed_unproved:
+      resultsAll.filter((r) => r.verdict === "reachable_feed").length,
+    unproved: resultsAll.filter((r) => r.verdict === "unproved").length,
+    blocked_or_limited:
+      resultsAll.filter((r) => r.verdict === "blocked_or_limited").length,
+    proved_per_topic: perTopic,
+  },
+  sources: resultsAll,
+};
+await Deno.writeTextFile(
+  "docs/academy/source_verification.json",
+  JSON.stringify(report, null, 1),
+);
+console.log("\nSUMMARY:", JSON.stringify(report.summary, null, 1));
