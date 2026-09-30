@@ -642,6 +642,7 @@ export function isLikelyArticle(
   html: string,
   url = "",
 ): boolean {
+  if (isVideoPlatformUrl(url)) return false; // video kurali (ustteki not)
   if (!page.title || page.text.length < 400) return false;
   const title = normText(page.title);
   const path = (() => {
@@ -1092,4 +1093,19 @@ export function sanitizeDateContext(s: string): string {
   if (m) t = m[1].trim();
   return t.replace(/\s+([.,;])/g, "$1").replace(/[.;]\s*$/, "").trim()
     .slice(0, 120);
+}
+
+/** KURAL (video icerik): video indirme/yeniden yukleme YOK, thumbnail
+ * kartta KULLANILMAZ, transkript kazima YOK. Izinli tek kullanim: kendi
+ * ozetimiz + videonun kendisine link/embed (yayin atfi sicilden gelir).
+ * Bu nedenle video platform sayfalari makale/kanit OLAMAZ. */
+const VIDEO_HOST_RE =
+  /(^|\.)(youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|tiktok\.com|twitch\.tv)$/i;
+
+export function isVideoPlatformUrl(raw: string): boolean {
+  try {
+    return VIDEO_HOST_RE.test(new URL(raw).hostname);
+  } catch (_) {
+    return false;
+  }
 }

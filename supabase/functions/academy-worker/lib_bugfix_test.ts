@@ -439,3 +439,21 @@ Deno.test("H7: date_context iç-talimat cümlesi ve parantez notu yayına sızma
   assert(sanitizeDateContext("Tarih: 01.02.2026") === "Tarih: 01.02.2026", "nokta-tarih");
   assert(sanitizeDateContext("") === "", "bos");
 });
+
+// ── K1: video platformu KURALI — makale/kanıt olamaz, transkript kazıma yok ──
+import { isVideoPlatformUrl } from "./lib.ts";
+
+Deno.test("K1: video platform URL'leri makale sayılmaz (kural: indirme/transkript yok)", () => {
+  for (const u of [
+    "https://www.youtube.com/watch?v=abc123",
+    "https://youtu.be/abc123",
+    "https://vimeo.com/12345",
+    "https://www.tiktok.com/@x/video/1",
+  ]) {
+    assert(isVideoPlatformUrl(u), "platform tespit: " + u);
+    const c = pageOf("Ekmek yapımı videosu", "<p>" +
+      "Hamur yoğurma ve fermantasyon videolu anlatım açıklaması. ".repeat(40) + "</p>", u);
+    assert(!isLikelyArticle(c.page, c.html, c.url), "makale sayıldı: " + u);
+  }
+  assert(!isVideoPlatformUrl("https://ornek.com/video-hakkinda-yazi"), "yanlış pozitif");
+});
