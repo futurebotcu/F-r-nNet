@@ -606,7 +606,7 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     publishedAt: item.published_at,
     text: fullText,
   });
-  const r = await deepseek(c, prompt.system, prompt.user, 4000);
+  const r = await deepseek(c, prompt.system, prompt.user, 8000);
   if (!r.ok) {
     if (r.reason === "no_key") return "config_no_llm_key";
     if (r.reason.startsWith("budget")) return "budget_" + r.reason;
