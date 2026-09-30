@@ -3,6 +3,36 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## CANLI AÇILIŞ — PRODUCTION GO-LIVE (2026-09-30 akşam, kullanıcı talimatı)
+
+Plan değişikliği: yarınki otomatik açılış yerine BU TURDA canlı
+(academy-go-live cron'u kaldırıldı). Değişen config (eski→yeni):
+enabled false→true, dry_run true→false, recipe_enabled false→true;
+hard_cap seed penceresi için 2→14→2, bot_cap 1→2→1 (geri alındı).
+
+**İlk canlı içerik (gerçek hat):** 10 editoryal taslak (evergreen,
+claims=[], dış kaynak iddiası yok) → worker media işleriyle 10 PNG kart →
+`academy_publish_draft` ile **10/10 published**. 6 bot: ekmek_fermantasyon
+×2 (hamur sıcaklığı, ekşi maya), un_tahil ×2 (su kaldırma, tuz yüzdesi),
+firin_teknoloji ×2 (buhar/veriş, enerji), hijyen_kalite (çapraz bulaşma),
+isletme ×2 (fire, gramaj), ustalik_dunya (şekillendirme).
+
+**Tarifler canlı:** 5 usta tarifi (Beyaz Ekmek, Ramazan Pidesi, Simit,
+Tam Buğday, Sandviç) checkBakersRecipe strict PASS kanıtıyla published;
+`ar_select_published` RLS migration'ı PROD'da; Flutter'a Tarifler şeridi +
+detay alt-sayfası (gramaj+% birlikte) eklendi (widget testli).
+**K2g fixi (red-first):** 'Tam buğday unu' gibi ek almış un adları taban
+sayılmıyordu → FLOUR_RE düzeltildi (yanlış RED'i canlı doğrulama yakaladı).
+
+Smoke (authenticated rolüyle): 10 bot postu + author_name snapshot +
+kart=1/post; public_profile_snapshot bot adını döndürüyor; 5 tarif
+görünür. profiles tablosunun yalnız-kendi-satırı politikası bilinen
+tasarım (feed snapshot + RPC yolu). Testler: deno 55/55, PG 10/10,
+Flutter 2507/2507, analyze 0.
+
+Rollback: config eski değerlere; içerik: editorial-% idempotency_key'li
+draft/post/media satırları + 5 tarif silinebilir (id'ler DB'de etiketli).
+
 ## EK-6/7 — VİDEO KURALI + TARİF TÜRÜ V1 (2026-09-30)
 
 **Video denetimi (madde 6):** Kod taraması sonucu — YouTube/video/transkript/
