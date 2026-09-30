@@ -3,6 +3,37 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## AŞAMA 3-5 — secrets + deploy + DRY-RUN CANLI DOĞRULAMA (2026-09-29/30)
+
+Secrets: edge `ACADEMY_WORKER_TOKEN`+`DEEPSEEK_API_KEY` mevcut; Vault
+`academy_worker_url`+`academy_worker_key` dolu. İlk tick 401 → iki değer
+ayrı girilmişti; tek yeni değerle senkronlandı (rotasyon; değer rapora
+yazılmadı). Worker deploy (CLI, --no-verify-jwt); yanlış/eksik token → 401
+fail-closed doğrulandı. `academy_enabled=true` + `academy_dry_run=true`;
+geçici `*/2` burst cron ile ~9 saat gerçek koşu, sonra burst kaldırıldı
+(kalıcı 30-dk `academy-worker-tick`).
+
+**Gerçek ortam sonuçları:** 264 scan + 297 archive başarılı; **73 kaynak
+gerçek makale kanıtıyla ACTIVE** (27 degraded, 13 candidate); 880 içerik
+adayı. **DeepSeek gerçek:** 152 istek / ~810k token (2 gün). **Bütçe
+tavanları tuttu:** token 405k/400k-cap ve fetch ~2k/cap'te kesildi
+(`budget_*` hata sınıfı). **İddia denetimi gerçek çıktıda:** 20 taslak RED
+(`context_mismatch`/`quantity`/`substance_mismatch`; `claims_uncertain`
+asla yayımlanmadı), 1 akademi taslağı (SIAL Paris, 4 iddia) + 2 mizah
+taslağı kabul → **dry_run_done; feed'e 0 bot postu (gece boyu)**. PNG kart
+1200×675 GERÇEK üretildi ve Storage'a yüklendi (nesne doğrulandı). Hata
+sınıfları canlı görüldü: scan_failed→dead (57), llm_truncated, budget_*.
+
+**Canlı bulunan ve düzeltilen hatalar (main 9266761 + devamı):**
+- draft `max_tokens` 1800 → truncation retry döngüsü (129 kez, token
+  israfı) → 4000 → canlıda sürdü → **8000**.
+- scan dedupe anahtarında saat slotu → kuyruk şişmesi (113→211) →
+  slot kaldırıldı (cooldown zaten aralığı koruyor) + kuyruk kopya temizliği.
+
+Not: akademi taslak kabul oranı bilinçli olarak düşük (deterministik
+denetim EN kaynak + TR quote çevirisini reddediyor → güvenli taraf);
+kabul oranı iyileştirmesi canlı-sonrası backlog.
+
 ## AŞAMA 2 — merge + prod migration SONUÇ (2026-09-29)
 
 PR #110 squash-merge edildi (main `fa20760`); 3 academy migration prod'a
