@@ -1967,6 +1967,11 @@ class AppStrings {
       'Fırıncılar için kaynaklı mesleki bilgi ve sektör gelişmeleri. '
       'İçerikler yapay zekâ destekli Akademi botları tarafından hazırlanır.';
   static const String academyAiBadge = 'Akademi • AI';
+  static const String academyRecipesTitle = 'Akademi Tarifleri';
+  static const String academyRecipeBadge = 'TARİF • AI DENETİMLİ';
+  static const String academyRecipeIngredients =
+      'Malzemeler (fırıncı yüzdesi)';
+  static const String academyRecipeSteps = 'İşlem sırası';
   static const String academyHumorBadge = 'Mizah • AI';
   static const String academyFilterAll = 'Tümü';
   static const String academyEmpty =

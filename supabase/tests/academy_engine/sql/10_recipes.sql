@@ -42,6 +42,20 @@ begin
                  where id = rid and status='approved') then
     raise exception 'R5 FAIL: service_role onaylayamadi';
   end if;
+  -- R5b: yayımlı tarif BAŞKA kullanıcıya görünür (uygulama listesi)
+  perform set_config('request.jwt.claim.sub', u2::text, true);
+  set local role authenticated;
+  if not exists (select 1 from public.academy_recipes
+                 where id = rid and status='approved') then
+    null; -- approved henüz görünmez (yalnız published)
+  end if;
+  reset role; set local role service_role;
+  update public.academy_recipes set status='published' where id = rid;
+  set local role authenticated;
+  if not exists (select 1 from public.academy_recipes where id = rid) then
+    raise exception 'R5b FAIL: yayımlı tarif başka kullanıcıya görünmedi';
+  end if;
+  reset role; set local role service_role;
   -- R6: adapted kaynak URL'siz eklenemez
   begin
     insert into public.academy_recipes (title, author_name, source_kind)

@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/academy_bot_profile.dart';
+import '../models/academy_recipe.dart';
 import 'academy_repository.dart';
 
 /// `academy_bot_profiles` üzerinden okuma. RLS yalnız görünür+aktif satırları
@@ -63,5 +64,19 @@ class SupabaseAcademyRepository implements AcademyRepository {
       'allow_humor_dm': prefs.allowDm,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'user_id');
+  }
+
+  @override
+  Future<List<AcademyRecipe>> listPublishedRecipes() async {
+    final rows = await _client
+        .from('academy_recipes')
+        .select('id, title, author_name, source_kind, source_url, '
+            'ingredients, oven_c, minutes, steps, notes')
+        .eq('status', 'published')
+        .order('created_at', ascending: true);
+    return [
+      for (final r in (rows as List))
+        AcademyRecipe.fromRow((r as Map).cast<String, dynamic>()),
+    ];
   }
 }

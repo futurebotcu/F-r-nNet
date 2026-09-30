@@ -515,3 +515,15 @@ Deno.test("K2f: 12+ kelime birebir dizi = kopya (uyarlama kuralı)", () => {
     "katlayarak güçlendirin. Oranlar: %68 hidrasyon, %2 tuz.";
   assert(!hasVerbatimOverlap(own, src), "kendi anlatım yanlış pozitif");
 });
+
+Deno.test("K2g: 'Tam buğday unu' gibi ek almış un adları taban sayılır", () => {
+  const r = checkBakersRecipe([
+    { name: "Tam buğday unu", grams: 600 },
+    { name: "Un", grams: 400 },
+    { name: "Su", grams: 700 },
+    { name: "Tuz", grams: 20 },
+    { name: "İnstant maya", grams: 7 },
+  ], { ovenC: 235, minutes: 40, strict: true });
+  assert(r.ok, "red: " + r.errors.join(","));
+  assert(r.pct["Su"] === 70, "hidrasyon %70 olmalı: " + r.pct["Su"]);
+});

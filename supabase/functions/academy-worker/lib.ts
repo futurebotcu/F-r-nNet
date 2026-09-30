@@ -1124,7 +1124,7 @@ export interface RecipeCheck {
   warnings: string[];
   pct: Record<string, number>;
 }
-const FLOUR_RE = /(^|\s)(un|flour|mehl|farine)(\s|$)/i;
+const FLOUR_RE = /(^|\s)(un(u|un|lar\w*)?|flour|mehl|farine)(\s|$)/i;
 const WATER_RE = /(su|water|wasser|eau|s(ü|u)t|milk)/i;
 const SALT_RE = /(tuz|salt|salz|sel)/i;
 const FRESH_YEAST_RE = /(taze|fresh|yas)\s*(maya|yeast)/i;

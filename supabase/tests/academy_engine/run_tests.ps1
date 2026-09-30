@@ -33,7 +33,8 @@ $migrations = @(
   (Join-Path $repoRoot 'supabase\migrations\20260929100000_academy_sources_seed_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260929110000_academy_cron_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260930090000_academy_attribution_vendor_fix.sql'),
-  (Join-Path $repoRoot 'supabase\migrations\20260930100000_academy_recipes_v1.sql')
+  (Join-Path $repoRoot 'supabase\migrations\20260930100000_academy_recipes_v1.sql'),
+  (Join-Path $repoRoot 'supabase\migrations\20260930110000_academy_recipes_public_read.sql')
 )
 foreach ($m in @($schemaFile) + $migrations) {
   if (-not (Test-Path $m)) { throw "Dosya bulunamadı: $m" }

@@ -1,6 +1,7 @@
 import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/features/academy/data/academy_repository.dart';
 import 'package:firin_defter/features/academy/models/academy_bot_profile.dart';
+import 'package:firin_defter/features/academy/models/academy_recipe.dart';
 import 'package:firin_defter/features/academy/providers/academy_providers.dart';
 import 'package:firin_defter/features/academy/screens/academy_page.dart';
 import 'package:firin_defter/features/academy/widgets/humor_prefs_tiles.dart';
@@ -72,6 +73,7 @@ class _SeedFeedRepo extends LocalFeedRepository {
 }
 
 void main() {
+  recipeTests();
   group('AcademyTopic V1 taksonomisi', () {
     test('yeni konu anahtarları round-trip + eski anahtarlar korunur', () {
       for (final t in AcademyTopic.values) {
@@ -271,6 +273,70 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(SocialPostCard), findsOneWidget);
       expect(find.text('FırınNet Un'), findsOneWidget);
+    });
+  });
+}
+
+// ── Akademi Tarifleri şeridi ────────────────────────────────────────────
+AcademyRecipe _recipe() => const AcademyRecipe(
+      id: 'r1',
+      title: 'Klasik Beyaz Ekmek',
+      authorName: 'FırınNet Akademi',
+      sourceKind: 'master',
+      ingredients: [
+        AcademyRecipeIngredient(name: 'Un', grams: 1000, pct: 100),
+        AcademyRecipeIngredient(name: 'Su', grams: 620, pct: 62),
+        AcademyRecipeIngredient(name: 'Tuz', grams: 20, pct: 2),
+      ],
+      ovenC: 230,
+      minutes: 35,
+      steps: '1) Yoğur. 2) Mayalandır. 3) Pişir.',
+    );
+
+void recipeTests() {
+  group('Akademi Tarifleri', () {
+    testWidgets('yayımlı tarif şeritte görünür, detayda gramaj+% birlikte', (
+      tester,
+    ) async {
+      final repo = LocalAcademyRepository(bots: [_bot()])
+        ..recipes = [_recipe()];
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          currentAuthUserProvider.overrideWith((_) => null),
+          feedRepositoryProvider.overrideWith(
+            (_) => LocalFeedRepository(seed: false),
+          ),
+          academyRepositoryProvider.overrideWithValue(repo),
+        ],
+        child: const MaterialApp(home: AcademyPage()),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('academy_recipes_title')),
+          findsOneWidget);
+      expect(find.text('Klasik Beyaz Ekmek'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('academy_recipe_r1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Un 1000 g (%100)'), findsOneWidget);
+      expect(find.text('Su 620 g (%62)'), findsOneWidget);
+      expect(find.textContaining('İşlem sırası'), findsOneWidget);
+    });
+
+    testWidgets('tarif yoksa bölüm hiç görünmez', (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          currentAuthUserProvider.overrideWith((_) => null),
+          feedRepositoryProvider.overrideWith(
+            (_) => LocalFeedRepository(seed: false),
+          ),
+          academyRepositoryProvider.overrideWithValue(
+            LocalAcademyRepository(bots: [_bot()]),
+          ),
+        ],
+        child: const MaterialApp(home: AcademyPage()),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('academy_recipes_title')),
+          findsNothing);
     });
   });
 }

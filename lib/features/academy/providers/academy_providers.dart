@@ -7,6 +7,7 @@ import '../../feed/providers/feed_providers.dart';
 import '../data/academy_repository.dart';
 import '../data/supabase_academy_repository.dart';
 import '../models/academy_bot_profile.dart';
+import '../models/academy_recipe.dart';
 
 /// Akademi okuma repository'si — Supabase açıksa canlı, değilse boş.
 final academyRepositoryProvider = Provider<AcademyRepository>((ref) {
@@ -145,4 +146,10 @@ final academyFeedProvider = StateNotifierProvider.autoDispose<
   final n = AcademyFeedNotifier(ref);
   n.refresh();
   return n;
+});
+
+/// Yayımlı Akademi tarifleri (fırıncı yüzdesiyle gösterim; RLS published).
+final academyRecipesProvider =
+    FutureProvider.autoDispose<List<AcademyRecipe>>((ref) {
+  return ref.watch(academyRepositoryProvider).listPublishedRecipes();
 });

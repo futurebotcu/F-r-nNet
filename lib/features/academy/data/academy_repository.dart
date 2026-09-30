@@ -1,4 +1,5 @@
 import '../models/academy_bot_profile.dart';
+import '../models/academy_recipe.dart';
 
 /// Kullanıcının Mizah botu etkileşim tercihleri (kendi satırı, RLS own).
 class HumorPrefs {
@@ -31,6 +32,9 @@ abstract class AcademyRepository {
   /// Tercihi kalıcı yazar (kendi satırı; sunucu guard'ları gönderim anında
   /// yeniden kontrol eder — geri çekme bekleyen etkileşimi de durdurur).
   Future<void> setHumorPrefs(HumorPrefs prefs);
+
+  /// Yayımlı Akademi tarifleri (status='published'; RLS herkese açık).
+  Future<List<AcademyRecipe>> listPublishedRecipes();
 }
 
 /// Supabase-off / hata default'u — hiç bot yok (UI bot yüzeyi göstermez).
@@ -49,6 +53,10 @@ class EmptyAcademyRepository implements AcademyRepository {
 
   @override
   Future<void> setHumorPrefs(HumorPrefs prefs) async {}
+
+  @override
+  Future<List<AcademyRecipe>> listPublishedRecipes() async =>
+      const <AcademyRecipe>[];
 }
 
 /// Test/local repo — verilen bot listesiyle çalışır.
@@ -82,4 +90,9 @@ class LocalAcademyRepository implements AcademyRepository {
     prefs = p;
     prefsWrites++;
   }
+
+  List<AcademyRecipe> recipes = const <AcademyRecipe>[];
+
+  @override
+  Future<List<AcademyRecipe>> listPublishedRecipes() async => recipes;
 }

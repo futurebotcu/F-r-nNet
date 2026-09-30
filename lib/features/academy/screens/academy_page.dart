@@ -8,6 +8,7 @@ import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../social/post/social_post_card.dart';
 import '../models/academy_bot_profile.dart';
+import '../models/academy_recipe.dart';
 import '../providers/academy_providers.dart';
 
 /// FırınNet Akademi — tüm Akademi botlarının içeriklerini tek "profil
@@ -39,6 +40,7 @@ class AcademyPage extends ConsumerWidget {
               children: [
                 const FirinNetHeader(title: AppStrings.academyTitle),
                 const _AcademyHero(),
+                const _RecipesStrip(),
                 bots.when(
                   data: (list) => _BotFilterChips(
                     bots: list
@@ -235,6 +237,229 @@ class _BotFilterChips extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Yayımlı Akademi tarifleri — yatay kart şeridi; dokununca detay
+/// alt-sayfası (malzemeler gramaj+% birlikte, işlem sırası, pişirme).
+/// Tarif yoksa bölüm hiç görünmez (feed akışı bozulmaz).
+class _RecipesStrip extends ConsumerWidget {
+  const _RecipesStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipes = ref.watch(academyRecipesProvider);
+    return recipes.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (list) {
+        if (list.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.pageH, 0, AppSpacing.pageH, AppSpacing.xs),
+              child: Text(
+                AppStrings.academyRecipesTitle,
+                key: ValueKey('academy_recipes_title'),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 118,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.pageH),
+                itemCount: list.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: AppSpacing.s),
+                itemBuilder: (context, i) =>
+                    _RecipeCard(recipe: list[i]),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.m),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _RecipeCard extends StatelessWidget {
+  const _RecipeCard({required this.recipe});
+
+  final AcademyRecipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = <String>[
+      if (recipe.ovenC != null) '${recipe.ovenC}°C',
+      if (recipe.minutes != null) '${recipe.minutes} dk',
+    ].join(' · ');
+    return InkWell(
+      key: ValueKey('academy_recipe_${recipe.id}'),
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => _showRecipeSheet(context, recipe),
+      child: Container(
+        width: 190,
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.brandLemonPale,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.brandLemon, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.restaurant_menu_rounded,
+                size: 18, color: AppColors.brandInk),
+            const SizedBox(height: 6),
+            Expanded(
+              child: Text(
+                recipe.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  height: 1.25,
+                ),
+              ),
+            ),
+            if (meta.isNotEmpty)
+              Text(
+                meta,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            Text(
+              recipe.authorName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.75,
+      maxChildSize: 0.95,
+      builder: (context, controller) => ListView(
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pageH, 0, AppSpacing.pageH, AppSpacing.xxl),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  recipe.title,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const AcademyAiBadge(label: AppStrings.academyRecipeBadge),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            [
+              recipe.authorName,
+              if (recipe.ovenC != null) '${recipe.ovenC}°C',
+              if (recipe.minutes != null) '${recipe.minutes} dk',
+            ].join(' · '),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          const Text(
+            AppStrings.academyRecipeIngredients,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          for (final ing in recipe.ingredients)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Text(
+                ing.display,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          if (recipe.steps.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.m),
+            const Text(
+              AppStrings.academyRecipeSteps,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              recipe.steps,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+                height: 1.45,
+              ),
+            ),
+          ],
+          if (recipe.notes.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.m),
+            Text(
+              recipe.notes,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
 }
 
 class _EmptyState extends StatelessWidget {
