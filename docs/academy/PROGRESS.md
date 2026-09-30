@@ -3,6 +3,29 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## EK-6/7 — VİDEO KURALI + TARİF TÜRÜ V1 (2026-09-30)
+
+**Video denetimi (madde 6):** Kod taraması sonucu — YouTube/video/transkript/
+thumbnail çekimi HİÇ YOKTU (safeFetch video/image content-type reddi, 0 video
+aday, medya yalnız üretilen info_card, taslakta URL yasağı). Kural artık
+AÇIK kod+test (K1): `isVideoPlatformUrl` (youtube/youtu.be/vimeo/dailymotion/
+tiktok/twitch) + `isLikelyArticle` reddi → video sayfası makale/kanıt olamaz;
+indirme/yeniden yükleme/transkript kazıma/thumbnail YOK; izinli tek kullanım
+kendi özet + videonun linki (atıf sicilden).
+
+**Tarif türü V1 (madde 7, plan→uygulama):** `academy_recipes` usta havuzu
+PROD'da (RLS: usta kendi taslağı; onay/yayın YALNIZ service_role; adapted
+için source_url zorunlu) + drafts.kind'e 'recipe' + `academy_recipe_enabled=
+false` (bot üretim hattı SONRAKİ adım — config açılınca). Denetimler lib'de
+testli (K2a-f, deno 54/54): `checkBakersRecipe` fırıncı yüzdesi (un=100;
+hidrasyon 50-90, tuz 1.2-3, maya instant 0.2-2/taze 0.5-5, şeker≤25, yağ≤30,
+fırın 140-320°C, süre 5-120dk; bot=strict RED, usta=uyarı; gram↔% tutarsızlık
+HER kipte RED), `formatRecipeLines` gramaj+% birlikte ("Un 1000 g (%100)"),
+`hasVerbatimOverlap` 12-kelime birebir dizi = kopya RED (uyarlama kuralı).
+PG 10_recipes testi (RLS/onay/adapted/kind/config) — paket 10/10 PASS.
+Ders: harness auth.uid() `request.jwt.claim.sub` (tekil) okur; runner'a
+migration eklerken idempotency turundaki fix-sonra-uygula sırası korunmalı.
+
 ## AŞAMA 6 — YAYIN AÇILIŞI KURULUMU (2026-09-30, onaylı)
 
 Onay öncesi iki düzeltme (main e8ab2c2, worker deploy edildi):

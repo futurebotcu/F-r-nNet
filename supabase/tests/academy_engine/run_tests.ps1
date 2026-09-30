@@ -32,7 +32,8 @@ $migrations = @(
   (Join-Path $repoRoot 'supabase\migrations\20260929090000_academy_content_engine_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260929100000_academy_sources_seed_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260929110000_academy_cron_v1.sql'),
-  (Join-Path $repoRoot 'supabase\migrations\20260930090000_academy_attribution_vendor_fix.sql')
+  (Join-Path $repoRoot 'supabase\migrations\20260930090000_academy_attribution_vendor_fix.sql'),
+  (Join-Path $repoRoot 'supabase\migrations\20260930100000_academy_recipes_v1.sql')
 )
 foreach ($m in @($schemaFile) + $migrations) {
   if (-not (Test-Path $m)) { throw "Dosya bulunamadı: $m" }
@@ -94,7 +95,8 @@ try {
   $sequential = @('01_seed_idempotent.sql', '02_rls_privileges.sql',
                   '07_sources_seed.sql', '03_queue.sql', '04_publish.sql',
                   '05_humor_guards.sql', '06_dm_rules.sql',
-                  '08_cron_tick.sql', '09_humor_dialogs.sql')
+                  '08_cron_tick.sql', '09_humor_dialogs.sql',
+                  '10_recipes.sql')
   foreach ($f in $sequential) {
     Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir $f)) $f
     Write-Host "OK: $f"

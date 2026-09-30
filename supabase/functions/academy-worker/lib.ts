@@ -1109,3 +1109,112 @@ export function isVideoPlatformUrl(raw: string): boolean {
     return false;
   }
 }
+
+// ── Tarif (recipe) denetimi — FIRINCI YUZDESI ────────────────────────
+// Un = 100 taban. Bot tarifi aralik disindaysa RED; usta tarifinde
+// aralik disi UYARI, gram↔yuzde tutarsizligi HER ZAMAN RED.
+export interface RecipeIngredient {
+  name: string;
+  grams: number;
+  pct?: number;
+}
+export interface RecipeCheck {
+  ok: boolean;
+  errors: string[];
+  warnings: string[];
+  pct: Record<string, number>;
+}
+const FLOUR_RE = /(^|\s)(un|flour|mehl|farine)(\s|$)/i;
+const WATER_RE = /(su|water|wasser|eau|s(ü|u)t|milk)/i;
+const SALT_RE = /(tuz|salt|salz|sel)/i;
+const FRESH_YEAST_RE = /(taze|fresh|yas)\s*(maya|yeast)/i;
+const YEAST_RE = /(maya|yeast|hefe|levure)/i;
+const SUGAR_RE = /((ş|s)eker|sugar|zucker|sucre|bal|honey)/i;
+const FAT_RE = /(ya(ğ|g)|butter|tereya|oil|margarin|fett)/i;
+
+export function checkBakersRecipe(
+  ings: RecipeIngredient[],
+  opts: { ovenC?: number; minutes?: number; strict: boolean },
+): RecipeCheck {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const pct: Record<string, number> = {};
+  const range = (msg: string) =>
+    (opts.strict ? errors : warnings).push(msg);
+  const flourG = ings.filter((i) => FLOUR_RE.test(i.name))
+    .reduce((a, i) => a + i.grams, 0);
+  if (flourG <= 0) {
+    return { ok: false, errors: ["un_tabani_yok"], warnings, pct };
+  }
+  let water = 0, salt = 0, yeast = 0, freshYeast = false, sugar = 0,
+    fat = 0;
+  for (const i of ings) {
+    if (!(i.grams > 0)) { errors.push(`gramaj_gecersiz:${i.name}`); continue; }
+    const p = (i.grams / flourG) * 100;
+    pct[i.name] = Math.round(p * 10) / 10;
+    // Girilen yuzde gramla tutarli olmali (her kipte RED).
+    if (typeof i.pct === "number" && Math.abs(i.pct - p) > 0.5) {
+      errors.push(`yuzde_tutarsiz:${i.name}:${i.pct}!=${pct[i.name]}`);
+    }
+    if (WATER_RE.test(i.name)) water += p;
+    else if (SALT_RE.test(i.name)) salt += p;
+    else if (YEAST_RE.test(i.name)) {
+      yeast += p;
+      if (FRESH_YEAST_RE.test(i.name)) freshYeast = true;
+    } else if (SUGAR_RE.test(i.name)) sugar += p;
+    else if (FAT_RE.test(i.name)) fat += p;
+  }
+  if (water > 0 && (water < 50 || water > 90)) {
+    range(`hidrasyon_aralik_disi:${Math.round(water)}`);
+  }
+  if (salt > 0 && (salt < 1.2 || salt > 3)) {
+    range(`tuz_aralik_disi:${salt.toFixed(1)}`);
+  }
+  if (salt === 0) warnings.push("tuz_yok");
+  if (yeast > 0) {
+    const lo = freshYeast ? 0.5 : 0.2;
+    const hi = freshYeast ? 5 : 2;
+    if (yeast < lo || yeast > hi) {
+      range(`maya_aralik_disi:${yeast.toFixed(1)}`);
+    }
+  }
+  if (sugar > 25) range(`seker_yuksek:${Math.round(sugar)}`);
+  if (fat > 30) range(`yag_yuksek:${Math.round(fat)}`);
+  if (typeof opts.ovenC === "number" &&
+      (opts.ovenC < 140 || opts.ovenC > 320)) {
+    range(`firin_isisi_aralik_disi:${opts.ovenC}`);
+  }
+  if (typeof opts.minutes === "number" &&
+      (opts.minutes < 5 || opts.minutes > 120)) {
+    range(`sure_aralik_disi:${opts.minutes}`);
+  }
+  return { ok: errors.length === 0, errors, warnings, pct };
+}
+
+/** Tarif postu gosterimi: gramaj + yuzde BIRLIKTE. */
+export function formatRecipeLines(ings: RecipeIngredient[]): string[] {
+  const flourG = ings.filter((i) => FLOUR_RE.test(i.name))
+    .reduce((a, i) => a + i.grams, 0) || 1;
+  return ings.map((i) => {
+    const p = Math.round((i.grams / flourG) * 1000) / 10;
+    return `${i.name} ${i.grams} g (%${p})`;
+  });
+}
+
+/** Uyarlama kurali: dis kaynaktan 12+ kelimelik BIREBIR dizi kopyadir. */
+export function hasVerbatimOverlap(
+  body: string,
+  sourceText: string,
+  n = 12,
+): boolean {
+  const norm = (t: string) =>
+    t.toLocaleLowerCase("tr-TR").replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/\s+/g, " ").trim();
+  const b = norm(body).split(" ");
+  const src = " " + norm(sourceText) + " ";
+  if (b.length < n) return false;
+  for (let i = 0; i + n <= b.length; i++) {
+    if (src.includes(" " + b.slice(i, i + n).join(" ") + " ")) return true;
+  }
+  return false;
+}

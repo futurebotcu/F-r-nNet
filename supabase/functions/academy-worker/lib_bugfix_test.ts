@@ -457,3 +457,61 @@ Deno.test("K1: video platform URL'leri makale sayılmaz (kural: indirme/transkri
   }
   assert(!isVideoPlatformUrl("https://ornek.com/video-hakkinda-yazi"), "yanlış pozitif");
 });
+
+// ── K2: Tarif denetimi — fırıncı yüzdesi + gösterim + kopya kuralı ──
+import { checkBakersRecipe, formatRecipeLines, hasVerbatimOverlap } from "./lib.ts";
+
+const OK_RECIPE = [
+  { name: "Un", grams: 1000 },
+  { name: "Su", grams: 680 },
+  { name: "Tuz", grams: 20 },
+  { name: "İnstant maya", grams: 7 },
+];
+
+Deno.test("K2a: geçerli ekmek tarifi bot kipinde (strict) GEÇER", () => {
+  const r = checkBakersRecipe(OK_RECIPE, { ovenC: 230, minutes: 35, strict: true });
+  assert(r.ok, "red: " + r.errors.join(","));
+  assert(r.pct["Su"] === 68, "hidrasyon pct");
+});
+
+Deno.test("K2b: aralık dışı bot tarifi RED, usta kipinde UYARI", () => {
+  const bad = [
+    { name: "Un", grams: 1000 },
+    { name: "Su", grams: 300 },      // %30 hidrasyon
+    { name: "Tuz", grams: 60 },      // %6 tuz
+    { name: "İnstant maya", grams: 40 }, // %4
+  ];
+  const bot = checkBakersRecipe(bad, { ovenC: 400, strict: true });
+  assert(!bot.ok && bot.errors.length >= 4, "bot RED bekleniyordu: " + bot.errors.join(","));
+  const usta = checkBakersRecipe(bad, { ovenC: 400, strict: false });
+  assert(usta.ok && usta.warnings.length >= 4, "usta uyarı bekleniyordu");
+});
+
+Deno.test("K2c: girilen yüzde gramla tutarsızsa HER kipte RED", () => {
+  const r = checkBakersRecipe(
+    [{ name: "Un", grams: 1000 }, { name: "Su", grams: 680, pct: 60 }],
+    { strict: false });
+  assert(!r.ok && r.errors[0].startsWith("yuzde_tutarsiz"), r.errors.join(","));
+});
+
+Deno.test("K2d: un tabanı yoksa RED", () => {
+  assert(!checkBakersRecipe([{ name: "Su", grams: 500 }], { strict: true }).ok, "un tabani");
+});
+
+Deno.test("K2e: gösterim gramaj + yüzde birlikte", () => {
+  const lines = formatRecipeLines(OK_RECIPE);
+  assert(lines[0] === "Un 1000 g (%100)", lines[0]);
+  assert(lines[1] === "Su 680 g (%68)", lines[1]);
+  assert(lines[2] === "Tuz 20 g (%2)", lines[2]);
+});
+
+Deno.test("K2f: 12+ kelime birebir dizi = kopya (uyarlama kuralı)", () => {
+  const src = "Bu tarifte önce un su ve tuz karıştırılır sonra hamur yirmi dakika " +
+    "dinlendirilir ve nazikçe katlanarak fermantasyona bırakılır";
+  const copied = "Notlar: bu tarifte önce un su ve tuz karıştırılır sonra hamur " +
+    "yirmi dakika dinlendirilir ve nazikçe katlanır.";
+  assert(hasVerbatimOverlap(copied, src), "kopya yakalanmadı");
+  const own = "Unu suyla otolize bırakın; tuzu sonradan ekleyip kısa aralıklarla " +
+    "katlayarak güçlendirin. Oranlar: %68 hidrasyon, %2 tuz.";
+  assert(!hasVerbatimOverlap(own, src), "kendi anlatım yanlış pozitif");
+});
