@@ -206,10 +206,12 @@ do $$
 declare
   v_src uuid; v_item uuid; v_draft uuid; r record; v_text text;
 begin
+  -- 'üretici içeriği' etiketi YALNIZ vendor kaynak içindir; ticari bir
+  -- sektör YAYINI (news) bu etiketi ALMAZ (P7e).
   insert into public.academy_sources (slug, name, domain, is_commercial,
-    topics, status)
+    source_type, topics, status)
   values ('attr_test', 'Atıf Testi Kurumu', 'attr-test.example',
-    true, array['un_tahil'], 'active')
+    true, 'vendor', array['un_tahil'], 'active')
   returning id into v_src;
   insert into public.academy_content_items (source_id, canonical_url, url,
     title, published_at, content_kind, status, full_text)
@@ -240,7 +242,38 @@ begin
   if v_text not like '%Tarih: 20 Eylül 2026%' then
     raise exception 'P7d: haber tarih bağlamı yok';
   end if;
-  raise notice 'PASS 04-P7 kaynak atfı';
+  -- P7e: ticari NEWS kaynağı 'üretici içeriği' etiketi almaz.
+  insert into public.academy_sources (slug, name, domain, is_commercial,
+    source_type, topics, status)
+  values ('attr_news', 'Sektör Yayını AŞ', 'attr-news.example',
+    true, 'news', array['un_tahil'], 'active')
+  returning id into v_src;
+  insert into public.academy_content_items (source_id, canonical_url, url,
+    title, published_at, content_kind, status, full_text)
+  values (v_src, 'https://attr-news.example/haber-1',
+    'https://attr-news.example/haber-1', 'Haber',
+    '2026-09-21T08:00:00Z', 'news', 'assigned', 'metin')
+  returning id into v_item;
+  insert into public.academy_drafts (content_item_id, bot_key, kind, title,
+    body, publishable, status, idempotency_key, date_context)
+  values (v_item, 'un_tahil', 'news', 'Haber başlığı', 'Gövde.',
+    true, 'media_ready', 'p-attr-news', '21 Eylül 2026')
+  returning id into v_draft;
+  insert into public.academy_media (draft_id, provider, storage_path,
+    width, height, alt_text)
+  values (v_draft, 'info_card', 'test/p-attr-news/card.png', 1200, 675, 'k');
+  select * into r from public.academy_publish_draft(v_draft);
+  if r.result <> 'published' then
+    raise exception 'P7e yayın: %', r.result;
+  end if;
+  select text into v_text from public.feed_posts where id = r.post_id;
+  if v_text like '%üretici içeriği%' then
+    raise exception 'P7e: sektör yayını üretici etiketi aldı: %', v_text;
+  end if;
+  if v_text not like '%Kaynak: Sektör Yayını AŞ%' then
+    raise exception 'P7f: kaynak adı yok';
+  end if;
+  raise notice 'PASS 04-P7 kaynak atfı (+vendor-only etiket)';
 end
 $$;
 reset role;

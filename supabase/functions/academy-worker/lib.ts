@@ -954,7 +954,7 @@ export function validateDraftOutput(
       tags: (j.tags as unknown[]).filter((t) => typeof t === "string")
         .slice(0, 6) as string[],
       claims,
-      date_context: str("date_context") ?? "",
+      date_context: sanitizeDateContext(str("date_context") ?? ""),
       image_brief: str("image_brief") ?? "",
       uncertainties: str("uncertainties") ?? "",
       publishable: j.publishable === true,
@@ -1080,4 +1080,16 @@ export function estimateLlmTokens(
   maxTokens: number,
 ): number {
   return Math.ceil(promptChars / 3) + maxTokens;
+}
+
+/** date_context temizligi: modelin urettigi ic-talimat cumleleri ("gecmis
+ * olay gibi anlatilmamalidir" vb.) ve parantezli editor notlari KULLANICIYA
+ * SIZMAZ — yalniz ilk cumle, parantez gruplari atilmis halde kalir.
+ * Tarih icindeki noktalar (01.02.2026) cumle sonu sayilmaz. */
+export function sanitizeDateContext(s: string): string {
+  let t = (s ?? "").replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+  const m = t.match(/^(.*?[^\d])\.\s/);
+  if (m) t = m[1].trim();
+  return t.replace(/\s+([.,;])/g, "$1").replace(/[.;]\s*$/, "").trim()
+    .slice(0, 120);
 }

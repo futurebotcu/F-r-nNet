@@ -406,7 +406,7 @@ Deno.test("H2: kurumsal/ yolu ve medya-merkezi/yayın-ilkeleri kanıt değil", (
 
 // ── H5: kart yerleşimi — uzun başlıkta gövde çerçeveyi taşıyor ──
 import { buildCardSvg } from "./card.ts";
-import { estimateLlmTokens } from "./lib.ts";
+import { estimateLlmTokens, sanitizeDateContext } from "./lib.ts";
 
 Deno.test("H5: 3 satırlık başlıkta gövde satırları çerçeve/alt-yazı sınırını aşmaz", () => {
   const svg = buildCardSvg({
@@ -428,4 +428,14 @@ Deno.test("H6: token ön-rezervasyon tahmini gerçek kullanımın altında kalam
   const est = estimateLlmTokens(9000, 8000);
   assert(est >= 3000 + 8000, `tahmin küçük: ${est}`);
   assert(estimateLlmTokens(0, 500) === 500, "yanıt-üst-sınır tabanı");
+});
+
+Deno.test("H7: date_context iç-talimat cümlesi ve parantez notu yayına sızmaz", () => {
+  const raw = "Etkinlik tarihi: 17-21 Ekim 2026 (kaynak yayın tarihi 2026-10-17). " +
+    "Etkinlik kaynağın yayın tarihinde başlıyor; geçmiş bir olay gibi anlatılmamalıdır.";
+  assert(sanitizeDateContext(raw) === "Etkinlik tarihi: 17-21 Ekim 2026",
+    "sanitize: " + sanitizeDateContext(raw));
+  // Nokta içeren tarih biçimi bozulmaz
+  assert(sanitizeDateContext("Tarih: 01.02.2026") === "Tarih: 01.02.2026", "nokta-tarih");
+  assert(sanitizeDateContext("") === "", "bos");
 });

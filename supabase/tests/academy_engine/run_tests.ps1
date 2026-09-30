@@ -31,7 +31,8 @@ $migrations = @(
   (Join-Path $repoRoot 'supabase\migrations\20260713090000_academy_bot_profiles_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260929090000_academy_content_engine_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260929100000_academy_sources_seed_v1.sql'),
-  (Join-Path $repoRoot 'supabase\migrations\20260929110000_academy_cron_v1.sql')
+  (Join-Path $repoRoot 'supabase\migrations\20260929110000_academy_cron_v1.sql'),
+  (Join-Path $repoRoot 'supabase\migrations\20260930090000_academy_attribution_vendor_fix.sql')
 )
 foreach ($m in @($schemaFile) + $migrations) {
   if (-not (Test-Path $m)) { throw "Dosya bulunamadı: $m" }
@@ -84,6 +85,9 @@ try {
   # yok, seed kopyası yok (01/07 testleri sayıları doğrular).
   Invoke-Psql @('-d', $dbName, '-f', $migrations[1]) 'engine (2. kez)'
   Invoke-Psql @('-d', $dbName, '-f', $migrations[2]) 'sources (2. kez)'
+  # Engine'in 2. uygulamasi publish fonksiyonunun ESKI govdesini geri yazar;
+  # atif duzeltmesi engine'den SONRA yeniden uygulanmali (prod sirasi da bu).
+  Invoke-Psql @('-d', $dbName, '-f', $migrations[4]) 'attribution fix (2. kez)'
   Write-Host 'Migrationlar 2. kez uygulandı (idempotency)'
   Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
 
