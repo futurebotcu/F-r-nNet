@@ -15,6 +15,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
+  estimateLlmTokens,
   BAKERY_TOPICAL_RE,
   buildDraftPrompt,
   decodeBody,
@@ -222,14 +223,21 @@ async function deepseek(
   { ok: false; reason: string }
 > {
   if (!DEEPSEEK_KEY) return { ok: false, reason: "no_key" };
-  // Atomik rezervasyon (yarışla aşım yok). Token bütçesi istek ÖNCESİ
-  // bilinemez → istek kapısı + gerçek kullanım sonradan sayaca eklenir.
-  if ((await usageToday(c, "llm_tokens")) >=
-      (await cfgInt(c, "academy_daily_llm_token_cap", 400000))) {
+  // Token tavanı KESİN üst sınırdır: tahmini kullanım (prompt + yanıt üst
+  // sınırı) ÇAĞRIDAN ÖNCE atomik rezerve edilir; tahmin gerçek kullanımdan
+  // küçük olamayacağı için tavan aşılamaz. Yanıt sonrası sayaç gerçek
+  // değere düzeltilir; reddedilen rezervasyon iade edilir (yarışta iki
+  // worker da bloklanır — iade yalnız BAŞARISIZ rezervasyonda).
+  const tokenEstimate = estimateLlmTokens(system.length + user.length,
+    maxTokens);
+  if (!(await reserveBudget(c, "llm_tokens",
+    "academy_daily_llm_token_cap", 400000, tokenEstimate))) {
+    await incrUsage(c, "llm_tokens", -tokenEstimate);
     return { ok: false, reason: "budget_tokens" };
   }
   if (!(await reserveBudget(c, "llm_requests",
     "academy_daily_llm_request_cap", 200))) {
+    await incrUsage(c, "llm_tokens", -tokenEstimate);
     return { ok: false, reason: "budget_requests" };
   }
   const model = await cfgStr(c, "academy_llm_model",
@@ -258,6 +266,8 @@ async function deepseek(
     });
   } catch (_) {
     clearTimeout(t);
+    // Kullanim bilinmiyor; rezervasyon KORUNUR (guvenli taraf — tavan
+    // asilmaz, en fazla erken kapanir).
     return { ok: false, reason: "network" };
   }
   clearTimeout(t);
@@ -272,7 +282,10 @@ async function deepseek(
   const content = j?.choices?.[0]?.message?.content;
   const tokensIn = Number(j?.usage?.prompt_tokens ?? 0);
   const tokensOut = Number(j?.usage?.completion_tokens ?? 0);
-  await incrUsage(c, "llm_tokens", tokensIn + tokensOut);
+  // Rezervasyonu GERCEK kullanima duzelt (tahmin >= gercek oldugundan
+  // delta <= 0; sayac hicbir anda gercegin altina dusmez → tavan kesin).
+  await incrUsage(c, "llm_tokens",
+    (tokensIn + tokensOut) - tokenEstimate);
   const truncated = j?.choices?.[0]?.finish_reason === "length";
   if (typeof content !== "string" || content.trim() === "" || truncated) {
     return { ok: false, reason: truncated ? "truncated" : "empty_content" };

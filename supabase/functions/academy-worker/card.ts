@@ -72,11 +72,18 @@ export interface CardSpec {
 export function buildCardSvg(spec: CardSpec): string {
   const badge = spec.kind === "humor" ? "MİZAH • AI" : "AKADEMİ • AI";
   const titleLines = wrapText(spec.title, 34, 3);
-  const bodyLines = wrapText(spec.body, 52, 6);
   const titleY0 = 210;
   const titleLH = 62;
   const bodyY0 = titleY0 + titleLines.length * titleLH + 36;
   const bodyLH = 46;
+  // Gövde satır bütçesi KALAN alandan hesaplanır: uzun (3 satırlık) başlık
+  // gövdeyi aşağı iter; sabit 6 satır çerçeveyi ve alt yazıyı (y=589) taşar.
+  const bodyMaxY = 545;
+  const bodyMaxLines = Math.max(
+    1,
+    Math.floor((bodyMaxY - bodyY0) / bodyLH) + 1,
+  );
+  const bodyLines = wrapText(spec.body, 52, Math.min(6, bodyMaxLines));
   const title = titleLines.map((l, i) =>
     `<text x="80" y="${titleY0 + i * titleLH}" font-family="Open Sans" ` +
     `font-weight="700" font-size="48" fill="${INK}">${esc(l)}</text>`

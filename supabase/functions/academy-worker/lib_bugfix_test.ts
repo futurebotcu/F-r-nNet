@@ -403,3 +403,29 @@ Deno.test("H2: kurumsal/ yolu ve medya-merkezi/yayın-ilkeleri kanıt değil", (
     assert(!isLikelyArticle(c.page, c.html, c.url), "kabul edildi: " + url);
   }
 });
+
+// ── H5: kart yerleşimi — uzun başlıkta gövde çerçeveyi taşıyor ──
+import { buildCardSvg } from "./card.ts";
+import { estimateLlmTokens } from "./lib.ts";
+
+Deno.test("H5: 3 satırlık başlıkta gövde satırları çerçeve/alt-yazı sınırını aşmaz", () => {
+  const svg = buildCardSvg({
+    kind: "info",
+    botName: "FırınNet Akademi",
+    title: "SIAL Paris 17-21 Ekim'de: Fırıncı için ne anlama gelir, ne anlama gelmez?",
+    body: "Kaynak kaydına göre SIAL Paris, uluslararası bir gıda fuarıdır. ".repeat(8),
+  });
+  const ys = [...svg.matchAll(/<text x="80" y="(\d+)" font-family="Open Sans" font-size="32"/g)]
+    .map((m) => Number(m[1]));
+  assert(ys.length > 0, "gövde satırı yok");
+  const maxY = Math.max(...ys);
+  assert(maxY <= 545, `gövde taşıyor: son taban çizgisi ${maxY} > 545 (alt yazı 589, çerçeve 615)`);
+});
+
+Deno.test("H6: token ön-rezervasyon tahmini gerçek kullanımın altında kalamaz", () => {
+  // TR metin ~2.5-3.5 karakter/token; 3'e bölüm + tam yanıt üst sınırı ile
+  // tahmin >= (gerçek prompt tokenı + gerçek yanıt tokenı) her durumda.
+  const est = estimateLlmTokens(9000, 8000);
+  assert(est >= 3000 + 8000, `tahmin küçük: ${est}`);
+  assert(estimateLlmTokens(0, 500) === 500, "yanıt-üst-sınır tabanı");
+});

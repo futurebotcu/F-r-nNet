@@ -1070,3 +1070,14 @@ export function buildHumorPrompt(): { system: string; user: string } {
   ].join("\n");
   return { system, user };
 }
+
+/** LLM cagrisi icin ON-REZERVASYON tahmini (token tavaninin KESIN ustunu
+ * garanti etmek icin): prompt ~3 karakter/token + yanit ust siniri.
+ * Tahmin gercek kullanimdan KUCUK olamaz (asim imkansizlasir); yanit
+ * sonrasi sayac gercek degere gore duzeltilir. */
+export function estimateLlmTokens(
+  promptChars: number,
+  maxTokens: number,
+): number {
+  return Math.ceil(promptChars / 3) + maxTokens;
+}
