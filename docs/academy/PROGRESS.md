@@ -3,6 +3,30 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## AŞAMA 6 — YAYIN AÇILIŞI KURULUMU (2026-09-30, onaylı)
+
+Onay öncesi iki düzeltme (main e8ab2c2, worker deploy edildi):
+- **date_context sanitize (H7)**: modelin iç-talimat cümlesi + parantez notu
+  yayına sızamaz (lib `sanitizeDateContext`, validateDraftOutput'a bağlı;
+  nokta içeren tarih bozulmaz). Mevcut SIAL taslağı veri düzeyinde
+  temizlendi → "Etkinlik tarihi: 17-21 Ekim 2026".
+- **Atıf etiketi vendor-only**: ' (üretici içeriği)' yalnız
+  source_type='vendor'; ticari SEKTÖR YAYINI (World Bakers) etiket almaz.
+  Yeni migration `20260930090000_academy_attribution_vendor_fix` PROD'da;
+  PG 04-P7 fixture vendor + P7e negatif senaryo; runner idempotency turu
+  fix'i engine'den SONRA yeniden uygular (engine 2. uygulaması eski gövdeyi
+  geri yazıyordu — testte yakalandı).
+
+Açılış planı (kullanıcı onaylı) KURULDU:
+- Tavanlar: `academy_daily_post_hard_cap=2`, `academy_bot_daily_post_cap=1`.
+- Mizah botu `posting_enabled=false` (ilk 3 gün; akademi oturunca elle açılır).
+- `academy-go-live` tek-seferlik pg_cron: **1 Ekim 2026 09:00 İstanbul**
+  → `academy_enabled=true` + `academy_dry_run=false` + kendini siler.
+- İlk 3 gün yayın raporlaması: oturum-içi zamanlanmış izleme turu (2 saatte
+  bir, gündüz) — her yeni bot postunun id+metni kullanıcıya raporlanır.
+- Acil durdurma: `update public.app_runtime_config set value='false'::jsonb
+  where key='academy_enabled';`
+
 ## AŞAMA 3-5 — secrets + deploy + DRY-RUN CANLI DOĞRULAMA (2026-09-29/30)
 
 Secrets: edge `ACADEMY_WORKER_TOKEN`+`DEEPSEEK_API_KEY` mevcut; Vault
