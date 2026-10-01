@@ -2,6 +2,17 @@
 -- feed_posts+feed_media tutarlılığı, author snapshot.
 set role service_role;
 
+-- Bu dosya ardışık yayınları test eder; yayın penceresi / aralık / çeşitlilik
+-- kuralları 11_editorial_publish.sql'de ayrıca test edilir.
+update public.app_runtime_config set value = '"00:00"'::jsonb
+  where key = 'academy_publish_window_start';
+update public.app_runtime_config set value = '"24:00"'::jsonb
+  where key = 'academy_publish_window_end';
+update public.app_runtime_config set value = '0'::jsonb
+  where key = 'academy_publish_min_gap_minutes';
+update public.app_runtime_config set value = 'false'::jsonb
+  where key = 'academy_publish_diversity';
+
 -- Yardımcı: taslak + HAZIR medya üret (medya artık yayında ZORUNLU).
 create or replace function pg_temp.mk_draft(
   p_bot text, p_key text, p_publishable boolean default true)

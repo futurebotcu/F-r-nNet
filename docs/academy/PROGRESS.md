@@ -3,6 +3,53 @@
 > Bu dosya uygulama boyunca güncellenir: tamamlanan işler, varsayımlar,
 > test sonuçları ve sıradaki adım. Rapor değil, çalışma defteridir.
 
+## EDİTORYAL KALİTE + FEED GÖRSEL DÜZELTMESİ (2026-10-01)
+
+**Baseline (ilk iki otomatik yayın):** SIAL haberi 323 kelime (haber hedefi
+100-220), 7 paragraf, 9 emir kipi, 7 madde; TÜBİTAK/protein araştırma
+yazısı 366 kelime, 4 emir, 4 madde, fırıncılık bağı yazının kendi
+ifadesiyle zayıf. İkisinde de kart yalnız başlığı tekrarlıyor (bilgi
+katmıyor). Her ikisi de feed'de 1 kart görseliyle yayında.
+
+**Feed görsel kırpılması — kök neden (koddan):** `social_post_card.dart`
+`_PostMedia` = `AspectRatio(4/3)` + `BoxFit.cover`. Akademi kartı
+1200x675 (16:9); cover yüksekliğe ölçekler → genişliğin %25'i kesilir
+(her yandan 150px), kart metni x=80'den başladığı için satır başları
+kaybolur. Detay (`comments_page.dart`) `AspectRatio(16/10)`+cover: her
+yandan ~67px → metin kenarı kurtulduğu için "tam" görünüyordu.
+**Düzeltme:** ortak `FeedPostImage` (feed + detay aynı kural): kutu
+görselin GERÇEK oranında (feed_media width/height; yoksa görsel çözülüp
+ölçülür), 4:5..1.91:1 aralığına sınırlı, `BoxFit.contain` + nötr zemin →
+hiçbir görsel kırpılmaz. Regression: `test/feed_image_fit_test.dart`
+(16:9 kart, 4:3, 1:1, dikey, boyutsuz, görselsiz, 320/390/600 genişlik,
+detay) — eski kodda 9/10 FAIL, düzeltmeyle 10/10. Kart şablonu
+`CARD_SAFE` güvenli alanı (sol/sağ 80px, gövde ≤545, alt marka) + K3 testi.
+
+**Editoryal katman (lib + worker + migration `20261001090000_academy_editorial_v1`):**
+- content_type (news/technical_explainer/business/research/ingredient/
+  hygiene/craft/quick_note) + tür başına yapı/uzunluk prompt'ta; haber/
+  araştırma/kısa notta pratik not listesi deterministik atılır.
+- Kaynak gerçeği (body) ile çıkarım ayrı: `editorial_note` yayında
+  "FırınNet notu:" etiketiyle, kaynak satırından önce.
+- `bakeryRelevance` KAYNAK metinde, LLM'den ÖNCE (token harcamaz):
+  protein yaz okulu tipi bağsız içerik `low_bakery_relevance` RED.
+- `editorialQuality`: uzunluk bandı, emir kipi yoğunluğu, haberde liste,
+  uzun giriş, "kaynak metin içermiyor" meta cümleleri, iç tekrar →
+  UYARI; aşırı uzunluk ve son yayınlarla aynı konu → BLOKER. Skor
+  `academy_drafts.quality`'de.
+- Görsel opsiyonel: `needs_visual` (haber/araştırma/kısa not hep görselsiz;
+  diğerleri model gerekçe gösterirse). Görselsiz taslak medya aşamasını
+  atlar; RPC medyayı yalnız needs_visual ise şart koşar.
+- Yayın RPC'si: İstanbul 08:00-21:30 penceresi (dışı → `deferred_quiet_hours`,
+  sıradaki açılışa), son yayından 90 dk (`deferred_spacing`), art arda aynı
+  persona / iki araştırma alternatif varken `deferred_diversity`; günlük
+  2 + bot başı 1 tavanları korunur. Worker planlaması aynı kuralları
+  önceden uygular (pencere + çeşitlilik sırası).
+
+Testler: deno 68/68 (E1-E12, K3), PG 11/11 (yeni 11_editorial_publish:
+pencere/görselsiz/not/atıf/aralık/çeşitlilik/tavan), Flutter görsel
+regression 10/10.
+
 ## CANLI AÇILIŞ — PRODUCTION GO-LIVE (2026-09-30 akşam, kullanıcı talimatı)
 
 Plan değişikliği: yarınki otomatik açılış yerine BU TURDA canlı

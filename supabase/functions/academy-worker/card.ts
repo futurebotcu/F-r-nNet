@@ -24,8 +24,18 @@ function ensureWasm(): Promise<void> {
   return wasmReady;
 }
 
+// Feed-safe tuval: 16:9 (1200x675). Flutter FeedPostImage kartı bu GERÇEK
+// oranda ve BoxFit.contain ile çizer (kırpma yok). Kritik öğeler aşağıdaki
+// güvenli alanın içinde kalır; kenarlara yapışan metin yoktur.
 const W = 1200;
 const H = 675;
+export const CARD_SAFE = {
+  left: 80, // logo/metin sol kenarı
+  right: W - 80, // en uzun satırın sağ sınırı
+  titleTop: 160, // başlık ilk taban çizgisinin üstü (logo/isim bloğu altı)
+  bodyBottom: 545, // gövde son taban çizgisi
+  footer: H - 86, // alt marka satırı
+} as const;
 const INK = "#1F1B0E"; // brandInk yakını (koyu)
 const LEMON = "#F6C90E"; // marka sarısı
 const LEMON_PALE = "#FFF8E1";
@@ -78,7 +88,7 @@ export function buildCardSvg(spec: CardSpec): string {
   const bodyLH = 46;
   // Gövde satır bütçesi KALAN alandan hesaplanır: uzun (3 satırlık) başlık
   // gövdeyi aşağı iter; sabit 6 satır çerçeveyi ve alt yazıyı (y=589) taşar.
-  const bodyMaxY = 545;
+  const bodyMaxY = CARD_SAFE.bodyBottom;
   const bodyMaxLines = Math.max(
     1,
     Math.floor((bodyMaxY - bodyY0) / bodyLH) + 1,

@@ -527,3 +527,210 @@ Deno.test("K2g: 'Tam buğday unu' gibi ek almış un adları taban sayılır", (
   assert(r.ok, "red: " + r.errors.join(","));
   assert(r.pct["Su"] === 70, "hidrasyon %70 olmalı: " + r.pct["Su"]);
 });
+
+// ── K3: kart güvenli alanı — metin kenarlara yapışmaz, oran 16:9 ──
+import { CARD_SAFE } from "./card.ts";
+
+Deno.test("K3: kart 16:9 ve tüm metin satırları güvenli alanda", () => {
+  const svg = buildCardSvg({
+    kind: "info",
+    botName: "FırınNet Akademi",
+    title: "Fırına veriş anı: ısı ve buharın ilk on dakikası neden belirleyici",
+    body: "Ekmeğin hacmi büyük ölçüde fırındaki ilk dakikalarda kazanılır. ".repeat(10),
+  });
+  assert(/width="1200" height="675"/.test(svg), "tuval 1200x675 olmalı");
+  for (const m of svg.matchAll(/<text x="(\d+)" y="(\d+)"[^>]*font-size="(\d+)"[^>]*>([^<]*)</g)) {
+    const x = Number(m[1]), y = Number(m[2]), fs = Number(m[3]), txt = m[4];
+    if (x === 80) {
+      // Open Sans ortalama ~0.55em/karakter: sağ kenar tahmini
+      const right = x + txt.length * fs * 0.55;
+      assert(right <= CARD_SAFE.right, `sağ taşma: "${txt}" ~${Math.round(right)}`);
+      assert(y <= CARD_SAFE.footer, `alt taşma: y=${y}`);
+    }
+  }
+});
+
+// ── E: Editoryal kalite katmanı (2026-10-01) ─────────────────────────────
+import {
+  bakeryRelevance,
+  countImperatives,
+  countWords,
+  decideNeedsVisual,
+  editorialQuality,
+  nextPublishSlot,
+  orderForDiversity,
+} from "./lib.ts";
+
+// Canlıdaki SIAL yayınının pratik notlar bölümü (baseline: 9 emir kipi).
+const SIAL_NOTES = "1) Takvimi erken kapatın: tarih aralığı yoğun dönemlere denk " +
+  "gelebilir; fiyatlar için kendi araştırmanızı yapın. 2) Ziyaret amacınızı tek " +
+  "cümleyle yazın. 3) Firma listesini sınırlayıp görüşme randevusu isteyin. " +
+  "4) Üretim planını fuar öncesi yazılı planlayın. 5) Tek bir test partisiyle " +
+  "başlayın. 6) Bütçe kalemlerini kendi tekliflerinizle doldurun.";
+
+Deno.test("E1: emir kipi sayacı SIAL notlarında yüksek, açıklayıcı metinde ~0", () => {
+  assert(countImperatives(SIAL_NOTES) >= 6, "SIAL: " + countImperatives(SIAL_NOTES));
+  const calm = "Büyük fuarlarda zamanın önemli kısmı plansız dolaşmaya gidebilir. " +
+    "Önceden birkaç hedef firma belirlemek, kısa ziyaretlerde zamanı daha " +
+    "verimli kullanmayı kolaylaştırabilir. Hamurun unu ve suyu dengelidir.";
+  assert(countImperatives(calm) === 0, "sakin metin: " + countImperatives(calm));
+});
+
+Deno.test("E2: fırıncılık ilgisi — protein yaz okulu RED, ekmek/un haberi KABUL", () => {
+  const protein = "PROTWIN Yaz Okulu TÜBİTAK MAM'da yapıldı. Proteomik, " +
+    "metabolomik ve foodomics yöntemleri, kütle spektrometrisi, NMR, yapay " +
+    "sindirim modelleri, SHIME simülasyonu ve mikrobiyom analizleri ele " +
+    "alındı. Gıda ve alternatif protein araştırmaları değerlendirildi.";
+  assert(!bakeryRelevance(protein).ok, "protein yaz okulu geçmemeli");
+  const bread = "Değirmenler bu yıl buğday kalitesindeki düşüş nedeniyle un " +
+    "spesifikasyonlarını güncelledi; fırınlar ekmek hamurunda su kaldırmanın " +
+    "değiştiğini bildiriyor.";
+  assert(bakeryRelevance(bread).ok, "ekmek/un haberi geçmeli");
+  const safety = "EFSA, akrilamid ve alerjen etiketleme konusunda gıda " +
+    "güvenliği rehberini güncelledi; HACCP planlarında kontaminasyon " +
+    "riskleri yeniden sınıflandırıldı.";
+  assert(bakeryRelevance(safety).ok, "gıda güvenliği alanı tek başına geçer");
+  const energy = "Elektrik dağıtım şirketleri tarife yapısını değiştirdi.";
+  assert(!bakeryRelevance(energy).ok, "fırınla bağsız enerji haberi geçmez");
+});
+
+Deno.test("E3: uzun haber + emir listesi kalite kapısında işaretlenir", () => {
+  const longNews = "SIAL Paris 17-21 Ekim'de Paris'te düzenleniyor. ".repeat(40);
+  const q = editorialQuality({
+    contentType: "news",
+    title: "SIAL Paris 17-21 Ekim'de",
+    body: longNews,
+    editorialNote: "",
+    practicalNotes: SIAL_NOTES,
+    recentTitles: [],
+  });
+  assert(q.warnings.some((w) => w.startsWith("too_long")), q.warnings.join(","));
+  assert(q.warnings.some((w) => w.startsWith("imperative")), q.warnings.join(","));
+  assert(q.warnings.includes("news_has_action_list"), q.warnings.join(","));
+  assert(q.score < 70, "skor: " + q.score);
+});
+
+Deno.test("E4: çok aşırı uzunluk ve tekrar eden konu BLOKER", () => {
+  const huge = "Kelime ".repeat(800);
+  const q = editorialQuality({
+    contentType: "news", title: "A", body: huge, editorialNote: "",
+    practicalNotes: "", recentTitles: [],
+  });
+  assert(q.blockers.some((b) => b.startsWith("excessive_length")), q.blockers.join(","));
+  const dup = editorialQuality({
+    contentType: "technical_explainer",
+    title: "Hamur sıcaklığını şansa bırakmayın: hedef sıcaklıkla çalışmak",
+    body: "Hamur sıcaklığı fermantasyonun hızını belirler. ".repeat(20),
+    editorialNote: "", practicalNotes: "",
+    recentTitles: ["Hamur sıcaklığını şansa bırakmayın: hedef sıcaklıkla çalışmak"],
+  });
+  assert(dup.blockers.includes("duplicate_topic"), dup.blockers.join(","));
+});
+
+Deno.test("E5: kaynak-meta konuşması ve uzun giriş uyarısı", () => {
+  const q = editorialQuality({
+    contentType: "research",
+    title: "Protein",
+    body: ("Projenin ikinci etkinliği uluslararası katılımla merkezde " +
+      "gerçekleştirildi ve farklı kariyer aşamalarındaki araştırmacılar, " +
+      "öğrenciler ve uzmanlar bir araya geldi. ").repeat(4) +
+      "\n\nKaynak metin bu bulgunun fırıncılığa uygulandığına dair veri içermiyor.",
+    editorialNote: "", practicalNotes: "", recentTitles: [],
+  });
+  assert(q.warnings.includes("long_lead"), q.warnings.join(","));
+  assert(q.warnings.includes("source_meta_talk"), q.warnings.join(","));
+});
+
+Deno.test("E6: görsel opsiyonel — haber/araştırma/kısa not görselsiz", () => {
+  assert(decideNeedsVisual("news", true) === false, "news");
+  assert(decideNeedsVisual("research", true) === false, "research");
+  assert(decideNeedsVisual("quick_note", true) === false, "quick_note");
+  assert(decideNeedsVisual("technical_explainer", true) === true, "tech+evet");
+  assert(decideNeedsVisual("technical_explainer", false) === false, "tech+hayır");
+});
+
+Deno.test("E7: yayın penceresi 08:00-21:30 İstanbul", () => {
+  // 03:00 İst = 00:00Z → aynı gün 08:00 İst = 05:00Z
+  const at3 = Date.parse("2026-10-01T00:00:00Z");
+  assert(new Date(nextPublishSlot(at3)).toISOString() === "2026-10-01T05:00:00.000Z",
+    new Date(nextPublishSlot(at3)).toISOString());
+  // 10:00 İst = 07:00Z → olduğu gibi
+  const at10 = Date.parse("2026-10-01T07:00:00Z");
+  assert(nextPublishSlot(at10) === at10, "gündüz değişmez");
+  // 21:45 İst = 18:45Z → ertesi gün 08:00 İst
+  const at2145 = Date.parse("2026-10-01T18:45:00Z");
+  assert(new Date(nextPublishSlot(at2145)).toISOString() === "2026-10-02T05:00:00.000Z",
+    new Date(nextPublishSlot(at2145)).toISOString());
+  // 08:00 tam sınır yayınlanabilir
+  const at8 = Date.parse("2026-10-01T05:00:00Z");
+  assert(nextPublishSlot(at8) === at8, "08:00 açık");
+});
+
+Deno.test("E8: çeşitlilik sırası — aynı persona/aynı akademik tür art arda gelmez", () => {
+  const out = orderForDiversity(
+    [
+      { id: "a", bot_key: "bilim_arge", content_type: "research" },
+      { id: "b", bot_key: "bilim_arge", content_type: "research" },
+      { id: "c", bot_key: "isletme", content_type: "business" },
+      { id: "d", bot_key: "ekmek_fermantasyon", content_type: "technical_explainer" },
+    ],
+    { bot_key: "bilim_arge", content_type: "research" },
+  );
+  assert(out[0].bot_key !== "bilim_arge", "ilk sıra son yayınla aynı persona olmamalı");
+  for (let i = 1; i < out.length; i++) {
+    const same = out[i].bot_key === out[i - 1].bot_key ||
+      (out[i].content_type === "research" && out[i - 1].content_type === "research");
+    if (same) {
+      // ancak alternatif kalmadıysa izinli
+      const rest = out.slice(i);
+      assert(rest.every((r) => r.bot_key === out[i - 1].bot_key || r.content_type === "research"),
+        "alternatif varken art arda: " + out.map((o) => o.id).join(""));
+    }
+  }
+});
+
+Deno.test("E9: kelime sayacı", () => {
+  assert(countWords("  Un 1000 g,  su\n620 g. ") === 6, String(countWords("  Un 1000 g,  su\n620 g. ")));
+});
+
+// ── E10-E12: taslak şeması (content_type / editorial_note / visual) ──
+import { validateDraftOutput as vdo } from "./lib.ts";
+
+const baseDraft = {
+  kind: "news",
+  topic: "fuar",
+  title: "SIAL Paris 17-21 Ekim'de",
+  body: "SIAL Paris 17-21 Ekim tarihlerinde Paris'te düzenleniyor. ".repeat(3),
+  practical_notes: "1) Takvimi kapatın. 2) Firma listesi yazın. 3) Randevu isteyin.",
+  tags: [],
+  claims: [],
+  date_context: "",
+  image_brief: "",
+  uncertainties: "",
+  publishable: true,
+};
+
+Deno.test("E10: news türünde pratik not listesi deterministik olarak atılır", () => {
+  const r = vdo(JSON.stringify({ ...baseDraft, content_type: "news",
+    visual_needed: true }), new Set(["x"]));
+  assert(r.ok, "geçmeli");
+  if (r.ok) {
+    assert(r.draft.practical_notes === "", "news notları boş olmalı");
+    assert(r.draft.content_type === "news", "tür");
+  }
+});
+
+Deno.test("E11: editorial_note içinde URL = uydurma link RED", () => {
+  const r = vdo(JSON.stringify({ ...baseDraft, content_type: "business",
+    editorial_note: "Ayrıntı için https://ornek.com/fuar sayfasına bakılabilir." }),
+    new Set(["x"]));
+  assert(!r.ok && r.reason === "fabricated_url", JSON.stringify(r));
+});
+
+Deno.test("E12: eski şema (content_type yok) kind'den türetilir; geçersiz tür RED", () => {
+  const legacy = vdo(JSON.stringify({ ...baseDraft, kind: "evergreen" }), new Set(["x"]));
+  assert(legacy.ok && legacy.draft.content_type === "technical_explainer",
+    JSON.stringify(legacy));
+  const bad = vdo(JSON.stringify({ ...baseDraft, content_type: "blog" }), new Set(["x"]));
+  assert(!bad.ok && bad.reason === "bad_content_type", JSON.stringify(bad));
+});

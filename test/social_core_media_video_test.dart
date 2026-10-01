@@ -216,8 +216,8 @@ void main() {
       expect(src.contains('SocialPostVideo(url: videoUrl)'), isTrue);
       // Image VEYA video — image varsa öncelik (image kart-tap sarmalayıcı
       // içinde; video yalnız image yokken, kendi kontrolleriyle dışarıda).
-      expect(src.contains('if (imageUrl != null)'), isTrue);
-      expect(src.contains('imageUrl == null && videoUrl != null'), isTrue);
+      expect(src.contains('if (firstImage != null)'), isTrue);
+      expect(src.contains('firstImage == null && videoUrl != null'), isTrue);
     });
   });
 

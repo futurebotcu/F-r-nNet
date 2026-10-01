@@ -34,7 +34,8 @@ $migrations = @(
   (Join-Path $repoRoot 'supabase\migrations\20260929110000_academy_cron_v1.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260930090000_academy_attribution_vendor_fix.sql'),
   (Join-Path $repoRoot 'supabase\migrations\20260930100000_academy_recipes_v1.sql'),
-  (Join-Path $repoRoot 'supabase\migrations\20260930110000_academy_recipes_public_read.sql')
+  (Join-Path $repoRoot 'supabase\migrations\20260930110000_academy_recipes_public_read.sql'),
+  (Join-Path $repoRoot 'supabase\migrations\20261001090000_academy_editorial_v1.sql')
 )
 foreach ($m in @($schemaFile) + $migrations) {
   if (-not (Test-Path $m)) { throw "Dosya bulunamadı: $m" }
@@ -90,6 +91,9 @@ try {
   # Engine'in 2. uygulamasi publish fonksiyonunun ESKI govdesini geri yazar;
   # atif duzeltmesi engine'den SONRA yeniden uygulanmali (prod sirasi da bu).
   Invoke-Psql @('-d', $dbName, '-f', $migrations[4]) 'attribution fix (2. kez)'
+  # Yayın fonksiyonunun EN GÜNCEL gövdesi editoryal migration'dadır; eski
+  # migration'ların yeniden uygulanmasından sonra en son o çalışmalı.
+  Invoke-Psql @('-d', $dbName, '-f', $migrations[7]) 'editorial (2. kez)'
   Write-Host 'Migrationlar 2. kez uygulandı (idempotency)'
   Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
 
@@ -97,7 +101,7 @@ try {
                   '07_sources_seed.sql', '03_queue.sql', '04_publish.sql',
                   '05_humor_guards.sql', '06_dm_rules.sql',
                   '08_cron_tick.sql', '09_humor_dialogs.sql',
-                  '10_recipes.sql')
+                  '10_recipes.sql', '11_editorial_publish.sql')
   foreach ($f in $sequential) {
     Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir $f)) $f
     Write-Host "OK: $f"

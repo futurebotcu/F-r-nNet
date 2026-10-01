@@ -876,9 +876,14 @@ export async function discoverArticles(opts: {
 // ── DeepSeek taslak şeması doğrulama ─────────────────────────────────
 export interface DraftOutput {
   kind: "news" | "evergreen" | "commercial_note";
+  content_type: ContentType;
   topic: string;
   title: string;
   body: string;
+  /** Kaynakta OLMAYAN editoryal çıkarım; yayında "FırınNet notu:" etiketiyle
+   * kaynak gerçeklerinden ayrı gösterilir. */
+  editorial_note: string;
+  visual_needed: boolean;
   practical_notes: string;
   tags: string[];
   claims: { claim: string; source_slug: string; quote: string }[];
@@ -937,21 +942,47 @@ export function validateDraftOutput(
       quote: cc.quote,
     });
   }
-  const practical = (str("practical_notes") ?? "");
-  // URL reddi TÜM kullanıcı-görünür alanlarda (pratik notlar dahil —
-  // model link ekleyerek başlık/gövde kontrolünü aşamaz); doğrulanmış
+  // İçerik türü: eski şema (yalnız kind) için kind'den türetilir.
+  const rawType = str("content_type");
+  let contentType: ContentType;
+  if (rawType) {
+    if (!(CONTENT_TYPES as readonly string[]).includes(rawType)) {
+      return { ok: false, reason: "bad_content_type" };
+    }
+    contentType = rawType as ContentType;
+  } else {
+    contentType = kind === "news"
+      ? "news"
+      : (kind === "commercial_note" ? "business" : "technical_explainer");
+  }
+  const editorialNote = (str("editorial_note") ?? "").trim();
+  // Haber/araştırma/kısa notta yapılacaklar listesi YOK (kaynakta olmayan
+  // tavsiye üretmez); bu türlerde pratik notlar deterministik olarak atılır.
+  const rawPractical = str("practical_notes") ?? "";
+  const practical = ["news", "research", "quick_note"].includes(contentType)
+    ? ""
+    : rawPractical;
+  // URL reddi modelin yazdığı TÜM alanlarda (atılacak pratik notlar ve
+  // editoryal not dahil — link uyduran taslak reddedilir); doğrulanmış
   // kaynak bağlantısını SUNUCU ekler.
-  if (/https?:\/\//i.test(title + "\n" + body + "\n" + practical)) {
+  if (
+    /https?:\/\//i.test(
+      [title, body, rawPractical, editorialNote].join("\n"),
+    )
+  ) {
     return { ok: false, reason: "fabricated_url" };
   }
   return {
     ok: true,
     draft: {
       kind: kind as DraftOutput["kind"],
+      content_type: contentType,
       topic: str("topic") ?? "",
       title,
       body,
-      practical_notes: str("practical_notes") ?? "",
+      editorial_note: editorialNote,
+      visual_needed: j.visual_needed === true,
+      practical_notes: practical,
       tags: (j.tags as unknown[]).filter((t) => typeof t === "string")
         .slice(0, 6) as string[],
       claims,
@@ -1017,7 +1048,38 @@ export function buildDraftPrompt(opts: {
   const system = [
     `Sen FırınNet Akademi için içerik hazırlayan "${opts.botName}" botusun.`,
     opts.style,
-    "Türkçe, özgün ve profesyonel fırıncıya pratik bir gönderi yaz.",
+    "Fırıncıya yönelik, sade ve doğal Türkçe yaz. Rapor değil, iyi bir",
+    "meslek dergisinin kısa yazısı gibi olsun.",
+    "ÖNCE content_type seç (TEK değer):",
+    "news (bir olay/duyuru/gelişme), technical_explainer (üretim/teknik konu),",
+    "business (işletme/maliyet/verim), research (araştırma bulgusu),",
+    "ingredient (hammadde/kalite), hygiene (gıda güvenliği/hijyen),",
+    "craft (ustalık/teknik beceri), quick_note (tek fikirlik kısa not).",
+    "YAPI ve UZUNLUK (body + editorial_note toplamı):",
+    "- news 100-220 kelime: 2-3 kısa paragrafta ne oldu; ardından tek",
+    "  kısa paragrafta fırıncı için neden önemli. practical_notes BOŞ.",
+    "- technical_explainer: sorun/gözlem → neden → pratik anlamı; 120-300.",
+    "- business: durum → maliyet/verim etkisi → uygulanabilir çıkarım; 120-300.",
+    "- research: araştırma ne yaptı → ne buldu → fırıncılıkla bağı gerçekten",
+    "  var mı; bağ zayıfsa bunu açıkça yaz. practical_notes BOŞ. 120-300.",
+    "- quick_note 50-120 kelime, practical_notes BOŞ.",
+    "İLK 2-3 CÜMLE: olay nedir ve fırıncı bunu neden okuyor — hemen anlaşılsın.",
+    "Uzun kurum/proje tanıtımıyla başlama.",
+    "TON: açıklama → bağlam → neden → sonuç. Emir kipi listeleri YAZMA",
+    "('yapın, kullanın, planlayın, kontrol edin, unutmayın' dizileri yok).",
+    "practical_notes yalnız gerçekten gerekirse, en fazla 3 kısa ve açıklayıcı",
+    "cümle; madde madde talimat listesi değil.",
+    "'Kaynak metin şunu içermiyor' gibi meta cümleler kurma; olmayan bilgiyi",
+    "yazma, o kadar.",
+    "KAYNAK GERÇEĞİ ile YORUM AYRIDIR: body YALNIZ kaynaktaki gerçekleri",
+    "anlatır. Kaynakta olmayan çıkarım/öneri gerekiyorsa editorial_note",
+    "alanına yaz (yayında 'FırınNet notu' olarak ayrı gösterilir); haberde",
+    "bunu en aza indir, gerekmiyorsa boş bırak.",
+    "Kaynağın fırıncılıkla (ekmek/unlu mamul, un/tahıl, maya, ekipman,",
+    "ambalaj, gıda güvenliği, işletme, enerji, mevzuat, sektör ekonomisi)",
+    "açık bir bağı YOKSA zorla bağlama: publishable=false yap.",
+    "visual_needed: yalnız bir süreç/karşılaştırma/veri görselle daha iyi",
+    "anlaşılacaksa true; haber ve araştırmada false.",
     "KURALLAR:",
     "- Yalnız aşağıdaki KAYNAK METİN'de desteklenen iddiaları kullan;",
     "  sayı/oran/tarih/sıcaklık/süre iddialarını claims listesine koy.",
@@ -1034,7 +1096,10 @@ export function buildDraftPrompt(opts: {
     "  dayanak yoksa publishable=false yap ve uncertainties'e yaz.",
     "- URL uydurma; metne link koyma (kaynak bağlantısını sistem ekler).",
     'ÇIKTI: TEK JSON nesnesi, şema: {"kind":"news|evergreen|commercial_note",',
-    '"topic":str,"title":str,"body":str,"practical_notes":str,"tags":[str],',
+    '"content_type":"news|technical_explainer|business|research|ingredient|' +
+      'hygiene|craft|quick_note",',
+    '"topic":str,"title":str,"body":str,"editorial_note":str,' +
+      '"visual_needed":bool,"practical_notes":str,"tags":[str],',
     '"claims":[{"claim":str,"source_slug":str,"quote":str}],'
     + '"date_context":str,',
     '"image_brief":str,"uncertainties":str,"publishable":bool}',
@@ -1217,4 +1282,247 @@ export function hasVerbatimOverlap(
     if (src.includes(" " + b.slice(i, i + n).join(" ") + " ")) return true;
   }
   return false;
+}
+
+// ── Editoryal kalite katmanı ─────────────────────────────────────────
+// Haber ile eğitim yazısı ayrılır; uzunluk/emir dili/tekrar/ilgi ölçülür.
+// Uyarılar kayda geçer, yalnız ağır ihlaller (bloker) yayını durdurur.
+export const CONTENT_TYPES = [
+  "news",
+  "technical_explainer",
+  "business",
+  "research",
+  "ingredient",
+  "hygiene",
+  "craft",
+  "quick_note",
+] as const;
+export type ContentType = typeof CONTENT_TYPES[number];
+
+/** [yumuşak alt, yumuşak üst, sert üst] kelime sınırları. */
+export const LENGTH_BANDS: Record<ContentType, [number, number, number]> = {
+  news: [100, 220, 350],
+  quick_note: [50, 120, 200],
+  research: [120, 300, 500],
+  technical_explainer: [120, 300, 550],
+  business: [120, 300, 550],
+  ingredient: [120, 300, 550],
+  hygiene: [120, 300, 550],
+  craft: [120, 300, 550],
+};
+
+export function countWords(text: string): number {
+  const t = (text ?? "").trim();
+  return t ? t.split(/\s+/).length : 0;
+}
+
+// Türkçe ikinci çoğul emir kipi: sık fiiller + olumsuz emir (-mayın/-meyin)
+// ve -layın/-leyin ekleri. "unun/hamurun" gibi tamlayan ekleri sayılmaz.
+const IMPERATIVE_WORDS = new Set([
+  "yapın", "kullanın", "araştırın", "planlayın", "uygulayın", "deneyin",
+  "belirleyin", "yazın", "isteyin", "eşleştirin", "kapatın", "sınırlayın",
+  "doldurun", "başlayın", "bakın", "çıkarın", "ölçün", "tartın", "ekleyin",
+  "tutun", "saklayın", "seçin", "ayırın", "koyun", "verin", "alın",
+  "bırakın", "bekleyin", "düşünün", "izleyin", "kaydedin", "hesaplayın",
+  "karşılaştırın", "sorun", "konuşun", "edin", "olun", "sağlayın",
+]);
+
+export function countImperatives(text: string): number {
+  const words = (text ?? "").toLocaleLowerCase("tr-TR")
+    .split(/[^\p{L}]+/u).filter(Boolean);
+  let n = 0;
+  for (const w of words) {
+    if (IMPERATIVE_WORDS.has(w)) n++;
+    else if (w.length >= 7 && /(mayın|meyin)$/.test(w)) n++;
+    else if (w.length >= 7 && /(layın|leyin)$/.test(w)) n++;
+  }
+  return n;
+}
+
+const BAKERY_STRONG_RE = new RegExp(
+  "(ekmek|unlu mamul|\\bun\\b|\\bunu\\b|\\bunun\\b|undan|\\bunlar|maya\\b|mayas|mayal|" +
+    "hamur|fırın|pastane|pastacı|simit|poğaça|börek|pide|lavaş|buğday|tahıl|" +
+    "değirmen|kepek|gluten|bread|flour|bakery|baker|baking|\\bbake|dough|" +
+    "yeast|sourdough|\\boven|pastry|croissant|wheat|grain|cereal|milling|" +
+    "\\bmill\\b|miller|brot|mehl|teig|bäcker|boulang|farine|levain|\\bpain\\b)",
+  "giu",
+);
+const FOOD_SAFETY_DOMAIN_RE = new RegExp(
+  "(gıda güvenliği|food safety|haccp|alerjen|allergen|akrilamid|acrylamide|" +
+    "mikotoksin|mycotoxin|kontaminasyon|contamination|geri çağır|recall|" +
+    "hijyen|hygiene|salmonella|listeria|etiketleme|labelling|labeling)",
+  "giu",
+);
+const BAKERY_CONTEXT_RE = new RegExp(
+  "(ambalaj|packaging|enerji|energy|doğalgaz|mevzuat|yönetmelik|tebliğ|" +
+    "regulation|fiyat|price|maliyet|cost|ihracat|export|pazar|market|" +
+    "ekipman|equipment|makine|machine|ürün geliştirme|product development)",
+  "giu",
+);
+
+export interface BakeryRelevance {
+  ok: boolean;
+  score: number; // 0-1
+  strong: number;
+  safety: number;
+  context: number;
+}
+
+/** KAYNAK metnin fırıncılık ilgisi (modelin köprü cümlesi DEĞİL). Kabul:
+ * en az 2 güçlü fırıncılık terimi; ya da 1 güçlü + 1 bağlam (ambalaj,
+ * enerji, mevzuat...); ya da gıda güvenliği alanında en az 2 isabet. */
+export function bakeryRelevance(text: string): BakeryRelevance {
+  const t = text ?? "";
+  const strong = (t.match(BAKERY_STRONG_RE) ?? []).length;
+  const safety = (t.match(FOOD_SAFETY_DOMAIN_RE) ?? []).length;
+  const context = (t.match(BAKERY_CONTEXT_RE) ?? []).length;
+  const ok = strong >= 2 || (strong >= 1 && context >= 1) || safety >= 2;
+  const score = Math.min(1, (2 * strong + 1.5 * safety + context) / 8);
+  return { ok, score: Math.round(score * 100) / 100, strong, safety, context };
+}
+
+/** Görsel yalnız bilgi taşıyorsa: haber/araştırma/kısa not görselsiz. */
+export function decideNeedsVisual(
+  type: ContentType,
+  modelSaysVisual: boolean,
+): boolean {
+  if (type === "news" || type === "research" || type === "quick_note") {
+    return false;
+  }
+  return modelSaysVisual === true;
+}
+
+function sentencesOf(text: string): string[] {
+  return (text ?? "").split(/(?<=[.!?])\s+/).map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+function wordSet(s: string): Set<string> {
+  return new Set(
+    s.toLocaleLowerCase("tr-TR").split(/[^\p{L}\p{N}]+/u)
+      .filter((w) => w.length > 2),
+  );
+}
+
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let inter = 0;
+  for (const w of a) if (b.has(w)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+const SOURCE_META_RE =
+  /(kaynak metin(de)?[^.]{0,80}(içermiyor|yer almıyor|vermiyor|bulunmuyor|belirtmiyor))/iu;
+const LIST_ITEM_RE = /(^|\n|\s)(\d+\)|[-•])\s/g;
+
+export interface EditorialQuality {
+  score: number; // 0-100
+  warnings: string[];
+  blockers: string[];
+  words: number;
+  imperatives: number;
+}
+
+export function editorialQuality(i: {
+  contentType: ContentType;
+  title: string;
+  body: string;
+  editorialNote: string;
+  practicalNotes: string;
+  recentTitles: string[];
+}): EditorialQuality {
+  const warnings: string[] = [];
+  const blockers: string[] = [];
+  const visible = [i.body, i.editorialNote, i.practicalNotes]
+    .filter(Boolean).join("\n\n");
+  const words = countWords(visible);
+  const [lo, hi, hard] = LENGTH_BANDS[i.contentType];
+  if (words > hard) blockers.push(`excessive_length:${words}>${hard}`);
+  else if (words > hi) warnings.push(`too_long:${words}>${hi}`);
+  else if (words < lo) warnings.push(`too_short:${words}<${lo}`);
+
+  const imperatives = countImperatives(visible);
+  const per100 = words ? (imperatives * 100) / words : 0;
+  if (imperatives >= 4 && per100 > 1.5) {
+    warnings.push(`imperative:${imperatives}`);
+  }
+
+  const listItems = (i.practicalNotes.match(LIST_ITEM_RE) ?? []).length;
+  if (i.contentType === "news" && (listItems >= 3 || i.practicalNotes.trim())) {
+    warnings.push("news_has_action_list");
+  }
+
+  const firstPara = i.body.split(/\n\s*\n/)[0] ?? "";
+  if (countWords(firstPara) > 60) warnings.push("long_lead");
+  if (SOURCE_META_RE.test(visible)) warnings.push("source_meta_talk");
+
+  // İç tekrar: neredeyse aynı iki cümle.
+  const sents = sentencesOf(visible).map(wordSet).filter((s) => s.size >= 5);
+  let repeats = 0;
+  for (let a = 0; a < sents.length; a++) {
+    for (let b = a + 1; b < sents.length; b++) {
+      if (jaccard(sents[a], sents[b]) >= 0.7) repeats++;
+    }
+  }
+  if (repeats >= 2) warnings.push(`repetition:${repeats}`);
+
+  // Yenilik: son yayınlarla neredeyse aynı başlık = aynı konu tekrarı.
+  const tw = wordSet(i.title);
+  if (i.recentTitles.some((r) => jaccard(tw, wordSet(r)) >= 0.7)) {
+    blockers.push("duplicate_topic");
+  }
+
+  const score = Math.max(0, 100 - 12 * warnings.length - 45 * blockers.length);
+  return { score, warnings, blockers, words, imperatives };
+}
+
+/** İstanbul (UTC+3, yaz saati yok) yayın penceresi: [start, end). Pencere
+ * dışındaki zamanı bir sonraki pencere açılışına taşır. */
+export function nextPublishSlot(
+  ms: number,
+  start = "08:00",
+  end = "21:30",
+): number {
+  const OFFSET = 3 * 3600_000;
+  const toMin = (hhmm: string) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 60 + (m || 0);
+  };
+  const local = ms + OFFSET;
+  const dayStart = Math.floor(local / 86_400_000) * 86_400_000;
+  const minOfDay = (local - dayStart) / 60000;
+  const s = toMin(start);
+  const e = toMin(end);
+  if (minOfDay >= s && minOfDay < e) return ms;
+  const nextOpen = minOfDay < s
+    ? dayStart + s * 60000
+    : dayStart + 86_400_000 + s * 60000;
+  return nextOpen - OFFSET;
+}
+
+export interface PublishCandidate {
+  id: string;
+  bot_key: string;
+  content_type: string | null;
+}
+
+/** Yayın sırası: art arda aynı persona ve iki araştırma yazısı gelmez;
+ * alternatif yoksa sıra korunur (yayını kilitlemez). */
+export function orderForDiversity<T extends PublishCandidate>(
+  cands: T[],
+  last: { bot_key: string; content_type: string | null } | null,
+): T[] {
+  const pool = [...cands];
+  const out: T[] = [];
+  let prev = last;
+  const clash = (c: T) =>
+    prev !== null && (c.bot_key === prev.bot_key ||
+      (c.content_type === "research" && prev.content_type === "research"));
+  while (pool.length) {
+    const idx = pool.findIndex((c) => !clash(c));
+    const pick = pool.splice(idx >= 0 ? idx : 0, 1)[0];
+    out.push(pick);
+    prev = { bot_key: pick.bot_key, content_type: pick.content_type };
+  }
+  return out;
 }

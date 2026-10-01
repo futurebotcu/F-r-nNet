@@ -20,7 +20,6 @@
 //   * Error: inline mesaj (snackbar değil)
 //   * Guest: yorumları görür + alta büyük "Giriş yap" CTA.
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,6 +37,7 @@ import '../../safety/providers/safety_providers.dart';
 import '../../safety/widgets/block_user_dialog.dart';
 import '../../safety/widgets/report_sheet.dart';
 import '../models/social_comment.dart';
+import '../post/widgets/feed_post_image.dart';
 import '../providers/social_providers.dart';
 
 /// Cevap hedefi (tek-seviye): bir ÜST yoruma cevap yazılırken composer bunu
@@ -346,7 +346,7 @@ class _PostContextHeader extends StatelessWidget {
         ),
       );
     }
-    final imageUrl = post.firstImage?.publicUrl;
+    final firstImage = post.firstImage;
     return Container(
       margin: const EdgeInsets.fromLTRB(
         AppSpacing.l,
@@ -437,22 +437,11 @@ class _PostContextHeader extends StatelessWidget {
               ),
             ),
           ),
-          if (imageUrl != null)
-            AspectRatio(
-              aspectRatio: 16 / 10,
-              child: CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(color: AppColors.surface),
-                errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surface,
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.broken_image_outlined,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
+          if (firstImage != null)
+            FeedPostImage(
+              imageUrl: firstImage.publicUrl,
+              width: firstImage.width,
+              height: firstImage.height,
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(

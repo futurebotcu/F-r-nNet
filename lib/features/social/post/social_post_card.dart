@@ -21,7 +21,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router/app_router.dart';
@@ -33,6 +32,7 @@ import '../../academy/providers/academy_providers.dart';
 import '../../academy/screens/academy_page.dart' show AcademyAiBadge;
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../feed/models/feed_media.dart';
 import '../../feed/models/feed_post.dart';
 import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
@@ -41,6 +41,7 @@ import '../../safety/models/report_models.dart';
 import '../../safety/widgets/block_user_dialog.dart';
 import '../../safety/widgets/report_sheet.dart';
 import '../comments/comments_page.dart';
+import 'widgets/feed_post_image.dart';
 import 'widgets/social_post_video.dart';
 
 class SocialPostCard extends ConsumerStatefulWidget {
@@ -323,7 +324,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   Widget build(BuildContext context) {
     final repo = ref.read(feedRepositoryProvider);
     final theme = Theme.of(context);
-    final imageUrl = post.firstImage?.publicUrl;
+    final firstImage = post.firstImage;
     // V2 Commit 3 — Video post desteği. Image yoksa video varsa player
     // render edilir. Tek post'ta image OR video (V3'te kombo).
     final videoUrl = post.firstVideo?.publicUrl;
@@ -401,11 +402,11 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
               children: [
                 _Caption(author: post.author, text: post.text),
                 if (post.tags.isNotEmpty) _TagsRow(tags: post.tags),
-                if (imageUrl != null) _PostMedia(imageUrl: imageUrl),
+                if (firstImage != null) _PostMedia(media: firstImage),
               ],
             ),
           ),
-          if (imageUrl == null && videoUrl != null)
+          if (firstImage == null && videoUrl != null)
             SocialPostVideo(url: videoUrl),
           // Sayılar (beğeni/yorum/repost) action row'da ikon yanında.
           _ActionRow(
@@ -765,33 +766,18 @@ class _TypeBadge extends StatelessWidget {
 }
 
 class _PostMedia extends StatelessWidget {
-  const _PostMedia({required this.imageUrl});
-  final String imageUrl;
+  const _PostMedia({required this.media});
+  final FeedMedia media;
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 4 / 3,
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        // Perf: feed full-width görseli telefon ekranı için decode edilir;
-        // tam çözünürlük decode (bellek spike) yerine 720px üst sınır.
-        memCacheWidth: 720,
-        placeholder: (_, __) => Container(
-          color: AppColors.surface,
-          alignment: Alignment.center,
-          child: const CircularProgressIndicator(strokeWidth: 1.6),
-        ),
-        errorWidget: (_, __, ___) => Container(
-          color: AppColors.surface,
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.broken_image_outlined,
-            color: AppColors.textMuted,
-          ),
-        ),
-      ),
+    return FeedPostImage(
+      imageUrl: media.publicUrl,
+      width: media.width,
+      height: media.height,
+      // Perf: feed full-width görseli telefon ekranı için decode edilir;
+      // tam çözünürlük decode (bellek spike) yerine 720px üst sınır.
+      memCacheWidth: 720,
     );
   }
 }

@@ -17,7 +17,12 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   estimateLlmTokens,
   BAKERY_TOPICAL_RE,
+  bakeryRelevance,
   buildDraftPrompt,
+  decideNeedsVisual,
+  editorialQuality,
+  nextPublishSlot,
+  orderForDiversity,
   decodeBody,
   buildHumorPrompt,
   checkClaimsAgainstSource,
@@ -582,6 +587,16 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     }).eq("id", item.id);
     return "rejected_insufficient_text";
   }
+  // Fırıncılık ilgisi KAYNAK metinde ölçülür (modelin köprü cümlesinde
+  // değil) ve LLM çağrısından ÖNCE: bağsız haber token harcatmaz.
+  const relevance = bakeryRelevance(item.title + "\n" + fullText);
+  if (!relevance.ok) {
+    await c.from("academy_content_items").update({
+      status: "rejected",
+      status_reason: `low_bakery_relevance:${relevance.score}`,
+    }).eq("id", item.id);
+    return "rejected_low_relevance";
+  }
 
   // Adil bot seçimi: kaynağın eşleştiği botlar arasından bugün en az
   // taslak üretmiş olan (ilk-konu tekeli YOK).
@@ -639,23 +654,51 @@ async function handleDraft(c: any, payload: any): Promise<string> {
   const evidence = checkClaimsAgainstSource(
     d.claims,
     fullText,
-    d.title + "\n" + d.body + "\n" + d.practical_notes,
+    [d.title, d.body, d.editorial_note, d.practical_notes].join("\n"),
   );
-  const publishable = d.publishable && evidence.ok;
+  // Editoryal kalite kapısı: uyarılar kayda geçer, yalnız blokerler
+  // (aşırı uzunluk, aynı konunun tekrarı) yayını durdurur.
+  const { data: recent } = await c.from("academy_drafts").select("title")
+    .eq("status", "published").order("updated_at", { ascending: false })
+    .limit(30);
+  const quality = editorialQuality({
+    contentType: d.content_type,
+    title: d.title,
+    body: d.body,
+    editorialNote: d.editorial_note,
+    practicalNotes: d.practical_notes,
+    recentTitles: (recent ?? []).map((x: any) => x.title as string),
+  });
+  const needsVisual = decideNeedsVisual(d.content_type, d.visual_needed);
+  const publishable = d.publishable && evidence.ok &&
+    quality.blockers.length === 0;
   const statusReason = !d.publishable
     ? "model_not_publishable"
     : (!evidence.ok
       ? (evidence.reason + ": " +
         evidence.failed.join(" | ").slice(0, 280))
-      : null);
+      : (quality.blockers.length
+        ? "quality: " + quality.blockers.join(",")
+        : null));
 
   const { error } = await c.from("academy_drafts").insert({
     content_item_id: item.id,
     bot_key: botKey,
     kind: d.kind,
+    content_type: d.content_type,
     topic: d.topic || bot.topic,
     title: d.title,
     body: d.body,
+    editorial_note: d.editorial_note,
+    needs_visual: needsVisual,
+    quality: {
+      score: quality.score,
+      warnings: quality.warnings,
+      blockers: quality.blockers,
+      words: quality.words,
+      imperatives: quality.imperatives,
+      relevance,
+    },
     practical_notes: d.practical_notes,
     tags: d.tags,
     claims: d.claims,
@@ -668,7 +711,11 @@ async function handleDraft(c: any, payload: any): Promise<string> {
       Deno.env.get("DEEPSEEK_MODEL") ?? "deepseek-flash") : null,
     tokens_in: r.tokensIn,
     tokens_out: r.tokensOut,
-    status: publishable ? "checked" : "rejected",
+    // Görselsiz taslak medya aşamasını atlar: 'media_ready' burada "medya
+    // aşaması tamam" demektir; yayın RPC'si medyayı yalnız needs_visual
+    // ise şart koşar.
+    status: publishable ? (needsVisual ? "checked" : "media_ready")
+      : "rejected",
     status_reason: statusReason,
     idempotency_key: `item:${item.id}:${botKey}`,
   });
@@ -990,7 +1037,7 @@ async function handleMaintenance(c: any): Promise<string> {
 
   // 4) Kontrolden geçen taslaklar → medya (kart) işi.
   const { data: needMedia } = await c.from("academy_drafts").select("id")
-    .eq("status", "checked").limit(target * 2);
+    .eq("status", "checked").eq("needs_visual", true).limit(target * 2);
   for (const d of needMedia ?? []) {
     await c.rpc("academy_enqueue_job", {
       p_job_type: "media",
@@ -1007,28 +1054,43 @@ async function handleMaintenance(c: any): Promise<string> {
   const readyStatuses = dryRun
     ? ["media_ready", "scheduled"]
     : ["media_ready", "scheduled", "dry_run_done"];
-  const { data: ready } = await c.from("academy_drafts").select("id")
+  const { data: ready } = await c.from("academy_drafts")
+    .select("id, bot_key, content_type")
     .in("status", readyStatuses)
     .or(`scheduled_for.is.null,scheduled_for.lte.${now.toISOString()}`)
     .limit(target);
   // Yayın aralığı FARKLI maintenance turlarında da korunur: taban zaman,
-  // bugünkü SON yayının zamanından türetilir (feed tek dakikada dolmaz).
-  const gapMs = 90 * 60000;
+  // SON yayının zamanından türetilir (feed tek dakikada dolmaz). Her slot
+  // İstanbul yayın penceresine (varsayılan 08:00-21:30) taşınır; sıra,
+  // art arda aynı persona / iki araştırma gelmeyecek şekilde dizilir.
+  // Pencere, aralık ve tavanları yayın RPC'si sunucu tarafında ayrıca
+  // uygular — buradaki planlama yalnız gereksiz denemeyi önler.
+  const gapMs = (await cfgInt(c, "academy_publish_min_gap_minutes", 90)) *
+    60000;
+  const winStart = await cfgStr(c, "academy_publish_window_start", "08:00");
+  const winEnd = await cfgStr(c, "academy_publish_window_end", "21:30");
   const { data: lastPub } = await c.from("academy_drafts")
-    .select("updated_at").eq("status", "published")
+    .select("updated_at, bot_key, content_type").eq("status", "published")
     .order("updated_at", { ascending: false }).limit(1).maybeSingle();
   const lastMs = lastPub ? Date.parse(lastPub.updated_at) : 0;
   let base = Math.max(now.getTime(), lastMs + gapMs);
-  for (const d of ready ?? []) {
+  const ordered = orderForDiversity(
+    (ready ?? []) as { id: string; bot_key: string; content_type: string }[],
+    lastPub
+      ? { bot_key: lastPub.bot_key, content_type: lastPub.content_type }
+      : null,
+  );
+  for (const d of ordered) {
+    const slot = nextPublishSlot(base, winStart, winEnd);
     await c.rpc("academy_enqueue_job", {
       p_job_type: "publish",
       p_payload: { draft_id: d.id },
-      p_run_after: new Date(base).toISOString(),
+      p_run_after: new Date(slot).toISOString(),
       p_dedupe_key: `publish:${d.id}`,
       p_priority: 80,
       p_max_attempts: 3,
     });
-    base += gapMs;
+    base = slot + gapMs;
   }
 
   // 6) Günde bir mizah gönderisi (başarı sonrası cooldown — aynı gün

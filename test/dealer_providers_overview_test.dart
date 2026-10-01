@@ -131,8 +131,10 @@ void main() {
 
       final o = await container.read(dealersOverviewProvider.future);
 
-      // Bugün delivery toplamı: Hamdi 500 + Mehmet 100 + Şenel 999 = 1599
-      expect(o.todayDelivered, 1599);
+      // Bugün delivery toplamı: Hamdi 500 + Mehmet 100 + Şenel 999 = 1599.
+      // Ayın 1'inde "ay başı" teslimatı (Hamdi 1000) da bugüne düşer.
+      final monthStartIsToday = DateTime.now().day == 1;
+      expect(o.todayDelivered, 1599 + (monthStartIsToday ? 1000 : 0));
       // Bugün payment toplamı: yalnız Hamdi 200
       expect(o.todayCollected, 200);
     });
