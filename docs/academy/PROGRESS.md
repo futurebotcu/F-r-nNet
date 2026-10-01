@@ -48,7 +48,16 @@ detay) — eski kodda 9/10 FAIL, düzeltmeyle 10/10. Kart şablonu
 
 Testler: deno 68/68 (E1-E12, K3), PG 11/11 (yeni 11_editorial_publish:
 pencere/görselsiz/not/atıf/aralık/çeşitlilik/tavan), Flutter görsel
-regression 10/10.
+regression 10/10; tam suite 2517/2517 (ayın 1'inde kırılan dealer
+overview testi düzeltildi — monthStart==today), analyze 0.
+
+**Deploy (CI yeşil bc3bbcc sonrası):** migration `academy_editorial_v1`
+PROD'da (4 kolon + 4 config + academy_next_publish_slot + yayın RPC'si);
+worker deploy (401 fail-closed teyitli); canlı tick hatasız (tarama +
+yayın işi OK, taslak bütçe tavanında beklendiği gibi bekledi). Pencere
+fonksiyonu prod'da doğrulandı: 03:00→08:00, 10:00 aynen, 21:45→ertesi gün
+08:00. Flutter görsel düzeltmesi kullanıcıya YENİ UYGULAMA SÜRÜMÜYLE
+ulaşır (sunucu değişikliği değildir).
 
 ## CANLI AÇILIŞ — PRODUCTION GO-LIVE (2026-09-30 akşam, kullanıcı talimatı)
 
