@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../features/bakery_panel/calculators/screens/bakers_percentage_screen.dart';
 import '../../features/bakery_panel/calculators/screens/batch_value_screen.dart';
 import '../../features/bakery_panel/calculators/screens/calculators_hub_screen.dart';
@@ -375,6 +376,9 @@ bool routeRequiresAuth(String location) {
 GoRouter createRouter({bool Function()? isAuthed}) {
   final router = GoRouter(
     initialLocation: AppRoutes.splash,
+    // Bilinmeyen/bozuk route (eski bildirim linki vb.): İngilizce varsayılan
+    // hata sayfası yerine Türkçe, ana akışa dönüşlü ekran.
+    errorBuilder: (context, state) => const RouteNotFoundScreen(),
     redirect: (context, state) {
       if (isAuthed == null) return null;
       if (routeRequiresAuth(state.matchedLocation) && !isAuthed()) {
@@ -1126,5 +1130,40 @@ profile_models.AccountType? _accountTypeFromKey(String? key) {
       return profile_models.AccountType.wholesaler;
     default:
       return null;
+  }
+}
+
+/// Router hata sayfası (bilinmeyen route) — Türkçe + ana akışa dönüş.
+class RouteNotFoundScreen extends StatelessWidget {
+  const RouteNotFoundScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.explore_off_rounded, size: 44),
+              const SizedBox(height: 12),
+              const Text(
+                AppStrings.routeNotFoundTitle,
+                key: ValueKey('route_not_found'),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.go(AppRoutes.feed),
+                child: const Text(AppStrings.routeNotFoundCta),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

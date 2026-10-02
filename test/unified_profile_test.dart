@@ -185,11 +185,12 @@ void main() {
           .readAsStringSync();
     });
 
-    test('ProfileScreen kendi /u/<id> route\'una go eder', () {
+    test('ProfileScreen kendi /u/<id> route\'una yönlenir (yığın korunur)', () {
       expect(
-        src.contains(r"context.go('${AppRoutes.userPublicProfile}/${user.id}')"),
+        src.contains(r"'${AppRoutes.userPublicProfile}/${user.id}'"),
         isTrue,
       );
+      expect(src.contains('context.pushReplacement(target)'), isTrue);
     });
 
     test('Guest ise /auth\'a yönlendirir', () {

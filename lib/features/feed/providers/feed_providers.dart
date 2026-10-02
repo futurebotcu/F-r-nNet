@@ -256,10 +256,12 @@ final feedPagedNotifierProvider =
 final currentFollowingIdsProvider =
     FutureProvider.autoDispose<Set<String>>((ref) async {
   ref.watch(followChangesProvider);
-  final user = ref.watch(currentAuthUserProvider);
-  if (user == null) return const <String>{};
+  // Yalnız uid izlenir: token refresh / app resume yeni AuthUser örneği
+  // üretir; tüm nesne izlenirse repo yeniden kurulur → feed page 1'e düşer.
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
+  if (userId == null) return const <String>{};
   final repo = ref.watch(followRepositoryProvider);
-  final ids = await repo.listFollowingIds(user.id);
+  final ids = await repo.listFollowingIds(userId);
   return ids.toSet();
 });
 
@@ -269,8 +271,8 @@ final currentFollowingIdsProvider =
 final feedRepostOwnerIdsProvider =
     FutureProvider.autoDispose<Set<String>>((ref) async {
   final following = await ref.watch(currentFollowingIdsProvider.future);
-  final user = ref.watch(currentAuthUserProvider);
-  return <String>{...following, if (user != null) user.id};
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
+  return <String>{...following, if (userId != null) userId};
 });
 
 /// Social UI Polish Sprint 2A — "Takip Edilenler" segmenti paged feed.

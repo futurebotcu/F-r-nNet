@@ -90,10 +90,20 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
 
     return PremiumScaffold(
       appBar: AppBar(
-        title: profileAsync.maybeWhen(
-          data: (p) => Text(p.displayNameOrFallback),
-          orElse: () => const Text(AppStrings.publicProfileTitle),
-        ),
+        // Akademi botu (mizah hariç) bot adıyla ("FırınNet Hijyen" vb.) ekran
+        // başlığı OLMAZ: hangi giriş noktasından gelinirse gelinsin başlık
+        // "FırınNet Akademi". Bot bilgisi çözülene kadar nötr başlık.
+        title: switch (ref.watch(academyBotProfileProvider(userId))) {
+          AsyncData(value: final bot?) when !bot.isHumor => const Text(
+              AppStrings.academyTitle,
+              key: ValueKey('profile_title_academy'),
+            ),
+          AsyncLoading() => const Text(AppStrings.publicProfileTitle),
+          _ => profileAsync.maybeWhen(
+              data: (p) => Text(p.displayNameOrFallback),
+              orElse: () => const Text(AppStrings.publicProfileTitle),
+            ),
+        },
         actions: [
           if (isSelf)
             IconButton(

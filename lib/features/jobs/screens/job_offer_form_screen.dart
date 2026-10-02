@@ -7,6 +7,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -44,6 +45,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   bool _isActive = true;
   bool _saving = false;
   bool _loaded = false;
+  bool _loadFailed = false;
 
   /// M6B — il + ilçe picker (eski city/district TextField'lar kaldırıldı).
   TurkeyProvince? _selectedProvince;
@@ -84,8 +86,17 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
 
   Future<void> _loadExisting() async {
     final repo = ref.read(jobOfferRepositoryProvider);
-    final p = await repo.getOffer(widget.postId!);
-    if (!mounted || p == null) {
+    if (_loadFailed) setState(() => _loadFailed = false);
+    final JobOfferPost? p;
+    try {
+      p = await repo.getOffer(widget.postId!);
+    } catch (_) {
+      // Ağ hatası: sonsuz yükleme yerine hata durumu + Tekrar dene / Geri.
+      if (mounted) setState(() => _loadFailed = true);
+      return;
+    }
+    if (!mounted) return;
+    if (p == null) {
       setState(() => _loaded = true);
       return;
     }
@@ -231,6 +242,18 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadFailed) {
+      return PremiumScaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: ErrorRetryState(
+            key: const ValueKey('job_offer_form_load_error'),
+            title: 'İlan yüklenemedi',
+            onRetry: _loadExisting,
+          ),
+        ),
+      );
+    }
     if (!_loaded) {
       return const PremiumScaffold(
         body: Center(child: CircularProgressIndicator()),

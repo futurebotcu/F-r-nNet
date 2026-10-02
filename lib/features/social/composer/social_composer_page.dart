@@ -35,6 +35,7 @@ import '../../feed/models/post_type.dart';
 import '../../feed/providers/feed_providers.dart';
 import '../../feed/services/feed_boundary_classifier.dart';
 import '../../feed/widgets/feed_boundary_sheet.dart';
+import '../post/widgets/feed_post_image.dart';
 
 /// Feed Premium Sprint — composer'a feed panelinden hangi medya aksiyonuyla
 /// girildiğini taşır. `null` = klasik manuel akış (picker otomatik açılmaz).
@@ -872,21 +873,85 @@ class _VideoPickedPreview extends StatelessWidget {
   }
 }
 
-class _MediaPreview extends StatelessWidget {
+/// Seçilen görselin önizlemesi — yayınlanan postla AYNI davranış
+/// ([FeedPostImage]): gerçek oran (4:5…1.91:1 sınırlı) + `BoxFit.contain`,
+/// kırpma yok. Kullanıcı compose'da ne görüyorsa feed'de onu görür.
+class _MediaPreview extends StatefulWidget {
   const _MediaPreview({required this.bytes, required this.onRemove});
 
   final Uint8List bytes;
   final VoidCallback onRemove;
 
   @override
+  State<_MediaPreview> createState() => _MediaPreviewState();
+}
+
+class _MediaPreviewState extends State<_MediaPreview> {
+  double? _aspect;
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_stream == null) _resolve();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MediaPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.bytes, widget.bytes)) {
+      _detach();
+      _aspect = null;
+      _resolve();
+    }
+  }
+
+  void _resolve() {
+    final stream = MemoryImage(widget.bytes)
+        .resolve(createLocalImageConfiguration(context));
+    final listener = ImageStreamListener(
+      (info, _) {
+        final img = info.image;
+        if (!mounted || img.height == 0) return;
+        setState(() => _aspect = img.width / img.height);
+      },
+      onError: (_, __) {},
+    );
+    stream.addListener(listener);
+    _stream = stream;
+    _listener = listener;
+  }
+
+  void _detach() {
+    final listener = _listener;
+    if (listener != null) _stream?.removeListener(listener);
+    _stream = null;
+    _listener = null;
+  }
+
+  @override
+  void dispose() {
+    _detach();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final onRemove = widget.onRemove;
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.m),
       child: Stack(
         children: [
           AspectRatio(
-            aspectRatio: 4 / 3,
-            child: Image.memory(bytes, fit: BoxFit.cover),
+            key: const ValueKey('composer_image_preview'),
+            aspectRatio: FeedPostImage.clampAspect(
+              _aspect ?? FeedPostImage.fallbackAspect,
+            ),
+            child: ColoredBox(
+              color: AppColors.surface,
+              child: Image.memory(widget.bytes, fit: BoxFit.contain),
+            ),
           ),
           Positioned(
             top: AppSpacing.s,

@@ -29,7 +29,8 @@ class DealerPulseCard extends ConsumerWidget {
     final pulseAsync = ref.watch(dealerPulseProvider);
     return pulseAsync.when(
       loading: () => const _PulseLoadingCard(),
-      error: (e, _) => _PulseErrorCard(message: '$e'),
+      // Ham istisna metni gösterilmez.
+      error: (_, __) => const _PulseErrorCard(message: AppStrings.errorGenericTitle),
       data: (snap) => _PulseCard(snapshot: snap),
     );
   }

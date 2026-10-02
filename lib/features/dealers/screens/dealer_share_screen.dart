@@ -199,9 +199,11 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
             '${AppStrings.dealerSharePdfSuffix}',
       );
     } catch (e) {
+      debugPrint('[FirinNet][DealerShare] pdf failed: $e');
       if (!mounted) return;
+      // Ham istisna metni kullanıcıya gösterilmez.
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppStrings.dealerSharePdfErr}$e')),
+        const SnackBar(content: Text(AppStrings.dealerSharePdfErr)),
       );
     } finally {
       if (mounted) setState(() => _pdfBusy = false);

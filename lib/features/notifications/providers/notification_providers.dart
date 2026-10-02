@@ -14,8 +14,10 @@ import '../repositories/supabase_notification_repository.dart';
 /// Authenticated user varsa Supabase; aksi halde Local (guest demo seed).
 final notificationRepositoryProvider =
     Provider<NotificationRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
-  if (AppConfig.supabaseEnabled && user != null) {
+  // Yalnız uid izlenir: token refresh / app resume yeni AuthUser örneği
+  // üretir; tüm nesne izlenirse repo yeniden kurulur → feed page 1'e düşer.
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
+  if (AppConfig.supabaseEnabled && userId != null) {
     return SupabaseNotificationRepository(sb.Supabase.instance.client);
   }
   return LocalNotificationRepository(seed: true);

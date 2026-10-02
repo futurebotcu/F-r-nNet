@@ -1962,6 +1962,12 @@ class AppStrings {
       'onayın olmadan hiçbir ücret alınmaz.';
 
   // ── FırınNet Akademi (bot içerikleri + toplu profil sayfası) ──
+  static const String routeNotFoundTitle = 'Aradığınız sayfa bulunamadı';
+  static const String routeNotFoundCta = 'Ana sayfaya dön';
+  static const String academyLoadMoreError =
+      'Daha fazla içerik yüklenemedi · Tekrar dene';
+  static const String academyRecipesLoadError =
+      'Tarifler yüklenemedi · Tekrar dene';
   static const String academyTitle = 'FırınNet Akademi';
   static const String academyBio =
       'Fırıncılar için kaynaklı mesleki bilgi ve sektör gelişmeleri. '
@@ -2665,5 +2671,6 @@ class AppStrings {
   static const String dealerSharePdfBuilding = 'PDF hazırlanıyor…';
   static const String dealerSharePdfButton = 'PDF Oluştur ve Paylaş';
   static const String dealerSharePdfSuffix = ' ve paylaşım açıldı.';
-  static const String dealerSharePdfErr = 'PDF oluşturulamadı: ';
+  static const String dealerSharePdfErr =
+      'PDF oluşturulamadı. Lütfen tekrar deneyin.';
 }

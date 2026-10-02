@@ -70,8 +70,14 @@ void main() {
       expect(s.contains('getInitialMessage'), isTrue);
       expect(s.contains('onMessageOpenedApp'), isTrue);
       expect(s.contains("message.data['route']"), isTrue);
-      // UI-NAV-002: koşulsuz go yerine shell-kök/derin ayrımı yapan helper.
-      expect(s.contains('navigateToNotificationRoute(router, route)'), isTrue);
+      // Cold-start: tap Splash boot kararına kadar bekletilir; boot sonrası
+      // shell-kök/derin ayrımı yapan helper (UI-NAV-002) ile işlenir.
+      expect(
+        s.contains('PendingNotificationRoute.handleTap(route, appRouter)'),
+        isTrue,
+      );
+      final r = _read('lib/features/notifications/notification_routing.dart');
+      expect(r.contains('navigateToNotificationRoute(router, route)'), isTrue);
     });
 
     test('app_router global appRouter referansı', () {

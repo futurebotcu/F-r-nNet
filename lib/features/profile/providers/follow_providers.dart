@@ -15,12 +15,14 @@ import '../repositories/supabase_follow_repository.dart';
 /// [LocalFollowRepository]. Yazma metodları [GuardedFollowRepository] ile
 /// guest guard'lı.
 final followRepositoryProvider = Provider<FollowRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // Yalnız uid izlenir: token refresh / app resume yeni AuthUser örneği
+  // üretir; tüm nesne izlenirse repo yeniden kurulur → feed page 1'e düşer.
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final FollowRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseFollowRepository(sb.Supabase.instance.client);
   } else {
-    inner = LocalFollowRepository(currentUserId: user?.id ?? 'me_misafir');
+    inner = LocalFollowRepository(currentUserId: userId ?? 'me_misafir');
   }
   final canWrite = ref.watch(canWriteCheckProvider);
   return GuardedFollowRepository(inner: inner, canWriteCheck: canWrite);
