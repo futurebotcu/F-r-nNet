@@ -11,7 +11,6 @@ import 'social_group_repository.dart';
 /// Bellek içi sosyal grup repository. Demo seed ile gelir; uygulama yeniden
 /// açıldığında veriler sıfırlanır — V1 için yeterli.
 ///
-/// TODO(v2): SupabaseSocialGroupRepository eklenecek.
 /// UI ve service katmanı bu sınıfa değil, [SocialGroupRepository] arayüzüne bağlı.
 class LocalSocialGroupRepository implements SocialGroupRepository {
   LocalSocialGroupRepository({

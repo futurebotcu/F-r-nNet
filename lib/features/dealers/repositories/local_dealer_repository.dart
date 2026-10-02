@@ -11,7 +11,6 @@ import 'dealer_repository.dart';
 /// Bellek içi dealer repository. Demo seed ile gelir; uygulama yeniden
 /// açıldığında veriler sıfırlanır — V1 için yeterli.
 ///
-/// TODO(v2): SupabaseDealerRepository eklenecek.
 /// UI ve service katmanı bu sınıfa değil, [DealerRepository] arayüzüne bağlı.
 class LocalDealerRepository implements DealerRepository {
   LocalDealerRepository({bool seed = true, this.currentUserId}) {
