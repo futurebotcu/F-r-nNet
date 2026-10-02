@@ -119,14 +119,6 @@ class SettingsScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     SettingsTile(
-                      icon: Icons.delete_forever_outlined,
-                      title: AppStrings.settingsDeleteAccount,
-                      subtitle: AppStrings.settingsDeleteAccountSubtitle,
-                      onTap: () => performDeleteAccount(context, ref),
-                      danger: true,
-                    ),
-                    const _TileDivider(),
-                    SettingsTile(
                       icon: Icons.info_outline_rounded,
                       title: AppStrings.settingsDataInfo,
                       subtitle: AppStrings.settingsDataInfoSubtitle,
@@ -141,6 +133,16 @@ class SettingsScreen extends ConsumerWidget {
                       title: AppStrings.blockedUsersTitle,
                       subtitle: AppStrings.blockedUsersTileSubtitle,
                       onTap: () => context.push(AppRoutes.settingsBlocked),
+                    ),
+                    const _TileDivider(),
+                    // Yıkıcı işlem grubun en sonunda (yanlışlıkla ilk satıra
+                    // dokunulmasın).
+                    SettingsTile(
+                      icon: Icons.delete_forever_outlined,
+                      title: AppStrings.settingsDeleteAccount,
+                      subtitle: AppStrings.settingsDeleteAccountSubtitle,
+                      onTap: () => performDeleteAccount(context, ref),
+                      danger: true,
                     ),
                   ],
                 ),

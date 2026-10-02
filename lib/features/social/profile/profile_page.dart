@@ -30,6 +30,7 @@ import '../../academy/screens/academy_page.dart' show AcademyAiBadge;
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
@@ -119,6 +120,7 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                 final blocked = ref.watch(blockedUserIdsSyncProvider);
                 final isBlocked = blocked.contains(userId);
                 return PopupMenuButton<String>(
+                  tooltip: AppStrings.moreActionsTooltip,
                   icon: const Icon(Icons.more_horiz_rounded),
                   onSelected: (v) {
                     if (v == 'report') {
@@ -366,13 +368,13 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
         padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const Padding(
-        padding: EdgeInsets.all(AppSpacing.l),
-        child: Center(
-          child: Text(
-            AppStrings.publicProfileLoadError,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-          ),
+      error: (_, __) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        child: ErrorRetryState(
+          compact: true,
+          subtitle: AppStrings.publicProfileLoadError,
+          onRetry: () =>
+              ref.invalidate(userPostsPagedNotifierProvider(userId)),
         ),
       ),
       data: (paged) {
@@ -680,12 +682,12 @@ class _StatusChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.circle, size: 8, color: AppColors.copper),
+              const Icon(Icons.circle, size: 8, color: AppColors.brandInk),
               const SizedBox(width: 6),
               Text(
                 status,
                 style: const TextStyle(
-                  color: AppColors.copper,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,
                   fontSize: 11.5,
                 ),

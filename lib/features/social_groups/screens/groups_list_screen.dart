@@ -122,7 +122,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                       ),
                       prefixIcon: const Icon(
                         Icons.search_rounded,
-                        color: AppColors.brandLemonPressed,
+                        color: AppColors.textSecondary,
                         size: 20,
                       ),
                       filled: true,

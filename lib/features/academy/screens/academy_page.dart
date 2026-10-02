@@ -66,14 +66,12 @@ class AcademyPage extends ConsumerWidget {
                 else if (!feed.loading && feed.posts.isEmpty)
                   const _EmptyState()
                 else ...[
+                  // Kart kendi yatay marjını (pageH) taşır; ekstra padding
+                  // kartı akıştakinden dar gösteriyordu.
                   for (final p in feed.posts)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.pageH, 0, AppSpacing.pageH, AppSpacing.m),
-                      child: SocialPostCard(
-                        key: ValueKey('academy_post_${p.feedEntryKey}'),
-                        post: p,
-                      ),
+                    SocialPostCard(
+                      key: ValueKey('academy_post_${p.feedEntryKey}'),
+                      post: p,
                     ),
                   // Sonraki sayfa hatası sessiz kaybolmaz: satır içi
                   // Tekrar dene (kaydırma otomatik yeniden denemez).
@@ -139,28 +137,15 @@ class _AcademyHero extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.m),
-          Expanded(
+          // Başlık zaten üst header'da: burada tekrar edilmez, yalnız AI
+          // rozeti + kısa tanıtım.
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        AppStrings.academyTitle,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const AcademyAiBadge(),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                const Text(
+                AcademyAiBadge(),
+                SizedBox(height: 6),
+                Text(
                   AppStrings.academyBio,
                   style: TextStyle(
                     fontSize: 12.5,
@@ -197,7 +182,7 @@ class AcademyAiBadge extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w800,
           color: AppColors.brandInk,
           letterSpacing: 0.2,
@@ -302,7 +287,10 @@ class _RecipesStrip extends ConsumerWidget {
               ),
             ),
             SizedBox(
-              height: 118,
+              // Sabit 118px büyük yazıda taşıyordu: yükseklik metin
+              // ölçeğiyle (font boyutu bazında — Android 14 non-linear)
+              // hesaplanır.
+              height: _RecipeCard.heightFor(MediaQuery.textScalerOf(context)),
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(
@@ -326,6 +314,14 @@ class _RecipeCard extends StatelessWidget {
   const _RecipeCard({required this.recipe});
 
   final AcademyRecipe recipe;
+
+  /// Kart yüksekliği: padding + ikon + 2 satır başlık + meta + yazar.
+  static double heightFor(TextScaler scaler) {
+    final text = scaler.scale(13.5) * 1.25 * 2 +
+        scaler.scale(11.5) * 1.3 +
+        scaler.scale(11) * 1.3;
+    return (AppSpacing.m * 2 + 18 + 6 + text + 8).ceilToDouble();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -417,6 +413,15 @@ void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
                 ),
               ),
               const AcademyAiBadge(label: AppStrings.academyRecipeBadge),
+              IconButton(
+                key: const ValueKey('academy_recipe_close'),
+                tooltip: AppStrings.closeTooltip,
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: AppColors.textSecondary,
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
             ],
           ),
           const SizedBox(height: 2),

@@ -123,7 +123,7 @@ class GroupCard extends StatelessWidget {
                           ),
                           child: Icon(
                             _categoryIcon(group.category),
-                            color: AppColors.brandLemonPressed,
+                            color: AppColors.brandInk,
                             size: 16,
                           ),
                         ),
@@ -396,13 +396,13 @@ class _PendingRequestsPill extends StatelessWidget {
           const Icon(
             Icons.hourglass_top_rounded,
             size: 13,
-            color: AppColors.brandLemonPressed,
+            color: AppColors.brandInk,
           ),
           const SizedBox(width: 5),
           Text(
             AppStrings.groupPendingRequestCount(count),
             style: const TextStyle(
-              color: AppColors.brandLemonPressed,
+              color: AppColors.brandInk,
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0,

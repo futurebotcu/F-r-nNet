@@ -187,7 +187,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                   child: Text(
                     status,
                     style: const TextStyle(
-                      color: AppColors.copper,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 12.5,
                     ),

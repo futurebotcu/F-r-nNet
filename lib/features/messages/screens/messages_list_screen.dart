@@ -11,12 +11,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/relative_time.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
@@ -92,7 +92,7 @@ class MessagesListScreen extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.s),
                     itemBuilder: (_, i) {
                       final c = items[i];
-                      return _ConversationTile(
+                      return ConversationTile(
                         conversation: c,
                         onTap: () => context.push(AppRoutes.conversation(c.id)),
                       );
@@ -108,8 +108,13 @@ class MessagesListScreen extends ConsumerWidget {
   }
 }
 
-class _ConversationTile extends StatelessWidget {
-  const _ConversationTile({required this.conversation, required this.onTap});
+@visibleForTesting
+class ConversationTile extends StatelessWidget {
+  const ConversationTile({
+    super.key,
+    required this.conversation,
+    required this.onTap,
+  });
 
   final Conversation conversation;
   final VoidCallback onTap;
@@ -117,11 +122,11 @@ class _ConversationTile extends StatelessWidget {
   String _contextLabel() {
     switch (conversation.contextType) {
       case 'market_listing':
-        return 'Market ilanı';
+        return AppStrings.messagingContextMarket;
       case 'job_offer':
-        return 'İş ilanı';
+        return AppStrings.messagingContextJobOffer;
       case 'job_seek':
-        return 'İş arayan ilanı';
+        return AppStrings.messagingContextJobSeek;
       case 'profile_direct':
       default:
         return '';
@@ -137,7 +142,10 @@ class _ConversationTile extends StatelessWidget {
     final last = conversation.lastMessageContent ?? '';
     final ctxLabel = _contextLabel();
     final time = conversation.lastMessageCreatedAt;
-    final timeLabel = time == null ? '' : _relativeTime(time);
+    // "5 dk" / "3 sa" / "dün" — eski "5d" dakikayı gün gibi okutuyordu.
+    final timeLabel = time == null ? '' : relativeTimeShortTr(time);
+    // Kalın isim/önizleme yalnız okunmamış sohbette (tarama kolaylığı).
+    final unread = conversation.unreadCount > 0;
 
     return Material(
       color: Colors.transparent,
@@ -191,9 +199,11 @@ class _ConversationTile extends StatelessWidget {
                             name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: unread
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               fontSize: 15.5,
                             ),
                           ),
@@ -202,10 +212,15 @@ class _ConversationTile extends StatelessWidget {
                           const SizedBox(width: 6),
                           Text(
                             timeLabel,
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
+                            key: const ValueKey('conversation_tile_time'),
+                            style: TextStyle(
+                              color: unread
+                                  ? AppColors.textPrimary
+                                  : AppColors.textMuted,
+                              fontSize: 12,
+                              fontWeight: unread
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                         ],
@@ -221,23 +236,21 @@ class _ConversationTile extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.softGold.withValues(alpha: 0.12),
+                              color: AppColors.surfaceLine,
                               borderRadius: BorderRadius.circular(
                                 AppRadius.pill,
                               ),
                               border: Border.all(
-                                color: AppColors.softGold.withValues(
-                                  alpha: 0.32,
-                                ),
+                                color: AppColors.borderHairline,
                                 width: 0.6,
                               ),
                             ),
                             child: Text(
                               ctxLabel,
                               style: const TextStyle(
-                                color: AppColors.softGold,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 10.5,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
                               ),
                             ),
                           ),
@@ -248,10 +261,14 @@ class _ConversationTile extends StatelessWidget {
                             last.isEmpty ? '—' : last,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: unread
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: unread
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
                             ),
                           ),
                         ),
@@ -260,7 +277,7 @@ class _ConversationTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (conversation.unreadCount > 0)
+              if (unread)
                 Container(
                   margin: const EdgeInsets.only(left: AppSpacing.s),
                   padding: const EdgeInsets.symmetric(
@@ -293,16 +310,6 @@ class _ConversationTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _relativeTime(DateTime t) {
-    final now = DateTime.now();
-    final diff = now.difference(t);
-    if (diff.inSeconds < 60) return 'şimdi';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}d';
-    if (diff.inHours < 24) return '${diff.inHours}sa';
-    if (diff.inDays < 7) return '${diff.inDays}g';
-    return DateFormat('d MMM').format(t);
   }
 }
 

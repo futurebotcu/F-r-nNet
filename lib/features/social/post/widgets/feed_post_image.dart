@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
 
 /// Feed ve detay ekranının ORTAK post görseli. Kutu görselin GERÇEK
 /// oranında çizilir ve `BoxFit.contain` kullanılır: üzerinde yazı olan
@@ -89,15 +90,48 @@ class _FeedPostImageState extends State<FeedPostImage> {
           imageUrl: widget.imageUrl,
           fit: BoxFit.contain,
           memCacheWidth: widget.memCacheWidth,
-          placeholder: (_, __) => const Center(
-            child: CircularProgressIndicator(strokeWidth: 1.6),
+          // Yüklenirken spinner yerine sakin nötr yüzey (akışta her kartta
+          // dönen çark gürültü yapıyordu).
+          placeholder: (_, __) => const ColoredBox(
+            key: ValueKey('feed_image_placeholder'),
+            color: AppColors.surfaceLine,
+            child: SizedBox.expand(),
           ),
-          errorWidget: (_, __, ___) => const Center(
-            child: Icon(
-              Icons.broken_image_outlined,
+          errorWidget: (_, __, ___) => const FeedImageErrorState(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Görsel yüklenemediğinde nötr zemin + ikon + kısa açıklama.
+class FeedImageErrorState extends StatelessWidget {
+  const FeedImageErrorState({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppColors.surfaceLine,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.image_not_supported_outlined,
               color: AppColors.textMuted,
+              size: 26,
             ),
-          ),
+            SizedBox(height: 6),
+            Text(
+              AppStrings.feedPostImageLoadError,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

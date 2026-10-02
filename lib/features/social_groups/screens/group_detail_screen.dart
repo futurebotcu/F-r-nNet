@@ -11,6 +11,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/permissions/app_permission_service.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/premium_top_banner.dart';
@@ -71,23 +73,23 @@ class GroupDetailScreen extends ConsumerWidget {
       ),
       body: groupAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Padding(
-          padding: EdgeInsets.all(AppSpacing.l),
-          child: Center(
-            child: Text(
-              AppStrings.groupDetailErrorGeneric,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13.5,
-                height: 1.45,
-              ),
+        error: (_, __) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: ErrorRetryState(
+              subtitle: AppStrings.groupDetailErrorGeneric,
+              onRetry: () => ref.invalidate(groupByIdProvider(groupId)),
             ),
           ),
         ),
         data: (g) {
           if (g == null) {
-            return const Center(child: Text(AppStrings.groupDetailNotFound));
+            return const Center(
+              child: EmptyState(
+                icon: Icons.groups_2_outlined,
+                title: AppStrings.groupDetailNotFound,
+              ),
+            );
           }
           return _GroupBody(group: g);
         },
@@ -499,7 +501,7 @@ class _OwnerPendingAlert extends ConsumerWidget {
               children: [
                 const Icon(
                   Icons.hourglass_top_rounded,
-                  color: AppColors.copper,
+                  color: AppColors.brandInk,
                   size: 16,
                 ),
                 const SizedBox(width: AppSpacing.s),
@@ -507,16 +509,15 @@ class _OwnerPendingAlert extends ConsumerWidget {
                   child: Text(
                     AppStrings.groupJoinRequestsCompact(count),
                     style: const TextStyle(
-                      color: AppColors.copper,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
-                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
                 const Icon(
                   Icons.chevron_right_rounded,
-                  color: AppColors.copper,
+                  color: AppColors.brandInk,
                   size: 18,
                 ),
               ],
@@ -715,7 +716,7 @@ class _ChatBubble extends ConsumerWidget {
                       dt.format(message.createdAt),
                       style: const TextStyle(
                         color: AppColors.textMuted,
-                        fontSize: 10.5,
+                        fontSize: 11,
                       ),
                     ),
                     if (message.isPinned) ...[
@@ -1075,8 +1076,8 @@ class _PinnedBadge extends StatelessWidget {
         style: TextStyle(
           color: AppColors.softGold,
           fontWeight: FontWeight.w800,
-          fontSize: 8.5,
-          letterSpacing: 0.8,
+          fontSize: 11,
+          letterSpacing: 0.4,
         ),
       ),
     );
@@ -1168,7 +1169,7 @@ class _JoinFooterCta extends ConsumerWidget {
         ),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: AppColors.surface,
+          foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surfaceLine,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -1282,7 +1283,7 @@ class PrimaryActionButton extends ConsumerWidget {
         label: Text(label),
         style: FilledButton.styleFrom(
           backgroundColor: color,
-          foregroundColor: isJoined ? AppColors.textPrimary : AppColors.surface,
+          foregroundColor: isJoined ? AppColors.textPrimary : AppColors.brandInk,
           disabledBackgroundColor: color,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -1326,7 +1327,7 @@ class _OwnerStatusCard extends StatelessWidget {
         children: [
           const Icon(
             Icons.shield_moon_rounded,
-            color: AppColors.copper,
+            color: AppColors.brandInk,
             size: 20,
           ),
           const SizedBox(width: AppSpacing.s),
@@ -1357,7 +1358,7 @@ class _OwnerStatusCard extends StatelessWidget {
             ),
           ),
           if (onTap != null)
-            const Icon(Icons.tune_rounded, color: AppColors.copper, size: 18),
+            const Icon(Icons.tune_rounded, color: AppColors.brandInk, size: 18),
         ],
       ),
     );
@@ -1435,7 +1436,7 @@ class _RequestButton extends ConsumerWidget {
         label: Text(label),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.copper,
-          foregroundColor: AppColors.surface,
+          foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surface,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -1800,7 +1801,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                   onPressed: _busy ? null : () => _decide(true),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: AppColors.surface,
+                    foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
@@ -2074,7 +2075,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
         IconButton(
           onPressed: _sending ? null : _attach,
           icon: const Icon(Icons.add_photo_alternate_rounded),
-          color: AppColors.copper,
+          color: AppColors.brandInk,
           tooltip: AppStrings.chatMediaSheetTitle,
         ),
         Expanded(
@@ -2101,9 +2102,9 @@ class _ComposerState extends ConsumerState<GroupComposer> {
             onPressed: _sending ? null : _send,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.copper,
-              foregroundColor: AppColors.surface,
+              foregroundColor: AppColors.brandInk,
               disabledBackgroundColor: AppColors.copper.withValues(alpha: 0.6),
-              disabledForegroundColor: AppColors.surface,
+              disabledForegroundColor: AppColors.brandInk,
               padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.m),
@@ -2427,10 +2428,10 @@ class _MemberRow extends StatelessWidget {
               child: const Text(
                 AppStrings.groupFounder,
                 style: TextStyle(
-                  color: AppColors.copper,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,
-                  fontSize: 10,
-                  letterSpacing: 0.8,
+                  fontSize: 11,
+                  letterSpacing: 0.4,
                 ),
               ),
             ),
