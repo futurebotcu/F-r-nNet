@@ -18,13 +18,22 @@ import '../models/market_filters.dart';
 import '../../../core/widgets/location_picker.dart';
 
 class MarketplaceFiltersSheet extends StatefulWidget {
-  const MarketplaceFiltersSheet({super.key, required this.initial});
+  const MarketplaceFiltersSheet({
+    super.key,
+    required this.initial,
+    this.lockedListingType,
+  });
 
   final MarketFilters initial;
+
+  /// İlanlar segmentinde (İş yeri / Ekipman) ilan tipi kilitli: tip seçimi
+  /// gizlenir ve "Tümünü temizle" tipi korur.
+  final String? lockedListingType;
 
   static Future<MarketFilters?> show(
     BuildContext context, {
     required MarketFilters initial,
+    String? lockedListingType,
   }) {
     return showModalBottomSheet<MarketFilters>(
       context: context,
@@ -33,7 +42,10 @@ class MarketplaceFiltersSheet extends StatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.l)),
       ),
-      builder: (_) => MarketplaceFiltersSheet(initial: initial),
+      builder: (_) => MarketplaceFiltersSheet(
+        initial: initial,
+        lockedListingType: lockedListingType,
+      ),
     );
   }
 
@@ -93,7 +105,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
 
   void _clearAll() {
     setState(() {
-      _f = const MarketFilters();
+      _f = MarketFilters(listingType: widget.lockedListingType);
       _minCtrl.clear();
       _maxCtrl.clear();
       _province = null;
@@ -188,32 +200,35 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                     vertical: AppSpacing.m,
                   ),
                   children: [
-                    _SectionLabel(label: AppStrings.marketFilterListingType),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _Chip(
-                          label: 'Tümü',
-                          selected: _f.listingType == null,
-                          onTap: () => setState(
-                            () => _f = _f.copyWith(clearListingType: true),
-                          ),
-                        ),
-                        for (final e
-                            in MarketplaceTaxonomy.listingTypes.entries)
+                    if (widget.lockedListingType == null) ...[
+                      _SectionLabel(label: AppStrings.marketFilterListingType),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
                           _Chip(
-                            label: e.value,
-                            selected: _f.listingType == e.key,
+                            label: 'Tümü',
+                            selected: _f.listingType == null,
                             onTap: () => setState(
-                              () => _f = _f.copyWith(listingType: e.key),
+                              () => _f = _f.copyWith(clearListingType: true),
                             ),
                           ),
-                      ],
-                    ),
+                          for (final e
+                              in MarketplaceTaxonomy.listingTypes.entries)
+                            _Chip(
+                              label: e.value,
+                              selected: _f.listingType == e.key,
+                              onTap: () => setState(
+                                () => _f = _f.copyWith(listingType: e.key),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                     if (_f.listingType ==
                         MarketplaceTaxonomy.listingTypeEquipmentSale) ...[
-                      const SizedBox(height: AppSpacing.l),
+                      if (widget.lockedListingType == null)
+                        const SizedBox(height: AppSpacing.l),
                       _SectionLabel(
                         label: AppStrings.marketFilterEquipmentCategory,
                       ),

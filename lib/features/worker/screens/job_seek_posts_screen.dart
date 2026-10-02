@@ -333,8 +333,7 @@ class _EmptyState extends StatelessWidget {
           AppPrimaryButton(
             label: 'İlk iş ilanını ver',
             icon: Icons.add_rounded,
-            onPressed: () =>
-                Navigator.of(context).pushNamed(AppRoutes.jobSeekNew),
+            onPressed: () => context.push(AppRoutes.jobSeekNew),
           ),
         ],
       ),

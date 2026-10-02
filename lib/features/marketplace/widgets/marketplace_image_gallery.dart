@@ -10,16 +10,22 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../core/constants/app_strings.dart';
 
 class MarketplaceImageGallery extends StatefulWidget {
   const MarketplaceImageGallery({
     super.key,
     required this.imageUrls,
     this.aspectRatio = 4 / 3,
+    this.placeholderIcon = Icons.image_outlined,
   });
 
   final List<String> imageUrls;
   final double aspectRatio;
+
+  /// Görselsiz ilanda gösterilen tür ikonu.
+  final IconData placeholderIcon;
 
   @override
   State<MarketplaceImageGallery> createState() =>
@@ -45,15 +51,30 @@ class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
   @override
   Widget build(BuildContext context) {
     if (widget.imageUrls.isEmpty) {
+      // İlanlar tasarım geçişi — görselsiz ilan: daha kısa 16:9 sakin alan +
+      // tür ikonu + "Fotoğraf yok" (büyük boş gri blok yerine).
       return AspectRatio(
-        aspectRatio: widget.aspectRatio,
+        aspectRatio: 16 / 9,
         child: Container(
-          color: AppColors.surface,
+          key: const ValueKey('market_gallery_no_photo'),
+          color: AppColors.surfaceLine,
           alignment: Alignment.center,
-          child: const Icon(
-            Icons.image_outlined,
-            size: 48,
-            color: AppColors.textMuted,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.placeholderIcon,
+                size: 34,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                AppStrings.listingsNoPhoto,
+                style: AppTypography.meta.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -72,7 +93,13 @@ class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
                 onTap: () => _openFullscreen(url),
                 child: CachedNetworkImage(
                   imageUrl: url,
-                  fit: BoxFit.cover,
+                  // Detayda görsel kırpılmaz (contain); boşluk sakin zemin.
+                  fit: BoxFit.contain,
+                  imageBuilder: (_, provider) => Container(
+                    color: AppColors.surfaceLine,
+                    alignment: Alignment.center,
+                    child: Image(image: provider, fit: BoxFit.contain),
+                  ),
                   // Perf: carousel görseli ekran boyutunda decode edilir.
                   memCacheWidth: 720,
                   placeholder: (_, __) => Container(

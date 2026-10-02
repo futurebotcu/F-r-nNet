@@ -13,6 +13,7 @@
 //   * Sticky bottom Publish CTA (Scaffold.bottomNavigationBar).
 //   * Photos post-create upload (storage rollback repository tarafında).
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,11 +25,13 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/permissions/app_permission_service.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../listings/utils/listing_format.dart';
 import '../../subscriptions/models/listing_fee.dart';
 import '../../subscriptions/widgets/listing_fee_notice.dart';
 import '../data/marketplace_taxonomy.dart';
@@ -43,9 +46,18 @@ class _PickedPhoto {
 }
 
 class MarketListingFormScreen extends ConsumerStatefulWidget {
-  const MarketListingFormScreen({super.key, this.listingId});
+  const MarketListingFormScreen({
+    super.key,
+    this.listingId,
+    this.initialListingType,
+  });
 
   final String? listingId;
+
+  /// Yeni ilanda önceden seçili tip ('bakery_transfer' / 'equipment_sale').
+  /// Verilmezse route'un `?type=` sorgu parametresi okunur (İlanlar
+  /// segmentinden gelen "+").
+  final String? initialListingType;
 
   @override
   ConsumerState<MarketListingFormScreen> createState() =>
@@ -70,8 +82,12 @@ class _MarketListingFormScreenState
   final _contactPhone = TextEditingController();
   final _contactWhatsapp = TextEditingController();
 
-  String _category = 'ekipman';
+  /// V1 eski `category` kolonu (zorunlu wire alanı). Formda artık seçtirilmez;
+  /// yeni ilanda tipten türetilir, düzenlemede tip değişmedikçe korunur.
+  String? _loadedCategory;
+  String? _loadedListingType;
   String _listingType = MarketplaceTaxonomy.defaultListingType;
+  List<String> _existingPhotoUrls = const [];
   String? _condition;
   String? _equipmentCategory;
   String _contactPreference = MarketplaceTaxonomy.defaultContactPreference;
@@ -111,6 +127,38 @@ class _MarketListingFormScreenState
     }
   }
 
+  bool _typeResolved = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_typeResolved || widget.listingId != null) return;
+    _typeResolved = true;
+    var type = widget.initialListingType;
+    if (type == null) {
+      try {
+        type = GoRouterState.of(context).uri.queryParameters['type'];
+      } catch (_) {
+        // Router dışında (test/doğrudan) açıldı → varsayılan tip.
+      }
+    }
+    if (MarketplaceTaxonomy.isValidListingType(type)) _listingType = type!;
+  }
+
+  /// Eski V1 `category` değerini tipten türetir (wire sözleşmesi korunur).
+  static String _categoryForType(String listingType) =>
+      listingType == MarketplaceTaxonomy.listingTypeBakeryTransfer
+      ? 'devren_firin'
+      : 'ekipman';
+
+  /// Bilinmeyen durum değeri dropdown'u çökertmesin → güvenli 'paused'.
+  static const Set<String> _knownStatuses = {
+    'active',
+    'paused',
+    'sold',
+    'expired',
+  };
+
   Future<void> _loadExisting() async {
     _hydrating = true;
     if (_loadFailed) setState(() => _loadFailed = false);
@@ -133,18 +181,25 @@ class _MarketListingFormScreenState
     }
     _title.text = m.title;
     _description.text = m.description ?? '';
-    _price.text = m.price?.toStringAsFixed(0) ?? '';
+    _price.text = ListingFormat.editText(m.price);
     _unit.text = m.unit ?? '';
     _brand.text = m.brand ?? '';
     _model.text = m.model ?? '';
     _year.text = m.year?.toString() ?? '';
     _rentPrice.text = m.rentPrice?.toStringAsFixed(0) ?? '';
     _transferPrice.text = m.transferPrice?.toStringAsFixed(0) ?? '';
+    _existingPhotoUrls = m.mediaList
+        .map((e) => e.publicUrl)
+        .where((u) => u.isNotEmpty)
+        .toList(growable: false);
     _areaM2.text = m.areaM2?.toString() ?? '';
     _contactPhone.text = m.contactPhone ?? '';
     _contactWhatsapp.text = m.contactWhatsapp ?? '';
-    _category = m.category;
-    _listingType = m.listingType;
+    _loadedCategory = m.category;
+    _listingType = MarketplaceTaxonomy.isValidListingType(m.listingType)
+        ? m.listingType
+        : MarketplaceTaxonomy.defaultListingType;
+    _loadedListingType = _listingType;
     _condition = m.condition;
     _equipmentCategory = m.equipmentCategory;
     _contactPreference = m.contactPreference;
@@ -154,7 +209,7 @@ class _MarketListingFormScreenState
     _negotiable = m.negotiable;
     _equipmentIncluded = m.equipmentIncluded;
     _hasLicense = m.hasLicense;
-    _status = m.status;
+    _status = _knownStatuses.contains(m.status) ? m.status : 'paused';
     // Lokasyon hydrate — code → controlled-vocabulary lookup.
     _selectedProvince =
         TurkeyLocations.findProvinceByCode(m.cityCode) ??
@@ -262,10 +317,15 @@ class _MarketListingFormScreenState
     final repo = ref.read(marketListingRepositoryProvider);
     final isEquip = _listingType == 'equipment_sale';
     final isTransfer = _listingType == 'bakery_transfer';
+    // Eski `category` kolonu: tip değişmediyse yüklenen değer korunur.
+    final category =
+        (_loadedCategory != null && _loadedListingType == _listingType)
+        ? _loadedCategory!
+        : _categoryForType(_listingType);
     final listing = MarketListing(
       id: widget.listingId,
       title: _title.text.trim(),
-      category: _category,
+      category: category,
       listingType: _listingType,
       condition: isEquip ? _condition : null,
       description: _description.text.trim().isEmpty
@@ -278,7 +338,7 @@ class _MarketListingFormScreenState
       districtCode: _selectedDistrict?.code,
       district: _selectedDistrict?.name,
       currency: _currency,
-      price: isEquip ? double.tryParse(_price.text.trim()) : null,
+      price: isEquip ? ListingFormat.parseAmount(_price.text) : null,
       unit: isEquip && _unit.text.trim().isNotEmpty ? _unit.text.trim() : null,
       contactPreference: _contactPreference,
       status: _status,
@@ -291,9 +351,9 @@ class _MarketListingFormScreenState
           ? _model.text.trim()
           : null,
       year: isEquip ? int.tryParse(_year.text.trim()) : null,
-      rentPrice: isTransfer ? double.tryParse(_rentPrice.text.trim()) : null,
+      rentPrice: isTransfer ? ListingFormat.parseAmount(_rentPrice.text) : null,
       transferPrice: isTransfer
-          ? double.tryParse(_transferPrice.text.trim())
+          ? ListingFormat.parseAmount(_transferPrice.text)
           : null,
       equipmentIncluded: isTransfer ? _equipmentIncluded : null,
       hasLicense: isTransfer ? _hasLicense : null,
@@ -323,8 +383,12 @@ class _MarketListingFormScreenState
         ref.invalidate(marketListingByIdProvider(saved.id!));
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.marketListingSavedSnack)),
+      AppFeedback.success(
+        context,
+        listingSavedMessage(
+          isEdit: widget.listingId != null,
+          isPendingPayment: saved.isPendingPayment,
+        ),
       );
       context.pop();
     } on GuestActionRequiredException {
@@ -333,16 +397,14 @@ class _MarketListingFormScreenState
       debugPrint('[FirinNet][MarketForm] publish error: $e');
       if (mounted) {
         setState(() => _error = AppStrings.marketListingErrorGeneric);
-        _showSnack(AppStrings.marketListingErrorGeneric);
+        AppFeedback.error(context, AppStrings.listingsSaveError);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
+  void _showSnack(String msg) => AppFeedback.info(context, msg);
 
   // ─── Location picker handlers ────────────────────────────────────
 
@@ -448,6 +510,11 @@ class _MarketListingFormScreenState
                     ],
                     // ── Photos ──
                     _SectionLabel(label: AppStrings.marketListingFieldPhotos),
+                    // Düzenlemede mevcut fotoğraflar (salt-okunur önizleme).
+                    if (_existingPhotoUrls.isNotEmpty) ...[
+                      _ExistingPhotosRow(urls: _existingPhotoUrls),
+                      const SizedBox(height: AppSpacing.s),
+                    ],
                     _PhotosRow(
                       photos: _newPhotos,
                       max: _maxPhotos,
@@ -491,24 +558,8 @@ class _MarketListingFormScreenState
                     ),
                     const SizedBox(height: AppSpacing.m),
 
-                    // ── Category (V1 backward) ──
-                    DropdownButtonFormField<String>(
-                      initialValue: _category,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.marketListingFieldCategory,
-                      ),
-                      items: AppStrings.marketCategoryLabels.entries
-                          .map(
-                            (e) => DropdownMenuItem(
-                              value: e.key,
-                              child: Text(e.value),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) =>
-                          setState(() => _category = v ?? 'diger'),
-                    ),
-                    const SizedBox(height: AppSpacing.m),
+                    // (V1 "Kategori" alanı kaldırıldı — ilan tipinden
+                    // türetilir; bkz. _categoryForType.)
 
                     // ── Equipment-only block ──
                     if (isEquip) ...[
@@ -580,6 +631,7 @@ class _MarketListingFormScreenState
                       TextFormField(
                         controller: _year,
                         keyboardType: TextInputType.number,
+                        inputFormatters: ListingFormat.integerInputFormatters,
                         decoration: const InputDecoration(
                           labelText: AppStrings.marketListingFieldYear,
                         ),
@@ -598,9 +650,16 @@ class _MarketListingFormScreenState
                           Expanded(
                             child: TextFormField(
                               controller: _price,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: AppStrings.marketListingFieldPrice,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters:
+                                  ListingFormat.priceInputFormatters,
+                              decoration: InputDecoration(
+                                labelText:
+                                    '${AppStrings.listingsMarketPriceLabel} '
+                                    '(${ListingFormat.currencySymbol(_currency)})',
                               ),
                             ),
                           ),
@@ -627,6 +686,8 @@ class _MarketListingFormScreenState
                             child: TextFormField(
                               controller: _transferPrice,
                               keyboardType: TextInputType.number,
+                              inputFormatters:
+                                  ListingFormat.integerInputFormatters,
                               decoration: const InputDecoration(
                                 labelText:
                                     AppStrings.marketListingFieldTransferPrice,
@@ -638,6 +699,8 @@ class _MarketListingFormScreenState
                             child: TextFormField(
                               controller: _rentPrice,
                               keyboardType: TextInputType.number,
+                              inputFormatters:
+                                  ListingFormat.integerInputFormatters,
                               decoration: const InputDecoration(
                                 labelText:
                                     AppStrings.marketListingFieldRentPrice,
@@ -650,6 +713,7 @@ class _MarketListingFormScreenState
                       TextFormField(
                         controller: _areaM2,
                         keyboardType: TextInputType.number,
+                        inputFormatters: ListingFormat.integerInputFormatters,
                         decoration: const InputDecoration(
                           labelText: AppStrings.marketListingFieldAreaM2,
                         ),
@@ -828,6 +892,10 @@ class _MarketListingFormScreenState
                             value: 'sold',
                             child: Text('Satıldı/Devredildi'),
                           ),
+                          DropdownMenuItem(
+                            value: 'expired',
+                            child: Text(AppStrings.listingsStatusExpired),
+                          ),
                         ],
                         onChanged: (v) =>
                             setState(() => _status = v ?? 'active'),
@@ -875,9 +943,13 @@ class _MarketListingFormScreenState
                     )
                   : const Icon(Icons.send_rounded, size: 18),
               label: Text(
-                _saving
-                    ? AppStrings.marketListingPublishingCta
-                    : AppStrings.marketListingPublishCta,
+                widget.listingId != null
+                    ? (_saving
+                          ? AppStrings.listingsUpdatingCta
+                          : AppStrings.listingsUpdateCta)
+                    : (_saving
+                          ? AppStrings.marketListingPublishingCta
+                          : AppStrings.marketListingPublishCta),
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 15.5,
@@ -977,6 +1049,60 @@ class _PhotosRow extends StatelessWidget {
   }
 }
 
+/// Düzenlemede mevcut ilan fotoğrafları — salt-okunur küçük önizleme
+/// (silme backend değişikliği gerektirdiği için bu geçişte yok).
+class _ExistingPhotosRow extends StatelessWidget {
+  const _ExistingPhotosRow({required this.urls});
+  final List<String> urls;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppStrings.listingsExistingPhotos,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 64,
+          child: ListView.separated(
+            key: const ValueKey('market_form_existing_photos'),
+            scrollDirection: Axis.horizontal,
+            itemCount: urls.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            itemBuilder: (_, i) => ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.s),
+              child: CachedNetworkImage(
+                imageUrl: urls[i],
+                width: 64,
+                height: 64,
+                fit: BoxFit.cover,
+                memCacheWidth: 192,
+                placeholder: (_, __) => Container(color: AppColors.surfaceLine),
+                errorWidget: (_, __, ___) => Container(
+                  color: AppColors.surfaceLine,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.broken_image_outlined,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PhotoThumb extends StatelessWidget {
   const _PhotoThumb({required this.bytes, required this.onRemove});
   final Uint8List bytes;
@@ -1042,7 +1168,7 @@ class _PhotoAddButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 22, color: AppColors.copper),
+            Icon(icon, size: 22, color: AppColors.textPrimary),
             const SizedBox(height: 2),
             Text(
               label,
