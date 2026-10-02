@@ -1,8 +1,11 @@
 /// Build-time configuration.
 ///
 /// Anahtarlar `--dart-define=SUPABASE_URL=…` / `--dart-define=SUPABASE_ANON_KEY=…`
-/// ile geçirilir. Anahtar yoksa [supabaseEnabled] false döner ve uygulama
-/// local/mock moduna düşer; crash etmez.
+/// ile geçirilir. DEBUG/test: anahtar yoksa [supabaseEnabled] false döner ve
+/// uygulama local/mock moduna düşer (geliştirme kolaylığı).
+/// RELEASE: anahtar eksikse sessiz mock fallback YOKTUR — [releaseConfigError]
+/// hata döndürür, `main` uygulamayı başlatmaz (fail-fast) ve Gradle release
+/// task'ı dart-define eksikse build'i durdurur.
 class AppConfig {
   const AppConfig._();
 
@@ -18,6 +21,23 @@ class AppConfig {
 
   static bool get supabaseEnabled =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+
+  /// Release build'in production config'i eksik/bozuksa hata kodu döner;
+  /// sorun yoksa (veya release değilse) null. Değerler mesaja YAZILMAZ.
+  static String? releaseConfigError({
+    required bool isRelease,
+    String url = supabaseUrl,
+    String anonKey = supabaseAnonKey,
+  }) {
+    if (!isRelease) return null;
+    if (url.trim().isEmpty) return 'SUPABASE_URL eksik';
+    if (anonKey.trim().isEmpty) return 'SUPABASE_ANON_KEY eksik';
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+      return 'SUPABASE_URL geçersiz (https gerekli)';
+    }
+    return null;
+  }
 
   /// Social login (Google / Apple) OAuth callback deep link.
   ///

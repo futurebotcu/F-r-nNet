@@ -11,7 +11,32 @@ import '../../messaging/services/chat_media_signed_url_cache.dart';
 import '../../notifications/push/push_notification_service.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/auth_providers.dart';
+import '../repositories/auth_repository.dart';
 import '../providers/guest_mode_provider.dart';
+
+/// Push token'ı pasifleştirip oturumu kapatır. Tüm çıkış yolları (Ayarlar,
+/// Profil, yarım kalmış profil oluşturma) bunu kullanır.
+///
+/// Sıra önemli: deactivate RPC auth.uid() ister → unregister signOut'tan ÖNCE.
+/// unregister hata verse ya da (çevrimdışı getToken) asılı kalsa bile
+/// [pushTimeout] sonunda signOut yine denenir; signOut hatası da yutulur →
+/// kullanıcı hiçbir durumda çıkış ekranında kilitli kalmaz.
+Future<void> signOutWithPushCleanup(
+  AuthRepository auth, {
+  Future<void> Function() unregisterPush = PushNotificationService.unregister,
+  Duration pushTimeout = const Duration(seconds: 5),
+}) async {
+  try {
+    await unregisterPush().timeout(pushTimeout);
+  } catch (_) {
+    // Push temizliği best-effort; çıkışı engellemez.
+  }
+  try {
+    await auth.signOut();
+  } catch (_) {
+    // Ağ kopuksa bile local state temizlenir (çağıran taraf).
+  }
+}
 
 /// V1.4 — Çıkış yap akışı.
 ///
@@ -23,16 +48,7 @@ import '../providers/guest_mode_provider.dart';
 /// birebir korundu, sadece çağrı yeri ortaklaştırıldı.
 Future<void> performSignOut(BuildContext context, WidgetRef ref) async {
   final auth = ref.read(authRepositoryProvider);
-  if (auth != null) {
-    try {
-      // Push: oturum HÂLÂ geçerliyken token'ı pasifleştir (deactivate RPC
-      // auth.uid() ister) → bu cihaza artık push gitmez.
-      await PushNotificationService.unregister();
-      await auth.signOut();
-    } catch (_) {
-      // Ağ kopuksa bile local state'i temizle.
-    }
-  }
+  if (auth != null) await signOutWithPushCleanup(auth);
   // Perf/güvenlik: bayat signed URL'ler sonraki kullanıcıya taşınmasın.
   ChatMediaSignedUrlCache.instance.clear();
   await ref.read(guestModeProvider.notifier).setGuest(false);

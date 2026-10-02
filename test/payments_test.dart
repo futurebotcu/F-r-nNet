@@ -15,6 +15,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// RevenueCat configure/logIn'in çevrimdışıyken platform istisnası attığı
+/// durumu taklit eder.
+class _ThrowingInitPaymentService extends FakePaymentService {
+  _ThrowingInitPaymentService() : super(available: true);
+
+  int initCalls = 0;
+
+  @override
+  Future<void> initialize({required String? userId}) async {
+    initCalls++;
+    throw Exception('PlatformException(NETWORK_ERROR, raw-detail)');
+  }
+}
+
 /// Store'un Google formatında ('id:basePlan') identifier döndürdüğü durumu
 /// taklit eder; gerçek servis gibi mapStorePrices ile eşler.
 class _SuffixedPricesPaymentService extends FakePaymentService {
@@ -352,5 +366,76 @@ void main() {
       expect(fake.listingFeeCalls, 0);
       expect(find.text(AppStrings.storePaymentPreparing), findsOneWidget);
     });
+    group('Ödeme hata/çevrimdışı — busy kilidi', () {
+    Widget host(FakePaymentService svc, Widget child) => ProviderScope(
+          overrides: [
+            profileControllerProvider.overrideWith(
+              (ref) => _FixedProfile(ref, AccountType.commercial),
+            ),
+            currentAuthUserProvider.overrideWithValue(
+              const AuthUser(id: 'u1', email: 'u@test.local'),
+            ),
+            paymentServiceProvider.overrideWithValue(svc),
+          ],
+          child: MaterialApp(home: Scaffold(body: child)),
+        );
+
+    testWidgets('purchase initialize hatası busy sıfırlar + yerel mesaj', (
+      tester,
+    ) async {
+      final svc = _ThrowingInitPaymentService();
+      await tester.pumpWidget(
+        host(svc, const PlanPurchaseActions(account: AccountType.commercial)),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('buy_premium_monthly')));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.storePaymentFailed), findsOneWidget);
+      expect(find.textContaining('PlatformException'), findsNothing);
+      final btn = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('buy_premium_monthly')),
+      );
+      expect(btn.onPressed, isNotNull, reason: 'busy kalıcı kilitlenmemeli');
+      // Tekrar denenebilir: ikinci dokunuş yeniden initialize dener.
+      final before = svc.initCalls;
+      await tester.tap(find.byKey(const ValueKey('buy_premium_monthly')));
+      await tester.pumpAndSettle();
+      expect(svc.initCalls, before + 1);
+    });
+
+    testWidgets('restore initialize hatası busy sıfırlar', (tester) async {
+      final svc = _ThrowingInitPaymentService();
+      await tester.pumpWidget(
+        host(svc, const PlanPurchaseActions(account: AccountType.commercial)),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('restore_purchases')));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.storePaymentFailed), findsOneWidget);
+      final btn = tester.widget<TextButton>(
+        find.byKey(const ValueKey('restore_purchases')),
+      );
+      expect(btn.onPressed, isNotNull);
+    });
+
+    testWidgets('ilan ödeme initialize hatası busy sıfırlar', (tester) async {
+      final svc = _ThrowingInitPaymentService();
+      await tester.pumpWidget(
+        host(
+          svc,
+          const ListingPaymentButton(listingKind: 'market', listingId: 'lid'),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('listing_pay_button')));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.storePaymentFailed), findsOneWidget);
+      expect(find.textContaining('PlatformException'), findsNothing);
+      final btn = tester.widget<ButtonStyleButton>(
+        find.byKey(const ValueKey('listing_pay_button')),
+      );
+      expect(btn.onPressed, isNotNull);
+      expect(svc.listingFeeCalls, 0);
+    });
   });
+});
 }
