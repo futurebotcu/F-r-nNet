@@ -24,6 +24,7 @@ import '../../profile/providers/profile_provider.dart';
 import '../models/social_profile.dart';
 import '../providers/social_providers.dart';
 import 'models/social_story.dart';
+import '../../../core/utils/tr_case.dart';
 
 class SocialStoriesCarousel extends ConsumerWidget {
   const SocialStoriesCarousel({super.key});
@@ -100,9 +101,9 @@ class _MyStorySlot extends ConsumerWidget {
     final profile = ref.watch(profileControllerProvider);
     final user = ref.watch(currentAuthUserProvider);
     final initial = (profile?.displayName.isNotEmpty ?? false)
-        ? profile!.displayName[0].toUpperCase()
+        ? profile!.displayName[0].trUpper
         : (user?.email?.isNotEmpty == true
-              ? user!.email![0].toUpperCase()
+              ? user!.email![0].trUpper
               : 'M');
     return InkWell(
       onTap: onTap,
@@ -184,7 +185,7 @@ class _OwnerStorySlot extends ConsumerWidget {
       data: (p) => p.displayNameOrFallback,
       orElse: () => SocialProfile.fallbackName,
     );
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),

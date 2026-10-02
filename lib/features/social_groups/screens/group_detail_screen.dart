@@ -30,6 +30,7 @@ import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../providers/social_group_providers.dart';
 import '../services/group_join_result.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// V1 UX Reset — WhatsApp benzeri chat-centric grup ekranı.
 ///
@@ -332,7 +333,7 @@ class _GroupAvatarStack extends StatelessWidget {
   }
 
   Widget _avatarCircle(String name, double size) {
-    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+    final initial = name.trim().isNotEmpty ? name.trim()[0].trUpper : '?';
     return Container(
       width: size,
       height: size,
@@ -680,7 +681,7 @@ class _ChatBubble extends ConsumerWidget {
             alignment: Alignment.center,
             child: Text(
               message.authorName.isNotEmpty
-                  ? message.authorName[0].toUpperCase()
+                  ? message.authorName[0].trUpper
                   : '?',
               style: const TextStyle(
                 color: AppColors.softGold,
@@ -1715,7 +1716,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                 alignment: Alignment.center,
                 child: Text(
                   (r.requesterName?.isNotEmpty == true)
-                      ? r.requesterName![0].toUpperCase()
+                      ? r.requesterName![0].trUpper
                       : '?',
                   style: const TextStyle(
                     color: AppColors.softGold,
@@ -2388,7 +2389,7 @@ class _MemberRow extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(
           member.displayName.isNotEmpty
-              ? member.displayName[0].toUpperCase()
+              ? member.displayName[0].trUpper
               : '?',
           style: const TextStyle(
             color: AppColors.softGold,

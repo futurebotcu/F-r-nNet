@@ -21,6 +21,7 @@ import '../models/recipe_metadata.dart';
 import '../models/recipe_record.dart';
 import '../providers/bakery_providers.dart';
 import 'recipe_visibility_badge.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Tek bir reçetenin detay ekranı.
 ///
@@ -294,7 +295,7 @@ class _Header extends StatelessWidget {
                   children: [
                     if (recipe.productName.isNotEmpty)
                       Text(
-                        recipe.productName.toUpperCase(),
+                        recipe.productName.trUpper,
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w800,
@@ -349,7 +350,7 @@ class _SectionTitle extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 2, top: AppSpacing.s),
       child: Text(
-        text.toUpperCase(),
+        text.trUpper,
         style: const TextStyle(
           color: AppColors.primary,
           fontWeight: FontWeight.w800,
@@ -679,7 +680,7 @@ class _BakeMetric extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label.toUpperCase(),
+                label.trUpper,
                 style: const TextStyle(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,

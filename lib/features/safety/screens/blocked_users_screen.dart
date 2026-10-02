@@ -15,6 +15,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/safety_providers.dart';
 import '../widgets/block_user_dialog.dart';
+import '../../../core/utils/tr_case.dart';
 
 class BlockedUsersScreen extends ConsumerWidget {
   const BlockedUsersScreen({super.key});
@@ -74,7 +75,7 @@ class _BlockedUserRow extends ConsumerWidget {
           orElse: () => null,
         ) ??
         PublicProfile.fallbackName;
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.m,

@@ -32,6 +32,7 @@ import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
 import '../widgets/marketplace_contact_panel.dart';
 import '../widgets/marketplace_image_gallery.dart';
+import '../../../core/utils/tr_case.dart';
 
 class MarketplaceDetailScreen extends ConsumerWidget {
   const MarketplaceDetailScreen({super.key, required this.listingId});
@@ -825,7 +826,7 @@ class _OwnerSection extends StatelessWidget {
     final name = (listing.authorName ?? '').isNotEmpty
         ? listing.authorName!
         : 'FırınNet Kullanıcısı';
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,

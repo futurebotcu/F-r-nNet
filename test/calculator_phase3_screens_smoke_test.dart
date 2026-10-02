@@ -28,7 +28,7 @@ void main() {
     await pump(tester, screen);
     expect(find.text(title), findsOneWidget);
     expect(find.text('SONUÇ'), findsOneWidget);
-    await tester.tap(find.text(AppStrings.calculate.toUpperCase()));
+    await tester.tap(find.text(AppStrings.calculate));
     await tester.pumpAndSettle();
     expect(find.text('SONUÇ'), findsOneWidget);
   }

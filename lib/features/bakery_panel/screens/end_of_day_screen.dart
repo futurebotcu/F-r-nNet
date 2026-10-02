@@ -12,6 +12,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../providers/bakery_providers.dart';
 import '../widgets/ledger_tables.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Fırın Defteri — Gün Sonu.
 ///
@@ -53,7 +54,7 @@ class EndOfDayScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        df.format(s.day).toUpperCase(),
+                        df.format(s.day).trUpper,
                         style: const TextStyle(
                           color: AppColors.textMuted,
                           fontWeight: FontWeight.w700,

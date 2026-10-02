@@ -19,6 +19,7 @@ import '../providers/dealer_providers.dart';
 import '../services/dealer_period.dart';
 import '../widgets/dealer_avatar.dart';
 import '../widgets/dealer_kpi_tile.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi Defteri mini-app Gün Sonu tab — pasif günlük rapor (V1).
 ///
@@ -144,7 +145,7 @@ class _Header extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppStrings.dealerEndOfDayHeaderToday.toUpperCase(),
+              AppStrings.dealerEndOfDayHeaderToday.trUpper,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: AppColors.textMuted,
                 fontWeight: FontWeight.w700,
@@ -215,7 +216,7 @@ class _SummarySection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
-            AppStrings.dealerEndOfDaySummaryTitle.toUpperCase(),
+            AppStrings.dealerEndOfDaySummaryTitle.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,
@@ -302,7 +303,7 @@ class _ByDealerSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
-            AppStrings.dealerEndOfDayByDealerTitle.toUpperCase(),
+            AppStrings.dealerEndOfDayByDealerTitle.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,
@@ -449,7 +450,7 @@ class _RecentSection extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                AppStrings.dealerEndOfDayRecentTitle.toUpperCase(),
+                AppStrings.dealerEndOfDayRecentTitle.trUpper,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,

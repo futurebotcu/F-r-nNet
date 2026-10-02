@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Şoförler — patron/ticari kullanıcı yönetim listesi (Sprint 2).
 ///
@@ -313,7 +314,7 @@ class _DriverInitial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final letter = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+    final letter = name.trim().isEmpty ? '?' : name.trim()[0].trUpper;
     return Container(
       width: 40,
       height: 40,

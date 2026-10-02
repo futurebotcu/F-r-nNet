@@ -17,6 +17,7 @@ import '../../subscriptions/providers/subscription_providers.dart';
 import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../providers/bakery_providers.dart';
 import '../widgets/ledger_tables.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Fırın Defteri — basit dönem raporu (Bugün / Dün / 7 Gün / 30 Gün).
 /// PDF/Excel/grafik YOK (V2) — sade kart/liste.
@@ -132,7 +133,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      '${df.format(r.from)} – ${df.format(r.to)}'.toUpperCase(),
+                      '${df.format(r.from)} – ${df.format(r.to)}'.trUpper,
                       style: const TextStyle(
                         color: AppColors.textMuted,
                         fontWeight: FontWeight.w700,

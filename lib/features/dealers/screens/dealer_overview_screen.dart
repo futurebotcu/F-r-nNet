@@ -21,6 +21,7 @@ import '../widgets/dealer_kpi_tile.dart';
 import '../widgets/dealer_picker_sheet.dart';
 import '../widgets/dealer_pulse_card.dart';
 import '../widgets/quick_payment_sheet.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi Defteri Genel Bakış ekranı (Sprint 6B).
 ///
@@ -205,7 +206,7 @@ class _RecentActivitySection extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                AppStrings.dealerOverviewRecentActivityTitle.toUpperCase(),
+                AppStrings.dealerOverviewRecentActivityTitle.trUpper,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,
@@ -402,7 +403,7 @@ class _QuickActionsSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
-            AppStrings.dealerOverviewQuickActionsTitle.toUpperCase(),
+            AppStrings.dealerOverviewQuickActionsTitle.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,

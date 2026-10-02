@@ -19,6 +19,7 @@ import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../widgets/dealer_avatar.dart';
 import '../widgets/dealer_filter_chip.dart';
+import '../../../core/utils/tr_case.dart';
 
 class DealerListScreen extends ConsumerStatefulWidget {
   const DealerListScreen({super.key});
@@ -442,7 +443,7 @@ class _BalanceFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label.toUpperCase(),
+                label.trUpper,
                 style: const TextStyle(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,
@@ -469,7 +470,7 @@ class _BalanceFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                AppStrings.dealerCardLastTxLabel.toUpperCase(),
+                AppStrings.dealerCardLastTxLabel.trUpper,
                 style: const TextStyle(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,
@@ -524,7 +525,7 @@ class _Badge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.30), width: 0.6),
       ),
       child: Text(
-        label.toUpperCase(),
+        label.trUpper,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w800,

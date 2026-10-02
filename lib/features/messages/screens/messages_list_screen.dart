@@ -24,6 +24,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../messaging/models/conversation.dart';
 import '../../messaging/providers/messaging_providers.dart';
+import '../../../core/utils/tr_case.dart';
 
 class MessagesListScreen extends ConsumerWidget {
   const MessagesListScreen({super.key});
@@ -132,7 +133,7 @@ class _ConversationTile extends StatelessWidget {
     final name = (conversation.otherUserName ?? '').isNotEmpty
         ? conversation.otherUserName!
         : AppStrings.messagesUnknownUser;
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     final last = conversation.lastMessageContent ?? '';
     final ctxLabel = _contextLabel();
     final time = conversation.lastMessageCreatedAt;

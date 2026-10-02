@@ -17,6 +17,7 @@ import '../services/dealer_period.dart';
 import '../widgets/dealer_avatar.dart';
 import '../widgets/dealer_filter_chip.dart';
 import '../widgets/dealer_kpi_tile.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi Defteri mini-app Raporlar tab (toplu + bayi bazlı rapor).
 ///
@@ -195,7 +196,7 @@ class _SummarySection extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                AppStrings.dealerReportsSummaryTitle.toUpperCase(),
+                AppStrings.dealerReportsSummaryTitle.trUpper,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,
@@ -309,7 +310,7 @@ class _ByDealerSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
-            AppStrings.dealerReportsByDealerTitle.toUpperCase(),
+            AppStrings.dealerReportsByDealerTitle.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,

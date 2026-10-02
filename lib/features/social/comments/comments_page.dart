@@ -40,6 +40,7 @@ import '../../safety/widgets/report_sheet.dart';
 import '../models/social_comment.dart';
 import '../post/widgets/feed_post_image.dart';
 import '../providers/social_providers.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Cevap hedefi (tek-seviye): bir ÜST yoruma cevap yazılırken composer bunu
 /// okuyup `parentCommentId` geçirir. "Cevapla" set eder; gönderim/iptal
@@ -385,7 +386,7 @@ class _PostContextHeader extends StatelessWidget {
                     color: AppColors.primary.withValues(alpha: 0.10),
                   ),
                   child: Text(
-                    post.author.isNotEmpty ? post.author[0].toUpperCase() : '?',
+                    post.author.isNotEmpty ? post.author[0].trUpper : '?',
                     style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w800,
@@ -591,7 +592,7 @@ class _CommentItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final initial = (comment.authorName.isNotEmpty)
-        ? comment.authorName[0].toUpperCase()
+        ? comment.authorName[0].trUpper
         : '?';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),

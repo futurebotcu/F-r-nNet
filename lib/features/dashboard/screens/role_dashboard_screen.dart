@@ -23,6 +23,7 @@ import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../../subscriptions/widgets/plan_status_card.dart';
 import '../../subscriptions/widgets/supplier_launch_gift_sheet.dart';
 import '../services/role_panel_cards.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Panel tab'ının yeni kök ekranı.
 ///
@@ -267,7 +268,7 @@ class _RoleBadgeStrip extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  account.label.toUpperCase(),
+                  account.label.trUpper,
                   style: const TextStyle(
                     color: AppColors.softGold,
                     fontWeight: FontWeight.w800,

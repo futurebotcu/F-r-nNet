@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../models/group_category.dart';
 import '../models/social_group.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Grupların hem listelerde hem Feed carousel'inde kullanılan ortak kartı.
 class GroupCard extends StatelessWidget {
@@ -428,7 +429,7 @@ class _MiniBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.22), width: 0.6),
       ),
       child: Text(
-        label.toUpperCase(),
+        label.trUpper,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w800,

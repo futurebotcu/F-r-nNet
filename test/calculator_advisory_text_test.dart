@@ -52,7 +52,7 @@ void main() {
     // Satış fiyatı alanı (8 alanın sonuncusu) maliyetin altına çekilir.
     final fields = find.byType(AppNumberField);
     await tester.enterText(fields.at(7), '1');
-    await tester.tap(find.text('HESAPLA'));
+    await tester.tap(find.text('Hesapla'));
     await tester.pumpAndSettle();
     expect(find.textContaining('zarar ediyorsun'), findsOneWidget);
   });

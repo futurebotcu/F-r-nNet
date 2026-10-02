@@ -25,6 +25,7 @@ import '../../models/b2b_store.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_campaign_card.dart';
 import '../../widgets/b2b_product_card.dart';
+import '../../../../core/utils/tr_case.dart';
 
 class SupplierStoreTab extends ConsumerWidget {
   const SupplierStoreTab({super.key});
@@ -327,7 +328,7 @@ class _LabeledChips extends StatelessWidget {
             Icon(icon, size: 14, color: AppColors.textMuted),
             const SizedBox(width: 5),
             Text(
-              label.toUpperCase(),
+              label.trUpper,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,

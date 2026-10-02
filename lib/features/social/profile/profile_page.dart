@@ -57,6 +57,7 @@ import 'widgets/profile_about_section.dart';
 import 'widgets/profile_category_tabs.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_statistics.dart';
+import '../../../core/utils/tr_case.dart';
 
 class SocialProfilePage extends ConsumerStatefulWidget {
   const SocialProfilePage({super.key, required this.userId});
@@ -866,7 +867,7 @@ class _JobSeekCard extends StatelessWidget {
   static String _capitalizeFirst(String s) {
     final t = s.trim();
     if (t.isEmpty) return t;
-    return t[0].toUpperCase() + t.substring(1);
+    return t[0].trUpper + t.substring(1);
   }
 
   @override

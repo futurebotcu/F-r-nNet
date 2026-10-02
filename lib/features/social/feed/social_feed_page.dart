@@ -38,6 +38,7 @@ import '../composer/inline_composer_card.dart';
 import '../post/social_post_card.dart';
 import '../stories/social_stories_carousel.dart';
 import 'feed_segment_provider.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// FırınNet'in ana sosyal feed sayfası — donor-first.
 ///
@@ -182,7 +183,7 @@ class ProfileAvatarAction extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
     final initial = (profile?.displayName.isNotEmpty ?? false)
-        ? profile!.displayName[0].toUpperCase()
+        ? profile!.displayName[0].trUpper
         : 'M';
     void onTap() {
       final user = ref.read(currentAuthUserProvider);

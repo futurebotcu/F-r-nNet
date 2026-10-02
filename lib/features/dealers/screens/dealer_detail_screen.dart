@@ -26,6 +26,7 @@ import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../repositories/driver_permission.dart';
 import '../widgets/quick_payment_sheet.dart';
+import '../../../core/utils/tr_case.dart';
 
 class DealerDetailScreen extends ConsumerWidget {
   const DealerDetailScreen({super.key, required this.dealerId});
@@ -540,7 +541,7 @@ class _MiniMetric extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label.toUpperCase(),
+          label.trUpper,
           style: const TextStyle(
             color: AppColors.textMuted,
             fontWeight: FontWeight.w700,

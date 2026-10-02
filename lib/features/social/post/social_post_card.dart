@@ -44,6 +44,7 @@ import '../../safety/widgets/report_sheet.dart';
 import '../comments/comments_page.dart';
 import 'widgets/feed_post_image.dart';
 import 'widgets/social_post_video.dart';
+import '../../../core/utils/tr_case.dart';
 
 class SocialPostCard extends ConsumerStatefulWidget {
   const SocialPostCard({super.key, required this.post});
@@ -523,7 +524,7 @@ class _Header extends StatelessWidget {
                 boxShadow: AppShadow.card,
               ),
               child: Text(
-                post.author.isNotEmpty ? post.author[0].toUpperCase() : '?',
+                post.author.isNotEmpty ? post.author[0].trUpper : '?',
                 style: const TextStyle(
                   color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,

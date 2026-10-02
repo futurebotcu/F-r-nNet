@@ -34,6 +34,7 @@ import 'package:firin_defter/features/social_groups/repositories/local_social_gr
 import 'package:firin_defter/features/social_groups/repositories/social_group_repository.dart';
 import 'package:firin_defter/features/social_groups/screens/group_detail_screen.dart';
 import 'package:firin_defter/features/social_groups/widgets/group_card.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 SocialGroup _mkGroup({
   required String id,
@@ -92,7 +93,7 @@ void main() {
           ),
         ));
         expect(
-          find.text(AppStrings.groupApprovalRequiredBadge.toUpperCase()),
+          find.text(AppStrings.groupApprovalRequiredBadge.trUpper),
           findsOneWidget,
         );
       },

@@ -23,7 +23,7 @@ void main() {
     await pump(tester, const MorningProductionPlannerScreen());
     expect(find.text(AppStrings.calcMorningPlanTitle), findsOneWidget);
     expect(find.text('SONUÇ'), findsOneWidget);
-    await tester.tap(find.text(AppStrings.calculate.toUpperCase()));
+    await tester.tap(find.text(AppStrings.calculate));
     await tester.pumpAndSettle();
     expect(find.text('SONUÇ'), findsOneWidget);
   });
@@ -34,7 +34,7 @@ void main() {
     await pump(tester, const WaterTemperatureScreen());
     expect(find.text(AppStrings.calcWaterTempTitle), findsOneWidget);
     expect(find.text('SONUÇ'), findsOneWidget);
-    await tester.tap(find.text(AppStrings.calculate.toUpperCase()));
+    await tester.tap(find.text(AppStrings.calculate));
     await tester.pumpAndSettle();
     expect(find.text('SONUÇ'), findsOneWidget);
   });
@@ -45,7 +45,7 @@ void main() {
     await pump(tester, const CostProfitScreen());
     expect(find.text(AppStrings.calcCostProfitTitle), findsOneWidget);
     expect(find.text('SONUÇ'), findsOneWidget);
-    await tester.tap(find.text(AppStrings.calculate.toUpperCase()));
+    await tester.tap(find.text(AppStrings.calculate));
     await tester.pumpAndSettle();
     expect(find.text('SONUÇ'), findsOneWidget);
   });

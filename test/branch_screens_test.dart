@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 /// Şube Yönetimi V1 — ekran/görünürlük testleri.
 class _FixedProfileController extends ProfileController {
@@ -574,11 +575,11 @@ void main() {
       await _pump(tester, const BranchManagementScreen(), repo: repo);
       // StatCard etiketi uppercase render eder.
       expect(
-        find.text(AppStrings.branchKpiAttention.toUpperCase()),
+        find.text(AppStrings.branchKpiAttention.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.branchKpiCompletedToday.toUpperCase()),
+        find.text(AppStrings.branchKpiCompletedToday.trUpper),
         findsOneWidget,
       );
     });

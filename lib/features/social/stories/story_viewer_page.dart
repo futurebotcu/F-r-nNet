@@ -24,6 +24,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../models/social_profile.dart';
 import '../providers/social_providers.dart';
 import 'models/social_story.dart';
+import '../../../core/utils/tr_case.dart';
 
 class SocialStoryViewerPage extends ConsumerStatefulWidget {
   const SocialStoryViewerPage({super.key, required this.ownerId});
@@ -299,7 +300,7 @@ class _OwnerChip extends StatelessWidget {
       data: (p) => p.displayNameOrFallback,
       orElse: () => 'FırınNet Kullanıcısı',
     );
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.s,

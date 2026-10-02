@@ -9,6 +9,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi seçici modal (Sprint 6B). Genel Bakış'taki "Teslimat Gir" ve
 /// "Ödeme Al" CTA'ları bu sheet'i çağırır; kullanıcı bayi seçince
@@ -258,7 +259,7 @@ class _DealerRow extends StatelessWidget {
                 radius: 18,
                 backgroundColor: AppColors.softGold.withValues(alpha: 0.18),
                 child: Text(
-                  dealer.name.isNotEmpty ? dealer.name[0].toUpperCase() : '?',
+                  dealer.name.isNotEmpty ? dealer.name[0].trUpper : '?',
                   style: TextStyle(
                     color: AppColors.softGold,
                     fontWeight: FontWeight.w800,

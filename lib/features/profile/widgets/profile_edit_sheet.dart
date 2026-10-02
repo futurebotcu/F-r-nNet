@@ -34,6 +34,7 @@ import '../models/bakery_profile.dart';
 import '../providers/profile_provider.dart';
 import '../providers/public_profile_detail_provider.dart';
 import '../services/avatar_upload_service.dart';
+import '../../../core/utils/tr_case.dart';
 
 class ProfileEditSheet extends ConsumerStatefulWidget {
   const ProfileEditSheet({super.key});
@@ -289,7 +290,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                     _AvatarTile(
                       avatarUrl: _avatarUrl,
                       initial: _name.text.trim().isNotEmpty
-                          ? _name.text.trim()[0].toUpperCase()
+                          ? _name.text.trim()[0].trUpper
                           : '?',
                       uploading: _uploading,
                       onTap: _uploading || _saving

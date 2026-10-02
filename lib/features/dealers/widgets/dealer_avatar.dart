@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../models/dealer.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi avatarı — bayi adının ilk harfini renkli kart/daire içinde
 /// gösterir (Quality Patch v2).
@@ -41,7 +42,7 @@ class DealerAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = _resolveColors(palette, dealer.isActive);
     final initial = dealer.name.isNotEmpty
-        ? dealer.name[0].toUpperCase()
+        ? dealer.name[0].trUpper
         : fallbackChar;
 
     return Container(
