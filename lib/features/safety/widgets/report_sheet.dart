@@ -223,7 +223,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                     (_reason != null && !_submitting) ? _submit : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
-                  foregroundColor: AppColors.surface,
+                  foregroundColor: AppColors.brandInk,
                   disabledBackgroundColor: AppColors.surfaceLine,
                   disabledForegroundColor: AppColors.textMuted,
                   shape: RoundedRectangleBorder(

@@ -6,6 +6,21 @@ import 'app_tokens.dart';
 
 final TextStyle premiumFont = const TextStyle(fontFamily: 'Inter');
 
+/// Ortak buton varyantları (tema varsayılanı = birincil sarı CTA).
+class AppButtonStyles {
+  const AppButtonStyles._();
+
+  /// Geri alınamaz işlem (sil, engelle, hesabı sil): kırmızı zemin + beyaz
+  /// metin. Yalnız `backgroundColor: danger` vermek tema mürekkep metnini
+  /// kırmızı üstünde bırakıyordu (okunmaz).
+  static final ButtonStyle destructive = FilledButton.styleFrom(
+    backgroundColor: AppColors.danger,
+    foregroundColor: Colors.white,
+    disabledBackgroundColor: AppColors.danger.withValues(alpha: 0.35),
+    disabledForegroundColor: Colors.white70,
+  );
+}
+
 class AppTheme {
   const AppTheme._();
 

@@ -107,7 +107,7 @@ class RecipesListScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni reçete'),
         backgroundColor: AppColors.copper,
-        foregroundColor: AppColors.surface,
+        foregroundColor: AppColors.brandInk,
       ),
     );
   }
@@ -248,7 +248,7 @@ class _RecipeCard extends ConsumerWidget {
                   label: const Text('Paylaş'),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: AppColors.surface,
+                    foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),

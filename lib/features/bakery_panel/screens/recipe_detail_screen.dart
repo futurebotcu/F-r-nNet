@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -105,7 +106,7 @@ class RecipeDetailScreen extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            style: AppButtonStyles.destructive,
             child: const Text('Sil'),
           ),
         ],
@@ -213,7 +214,7 @@ class _Body extends ConsumerWidget {
           label: const Text('Reçeteyi Paylaş'),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.surface,
+            foregroundColor: AppColors.brandInk,
             minimumSize: const Size.fromHeight(52),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.m),
@@ -283,7 +284,7 @@ class _Header extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.menu_book_rounded,
-                  color: AppColors.primary,
+                  color: AppColors.brandInk,
                   size: 20,
                 ),
               ),
@@ -297,7 +298,7 @@ class _Header extends StatelessWidget {
                       Text(
                         recipe.productName.trUpper,
                         style: const TextStyle(
-                          color: AppColors.primary,
+                          color: AppColors.brandInk,
                           fontWeight: FontWeight.w800,
                           fontSize: 11,
                           letterSpacing: 1.4,
@@ -352,7 +353,7 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         text.trUpper,
         style: const TextStyle(
-          color: AppColors.primary,
+          color: AppColors.brandInk,
           fontWeight: FontWeight.w800,
           fontSize: 11.5,
           letterSpacing: 1.4,
@@ -471,7 +472,7 @@ class _IngredientList extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.circle,
-                      color: AppColors.primary,
+                      color: AppColors.brandInk,
                       size: 8,
                     ),
                   ),
@@ -506,7 +507,7 @@ class _IngredientList extends StatelessWidget {
                   Text(
                     '${NumberFormatter.decimal(items[i].amount)} ${items[i].unit}',
                     style: const TextStyle(
-                      color: AppColors.primary,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
                       letterSpacing: -0.1,
@@ -560,7 +561,7 @@ class _StepList extends StatelessWidget {
                     child: Text(
                       '${sorted[i].order}',
                       style: const TextStyle(
-                        color: AppColors.primary,
+                        color: AppColors.brandInk,
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
                       ),
@@ -673,7 +674,7 @@ class _BakeMetric extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.primary, size: 16),
+          Icon(icon, color: AppColors.brandInk, size: 16),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,7 +725,7 @@ class _MediaPlaceholder extends StatelessWidget {
             ),
             child: const Icon(
               Icons.photo_library_outlined,
-              color: AppColors.primary,
+              color: AppColors.brandInk,
               size: 22,
             ),
           ),
@@ -913,7 +914,7 @@ class _ShareOption extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 18),
+                child: Icon(icon, color: AppColors.brandInk, size: 18),
               ),
               const SizedBox(width: AppSpacing.m),
               Expanded(
@@ -947,7 +948,7 @@ class _ShareOption extends StatelessWidget {
                             child: const Text(
                               'YAKINDA',
                               style: TextStyle(
-                                color: AppColors.primary,
+                                color: AppColors.brandInk,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 9.5,
                                 letterSpacing: 1.0,

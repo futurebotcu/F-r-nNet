@@ -225,7 +225,7 @@ Future<FeedBoundaryAction> showFeedBoundarySheet(
                   label: Text(copy.ctaLabel!),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.copper,
-                    foregroundColor: AppColors.surface,
+                    foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),

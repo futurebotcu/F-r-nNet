@@ -258,7 +258,7 @@ class _AuthRequiredSheet extends StatelessWidget {
                 label: const Text(AppStrings.authContinueWithGoogle),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
-                  foregroundColor: AppColors.surface,
+                  foregroundColor: AppColors.brandInk,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),

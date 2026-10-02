@@ -468,7 +468,7 @@ class _RecentSection extends ConsumerWidget {
                     vertical: 0,
                   ),
                   visualDensity: VisualDensity.compact,
-                  foregroundColor: AppColors.copper,
+                  foregroundColor: AppColors.brandInk,
                 ),
                 child: const Text(AppStrings.dealerEndOfDaySeeAll),
               ),
@@ -600,7 +600,7 @@ class _ShareCta extends StatelessWidget {
         label: const Text(AppStrings.dealerEndOfDayShareCta),
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.copper,
+          foregroundColor: AppColors.brandInk,
           side: const BorderSide(color: AppColors.copper, width: 1.0),
         ),
       ),

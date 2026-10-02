@@ -78,7 +78,7 @@ class _DealerReportsTabScreenState
                   child: Row(
                     children: [
                       Icon(Icons.event_available_rounded,
-                          size: 20, color: AppColors.copper),
+                          size: 20, color: AppColors.brandInk),
                       SizedBox(width: AppSpacing.m),
                       Expanded(
                         child: Text('Gün Sonu',

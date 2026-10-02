@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/premium/premium_card.dart';
@@ -182,7 +183,7 @@ class _DealerTransactionHistoryScreenState
             child: const Text('Vazgeç'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            style: AppButtonStyles.destructive,
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Sil'),
           ),

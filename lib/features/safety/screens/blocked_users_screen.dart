@@ -120,7 +120,7 @@ class _BlockedUserRow extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => unblockUser(context, ref, userId: userId),
-            style: TextButton.styleFrom(foregroundColor: AppColors.copper),
+            style: TextButton.styleFrom(foregroundColor: AppColors.brandInk),
             child: const Text(
               AppStrings.safetyActionUnblock,
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),

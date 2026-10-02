@@ -225,7 +225,7 @@ class _RecentActivitySection extends ConsumerWidget {
                     vertical: 0,
                   ),
                   visualDensity: VisualDensity.compact,
-                  foregroundColor: AppColors.copper,
+                  foregroundColor: AppColors.brandInk,
                 ),
                 child: const Text(AppStrings.dealerOverviewSeeAll),
               ),

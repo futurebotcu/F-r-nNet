@@ -93,13 +93,13 @@ class _PulseCard extends StatelessWidget {
               const Icon(
                 Icons.show_chart_rounded,
                 size: 18,
-                color: AppColors.copper,
+                color: AppColors.brandInk,
               ),
               const SizedBox(width: AppSpacing.s),
               Text(
                 AppStrings.dealerPulseTitle,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.copper,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.6,
                 ),
