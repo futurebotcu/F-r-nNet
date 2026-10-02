@@ -31,7 +31,7 @@
 // Hata: 4xx/5xx { "error": "<code>" } — generic kodlar.
 
 // deno-lint-ignore-file
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,7 +48,8 @@ function jsonResponse(payload: unknown, status: number): Response {
 }
 
 async function removeStoragePrefix(
-  adminClient: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  adminClient: SupabaseClient<any, 'public', 'public', any, any>,
   bucket: string,
   prefix: string,
 ): Promise<void> {
@@ -88,7 +89,8 @@ async function removeStoragePrefix(
 }
 
 async function removeUserStorage(
-  adminClient: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  adminClient: SupabaseClient<any, 'public', 'public', any, any>,
   userId: string,
 ): Promise<void> {
   const userPrefixBuckets = [
