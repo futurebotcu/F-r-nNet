@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<title>FırınNet — Gizlilik Politikası</title>
+<style>
+  :root { --ink:#1f2430; --muted:#5b6472; --line:#e7e9ee; --accent:#caa53a; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink); line-height: 1.6; margin: 0; background: #fafafa;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; background: #fff; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  h2 { font-size: 1.2rem; margin: 28px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  h3 { font-size: 1.02rem; margin: 16px 0 4px; }
+  .meta { color: var(--muted); font-size: .92rem; margin-bottom: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: .95rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f6f6f4; }
+  blockquote { margin: 10px 0; padding: 10px 14px; background: #fbf7e8; border-left: 3px solid var(--accent); }
+  a { color: #b8901f; }
+  .note { color: var(--muted); font-size: .88rem; }
+  footer { margin-top: 36px; color: var(--muted); font-size: .88rem; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FırınNet — Gizlilik Politikası</h1>
+  <p class="meta"><strong>Son güncelleme:</strong> 23 Haziran 2026</p>
+
+  <p>Bu Gizlilik Politikası, <strong>FırınNet</strong> mobil uygulamasının (&quot;Uygulama&quot;) kullanıcılarından hangi verileri topladığını, bu verileri nasıl kullandığını ve koruduğunu açıklar. Uygulamayı kullanarak bu politikayı kabul etmiş olursunuz.</p>
+  <p>FırınNet; fırıncılar, tedarikçiler ve işletmeler için tasarlanmış bir mesleki ağ ve işletme aracıdır. Bayi defteri, işlem/teslimat/tahsilat takibi, B2B tedarik ve teklif ağı, şoför yönetimi ile mesleki sosyal akış sunar.</p>
+
+  <h2>1. Topladığımız Veriler</h2>
+  <h3>a) Hesap bilgileri</h3>
+  <p>Ad / görünen ad, e-posta adresi, telefon numarası (opsiyonel).</p>
+  <h3>b) Profil ve işletme bilgileri</h3>
+  <p>Hesap tipi (bireysel / işletme / toptancı), meslek/rol, şehir, işletme/profil tanıtımı ve profil görseli (opsiyonel).</p>
+  <h3>c) İşletme / defter kayıtları</h3>
+  <p>Bayi defteri kayıtları (bayi/müşteri, işlem, teslimat, tahsilat, fiyat); borç &amp; gider ve personel kayıtları; şoför ataması ve şoför işlem kayıtları.</p>
+  <h3>d) B2B (tedarik/teklif) verileri</h3>
+  <p>Ürün, kampanya ve mağaza bilgileri; teklif talepleri, teklifler ve ilgili mesaj/lead kayıtları.</p>
+  <h3>e) Kullanıcı içerikleri</h3>
+  <p>Gönderiler, yorumlar, hikâyeler; yüklediğiniz görsel/video medya; mesajlaşma içerikleri.</p>
+  <h3>f) Teknik veriler</h3>
+  <p>Cihaz bildirim (push) tokenı; çökme (crash) tanılama verisi: hata yığını (stack trace) ve cihaz model/işletim sistemi bilgisi.</p>
+
+  <h2>2. Verileri Nasıl Kullanırız</h2>
+  <ul>
+    <li>Hesabınızı oluşturmak ve oturum açmanızı sağlamak</li>
+    <li>Bayi defteri, B2B teklif ağı, mesajlaşma ve sosyal akış gibi temel özellikleri sunmak</li>
+    <li>Size bildirim göndermek</li>
+    <li>Uygulama kararlılığını iyileştirmek (çökme tanılama)</li>
+    <li>Güvenlik, kötüye kullanımın önlenmesi ve yasal yükümlülükler</li>
+  </ul>
+
+  <h2>3. Kamera İzni</h2>
+  <p>Kamera erişimi <strong>yalnızca</strong> siz bir fotoğraf veya video <strong>çekmek istediğinizde</strong> (gönderi, hikâye, ürün/kampanya görseli, ilan görseli veya sohbet medyası eklerken) kullanılır. Galeriden seçim kamera izni gerektirmez. Kamera arka planda çalışmaz; izin vermemeniz uygulamanın diğer bölümlerini etkilemez.</p>
+
+  <h2>4. Bildirim İzni</h2>
+  <p>Bildirimleri; sipariş/teklif, bayi/işlem, sosyal etkileşim (yorum, takip, mesaj) ve sistem bilgilendirmeleri için kullanırız. Bildirim iznini reddetmeniz uygulamanın çalışmasını engellemez; uygulama içi bildirim merkezi yine çalışır.</p>
+
+  <h2>5. Üçüncü Taraf Hizmetler</h2>
+  <table>
+    <tr><th>Hizmet</th><th>Amaç</th></tr>
+    <tr><td>Supabase</td><td>Kimlik doğrulama, veritabanı ve dosya/medya depolama (arka uç altyapısı)</td></tr>
+    <tr><td>Firebase Cloud Messaging (FCM)</td><td>Anlık (push) bildirim gönderimi</td></tr>
+    <tr><td>Firebase Crashlytics</td><td>Çökme tanılama (yalnız hata yığını + cihaz tanılama; kişiye bağlanmaz)</td></tr>
+    <tr><td>Google Sign-In</td><td>Google hesabıyla güvenli oturum açma</td></tr>
+  </table>
+  <p>Bu hizmetlerin kendi gizlilik politikaları geçerlidir. Verileriniz yalnızca ilgili hizmetin sağlanması amacıyla işlenir.</p>
+
+  <h2>6. Veri Paylaşımı</h2>
+  <p>Kişisel verileriniz <strong>satış veya reklam amacıyla üçüncü taraflarla paylaşılmaz, satılmaz veya kiralanmaz.</strong> Veriler yalnızca yukarıdaki hizmetlerin sağlanması ve yasal zorunluluklar için işlenir. Çökme tanılama verisi kullanıcı kimliğine bağlanmaz.</p>
+
+  <h2>7. Veri Güvenliği</h2>
+  <p>Veriler, satır-düzeyi güvenlik (RLS) politikalarıyla korunan altyapıda saklanır; her kullanıcı yalnızca kendi verisine erişir. Sohbet medyası özel olarak imzalı bağlantılarla sunulur. İletişim HTTPS üzerinden şifrelidir.</p>
+
+  <h2>8. Hesap ve Veri Silme</h2>
+  <blockquote><strong>Profil → Hesabı Sil</strong> (iki aşamalı onay)</blockquote>
+  <p>Silme talebi sonrası hesabınız ve ilişkili kişisel verileriniz silinir. İlişkili içerik ve kayıtlar (gönderiler, yorumlar, bayi/işlem kayıtları, davetler vb.) hesabınızla birlikte kaldırılır. Yasal veya mali yükümlülük gerektiren sınırlı kayıtlar, ilgili mevzuatın öngördüğü süre boyunca saklanabilir; bu süre sonunda silinir.</p>
+
+  <h2>9. Çocukların Gizliliği</h2>
+  <p>FırınNet mesleki bir uygulamadır ve 18 yaşından küçük kullanıcılar hedeflenmez. Bilerek küçüklerden veri toplamayız.</p>
+
+  <h2>10. Politika Değişiklikleri</h2>
+  <p>Bu politikayı zaman zaman güncelleyebiliriz. Önemli değişikliklerde &quot;Son güncelleme&quot; tarihi yenilenir. Güncel sürüm her zaman bu sayfada yayımlanır.</p>
+
+  <h2>11. İletişim</h2>
+  <p>Gizlilikle ilgili soru, talep veya veri silme istekleri için:</p>
+  <p><strong>E-posta:</strong> <a href="mailto:info@fırın.net">info@fırın.net</a></p>
+
+  <footer>FırınNet — Fırıncının dijital ağı.</footer>
+</div>
+</body>
+</html>
