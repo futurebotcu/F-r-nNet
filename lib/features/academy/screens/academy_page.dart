@@ -27,6 +27,9 @@ class AcademyPage extends ConsumerWidget {
         bottom: false,
         child: NotificationListener<ScrollNotification>(
           onNotification: (n) {
+            // Yalnız ana dikey liste: yatay tarif/konu şeritleri sayfalamayı
+            // tetiklemez.
+            if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
             if (n.metrics.pixels > n.metrics.maxScrollExtent - 400) {
               ref.read(academyFeedProvider.notifier).loadMore();
             }
@@ -70,6 +73,22 @@ class AcademyPage extends ConsumerWidget {
                       child: SocialPostCard(
                         key: ValueKey('academy_post_${p.feedEntryKey}'),
                         post: p,
+                      ),
+                    ),
+                  // Sonraki sayfa hatası sessiz kaybolmaz: satır içi
+                  // Tekrar dene (kaydırma otomatik yeniden denemez).
+                  if (feed.error && !feed.loading)
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.m),
+                      child: Center(
+                        child: TextButton.icon(
+                          key: const ValueKey('academy_load_more_retry'),
+                          onPressed: () => ref
+                              .read(academyFeedProvider.notifier)
+                              .loadMore(retry: true),
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text(AppStrings.academyLoadMoreError),
+                        ),
                       ),
                     ),
                   if (feed.loading)
@@ -250,7 +269,20 @@ class _RecipesStrip extends ConsumerWidget {
     final recipes = ref.watch(academyRecipesProvider);
     return recipes.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      // Hata kalıcı boşluk olmasın: kompakt Tekrar dene (provider yeniden
+      // istenir). Çekip-yenile de şeridi tazeler.
+      error: (_, __) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const ValueKey('academy_recipes_retry'),
+            onPressed: () => ref.invalidate(academyRecipesProvider),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text(AppStrings.academyRecipesLoadError),
+          ),
+        ),
+      ),
       data: (list) {
         if (list.isEmpty) return const SizedBox.shrink();
         return Column(

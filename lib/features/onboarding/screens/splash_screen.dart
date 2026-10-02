@@ -13,6 +13,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/guest_mode_provider.dart';
 import '../../auth/services/guest_mode_storage.dart';
 import '../../profile/providers/profile_provider.dart';
+import '../../notifications/notification_routing.dart';
 import '../services/onboarding_seen_storage.dart';
 
 /// V1.3 — Splash boot decision.
@@ -56,6 +57,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   /// doğrudan `/auth`. (Yalnız oturum YOK + guest DEĞİL durumunda çağrılır;
   /// guest/login akışı bu yoldan geçmez, korunur.)
   Future<void> _goAuthOrIntro() async {
+    PendingNotificationRoute.discardOnBoot();
     final seen = await OnboardingSeenStorage.instance.read();
     if (!mounted) return;
     context.go(seen ? AppRoutes.authEntry : AppRoutes.intro);
@@ -71,6 +73,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!AppConfig.supabaseEnabled) {
       if (!mounted) return;
       if (guest) {
+        PendingNotificationRoute.discardOnBoot();
         ref.read(profileControllerProvider.notifier).useGuest();
         context.go(AppRoutes.feed);
       } else {
@@ -102,6 +105,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (user == null) {
       if (!mounted) return;
       if (guest) {
+        PendingNotificationRoute.discardOnBoot();
         ref.read(profileControllerProvider.notifier).useGuest();
         context.go(AppRoutes.feed);
       } else {
@@ -114,6 +118,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final repo = ref.read(profileRepositoryProvider);
     if (repo == null) {
       if (!mounted) return;
+      PendingNotificationRoute.discardOnBoot();
       context.go(AppRoutes.createProfile);
       return;
     }
@@ -131,6 +136,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           .timeout(const Duration(seconds: 4));
       if (!mounted) return;
       if (profile == null || !profile.isComplete) {
+        PendingNotificationRoute.discardOnBoot();
         context.go(AppRoutes.createProfile);
         return;
       }
@@ -139,11 +145,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       if (!mounted) return;
       // V1.3.5 — Login sonrası ilk açılış Feed (sektör akışı). Panel'e
       // bottom nav 5. tab'dan ulaşılır. Brief ürün kararı.
-      context.go(AppRoutes.feed);
+      // Cold-start push: bekleyen bildirim route'u feed'in ÜSTÜNE açılır.
+      goHomeThenPending(GoRouter.of(context), AppRoutes.feed);
     } catch (e) {
       debugPrint('[FirinNet][Splash] profile fetch failed (offline?): $e');
       if (!mounted) return;
-      context.go(AppRoutes.feed);
+      goHomeThenPending(GoRouter.of(context), AppRoutes.feed);
     }
   }
 

@@ -53,21 +53,23 @@ class PushNotificationService {
   /// background (onMessageOpenedApp). Foreground'da sistem bildirimi BASILMAZ
   /// (Android default) → mevcut in-app davranış korunur.
   static void _setupInteractionHandlers() {
+    // Cold-start: route Splash oturum kararını verene kadar bekletilir
+    // (router hazır değil + Splash'in go(feed)'i hedefi ezerdi).
     FirebaseMessaging.instance.getInitialMessage().then((msg) {
       if (msg != null) _navigateFromMessage(msg);
+    }).catchError((Object e) {
+      debugPrint('[FirinNet][Push] getInitialMessage failed: $e');
     });
     FirebaseMessaging.onMessageOpenedApp.listen(_navigateFromMessage);
   }
 
   static void _navigateFromMessage(RemoteMessage message) {
     final route = message.data['route'];
-    if (route == null || route.isEmpty) return;
-    final router = appRouter;
-    if (router == null) return;
+    if (route is! String || route.isEmpty) return;
     try {
       // UI-NAV-002: shell kökü `go`, derin route `push` → bildirimden açılan
       // derin ekrandan Android geri tuşu app'ten çıkmaz (önceki ekrana döner).
-      navigateToNotificationRoute(router, route);
+      PendingNotificationRoute.handleTap(route, appRouter);
       debugPrint('[FirinNet][Push] tap → route=$route');
     } catch (e) {
       // Geçersiz route → güvenli fallback (no-op; app yine açılır).

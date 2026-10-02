@@ -26,6 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/feed_post.dart';
@@ -131,17 +132,19 @@ class SocialCommentsPage extends ConsumerWidget {
                   debugPrint('[FirinNet][Comments] list error: $e');
                   return _ScrollableShell(
                     post: post,
+                    // Statik metin yerine gerçek yeniden yükleme: yorum
+                    // listesi + post provider'ı yeniden istenir.
                     child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      child: Center(
-                        child: Text(
-                          AppStrings.feedCommentErrorGeneric,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                      padding: const EdgeInsets.all(AppSpacing.l),
+                      child: ErrorRetryState(
+                        key: const ValueKey('comments_error_retry'),
+                        compact: true,
+                        title: AppStrings.feedCommentErrorGeneric,
+                        subtitle: null,
+                        onRetry: () {
+                          ref.invalidate(socialCommentsProvider(postId));
+                          ref.invalidate(feedPostByIdProvider(postId));
+                        },
                       ),
                     ),
                   );

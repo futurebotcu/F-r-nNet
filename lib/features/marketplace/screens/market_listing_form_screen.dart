@@ -25,6 +25,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -90,6 +91,7 @@ class _MarketListingFormScreenState
 
   bool _saving = false;
   bool _loaded = false;
+  bool _loadFailed = false;
   // PR-UI-2 — kaydedilmemiş değişiklik koruması. `_hydrating` _loadExisting
   // sırasında Form.onChanged'in false-dirty üretmesini engeller.
   bool _dirty = false;
@@ -111,10 +113,20 @@ class _MarketListingFormScreenState
 
   Future<void> _loadExisting() async {
     _hydrating = true;
-    final m = await ref
-        .read(marketListingRepositoryProvider)
-        .getListing(widget.listingId!);
-    if (!mounted || m == null) {
+    if (_loadFailed) setState(() => _loadFailed = false);
+    final MarketListing? m;
+    try {
+      m = await ref
+          .read(marketListingRepositoryProvider)
+          .getListing(widget.listingId!);
+    } catch (_) {
+      // Ağ hatası: sonsuz yükleme yerine hata durumu + Tekrar dene / Geri.
+      _hydrating = false;
+      if (mounted) setState(() => _loadFailed = true);
+      return;
+    }
+    if (!mounted) return;
+    if (m == null) {
       _hydrating = false;
       setState(() => _loaded = true);
       return;
@@ -384,6 +396,18 @@ class _MarketListingFormScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (_loadFailed) {
+      return PremiumScaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: ErrorRetryState(
+            key: const ValueKey('market_form_load_error'),
+            title: 'İlan yüklenemedi',
+            onRetry: _loadExisting,
+          ),
+        ),
+      );
+    }
     if (!_loaded) {
       return const PremiumScaffold(
         body: Center(child: CircularProgressIndicator()),

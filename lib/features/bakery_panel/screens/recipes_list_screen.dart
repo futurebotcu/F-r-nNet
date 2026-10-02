@@ -9,6 +9,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/models/bakery_profile.dart';
@@ -73,7 +74,14 @@ class RecipesListScreen extends ConsumerWidget {
           skipLoadingOnReload: true,
           loading: () =>
               const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
-          error: (e, _) => _ErrorBox(message: '$e'),
+          // Ham istisna gösterilmez; Tekrar dene provider'ı yeniden ister.
+          error: (_, __) => Center(
+            child: ErrorRetryState(
+              key: const ValueKey('recipes_list_error'),
+              title: 'Reçeteler okunamadı',
+              onRetry: () => ref.invalidate(recipesListProvider),
+            ),
+          ),
           data: (items) {
             if (items.isEmpty) return const _EmptyState();
             return RefreshIndicator(
@@ -361,22 +369,6 @@ class _EmptyState extends StatelessWidget {
             onPressed: () => context.push(AppRoutes.recipeNew),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ErrorBox extends StatelessWidget {
-  const _ErrorBox({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.l),
-      child: Text(
-        'Reçeteler okunamadı: $message',
-        style: const TextStyle(color: AppColors.danger),
       ),
     );
   }

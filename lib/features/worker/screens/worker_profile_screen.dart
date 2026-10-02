@@ -9,6 +9,7 @@ import '../../../core/data/turkey_locations.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -90,6 +91,7 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
   static const int _maxSkillSelection = 10;
 
   bool _loading = true;
+  bool _loadFailed = false;
   bool _saving = false;
   WorkerProfile? _initial;
 
@@ -101,7 +103,25 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
 
   Future<void> _load() async {
     final repo = ref.read(workerRepositoryProvider);
-    final p = await repo.getMyProfile();
+    if (_loadFailed) {
+      setState(() {
+        _loadFailed = false;
+        _loading = true;
+      });
+    }
+    final WorkerProfile? p;
+    try {
+      p = await repo.getMyProfile();
+    } catch (_) {
+      // Ağ hatası: sonsuz yükleme yerine hata durumu + Tekrar dene / Geri.
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadFailed = true;
+        });
+      }
+      return;
+    }
     if (!mounted) return;
     if (p != null) {
       _initial = p;
@@ -259,6 +279,18 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
     if (_loading) {
       return const PremiumScaffold(
         body: Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+      );
+    }
+    if (_loadFailed) {
+      return PremiumScaffold(
+        appBar: AppBar(title: const Text('Ustalık Bilgilerim')),
+        body: Center(
+          child: ErrorRetryState(
+            key: const ValueKey('worker_profile_load_error'),
+            title: 'Bilgiler yüklenemedi',
+            onRetry: _load,
+          ),
+        ),
       );
     }
     return PremiumScaffold(

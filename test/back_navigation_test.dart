@@ -66,7 +66,14 @@ void main() {
       final p = _read(
         'lib/features/notifications/push/push_notification_service.dart',
       );
-      expect(p.contains('navigateToNotificationRoute(router, route)'), isTrue);
+      // Tap PendingNotificationRoute üzerinden (cold-start bekletme) helper'a
+      // gider; helper shell-kök/derin ayrımını yapar.
+      expect(
+        p.contains('PendingNotificationRoute.handleTap(route, appRouter)'),
+        isTrue,
+      );
+      final r = _read('lib/features/notifications/notification_routing.dart');
+      expect(r.contains('navigateToNotificationRoute(router, route)'), isTrue);
       // Eski koşulsuz appRouter?.go(route) kalmamalı.
       expect(p.contains('appRouter?.go(route)'), isFalse);
     });

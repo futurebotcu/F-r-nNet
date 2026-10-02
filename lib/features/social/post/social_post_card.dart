@@ -28,6 +28,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/tag_chip.dart';
+import '../../academy/academy_navigation.dart';
 import '../../academy/providers/academy_providers.dart';
 import '../../academy/screens/academy_page.dart' show AcademyAiBadge;
 import '../../auth/providers/auth_providers.dart';
@@ -89,17 +90,10 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   }
 
   void _onAuthorTap() {
-    if (post.ownerId.isEmpty) return;
-    // Akademi botuna dokunuş → tüm Akademi içeriklerinin toplu sayfası.
-    // Mizah botu kendi kimliğiyle normal profil sayfasına gider.
-    final bot = ref
-        .read(academyBotsByIdProvider)
-        .valueOrNull?[post.ownerId];
-    if (bot != null && !bot.isHumor) {
-      context.push(AppRoutes.academy);
-      return;
-    }
-    context.push('${AppRoutes.userPublicProfile}/${post.ownerId}');
+    // Akademi botuna dokunuş → tüm Akademi içeriklerinin toplu sayfası
+    // (Akademi'deyken tekrar push edilmez). Mizah botu kendi kimliğiyle
+    // normal profil sayfasına gider.
+    openUserProfileOrAcademy(context, ref, post.ownerId);
   }
 
   Future<void> _onLikeTap(FeedRepository repo) async {
@@ -314,7 +308,8 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
 
   String _timeAgo(DateTime t) {
     final d = DateTime.now().difference(t);
-    if (d.inMinutes < 60) return 'şimdi';
+    if (d.inMinutes < 1) return 'şimdi';
+    if (d.inMinutes < 60) return '${d.inMinutes} dk önce';
     if (d.inHours < 24) return '${d.inHours} sa önce';
     if (d.inDays < 2) return 'dün';
     return '${d.inDays} gün önce';

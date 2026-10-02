@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../academy/academy_navigation.dart';
+import '../../academy/providers/academy_providers.dart';
 import '../models/social_profile.dart';
 import '../providers/social_providers.dart';
 
@@ -30,6 +30,8 @@ class SocialUserListPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Bot haritası tap anında hazır olsun (autoDispose → izlenmeli).
+    ref.watch(academyBotsByIdProvider);
     final idsAsync = switch (kind) {
       UserListKind.followers => ref.watch(socialFollowersIdsProvider(userId)),
       UserListKind.following => ref.watch(socialFollowingIdsProvider(userId)),
@@ -102,8 +104,9 @@ class SocialUserListPage extends ConsumerWidget {
                   final p = byId[id] ?? SocialProfile(id: id);
                   return _UserTile(
                     profile: p,
-                    onTap: () =>
-                        context.push('${AppRoutes.userPublicProfile}/$id'),
+                    // Akademi botu → toplu Akademi sayfası (bot adı ekran
+                    // başlığı olmaz).
+                    onTap: () => openUserProfileOrAcademy(context, ref, id),
                   );
                 },
               ),

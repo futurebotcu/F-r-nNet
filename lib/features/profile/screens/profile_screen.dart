@@ -45,7 +45,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
     _redirected = true;
-    context.go('${AppRoutes.userPublicProfile}/${user.id}');
+    final target = '${AppRoutes.userPublicProfile}/${user.id}';
+    // pushReplacement: Panel'den push ile gelindiyse altındaki yığın korunur
+    // (go tüm yığını değiştirir → geri tuşu uygulamadan çıkarır).
+    if (context.canPop()) {
+      context.pushReplacement(target);
+      return;
+    }
+    // Yığının tek sayfasıysak (derin link / go): Panel'i alta koy, profili
+    // üstüne aç → Android geri Panel'e döner, uygulamadan çıkmaz.
+    final router = GoRouter.of(context);
+    router.go(AppRoutes.panel);
+    WidgetsBinding.instance.addPostFrameCallback((_) => router.push(target));
   }
 
   @override

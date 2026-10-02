@@ -9,6 +9,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
@@ -81,6 +82,7 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
 
   RecipeResult? _previewResult;
   bool _loading = false;
+  bool _loadFailed = false;
   bool _saving = false;
   Recipe? _existing;
 
@@ -92,9 +94,23 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
   }
 
   Future<void> _loadExisting(String id) async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
     final repo = ref.read(recipeRepositoryProvider);
-    final r = await repo.getById(id);
+    final Recipe? r;
+    try {
+      r = await repo.getById(id);
+    } catch (_) {
+      // Ağ hatası: sonsuz yükleme yerine hata durumu + Tekrar dene / Geri.
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadFailed = true;
+      });
+      return;
+    }
     if (!mounted) return;
     if (r == null) {
       setState(() => _loading = false);
@@ -362,6 +378,18 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
     if (_loading) {
       return const PremiumScaffold(
         body: Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+      );
+    }
+    if (_loadFailed) {
+      return PremiumScaffold(
+        appBar: AppBar(title: const Text('Reçeteyi Düzenle')),
+        body: Center(
+          child: ErrorRetryState(
+            key: const ValueKey('recipe_editor_load_error'),
+            title: 'Reçete yüklenemedi',
+            onRetry: () => _loadExisting(widget.recipeId!),
+          ),
+        ),
       );
     }
     final isEditing = _existing != null;

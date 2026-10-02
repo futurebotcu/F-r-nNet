@@ -30,13 +30,15 @@ import '../stories/repositories/supabase_social_stories_repository.dart';
 
 final socialCommentsRepositoryProvider =
     Provider<SocialCommentsRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // Yalnız uid izlenir: token refresh / app resume yeni AuthUser örneği
+  // üretir; tüm nesne izlenirse repo yeniden kurulur → feed page 1'e düşer.
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final SocialCommentsRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseSocialCommentsRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalSocialCommentsRepository(
-      currentUserId: user?.id ?? 'me_misafir',
+      currentUserId: userId ?? 'me_misafir',
     );
   }
   final canWrite = ref.watch(canWriteCheckProvider);
@@ -166,13 +168,15 @@ final socialFollowingIdsProvider = FutureProvider.autoDispose
 
 final socialStoriesRepositoryProvider =
     Provider<SocialStoriesRepository>((ref) {
-  final user = ref.watch(currentAuthUserProvider);
+  // Yalnız uid izlenir: token refresh / app resume yeni AuthUser örneği
+  // üretir; tüm nesne izlenirse repo yeniden kurulur → feed page 1'e düşer.
+  final userId = ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final SocialStoriesRepository inner;
-  if (AppConfig.supabaseEnabled && user != null) {
+  if (AppConfig.supabaseEnabled && userId != null) {
     inner = SupabaseSocialStoriesRepository(sb.Supabase.instance.client);
   } else {
     inner = LocalSocialStoriesRepository(
-      currentUserId: user?.id ?? 'me_misafir',
+      currentUserId: userId ?? 'me_misafir',
     );
   }
   final canWrite = ref.watch(canWriteCheckProvider);
