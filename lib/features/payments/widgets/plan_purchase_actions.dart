@@ -44,9 +44,11 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
     final userId = ref.read(currentAuthUserProvider)?.id;
     if (userId == null) return;
     final service = ref.read(paymentServiceProvider);
-    await service.initialize(userId: userId);
-    if (!mounted || !service.isAvailable) return;
     try {
+      // configure/logIn istisnası (ör. çevrimdışı) yakalanmazsa microtask'ta
+      // işlenmemiş hata olur; fiyatlar config fallback'inde kalır.
+      await service.initialize(userId: userId);
+      if (!mounted || !service.isAvailable) return;
       final ids = StoreProductConfig.premiumProductIdsFor(widget.account);
       final prices = await service.fetchStorePrices(ids);
       if (mounted) setState(() => _prices = prices);
@@ -63,12 +65,19 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
       return;
     }
     setState(() => _busy = true);
-    await ref.read(paymentServiceProvider).initialize(userId: userId);
-    final result = await ref
-        .read(paymentServiceProvider)
-        .purchaseProduct(productId: productId);
+    var result = PaymentResult.error;
+    try {
+      // configure/logIn platform istisnası (ör. çevrimdışı) butonu kalıcı
+      // kilitlememeli; başarısız işlem olarak bildirilir (ham hata gösterilmez).
+      final service = ref.read(paymentServiceProvider);
+      await service.initialize(userId: userId);
+      result = await service.purchaseProduct(productId: productId);
+    } catch (_) {
+      result = PaymentResult.error;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
     if (!mounted) return;
-    setState(() => _busy = false);
     _feedback(result);
     if (result == PaymentResult.success || result == PaymentResult.pending) {
       ref.invalidate(myEntitlementProvider);
@@ -84,10 +93,16 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
     }
     setState(() => _busy = true);
     final service = ref.read(paymentServiceProvider);
-    await service.initialize(userId: userId);
-    final result = await service.restorePurchases();
+    var result = PaymentResult.error;
+    try {
+      await service.initialize(userId: userId);
+      result = await service.restorePurchases();
+    } catch (_) {
+      result = PaymentResult.error;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
     if (!mounted) return;
-    setState(() => _busy = false);
     if (result == PaymentResult.success) {
       ref.invalidate(myEntitlementProvider);
       _snack(AppStrings.storePaymentRestored);

@@ -42,7 +42,13 @@ class _FirinNetAppState extends ConsumerState<FirinNetApp> {
       }
       final userId = ref.read(currentAuthUserProvider)?.id;
       if (userId != null) {
-        unawaited(ref.read(paymentServiceProvider).initialize(userId: userId));
+        // Çevrimdışı configure/logIn istisnası işlenmemiş async hata olmasın.
+        unawaited(
+          ref
+              .read(paymentServiceProvider)
+              .initialize(userId: userId)
+              .catchError((Object _) {}),
+        );
       }
     });
   }

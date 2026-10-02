@@ -44,13 +44,21 @@ class _ListingPaymentButtonState extends ConsumerState<ListingPaymentButton> {
       return;
     }
     setState(() => _busy = true);
-    await service.initialize(userId: userId);
-    final result = await service.purchaseListingFee(
-      listingKind: widget.listingKind,
-      listingId: widget.listingId,
-    );
+    var result = PaymentResult.error;
+    try {
+      // configure/logIn platform istisnası butonu kalıcı kilitlememeli;
+      // kullanıcıya ham hata değil yerelleştirilmiş mesaj gösterilir.
+      await service.initialize(userId: userId);
+      result = await service.purchaseListingFee(
+        listingKind: widget.listingKind,
+        listingId: widget.listingId,
+      );
+    } catch (_) {
+      result = PaymentResult.error;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
     if (!mounted) return;
-    setState(() => _busy = false);
     switch (result) {
       case PaymentResult.success:
       case PaymentResult.pending:

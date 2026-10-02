@@ -88,7 +88,13 @@ void main() {
 
     test('performSignOut çıkıştan ÖNCE unregister eder', () {
       final a = _read('lib/features/auth/services/auth_actions.dart');
-      final idxUnreg = a.indexOf('PushNotificationService.unregister()');
+      // Ortak yardımcı: varsayılan unregister = PushNotificationService.unregister
+      // (timeout + hata yutma), signOut'tan önce çağrılır.
+      expect(
+        a.contains('= PushNotificationService.unregister,'),
+        isTrue,
+      );
+      final idxUnreg = a.indexOf('await unregisterPush()');
       final idxSignOut = a.indexOf('auth.signOut()');
       expect(idxUnreg, greaterThan(0));
       expect(idxSignOut, greaterThan(0));

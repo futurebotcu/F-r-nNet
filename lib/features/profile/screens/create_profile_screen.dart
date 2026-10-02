@@ -14,6 +14,7 @@ import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/providers/guest_mode_provider.dart';
+import '../../auth/services/auth_actions.dart';
 import '../../auth/utils/email_validator.dart';
 import '../models/bakery_profile.dart';
 import '../providers/profile_provider.dart';
@@ -222,11 +223,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
     // Senaryo 2: incomplete authenticated session → signOut + temizlik.
     if (currentUser != null) {
-      try {
-        await auth!.signOut();
-      } catch (_) {
-        // Ağ kopuk olsa bile local state temizle.
-      }
+      // Push token oturum HÂLÂ geçerliyken pasifleştirilir (deactivate RPC
+      // auth.uid() ister); unregister/signOut hatası çıkışı kilitlemez.
+      await signOutWithPushCleanup(auth!);
       ref.read(profileControllerProvider.notifier).clear();
     }
 
@@ -387,7 +386,13 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       // 7 sn göster + "Tamam" action ile dismiss edebilsin.
       messenger.showSnackBar(
         SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          // Auth repo hataları zaten Türkçeye çevrilmiş düz Exception;
+          // diğer (Postgrest/ağ) istisnaların ham metni gösterilmez.
+          content: Text(
+            e.toString().startsWith('Exception: ')
+                ? e.toString().replaceFirst('Exception: ', '')
+                : AppStrings.errorGenericTitle,
+          ),
           duration: const Duration(seconds: 7),
           action: SnackBarAction(
             label: AppStrings.commonOk,

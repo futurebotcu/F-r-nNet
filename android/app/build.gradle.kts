@@ -1,4 +1,5 @@
 import java.io.FileInputStream
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -129,6 +130,32 @@ gradle.taskGraph.whenReady {
     }
     if (!releaseTaskInGraph) {
         return@whenReady
+    }
+    // Production config fail-fast: release build SUPABASE_URL /
+    // SUPABASE_ANON_KEY dart-define'ları olmadan derlenirse uygulama mock/local
+    // moda düşerdi. Flutter dart-define'ları base64 + virgülle geçirir.
+    // Değerler hata mesajına YAZILMAZ; yalnız anahtar adları.
+    val dartDefineKeys = (project.findProperty("dart-defines") as String?)
+        .orEmpty()
+        .split(",")
+        .filter { it.isNotBlank() }
+        .mapNotNull { encoded ->
+            runCatching {
+                String(Base64.getDecoder().decode(encoded), Charsets.UTF_8)
+            }.getOrNull()
+        }
+        .filter { it.substringAfter("=", "").isNotBlank() }
+        .map { it.substringBefore("=") }
+        .toSet()
+    val missingDefines = listOf("SUPABASE_URL", "SUPABASE_ANON_KEY")
+        .filter { it !in dartDefineKeys }
+    if (missingDefines.isNotEmpty()) {
+        throw GradleException(
+            "Release build production config olmadan derlenemez; eksik " +
+                "--dart-define: " + missingDefines.joinToString(", ") +
+                ". scripts/build_release_supabase_apk.ps1 veya " +
+                "scripts/build_release_supabase_aab.ps1 kullanın."
+        )
     }
     if (!keystorePropertiesFile.exists()) {
         throw GradleException(
