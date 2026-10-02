@@ -18,7 +18,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
+import 'marketplace_listing_card.dart';
 
 class MarketplaceContactPanel extends StatelessWidget {
   const MarketplaceContactPanel({
@@ -343,11 +345,12 @@ class MarketplaceContactPanel extends StatelessWidget {
     final buf = StringBuffer()
       ..writeln('FırınNet Market — ${listing.title}')
       ..writeln();
-    final type = AppStrings.marketListingTypeLabels[listing.listingType] ?? '';
+    final type = MarketplaceTaxonomy.listingTypeLabel(listing.listingType);
     if (type.isNotEmpty) buf.writeln(type);
-    if (listing.price != null) {
-      buf.writeln('₺ ${listing.price!.toStringAsFixed(0)}');
-    }
+    final hasPrice = listing.isBakeryTransfer
+        ? (listing.transferPrice != null || listing.rentPrice != null)
+        : listing.price != null;
+    if (hasPrice) buf.writeln(MarketplaceListingCard.priceLabel(listing));
     if (listing.city != null) buf.writeln('Konum: ${listing.city}');
     if (listing.description != null) {
       buf

@@ -17,11 +17,15 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../dealers/widgets/dealer_filter_chip.dart';
+import '../../listings/utils/listing_format.dart';
+import '../data/marketplace_taxonomy.dart';
 import '../models/market_filters.dart';
 import '../models/market_listing.dart';
 import '../providers/market_listing_providers.dart';
@@ -58,16 +62,48 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    context.push(AppRoutes.marketListingNew);
+    // Gömülü segmentte (İş yeri / Ekipman) form doğru ilan tipiyle açılır.
+    final type = widget.forceListingType;
+    context.push(
+      type == null
+          ? AppRoutes.marketListingNew
+          : Uri(
+              path: AppRoutes.marketListingNew,
+              queryParameters: {'type': type},
+            ).toString(),
+    );
+  }
+
+  /// Gömülü segmentte forced tip korunarak filtre sıfırlanır.
+  MarketFilters get _baseFilters => widget.forceListingType == null
+      ? const MarketFilters()
+      : MarketFilters(listingType: widget.forceListingType);
+
+  /// Segment kilidi dışındaki aktif filtre sayısı ("Filtrele (n)").
+  int get _extraFilterCount => widget.forceListingType == null
+      ? _filters.activeCount
+      : _filters.activeCount - (_filters.listingType == null ? 0 : 1);
+
+  Future<void> _onRefresh() async {
+    ref.invalidate(filteredMarketListingsProvider(_filters));
+    await ref
+        .read(filteredMarketListingsProvider(_filters).future)
+        .catchError((_) => const <MarketListing>[]);
   }
 
   Future<void> _openFilters() async {
     final result = await MarketplaceFiltersSheet.show(
       context,
       initial: _filters,
+      lockedListingType: widget.forceListingType,
     );
     if (result != null) {
-      setState(() => _filters = result);
+      final forced = widget.forceListingType;
+      setState(
+        () => _filters = forced == null
+            ? result
+            : result.copyWith(listingType: forced),
+      );
     }
   }
 
@@ -105,155 +141,212 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
+        child: RefreshIndicator(
+          color: AppColors.brandInk,
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            slivers: [
+              if (!widget.embedded) ...[
+                SliverToBoxAdapter(
+                  child: FirinNetHeader(
+                    title: AppStrings.marketTitle,
+                    subtitle: AppStrings.marketSubtitle,
+                    actions: [
+                      HeaderActionButton(
+                        icon: Icons.tune_rounded,
+                        tooltip: AppStrings.marketFilterCta,
+                        onTap: _openFilters,
+                      ),
+                      const SizedBox(width: 6),
+                      HeaderActionButton(
+                        icon: Icons.add_rounded,
+                        tooltip: AppStrings.marketListingAddCta,
+                        onTap: _onAddPressed,
+                      ),
+                    ],
+                  ),
+                ),
+                // Görsel kalite — header ile içerik arası çok hafif ayraç.
+                const SliverToBoxAdapter(
+                  child: Divider(
+                    height: 1,
+                    thickness: 0.6,
+                    color: AppColors.borderHairline,
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.s)),
+                SliverToBoxAdapter(
+                  child: _ListingTypeChipRow(
+                    selected: _filters.listingType,
+                    onSelect: _setListingType,
+                  ),
+                ),
+              ],
+              // Gömülü segmentte listing_type kilitli → type chip satırı yok;
+              // yerine kompakt "Filtrele (n)" + aktif filtre rozetleri.
+              if (widget.embedded || _filters.activeCount > 0)
+                SliverToBoxAdapter(
+                  child: _ActiveFilterChipRow(
+                    filters: _filters,
+                    hideListingType: widget.embedded,
+                    leading: widget.embedded
+                        ? _FilterPill(
+                            count: _extraFilterCount,
+                            onTap: _openFilters,
+                          )
+                        : null,
+                    showClear: _extraFilterCount > 0,
+                    onClear: () => setState(() => _filters = _baseFilters),
+                    onRemoveType: () => setState(
+                      () =>
+                          _filters = _filters.copyWith(clearListingType: true),
+                    ),
+                    onRemoveEquipment: () => setState(
+                      () => _filters = _filters.copyWith(
+                        clearEquipmentCategory: true,
+                      ),
+                    ),
+                    onRemoveCity: () => setState(
+                      () => _filters = _filters.copyWith(clearCity: true),
+                    ),
+                    onRemoveDistrict: () => setState(
+                      () => _filters = _filters.copyWith(clearDistrict: true),
+                    ),
+                    onRemovePrice: () => setState(
+                      () => _filters = _filters.copyWith(
+                        clearMinPrice: true,
+                        clearMaxPrice: true,
+                      ),
+                    ),
+                    onRemoveCondition: () => setState(
+                      () => _filters = _filters.copyWith(clearCondition: true),
+                    ),
+                    onRemoveNegotiable: () => setState(
+                      () => _filters = _filters.copyWith(negotiableOnly: false),
+                    ),
+                  ),
+                ),
+              async.when(
+                // Perf: ilan oluşturma/kaydet-toggle sonrası liste eski
+                // içeriğini korur, spinner flash yok.
+                skipLoadingOnReload: true,
+                loading: () => const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+                error: (_, __) => SliverToBoxAdapter(
+                  child: ErrorRetryState(
+                    compact: true,
+                    title: AppStrings.listingsLoadError,
+                    subtitle: AppStrings.marketListingErrorGeneric,
+                    // UI-level retry — mevcut provider'ı yeniden tetikler
+                    // (backend/provider logic değişmez).
+                    onRetry: () => ref.invalidate(
+                      filteredMarketListingsProvider(_filters),
+                    ),
+                  ),
+                ),
+                data: (items) {
+                  if (items.isEmpty) {
+                    // M3 polish (C): filtre aktifse farklı mesaj + clear CTA;
+                    // boş listede ise "İlk ilanı oluştur" CTA.
+                    // Navigation IA: gömülü segmentte forceListingType bir aktif
+                    // filtre sayılır; segmentin kendisi boşsa "filtreli" değil
+                    // sade boş-state göster (activeCount>1 → gerçek ek filtre).
+                    final filterActive = widget.embedded
+                        ? _filters.activeCount > 1
+                        : _filters.activeCount > 0;
+                    return SliverToBoxAdapter(
+                      child: _MarketEmptyState(
+                        filterActive: filterActive,
+                        onAddPressed: _onAddPressed,
+                        // Gömülüde "temizle" forced tipi KORUR (segment kilidi
+                        // kırılmasın); standalone'da tüm filtreleri sıfırlar.
+                        onClearFilters: () =>
+                            setState(() => _filters = _baseFilters),
+                      ),
+                    );
+                  }
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageH,
+                      AppSpacing.s,
+                      AppSpacing.pageH,
+                      AppSpacing.xxl,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.m),
+                      itemBuilder: (_, i) {
+                        final l = items[i];
+                        return MarketplaceListingCard(
+                          listing: l,
+                          onTap: () => context.push('/market/listings/${l.id}'),
+                          onToggleSave: l.id == null
+                              ? null
+                              : () => _toggleSave(l),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          slivers: [
-            if (!widget.embedded) ...[
-              SliverToBoxAdapter(
-                child: FirinNetHeader(
-                  title: AppStrings.marketTitle,
-                  subtitle: AppStrings.marketSubtitle,
-                  actions: [
-                    HeaderActionButton(
-                      icon: Icons.tune_rounded,
-                      tooltip: AppStrings.marketFilterCta,
-                      onTap: _openFilters,
-                    ),
-                    const SizedBox(width: 6),
-                    HeaderActionButton(
-                      icon: Icons.add_rounded,
-                      tooltip: AppStrings.marketListingAddCta,
-                      onTap: _onAddPressed,
-                    ),
-                  ],
-                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gömülü segment filtre girişi: "Filtrele" / "Filtrele (2)".
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({required this.count, required this.onTap});
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = count > 0;
+    return Material(
+      color: active ? AppColors.brandLemonPale : AppColors.surface,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: active ? AppColors.brandLemonSoft : AppColors.borderHairline,
+          width: 0.8,
+        ),
+      ),
+      child: InkWell(
+        key: const ValueKey('market_filter_pill'),
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.tune_rounded,
+                size: 15,
+                color: AppColors.textPrimary,
               ),
-              // Görsel kalite — header ile içerik arası çok hafif ayraç.
-              const SliverToBoxAdapter(
-                child: Divider(
-                  height: 1,
-                  thickness: 0.6,
-                  color: AppColors.borderHairline,
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.s)),
-              SliverToBoxAdapter(
-                child: _ListingTypeChipRow(
-                  selected: _filters.listingType,
-                  onSelect: _setListingType,
+              const SizedBox(width: 6),
+              Text(
+                active
+                    ? '${AppStrings.marketFilterCta} ($count)'
+                    : AppStrings.marketFilterCta,
+                style: AppTypography.chipLabel.copyWith(
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
-            // Gömülü segmentte listing_type kilitli → type chip satırı yok;
-            // üstte küçük bir nefes boşluğu bırak.
-            if (widget.embedded)
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.s)),
-            if (!widget.embedded && _filters.activeCount > 0)
-              SliverToBoxAdapter(
-                child: _ActiveFilterChipRow(
-                  filters: _filters,
-                  onClear: () =>
-                      setState(() => _filters = const MarketFilters()),
-                  onRemoveType: () => setState(
-                    () => _filters = _filters.copyWith(clearListingType: true),
-                  ),
-                  onRemoveEquipment: () => setState(
-                    () => _filters = _filters.copyWith(
-                      clearEquipmentCategory: true,
-                    ),
-                  ),
-                  onRemoveCity: () => setState(
-                    () => _filters = _filters.copyWith(clearCity: true),
-                  ),
-                  onRemoveDistrict: () => setState(
-                    () => _filters = _filters.copyWith(clearDistrict: true),
-                  ),
-                  onRemovePrice: () => setState(
-                    () => _filters = _filters.copyWith(
-                      clearMinPrice: true,
-                      clearMaxPrice: true,
-                    ),
-                  ),
-                  onRemoveCondition: () => setState(
-                    () => _filters = _filters.copyWith(clearCondition: true),
-                  ),
-                  onRemoveNegotiable: () => setState(
-                    () => _filters = _filters.copyWith(negotiableOnly: false),
-                  ),
-                ),
-              ),
-            async.when(
-              // Perf: ilan oluşturma/kaydet-toggle sonrası liste eski
-              // içeriğini korur, spinner flash yok.
-              skipLoadingOnReload: true,
-              loading: () => const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ),
-              error: (_, __) => SliverToBoxAdapter(
-                child: _MarketMessage(
-                  icon: Icons.cloud_off_outlined,
-                  message: AppStrings.marketListingErrorGeneric,
-                  // UI-level retry — mevcut provider'ı yeniden tetikler
-                  // (backend/provider logic değişmez).
-                  onRetry: () =>
-                      ref.invalidate(filteredMarketListingsProvider(_filters)),
-                ),
-              ),
-              data: (items) {
-                if (items.isEmpty) {
-                  // M3 polish (C): filtre aktifse farklı mesaj + clear CTA;
-                  // boş listede ise "İlk ilanı oluştur" CTA.
-                  // Navigation IA: gömülü segmentte forceListingType bir aktif
-                  // filtre sayılır; segmentin kendisi boşsa "filtreli" değil
-                  // sade boş-state göster (activeCount>1 → gerçek ek filtre).
-                  final filterActive = widget.embedded
-                      ? _filters.activeCount > 1
-                      : _filters.activeCount > 0;
-                  return SliverToBoxAdapter(
-                    child: _MarketEmptyState(
-                      filterActive: filterActive,
-                      onAddPressed: _onAddPressed,
-                      // Gömülüde "temizle" forced tipi KORUR (segment kilidi
-                      // kırılmasın); standalone'da tüm filtreleri sıfırlar.
-                      onClearFilters: () => setState(
-                        () => _filters = widget.forceListingType == null
-                            ? const MarketFilters()
-                            : MarketFilters(listingType: widget.forceListingType),
-                      ),
-                    ),
-                  );
-                }
-                return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageH,
-                    AppSpacing.s,
-                    AppSpacing.pageH,
-                    AppSpacing.xxl,
-                  ),
-                  sliver: SliverList.separated(
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppSpacing.m),
-                    itemBuilder: (_, i) {
-                      final l = items[i];
-                      return MarketplaceListingCard(
-                        listing: l,
-                        onTap: () => context.push('/market/listings/${l.id}'),
-                        onToggleSave: l.id == null
-                            ? null
-                            : () => _toggleSave(l),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -279,7 +372,7 @@ class _ListingTypeChipRow extends StatelessWidget {
         children: [
           _typeChip(label: 'Tümü', value: null),
           const SizedBox(width: AppSpacing.s),
-          for (final e in AppStrings.marketListingTypeLabels.entries) ...[
+          for (final e in MarketplaceTaxonomy.listingTypes.entries) ...[
             _typeChip(label: e.value, value: e.key),
             const SizedBox(width: AppSpacing.s),
           ],
@@ -301,6 +394,9 @@ class _ListingTypeChipRow extends StatelessWidget {
 class _ActiveFilterChipRow extends StatelessWidget {
   const _ActiveFilterChipRow({
     required this.filters,
+    this.hideListingType = false,
+    this.leading,
+    this.showClear = true,
     required this.onClear,
     required this.onRemoveType,
     required this.onRemoveEquipment,
@@ -312,6 +408,13 @@ class _ActiveFilterChipRow extends StatelessWidget {
   });
 
   final MarketFilters filters;
+
+  /// Gömülü segmentte tip kilitli → tip rozeti gösterilmez.
+  final bool hideListingType;
+
+  /// Satır başı (gömülüde "Filtrele (n)" pill'i).
+  final Widget? leading;
+  final bool showClear;
   final VoidCallback onClear;
   final VoidCallback onRemoveType;
   final VoidCallback onRemoveEquipment;
@@ -334,17 +437,18 @@ class _ActiveFilterChipRow extends StatelessWidget {
         runSpacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          if (filters.listingType != null)
+          ?leading,
+          if (filters.listingType != null && !hideListingType)
             _RemovableChip(
               label:
-                  AppStrings.marketListingTypeLabels[filters.listingType!] ??
+                  MarketplaceTaxonomy.listingTypes[filters.listingType!] ??
                   filters.listingType!,
               onRemove: onRemoveType,
             ),
           if (filters.equipmentCategory != null)
             _RemovableChip(
               label:
-                  AppStrings.marketEquipmentCategoryLabels[filters
+                  MarketplaceTaxonomy.equipmentCategories[filters
                       .equipmentCategory!] ??
                   filters.equipmentCategory!,
               onRemove: onRemoveEquipment,
@@ -364,7 +468,7 @@ class _ActiveFilterChipRow extends StatelessWidget {
           if (filters.condition != null)
             _RemovableChip(
               label:
-                  AppStrings.marketConditionLabels[filters.condition!] ??
+                  MarketplaceTaxonomy.conditions[filters.condition!] ??
                   filters.condition!,
               onRemove: onRemoveCondition,
             ),
@@ -373,21 +477,26 @@ class _ActiveFilterChipRow extends StatelessWidget {
               label: AppStrings.marketFilterNegotiable,
               onRemove: onRemoveNegotiable,
             ),
-          TextButton.icon(
-            onPressed: onClear,
-            icon: const Icon(Icons.clear_all, size: 16),
-            label: const Text(AppStrings.marketFilterClearAll),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: const Size(0, 36),
-              visualDensity: VisualDensity.compact,
-              textStyle: const TextStyle(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
+          if (showClear)
+            TextButton.icon(
+              onPressed: onClear,
+              icon: const Icon(Icons.clear_all, size: 16),
+              label: Text(
+                leading != null
+                    ? AppStrings.listingsFilterClear
+                    : AppStrings.marketFilterClearAll,
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(0, 36),
+                visualDensity: VisualDensity.compact,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -397,10 +506,10 @@ class _ActiveFilterChipRow extends StatelessWidget {
     final lo = f.minPrice;
     final hi = f.maxPrice;
     if (lo != null && hi != null) {
-      return '₺${lo.toStringAsFixed(0)}–${hi.toStringAsFixed(0)}';
+      return '${ListingFormat.price(lo)} – ${ListingFormat.amount(hi)}';
     }
-    if (lo != null) return '≥ ₺${lo.toStringAsFixed(0)}';
-    if (hi != null) return '≤ ₺${hi.toStringAsFixed(0)}';
+    if (lo != null) return '≥ ${ListingFormat.price(lo)}';
+    if (hi != null) return '≤ ${ListingFormat.price(hi)}';
     return '—';
   }
 }
@@ -448,74 +557,6 @@ class _RemovableChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MarketMessage extends StatelessWidget {
-  const _MarketMessage({
-    required this.icon,
-    required this.message,
-    this.onRetry,
-  });
-  final IconData icon;
-  final String message;
-
-  /// Opsiyonel UI-level retry; `null` ise buton gösterilmez.
-  final VoidCallback? onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pageH,
-        vertical: AppSpacing.xxl,
-      ),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(icon, size: 36, color: AppColors.textMuted),
-            const SizedBox(height: AppSpacing.s),
-            Text(
-              message,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (onRetry != null) ...[
-              const SizedBox(height: AppSpacing.m),
-              OutlinedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text(
-                  AppStrings.retry,
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.softGold,
-                  side: BorderSide(
-                    color: AppColors.copper.withValues(alpha: 0.5),
-                    width: 0.8,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.l,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

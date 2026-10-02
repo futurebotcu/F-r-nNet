@@ -2,232 +2,328 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/tr_case.dart';
 
+/// İş ilanı türü: işletme personel arıyor (offer) / kişi iş arıyor (seek).
+enum JobListingKind { hiring, seeking }
+
+/// İlanlar tasarım geçişi — iş ilanı kartı.
+///
+/// Hiyerarşi: tür rozeti → güçlü başlık → ana bilgi (ücret) → konum →
+/// ilan sahibi · göreli tarih → kısa etiketler → CTA. Türler ayrı ama sakin
+/// görünür: "PERSONEL ARANIYOR" (çanta ikonu, limon zemin) / "İŞ ARIYOR"
+/// (kişi-arama ikonu, nötr-teal zemin). Tüm metinler ellipsize olur;
+/// etiketler Wrap ile akar (320px + 1.3x yazı ölçeğinde taşma yok).
 class JobOpportunityCard extends StatelessWidget {
   const JobOpportunityCard({
     super.key,
-    required this.position,
-    required this.business,
-    required this.city,
-    required this.salary,
-    required this.experience,
-    required this.badge,
-    this.shift,
-    this.featured = false,
+    required this.kind,
+    required this.title,
+    required this.keyFact,
+    this.location,
+    this.owner,
+    this.timeLabel,
+    this.tags = const <String>[],
+    this.statusBadge,
+    this.onTap,
+    this.onMore,
     this.onApply,
     this.applyLabel,
     this.applyIcon,
     this.applyEnabled = true,
+    this.secondaryAction,
+    this.footer,
   });
 
-  final String position;
-  final String business;
-  final String city;
-  final String salary;
-  final String experience;
-  final String badge;
-  final String? shift;
-  final bool featured;
+  final JobListingKind kind;
+  final String title;
 
-  /// Parent callback. `null` ise CTA gizlenir (sessiz snackbar yerine
-  /// dürüst davranış — parent açıkça "bu kart için aksiyon yok" diyor).
+  /// Ana bilgi (ücret / beklenti). Fallback metni çağıran seçer.
+  final String keyFact;
+  final String? location;
+  final String? owner;
+  final String? timeLabel;
+
+  /// Yalnız dolu etiketler (tecrübe, vardiya, meslek…). Boşlar atlanır.
+  final List<String> tags;
+
+  /// Owner'a özel durum rozeti (örn. "Ödeme bekliyor"). Public kartta null.
+  final Widget? statusBadge;
+
+  /// Kart dokunuşu → detay.
+  final VoidCallback? onTap;
+
+  /// ⋮ menü (şikayet/engelle). null → ikon gösterilmez.
+  final VoidCallback? onMore;
+
+  /// Birincil CTA. `null` ise CTA hiç render edilmez.
   final VoidCallback? onApply;
-
-  /// Default `AppStrings.jobsApply` ("Başvur"). Job seek kartı için
-  /// "İletişime geç" geçilir.
   final String? applyLabel;
-
-  /// Default `Icons.send_rounded`. Job seek için chat ikonu da geçilebilir.
   final IconData? applyIcon;
-
-  /// `false` ise buton görünür ama disabled (örn. kendi ilanı / closed).
   final bool applyEnabled;
+
+  /// Kart içi ikincil aksiyon (örn. "Ara").
+  final Widget? secondaryAction;
+
+  /// Kart altı ek içerik (örn. owner için ödeme butonu).
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: featured ? AppColors.elevatedCard : AppColors.card,
-        borderRadius: BorderRadius.circular(AppRadius.l),
-        // İş İlanları Polish V1 — daha yumuşak/rafine hairline (P0 dili).
-        border: Border.all(
-          color: featured
-              ? AppColors.copper.withValues(alpha: 0.32)
-              : AppColors.borderHairline.withValues(alpha: 0.7),
-          width: featured ? 0.8 : 0.6,
-        ),
-        boxShadow: featured ? AppShadow.copper : AppShadow.card,
-      ),
+    final visibleTags = tags.where((t) => t.trim().isNotEmpty).toList();
+    final hasLocation = (location ?? '').trim().isNotEmpty;
+    final ownerText = (owner ?? '').trim();
+    final time = (timeLabel ?? '').trim();
+    final metaLine = [
+      if (ownerText.isNotEmpty) ownerText,
+      if (time.isNotEmpty) time,
+    ].join(' · ');
+    final hasCta = onApply != null || secondaryAction != null;
+
+    final content = Padding(
       padding: const EdgeInsets.all(AppSpacing.l),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppColors.copper.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(AppRadius.s),
-                  border: featured
-                      ? Border.all(
-                          color: AppColors.copper.withValues(alpha: 0.3),
-                          width: 0.6,
-                        )
-                      : null,
-                ),
-                child: const Icon(
-                  Icons.bakery_dining_rounded,
-                  color: AppColors.softGold,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.m),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      position,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        letterSpacing: -0.2,
-                        height: 1.15,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+              Flexible(child: JobKindBadge(kind: kind)),
+              if (statusBadge != null) ...[
+                const SizedBox(width: 6),
+                Flexible(child: statusBadge!),
+              ],
+              const Spacer(),
+              if (onMore != null)
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: IconButton(
+                    key: const ValueKey('job_card_more'),
+                    padding: EdgeInsets.zero,
+                    iconSize: 20,
+                    tooltip: AppStrings.listingsMoreActions,
+                    onPressed: onMore,
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: AppColors.textSecondary,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      business,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softGold,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13.5,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(
-                    color: AppColors.borderHairline,
-                    width: 0.6,
                   ),
                 ),
-                child: Text(
-                  badge,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.5,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.l),
-          Row(
-            children: [
-              _Tag(icon: Icons.place_outlined, label: city),
-              const SizedBox(width: AppSpacing.s),
-              _Tag(icon: Icons.payments_outlined, label: salary),
             ],
           ),
           const SizedBox(height: AppSpacing.s),
-          Row(
-            children: [
-              _Tag(icon: Icons.workspace_premium_outlined, label: experience),
-              const SizedBox(width: AppSpacing.s),
-              _Tag(icon: Icons.schedule_rounded, label: shift ?? '—'),
-            ],
+          Text(
+            title,
+            style: AppTypography.cardTitle.copyWith(fontSize: 16.5),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          // V1 — Job messaging gerçek oldu: onApply parent'tan geçilir.
-          // Parent vermezse CTA hiç render edilmez (boş snackbar/no-op yok).
-          if (onApply != null) ...[
-            const SizedBox(height: AppSpacing.l),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: FilledButton.icon(
-                onPressed: applyEnabled ? onApply : null,
-                icon: Icon(applyIcon ?? Icons.send_rounded, size: 16),
-                label: Text(applyLabel ?? AppStrings.jobsApply),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.copper,
-                  foregroundColor: AppColors.brandInk,
-                  // İş İlanları Polish V1 — global buton radius standardı (m).
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                    letterSpacing: 0.1,
-                  ),
-                ),
-              ),
+          const SizedBox(height: 6),
+          Text(
+            keyFact,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+              height: 1.25,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (hasLocation) ...[
+            const SizedBox(height: 6),
+            _MetaRow(icon: Icons.place_outlined, text: location!.trim()),
+          ],
+          if (metaLine.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            _MetaRow(
+              icon: kind == JobListingKind.hiring
+                  ? Icons.storefront_outlined
+                  : Icons.person_outline_rounded,
+              text: metaLine,
             ),
           ],
+          if (visibleTags.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [for (final t in visibleTags) _Tag(label: t)],
+            ),
+          ],
+          if (hasCta) ...[
+            const SizedBox(height: AppSpacing.m),
+            Row(
+              children: [
+                if (onApply != null)
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: FilledButton.icon(
+                        onPressed: applyEnabled ? onApply : null,
+                        icon: Icon(applyIcon ?? Icons.send_rounded, size: 16),
+                        label: Text(
+                          applyLabel ?? AppStrings.jobsApply,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.copper,
+                          foregroundColor: AppColors.brandInk,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                          ),
+                          textStyle: AppTypography.buttonLabel,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (onApply != null && secondaryAction != null)
+                  const SizedBox(width: AppSpacing.s),
+                if (secondaryAction != null) secondaryAction!,
+              ],
+            ),
+          ],
+          if (footer != null) ...[
+            const SizedBox(height: AppSpacing.m),
+            footer!,
+          ],
+        ],
+      ),
+    );
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            border: Border.all(
+              color: AppColors.borderHairline.withValues(alpha: 0.7),
+              width: 0.6,
+            ),
+            boxShadow: AppShadow.card,
+          ),
+          child: content,
+        ),
+      ),
+    );
+  }
+}
+
+/// İş ilanı tür rozeti — kartta ve detay sayfasında ortak.
+class JobKindBadge extends StatelessWidget {
+  const JobKindBadge({super.key, required this.kind});
+
+  final JobListingKind kind;
+
+  // Tek nötr-teal vurgu: "İş arıyor" türünü limon "Personel aranıyor"dan
+  // ayırır; düşük doygunluk, koyu metin (kontrast ≥ 7:1).
+  static const Color _seekBg = Color(0xFFEDF5F4);
+  static const Color _seekBorder = Color(0xFFCFE3E0);
+  static const Color _seekFg = Color(0xFF134E4A);
+
+  @override
+  Widget build(BuildContext context) {
+    final hiring = kind == JobListingKind.hiring;
+    final label =
+        (hiring
+                ? AppStrings.listingsBadgeHiring
+                : AppStrings.listingsBadgeSeeking)
+            .trUpper;
+    final bg = hiring ? AppColors.brandLemonPale : _seekBg;
+    final border = hiring ? AppColors.brandLemonSoft : _seekBorder;
+    final fg = hiring ? AppColors.brandInk : _seekFg;
+    return Container(
+      key: ValueKey(hiring ? 'job_badge_hiring' : 'job_badge_seeking'),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: border, width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            hiring ? Icons.work_outline_rounded : Icons.person_search_outlined,
+            size: 13,
+            color: fg,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: fg,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Tag extends StatelessWidget {
-  const _Tag({required this.icon, required this.label});
+class _MetaRow extends StatelessWidget {
+  const _MetaRow({required this.icon, required this.text});
   final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: AppColors.textSecondary),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTypography.meta.copyWith(color: AppColors.textSecondary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  const _Tag({required this.label});
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 220),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.s,
-          vertical: 9,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surfaceVariant,
           borderRadius: BorderRadius.circular(AppRadius.s),
           border: Border.all(color: AppColors.borderHairline, width: 0.6),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: AppColors.softGold),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11.5,
-                  letterSpacing: -0.1,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
         ),
       ),
     );

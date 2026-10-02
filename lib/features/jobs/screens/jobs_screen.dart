@@ -5,22 +5,27 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/listing_phone_cta.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/job_opportunity_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
-import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../listings/utils/listing_format.dart';
 import '../../messages/widgets/start_job_conversation_sheet.dart';
+import '../../payments/widgets/listing_payment_button.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../safety/models/report_models.dart';
 import '../../safety/widgets/block_user_dialog.dart';
 import '../../safety/widgets/report_sheet.dart';
+import '../../subscriptions/widgets/listing_fee_notice.dart';
 import '../../worker/models/job_seek_post.dart';
 import '../../worker/providers/worker_providers.dart';
 import '../models/job_offer_post.dart';
@@ -34,6 +39,10 @@ import '../providers/job_offer_providers.dart';
 /// kullanıcıların yayınladığı aktif ilanları listeler.
 /// "+" CTA segmente göre yönlendirir; role-aware (commercial/wholesaler ↔
 /// individual).
+///
+/// İlanlar tasarım geçişi: kart dokunulabilir → tam bilgi sayfası (alt
+/// sheet); tür rozeti, göreli tarih, kart içi "Ara", ⋮ şikayet/engelle,
+/// owner'ın ödeme bekleyen ilanında ödeme butonu, çekerek yenileme.
 class JobsScreen extends ConsumerStatefulWidget {
   const JobsScreen({super.key, this.embedded = false});
 
@@ -60,16 +69,14 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
       return;
     }
     // M8 Cleanup P1-1: bireysel kullanıcı "Usta Arıyor" ilanı veremez —
-    // bu segment yalnız ticari ve toptancı içindir. Snackbar + early return.
+    // bu segment yalnız ticari ve toptancı içindir. Bilgi + early return.
     if (_segmentIndex == 0) {
       final profile = ref.read(profileControllerProvider);
       final isCommercial =
           profile?.accountType == AccountType.commercial ||
           profile?.accountType == AccountType.wholesaler;
       if (!isCommercial) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.jobOfferCommercialOnly)),
-        );
+        AppFeedback.info(context, AppStrings.jobOfferCommercialOnly);
         return;
       }
     }
@@ -79,46 +86,83 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     context.push(route);
   }
 
+  Future<void> _onRefresh() async {
+    if (_segmentIndex == 0) {
+      ref.invalidate(activeJobOffersProvider);
+      await ref
+          .read(activeJobOffersProvider.future)
+          .catchError((_) => const <JobOfferPost>[]);
+    } else {
+      ref.invalidate(activeJobSeekPostsProvider);
+      await ref
+          .read(activeJobSeekPostsProvider.future)
+          .catchError((_) => const <JobSeekPost>[]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PremiumScaffold(
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-          children: [
-            if (!widget.embedded) ...[
-              FirinNetHeader(
-                title: AppStrings.jobsTitle,
-                subtitle: AppStrings.jobsSubtitle,
-                actions: [
-                  HeaderActionButton(
-                    icon: Icons.add_rounded,
-                    onTap: _onAddPressed,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-            ],
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: _Segment(
-                index: _segmentIndex,
-                onChange: (i) => setState(() => _segmentIndex = i),
-              ),
+        child: RefreshIndicator(
+          color: AppColors.brandInk,
+          onRefresh: _onRefresh,
+          child: ListView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-            if (_segmentIndex == 0)
-              const _HiringList()
-            else
-              const _LookingList(),
-          ],
+            padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+            children: [
+              if (!widget.embedded) ...[
+                FirinNetHeader(
+                  title: AppStrings.jobsTitle,
+                  subtitle: AppStrings.jobsSubtitle,
+                  actions: [
+                    HeaderActionButton(
+                      icon: Icons.add_rounded,
+                      onTap: _onAddPressed,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+              ] else
+                const SizedBox(height: AppSpacing.s),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageH,
+                ),
+                child: _Segment(
+                  index: _segmentIndex,
+                  onChange: (i) => setState(() => _segmentIndex = i),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.m),
+              if (_segmentIndex == 0)
+                const _HiringList()
+              else
+                const _LookingList(),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// Liste gövdesi: kartlar arası ritim + sayfa kenar boşluğu.
+Widget _cardColumn(List<Widget> cards) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
+    child: Column(
+      children: [
+        for (var i = 0; i < cards.length; i++) ...[
+          cards[i],
+          if (i != cards.length - 1) const SizedBox(height: AppSpacing.m),
+        ],
+      ],
+    ),
+  );
 }
 
 class _LookingList extends ConsumerWidget {
@@ -127,55 +171,103 @@ class _LookingList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(activeJobSeekPostsProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(title: AppStrings.jobsListLooking),
-        async.when(
-          // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
-          // korur, spinner flash yok.
-          skipLoadingOnReload: true,
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (_, __) => const EmptyState(
+    return async.when(
+      // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
+      // korur, spinner flash yok.
+      skipLoadingOnReload: true,
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => ErrorRetryState(
+        compact: true,
+        title: AppStrings.listingsLoadError,
+        subtitle: AppStrings.jobsErrorGeneric,
+        onRetry: () => ref.invalidate(activeJobSeekPostsProvider),
+      ),
+      data: (posts) {
+        if (posts.isEmpty) {
+          final user = ref.watch(currentAuthUserProvider);
+          return EmptyState(
             compact: true,
-            icon: Icons.cloud_off_outlined,
-            title: AppStrings.jobsErrorGeneric,
-          ),
-          data: (posts) {
-            if (posts.isEmpty) {
-              final user = ref.watch(currentAuthUserProvider);
-              return EmptyState(
-                compact: true,
-                icon: Icons.inbox_outlined,
-                title: user == null
-                    ? AppStrings.jobsLookingEmptyGuest
-                    : AppStrings.jobsLookingEmpty,
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: Column(
-                children: [
-                  for (var i = 0; i < posts.length; i++) ...[
-                    _JobSeekCard(post: posts[i]),
-                    if (i != posts.length - 1)
-                      const SizedBox(height: AppSpacing.m),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-      ],
+            icon: Icons.inbox_outlined,
+            title: user == null
+                ? AppStrings.jobsLookingEmptyGuest
+                : AppStrings.jobsLookingEmpty,
+          );
+        }
+        return _cardColumn([for (final p in posts) _JobSeekCard(post: p)]);
+      },
     );
   }
 }
 
+/// UGC Safety V1 — şikayet et / sahibini engelle sheet'i (⋮ ve uzun basma).
+Future<void> _showJobSafetySheet(
+  BuildContext context,
+  WidgetRef ref, {
+  required String targetId,
+  required String ownerId,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+    ),
+    builder: (ctx) => SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(
+              Icons.flag_outlined,
+              color: AppColors.textPrimary,
+            ),
+            title: const Text(AppStrings.safetyActionReport),
+            onTap: () {
+              Navigator.of(ctx).pop();
+              showReportSheet(
+                context,
+                ref,
+                targetType: ReportTargetType.jobListing,
+                targetId: targetId,
+                reportedUserId: ownerId,
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.block_rounded, color: AppColors.danger),
+            title: const Text(
+              AppStrings.safetyActionBlock,
+              style: TextStyle(color: AppColors.danger),
+            ),
+            onTap: () {
+              Navigator.of(ctx).pop();
+              confirmAndBlockUser(context, ref, userId: ownerId);
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+bool _canReport({
+  required bool isOwn,
+  required String? targetId,
+  required String? ownerId,
+}) =>
+    !isOwn &&
+    targetId != null &&
+    targetId.isNotEmpty &&
+    ownerId != null &&
+    ownerId.isNotEmpty;
+
 /// UGC Safety V1 — ilan kartına uzun basma: şikayet et / sahibini engelle.
-/// Kendi ilanında veya id/owner bilinmiyorsa sarmalamaz.
+/// Kendi ilanında veya id/owner bilinmiyorsa sarmalamaz. (Aynı aksiyonlar
+/// kartın ⋮ menüsünde de görünür.)
 Widget _withJobSafetyActions(
   BuildContext context,
   WidgetRef ref, {
@@ -184,59 +276,41 @@ Widget _withJobSafetyActions(
   required String? targetId,
   required String? ownerId,
 }) {
-  if (isOwn ||
-      targetId == null ||
-      targetId.isEmpty ||
-      ownerId == null ||
-      ownerId.isEmpty) {
+  if (!_canReport(isOwn: isOwn, targetId: targetId, ownerId: ownerId)) {
     return child;
   }
   return GestureDetector(
-    onLongPress: () => showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-      ),
-      builder: (ctx) => SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(
-                Icons.flag_outlined,
-                color: AppColors.textPrimary,
-              ),
-              title: const Text(AppStrings.safetyActionReport),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                showReportSheet(
-                  context,
-                  ref,
-                  targetType: ReportTargetType.jobListing,
-                  targetId: targetId,
-                  reportedUserId: ownerId,
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.block_rounded, color: AppColors.danger),
-              title: const Text(
-                AppStrings.safetyActionBlock,
-                style: TextStyle(color: AppColors.danger),
-              ),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                confirmAndBlockUser(context, ref, userId: ownerId);
-              },
-            ),
-          ],
-        ),
-      ),
+    onLongPress: () => _showJobSafetySheet(
+      context,
+      ref,
+      targetId: targetId!,
+      ownerId: ownerId!,
     ),
     child: child,
   );
+}
+
+/// Göreli tarih (yoksa null).
+String? _timeLabel(DateTime? createdAt) =>
+    createdAt == null ? null : ListingFormat.relative(createdAt);
+
+/// Başlık boşsa veriden sunum başlığı üretir: "Rol aranıyor · Şehir".
+String _presentationTitle(
+  String raw, {
+  required String? role,
+  required String? city,
+  required String suffix,
+}) {
+  final t = raw.trim();
+  if (t.isNotEmpty) return t;
+  final r = (role ?? '').trim();
+  final c = (city ?? '').trim();
+  if (r.isEmpty) {
+    return c.isEmpty
+        ? AppStrings.listingsTitleFallback
+        : '${AppStrings.listingsTitleFallback} · $c';
+  }
+  return c.isEmpty ? '$r $suffix' : '$r $suffix · $c';
 }
 
 class _JobSeekCard extends ConsumerWidget {
@@ -245,30 +319,37 @@ class _JobSeekCard extends ConsumerWidget {
 
   String _formatSalary() {
     final v = post.salaryExpectation;
-    if (v == null || v <= 0) return AppStrings.jobsCardSalaryUnset;
-    return 'Beklenti ₺ ${v.toStringAsFixed(0)}';
+    if (v == null || v <= 0) return AppStrings.listingsSalaryNegotiable;
+    return '${AppStrings.listingsSalaryExpectation} ${ListingFormat.price(v)}';
   }
 
-  String _formatExperience() {
+  String? _formatExperience() {
     final y = post.experienceYears;
-    if (y == null || y < 0) return AppStrings.jobsCardExperienceUnset;
-    if (y == 0) return 'Deneyimsiz olabilir';
-    return '$y yıl';
+    if (y == null || y < 0) return null;
+    if (y == 0) return AppStrings.listingsExperienceNone;
+    return '$y ${AppStrings.listingsExperienceYearsSuffix}';
   }
 
-  String _formatBusiness() {
-    final badge = post.professionBadge;
-    if (badge == null || badge.trim().isEmpty) {
-      return AppStrings.jobsCardBusinessFallback;
-    }
-    return badge.trim();
+  String? _formatProfession() {
+    final code = post.professionBadgeCode;
+    final fromCode = code == null
+        ? null
+        : FirinnetTaxonomy.professionLabel(code);
+    final label = (fromCode ?? post.professionBadge)?.trim();
+    return (label == null || label.isEmpty) ? null : label;
   }
 
-  String _formatCity() {
-    final c = post.city;
-    if (c == null || c.trim().isEmpty) return AppStrings.jobsCardCityUnset;
-    return c.trim();
+  String? _formatCity() {
+    final c = post.city?.trim();
+    return (c == null || c.isEmpty) ? null : c;
   }
+
+  String _title() => _presentationTitle(
+    post.title,
+    role: _formatProfession(),
+    city: _formatCity(),
+    suffix: AppStrings.listingsTitleSeekingSuffix,
+  );
 
   Future<void> _onContact(BuildContext context, WidgetRef ref) async {
     final canWrite = AuthRequiredGuard.canWriteWithRef(ref);
@@ -277,6 +358,35 @@ class _JobSeekCard extends ConsumerWidget {
       return;
     }
     await StartJobConversationSheet.showForSeek(context, post);
+  }
+
+  void _openDetail(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool showCta,
+    required bool showPhone,
+  }) {
+    final rows = <MapEntry<String, String>>[
+      if (_formatProfession() != null)
+        MapEntry(AppStrings.listingsDetailProfession, _formatProfession()!),
+      if (_formatExperience() != null)
+        MapEntry(AppStrings.listingsDetailExperience, _formatExperience()!),
+      MapEntry(AppStrings.listingsDetailSalary, _formatSalary()),
+      if (_formatCity() != null)
+        MapEntry(AppStrings.listingsDetailLocation, _formatCity()!),
+    ];
+    showJobListingDetailSheet(
+      context,
+      kind: JobListingKind.seeking,
+      title: _title(),
+      rows: rows,
+      description: post.description,
+      createdAt: post.createdAt,
+      primaryLabel: showCta ? AppStrings.jobsContact : null,
+      primaryIcon: Icons.chat_bubble_outline_rounded,
+      onPrimary: showCta ? () => _onContact(context, ref) : null,
+      phone: showPhone ? post.contactPhone : null,
+    );
   }
 
   @override
@@ -291,43 +401,42 @@ class _JobSeekCard extends ConsumerWidget {
         profile?.accountType == AccountType.commercial ||
         profile?.accountType == AccountType.wholesaler;
     final showCta = !isOwn && (isCommercial || profile == null);
+    // Listing Contact Phone Sprint — sahibi telefon paylaştıysa Ara CTA
+    // (artık kartın içinde, ikincil aksiyon olarak).
+    final showPhone = !isOwn && ListingPhoneCta.hasPhone(post.contactPhone);
+    final canReport = _canReport(
+      isOwn: isOwn,
+      targetId: post.id,
+      ownerId: post.ownerId,
+    );
     final card = JobOpportunityCard(
-      position: post.title,
-      business: _formatBusiness(),
-      city: _formatCity(),
-      salary: _formatSalary(),
-      experience: _formatExperience(),
-      badge: AppStrings.jobsCardBadgeActive,
-      shift: null,
+      kind: JobListingKind.seeking,
+      title: _title(),
+      keyFact: _formatSalary(),
+      location: _formatCity(),
+      timeLabel: _timeLabel(post.createdAt),
+      tags: [?_formatProfession(), ?_formatExperience()],
+      onTap: () =>
+          _openDetail(context, ref, showCta: showCta, showPhone: showPhone),
+      onMore: canReport
+          ? () => _showJobSafetySheet(
+              context,
+              ref,
+              targetId: post.id!,
+              ownerId: post.ownerId!,
+            )
+          : null,
       onApply: showCta ? () => _onContact(context, ref) : null,
       applyLabel: AppStrings.jobsContact,
       applyIcon: Icons.chat_bubble_outline_rounded,
+      secondaryAction: showPhone
+          ? ListingPhoneCta(phone: post.contactPhone)
+          : null,
     );
-    // Listing Contact Phone Sprint — sahibi telefon paylaştıysa Ara CTA.
-    final Widget result;
-    if (!ListingPhoneCta.hasPhone(post.contactPhone) || isOwn) {
-      result = card;
-    } else {
-      result = Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          card,
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pageH,
-              0,
-              AppSpacing.pageH,
-              AppSpacing.s,
-            ),
-            child: ListingPhoneCta(phone: post.contactPhone, compact: true),
-          ),
-        ],
-      );
-    }
     return _withJobSafetyActions(
       context,
       ref,
-      child: result,
+      child: card,
       isOwn: isOwn,
       targetId: post.id,
       ownerId: post.ownerId,
@@ -348,84 +457,68 @@ class _HiringList extends ConsumerWidget {
     final canPostOffer =
         profile?.accountType == AccountType.commercial ||
         profile?.accountType == AccountType.wholesaler;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(title: AppStrings.jobsListHiring),
-        async.when(
-          // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
-          // korur, spinner flash yok.
-          skipLoadingOnReload: true,
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (_, __) => const EmptyState(
-            compact: true,
-            icon: Icons.cloud_off_outlined,
-            title: AppStrings.jobOfferErrorGeneric,
-          ),
-          data: (offers) {
-            if (offers.isEmpty) {
-              final user = ref.watch(currentAuthUserProvider);
-              return Column(
-                children: [
-                  EmptyState(
-                    compact: true,
-                    icon: Icons.inbox_outlined,
-                    title: user == null
-                        ? AppStrings.jobOfferEmptyGuest
-                        : AppStrings.jobOfferEmpty,
+    return async.when(
+      // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
+      // korur, spinner flash yok.
+      skipLoadingOnReload: true,
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => ErrorRetryState(
+        compact: true,
+        title: AppStrings.listingsLoadError,
+        subtitle: AppStrings.jobOfferErrorGeneric,
+        onRetry: () => ref.invalidate(activeJobOffersProvider),
+      ),
+      data: (offers) {
+        if (offers.isEmpty) {
+          final user = ref.watch(currentAuthUserProvider);
+          return Column(
+            children: [
+              EmptyState(
+                compact: true,
+                icon: Icons.inbox_outlined,
+                title: user == null
+                    ? AppStrings.jobOfferEmptyGuest
+                    : AppStrings.jobOfferEmpty,
+              ),
+              if (canPostOffer)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageH,
+                    0,
+                    AppSpacing.pageH,
+                    AppSpacing.l,
                   ),
-                  if (canPostOffer)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.pageH,
-                        0,
-                        AppSpacing.pageH,
-                        AppSpacing.l,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 42,
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: const Text(
+                        AppStrings.jobOfferAddCta,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 42,
-                        child: FilledButton.icon(
-                          icon: const Icon(Icons.add_rounded, size: 16),
-                          label: const Text(
-                            AppStrings.jobOfferAddCta,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          onPressed: () => context.push(AppRoutes.jobOfferNew),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.copper,
-                            foregroundColor: AppColors.brandInk,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.m),
-                            ),
-                          ),
+                      onPressed: () => context.push(AppRoutes.jobOfferNew),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.copper,
+                        foregroundColor: AppColors.brandInk,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.m),
                         ),
                       ),
                     ),
-                ],
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
-              child: Column(
-                children: [
-                  for (var i = 0; i < offers.length; i++) ...[
-                    _JobOfferCard(offer: offers[i]),
-                    if (i != offers.length - 1)
-                      const SizedBox(height: AppSpacing.m),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-      ],
+                  ),
+                ),
+            ],
+          );
+        }
+        return _cardColumn([for (final o in offers) _JobOfferCard(offer: o)]);
+      },
     );
   }
 }
@@ -435,26 +528,29 @@ class _JobOfferCard extends ConsumerWidget {
   final JobOfferPost offer;
 
   String _formatSalary() {
-    final min = offer.salaryMin;
-    final max = offer.salaryMax;
-    if (min == null && max == null) return AppStrings.jobsCardSalaryUnset;
-    if (min != null && max != null && max > min) {
-      return '₺ ${min.toStringAsFixed(0)} – ${max.toStringAsFixed(0)}';
-    }
-    final v = (max ?? min)!;
-    return '₺ ${v.toStringAsFixed(0)}';
+    return ListingFormat.priceRange(offer.salaryMin, offer.salaryMax) ??
+        AppStrings.listingsSalaryNegotiable;
   }
 
-  String _formatCity() {
+  String? _formatCity() {
     final c = offer.city?.trim() ?? '';
     final d = offer.district?.trim() ?? '';
-    if (c.isEmpty && d.isEmpty) return AppStrings.jobsCardCityUnset;
+    if (c.isEmpty && d.isEmpty) return null;
     if (d.isEmpty) return c;
     if (c.isEmpty) return d;
     return '$c · $d';
   }
 
-  String _formatExperience() {
+  String? _formatRole() {
+    final code = offer.roleCode;
+    final fromCode = code == null
+        ? null
+        : FirinnetTaxonomy.professionLabel(code);
+    final label = (fromCode ?? offer.roleTitle).trim();
+    return label.isEmpty ? null : label;
+  }
+
+  String? _formatExperience() {
     // M8 — code öncelikli (taxonomy label); yoksa eski text fallback.
     final code = offer.experienceCode;
     if (code != null) {
@@ -462,7 +558,7 @@ class _JobOfferCard extends ConsumerWidget {
       if (lbl != null) return lbl;
     }
     final e = offer.experienceRequired?.trim();
-    if (e == null || e.isEmpty) return AppStrings.jobsCardExperienceUnset;
+    if (e == null || e.isEmpty) return null;
     return e;
   }
 
@@ -473,14 +569,22 @@ class _JobOfferCard extends ConsumerWidget {
       final lbl = FirinnetTaxonomy.shiftLabel(code);
       if (lbl != null) return lbl;
     }
-    return offer.shiftType;
+    final s = offer.shiftType?.trim();
+    return (s == null || s.isEmpty) ? null : s;
   }
 
   String _formatBusiness() {
     final n = offer.authorName?.trim();
     if (n != null && n.isNotEmpty) return n;
-    return AppStrings.jobsCardBusinessFallback;
+    return AppStrings.listingsOwnerFallback;
   }
+
+  String _title() => _presentationTitle(
+    offer.title,
+    role: _formatRole(),
+    city: offer.city,
+    suffix: AppStrings.listingsTitleHiringSuffix,
+  );
 
   Future<void> _onApply(BuildContext context, WidgetRef ref) async {
     final canWrite = AuthRequiredGuard.canWriteWithRef(ref);
@@ -491,6 +595,39 @@ class _JobOfferCard extends ConsumerWidget {
     await StartJobConversationSheet.showForOffer(context, offer);
   }
 
+  void _openDetail(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isOwn,
+    required bool showPhone,
+  }) {
+    final rows = <MapEntry<String, String>>[
+      if (_formatRole() != null)
+        MapEntry(AppStrings.listingsDetailRole, _formatRole()!),
+      MapEntry(AppStrings.listingsDetailSalary, _formatSalary()),
+      if (_formatShift() != null)
+        MapEntry(AppStrings.listingsDetailShift, _formatShift()!),
+      if (_formatExperience() != null)
+        MapEntry(AppStrings.listingsDetailExperience, _formatExperience()!),
+      if (_formatCity() != null)
+        MapEntry(AppStrings.listingsDetailLocation, _formatCity()!),
+      MapEntry(AppStrings.listingsDetailOwner, _formatBusiness()),
+    ];
+    showJobListingDetailSheet(
+      context,
+      kind: JobListingKind.hiring,
+      title: _title(),
+      rows: rows,
+      description: offer.description,
+      createdAt: offer.createdAt,
+      expiresAt: offer.expiresAt,
+      primaryLabel: isOwn ? null : AppStrings.jobsApply,
+      primaryIcon: Icons.send_rounded,
+      onPrimary: isOwn ? null : () => _onApply(context, ref),
+      phone: showPhone ? offer.contactPhone : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Usta Arıyor kartı: bireysel kullanıcı başvurabilir; kendi ilanı için
@@ -498,50 +635,281 @@ class _JobOfferCard extends ConsumerWidget {
     final user = ref.watch(currentAuthUserProvider);
     final isOwn = user != null && offer.ownerId == user.id;
     // İlan Ücretlendirme V1 — owner kendi ücretli-bekleyen ilanında "Ödeme
-    // bekliyor" rozeti görür (public zaten pending ilanı görmez).
+    // bekliyor" rozeti + ödeme butonu görür (public zaten pending görmez).
     final pendingOwn = isOwn && offer.isPendingPayment;
-    final card = JobOpportunityCard(
-      position: offer.title,
-      business: _formatBusiness(),
-      city: _formatCity(),
-      salary: _formatSalary(),
-      experience: _formatExperience(),
-      badge: pendingOwn
-          ? AppStrings.listingFeePendingBadge
-          : AppStrings.jobsCardBadgeActive,
-      shift: _formatShift(),
-      onApply: isOwn ? null : () => _onApply(context, ref),
-      applyLabel: AppStrings.jobsApply,
-      applyIcon: Icons.send_rounded,
-    );
     // Listing Contact Phone Sprint — sahibi telefon paylaştıysa Ara CTA.
-    final Widget result;
-    if (!ListingPhoneCta.hasPhone(offer.contactPhone) || isOwn) {
-      result = card;
-    } else {
-      result = Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          card,
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pageH,
-              0,
-              AppSpacing.pageH,
-              AppSpacing.s,
-            ),
-            child: ListingPhoneCta(phone: offer.contactPhone, compact: true),
-          ),
-        ],
-      );
-    }
-    return _withJobSafetyActions(
-      context,
-      ref,
-      child: result,
+    final showPhone = !isOwn && ListingPhoneCta.hasPhone(offer.contactPhone);
+    final canReport = _canReport(
       isOwn: isOwn,
       targetId: offer.id,
       ownerId: offer.ownerId,
+    );
+    final card = JobOpportunityCard(
+      kind: JobListingKind.hiring,
+      title: _title(),
+      keyFact: _formatSalary(),
+      location: _formatCity(),
+      owner: _formatBusiness(),
+      timeLabel: _timeLabel(offer.createdAt),
+      tags: [?_formatExperience(), ?_formatShift()],
+      statusBadge: pendingOwn ? const ListingPendingBadge() : null,
+      onTap: () =>
+          _openDetail(context, ref, isOwn: isOwn, showPhone: showPhone),
+      onMore: canReport
+          ? () => _showJobSafetySheet(
+              context,
+              ref,
+              targetId: offer.id!,
+              ownerId: offer.ownerId!,
+            )
+          : null,
+      onApply: isOwn ? null : () => _onApply(context, ref),
+      applyLabel: AppStrings.jobsApply,
+      applyIcon: Icons.send_rounded,
+      secondaryAction: showPhone
+          ? ListingPhoneCta(phone: offer.contactPhone)
+          : null,
+      footer: pendingOwn && (offer.id ?? '').isNotEmpty
+          ? _PendingPaymentFooter(offerId: offer.id!)
+          : null,
+    );
+    return _withJobSafetyActions(
+      context,
+      ref,
+      child: card,
+      isOwn: isOwn,
+      targetId: offer.id,
+      ownerId: offer.ownerId,
+    );
+  }
+}
+
+/// Owner'ın ödeme bekleyen iş ilanı: kısa açıklama + mevcut ödeme butonu
+/// (ödeme mantığı değişmedi; market detayındaki aynı bileşen).
+class _PendingPaymentFooter extends ConsumerWidget {
+  const _PendingPaymentFooter({required this.offerId});
+  final String offerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          AppStrings.listingsPendingPayHint,
+          style: AppTypography.meta.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        ListingPaymentButton(
+          listingKind: 'job_offer',
+          listingId: offerId,
+          onPaid: () {
+            ref.invalidate(activeJobOffersProvider);
+            ref.invalidate(myJobOffersProvider);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// İş ilanı tam bilgi sayfası (alt sheet): tür rozeti, başlık, bilgi
+/// satırları, açıklama, yayın/bitiş tarihi ve mevcut CTA'lar (Mesaj / Ara).
+Future<void> showJobListingDetailSheet(
+  BuildContext context, {
+  required JobListingKind kind,
+  required String title,
+  required List<MapEntry<String, String>> rows,
+  String? description,
+  DateTime? createdAt,
+  DateTime? expiresAt,
+  String? primaryLabel,
+  IconData? primaryIcon,
+  VoidCallback? onPrimary,
+  String? phone,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+    ),
+    builder: (ctx) {
+      final maxH = MediaQuery.of(ctx).size.height * 0.88;
+      final desc = (description ?? '').trim();
+      final dates = [
+        if (createdAt != null)
+          '${AppStrings.listingsPublishedOn}: ${ListingFormat.date(createdAt)}',
+        if (expiresAt != null)
+          '${AppStrings.listingsExpiresOn}: ${ListingFormat.date(expiresAt)}',
+      ].join(' · ');
+      final hasPhone = ListingPhoneCta.hasPhone(phone);
+      return ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxH),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: AppSpacing.s),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderHairline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  key: const ValueKey('job_detail_sheet'),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageH,
+                    AppSpacing.m,
+                    AppSpacing.pageH,
+                    AppSpacing.m,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: JobKindBadge(kind: kind),
+                      ),
+                      const SizedBox(height: AppSpacing.s),
+                      Text(
+                        title,
+                        style: AppTypography.cardTitle.copyWith(fontSize: 20),
+                      ),
+                      if (dates.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          dates,
+                          style: AppTypography.meta.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.m),
+                      for (final r in rows)
+                        _DetailRow(label: r.key, value: r.value),
+                      if (desc.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.m),
+                        Text(
+                          AppStrings.listingsDetailDescription,
+                          style: AppTypography.sectionTitle.copyWith(
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          desc,
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              if (onPrimary != null || hasPhone)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageH,
+                    AppSpacing.s,
+                    AppSpacing.pageH,
+                    AppSpacing.m,
+                  ),
+                  child: Row(
+                    children: [
+                      if (onPrimary != null)
+                        Expanded(
+                          child: SizedBox(
+                            height: 48,
+                            child: FilledButton.icon(
+                              onPressed: () {
+                                Navigator.of(ctx).pop();
+                                onPrimary();
+                              },
+                              icon: Icon(
+                                primaryIcon ?? Icons.send_rounded,
+                                size: 16,
+                              ),
+                              label: Text(
+                                primaryLabel ?? AppStrings.jobsApply,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.copper,
+                                foregroundColor: AppColors.brandInk,
+                                textStyle: AppTypography.buttonLabel,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.m,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (onPrimary != null && hasPhone)
+                        const SizedBox(width: AppSpacing.s),
+                      if (hasPhone) ListingPhoneCta(phone: phone),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: AppTypography.meta.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 13.5,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -556,7 +924,7 @@ class _Segment extends StatelessWidget {
   Widget build(BuildContext context) {
     // İş İlanları Polish V1 — feed'deki premium segmented control diliyle
     // hizalı: surface track + pill, seçili = card pill + yumuşak gölge +
-    // softGold label. Davranış aynı (index/onChange).
+    // koyu label. Davranış aynı (index/onChange).
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -611,8 +979,10 @@ class _SegmentTab extends StatelessWidget {
           ),
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: selected ? AppColors.softGold : AppColors.textMuted,
+              color: selected ? AppColors.textPrimary : AppColors.textMuted,
               fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
               fontSize: 13,
               letterSpacing: -0.1,
