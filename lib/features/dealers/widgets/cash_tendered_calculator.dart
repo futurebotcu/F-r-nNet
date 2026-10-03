@@ -19,6 +19,8 @@
 //   (`isOperating`), `_calc` operator helper, and child classes
 //   (`_CalculatorAction`, `_CalculatorPostfixAction`, `_SingleField`)
 //   preserved verbatim from donor.
+// - Final polish (2026-10): `_SingleField` value wrapped in
+//   Expanded + FittedBox(scaleDown) so long amounts never overflow.
 
 import 'package:flutter/material.dart';
 
@@ -418,15 +420,26 @@ class _SingleFieldState extends State<_SingleField> {
 
   @override
   Widget build(BuildContext context) {
+    // FırınNet final cilası: uzun tutar (büyük yazı / dar ekran) satırı
+    // taşırmaz; değer sağa yaslı küçülür (kesilmez).
     return Row(
       children: [
         Text(widget.prefix),
-        const Spacer(),
-        _text == null
-            ? Text(widget.errorText, key: Key('${widget.id}.error'))
-            : _text!.isEmpty
-            ? Text(widget.defaultText, key: Key('${widget.id}.hint'))
-            : Text(_text!, key: Key(widget.id)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: _text == null
+                  ? Text(widget.errorText, key: Key('${widget.id}.error'))
+                  : _text!.isEmpty
+                  ? Text(widget.defaultText, key: Key('${widget.id}.hint'))
+                  : Text(_text!, key: Key(widget.id)),
+            ),
+          ),
+        ),
       ],
     );
   }

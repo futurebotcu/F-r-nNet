@@ -204,7 +204,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                         runSpacing: 8,
                         children: [
                           _Chip(
-                            label: 'Tümü',
+                            label: AppStrings.finalFilterAll,
                             selected: _f.listingType == null,
                             onTap: () => setState(
                               () => _f = _f.copyWith(clearListingType: true),
@@ -234,7 +234,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                         runSpacing: 8,
                         children: [
                           _Chip(
-                            label: 'Tümü',
+                            label: AppStrings.finalFilterAll,
                             selected: _f.equipmentCategory == null,
                             onTap: () => setState(
                               () => _f = _f.copyWith(
@@ -334,7 +334,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                       runSpacing: 8,
                       children: [
                         _Chip(
-                          label: 'Tümü',
+                          label: AppStrings.finalFilterAll,
                           selected: _f.condition == null,
                           onTap: () => setState(
                             () => _f = _f.copyWith(clearCondition: true),

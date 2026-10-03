@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/subscription_providers.dart';
@@ -85,11 +86,7 @@ class IndividualLaunchSheetBody extends StatelessWidget {
                     padding: EdgeInsets.only(top: 6),
                     child: Text(
                       AppStrings.individualLaunchTitle,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
+                      style: AppTypography.sectionTitle,
                     ),
                   ),
                 ),
@@ -119,12 +116,7 @@ class IndividualLaunchSheetBody extends StatelessWidget {
                   Expanded(
                     child: Text(
                       '$dateLabel ${AppStrings.individualLaunchFreeSuffix}',
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.brandInk,
-                        height: 1.3,
-                      ),
+                      style: AppTypography.cardTitle,
                     ),
                   ),
                 ],
@@ -133,12 +125,7 @@ class IndividualLaunchSheetBody extends StatelessWidget {
             const SizedBox(height: AppSpacing.m),
             const Text(
               AppStrings.individualLaunchBody,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                height: 1.45,
-              ),
+              style: AppTypography.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.m),
             Row(
@@ -156,12 +143,7 @@ class IndividualLaunchSheetBody extends StatelessWidget {
                 const Expanded(
                   child: Text(
                     AppStrings.individualLaunchAssurance,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
-                      height: 1.4,
-                    ),
+                    style: AppTypography.meta,
                   ),
                 ),
               ],
@@ -181,7 +163,7 @@ class IndividualLaunchSheetBody extends StatelessWidget {
               ),
               child: const Text(
                 AppStrings.individualLaunchCta,
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                style: AppTypography.buttonLabel,
               ),
             ),
           ],

@@ -41,6 +41,13 @@ import '../providers/market_listing_providers.dart';
 import '../widgets/marketplace_contact_panel.dart';
 import '../widgets/marketplace_image_gallery.dart';
 
+/// Menüde yıkıcı eylem metni (engelle / sil) — tek rol, tehlike tonu.
+const TextStyle _dangerMenuStyle = TextStyle(
+  color: AppColors.danger,
+  fontSize: 14,
+  fontWeight: FontWeight.w600,
+);
+
 class MarketplaceDetailScreen extends ConsumerWidget {
   const MarketplaceDetailScreen({super.key, required this.listingId});
 
@@ -121,14 +128,14 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                   children: [
                     IconButton(
                       tooltip: AppStrings.marketContactShareCta,
-                      icon: const Icon(Icons.ios_share_rounded),
+                      icon: const Icon(Icons.share_outlined),
                       color: AppColors.textPrimary,
                       onPressed: () => shareListing(l),
                     ),
                     PopupMenuButton<String>(
                       tooltip: AppStrings.listingsMoreActions,
                       icon: const Icon(
-                        Icons.more_horiz_rounded,
+                        Icons.more_vert_rounded,
                         color: AppColors.textPrimary,
                       ),
                       color: AppColors.surface,
@@ -162,7 +169,7 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                           value: 'block',
                           child: Text(
                             AppStrings.safetyActionBlock,
-                            style: TextStyle(color: AppColors.danger),
+                            style: _dangerMenuStyle,
                           ),
                         ),
                       ],
@@ -174,7 +181,7 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                 key: const ValueKey('market_owner_menu'),
                 tooltip: AppStrings.listingsMoreActions,
                 icon: const Icon(
-                  Icons.more_horiz_rounded,
+                  Icons.more_vert_rounded,
                   color: AppColors.textPrimary,
                 ),
                 color: AppColors.surface,
@@ -217,12 +224,14 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.pause_circle_outline,
+                            Icons.pause_circle_outline_rounded,
                             size: 18,
                             color: AppColors.textPrimary,
                           ),
                           SizedBox(width: 8),
-                          Flexible(child: Text('İlanı duraklat')),
+                          Flexible(
+                            child: Text(AppStrings.finalMarketPauseAction),
+                          ),
                         ],
                       ),
                     ),
@@ -231,14 +240,12 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.check_circle_outline,
+                          Icons.check_circle_outline_rounded,
                           size: 18,
-                          color: AppColors.success,
+                          color: AppColors.successInk,
                         ),
                         SizedBox(width: 8),
-                        Flexible(
-                          child: Text('Satıldı/Devredildi olarak işaretle'),
-                        ),
+                        Flexible(child: Text(AppStrings.finalMarketSoldAction)),
                       ],
                     ),
                   ),
@@ -254,8 +261,8 @@ class MarketplaceDetailScreen extends ConsumerWidget {
                         SizedBox(width: 8),
                         Flexible(
                           child: Text(
-                            'İlanı sil',
-                            style: TextStyle(color: AppColors.danger),
+                            AppStrings.finalMarketDeleteAction,
+                            style: _dangerMenuStyle,
                           ),
                         ),
                       ],
@@ -351,7 +358,7 @@ class MarketplaceDetailScreen extends ConsumerWidget {
     final me = ref.read(currentAuthUserProvider);
     if (l.id == null || l.ownerId == null) return;
     if (me != null && me.id == l.ownerId) {
-      AppFeedback.info(context, 'Kendi ilanına mesaj başlatamazsın.');
+      AppFeedback.info(context, AppStrings.finalMarketOwnMessageInfo);
       return;
     }
     try {
@@ -628,7 +635,7 @@ class _PriceBlock extends StatelessWidget {
     final cur = listing.currency;
     if (listing.isBakeryTransfer) {
       if (listing.transferPrice == null && listing.rentPrice == null) {
-        return Text(AppStrings.listingsPriceAsk, style: _askStyle);
+        return Text(AppStrings.finalListingsPriceAsk, style: _askStyle);
       }
       return Wrap(
         spacing: 12,
@@ -643,13 +650,14 @@ class _PriceBlock extends StatelessWidget {
             _PriceLine(
               label: AppStrings.marketAttrRentPrice,
               value:
-                  '${ListingFormat.price(listing.rentPrice!, currency: cur)}/ay',
+                  '${ListingFormat.price(listing.rentPrice!, currency: cur)}'
+                  '${AppStrings.finalMarketRentPerMonth}',
             ),
         ],
       );
     }
     if (listing.price == null) {
-      return Text(AppStrings.listingsPriceAsk, style: _askStyle);
+      return Text(AppStrings.finalListingsPriceAsk, style: _askStyle);
     }
     final unit = (listing.unit ?? '').isEmpty ? '' : ' / ${listing.unit}';
     return Text(
@@ -792,7 +800,7 @@ class _AttributesGrid extends StatelessWidget {
       listing.contactPreference,
     );
     if (contactLabel.isNotEmpty) {
-      out.add(MapEntry('İletişim', contactLabel));
+      out.add(MapEntry(AppStrings.listingsSectionContact, contactLabel));
     }
     if (listing.currency.isNotEmpty &&
         listing.currency != MarketplaceTaxonomy.defaultCurrency) {
@@ -916,8 +924,8 @@ class _LocationChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(
-            Icons.place_outlined,
-            size: 13,
+            Icons.location_on_outlined,
+            size: 14,
             color: AppColors.textSecondary,
           ),
           const SizedBox(width: 4),
@@ -991,7 +999,7 @@ class MarketOwnerStatusBanner extends StatelessWidget {
         (
           const Color(0xFFF3FBEF),
           const Color(0xFFCDEBBF),
-          const Color(0xFF166534),
+          AppColors.successInk,
         ),
       ),
       MarketOwnerStatus.paused => (

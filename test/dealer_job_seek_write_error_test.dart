@@ -209,7 +209,7 @@ void main() {
     );
 
     // Sil ikonunu tıkla → confirm dialog açılır.
-    await tester.tap(find.byIcon(Icons.delete_outline));
+    await tester.tap(find.byIcon(Icons.delete_outline_rounded));
     await tester.pumpAndSettle();
 
     // Confirm dialog: "Sil" buton text'i ile FilledButton.

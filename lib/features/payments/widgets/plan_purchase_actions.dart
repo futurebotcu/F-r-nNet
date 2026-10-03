@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -120,8 +121,9 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
       case PaymentResult.unavailable:
         AppFeedback.info(context, AppStrings.storePaymentPreparing);
       case PaymentResult.cancelled:
+        AppFeedback.info(context, AppStrings.finalStorePaymentCancelled);
       case PaymentResult.error:
-        AppFeedback.error(context, AppStrings.storePaymentFailed);
+        AppFeedback.error(context, AppStrings.finalStorePaymentFailed);
     }
   }
 
@@ -138,10 +140,9 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
         AppStrings.storePaymentPreparing,
         key: const ValueKey('store_payment_preparing'),
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 12.5,
+        style: AppTypography.infoLabel.copyWith(
+          color: AppColors.textSecondary,
           fontWeight: FontWeight.w700,
-          color: AppColors.textMuted,
         ),
       );
     }
@@ -172,7 +173,15 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
         TextButton(
           key: const ValueKey('restore_purchases'),
           onPressed: _busy ? null : _restore,
-          child: const Text(AppStrings.storePaymentRestoreCta),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.textPrimary,
+            minimumSize: const Size.fromHeight(48),
+            textStyle: AppTypography.buttonLabel,
+          ),
+          child: const Text(
+            AppStrings.storePaymentRestoreCta,
+            textAlign: TextAlign.center,
+          ),
         ),
       ],
     );
@@ -192,30 +201,34 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
         backgroundColor: AppColors.brandInk,
         foregroundColor: AppColors.brandLemon,
         minimumSize: const Size.fromHeight(54),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.m,
+          vertical: AppSpacing.s,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      // Dar ekran / büyük yazıda fiyat kesilmez: etiket 2 satıra iner,
+      // rozet alta kayar (Wrap).
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: AppSpacing.s,
+        runSpacing: 2,
         children: [
-          Flexible(
-            child: Text(
-              '$label · $price',
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 14.5,
-              ),
-            ),
+          Text(
+            '$label · $price',
+            maxLines: 2,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.buttonLabel,
           ),
-          if (badge != null) ...[
-            const SizedBox(width: 8),
+          if (badge != null)
             Text(
               badge,
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+              style: AppTypography.badge.copyWith(color: AppColors.brandLemon),
             ),
-          ],
         ],
       ),
     );

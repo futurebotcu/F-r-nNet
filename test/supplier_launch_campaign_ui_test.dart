@@ -97,12 +97,12 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text(AppStrings.supplierLaunchGiftBody), findsOneWidget);
+      expect(find.text(AppStrings.finalSupplierGiftBody), findsOneWidget);
       expect(
-        find.text(AppStrings.supplierLaunchGiftContinueInfo),
+        find.text(AppStrings.finalSupplierGiftContinueInfo),
         findsOneWidget,
       );
-      expect(find.text(AppStrings.supplierLaunchGiftAssurance), findsOneWidget);
+      expect(find.text(AppStrings.finalSupplierGiftAssurance), findsOneWidget);
       expect(find.text(AppStrings.supplierLaunchGiftCta), findsOneWidget);
       // Fiyat/satın alma yüzeyi YOK (yalnız bilgilendirme).
       expect(find.textContaining('TL'), findsNothing);

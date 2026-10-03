@@ -74,28 +74,28 @@ class FeatureLock {
 
   static const FeatureLock calculatorPro = FeatureLock(
     title: AppStrings.paywallCalcProTitle,
-    body: AppStrings.paywallCalcBody,
+    body: AppStrings.finalPaywallCalcBody,
     requiredPlan: BusinessPlan.premium,
     priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   static const FeatureLock calculatorPremium = FeatureLock(
     title: AppStrings.paywallCalcPremiumTitle,
-    body: AppStrings.paywallCalcBody,
+    body: AppStrings.finalPaywallCalcBody,
     requiredPlan: BusinessPlan.premium,
     priceHint: PricingConfig.bakeryPremiumHint,
   );
 
   static const FeatureLock reportPro = FeatureLock(
     title: AppStrings.paywallReportProTitle,
-    body: AppStrings.paywallReportBody,
+    body: AppStrings.finalPaywallReportBody,
     requiredPlan: BusinessPlan.premium,
     priceHint: PricingConfig.premiumMonthlyHint,
   );
 
   static const FeatureLock reportPremium = FeatureLock(
     title: AppStrings.paywallReportPremiumTitle,
-    body: AppStrings.paywallReportBody,
+    body: AppStrings.finalPaywallReportBody,
     requiredPlan: BusinessPlan.premium,
     priceHint: PricingConfig.bakeryPremiumHint,
   );

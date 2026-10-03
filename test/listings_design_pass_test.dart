@@ -191,7 +191,7 @@ void main() {
       );
       expect(find.byKey(const ValueKey('market_card_no_photo')), findsOneWidget);
       expect(find.text(AppStrings.listingsNoPhoto), findsOneWidget);
-      expect(find.text(AppStrings.listingsPriceAsk), findsOneWidget);
+      expect(find.text(AppStrings.finalListingsPriceAsk), findsOneWidget);
       final ratio = tester.widget<AspectRatio>(find.byType(AspectRatio));
       expect(ratio.aspectRatio, closeTo(16 / 9, 0.001));
     });

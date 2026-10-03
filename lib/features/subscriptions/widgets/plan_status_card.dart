@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/business_entitlements.dart';
 import '../models/business_plan.dart';
@@ -73,11 +74,7 @@ class PlanStatusCard extends ConsumerWidget {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: AppTypography.cardTitle,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.s),
@@ -87,10 +84,9 @@ class PlanStatusCard extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     sub,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.meta.copyWith(
                       color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
                       height: 1.35,
                     ),
                   ),
@@ -98,10 +94,9 @@ class PlanStatusCard extends ConsumerWidget {
                     const SizedBox(height: 3),
                     Text(
                       _priceHint(e),
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.caption.copyWith(
                         color: AppColors.brandInk,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],

@@ -255,7 +255,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
           : _description.text.trim(),
       isActive: _isActive,
     );
-    Share.share(p.toShareText(), subject: 'FırınNet — İş Arıyorum');
+    Share.share(p.toShareText(), subject: AppStrings.finalSeekShareSubject);
   }
 
   @override
@@ -291,7 +291,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
           IconButton(
             tooltip: AppStrings.listingsShareTooltip,
             onPressed: _previewShare,
-            icon: const Icon(Icons.ios_share_rounded),
+            icon: const Icon(Icons.share_outlined),
           ),
         ],
       ),
