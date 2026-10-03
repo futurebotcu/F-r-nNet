@@ -11,6 +11,7 @@ import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
 import '../../../core/widgets/listing_phone_cta.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/job_opportunity_card.dart';
@@ -18,6 +19,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../listings/utils/listing_format.dart';
+import '../../listings/widgets/listing_ui.dart';
 import '../../messages/widgets/start_job_conversation_sheet.dart';
 import '../../payments/widgets/listing_payment_button.dart';
 import '../../profile/models/bakery_profile.dart';
@@ -175,14 +177,12 @@ class _LookingList extends ConsumerWidget {
       // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
       // korur, spinner flash yok.
       skipLoadingOnReload: true,
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      // Polish 2 — ilk yüklemede tek spinner yerine hafif kart iskeleti.
+      loading: () => const ListingSkeletonList(),
       error: (_, __) => ErrorRetryState(
         compact: true,
         title: AppStrings.listingsLoadError,
-        subtitle: AppStrings.jobsErrorGeneric,
+        subtitle: AppStrings.listingsLoadErrorHint,
         onRetry: () => ref.invalidate(activeJobSeekPostsProvider),
       ),
       data: (posts) {
@@ -291,6 +291,11 @@ Widget _withJobSafetyActions(
   );
 }
 
+/// Polish 2 — tür başına TEK birincil eylem etiketi; kart ve detay aynı
+/// sabiti kullanır (personel ilanı → "Başvur", iş arayan → "Mesaj gönder").
+const String offerPrimaryCtaLabel = AppStrings.jobsApply;
+const String seekPrimaryCtaLabel = AppStrings.listingsCtaMessage;
+
 /// Göreli tarih (yoksa null).
 String? _timeLabel(DateTime? createdAt) =>
     createdAt == null ? null : ListingFormat.relative(createdAt);
@@ -367,23 +372,26 @@ class _JobSeekCard extends ConsumerWidget {
     required bool showCta,
     required bool showPhone,
   }) {
+    // Ücret ve konum detayda kendi satırlarında; burada yalnız şartlar.
     final rows = <MapEntry<String, String>>[
       if (_formatProfession() != null)
         MapEntry(AppStrings.listingsDetailProfession, _formatProfession()!),
       if (_formatExperience() != null)
         MapEntry(AppStrings.listingsDetailExperience, _formatExperience()!),
-      MapEntry(AppStrings.listingsDetailSalary, _formatSalary()),
-      if (_formatCity() != null)
-        MapEntry(AppStrings.listingsDetailLocation, _formatCity()!),
     ];
+    final salary = post.salaryExpectation;
     showJobListingDetailSheet(
       context,
       kind: JobListingKind.seeking,
       title: _title(),
+      keyFact: _formatSalary(),
+      keyFactIsFallback: salary == null || salary <= 0,
+      location: _formatCity(),
       rows: rows,
       description: post.description,
       createdAt: post.createdAt,
-      primaryLabel: showCta ? AppStrings.jobsContact : null,
+      // Kart ve detayda aynı birincil eylem etiketi.
+      primaryLabel: showCta ? seekPrimaryCtaLabel : null,
       primaryIcon: Icons.chat_bubble_outline_rounded,
       onPrimary: showCta ? () => _onContact(context, ref) : null,
       phone: showPhone ? post.contactPhone : null,
@@ -428,10 +436,10 @@ class _JobSeekCard extends ConsumerWidget {
             )
           : null,
       onApply: showCta ? () => _onContact(context, ref) : null,
-      applyLabel: AppStrings.jobsContact,
+      applyLabel: seekPrimaryCtaLabel,
       applyIcon: Icons.chat_bubble_outline_rounded,
       secondaryAction: showPhone
-          ? ListingPhoneCta(phone: post.contactPhone)
+          ? ListingPhoneCta(phone: post.contactPhone, compact: true)
           : null,
     );
     return _withJobSafetyActions(
@@ -462,14 +470,12 @@ class _HiringList extends ConsumerWidget {
       // Perf: ilan oluşturma/güncelleme sonrası liste eski içeriğini
       // korur, spinner flash yok.
       skipLoadingOnReload: true,
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      // Polish 2 — ilk yüklemede tek spinner yerine hafif kart iskeleti.
+      loading: () => const ListingSkeletonList(),
       error: (_, __) => ErrorRetryState(
         compact: true,
         title: AppStrings.listingsLoadError,
-        subtitle: AppStrings.jobOfferErrorGeneric,
+        subtitle: AppStrings.listingsLoadErrorHint,
         onRetry: () => ref.invalidate(activeJobOffersProvider),
       ),
       data: (offers) {
@@ -495,19 +501,14 @@ class _HiringList extends ConsumerWidget {
                   ),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 42,
+                    height: 48,
                     child: FilledButton.icon(
                       icon: const Icon(Icons.add_rounded, size: 16),
-                      label: const Text(
-                        AppStrings.jobOfferAddCta,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+                      label: const Text(AppStrings.jobOfferAddCta),
                       onPressed: () => context.push(AppRoutes.jobOfferNew),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.copper,
+                        backgroundColor: AppColors.brandLemon,
+                        textStyle: AppTypography.buttonLabel,
                         foregroundColor: AppColors.brandInk,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.m),
@@ -603,27 +604,29 @@ class _JobOfferCard extends ConsumerWidget {
     required bool isOwn,
     required bool showPhone,
   }) {
+    // Ücret, konum ve ilan sahibi detayda kendi bloklarında.
     final rows = <MapEntry<String, String>>[
       if (_formatRole() != null)
         MapEntry(AppStrings.listingsDetailRole, _formatRole()!),
-      MapEntry(AppStrings.listingsDetailSalary, _formatSalary()),
       if (_formatShift() != null)
         MapEntry(AppStrings.listingsDetailShift, _formatShift()!),
       if (_formatExperience() != null)
         MapEntry(AppStrings.listingsDetailExperience, _formatExperience()!),
-      if (_formatCity() != null)
-        MapEntry(AppStrings.listingsDetailLocation, _formatCity()!),
-      MapEntry(AppStrings.listingsDetailOwner, _formatBusiness()),
     ];
     showJobListingDetailSheet(
       context,
       kind: JobListingKind.hiring,
       title: _title(),
+      keyFact: _formatSalary(),
+      keyFactIsFallback:
+          ListingFormat.priceRange(offer.salaryMin, offer.salaryMax) == null,
+      location: _formatCity(),
+      ownerName: _formatBusiness(),
       rows: rows,
       description: offer.description,
       createdAt: offer.createdAt,
       expiresAt: offer.expiresAt,
-      primaryLabel: isOwn ? null : AppStrings.jobsApply,
+      primaryLabel: isOwn ? null : offerPrimaryCtaLabel,
       primaryIcon: Icons.send_rounded,
       onPrimary: isOwn ? null : () => _onApply(context, ref),
       phone: showPhone ? offer.contactPhone : null,
@@ -666,10 +669,10 @@ class _JobOfferCard extends ConsumerWidget {
             )
           : null,
       onApply: isOwn ? null : () => _onApply(context, ref),
-      applyLabel: AppStrings.jobsApply,
+      applyLabel: offerPrimaryCtaLabel,
       applyIcon: Icons.send_rounded,
       secondaryAction: showPhone
-          ? ListingPhoneCta(phone: offer.contactPhone)
+          ? ListingPhoneCta(phone: offer.contactPhone, compact: true)
           : null,
       footer: pendingOwn && (offer.id ?? '').isNotEmpty
           ? _PendingPaymentFooter(offerId: offer.id!)
@@ -715,12 +718,19 @@ class _PendingPaymentFooter extends ConsumerWidget {
   }
 }
 
-/// İş ilanı tam bilgi sayfası (alt sheet): tür rozeti, başlık, bilgi
-/// satırları, açıklama, yayın/bitiş tarihi ve mevcut CTA'lar (Mesaj / Ara).
+/// İş ilanı tam bilgi sayfası (alt sheet).
+///
+/// Polish 2 sırası: tür rozeti → başlık → ücret (priceLarge) → konum →
+/// açıklama → şartlar (etiket/değer) → ilan sahibi → tarihler → sabit CTA.
+/// Boş alanlar hiç çizilmez ("—" / "Belirtilmedi" yok).
 Future<void> showJobListingDetailSheet(
   BuildContext context, {
   required JobListingKind kind,
   required String title,
+  required String keyFact,
+  bool keyFactIsFallback = false,
+  String? location,
+  String? ownerName,
   required List<MapEntry<String, String>> rows,
   String? description,
   DateTime? createdAt,
@@ -737,180 +747,279 @@ Future<void> showJobListingDetailSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
-    builder: (ctx) {
-      final maxH = MediaQuery.of(ctx).size.height * 0.88;
-      final desc = (description ?? '').trim();
-      final dates = [
-        if (createdAt != null)
-          '${AppStrings.listingsPublishedOn}: ${ListingFormat.date(createdAt)}',
-        if (expiresAt != null)
-          '${AppStrings.listingsExpiresOn}: ${ListingFormat.date(expiresAt)}',
-      ].join(' · ');
-      final hasPhone = ListingPhoneCta.hasPhone(phone);
-      return ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxH),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: AppSpacing.s),
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.borderHairline,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+    builder: (ctx) => JobListingDetailView(
+      kind: kind,
+      title: title,
+      keyFact: keyFact,
+      keyFactIsFallback: keyFactIsFallback,
+      location: location,
+      ownerName: ownerName,
+      rows: rows,
+      description: description,
+      createdAt: createdAt,
+      expiresAt: expiresAt,
+      primaryLabel: primaryLabel,
+      primaryIcon: primaryIcon,
+      onPrimary: onPrimary,
+      phone: phone,
+    ),
+  );
+}
+
+/// [showJobListingDetailSheet] gövdesi (test edilebilir olması için ayrı).
+class JobListingDetailView extends StatelessWidget {
+  const JobListingDetailView({
+    super.key,
+    required this.kind,
+    required this.title,
+    required this.keyFact,
+    this.keyFactIsFallback = false,
+    this.location,
+    this.ownerName,
+    required this.rows,
+    this.description,
+    this.createdAt,
+    this.expiresAt,
+    this.primaryLabel,
+    this.primaryIcon,
+    this.onPrimary,
+    this.phone,
+  });
+
+  final JobListingKind kind;
+  final String title;
+  final String keyFact;
+  final bool keyFactIsFallback;
+  final String? location;
+  final String? ownerName;
+  final List<MapEntry<String, String>> rows;
+  final String? description;
+  final DateTime? createdAt;
+  final DateTime? expiresAt;
+  final String? primaryLabel;
+  final IconData? primaryIcon;
+  final VoidCallback? onPrimary;
+  final String? phone;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxH = MediaQuery.of(context).size.height * 0.88;
+    final desc = (description ?? '').trim();
+    final loc = (location ?? '').trim();
+    final owner = (ownerName ?? '').trim();
+    final terms = rows
+        .where((r) => ListingInfoRow.isMeaningful(r.value))
+        .toList(growable: false);
+    final dates = [
+      if (createdAt != null)
+        '${AppStrings.listingsPublishedOn}: ${ListingFormat.date(createdAt!)}',
+      if (expiresAt != null)
+        '${AppStrings.listingsExpiresOn}: ${ListingFormat.date(expiresAt!)}',
+    ].join(' · ');
+    final hasPhone = ListingPhoneCta.hasPhone(phone);
+    final primary = onPrimary;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxH),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: AppSpacing.s),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.borderHairline,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              Flexible(
-                child: SingleChildScrollView(
-                  key: const ValueKey('job_detail_sheet'),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageH,
-                    AppSpacing.m,
-                    AppSpacing.pageH,
-                    AppSpacing.m,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageH,
+                AppSpacing.xs,
+                AppSpacing.xs,
+                0,
+              ),
+              child: Row(
+                children: [
+                  Flexible(child: JobKindBadge(kind: kind)),
+                  const Spacer(),
+                  IconButton(
+                    key: const ValueKey('job_detail_close'),
+                    tooltip: AppStrings.listingsCloseTooltip,
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: JobKindBadge(kind: kind),
-                      ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                key: const ValueKey('job_detail_sheet'),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageH,
+                  0,
+                  AppSpacing.pageH,
+                  AppSpacing.m,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: AppTypography.detailTitle),
+                    const SizedBox(height: AppSpacing.s),
+                    Text(
+                      keyFact,
+                      style: keyFactIsFallback
+                          ? AppTypography.price.copyWith(
+                              color: AppColors.textSecondary,
+                            )
+                          : AppTypography.priceLarge,
+                    ),
+                    if (loc.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.s),
-                      Text(
-                        title,
-                        style: AppTypography.cardTitle.copyWith(fontSize: 20),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 2),
+                            child: Icon(
+                              Icons.place_outlined,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              loc,
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      if (dates.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          dates,
-                          style: AppTypography.meta.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.m),
-                      for (final r in rows)
-                        _DetailRow(label: r.key, value: r.value),
-                      if (desc.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.m),
-                        Text(
-                          AppStrings.listingsDetailDescription,
-                          style: AppTypography.sectionTitle.copyWith(
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          desc,
-                          style: AppTypography.body.copyWith(
-                            color: AppColors.textPrimary,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
+                    if (desc.isNotEmpty) ...[
+                      const ListingSectionHeader(
+                        AppStrings.listingsDetailDescription,
+                      ),
+                      Text(
+                        desc,
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                    if (terms.isNotEmpty) ...[
+                      const ListingSectionHeader(
+                        AppStrings.listingsSectionDetails,
+                      ),
+                      for (final r in terms)
+                        ListingInfoRow(label: r.key, value: r.value),
+                    ],
+                    if (owner.isNotEmpty) ...[
+                      const ListingSectionHeader(
+                        AppStrings.listingsDetailOwner,
+                      ),
+                      Row(
+                        key: const ValueKey('job_detail_owner'),
+                        children: [
+                          FirinNetAvatar(
+                            name: owner,
+                            kind: kind == JobListingKind.hiring
+                                ? FirinNetAvatarKind.business
+                                : FirinNetAvatarKind.person,
+                          ),
+                          const SizedBox(width: AppSpacing.m),
+                          Expanded(
+                            child: Text(
+                              owner,
+                              style: AppTypography.authorName,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (dates.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.l),
+                      Text(dates, style: AppTypography.caption),
+                    ],
+                  ],
                 ),
               ),
-              if (onPrimary != null || hasPhone)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageH,
-                    AppSpacing.s,
-                    AppSpacing.pageH,
-                    AppSpacing.m,
+            ),
+            if (primary != null || hasPhone)
+              Container(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageH,
+                  AppSpacing.s,
+                  AppSpacing.pageH,
+                  AppSpacing.m,
+                ),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: AppColors.borderHairline,
+                      width: 0.6,
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      if (onPrimary != null)
-                        Expanded(
-                          child: SizedBox(
-                            height: 48,
-                            child: FilledButton.icon(
-                              onPressed: () {
-                                Navigator.of(ctx).pop();
-                                onPrimary();
-                              },
-                              icon: Icon(
-                                primaryIcon ?? Icons.send_rounded,
-                                size: 16,
-                              ),
-                              label: Text(
-                                primaryLabel ?? AppStrings.jobsApply,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.copper,
-                                foregroundColor: AppColors.brandInk,
-                                textStyle: AppTypography.buttonLabel,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.m,
-                                  ),
+                ),
+                child: Row(
+                  children: [
+                    if (primary != null)
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: FilledButton.icon(
+                            key: const ValueKey('job_detail_primary'),
+                            onPressed: () {
+                              Navigator.of(context).maybePop();
+                              primary();
+                            },
+                            icon: Icon(
+                              primaryIcon ?? Icons.send_rounded,
+                              size: 16,
+                            ),
+                            label: Text(
+                              primaryLabel ?? offerPrimaryCtaLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.brandLemon,
+                              foregroundColor: AppColors.brandInk,
+                              textStyle: AppTypography.buttonLabel,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.m,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      if (onPrimary != null && hasPhone)
-                        const SizedBox(width: AppSpacing.s),
-                      if (hasPhone) ListingPhoneCta(phone: phone),
-                    ],
-                  ),
+                      ),
+                    if (primary != null && hasPhone)
+                      const SizedBox(width: AppSpacing.s),
+                    if (hasPhone) ListingPhoneCta(phone: phone),
+                  ],
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
-      );
-    },
-  );
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: AppTypography.meta.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.s),
-          Expanded(
-            flex: 3,
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -983,11 +1092,9 @@ class _SegmentTab extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: selected ? AppColors.textPrimary : AppColors.textMuted,
+            style: AppTypography.chipLabel.copyWith(
+              color: selected ? AppColors.textPrimary : AppColors.textSecondary,
               fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-              fontSize: 13,
-              letterSpacing: -0.1,
             ),
           ),
         ),

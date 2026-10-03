@@ -2759,6 +2759,86 @@ class AppStrings {
       'Kısa ve net yaz: meslek, şehir, tecrübe ve maaş beklentin işverenin '
       'ilk baktığı bilgiler.';
 
+  // ── İlanlar polish 2 ──
+  static const String listingsCtaMessage = 'Mesaj gönder';
+  static const String listingsSaveTooltip = 'İlanı kaydet';
+  static const String listingsUnsaveTooltip = 'Kaydedilenlerden çıkar';
+  static const String listingsSavedToast = 'İlan kaydedildi';
+  static const String listingsUnsavedToast = 'İlan kaydedilenlerden çıkarıldı';
+  static const String listingsSaveToggleError =
+      'İlan kaydedilemedi. Tekrar dene.';
+  static const String listingsRemoveFilterTooltip = 'Filtreyi kaldır';
+  static const String listingsRemovePhotoTooltip = 'Fotoğrafı kaldır';
+  static const String listingsCloseTooltip = 'Kapat';
+  static const String listingsSectionBasics = 'Temel bilgi';
+  static const String listingsSectionLocation = 'Konum';
+  static const String listingsSectionDetails = 'Detaylar';
+  static const String listingsSectionSalary = 'Ücret';
+  static const String listingsSectionPrice = 'Fiyat';
+  static const String listingsSectionPhotos = 'Fotoğraf';
+  static const String listingsSectionContact = 'İletişim';
+  static const String listingsSectionPublish = 'Yayın durumu';
+  static const String listingsDeleteConfirmTitle = 'İlan silinsin mi?';
+  static const String listingsDeleteConfirmBody =
+      'İlan kalıcı olarak kaldırılır. Bu işlem geri alınamaz.';
+  static const String listingsDeleteCta = 'Sil';
+  static const String listingsPauseConfirmTitle = 'İlan duraklatılsın mı?';
+  static const String listingsPauseConfirmBody =
+      'İlan aramalarda görünmez. İstediğin zaman yeniden yayınlayabilirsin.';
+  static const String listingsPauseCta = 'Duraklat';
+  static const String listingsSoldConfirmTitle =
+      'Satıldı olarak işaretlensin mi?';
+  static const String listingsSoldConfirmBody =
+      'İlan yayından kalkar ve alıcılara "Satıldı" olarak görünür.';
+  static const String listingsSoldCta = 'İşaretle';
+  static const String listingsPausedToast = 'İlan duraklatıldı';
+  static const String listingsSoldToast = 'İlan satıldı olarak işaretlendi';
+  static const String listingsRepublishedToast = 'İlan yeniden yayında';
+  static const String listingsCloseConfirmTitle =
+      'İlan yayından kaldırılsın mı?';
+  static const String listingsCloseConfirmBody =
+      'İlan diğer kullanıcılara görünmez. Sonra yeniden açabilirsin.';
+  static const String listingsCloseCta = 'Yayından kaldır';
+  static const String listingsClosedToast = 'İlan yayından kaldırıldı';
+  static const String listingsDeleteSeekConfirmTitle = 'İlanı sil';
+  static const String listingsCopiedToast = 'Numara panoya kopyalandı';
+  static const String listingsNotVisible = 'Bu ilan artık yayında değil.';
+  static const String listingsNotFound = 'İlan bulunamadı';
+  static const String listingsLoadErrorHint =
+      'Bağlantını kontrol edip tekrar dene.';
+  static const String listingsMyLoadError = 'İlanların yüklenemedi';
+  static const String listingsLoadingLabel = 'İlanlar yükleniyor';
+  static const String listingsTitleRequired = 'İlan başlığını yaz.';
+  static const String listingsYearInvalid =
+      '1900 ile 2100 arasında bir yıl gir.';
+  static const String listingsAreaInvalid = 'Alanı sıfırdan büyük bir sayı gir.';
+  static const String listingsPhotoPickError =
+      'Fotoğraf eklenemedi. Tekrar dene.';
+  static const String listingsPhotoHint = 'En fazla 6 fotoğraf ekleyebilirsin.';
+  static const String listingsOptionNone = 'Seçilmedi';
+  static const String listingsPublishOpen = 'Yayında';
+  static const String listingsPublishClosed = 'Kapalı';
+  static const String listingsPublishOpenHint =
+      'Sektördeki diğer kullanıcılar görür.';
+  static const String listingsPublishClosedHint =
+      'Sadece sen görürsün. Sonra açabilirsin.';
+  static const String listingsSeekTitleLabel = 'Başlık';
+  static const String listingsSeekTitleHint = 'Manisa civarı taş fırın ustası';
+  static const String listingsSeekCity = 'Şehir';
+  static const String listingsSeekCityHint = 'İl seç';
+  static const String listingsSeekExperience = 'Tecrübe yılı';
+  static const String listingsSeekSalary = 'Maaş beklentisi';
+  static const String listingsSeekDescription = 'Açıklama (isteğe bağlı)';
+  static const String listingsSeekDescriptionHint =
+      'Vardiya tercihi, ulaşım durumu, özel beceriler…';
+  static const String listingsSeekEditTitle = 'İlanı Düzenle';
+  static const String listingsSeekPublishCta = 'İlanı yayınla';
+  static const String listingsSavingCta = 'Kaydediliyor…';
+  static const String listingsShareTooltip = 'Paylaş';
+  static const String listingsToggleOffTooltip = 'Yayından kaldır';
+  static const String listingsToggleOnTooltip = 'Yayına aç';
+  static const String listingsDeleteTooltip = 'Sil';
+
   static const String dealerSharePdfErr =
       'PDF oluşturulamadı. Lütfen tekrar deneyin.';
 }

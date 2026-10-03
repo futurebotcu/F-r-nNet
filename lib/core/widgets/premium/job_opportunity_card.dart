@@ -76,10 +76,6 @@ class JobOpportunityCard extends StatelessWidget {
     final hasLocation = (location ?? '').trim().isNotEmpty;
     final ownerText = (owner ?? '').trim();
     final time = (timeLabel ?? '').trim();
-    final metaLine = [
-      if (ownerText.isNotEmpty) ownerText,
-      if (time.isNotEmpty) time,
-    ].join(' · ');
     final hasCta = onApply != null || secondaryAction != null;
 
     final content = Padding(
@@ -96,10 +92,12 @@ class JobOpportunityCard extends StatelessWidget {
                 Flexible(child: statusBadge!),
               ],
               const Spacer(),
+              if (onMore == null) const SizedBox(height: 44),
               if (onMore != null)
+                // Polish 2 — 44px dokunma alanı (görsel ikon küçük kalır).
                 SizedBox(
-                  width: 32,
-                  height: 32,
+                  width: 44,
+                  height: 44,
                   child: IconButton(
                     key: const ValueKey('job_card_more'),
                     padding: EdgeInsets.zero,
@@ -114,22 +112,17 @@ class JobOpportunityCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: AppSpacing.s),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             title,
-            style: AppTypography.cardTitle.copyWith(fontSize: 16.5),
+            style: AppTypography.cardTitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
           Text(
             keyFact,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
-              height: 1.25,
-            ),
+            style: AppTypography.price,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -137,13 +130,14 @@ class JobOpportunityCard extends StatelessWidget {
             const SizedBox(height: 6),
             _MetaRow(icon: Icons.place_outlined, text: location!.trim()),
           ],
-          if (metaLine.isNotEmpty) ...[
+          if (ownerText.isNotEmpty || time.isNotEmpty) ...[
             const SizedBox(height: 4),
             _MetaRow(
               icon: kind == JobListingKind.hiring
                   ? Icons.storefront_outlined
                   : Icons.person_outline_rounded,
-              text: metaLine,
+              text: ownerText,
+              trailing: time,
             ),
           ],
           if (visibleTags.isNotEmpty) ...[
@@ -171,7 +165,7 @@ class JobOpportunityCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.copper,
+                          backgroundColor: AppColors.brandLemon,
                           foregroundColor: AppColors.brandInk,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.m),
@@ -262,12 +256,7 @@ class JobKindBadge extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: fg,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.4,
-              ),
+              style: AppTypography.badge.copyWith(color: fg),
             ),
           ),
         ],
@@ -276,17 +265,26 @@ class JobKindBadge extends StatelessWidget {
   }
 }
 
+/// Konum / sahip satırı. Sahip adı okunur (textSecondary) ve gerekirse
+/// kısalır; göreli tarih sağda sakin `caption` olarak kalır (baskın değil).
 class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.icon, required this.text});
+  const _MetaRow({required this.icon, required this.text, this.trailing});
   final IconData icon;
   final String text;
+  final String? trailing;
 
   @override
   Widget build(BuildContext context) {
+    final t = (trailing ?? '').trim();
+    if (text.isEmpty) {
+      return Text(t, style: AppTypography.caption, maxLines: 1);
+    }
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppColors.textSecondary),
-        const SizedBox(width: 4),
+        if (text.isNotEmpty) ...[
+          Icon(icon, size: 14, color: AppColors.textSecondary),
+          const SizedBox(width: 4),
+        ],
         Expanded(
           child: Text(
             text,
@@ -295,6 +293,10 @@ class _MetaRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (t.isNotEmpty) ...[
+          const SizedBox(width: AppSpacing.s),
+          Text(t, style: AppTypography.caption, maxLines: 1),
+        ],
       ],
     );
   }
@@ -319,11 +321,7 @@ class _Tag extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
+          style: AppTypography.meta.copyWith(color: AppColors.textPrimary),
         ),
       ),
     );

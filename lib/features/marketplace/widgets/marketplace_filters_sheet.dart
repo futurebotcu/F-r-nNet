@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/interactions.dart';
@@ -161,24 +162,20 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                     const Expanded(
                       child: Text(
                         AppStrings.marketFilterTitle,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 17,
-                        ),
+                        style: AppTypography.sectionTitle,
                       ),
                     ),
                     TextButton(
                       onPressed: _clearAll,
-                      child: const Text(
-                        AppStrings.marketFilterClearAll,
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        minimumSize: const Size(0, 44),
+                        textStyle: AppTypography.chipLabel,
                       ),
+                      child: const Text(AppStrings.marketFilterClearAll),
                     ),
                     IconButton(
+                      tooltip: AppStrings.listingsCloseTooltip,
                       onPressed: () => Navigator.of(context).maybePop(),
                       icon: const Icon(
                         Icons.close_rounded,
@@ -384,24 +381,17 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                   child: FilledButton(
                     onPressed: _apply,
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.copper,
+                      backgroundColor: AppColors.brandLemon,
                       foregroundColor: AppColors.brandInk,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.m),
                       ),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                      ),
+                      textStyle: AppTypography.buttonLabel,
                     ),
                     child: Text(
                       _f.activeCount > 0
                           ? '${AppStrings.marketFilterApply} (${_f.activeCount})'
                           : AppStrings.marketFilterApply,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15.5,
-                      ),
                     ),
                   ),
                 ),
@@ -421,14 +411,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w800,
-          fontSize: 14.5,
-        ),
-      ),
+      child: Text(label, style: AppTypography.sectionTitle),
     );
   }
 }
@@ -465,10 +448,9 @@ class _Chip extends StatelessWidget {
             ),
             child: Text(
               label,
-              style: TextStyle(
-                color: selected ? AppColors.softGold : AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
+              style: AppTypography.chipLabel.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
               ),
             ),
           ),

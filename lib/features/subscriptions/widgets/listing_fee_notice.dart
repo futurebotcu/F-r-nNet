@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -71,21 +72,12 @@ class ListingFeeNotice extends ConsumerWidget {
                 if (!free)
                   Text(
                     AppStrings.listingFeePaidTitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.chipLabel.copyWith(
                       color: fg,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                Text(
-                  body,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: fg,
-                    height: 1.4,
-                  ),
-                ),
+                Text(body, style: AppTypography.bodySmall.copyWith(color: fg)),
               ],
             ),
           ),
@@ -103,7 +95,7 @@ class ListingPendingBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: const ValueKey('listing_pending_badge'),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7E6),
         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -111,16 +103,18 @@ class ListingPendingBadge extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.schedule_rounded, size: 11, color: Color(0xFFB45309)),
-          SizedBox(width: 3),
+        children: [
+          const Icon(
+            Icons.schedule_rounded,
+            size: 12,
+            color: Color(0xFF92400E),
+          ),
+          const SizedBox(width: 3),
+          // Polish 2 — tür rozetleriyle aynı boyut (AppTypography.badge);
+          // koyu amber metin (AA kontrast).
           Text(
             AppStrings.listingFeePendingBadge,
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFFB45309),
-            ),
+            style: AppTypography.badge.copyWith(color: const Color(0xFF92400E)),
           ),
         ],
       ),

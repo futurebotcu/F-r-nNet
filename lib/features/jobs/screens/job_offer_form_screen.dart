@@ -4,16 +4,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../listings/utils/listing_format.dart';
+import '../../listings/widgets/listing_ui.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../dealers/widgets/dealer_filter_chip.dart';
@@ -218,6 +221,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
       ref.invalidate(activeJobOffersProvider);
       ref.invalidate(myJobOffersProvider);
       if (!mounted) return;
+      AppHaptics.success();
       // Ücretli ilan ödeme bekliyorsa "yayında" denmez.
       AppFeedback.success(
         context,
@@ -246,7 +250,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
         body: Center(
           child: ErrorRetryState(
             key: const ValueKey('job_offer_form_load_error'),
-            title: 'İlan yüklenemedi',
+            title: AppStrings.listingsDetailLoadError,
             onRetry: _loadExisting,
           ),
         ),
@@ -257,7 +261,41 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+    // Polish 2 — bölümlü form (Temel bilgi / Konum / Ücret / Detaylar /
+    // İletişim / Yayın durumu) + klavye açıkken de görünen sabit CTA.
     return PremiumScaffold(
+      bottomNavigationBar: ListingStickyBar(
+        child: SizedBox(
+          height: 52,
+          child: FilledButton.icon(
+            key: const ValueKey('job_offer_form_submit'),
+            onPressed: _saving ? null : _onSavePressed,
+            icon: _saving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.8,
+                      valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
+                    ),
+                  )
+                : const Icon(Icons.send_rounded, size: 18),
+            label: Text(
+              widget.postId == null
+                  ? AppStrings.jobOfferFormSaveCta
+                  : AppStrings.listingsUpdateCta,
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.brandLemon,
+              foregroundColor: AppColors.brandInk,
+              textStyle: AppTypography.buttonLabel,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: Form(
@@ -266,7 +304,8 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
             children: [
               FirinNetHeader(
                 title: widget.postId == null
@@ -283,12 +322,16 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // ── İlan Ücretlendirme V1 — ücret bilgilendirmesi ──
-                    if (widget.postId == null) ...[
+                    if (widget.postId == null)
                       const ListingFeeNotice(kind: ListingKind.jobOffer),
-                      const SizedBox(height: AppSpacing.m),
-                    ],
+                    // ── Temel bilgi ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionBasics,
+                    ),
                     TextFormField(
                       controller: _title,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         labelText: AppStrings.jobOfferFieldTitle,
                         hintText: AppStrings.jobOfferFieldTitleHint,
@@ -306,7 +349,10 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                           ? null
                           : (code) => setState(() => _roleCode = code),
                     ),
-                    const SizedBox(height: AppSpacing.m),
+                    // ── Konum ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionLocation,
+                    ),
                     Row(
                       children: [
                         Expanded(
@@ -362,17 +408,23 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.m),
+                    // ── Ücret ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionSalary,
+                    ),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: TextFormField(
                             controller: _salaryMin,
                             keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
                             inputFormatters:
                                 ListingFormat.integerInputFormatters,
                             decoration: const InputDecoration(
                               labelText: AppStrings.jobOfferFieldSalaryMin,
+                              suffixText: '₺',
                             ),
                           ),
                         ),
@@ -381,16 +433,21 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                           child: TextFormField(
                             controller: _salaryMax,
                             keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
                             inputFormatters:
                                 ListingFormat.integerInputFormatters,
                             decoration: const InputDecoration(
                               labelText: AppStrings.jobOfferFieldSalaryMax,
+                              suffixText: '₺',
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.m),
+                    // ── Detaylar ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionDetails,
+                    ),
                     _CodeChipPicker(
                       label: AppStrings.jobOfferFieldShift,
                       entries: FirinnetTaxonomy.shiftEntries,
@@ -410,8 +467,25 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                     ),
                     const SizedBox(height: AppSpacing.m),
                     TextFormField(
+                      controller: _description,
+                      minLines: 3,
+                      maxLines: 6,
+                      keyboardType: TextInputType.multiline,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.jobOfferFieldDescription,
+                        hintText: AppStrings.jobOfferFieldDescriptionHint,
+                        alignLabelWithHint: true,
+                      ),
+                    ),
+                    // ── İletişim ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionContact,
+                    ),
+                    TextFormField(
                       controller: _contactPhone,
                       keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.done,
                       decoration: const InputDecoration(
                         labelText: AppStrings.listingContactPhoneLabel,
                         hintText: AppStrings.listingContactPhoneHint,
@@ -419,57 +493,27 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                         helperMaxLines: 2,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.m),
-                    TextFormField(
-                      controller: _description,
-                      minLines: 3,
-                      maxLines: 6,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.jobOfferFieldDescription,
-                        hintText: AppStrings.jobOfferFieldDescriptionHint,
-                      ),
+                    // ── Yayın durumu ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionPublish,
                     ),
-                    const SizedBox(height: AppSpacing.m),
                     SwitchListTile(
                       value: _isActive,
                       onChanged: (v) => setState(() => _isActive = v),
-                      title: const Text(AppStrings.jobOfferFieldIsActive),
-                      subtitle: const Text(
+                      title: Text(
+                        AppStrings.jobOfferFieldIsActive,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      subtitle: Text(
                         AppStrings.jobOfferFieldIsActiveHint,
+                        style: AppTypography.bodySmall,
                       ),
-                      activeThumbColor: AppColors.copper,
+                      activeThumbColor: AppColors.brandInk,
+                      activeTrackColor: AppColors.brandLemon,
                       contentPadding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(height: AppSpacing.l),
-                    SizedBox(
-                      height: 52,
-                      child: FilledButton.icon(
-                        onPressed: _saving ? null : _onSavePressed,
-                        icon: _saving
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 1.8,
-                                  valueColor: AlwaysStoppedAnimation(
-                                    AppColors.surface,
-                                  ),
-                                ),
-                              )
-                            : const Icon(Icons.send_rounded, size: 18),
-                        label: Text(
-                          widget.postId == null
-                              ? AppStrings.jobOfferFormSaveCta
-                              : AppStrings.listingsUpdateCta,
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.copper,
-                          foregroundColor: AppColors.brandInk,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.m),
-                          ),
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -503,15 +547,7 @@ class _CodeChipPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-            letterSpacing: 0.4,
-          ),
-        ),
+        Text(label, style: AppTypography.infoLabel),
         const SizedBox(height: AppSpacing.s),
         Wrap(
           spacing: 6,

@@ -19,12 +19,15 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../dealers/widgets/dealer_filter_chip.dart';
 import '../../listings/utils/listing_format.dart';
+import '../../listings/widgets/listing_ui.dart';
 import '../data/marketplace_taxonomy.dart';
 import '../models/market_filters.dart';
 import '../models/market_listing.dart';
@@ -122,16 +125,29 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
       return;
     }
     final repo = ref.read(marketListingRepositoryProvider);
+    AppHaptics.toggle();
+    final wasSaved = l.isSavedByMe;
     try {
-      if (l.isSavedByMe) {
+      if (wasSaved) {
         await repo.unsaveListing(l.id!);
       } else {
         await repo.saveListing(l.id!);
       }
       ref.invalidate(filteredMarketListingsProvider(_filters));
       ref.invalidate(savedMarketListingsProvider);
+      if (mounted) {
+        AppFeedback.success(
+          context,
+          wasSaved
+              ? AppStrings.listingsUnsavedToast
+              : AppStrings.listingsSavedToast,
+        );
+      }
     } catch (e) {
       debugPrint('[FirinNet][Market] toggle save error: $e');
+      if (mounted) {
+        AppFeedback.error(context, AppStrings.listingsSaveToggleError);
+      }
     }
   }
 
@@ -233,17 +249,15 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                 // Perf: ilan oluşturma/kaydet-toggle sonrası liste eski
                 // içeriğini korur, spinner flash yok.
                 skipLoadingOnReload: true,
+                // Polish 2 — ilk yüklemede tek spinner yerine hafif iskelet.
                 loading: () => const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
+                  child: ListingSkeletonList(withImage: true),
                 ),
                 error: (_, __) => SliverToBoxAdapter(
                   child: ErrorRetryState(
                     compact: true,
                     title: AppStrings.listingsLoadError,
-                    subtitle: AppStrings.marketListingErrorGeneric,
+                    subtitle: AppStrings.listingsLoadErrorHint,
                     // UI-level retry — mevcut provider'ı yeniden tetikler
                     // (backend/provider logic değişmez).
                     onRetry: () => ref.invalidate(
@@ -326,8 +340,11 @@ class _FilterPill extends StatelessWidget {
         key: const ValueKey('market_filter_pill'),
         onTap: onTap,
         customBorder: const StadiumBorder(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        // Polish 2 — en az 44px dokunma yüksekliği.
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -489,12 +506,8 @@ class _ActiveFilterChipRow extends StatelessWidget {
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: const Size(0, 36),
-                visualDensity: VisualDensity.compact,
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                ),
+                minimumSize: const Size(0, 44),
+                textStyle: AppTypography.chipLabel,
               ),
             ),
         ],
@@ -522,41 +535,56 @@ class _RemovableChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Aktif filtre rozeti - lemon pale bg + hairline + koyu label.
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 5, 6, 5),
-      decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.34),
-          width: 0.6,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.softGold,
-              fontWeight: FontWeight.w700,
-              fontSize: 12.5,
-            ),
-          ),
-          const SizedBox(width: 3),
-          InkWell(
-            onTap: onRemove,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: const Padding(
-              padding: EdgeInsets.all(2),
-              child: Icon(
-                Icons.close_rounded,
-                size: 13,
-                color: AppColors.softGold,
+    // Polish 2 — rozetin tamamı kaldırma hedefi (≥ 44px yükseklik);
+    // metin/ikon mürekkep tonunda.
+    return Semantics(
+      button: true,
+      label: '$label, ${AppStrings.listingsRemoveFilterTooltip}',
+      excludeSemantics: true,
+      child: Tooltip(
+        message: AppStrings.listingsRemoveFilterTooltip,
+        child: InkWell(
+          onTap: onRemove,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Center(
+              widthFactor: 1,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+                decoration: BoxDecoration(
+                  color: AppColors.brandLemonPale,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  border: Border.all(
+                    color: AppColors.brandLemonSoft,
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.chipLabel.copyWith(
+                          color: AppColors.brandInk,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.close_rounded,
+                      size: 15,
+                      color: AppColors.brandInk,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -603,48 +631,34 @@ class _MarketEmptyState extends StatelessWidget {
               height: 50,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.softGold.withValues(alpha: 0.12),
+                color: AppColors.surfaceVariant,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.softGold.withValues(alpha: 0.28),
-                  width: 0.8,
-                ),
+                border: Border.all(color: AppColors.borderHairline, width: 0.8),
               ),
-              child: Icon(icon, size: 22, color: AppColors.softGold),
+              child: Icon(icon, size: 22, color: AppColors.brandInk),
             ),
             const SizedBox(height: AppSpacing.s),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 17,
-                letterSpacing: -0.2,
-              ),
+              style: AppTypography.sectionTitle,
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13.5,
-                height: 1.4,
-              ),
+              style: AppTypography.body,
             ),
             const SizedBox(height: AppSpacing.m),
             if (filterActive)
               SizedBox(
                 width: double.infinity,
-                height: 42,
+                height: 48,
                 child: OutlinedButton.icon(
+                  key: const ValueKey('market_empty_clear_filters'),
                   onPressed: onClearFilters,
                   icon: const Icon(Icons.clear_all_rounded, size: 16),
-                  label: const Text(
-                    AppStrings.marketEmptyClearFiltersCta,
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                  ),
+                  label: const Text(AppStrings.marketEmptyClearFiltersCta),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
                     side: const BorderSide(
@@ -654,34 +668,25 @@ class _MarketEmptyState extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                    textStyle: AppTypography.buttonLabel,
                   ),
                 ),
               )
             else
               SizedBox(
                 width: double.infinity,
-                height: 42,
+                height: 48,
                 child: FilledButton.icon(
                   onPressed: onAddPressed,
                   icon: const Icon(Icons.add_rounded, size: 16),
-                  label: const Text(
-                    AppStrings.marketEmptyCta,
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                  ),
+                  label: const Text(AppStrings.marketEmptyCta),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
+                    backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                    textStyle: AppTypography.buttonLabel,
                   ),
                 ),
               ),
