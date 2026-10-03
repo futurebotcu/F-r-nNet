@@ -387,7 +387,7 @@ class _ListingTypeChipRow extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
         children: [
-          _typeChip(label: 'Tümü', value: null),
+          _typeChip(label: AppStrings.finalFilterAll, value: null),
           const SizedBox(width: AppSpacing.s),
           for (final e in MarketplaceTaxonomy.listingTypes.entries) ...[
             _typeChip(label: e.value, value: e.key),
@@ -497,7 +497,7 @@ class _ActiveFilterChipRow extends StatelessWidget {
           if (showClear)
             TextButton.icon(
               onPressed: onClear,
-              icon: const Icon(Icons.clear_all, size: 16),
+              icon: const Icon(Icons.clear_all_rounded, size: 16),
               label: Text(
                 leading != null
                     ? AppStrings.listingsFilterClear
@@ -523,7 +523,7 @@ class _ActiveFilterChipRow extends StatelessWidget {
     }
     if (lo != null) return '≥ ${ListingFormat.price(lo)}';
     if (hi != null) return '≤ ${ListingFormat.price(hi)}';
-    return '—';
+    return '';
   }
 }
 

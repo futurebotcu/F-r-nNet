@@ -2962,5 +2962,42 @@ class AppStrings {
   static const String listingsToggleOnTooltip = 'Yayına aç';
   static const String listingsDeleteTooltip = 'Sil';
 
+  // ── Final ilanlar/ödeme ──
+  static const String finalListingsPriceAsk = 'Fiyat için sor';
+  static const String finalMarketCardCta = 'İncele';
+  static const String finalMarketPauseAction = 'İlanı duraklat';
+  static const String finalMarketSoldAction =
+      'Satıldı/Devredildi olarak işaretle';
+  static const String finalMarketDeleteAction = 'İlanı sil';
+  static const String finalMarketOwnMessageInfo =
+      'Kendi ilanına mesaj başlatamazsın.';
+  static const String finalMarketRentPerMonth = '/ay';
+  static const String finalFilterAll = 'Tümü';
+  static const String finalFormContactPreference = 'Tercih edilen iletişim';
+  static const String finalFormStatusLabel = 'Durum';
+  static const String finalFormStatusSold = 'Satıldı/Devredildi';
+  static const String finalSeekMyPostsTitle = 'İş Arıyorum İlanlarım';
+  static const String finalSeekNewPost = 'Yeni ilan';
+  static const String finalSeekShareSubject = 'FırınNet — İş Arıyorum';
+  static const String finalStorePaymentCancelled =
+      'Ödeme iptal edildi. İstediğin zaman yeniden deneyebilirsin.';
+  static const String finalStorePaymentFailed =
+      'Ödeme tamamlanamadı. Bağlantını kontrol edip tekrar dene.';
+  static const String finalPaywallCalcBody =
+      'Daha fazla karar odaklı hesaplama için paketini yükselt.';
+  static const String finalPaywallReportBody =
+      'Daha uzun rapor geçmişi için paketini yükselt.';
+  static const String finalListingFeeFreePlan =
+      'Paketinle ilan yayınlama ücretsiz.';
+  static const String finalSupplierGiftBody =
+      "FırınNet'in tedarikçilere sunduğu tüm özellikleri lansmana özel "
+      'ücretsiz kullan.';
+  static const String finalSupplierGiftContinueInfo =
+      'Ücretsiz dönem bitmeden sana hatırlatma yapacak, devam edebileceğin '
+      'paketleri ve fiyatlarını bildireceğiz. İstersen sana uygun paketi '
+      'seçerek ücretli devam edebilirsin.';
+  static const String finalSupplierGiftAssurance =
+      'Onayın olmadan ücret alınmaz, ücretli abonelik başlatılmaz.';
+
   static const String dealerSharePdfErr = 'PDF oluşturulamadı. Tekrar dene.';
 }

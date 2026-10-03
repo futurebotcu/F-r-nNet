@@ -57,10 +57,10 @@ class MarketplaceListingCard extends StatelessWidget {
         return '${ListingFormat.price(rent, currency: cur)}'
             '${AppStrings.listingsPriceRentSuffix}';
       }
-      return AppStrings.listingsPriceAsk;
+      return AppStrings.finalListingsPriceAsk;
     }
     final price = listing.price;
-    if (price == null) return AppStrings.listingsPriceAsk;
+    if (price == null) return AppStrings.finalListingsPriceAsk;
     final unit = (listing.unit ?? '').trim();
     return '${ListingFormat.price(price, currency: cur)}'
         '${unit.isNotEmpty ? ' / $unit' : ''}';
@@ -181,26 +181,41 @@ class MarketplaceListingCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                    // Fiyat solda; sağda sakin "İncele ›" ipucu (kart
+                    // dokunuşu detayı açar — iş kartlarındaki görünür CTA ile
+                    // tutarlı, ek yükseklik yok).
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          priceLabel(listing),
-                          style: priced
-                              ? AppTypography.price
-                              : AppTypography.price.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 14,
-                                ),
+                        Expanded(
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                priceLabel(listing),
+                                style: priced
+                                    ? AppTypography.price
+                                    : AppTypography.price.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14,
+                                      ),
+                              ),
+                              if (listing.negotiable) const _NegotiableChip(),
+                            ],
+                          ),
                         ),
-                        if (listing.negotiable) const _NegotiableChip(),
+                        const SizedBox(width: AppSpacing.s),
+                        const _DetailHint(),
                       ],
                     ),
                     if (location != null) ...[
                       const SizedBox(height: 6),
-                      _MetaLine(icon: Icons.place_outlined, text: location),
+                      _MetaLine(
+                        icon: Icons.location_on_outlined,
+                        text: location,
+                      ),
                     ],
                     if (owner.isNotEmpty || time.isNotEmpty) ...[
                       const SizedBox(height: 4),
@@ -308,6 +323,34 @@ class _MetaLine extends StatelessWidget {
           Text(t, style: AppTypography.caption, maxLines: 1),
         ],
       ],
+    );
+  }
+}
+
+/// Kartın ikincil detay ipucu: "İncele ›" (mürekkep, küçük). Dokunma kartın
+/// kendisinde; ipucu semantikte tekrar okunmaz.
+class _DetailHint extends StatelessWidget {
+  const _DetailHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ExcludeSemantics(
+      child: Row(
+        key: ValueKey('market_card_cta'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppStrings.finalMarketCardCta,
+            maxLines: 1,
+            style: AppTypography.smallAction,
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 16,
+            color: AppColors.brandInk,
+          ),
+        ],
+      ),
     );
   }
 }

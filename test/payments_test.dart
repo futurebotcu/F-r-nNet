@@ -390,7 +390,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('buy_premium_monthly')));
       await tester.pumpAndSettle();
-      expect(find.text(AppStrings.storePaymentFailed), findsOneWidget);
+      expect(find.text(AppStrings.finalStorePaymentFailed), findsOneWidget);
       expect(find.textContaining('PlatformException'), findsNothing);
       final btn = tester.widget<FilledButton>(
         find.byKey(const ValueKey('buy_premium_monthly')),
@@ -411,7 +411,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('restore_purchases')));
       await tester.pumpAndSettle();
-      expect(find.text(AppStrings.storePaymentFailed), findsOneWidget);
+      expect(find.text(AppStrings.finalStorePaymentFailed), findsOneWidget);
       final btn = tester.widget<TextButton>(
         find.byKey(const ValueKey('restore_purchases')),
       );
@@ -428,7 +428,7 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('listing_pay_button')));
       await tester.pumpAndSettle();
-      expect(find.text(AppStrings.storePaymentFailed), findsOneWidget);
+      expect(find.text(AppStrings.finalStorePaymentFailed), findsOneWidget);
       expect(find.textContaining('PlatformException'), findsNothing);
       final btn = tester.widget<ButtonStyleButton>(
         find.byKey(const ValueKey('listing_pay_button')),

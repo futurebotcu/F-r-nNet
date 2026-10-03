@@ -226,7 +226,10 @@ Future<void> _showJobSafetySheet(
               Icons.flag_outlined,
               color: AppColors.textPrimary,
             ),
-            title: const Text(AppStrings.safetyActionReport),
+            title: const Text(
+              AppStrings.safetyActionReport,
+              style: AppTypography.bodyLarge,
+            ),
             onTap: () {
               Navigator.of(ctx).pop();
               showReportSheet(
@@ -240,9 +243,9 @@ Future<void> _showJobSafetySheet(
           ),
           ListTile(
             leading: const Icon(Icons.block_rounded, color: AppColors.danger),
-            title: const Text(
+            title: Text(
               AppStrings.safetyActionBlock,
-              style: TextStyle(color: AppColors.danger),
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.danger),
             ),
             onTap: () {
               Navigator.of(ctx).pop();
@@ -880,6 +883,7 @@ class JobListingDetailView extends StatelessWidget {
                     const SizedBox(height: AppSpacing.s),
                     Text(
                       keyFact,
+                      key: const ValueKey('job_detail_key_fact'),
                       style: keyFactIsFallback
                           ? AppTypography.price.copyWith(
                               color: AppColors.textSecondary,
@@ -894,7 +898,7 @@ class JobListingDetailView extends StatelessWidget {
                           const Padding(
                             padding: EdgeInsets.only(top: 2),
                             child: Icon(
-                              Icons.place_outlined,
+                              Icons.location_on_outlined,
                               size: 16,
                               color: AppColors.textSecondary,
                             ),

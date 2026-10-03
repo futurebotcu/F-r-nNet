@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -68,8 +69,9 @@ class _ListingPaymentButtonState extends ConsumerState<ListingPaymentButton> {
       case PaymentResult.unavailable:
         AppFeedback.info(context, AppStrings.storePaymentPreparing);
       case PaymentResult.cancelled:
+        AppFeedback.info(context, AppStrings.finalStorePaymentCancelled);
       case PaymentResult.error:
-        AppFeedback.error(context, AppStrings.storePaymentFailed);
+        AppFeedback.error(context, AppStrings.finalStorePaymentFailed);
     }
   }
 
@@ -83,8 +85,14 @@ class _ListingPaymentButtonState extends ConsumerState<ListingPaymentButton> {
         key: const ValueKey('listing_pay_button'),
         onPressed: _busy ? null : _pay,
         icon: const Icon(Icons.lock_open_rounded, size: 17),
-        label: const Text(AppStrings.storeListingPayCta),
+        label: const Text(
+          AppStrings.storeListingPayCta,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+        ),
         style: FilledButton.styleFrom(
+          textStyle: AppTypography.buttonLabel,
           backgroundColor: AppColors.brandInk,
           foregroundColor: AppColors.brandLemon,
           minimumSize: const Size.fromHeight(50),

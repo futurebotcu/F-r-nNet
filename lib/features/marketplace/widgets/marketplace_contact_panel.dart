@@ -183,7 +183,7 @@ class MarketplaceContactPanel extends StatelessWidget {
                           child: OutlinedButton.icon(
                             key: const ValueKey('market_detail_call'),
                             onPressed: () => _launchPhone(context),
-                            icon: const Icon(Icons.phone_rounded, size: 16),
+                            icon: const Icon(Icons.call_outlined, size: 16),
                             label: const Text(
                               AppStrings.marketContactPhone,
                               maxLines: 1,

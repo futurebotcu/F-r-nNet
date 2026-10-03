@@ -47,7 +47,7 @@ void main() {
 
     test('InfoSection _LocationChip rozet kullanır', () {
       expect(src.contains('_LocationChip'), isTrue);
-      expect(src.contains('Icons.place_outlined'), isTrue);
+      expect(src.contains('Icons.location_on_outlined'), isTrue);
     });
 
     test('AttributesGrid taxonomy iletişim tercihi label\'ı ekler', () {
@@ -56,7 +56,7 @@ void main() {
         isTrue,
         reason: 'Detail attribute taxonomy üzerinden contact label vermeli',
       );
-      expect(src.contains("MapEntry('İletişim'"), isTrue);
+      expect(src.contains('MapEntry(AppStrings.listingsSectionContact'), isTrue);
     });
 
     test('Currency default\'dan farklıysa attribute olarak gösterilir', () {
