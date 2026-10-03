@@ -42,7 +42,11 @@ class PremiumBottomNav extends StatelessWidget {
                       child: _NavTile(
                         item: items[i],
                         selected: i == selectedIndex,
-                        onTap: () => onSelect(i),
+                        onTap: () {
+                          // Yalnız gerçek sekme değişiminde hafif tık.
+                          if (i != selectedIndex) AppHaptics.selection();
+                          onSelect(i);
+                        },
                       ),
                     ),
                   ),

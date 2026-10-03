@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/theme/app_tokens.dart';
+
+/// Ölçülü dokunsal geri bildirim — her dokunuşa titreşim YOK.
+///
+/// * [selection]: alt sekme / segment değişimi
+/// * [toggle]: beğen, kaydet, favori gibi aç-kapa eylemi
+/// * [success]: ilan yayınlama gibi önemli bir işlemin başarıyla bitmesi
+class AppHaptics {
+  const AppHaptics._();
+
+  static void selection() => HapticFeedback.selectionClick();
+  static void toggle() => HapticFeedback.lightImpact();
+  static void success() => HapticFeedback.mediumImpact();
+}
 
 /// Tap edildiğinde child'i hafifçe küçülterek "press" hissi veren wrapper.
 /// onTap null ise pasiftir.
