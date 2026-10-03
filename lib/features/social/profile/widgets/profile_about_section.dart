@@ -72,7 +72,7 @@ class ProfileAboutSection extends StatelessWidget {
                     const Icon(
                       Icons.add_rounded,
                       size: 15,
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                     ),
                     const SizedBox(width: 4),
                     Flexible(

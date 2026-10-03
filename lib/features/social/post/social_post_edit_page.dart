@@ -126,7 +126,7 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
             child: FilledButton(
               onPressed: (_saving || !isOwner) ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
+                backgroundColor: AppColors.brandLemon,
                 foregroundColor: AppColors.brandInk,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.s),

@@ -30,7 +30,7 @@ void main() {
         ),
       ));
       final chip = tester.widget<ChoiceChip>(find.byType(ChoiceChip));
-      expect(chip.labelStyle?.color, AppColors.softGold);
+      expect(chip.labelStyle?.color, AppColors.brandInk);
       expect(chip.labelStyle?.fontWeight, FontWeight.w800);
       expect(chip.selected, isTrue);
     });

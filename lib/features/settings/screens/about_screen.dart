@@ -39,7 +39,7 @@ class AboutScreen extends StatelessWidget {
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [AppColors.copper, AppColors.copperMuted],
+                            colors: [AppColors.brandLemon, AppColors.brandLemonSoft],
                           ),
                           borderRadius: BorderRadius.circular(AppRadius.m),
                         ),

@@ -223,7 +223,7 @@ class _MetricsGrid extends StatelessWidget {
         _MetricTile(
           label: AppStrings.dealerTxFilterTypeAdjustment,
           value: NumberFormatter.currency(metrics.totalAdjustment),
-          accent: AppColors.softGold,
+          accent: AppColors.brandInk,
         ),
         _MetricTile(
           label: AppStrings.dealerReportMetricNet,

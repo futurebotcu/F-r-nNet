@@ -172,10 +172,10 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.copper.withValues(alpha: 0.12),
+                    color: AppColors.brandLemon.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     border: Border.all(
-                      color: AppColors.copper.withValues(alpha: 0.34),
+                      color: AppColors.brandLemon.withValues(alpha: 0.34),
                       width: 0.6,
                     ),
                   ),
@@ -217,7 +217,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: const Text(AppStrings.cvAddRecordCta),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.softGold,
+                    foregroundColor: AppColors.brandInk,
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
@@ -296,7 +296,7 @@ class _Label extends StatelessWidget {
     return Text(
       text,
       style: AppTypography.caption.copyWith(
-        color: AppColors.softGold,
+        color: AppColors.brandInk,
         fontWeight: FontWeight.w700,
       ),
     );
@@ -351,7 +351,7 @@ class _CvRecordCard extends ConsumerWidget {
                       : Icons.visibility_off_outlined,
                   size: 18,
                   color: record.isPublic
-                      ? AppColors.softGold
+                      ? AppColors.brandInk
                       : AppColors.textMuted,
                 ),
               ),
@@ -370,7 +370,7 @@ class _CvRecordCard extends ConsumerWidget {
           if ((record.workplace ?? '').isNotEmpty)
             Text(
               record.workplace!,
-              style: AppTypography.meta.copyWith(color: AppColors.softGold),
+              style: AppTypography.meta.copyWith(color: AppColors.brandInk),
             ),
           const SizedBox(height: 4),
           Wrap(
@@ -593,19 +593,19 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                       label: Text(entry.value),
                       selected: _entryType == entry.key,
                       onSelected: (_) => setState(() => _entryType = entry.key),
-                      selectedColor: AppColors.copperMuted.withValues(
+                      selectedColor: AppColors.brandLemonSoft.withValues(
                         alpha: 0.28,
                       ),
                       backgroundColor: Colors.transparent,
                       side: BorderSide(
                         color: _entryType == entry.key
-                            ? AppColors.copperMuted
+                            ? AppColors.brandLemonSoft
                             : AppColors.surfaceVariant,
                         width: 1,
                       ),
                       labelStyle: AppTypography.meta.copyWith(
                         color: _entryType == entry.key
-                            ? AppColors.softGold
+                            ? AppColors.brandInk
                             : AppColors.textSecondary,
                       ),
                     ),

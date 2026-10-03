@@ -357,7 +357,7 @@ class _BalanceHero extends StatelessWidget {
         ? AppColors.warningInk
         : balance < 0
         ? AppColors.success
-        : AppColors.softGold;
+        : AppColors.brandInk;
     final tag = balance > 0
         ? AppStrings.dealerDetailHeroDebt
         : balance < 0
@@ -379,7 +379,7 @@ class _BalanceHero extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.18),
+          color: AppColors.brandLemon.withValues(alpha: 0.18),
           width: 0.8,
         ),
         boxShadow: AppShadow.heroGlow,
@@ -452,7 +452,7 @@ class _BalanceHero extends StatelessWidget {
                 child: _MiniMetric(
                   label: AppStrings.dealerDetailMetricDelivery,
                   value: NumberFormatter.currency(summary.totalDelivery),
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                 ),
               ),
               Expanded(
@@ -542,7 +542,7 @@ class _ChipMini extends StatelessWidget {
         color: AppColors.overlay.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.18),
+          color: AppColors.brandInk.withValues(alpha: 0.18),
           width: 0.6,
         ),
       ),
@@ -705,13 +705,13 @@ class _SectionHeaderWithCta extends StatelessWidget {
                   const Icon(
                     Icons.add_rounded,
                     size: 16,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                   ),
                   const SizedBox(width: 2),
                   Text(
                     ctaLabel,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w700,
                       fontSize: 12.5,
                     ),
@@ -813,7 +813,7 @@ class _ActionChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.accent = AppColors.softGold,
+    this.accent = AppColors.brandInk,
   });
   final IconData icon;
   final String label;
@@ -903,12 +903,12 @@ class _PricesCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppColors.softGold.withValues(alpha: 0.12),
+                  color: AppColors.brandInk.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
                 child: const Icon(
                   Icons.local_offer_rounded,
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   size: 16,
                 ),
               ),
@@ -934,7 +934,7 @@ class _PricesCard extends StatelessWidget {
                   Text(
                     NumberFormatter.currency(prices[i].unitPrice),
                     style: const TextStyle(
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 14.5,
                     ),
@@ -1443,7 +1443,7 @@ class _TxRow extends StatelessWidget {
       case DealerTransactionType.delivery:
         return (
           Icons.bakery_dining_rounded,
-          AppColors.softGold,
+          AppColors.brandInk,
           '${t.productName ?? "Ürün"} x${t.quantity ?? 0}',
         );
       case DealerTransactionType.returned:
@@ -1557,7 +1557,7 @@ class _NotesCardState extends ConsumerState<NotesCard> {
                         const Icon(
                           Icons.sticky_note_2_outlined,
                           size: 16,
-                          color: AppColors.softGold,
+                          color: AppColors.brandInk,
                         ),
                         const SizedBox(width: AppSpacing.s),
                         Expanded(
@@ -1619,7 +1619,7 @@ class _NotesCardState extends ConsumerState<NotesCard> {
               child: FilledButton(
                 onPressed: _saving ? null : _add,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.copper,
+                  backgroundColor: AppColors.brandLemon,
                   // P0 hijyen — copper zemin üstünde beyaz ikon (standart);
                   // koyu textPrimary kontrastı düşüktü.
                   foregroundColor: Colors.white,

@@ -590,7 +590,7 @@ class _AccountTypePicker extends StatelessWidget {
 /// gösterilir.
 /// Kullanım şartları / gizlilik bağlantı metni (altı çizili, mürekkep).
 final TextStyle _legalLinkStyle = AppTypography.body.copyWith(
-  color: AppColors.softGold,
+  color: AppColors.brandInk,
   fontWeight: FontWeight.w700,
   decoration: TextDecoration.underline,
 );
@@ -659,7 +659,7 @@ class _LegalAcceptCheckboxState extends State<_LegalAcceptCheckbox> {
               Checkbox(
                 value: widget.value,
                 onChanged: widget.onChanged,
-                activeColor: AppColors.copper,
+                activeColor: AppColors.brandLemon,
               ),
               Expanded(
                 child: Padding(
@@ -719,7 +719,7 @@ class _AccountTypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = AppColors.softGold;
+    const accent = AppColors.brandInk;
     return Material(
       color: isSelected ? accent.withValues(alpha: 0.12) : AppColors.card,
       borderRadius: BorderRadius.circular(AppRadius.m),

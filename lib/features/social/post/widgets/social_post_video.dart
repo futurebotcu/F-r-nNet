@@ -81,8 +81,8 @@ class _SocialPostVideoState extends State<SocialPostVideo> {
         allowFullScreen: true,
         aspectRatio: aspect,
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppColors.copper,
-          handleColor: AppColors.copper,
+          playedColor: AppColors.brandLemon,
+          handleColor: AppColors.brandLemon,
           bufferedColor: AppColors.borderHairline,
           backgroundColor: AppColors.surface,
         ),

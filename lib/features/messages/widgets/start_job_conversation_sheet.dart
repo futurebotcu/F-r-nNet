@@ -187,7 +187,7 @@ class _StartJobConversationSheetState
               Text(
                 _relatedTitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w700,
                   fontSize: 13.5,
                 ),
@@ -262,7 +262,7 @@ class _StartJobConversationSheetState
                   onPressed: _sending ? null : _onSendPressed,
                   label: const Text(AppStrings.startConvoSendCta),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
+                    backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),

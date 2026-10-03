@@ -399,7 +399,7 @@ class _ActivityRow extends StatelessWidget {
       case DealerTransactionType.payment:
         return (Icons.payments_rounded, AppColors.success, '−');
       case DealerTransactionType.adjustment:
-        return (Icons.tune_rounded, AppColors.softGold, '±');
+        return (Icons.tune_rounded, AppColors.brandInk, '±');
     }
   }
 

@@ -174,7 +174,7 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                           : AppStrings.dealerSearchHint,
                       prefixIcon: const Icon(
                         Icons.search_rounded,
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.l,

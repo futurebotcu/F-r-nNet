@@ -31,7 +31,7 @@ class WorkerExperiencesScreen extends ConsumerWidget {
         onPressed: () => _openAddSheet(context, ref),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Tecrübe ekle'),
-        backgroundColor: AppColors.copper,
+        backgroundColor: AppColors.brandLemon,
         foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
@@ -127,7 +127,7 @@ class _ExperienceCard extends ConsumerWidget {
               child: Text(
                 experience.workplace!,
                 style: const TextStyle(
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w700,
                   fontSize: 13.5,
                 ),
@@ -209,12 +209,12 @@ class _EmptyState extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.12),
+                    color: AppColors.brandInk.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.s),
                   ),
                   child: const Icon(
                     Icons.history_edu_outlined,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     size: 22,
                   ),
                 ),

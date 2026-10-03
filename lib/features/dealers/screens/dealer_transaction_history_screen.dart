@@ -227,7 +227,7 @@ class _DealerTransactionHistoryScreenState
     case DealerTransactionType.payment:
       return (icon: Icons.payments_rounded, color: AppColors.success, sign: '−');
     case DealerTransactionType.adjustment:
-      return (icon: Icons.tune_rounded, color: AppColors.softGold, sign: '±');
+      return (icon: Icons.tune_rounded, color: AppColors.brandInk, sign: '±');
   }
 }
 

@@ -176,7 +176,7 @@ class _TodayHero extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.local_fire_department_rounded,
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   size: 20,
                 ),
               ),
@@ -198,7 +198,7 @@ class _TodayHero extends StatelessWidget {
           Text(
             revenue == null ? '₺ —' : NumberFormatter.currency(revenue),
             style: theme.textTheme.displaySmall?.copyWith(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w800,
               fontSize: 38,
               letterSpacing: -1.2,
@@ -508,7 +508,7 @@ class _TaskRow extends ConsumerWidget {
               onChanged: (v) => ref
                   .read(bakeryRepositoryProvider)
                   .setTaskDone(task.id, v ?? false),
-              activeColor: AppColors.softGold,
+              activeColor: AppColors.brandInk,
             ),
           ),
           const SizedBox(width: 4),
@@ -638,7 +638,7 @@ class _RecentList extends StatelessWidget {
               icon: Icons.sticky_note_2_outlined,
               title: dayBook!.dayNote,
               meta: 'Not',
-              accent: AppColors.softGold,
+              accent: AppColors.brandInk,
             ),
         ],
       ),

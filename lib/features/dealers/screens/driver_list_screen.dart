@@ -118,11 +118,11 @@ class _GeneralAccountCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.softGold.withValues(alpha: 0.14),
+                color: AppColors.brandInk.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(AppRadius.m),
               ),
               child: const Icon(Icons.summarize_rounded,
-                  color: AppColors.softGold, size: 20),
+                  color: AppColors.brandInk, size: 20),
             ),
             const SizedBox(width: AppSpacing.m),
             const Expanded(
@@ -350,11 +350,11 @@ class _DriversEmpty extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.softGold.withValues(alpha: 0.14),
+              color: AppColors.brandInk.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(AppRadius.m),
             ),
             child: const Icon(Icons.local_shipping_outlined,
-                color: AppColors.softGold, size: 26),
+                color: AppColors.brandInk, size: 26),
           ),
           const SizedBox(height: AppSpacing.m),
           const Text('Henüz şoför yok',

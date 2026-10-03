@@ -516,7 +516,7 @@ class _RetryState extends StatelessWidget {
           icon: const Icon(Icons.refresh_rounded, size: 16),
           label: const Text(AppStrings.academyRetryCta),
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.copper,
+            backgroundColor: AppColors.brandLemon,
             foregroundColor: AppColors.brandInk,
             minimumSize: const Size(0, 44),
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),

@@ -461,10 +461,10 @@ class _OwnerPendingAlert extends ConsumerWidget {
               vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: AppColors.copper.withValues(alpha: 0.12),
+              color: AppColors.brandLemon.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                color: AppColors.copper.withValues(alpha: 0.32),
+                color: AppColors.brandLemon.withValues(alpha: 0.32),
                 width: 0.6,
               ),
             ),
@@ -984,16 +984,16 @@ class _PinnedBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.16),
+        color: AppColors.brandLemon.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.32),
+          color: AppColors.brandLemon.withValues(alpha: 0.32),
           width: 0.6,
         ),
       ),
       child: Text(
         AppStrings.groupDetailPinnedBadge,
-        style: AppTypography.badge.copyWith(color: AppColors.softGold),
+        style: AppTypography.badge.copyWith(color: AppColors.brandInk),
       ),
     );
   }
@@ -1087,7 +1087,7 @@ class _JoinFooterCta extends ConsumerWidget {
               : AppStrings.groupJoinNowCta,
         ),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.copper,
+          backgroundColor: AppColors.brandLemon,
           foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surfaceLine,
           disabledForegroundColor: AppColors.textMuted,
@@ -1162,7 +1162,7 @@ class PrimaryActionButton extends ConsumerWidget {
     } else {
       label = AppStrings.groupActionJoin;
       icon = Icons.add_rounded;
-      color = AppColors.copper;
+      color = AppColors.brandLemon;
       enabled = true;
     }
 
@@ -1233,10 +1233,10 @@ class _OwnerStatusCard extends StatelessWidget {
         vertical: AppSpacing.m,
       ),
       decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.12),
+        color: AppColors.brandLemon.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.m),
         border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.32),
+          color: AppColors.brandLemon.withValues(alpha: 0.32),
           width: 0.6,
         ),
       ),
@@ -1343,7 +1343,7 @@ class _RequestButton extends ConsumerWidget {
         icon: Icon(icon, size: 18),
         label: Text(label),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.copper,
+          backgroundColor: AppColors.brandLemon,
           foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surface,
           disabledForegroundColor: AppColors.textMuted,
@@ -1379,7 +1379,7 @@ class _PrivateGated extends StatelessWidget {
             children: [
               Icon(
                 Icons.lock_outline_rounded,
-                color: AppColors.softGold,
+                color: AppColors.brandInk,
                 size: 20,
               ),
               SizedBox(width: AppSpacing.m),
@@ -1471,7 +1471,7 @@ void _openJoinRequestsSheet(
                 children: [
                   Icon(
                     Icons.hourglass_top_rounded,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     size: 18,
                   ),
                   SizedBox(width: AppSpacing.s),
@@ -1662,7 +1662,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                 child: FilledButton(
                   onPressed: _busy ? null : () => _decide(true),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
+                    backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -1966,9 +1966,9 @@ class _ComposerState extends ConsumerState<GroupComposer> {
           child: FilledButton(
             onPressed: _sending ? null : _send,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.copper,
+              backgroundColor: AppColors.brandLemon,
               foregroundColor: AppColors.brandInk,
-              disabledBackgroundColor: AppColors.copper.withValues(alpha: 0.6),
+              disabledBackgroundColor: AppColors.brandLemon.withValues(alpha: 0.6),
               disabledForegroundColor: AppColors.brandInk,
               padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
@@ -2147,7 +2147,7 @@ class _MembersSheetBody extends ConsumerWidget {
             children: [
               const Icon(
                 Icons.group_rounded,
-                color: AppColors.softGold,
+                color: AppColors.brandInk,
                 size: 18,
               ),
               const SizedBox(width: AppSpacing.s),
@@ -2251,10 +2251,10 @@ class _MemberRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.copper.withValues(alpha: 0.16),
+                color: AppColors.brandLemon.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 border: Border.all(
-                  color: AppColors.copper.withValues(alpha: 0.32),
+                  color: AppColors.brandLemon.withValues(alpha: 0.32),
                   width: 0.6,
                 ),
               ),

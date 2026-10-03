@@ -50,15 +50,6 @@ class AppColors {
   static const Color heroFrom = surface;
   static const Color heroTo = brandLemonPale;
 
-  // Legacy aliases used across the app
-  static const Color brandYellow = brandLemon;
-  static const Color brandYellowPressed = brandLemonPressed;
-  static const Color copper = brandLemon;
-  static const Color softGold = brandInk;
-  static const Color copperMuted = brandLemonSoft;
-  static const Color darkAccent = brandInk;
-  static const Color darkAccentDeeper = brandInk;
-
   // Semantic colors
   static const Color success = Color(0xFF16A34A);
   static const Color warning = Color(0xFFF59E0B);

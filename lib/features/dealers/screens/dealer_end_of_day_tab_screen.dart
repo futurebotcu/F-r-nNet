@@ -236,7 +236,7 @@ class _SummarySection extends StatelessWidget {
             DealerKpiTile(
               label: AppStrings.dealerReportsKpiDelivery,
               value: NumberFormatter.currency(metrics.totalDelivery),
-              accent: AppColors.softGold,
+              accent: AppColors.brandInk,
             ),
             DealerKpiTile(
               label: AppStrings.dealerReportsKpiReturn,
@@ -581,7 +581,7 @@ class _TodayTxRow extends StatelessWidget {
       case DealerTransactionType.payment:
         return (Icons.payments_rounded, AppColors.success, '−');
       case DealerTransactionType.adjustment:
-        return (Icons.tune_rounded, AppColors.softGold, '±');
+        return (Icons.tune_rounded, AppColors.brandInk, '±');
     }
   }
 }
@@ -601,7 +601,7 @@ class _ShareCta extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.brandInk,
-          side: const BorderSide(color: AppColors.copper, width: 1.0),
+          side: const BorderSide(color: AppColors.brandLemon, width: 1.0),
         ),
       ),
     );

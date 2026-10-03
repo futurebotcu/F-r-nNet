@@ -87,7 +87,7 @@ class CalculatorQuantityRow extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: o == unit
-                          ? AppColors.copper.withValues(alpha: 0.30)
+                          ? AppColors.brandLemon.withValues(alpha: 0.30)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
@@ -95,7 +95,7 @@ class CalculatorQuantityRow extends StatelessWidget {
                       o.label,
                       style: TextStyle(
                         color: o == unit
-                            ? AppColors.softGold
+                            ? AppColors.brandInk
                             : AppColors.textMuted,
                         fontWeight: FontWeight.w800,
                         fontSize: 12,

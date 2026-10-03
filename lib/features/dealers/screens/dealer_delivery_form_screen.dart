@@ -218,14 +218,14 @@ class _DealerDeliveryFormScreenState
                   children: [
                     Icon(
                       Icons.bolt_rounded,
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                       size: 14,
                     ),
                     SizedBox(width: 4),
                     Text(
                       AppStrings.dealerDeliveryAutoPriceMsg,
                       style: TextStyle(
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                         fontWeight: FontWeight.w600,
                         fontSize: 11.5,
                       ),
@@ -243,7 +243,7 @@ class _DealerDeliveryFormScreenState
                   children: [
                     const Icon(
                       Icons.calculate_outlined,
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                       size: 18,
                     ),
                     const SizedBox(width: AppSpacing.s),
@@ -257,7 +257,7 @@ class _DealerDeliveryFormScreenState
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                         letterSpacing: -0.4,
                       ),
                     ),
@@ -324,7 +324,7 @@ class _DealerStrip extends StatelessWidget {
         children: [
           const Icon(
             Icons.storefront_rounded,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
             size: 18,
           ),
           const SizedBox(width: AppSpacing.s),

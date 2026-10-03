@@ -105,7 +105,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppColors.copper, AppColors.copperMuted],
+                      colors: [AppColors.brandLemon, AppColors.brandLemonSoft],
                     ),
                     borderRadius: BorderRadius.circular(AppRadius.l),
                   ),
@@ -140,17 +140,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   padding: const EdgeInsets.all(AppSpacing.m),
                   margin: const EdgeInsets.only(bottom: AppSpacing.l),
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.10),
+                    color: AppColors.brandInk.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(AppRadius.m),
                     border: Border.all(
-                      color: AppColors.softGold.withValues(alpha: 0.30),
+                      color: AppColors.brandInk.withValues(alpha: 0.30),
                     ),
                   ),
                   child: Row(
                     children: [
                       const Icon(
                         Icons.info_outline,
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                         size: 18,
                       ),
                       const SizedBox(width: 8),

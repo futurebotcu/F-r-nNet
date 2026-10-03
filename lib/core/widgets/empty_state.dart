@@ -54,7 +54,7 @@ class EmptyState extends StatelessWidget {
           border: Border.all(color: AppColors.borderHairline, width: 0.8),
           boxShadow: AppShadow.subtle,
         ),
-        child: Icon(icon, size: compact ? 24 : 27, color: AppColors.softGold),
+        child: Icon(icon, size: compact ? 24 : 27, color: AppColors.brandInk),
       ),
     );
 
@@ -95,7 +95,7 @@ class EmptyState extends StatelessWidget {
               icon: const Icon(Icons.arrow_forward_rounded, size: 16),
               label: Text(actionLabel!),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
+                backgroundColor: AppColors.brandLemon,
                 foregroundColor: AppColors.brandInk,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.l,

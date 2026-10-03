@@ -248,7 +248,7 @@ class _KpiBlock extends StatelessWidget {
             DealerKpiTile(
               label: AppStrings.dealerReportsKpiDelivery,
               value: NumberFormatter.currency(metrics.totalDelivery),
-              accent: AppColors.softGold,
+              accent: AppColors.brandInk,
             ),
             DealerKpiTile(
               label: AppStrings.dealerReportsKpiReturn,

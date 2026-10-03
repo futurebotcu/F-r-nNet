@@ -106,14 +106,14 @@ class _RoleCard extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: AppColors.copper.withValues(alpha: 0.18),
+              color: AppColors.brandLemon.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                color: AppColors.copper.withValues(alpha: 0.32),
+                color: AppColors.brandLemon.withValues(alpha: 0.32),
                 width: 0.6,
               ),
             ),
-            child: Icon(icon, color: AppColors.softGold, size: 26),
+            child: Icon(icon, color: AppColors.brandInk, size: 26),
           ),
           const SizedBox(width: AppSpacing.l),
           Expanded(
@@ -140,7 +140,7 @@ class _RoleCard extends StatelessWidget {
           ),
           const Icon(
             Icons.chevron_right_rounded,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
             size: 22,
           ),
         ],

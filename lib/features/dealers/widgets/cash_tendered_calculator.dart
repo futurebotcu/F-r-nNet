@@ -12,7 +12,7 @@
 //   `kFABSpacing`).
 // - `CurrencySetting.instance.ceil(price)` simplified to `ceilToDouble()`
 //   (TR kuruş precision; donor's currency-aware ceil not needed).
-// - Theme colors: operator buttons `AppColors.softGold` (donor used
+// - Theme colors: operator buttons `AppColors.brandInk` (donor used
 //   `theme.colorScheme.secondary`); back/clear `AppColors.danger` (donor
 //   used `theme.colorScheme.error`).
 // - Core widget logic, keypad layout (5-column), state machine
@@ -166,25 +166,25 @@ class _CashTenderedCalculatorState extends State<CashTenderedCalculator> {
                         _CalculatorAction(
                           key: const Key('cashier.calculator.plus'),
                           action: () => _addOperator('+'),
-                          color: AppColors.softGold,
+                          color: AppColors.brandInk,
                           child: const Icon(Icons.add_outlined, size: 24),
                         ),
                         _CalculatorAction(
                           key: const Key('cashier.calculator.minus'),
                           action: () => _addOperator('-'),
-                          color: AppColors.softGold,
+                          color: AppColors.brandInk,
                           child: const Icon(Icons.remove_outlined, size: 24),
                         ),
                         _CalculatorAction(
                           key: const Key('cashier.calculator.times'),
                           action: () => _addOperator('x'),
-                          color: AppColors.softGold,
+                          color: AppColors.brandInk,
                           child: const Icon(Icons.clear_outlined, size: 24),
                         ),
                         _CalculatorAction(
                           key: const Key('cashier.calculator.ceil'),
                           action: _execCeil,
-                          color: AppColors.softGold,
+                          color: AppColors.brandInk,
                           child: const Icon(Icons.merge_type_rounded, size: 24),
                         ),
                       ],

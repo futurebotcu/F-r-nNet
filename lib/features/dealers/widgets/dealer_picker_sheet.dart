@@ -269,11 +269,11 @@ class _DealerRow extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: AppColors.softGold.withValues(alpha: 0.18),
+                backgroundColor: AppColors.brandInk.withValues(alpha: 0.18),
                 child: Text(
                   dealer.name.isNotEmpty ? dealer.name[0].trUpper : '?',
                   style: TextStyle(
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -312,7 +312,7 @@ class _DealerRow extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.copper.withValues(alpha: 0.12),
+                    color: AppColors.brandLemon.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(

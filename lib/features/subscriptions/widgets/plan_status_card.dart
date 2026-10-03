@@ -37,7 +37,7 @@ class PlanStatusCard extends ConsumerWidget {
           border: (e.freePeriodActive || e.isLaunchPromoActive)
               ? Border.all(
                   color: isCommercialFreePeriodEnding(e)
-                      ? AppColors.softGold
+                      ? AppColors.brandInk
                       : AppColors.brandLemon,
                   width: 1.4,
                 )

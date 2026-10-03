@@ -20,7 +20,7 @@ void main() {
         const DealerKpiTile(
           label: 'Açık Alacaklar',
           value: '₺1.000,00',
-          accent: AppColors.copper,
+          accent: AppColors.brandLemon,
         ),
       ));
       // Label Türkçe büyük harfle (trUpper) render edilir.
@@ -33,12 +33,12 @@ void main() {
         const DealerKpiTile(
           label: 'NET DEĞIŞIM',
           value: '₺500,00',
-          accent: AppColors.copper,
+          accent: AppColors.brandLemon,
         ),
       ));
       final valueText =
           tester.widget<Text>(find.text('₺500,00'));
-      expect(valueText.style?.color, AppColors.copper);
+      expect(valueText.style?.color, AppColors.brandLemon);
       expect(valueText.style?.fontWeight, FontWeight.w800);
     });
 

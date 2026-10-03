@@ -50,7 +50,7 @@ class CalculatorResultList extends StatelessWidget {
             value: lines[i].value,
             hero: lines[i].hero,
             warm: lines[i].hero,
-            accent: lines[i].hero ? AppColors.softGold : null,
+            accent: lines[i].hero ? AppColors.brandInk : null,
           ),
           if (i != lines.length - 1) const SizedBox(height: AppSpacing.m),
         ],
@@ -71,7 +71,7 @@ class _WarningBanner extends StatelessWidget {
         children: [
           const Icon(
             Icons.warning_amber_rounded,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
             size: 20,
           ),
           const SizedBox(width: AppSpacing.s),

@@ -177,39 +177,55 @@ class B2bProductCard extends StatelessWidget {
           // Aksiyonlar kendi satırında, sağa yaslı — dar ekranda taşmaz.
           if (!_isMine) ...[
             const SizedBox(height: AppSpacing.s),
-            Wrap(
-              alignment: WrapAlignment.end,
-              spacing: 4,
-              runSpacing: 4,
+            // Tek satır: ikincil "Fiyat Sor" + kalan genişlikte birincil CTA.
+            // Metinler gerekirse kısalır → dar ekran / büyük yazıda taşmaz.
+            Row(
               children: [
                 if (onAskPrice != null) ...[
-                  TextButton(
-                    onPressed: onAskPrice,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      minimumSize: const Size(0, 38),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.w700,
+                  Flexible(
+                    child: TextButton(
+                      onPressed: onAskPrice,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        minimumSize: const Size(0, 44),
+                        textStyle: AppTypography.buttonLabel.copyWith(
+                          fontSize: 13,
+                        ),
+                      ),
+                      child: const Text(
+                        'Fiyat Sor',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                ],
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: onRequestQuote,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.brandLemon,
+                      foregroundColor: AppColors.brandInk,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.m,
+                      ),
+                      minimumSize: const Size(0, 44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                      ),
+                      textStyle: AppTypography.buttonLabel.copyWith(
                         fontSize: 13,
                       ),
                     ),
-                    child: const Text('Fiyat Sor'),
-                  ),
-                ],
-                FilledButton(
-                  onPressed: onRequestQuote,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandLemon,
-                    foregroundColor: AppColors.brandInk,
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-                    minimumSize: const Size(0, 38),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    child: const Text(
+                      'Teklif İste',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
                   ),
-                  child: const Text('Teklif İste'),
                 ),
               ],
             ),

@@ -137,7 +137,7 @@ class _FollowButtonShell extends StatelessWidget {
           : const Icon(Icons.person_add_alt_1_rounded, size: 16),
       label: Text(label),
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.copper,
+        backgroundColor: AppColors.brandLemon,
         foregroundColor: AppColors.brandInk,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),

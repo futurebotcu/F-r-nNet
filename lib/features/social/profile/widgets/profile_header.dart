@@ -127,10 +127,10 @@ class ProfileHeader extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.softGold.withValues(alpha: 0.14),
+                          color: AppColors.brandInk.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(AppRadius.pill),
                           border: Border.all(
-                            color: AppColors.softGold.withValues(alpha: 0.36),
+                            color: AppColors.brandInk.withValues(alpha: 0.36),
                             width: 0.6,
                           ),
                         ),

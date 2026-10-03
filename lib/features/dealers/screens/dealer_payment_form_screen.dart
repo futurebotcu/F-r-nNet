@@ -136,7 +136,7 @@ class _DealerPaymentFormScreenState
                   children: [
                     const Icon(
                       Icons.payments_rounded,
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                       size: 18,
                     ),
                     const SizedBox(width: AppSpacing.s),
@@ -150,7 +150,7 @@ class _DealerPaymentFormScreenState
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                         letterSpacing: -0.4,
                       ),
                     ),

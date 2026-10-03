@@ -102,7 +102,7 @@ class EndOfDayScreen extends ConsumerWidget {
                       ? '₺ —'
                       : NumberFormatter.currency(book!.revenueAmount!),
                   helper: AppStrings.ledgerRevenueHint,
-                  accent: AppColors.softGold,
+                  accent: AppColors.brandInk,
                 ),
                 const SizedBox(height: AppSpacing.m),
                 Row(

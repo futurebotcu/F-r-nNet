@@ -92,7 +92,7 @@ class _Segment extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 44),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.copper : Colors.transparent,
+          color: selected ? AppColors.brandLemon : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           // Secili segment hafif lemon accent ile zarifce yukselir; pasifler duz.
           boxShadow: selected ? AppShadow.subtle : null,

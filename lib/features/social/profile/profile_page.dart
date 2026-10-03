@@ -529,10 +529,10 @@ class _AccountTypeBadge extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.softGold.withValues(alpha: 0.14),
+                color: AppColors.brandInk.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 border: Border.all(
-                  color: AppColors.softGold.withValues(alpha: 0.36),
+                  color: AppColors.brandInk.withValues(alpha: 0.36),
                   width: 0.6,
                 ),
               ),
@@ -585,7 +585,7 @@ class _CvHeader extends StatelessWidget {
                     style: AppTypography.smallAction,
                   ),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.softGold,
+                    foregroundColor: AppColors.brandInk,
                     minimumSize: const Size(0, 44),
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     visualDensity: VisualDensity.compact,
@@ -664,10 +664,10 @@ class _StatusChip extends StatelessWidget {
           key: const ValueKey('profile_status_chip'),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
           decoration: BoxDecoration(
-            color: AppColors.copper.withValues(alpha: 0.12),
+            color: AppColors.brandLemon.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(AppRadius.pill),
             border: Border.all(
-              color: AppColors.copper.withValues(alpha: 0.34),
+              color: AppColors.brandLemon.withValues(alpha: 0.34),
               width: 0.6,
             ),
           ),
@@ -727,7 +727,7 @@ class _ExperienceSection extends StatelessWidget {
                         style: AppTypography.smallAction,
                       ),
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.softGold,
+                        foregroundColor: AppColors.brandInk,
                         minimumSize: const Size(0, 44),
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         visualDensity: VisualDensity.compact,
@@ -871,7 +871,7 @@ class _JobSeekCard extends StatelessWidget {
               style: AppTypography.smallAction,
             ),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.softGold,
+              foregroundColor: AppColors.brandInk,
               minimumSize: const Size(0, 44),
               padding: const EdgeInsets.symmetric(horizontal: 4),
               visualDensity: VisualDensity.compact,
@@ -902,7 +902,7 @@ class _JobSeekCard extends StatelessWidget {
           // Aktif ilan vurgusu — softGold accent border korunur; üzerine
           // sakin kart gölgesi ile premium yükseliş.
           border: Border.all(
-            color: AppColors.softGold.withValues(alpha: 0.4),
+            color: AppColors.brandInk.withValues(alpha: 0.4),
             width: 0.8,
           ),
           boxShadow: AppShadow.card,
@@ -915,7 +915,7 @@ class _JobSeekCard extends StatelessWidget {
                 const Icon(
                   Icons.campaign_outlined,
                   size: 16,
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                 ),
                 const SizedBox(width: 6),
                 const Flexible(
@@ -957,7 +957,7 @@ class _JobSeekCard extends StatelessWidget {
                   style: AppTypography.smallAction,
                 ),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.softGold,
+                  foregroundColor: AppColors.brandInk,
                   minimumSize: const Size(0, 44),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   visualDensity: VisualDensity.compact,
@@ -1103,7 +1103,7 @@ class _ProfessionalSection extends StatelessWidget {
                         style: AppTypography.smallAction,
                       ),
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.softGold,
+                        foregroundColor: AppColors.brandInk,
                         minimumSize: const Size(0, 44),
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         visualDensity: VisualDensity.compact,
@@ -1287,7 +1287,7 @@ class _PublicRecipeRow extends StatelessWidget {
           const Icon(
             Icons.menu_book_outlined,
             size: 18,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
           ),
           const SizedBox(width: AppSpacing.s),
           Expanded(

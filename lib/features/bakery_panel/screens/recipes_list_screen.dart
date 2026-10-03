@@ -106,7 +106,7 @@ class RecipesListScreen extends ConsumerWidget {
         onPressed: () => _addRecipe(context, entitlements, count),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni reçete'),
-        backgroundColor: AppColors.copper,
+        backgroundColor: AppColors.brandLemon,
         foregroundColor: AppColors.brandInk,
       ),
     );
@@ -132,16 +132,16 @@ class _RecipeCard extends ConsumerWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: AppColors.copper.withValues(alpha: 0.18),
+                  color: AppColors.brandLemon.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                   border: Border.all(
-                    color: AppColors.copper.withValues(alpha: 0.32),
+                    color: AppColors.brandLemon.withValues(alpha: 0.32),
                     width: 0.6,
                   ),
                 ),
                 child: const Icon(
                   Icons.menu_book_rounded,
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   size: 18,
                 ),
               ),
@@ -214,7 +214,7 @@ class _RecipeCard extends ConsumerWidget {
                 icon: Icons.bakery_dining_outlined,
                 label:
                     '${NumberFormatter.integer(recipe.result.estimatedPieces)} adet',
-                accent: AppColors.softGold,
+                accent: AppColors.brandInk,
               ),
             ],
           ),
@@ -228,9 +228,9 @@ class _RecipeCard extends ConsumerWidget {
                   icon: const Icon(Icons.read_more_rounded, size: 16),
                   label: const Text('Detay'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.softGold,
+                    foregroundColor: AppColors.brandInk,
                     side: BorderSide(
-                      color: AppColors.copper.withValues(alpha: 0.45),
+                      color: AppColors.brandLemon.withValues(alpha: 0.45),
                       width: 0.8,
                     ),
                     shape: RoundedRectangleBorder(
@@ -247,7 +247,7 @@ class _RecipeCard extends ConsumerWidget {
                   icon: const Icon(Icons.share_outlined, size: 16),
                   label: const Text('Paylaş'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
+                    backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -330,12 +330,12 @@ class _EmptyState extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.copper.withValues(alpha: 0.18),
+                    color: AppColors.brandLemon.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(AppRadius.s),
                   ),
                   child: const Icon(
                     Icons.menu_book_outlined,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     size: 22,
                   ),
                 ),

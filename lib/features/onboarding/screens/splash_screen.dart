@@ -169,7 +169,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.copper, AppColors.copperMuted],
+                  colors: [AppColors.brandLemon, AppColors.brandLemonSoft],
                 ),
                 borderRadius: BorderRadius.circular(AppRadius.l),
                 boxShadow: AppShadow.card,

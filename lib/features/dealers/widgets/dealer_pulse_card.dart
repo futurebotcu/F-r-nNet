@@ -136,7 +136,7 @@ class _PulseCard extends StatelessWidget {
               label: AppStrings.dealerPulseMetricNetChange,
               today: snapshot.todayNetChange,
               baseline: snapshot.baselineNetChange,
-              accent: AppColors.softGold,
+              accent: AppColors.brandInk,
               isSigned: true,
             ),
             const SizedBox(height: AppSpacing.xs),

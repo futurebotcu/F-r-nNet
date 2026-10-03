@@ -196,9 +196,9 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                 style: AppTypography.buttonLabel,
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
+                backgroundColor: AppColors.brandLemon,
                 foregroundColor: AppColors.brandInk,
-                disabledBackgroundColor: AppColors.copper.withValues(
+                disabledBackgroundColor: AppColors.brandLemon.withValues(
                   alpha: 0.35,
                 ),
                 disabledForegroundColor: AppColors.surface.withValues(
@@ -237,7 +237,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                     const Icon(
                       Icons.photo_library_outlined,
                       size: 44,
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                     ),
                     const SizedBox(height: AppSpacing.s),
                     const Text(
@@ -268,7 +268,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                               style: AppTypography.buttonLabel,
                             ),
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.copper,
+                              backgroundColor: AppColors.brandLemon,
                               foregroundColor: AppColors.brandInk,
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.s,

@@ -108,7 +108,7 @@ class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
                   height: 6,
                   decoration: BoxDecoration(
                     color: selected
-                        ? AppColors.copper
+                        ? AppColors.brandLemon
                         : AppColors.borderHairline,
                     borderRadius: BorderRadius.circular(3),
                   ),

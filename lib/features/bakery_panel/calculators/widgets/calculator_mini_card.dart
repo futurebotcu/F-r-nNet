@@ -51,8 +51,8 @@ class CalculatorMiniCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             customBorder: shape,
-            splashColor: AppColors.softGold.withValues(alpha: 0.06),
-            highlightColor: AppColors.softGold.withValues(alpha: 0.04),
+            splashColor: AppColors.brandInk.withValues(alpha: 0.06),
+            highlightColor: AppColors.brandInk.withValues(alpha: 0.04),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.m),
               child: Column(

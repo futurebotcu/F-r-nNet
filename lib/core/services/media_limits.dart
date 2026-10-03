@@ -30,5 +30,5 @@ class MediaTooLargeException implements Exception {
 
   @override
   String toString() =>
-      'Görsel 5 MB sınırını aşıyor. Lütfen daha küçük bir görsel seçin.';
+      'Görsel 5 MB sınırını aşıyor. Daha küçük bir görsel seç.';
 }

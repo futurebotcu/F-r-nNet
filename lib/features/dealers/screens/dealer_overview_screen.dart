@@ -95,10 +95,10 @@ class _ActiveDealersChip extends StatelessWidget {
         vertical: AppSpacing.s,
       ),
       decoration: BoxDecoration(
-        color: AppColors.softGold.withValues(alpha: 0.10),
+        color: AppColors.brandInk.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.25),
+          color: AppColors.brandInk.withValues(alpha: 0.25),
           width: 0.6,
         ),
       ),
@@ -108,13 +108,13 @@ class _ActiveDealersChip extends StatelessWidget {
           const Icon(
             Icons.storefront_rounded,
             size: 16,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
           ),
           const SizedBox(width: AppSpacing.s),
           Text(
             AppStrings.dealerOverviewActiveDealersLabel,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
             ),
@@ -157,7 +157,7 @@ class _KpiGrid extends StatelessWidget {
             DealerKpiTile(
               label: AppStrings.dealerOverviewKpiTodayDelivery,
               value: NumberFormatter.currency(overview.todayDelivered),
-              accent: AppColors.softGold,
+              accent: AppColors.brandInk,
             ),
             DealerKpiTile(
               label: AppStrings.dealerOverviewKpiTodayPayment,
@@ -367,7 +367,7 @@ class _RecentTxRow extends StatelessWidget {
       case DealerTransactionType.payment:
         return (Icons.payments_rounded, AppColors.success, '−');
       case DealerTransactionType.adjustment:
-        return (Icons.tune_rounded, AppColors.softGold, '±');
+        return (Icons.tune_rounded, AppColors.brandInk, '±');
     }
   }
 }
@@ -526,7 +526,7 @@ class _QuickActionChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.accent = AppColors.softGold,
+    this.accent = AppColors.brandInk,
   });
 
   final IconData icon;
