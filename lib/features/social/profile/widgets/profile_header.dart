@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,6 +5,8 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/widgets/firinnet_avatar.dart';
+import '../../widgets/social_skeletons.dart';
 import '../../../profile/models/public_profile_detail.dart';
 import '../../models/social_profile.dart';
 
@@ -37,13 +38,10 @@ class ProfileHeader extends StatelessWidget {
         AppSpacing.m,
       ),
       child: profileAsync.when(
-        loading: () => const SizedBox(
-          height: 96,
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        loading: () => const _ProfileHeaderSkeleton(),
         error: (_, __) => const Text(
           AppStrings.publicProfileLoadError,
-          style: TextStyle(color: AppColors.textSecondary),
+          style: AppTypography.body,
         ),
         data: (p) {
           final detail = detailAsync?.asData?.value;
@@ -55,7 +53,21 @@ class ProfileHeader extends StatelessWidget {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Avatar(avatarUrl: avatarUrl, initial: p.initial),
+              // Ortak avatar: gerçek fotoğraf (ekran boyutunda decode,
+              // memCacheWidth içeride) → yoksa/bozuksa baş harfler.
+              FirinNetAvatar(
+                key: const ValueKey('profile_header_avatar'),
+                name: p.displayNameOrFallback,
+                imageUrl: avatarUrl,
+                size: FirinNetAvatarSize.xl,
+                kind:
+                    const {
+                      'commercial',
+                      'wholesaler',
+                    }.contains(detail?.header.accountType)
+                    ? FirinNetAvatarKind.business
+                    : FirinNetAvatarKind.person,
+              ),
               const SizedBox(width: AppSpacing.l),
               Expanded(
                 child: Column(
@@ -64,7 +76,7 @@ class ProfileHeader extends StatelessWidget {
                   children: [
                     Text(
                       p.displayNameOrFallback,
-                      style: AppTypography.titleLarge,
+                      style: AppTypography.detailTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -72,11 +84,10 @@ class ProfileHeader extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         role,
-                        style: const TextStyle(
-                          color: AppColors.softGold,
+                        style: AppTypography.meta.copyWith(
+                          color: AppColors.brandInk,
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
-                          letterSpacing: 0.2,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -96,9 +107,8 @@ class ProfileHeader extends StatelessWidget {
                           Flexible(
                             child: Text(
                               city,
-                              style: const TextStyle(
+                              style: AppTypography.meta.copyWith(
                                 color: AppColors.textSecondary,
-                                fontSize: 12.5,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -126,11 +136,7 @@ class ProfileHeader extends StatelessWidget {
                         ),
                         child: const Text(
                           AppStrings.publicProfileSelfHint,
-                          style: TextStyle(
-                            color: AppColors.softGold,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11.5,
-                          ),
+                          style: AppTypography.badge,
                         ),
                       ),
                     ],
@@ -145,64 +151,37 @@ class ProfileHeader extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.avatarUrl, required this.initial});
-
-  final String? avatarUrl;
-  final String initial;
+/// İlk yükleme: statik iskelet (avatar + üç çubuk), spinner yok.
+class _ProfileHeaderSkeleton extends StatelessWidget {
+  const _ProfileHeaderSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    const double size = 72;
-    final borderRadius = BorderRadius.circular(AppRadius.l);
-    final hasUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
-    final fallback = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.brandLemon, AppColors.brandLemonSoft],
+    return Row(
+      key: const ValueKey('profile_header_skeleton'),
+      children: [
+        Container(
+          width: FirinNetAvatarSize.xl,
+          height: FirinNetAvatarSize.xl,
+          decoration: const BoxDecoration(
+            color: AppColors.surfaceLine,
+            shape: BoxShape.circle,
+          ),
         ),
-        borderRadius: borderRadius,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: const TextStyle(
-          color: AppColors.brandInk,
-          fontWeight: FontWeight.w800,
-          fontSize: 32,
+        const SizedBox(width: AppSpacing.l),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SkeletonBar(width: 160, height: 18),
+              SizedBox(height: 10),
+              SkeletonBar(width: 110),
+              SizedBox(height: 8),
+              SkeletonBar(width: 80, height: 10),
+            ],
+          ),
         ),
-      ),
-    );
-    final inner = hasUrl
-        ? ClipRRect(
-            borderRadius: borderRadius,
-            child: CachedNetworkImage(
-              imageUrl: avatarUrl!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              // Perf: avatar ekran boyutunda decode edilir (full-res decode
-              // + bellek spike yok). 2x display, retina için yeterli.
-              memCacheWidth: (size * 2).round(),
-              placeholder: (_, __) => fallback,
-              errorWidget: (_, __, ___) => fallback,
-            ),
-          )
-        : fallback;
-    // İnce hairline çerçeve + çok yumuşak gölge ile premium yükseliş.
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        border: Border.all(color: AppColors.borderHairline, width: 0.8),
-        boxShadow: AppShadow.subtle,
-      ),
-      child: inner,
+      ],
     );
   }
 }

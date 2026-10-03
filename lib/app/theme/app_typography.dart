@@ -166,4 +166,80 @@ class AppTypography {
     fontWeight: FontWeight.w700,
     letterSpacing: -0.1,
   );
+
+  // ── Polish turu — ortak roller ──────────────────────────────────────
+  // Ekranlar inline TextStyle yerine bu rolleri kullanır; renk gerekirse
+  // `.copyWith(color: …)` ile verilir (boyut/ağırlık/satır yüksekliği sabit).
+
+  /// Sekme kökü sayfa başlığı (FirinNetHeader).
+  static const TextStyle pageTitle = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 20,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.15,
+    height: 1.15,
+  );
+
+  /// Detay ekranı ana başlığı (ilan/gönderi/tarif detayı).
+  static const TextStyle detailTitle = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 20,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.3,
+    height: 1.25,
+  );
+
+  /// Fiyat / ücret — kart ve detayda aynı vurgu.
+  static const TextStyle price = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 16,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.1,
+    height: 1.25,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  /// Detayda büyük fiyat.
+  static const TextStyle priceLarge = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.3,
+    height: 1.2,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  /// Küçük açıklama / yardımcı metin (helper, zaman, sayaç).
+  static const TextStyle caption = TextStyle(
+    color: AppColors.textMuted,
+    fontSize: 11.5,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
+  /// Tür/durum rozeti etiketi.
+  static const TextStyle badge = TextStyle(
+    color: AppColors.brandInk,
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+    height: 1.2,
+  );
+
+  /// Kişi/işletme adı (feed yazarı, yorum sahibi, sohbet başlığı).
+  static const TextStyle authorName = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.1,
+    height: 1.25,
+  );
+
+  /// Detay ekranında bilgi bloğu etiketi ("Konum", "Çalışma şartları").
+  static const TextStyle infoLabel = TextStyle(
+    color: AppColors.textSecondary,
+    fontSize: 12.5,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
 }

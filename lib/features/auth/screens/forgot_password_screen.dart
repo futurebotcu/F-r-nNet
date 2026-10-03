@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../providers/auth_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// V1.3.5 — Şifre sıfırlama linki talep ekranı.
 ///
@@ -57,15 +58,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         _sent = true;
         _submitting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.authForgotPasswordSent)),
-      );
+      AppFeedback.success(context, AppStrings.authForgotPasswordSent);
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.authForgotPasswordFail)),
-      );
+      AppFeedback.error(context, AppStrings.authForgotPasswordFail);
     }
   }
 
@@ -77,6 +74,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(
+          tooltip: AppStrings.polishBack,
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () {
             if (context.canPop()) {

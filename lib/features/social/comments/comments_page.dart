@@ -42,13 +42,25 @@ import '../post/widgets/feed_post_image.dart';
 import '../providers/social_providers.dart';
 import '../../../core/utils/relative_time.dart';
 import '../../../core/widgets/app_feedback.dart';
-import '../../../core/utils/tr_case.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
+import '../../academy/providers/academy_providers.dart';
+import '../post/social_post_card.dart';
+import '../post/widgets/social_post_video.dart';
+import '../../../core/widgets/interactions.dart';
+import '../widgets/social_skeletons.dart';
 
 /// Cevap hedefi (tek-seviye): bir ÜST yoruma cevap yazılırken composer bunu
 /// okuyup `parentCommentId` geçirir. "Cevapla" set eder; gönderim/iptal
 /// temizler. autoDispose: sayfa kapanınca sıfırlanır.
 final _replyTargetProvider =
     StateProvider.autoDispose<({String id, String author})?>((ref) => null);
+
+/// Detay aksiyon satırındaki "Yorum" → composer'a odak isteği (sayaç).
+final _composerFocusRequestProvider = StateProvider.autoDispose<int>(
+  (ref) => 0,
+);
 
 class SocialCommentsPage extends ConsumerWidget {
   const SocialCommentsPage({super.key, required this.postId, this.initialPost});
@@ -70,10 +82,8 @@ class SocialCommentsPage extends ConsumerWidget {
     return Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
-        builder: (_) => SocialCommentsPage(
-          postId: postId,
-          initialPost: initialPost,
-        ),
+        builder: (_) =>
+            SocialCommentsPage(postId: postId, initialPost: initialPost),
       ),
     );
   }
@@ -94,6 +104,7 @@ class SocialCommentsPage extends ConsumerWidget {
         elevation: 0,
         leadingWidth: 56,
         leading: IconButton(
+          tooltip: AppStrings.socialBackTooltip,
           icon: const Icon(Icons.arrow_back_rounded, size: 26),
           color: AppColors.textPrimary,
           onPressed: () => Navigator.of(context).maybePop(),
@@ -102,12 +113,7 @@ class SocialCommentsPage extends ConsumerWidget {
           // V1 P0 — Twitter post-detail mantığı: AppBar başlığı "Gönderi".
           // Sayfa içinde ayrı "Yorumlar (N)" başlığı var.
           AppStrings.postDetailTitle,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: -0.2,
-          ),
+          style: AppTypography.pageTitle,
         ),
         centerTitle: true,
         bottom: const PreferredSize(
@@ -126,9 +132,11 @@ class SocialCommentsPage extends ConsumerWidget {
                 skipLoadingOnReload: true,
                 loading: () => _ScrollableShell(
                   post: post,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
-                    child: Center(child: CircularProgressIndicator()),
+                  // Yorumlar yüklenirken: statik yorum satırı iskeleti.
+                  child: const SocialListSkeleton(
+                    key: ValueKey('comments_skeleton'),
+                    count: 3,
+                    avatarSize: FirinNetAvatarSize.s,
                   ),
                 ),
                 error: (e, st) {
@@ -306,172 +314,99 @@ class _SectionHeading extends StatelessWidget {
       ),
       child: Text(
         AppStrings.postCommentsHeading(count),
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w800,
-          fontSize: 15.5,
-          letterSpacing: -0.1,
-        ),
+        style: AppTypography.sectionTitle,
       ),
     );
   }
 }
 
-/// Twitter post-detail header: üstte post kartı (avatar + author + role ·
-/// time + caption 17 px + media + stat line "12 beğeni · 3 yorum").
-class _PostContextHeader extends StatelessWidget {
+/// Gönderi detayının üst bölümü — feed kartıyla AYNI kimlik: ortak
+/// [SocialPostHeader] (avatar · ad · tür/AI rozeti · rol · zaman + ⋮),
+/// aynı caption tipografisi (detayda kesilmeden), [FeedPostImage] / video ve
+/// aynı aksiyon satırı (beğen/yorum/repost/kaydet/paylaş handler'ları
+/// [SocialPostInteractionsMixin]'den gelir).
+class _PostContextHeader extends ConsumerStatefulWidget {
   const _PostContextHeader({required this.post});
 
   final FeedPost? post;
 
   @override
+  ConsumerState<_PostContextHeader> createState() => _PostContextHeaderState();
+}
+
+class _PostContextHeaderState extends ConsumerState<_PostContextHeader>
+    with SocialPostInteractionsMixin<_PostContextHeader> {
+  @override
+  FeedPost get post => widget.post!;
+
+  @override
+  void onPostDeleted() {
+    // Silinen gönderinin detayında kalınmaz.
+    Navigator.of(context).maybePop();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final post = this.post; // yerel: null-check sonrası promote olsun
+    final post = widget.post; // yerel: null-check sonrası promote olsun
     if (post == null) {
       // Cache miss / lookup başarısız: sade fallback (yorum yine açılır).
       return Container(
         margin: const EdgeInsets.fromLTRB(
-          AppSpacing.l,
+          AppSpacing.pageH,
           AppSpacing.m,
-          AppSpacing.l,
+          AppSpacing.pageH,
           AppSpacing.s,
         ),
         padding: const EdgeInsets.all(AppSpacing.m),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.m),
+          borderRadius: BorderRadius.circular(AppRadius.l),
           boxShadow: AppShadow.card,
         ),
-        child: const Text(
+        child: Text(
           AppStrings.commentsPostFallback,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTypography.body.copyWith(fontWeight: FontWeight.w600),
         ),
       );
     }
     final firstImage = post.firstImage;
+    final videoUrl = post.firstVideo?.publicUrl;
     return Container(
+      key: const ValueKey('post_detail_header'),
       margin: const EdgeInsets.fromLTRB(
-        AppSpacing.l,
+        AppSpacing.pageH,
         AppSpacing.m,
-        AppSpacing.l,
+        AppSpacing.pageH,
         AppSpacing.s,
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.m),
+        borderRadius: BorderRadius.circular(AppRadius.l),
         boxShadow: AppShadow.card,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.m,
-              AppSpacing.m,
-              AppSpacing.m,
-              AppSpacing.s,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
-                  // Limon üstüne limon baş harf okunmuyordu → nötr zemin +
-                  // mürekkep harf.
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.surfaceLine,
-                    border: Border.all(color: AppColors.borderHairline),
-                  ),
-                  child: Text(
-                    post.author.isNotEmpty ? post.author[0].trUpper : '?',
-                    style: const TextStyle(
-                      color: AppColors.brandInk,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.m),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.author,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        post.role.isEmpty
-                            ? relativeTimeTr(post.createdAt)
-                            : '${post.role} · '
-                                  '${relativeTimeTr(post.createdAt)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.m,
-              0,
-              AppSpacing.m,
-              AppSpacing.s,
-            ),
-            child: Text(
-              post.text,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 17,
-                height: 1.4,
-              ),
-            ),
-          ),
+          buildPostHeader(),
+          // Detayda metin kesilmez ("devamını gör" yok).
+          SocialPostCaption(text: post.text, expandable: false),
+          if (post.tags.isNotEmpty) SocialPostTags(tags: post.tags),
           if (firstImage != null)
             FeedPostImage(
               imageUrl: firstImage.publicUrl,
               width: firstImage.width,
               height: firstImage.height,
+              memCacheWidth: 1080,
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.m,
-              AppSpacing.s,
-              AppSpacing.m,
-              AppSpacing.m,
-            ),
-            child: Text(
-              '${post.likeCount} ${AppStrings.postLikesShortLabel}  ·  '
-              '${post.commentCount} ${AppStrings.postCommentsShortLabel}',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+          if (firstImage == null && videoUrl != null)
+            SocialPostVideo(url: videoUrl),
+          buildPostActionRow(
+            // Detayda "Yorum" yazma alanını açar (sayfa zaten yorumlar).
+            onComment: () =>
+                ref.read(_composerFocusRequestProvider.notifier).state++,
           ),
+          const SizedBox(height: 4),
         ],
       ),
     );
@@ -510,11 +445,9 @@ class _EmptyState extends StatelessWidget {
               isGuest
                   ? AppStrings.feedCommentEmptyGuest
                   : AppStrings.feedCommentEmpty,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: AppTypography.body.copyWith(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                height: 1.45,
               ),
               textAlign: TextAlign.center,
             ),
@@ -545,18 +478,18 @@ class _BlockedCommentPlaceholder extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
         child: Row(
-          children: const [
-            Icon(Icons.block_rounded, size: 16, color: AppColors.textMuted),
-            SizedBox(width: AppSpacing.s),
+          children: [
+            const Icon(
+              Icons.block_rounded,
+              size: 16,
+              color: AppColors.textMuted,
+            ),
+            const SizedBox(width: AppSpacing.s),
             Expanded(
               child: Text(
                 AppStrings.blockedContentPlaceholder,
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12.5,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w600,
-                ),
+                key: const ValueKey('blocked_comment_text'),
+                style: AppTypography.meta.copyWith(fontStyle: FontStyle.italic),
               ),
             ),
           ],
@@ -579,12 +512,11 @@ class _CommentItem extends ConsumerWidget {
   final String postId;
   final bool isReply;
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final initial = (comment.authorName.isNotEmpty)
-        ? comment.authorName[0].trUpper
-        : '?';
+    final bot = ref
+        .watch(academyBotsByIdProvider)
+        .valueOrNull?[comment.ownerId];
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
       child: Container(
@@ -597,22 +529,13 @@ class _CommentItem extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.surfaceLine,
-              ),
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  color: AppColors.brandInk,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                ),
-              ),
+            FirinNetAvatar(
+              key: const ValueKey('comment_author_avatar'),
+              name: comment.authorName,
+              size: FirinNetAvatarSize.s,
+              kind: bot != null && !bot.isHumor
+                  ? FirinNetAvatarKind.academy
+                  : FirinNetAvatarKind.person,
             ),
             const SizedBox(width: AppSpacing.m),
             Expanded(
@@ -626,11 +549,7 @@ class _CommentItem extends ConsumerWidget {
                           isOwn
                               ? AppStrings.feedCommentOwnLabel
                               : comment.authorName,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15.5,
-                          ),
+                          style: AppTypography.authorName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -638,29 +557,29 @@ class _CommentItem extends ConsumerWidget {
                       const SizedBox(width: 6),
                       Text(
                         '· ${relativeTimeShortTr(comment.createdAt)}',
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: AppTypography.meta,
                       ),
                       const Spacer(),
                       if (isOwn)
-                        InkWell(
-                          onTap: () => _confirmAndDelete(context, ref),
-                          borderRadius: BorderRadius.circular(20),
-                          child: const Padding(
-                            padding: EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.delete_outline_rounded,
-                              size: 20,
-                              color: AppColors.textMuted,
-                            ),
+                        IconButton(
+                          key: const ValueKey('comment_delete_button'),
+                          tooltip: AppStrings.feedCommentDeleteCta,
+                          onPressed: () => _confirmAndDelete(context, ref),
+                          constraints: const BoxConstraints(
+                            minWidth: 44,
+                            minHeight: 44,
+                          ),
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 20,
+                            color: AppColors.textMuted,
                           ),
                         )
                       // UGC Safety V1 — başkasının yorumu: şikayet + engelle.
                       else if (comment.ownerId.isNotEmpty)
                         PopupMenuButton<String>(
+                          tooltip: AppStrings.moreActionsTooltip,
                           icon: const Icon(
                             Icons.more_horiz_rounded,
                             size: 20,
@@ -703,10 +622,9 @@ class _CommentItem extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     comment.text,
-                    style: const TextStyle(
+                    style: AppTypography.body.copyWith(
                       color: AppColors.textPrimary,
-                      fontSize: 16,
-                      height: 1.45,
+                      fontSize: 15.5,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -730,31 +648,15 @@ class _CommentItem extends ConsumerWidget {
   }
 
   Future<void> _confirmAndDelete(BuildContext context, WidgetRef ref) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.m),
-        ),
-        content: const Text(
-          AppStrings.feedCommentDeleteConfirm,
-          style: TextStyle(fontSize: 15.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(AppStrings.feedCommentCancelCta),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text(AppStrings.feedCommentDeleteCta),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: AppStrings.feedCommentDeleteConfirm,
+      confirmLabel: AppStrings.feedCommentDeleteCta,
+      cancelLabel: AppStrings.feedCommentCancelCta,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true || !context.mounted) return;
+    if (!ok || !context.mounted) return;
     debugPrint('[FirinNet][Comments] delete tap id=${comment.id}');
     final repo = ref.read(socialCommentsRepositoryProvider);
     final messenger = ScaffoldMessenger.maybeOf(context);
@@ -825,11 +727,13 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
     }
     final prevLiked = _liked;
     final prevCount = _count;
+    AppHaptics.toggle();
     setState(() {
       _busy = true;
       _likedOverride = !prevLiked;
-      _countOverride =
-          prevLiked ? (prevCount > 0 ? prevCount - 1 : 0) : prevCount + 1;
+      _countOverride = prevLiked
+          ? (prevCount > 0 ? prevCount - 1 : 0)
+          : prevCount + 1;
     });
     try {
       await ref
@@ -867,10 +771,11 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
       child: InkWell(
         onTap: _busy ? null : _onTap,
         borderRadius: BorderRadius.circular(AppRadius.s),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 liked
@@ -884,9 +789,8 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
                 const SizedBox(width: 5),
                 Text(
                   '$_count',
-                  style: TextStyle(
+                  style: AppTypography.meta.copyWith(
                     color: color,
-                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -910,12 +814,15 @@ class _CommentReplyButton extends ConsumerWidget {
       message: AppStrings.feedActionReply,
       child: InkWell(
         onTap: () {
-          ref.read(_replyTargetProvider.notifier).state =
-              (id: comment.id, author: comment.authorName);
+          ref.read(_replyTargetProvider.notifier).state = (
+            id: comment.id,
+            author: comment.authorName,
+          );
         },
         borderRadius: BorderRadius.circular(AppRadius.s),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+        child: const SizedBox(
+          width: 44,
+          height: 44,
           child: Icon(
             Icons.reply_rounded,
             size: 16,
@@ -991,20 +898,32 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
             parentCommentId: reply?.id,
           )
           .timeout(const Duration(seconds: 30));
-      debugPrint('[FirinNet][Comments] sent ok id=${c.id} '
-          'parent=${reply?.id ?? "-"}');
+      debugPrint(
+        '[FirinNet][Comments] sent ok id=${c.id} '
+        'parent=${reply?.id ?? "-"}',
+      );
       if (!mounted) return;
       // Dar sayaç güncellemesi: paged feed'i yeniden çekmeden kart sayacını
       // anında +1 yap. basis = o an bilinen gerçek sayaç.
       final basis =
-          ref.read(feedPostByIdProvider(widget.postId)).valueOrNull?.commentCount ??
-              0;
+          ref
+              .read(feedPostByIdProvider(widget.postId))
+              .valueOrNull
+              ?.commentCount ??
+          0;
       ref
           .read(feedCommentCountOverrideProvider.notifier)
           .increment(widget.postId, basis);
       _ctrl.clear();
       _focus.unfocus();
-      ref.read(_replyTargetProvider.notifier).state = null; // cevap modu kapanır
+      ref.read(_replyTargetProvider.notifier).state =
+          null; // cevap modu kapanır
+      AppFeedback.success(
+        context,
+        reply == null
+            ? AppStrings.feedCommentSentSnack
+            : AppStrings.feedReplySentSnack,
+      );
     } on GuestActionRequiredException {
       debugPrint('[FirinNet][Comments] send guest exception');
       if (mounted) await showAuthRequiredSheet(context, ref);
@@ -1061,6 +980,13 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
       );
     }
     final reply = ref.watch(_replyTargetProvider);
+    // Detaydaki "Yorum" aksiyonu ya da "Cevapla" → yazma alanına odak.
+    ref.listen<int>(_composerFocusRequestProvider, (_, __) {
+      _focus.requestFocus();
+    });
+    ref.listen(_replyTargetProvider, (_, next) {
+      if (next != null) _focus.requestFocus();
+    });
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1083,29 +1009,36 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.reply_rounded,
-                    size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.reply_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     '${reply.author}${AppStrings.commentReplyingToSuffix}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: AppTypography.meta.copyWith(
                       color: AppColors.textSecondary,
-                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                InkWell(
-                  onTap: () =>
+                IconButton(
+                  tooltip: AppStrings.socialCloseTooltip,
+                  onPressed: () =>
                       ref.read(_replyTargetProvider.notifier).state = null,
-                  borderRadius: BorderRadius.circular(20),
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(Icons.close_rounded,
-                        size: 16, color: AppColors.textMuted),
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: AppColors.textMuted,
                   ),
                 ),
               ],

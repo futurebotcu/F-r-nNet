@@ -7,12 +7,17 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../listings/widgets/listing_ui.dart';
 import '../models/job_seek_post.dart';
 import '../providers/worker_providers.dart';
 
@@ -30,19 +35,22 @@ class JobSeekPostsScreen extends ConsumerWidget {
         onPressed: () => context.push(AppRoutes.jobSeekNew),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni ilan'),
-        backgroundColor: AppColors.copper,
+        backgroundColor: AppColors.brandLemon,
         foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
         child: async.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+          // Polish 2 — ilk yüklemede hafif kart iskeleti.
+          loading: () => const SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            child: ListingSkeletonList(),
+          ),
           // İş İlanları Polish V1 — ham exception gösterme; kaliteli hata
           // durumu + UI-level retry (provider yeniden tetiklenir).
           error: (_, __) => EmptyState(
             icon: Icons.cloud_off_rounded,
-            title: 'İlanların yüklenemedi',
-            subtitle: 'Bağlantını kontrol edip tekrar dener misin?',
+            title: AppStrings.listingsMyLoadError,
+            subtitle: AppStrings.listingsLoadErrorHint,
             actionLabel: AppStrings.retry,
             onAction: () => ref.invalidate(myJobSeekPostsProvider),
           ),
@@ -76,6 +84,13 @@ class JobSeekPostCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final df = DateFormat('d MMM yyyy', 'tr_TR');
+    // Boş parçalar atlanır ("—" / "null" yok).
+    final meta = [
+      post.professionBadge,
+      post.city,
+      if (post.experienceYears != null)
+        '${post.experienceYears} ${AppStrings.listingsExperienceYearsSuffix}',
+    ].whereType<String>().where((s) => s.trim().isNotEmpty).join(' · ');
     return PremiumCard(
       padding: const EdgeInsets.all(AppSpacing.l),
       onTap: () => context.push('${AppRoutes.jobSeek}/${post.id}/edit'),
@@ -87,59 +102,43 @@ class JobSeekPostCard extends ConsumerWidget {
               Expanded(
                 child: Text(
                   post.title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                  maxLines: 1,
+                  style: AppTypography.cardTitle,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: AppSpacing.s),
               _StatusBadge(active: post.isActive),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            [
-              if (post.professionBadge != null) post.professionBadge!,
-              if (post.city != null) post.city!,
-              if (post.experienceYears != null)
-                '${post.experienceYears} yıl tecrübe',
-            ].whereType<String>().join(' · '),
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w600,
-              fontSize: 12.5,
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              meta,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.meta.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
-          ),
+          ],
           if (post.description != null && post.description!.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s),
             Text(
               post.description!,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                height: 1.4,
-              ),
+              style: AppTypography.body,
             ),
           ],
           const SizedBox(height: AppSpacing.m),
           Row(
             children: [
-              Text(
-                post.createdAt != null ? df.format(post.createdAt!) : '—',
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              if (post.createdAt != null)
+                Text(df.format(post.createdAt!), style: AppTypography.caption),
               const Spacer(),
               IconButton(
-                tooltip: 'Paylaş',
+                tooltip: AppStrings.listingsShareTooltip,
                 onPressed: () =>
                     Share.share(post.toShareText(), subject: 'FırınNet — İş'),
                 icon: const Icon(
@@ -149,7 +148,9 @@ class JobSeekPostCard extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                tooltip: post.isActive ? 'Yayını kapat' : 'Yayına aç',
+                tooltip: post.isActive
+                    ? AppStrings.listingsToggleOffTooltip
+                    : AppStrings.listingsToggleOnTooltip,
                 onPressed: () => _toggleActive(context, ref),
                 icon: Icon(
                   post.isActive
@@ -157,17 +158,17 @@ class JobSeekPostCard extends ConsumerWidget {
                       : Icons.toggle_off_outlined,
                   color: post.isActive
                       ? AppColors.success
-                      : AppColors.textMuted,
+                      : AppColors.textSecondary,
                   size: 22,
                 ),
               ),
               IconButton(
-                tooltip: 'Sil',
+                tooltip: AppStrings.listingsDeleteTooltip,
                 onPressed: () => _delete(context, ref),
                 icon: const Icon(
                   Icons.delete_outline,
-                  color: AppColors.textMuted,
-                  size: 18,
+                  color: AppColors.textSecondary,
+                  size: 20,
                 ),
               ),
             ],
@@ -190,13 +191,18 @@ class JobSeekPostCard extends ConsumerWidget {
           await ref
               .read(workerRepositoryProvider)
               .upsertJobSeekPost(post.copyWith(isActive: !post.isActive));
+          if (!context.mounted) return;
+          AppFeedback.success(
+            context,
+            post.isActive
+                ? AppStrings.listingsClosedToast
+                : AppStrings.listingsRepublishedToast,
+          );
         } on GuestActionRequiredException {
           rethrow;
         } catch (_) {
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.jobSeekPostToggleError)),
-          );
+          AppFeedback.error(context, AppStrings.jobSeekPostToggleError);
         }
       },
     );
@@ -204,27 +210,15 @@ class JobSeekPostCard extends ConsumerWidget {
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     if (post.id == null) return;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('İlanı sil'),
-        content: const Text(
-          'Bu ilan kalıcı olarak silinecek. Devam edilsin mi?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: AppStrings.listingsDeleteSeekConfirmTitle,
+      message: AppStrings.listingsDeleteConfirmBody,
+      confirmLabel: AppStrings.listingsDeleteCta,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true) return;
+    if (!ok) return;
     if (!context.mounted) return;
     await runGuardedMutation(
       context,
@@ -235,13 +229,13 @@ class JobSeekPostCard extends ConsumerWidget {
         // et ki runGuardedMutation auth sheet'i açabilsin.
         try {
           await ref.read(workerRepositoryProvider).deleteJobSeekPost(post.id!);
+          if (!context.mounted) return;
+          AppFeedback.success(context, AppStrings.listingsDeleted);
         } on GuestActionRequiredException {
           rethrow;
         } catch (_) {
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.jobSeekPostDeleteError)),
-          );
+          AppFeedback.error(context, AppStrings.jobSeekPostDeleteError);
         }
       },
     );
@@ -254,7 +248,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.success : AppColors.textMuted;
+    final color = active ? AppColors.success : AppColors.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -263,13 +257,11 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.30), width: 0.6),
       ),
       child: Text(
-        active ? 'YAYINDA' : 'KAPALI',
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w800,
-          fontSize: 9.5,
-          letterSpacing: 0.9,
-        ),
+        (active
+                ? AppStrings.listingsPublishOpen
+                : AppStrings.listingsPublishClosed)
+            .trUpper,
+        style: AppTypography.badge.copyWith(color: color),
       ),
     );
   }
@@ -298,33 +290,25 @@ class _EmptyState extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.12),
+                    color: AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(AppRadius.s),
                   ),
                   child: const Icon(
                     Icons.campaign_outlined,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     size: 22,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.m),
                 const Text(
                   'Henüz iş arıyorum ilanı yok',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 17,
-                  ),
+                  style: AppTypography.sectionTitle,
                 ),
                 const SizedBox(height: 6),
                 const Text(
                   'İlk ilanını yayınla — şehir, vardiya tercihi ve tecrübeni '
                   'yazınca işverenler seni görür.',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13.5,
-                    height: 1.4,
-                  ),
+                  style: AppTypography.body,
                 ),
               ],
             ),

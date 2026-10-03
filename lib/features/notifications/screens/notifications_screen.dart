@@ -11,6 +11,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../social/widgets/social_skeletons.dart';
 import '../models/app_notification.dart';
 import '../notification_routing.dart';
 import '../providers/notification_providers.dart';
@@ -63,7 +65,15 @@ class NotificationsScreen extends ConsumerWidget {
       body: SafeArea(
         top: false,
         child: async.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          // İlk yükleme: ortada dev spinner yerine statik satır iskeleti.
+          loading: () => const SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            child: SocialListSkeleton(
+              key: ValueKey('notifications_skeleton'),
+              count: 6,
+              avatarSize: 10,
+            ),
+          ),
           error: (_, __) => Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.l),
@@ -170,8 +180,7 @@ class NotificationRow extends ConsumerWidget {
                 children: [
                   Text(
                     item.title,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
+                    style: AppTypography.authorName.copyWith(
                       fontSize: 14.5,
                       fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
                     ),
@@ -179,21 +188,13 @@ class NotificationRow extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     item.body,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
+                    style: AppTypography.body.copyWith(fontSize: 13),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     relativeTimeTr(item.createdAt),
                     key: const ValueKey('notification_row_time'),
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTypography.caption,
                   ),
                 ],
               ),

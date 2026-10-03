@@ -186,7 +186,7 @@ void main() {
       await t.tap(find.text('Ürünü kaydet'));
       await t.pump();
       expect(find.text('Ürün adı gerekli'), findsOneWidget);
-      expect(find.text('Kategori seçin'), findsOneWidget);
+      expect(find.text('Kategori seç'), findsOneWidget);
     });
   });
 

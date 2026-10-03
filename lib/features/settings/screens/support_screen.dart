@@ -16,6 +16,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class _Faq {
   const _Faq(this.q, this.a);
@@ -85,12 +86,9 @@ class SupportScreen extends StatelessWidget {
   }
 
   void _showMailError(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${AppStrings.supportMailError}${AppStrings.supportEmail}',
-        ),
-      ),
+    AppFeedback.error(
+      context,
+      '${AppStrings.supportMailError}${AppStrings.supportEmail}',
     );
   }
 

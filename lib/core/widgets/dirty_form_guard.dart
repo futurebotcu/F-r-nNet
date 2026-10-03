@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../constants/app_strings.dart';
+import 'app_confirm_dialog.dart';
 
 /// PR-UI-2 — Form ekranlarında kaydedilmemiş değişiklik koruması.
 ///
@@ -54,28 +55,15 @@ Future<void> maybePopWithDirtyGuard(
   }
 }
 
-/// "Değişiklikleri sil?" onay dialogu. `true` → kullanıcı çıkışı onayladı.
-Future<bool> showDiscardChangesDialog(BuildContext context) async {
-  final result = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Değişiklikleri sil?'),
-      content: const Text(
-        'Kaydedilmemiş değişiklikleriniz var. Çıkarsanız bu değişiklikler '
-        'kaybolur.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('Vazgeç'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-          child: const Text('Değişiklikleri sil'),
-        ),
-      ],
-    ),
+/// "Değişiklikler silinsin mi?" onay dialogu (ortak [showAppConfirmDialog]).
+/// `true` → kullanıcı çıkışı onayladı.
+Future<bool> showDiscardChangesDialog(BuildContext context) {
+  return showAppConfirmDialog(
+    context,
+    title: AppStrings.polishDiscardTitle,
+    message: AppStrings.polishDiscardBody,
+    confirmLabel: AppStrings.polishDiscardCta,
+    cancelLabel: AppStrings.polishCancel,
+    destructive: true,
   );
-  return result ?? false;
 }

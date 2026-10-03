@@ -36,7 +36,7 @@ void main() {
       final nav = await pushForm(tester, isDirty: true);
       await nav.currentState!.maybePop();
       await tester.pumpAndSettle();
-      expect(find.text('Değişiklikleri sil?'), findsOneWidget);
+      expect(find.text('Değişiklikler silinsin mi?'), findsOneWidget);
       expect(find.text('form'), findsOneWidget); // çıkmadı
     });
 
@@ -44,7 +44,7 @@ void main() {
       final nav = await pushForm(tester, isDirty: false);
       await nav.currentState!.maybePop();
       await tester.pumpAndSettle();
-      expect(find.text('Değişiklikleri sil?'), findsNothing);
+      expect(find.text('Değişiklikler silinsin mi?'), findsNothing);
       expect(find.text('home'), findsOneWidget);
     });
 
@@ -71,7 +71,7 @@ void main() {
       // Vazgeç → false
       final f1 = showDiscardChangesDialog(ctx);
       await tester.pumpAndSettle();
-      expect(find.text('Değişiklikleri sil?'), findsOneWidget);
+      expect(find.text('Değişiklikler silinsin mi?'), findsOneWidget);
       await tester.tap(find.text('Vazgeç'));
       await tester.pumpAndSettle();
       expect(await f1, isFalse);

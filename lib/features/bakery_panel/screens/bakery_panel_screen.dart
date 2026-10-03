@@ -550,7 +550,7 @@ class _TaskRow extends ConsumerWidget {
           ),
           IconButton(
             key: ValueKey('ledger_task_delete_${task.id}'),
-            visualDensity: VisualDensity.compact,
+            tooltip: AppStrings.polishTaskDelete,
             icon: const Icon(
               Icons.close_rounded,
               size: 16,

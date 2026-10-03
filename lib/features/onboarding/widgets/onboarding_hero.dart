@@ -163,7 +163,7 @@ class _BrandHero extends StatelessWidget {
                 child: const Icon(
                   Icons.local_fire_department_rounded,
                   size: 76,
-                  color: AppColors.brandLemonPressed,
+                  color: AppColors.brandInk,
                 ),
               ),
             ),

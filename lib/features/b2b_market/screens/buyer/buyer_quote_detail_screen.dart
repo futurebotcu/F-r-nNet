@@ -12,6 +12,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
+import '../../../../core/widgets/app_feedback.dart';
 import '../../../../core/widgets/error_retry_state.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
 import '../../../../core/widgets/premium/premium_scaffold.dart';
@@ -166,35 +169,23 @@ class _QuoteActions extends ConsumerWidget {
     required String confirmLabel,
     required Future<void> Function() action,
     required String done,
+    bool destructive = false,
   }) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: const Text('Bu işlem talebin durumunu değiştirir.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: title,
+      message: AppStrings.polishQuoteStatusBody,
+      confirmLabel: confirmLabel,
+      destructive: destructive,
     );
-    if (ok != true) return;
+    if (!ok) return;
     try {
       await action();
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(done)));
+      AppFeedback.success(context, done);
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('İşlem başarısız. Tekrar deneyin.')),
-      );
+      AppFeedback.error(context, AppStrings.polishQuoteActionError);
     }
   }
 
@@ -232,10 +223,10 @@ class _QuoteActions extends ConsumerWidget {
             onPressed: () => _confirm(
               context,
               ref,
-              title: 'Talebi kapat',
-              confirmLabel: 'Kapat',
+              title: 'Talep kapatılsın mı?',
+              confirmLabel: 'Talebi kapat',
               action: () => ctrl.closeQuoteRequest(quoteRequestId),
-              done: 'Talep kapatıldı.',
+              done: 'Talep kapatıldı',
             ),
             icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
             label: const Text('Talebi kapat'),
@@ -254,10 +245,11 @@ class _QuoteActions extends ConsumerWidget {
             onPressed: () => _confirm(
               context,
               ref,
-              title: 'Talebi iptal et',
-              confirmLabel: 'İptal et',
+              title: 'Talep iptal edilsin mi?',
+              confirmLabel: 'Talebi iptal et',
+              destructive: true,
               action: () => ctrl.cancelQuoteRequest(quoteRequestId),
-              done: 'Talep iptal edildi.',
+              done: 'Talep iptal edildi',
             ),
             icon: const Icon(Icons.cancel_outlined, size: 17),
             label: const Text('İptal et'),
@@ -389,7 +381,7 @@ class _ReplyCard extends ConsumerWidget {
               const Icon(
                 Icons.storefront_rounded,
                 size: 16,
-                color: AppColors.brandLemonPressed,
+                color: AppColors.brandInk,
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -502,9 +494,7 @@ class _LeadArea extends ConsumerWidget {
           .rejectQuoteReply(reply.id);
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('İşlem başarısız. Tekrar deneyin.')),
-        );
+        AppFeedback.error(context, AppStrings.polishQuoteActionError);
       }
     }
   }
@@ -515,17 +505,14 @@ class _LeadArea extends ConsumerWidget {
           .read(b2bMarketControllerProvider.notifier)
           .acceptQuoteReply(reply.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bu teklifle ilerliyorsun. Tedarikçiye iletildi.'),
-          ),
+        AppFeedback.success(
+          context,
+          'Bu teklifle ilerliyorsun. Tedarikçiye iletildi.',
         );
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('İşlem başarısız. Tekrar deneyin.')),
-        );
+        AppFeedback.error(context, AppStrings.polishQuoteAcceptError);
       }
     }
   }
@@ -709,11 +696,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(
-          Icons.forum_outlined,
-          size: 17,
-          color: AppColors.brandLemonPressed,
-        ),
+        const Icon(Icons.forum_outlined, size: 17, color: AppColors.brandInk),
         const SizedBox(width: 6),
         Text(
           count > 0 ? '$title ($count)' : title,
@@ -772,20 +755,17 @@ class _InterestSheetState extends ConsumerState<_InterestSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _sharePhone
-                ? 'Tedarikçiye ilgilendiğin bildirildi. Telefonun paylaşıldı.'
-                : 'Tedarikçiye ilgilendiğin bildirildi.',
-          ),
-        ),
+      AppFeedback.success(
+        context,
+        _sharePhone
+            ? 'Tedarikçiye ilgilendiğin bildirildi. Telefonun paylaşıldı.'
+            : 'Tedarikçiye ilgilendiğin bildirildi.',
       );
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = 'Gönderilemedi. Lütfen tekrar deneyin.';
+        _error = AppStrings.polishQuoteSendError;
       });
     }
   }

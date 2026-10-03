@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/widgets/interactions.dart';
 
 class ProfileCategoryTabs extends StatelessWidget {
   const ProfileCategoryTabs({
@@ -53,7 +54,10 @@ class ProfileCategoryTabs extends StatelessWidget {
                 child: _Segment(
                   label: labels[i],
                   selected: i == index,
-                  onTap: () => onChanged(i),
+                  onTap: () {
+                    AppHaptics.selection();
+                    onChanged(i);
+                  },
                 ),
               ),
           ],

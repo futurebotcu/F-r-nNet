@@ -13,6 +13,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer_transaction.dart';
 import '../repositories/driver_permission.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Bayi cari bakiyesini elle ayarlamak için form (V1.1).
 /// Tutar pozitif girilir, yön segment ile seçilir → işaretli `amount`
@@ -80,13 +81,10 @@ class _DealerAdjustmentFormScreenState
       if (!mounted) return;
       Navigator.of(context).pop();
       final sign = signed >= 0 ? '+' : '−';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${AppStrings.dealerSaveSnackAdjustment}'
-            '$sign${NumberFormatter.currency(signed.abs())}',
-          ),
-        ),
+      AppFeedback.success(
+        context,
+        '${AppStrings.dealerSaveSnackAdjustment}'
+        '$sign${NumberFormatter.currency(signed.abs())}',
       );
     } on GuestActionRequiredException {
       // V1.4 P1.7 — Defense-in-depth: pre-check sonrası repo katmanı yine
@@ -101,16 +99,14 @@ class _DealerAdjustmentFormScreenState
       // V1.4 P1.7 — Ham PostgrestException/network UI'a sızmaz. Form AÇIK
       // kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerAdjustmentSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.dealerAdjustmentSaveError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
   void _err(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.warning(context, msg);
   }
 
   @override

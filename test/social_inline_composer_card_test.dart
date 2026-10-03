@@ -104,19 +104,20 @@ void main() {
         (tester) async {
       await tester.pumpWidget(_wrap(
         router: _testRouter(),
-        profile: _individualProfile, // displayName "Ali Usta" → "A"
+        profile: _individualProfile, // displayName "Ali Usta" → "AU"
       ));
       await tester.pumpAndSettle();
-      expect(find.text('A'), findsOneWidget);
+      // Sosyal polish 2: ortak FirinNetAvatar iki baş harf gösterir.
+      expect(find.text('AU'), findsOneWidget);
     });
 
-    testWidgets('Profile yokken avatar fallback "M"', (tester) async {
+    testWidgets('Profile yokken avatar nötr kişi ikonu', (tester) async {
       await tester.pumpWidget(_wrap(
         router: _testRouter(),
         profile: null,
       ));
       await tester.pumpAndSettle();
-      expect(find.text('M'), findsOneWidget);
+      expect(find.byIcon(Icons.person_rounded), findsOneWidget);
     });
   });
 

@@ -439,7 +439,7 @@ void main() {
         find.text(AppStrings.branchStaffRemoveConfirmTitle),
         findsOneWidget,
       );
-      await tester.tap(find.byKey(const ValueKey('member_action_cancel')));
+      await tester.tap(find.byKey(const ValueKey('app_confirm_cancel')));
       await tester.pumpAndSettle();
       expect(find.text('Ahmet Usta'), findsOneWidget);
       expect(
@@ -458,7 +458,7 @@ void main() {
       await openMemberMenu(tester);
       await tester.tap(find.text(AppStrings.branchStaffRemove));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('member_action_confirm')));
+      await tester.tap(find.byKey(const ValueKey('app_confirm_ok')));
       await tester.pumpAndSettle();
       expect(find.text('Ahmet Usta'), findsNothing);
       expect(await repo.branchMembers('branch-1'), isEmpty);
@@ -480,7 +480,7 @@ void main() {
         find.text(AppStrings.branchStaffSuspendConfirmTitle),
         findsOneWidget,
       );
-      await tester.tap(find.byKey(const ValueKey('member_action_confirm')));
+      await tester.tap(find.byKey(const ValueKey('app_confirm_ok')));
       await tester.pumpAndSettle();
       expect(
         find.textContaining(BranchMembershipStatus.suspended.label),
@@ -556,7 +556,7 @@ void main() {
         find.text(AppStrings.branchDeactivateConfirmTitle),
         findsOneWidget,
       );
-      await tester.tap(find.byKey(const ValueKey('branch_deactivate_confirm')));
+      await tester.tap(find.byKey(const ValueKey('app_confirm_ok')));
       await tester.pumpAndSettle();
       expect((await repo.branchById('branch-2'))!.isActive, isFalse);
       expect(find.text(AppStrings.branchActivateCta), findsOneWidget);

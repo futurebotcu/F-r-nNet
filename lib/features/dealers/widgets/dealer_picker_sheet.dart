@@ -67,7 +67,8 @@ class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.78,
+          // Klavye açıkken (arama) sheet ekrandan taşmasın: kalan alana sığ.
+          height: _sheetHeight(context, viewInsets.bottom),
           child: Column(
             children: [
               Padding(
@@ -88,7 +89,12 @@ class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
                   AppSpacing.pageH,
                   AppSpacing.s,
                 ),
-                child: Row(
+                // Dar ekran / büyük yazıda başlık + filtre alt satıra iner.
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppSpacing.s,
+                  runSpacing: AppSpacing.xs,
                   children: [
                     Text(
                       AppStrings.dealerPickerTitle,
@@ -97,7 +103,6 @@ class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const Spacer(),
                     SegmentedButton<bool>(
                       segments: const [
                         ButtonSegment<bool>(
@@ -148,6 +153,13 @@ class _DealerPickerSheetState extends ConsumerState<DealerPickerSheet> {
         ),
       ),
     );
+  }
+
+  static double _sheetHeight(BuildContext context, double keyboard) {
+    final mq = MediaQuery.of(context);
+    final preferred = mq.size.height * 0.78;
+    final available = mq.size.height - keyboard - mq.padding.top - 24;
+    return preferred < available ? preferred : available.clamp(200, preferred);
   }
 
   Widget _buildList(

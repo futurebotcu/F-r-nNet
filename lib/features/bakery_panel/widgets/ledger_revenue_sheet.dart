@@ -7,6 +7,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
 import '../providers/bakery_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Ciro / gün notu sheet'i — upsert_bakery_day_book RPC'sine yazar.
 ///
@@ -82,9 +83,7 @@ class _RevenueSheetState extends ConsumerState<_RevenueSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.ledgerSaved)));
+      AppFeedback.success(context, AppStrings.polishLedgerDaySaved);
     } on StateError catch (e) {
       if (!mounted) return;
       setState(() {
@@ -234,9 +233,7 @@ class _TaskSheetState extends ConsumerState<_TaskSheet> {
           .addTask(day: DateTime.now(), title: _title.text);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.ledgerTaskAdded)));
+      AppFeedback.success(context, AppStrings.ledgerTaskAdded);
     } catch (_) {
       if (!mounted) return;
       setState(() {

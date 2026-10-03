@@ -27,6 +27,8 @@ import '../providers/dealer_providers.dart';
 import '../repositories/driver_permission.dart';
 import '../widgets/quick_payment_sheet.dart';
 import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 
 class DealerDetailScreen extends ConsumerWidget {
   const DealerDetailScreen({super.key, required this.dealerId});
@@ -226,58 +228,36 @@ class DealerDetailScreen extends ConsumerWidget {
     }
 
     final nextActive = !dealer.isActive;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          nextActive
-              ? AppStrings.dealerStatusActiveTitle
-              : AppStrings.dealerStatusPassiveTitle,
-        ),
-        content: Text(
-          nextActive
-              ? AppStrings.dealerStatusActiveBody
-              : AppStrings.dealerStatusPassiveBody,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              nextActive
-                  ? AppStrings.dealerStatusActiveConfirm
-                  : AppStrings.dealerStatusPassiveConfirm,
-            ),
-          ),
-        ],
-      ),
+    final confirmed = await showAppConfirmDialog(
+      context,
+      title: nextActive
+          ? AppStrings.dealerStatusActiveTitle
+          : AppStrings.dealerStatusPassiveTitle,
+      message: nextActive
+          ? AppStrings.dealerStatusActiveBody
+          : AppStrings.dealerStatusPassiveBody,
+      confirmLabel: nextActive
+          ? AppStrings.dealerStatusActiveConfirm
+          : AppStrings.dealerStatusPassiveConfirm,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     try {
       await ref
           .read(dealerRepositoryProvider)
           .setActive(dealer.id, active: nextActive);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerStatusUpdated)),
-      );
+      AppFeedback.success(context, AppStrings.dealerStatusUpdated);
     } on GuestActionRequiredException {
       if (!context.mounted) return;
       await showAuthRequiredSheet(context, ref);
     } on DriverPermissionException catch (e) {
       // Şoför aktif/pasif (owner) tetikledi → temiz mesaj.
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      AppFeedback.error(context, e.message);
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerStatusUpdateError)),
-      );
+      AppFeedback.error(context, AppStrings.dealerStatusUpdateError);
     }
   }
 
@@ -1057,13 +1037,10 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
       ref.invalidate(pricesByDealerProvider(widget.dealerId));
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${AppStrings.dealerPriceSheetSaved}'
-            '$productName · ${NumberFormatter.currency(price)}',
-          ),
-        ),
+      AppFeedback.success(
+        context,
+        '${AppStrings.dealerPriceSheetSaved}'
+        '$productName · ${NumberFormatter.currency(price)}',
       );
     } on GuestActionRequiredException {
       // Defense-in-depth: pre-check geçtikten sonra repo katmanı guest
@@ -1073,20 +1050,17 @@ class _PriceSheetState extends ConsumerState<DealerPriceSheet> {
     } on DriverPermissionException catch (e) {
       // Şoför "Fiyat ekle" (owner) tetikledi → temiz mesaj, sheet açık kalır.
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      AppFeedback.error(context, e.message);
     } catch (_) {
       if (!mounted) return;
       // Sheet AÇIK kalır (Navigator.pop çağrılmaz) ki kullanıcı tek tıkla
       // tekrar deneyebilsin. Ham exception UI'a sızmaz.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerPriceSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.dealerPriceSaveError);
     }
   }
 
   void _err(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.warning(context, msg);
   }
 
   @override
@@ -1536,9 +1510,7 @@ class _NotesCardState extends ConsumerState<NotesCard> {
       if (!mounted) return;
       // Not metni input'ta korunur ki kullanıcı tek tıkla tekrar
       // deneyebilsin. Ham exception UI'a sızmaz.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerNoteAddError)),
-      );
+      AppFeedback.error(context, AppStrings.dealerNoteAddError);
     } finally {
       if (mounted) {
         setState(() => _saving = false);

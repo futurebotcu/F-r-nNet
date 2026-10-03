@@ -18,7 +18,9 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/permissions/app_permission_service.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import 'story_media_frame.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../providers/social_providers.dart';
 
@@ -125,9 +127,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
       debugPrint('[FirinNet][StoryCreate] share success id=${story.id}');
       if (!mounted) return;
       ref.invalidate(socialFreshStoriesProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.storyCreateSavedSnack)),
-      );
+      AppFeedback.success(context, AppStrings.storyCreateSavedSnack);
       context.pop();
     } on GuestActionRequiredException {
       if (mounted) await showAuthRequiredSheet(context, ref);
@@ -149,6 +149,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
         backgroundColor: AppColors.elevatedCard,
         elevation: 0,
         leading: IconButton(
+          tooltip: AppStrings.socialCloseTooltip,
           icon: const Icon(Icons.close_rounded, size: 26),
           color: AppColors.textPrimary,
           onPressed: _saving ? null : () => context.pop(),
@@ -319,11 +320,13 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                 ),
               ),
             ] else ...[
-              ClipRRect(
+              // İzleyiciyle AYNI 9:16 çerçeve + aynı fit (kadraj eşleşir).
+              StoryMediaFrame(
                 borderRadius: BorderRadius.circular(AppRadius.m),
-                child: AspectRatio(
-                  aspectRatio: 9 / 16,
-                  child: Image.memory(_pickedBytes!, fit: BoxFit.cover),
+                child: Image.memory(
+                  _pickedBytes!,
+                  key: const ValueKey('story_create_preview'),
+                  fit: StoryMediaFrame.fit,
                 ),
               ),
               const SizedBox(height: AppSpacing.m),

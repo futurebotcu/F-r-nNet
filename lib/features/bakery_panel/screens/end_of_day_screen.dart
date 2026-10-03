@@ -13,6 +13,7 @@ import '../../../core/widgets/premium/stat_card.dart';
 import '../providers/bakery_providers.dart';
 import '../widgets/ledger_tables.dart';
 import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Fırın Defteri — Gün Sonu.
 ///
@@ -226,11 +227,7 @@ class EndOfDayScreen extends ConsumerWidget {
                           .read(bakeryRepositoryProvider)
                           .closeDay(DateTime.now());
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(AppStrings.ledgerDayClosed),
-                        ),
-                      );
+                      AppFeedback.success(context, AppStrings.ledgerDayClosed);
                     },
                     icon: const Icon(Icons.nightlight_rounded, size: 18),
                     label: const Text(AppStrings.ledgerCloseDayCta),

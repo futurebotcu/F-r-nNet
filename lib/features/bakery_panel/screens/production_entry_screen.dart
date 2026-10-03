@@ -12,6 +12,7 @@ import '../../../core/widgets/product_choice_chips.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/production_entry.dart';
 import '../providers/bakery_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class ProductionEntryScreen extends ConsumerStatefulWidget {
   const ProductionEntryScreen({super.key});
@@ -65,9 +66,7 @@ class _ProductionEntryScreenState extends ConsumerState<ProductionEntryScreen> {
           );
           if (!mounted) return;
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Üretim kaydedildi: $qty $productName')),
-          );
+          AppFeedback.success(context, 'Üretim kaydedildi: $qty $productName');
         },
       );
     } finally {
@@ -76,7 +75,7 @@ class _ProductionEntryScreenState extends ConsumerState<ProductionEntryScreen> {
   }
 
   void _err(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.warning(context, msg);
   }
 
   @override

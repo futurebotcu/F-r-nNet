@@ -26,6 +26,7 @@ import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_campaign_card.dart';
 import '../../widgets/b2b_product_card.dart';
 import '../../../../core/utils/tr_case.dart';
+import '../../../../core/widgets/firinnet_avatar.dart';
 
 class SupplierStoreTab extends ConsumerWidget {
   const SupplierStoreTab({super.key});
@@ -165,7 +166,7 @@ class _ViewpointStrip extends StatelessWidget {
           const Icon(
             Icons.visibility_outlined,
             size: 15,
-            color: AppColors.brandLemonPressed,
+            color: AppColors.brandInk,
           ),
           const SizedBox(width: 6),
           const Expanded(
@@ -200,27 +201,12 @@ class _StoreHero extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                  border: Border.all(
-                    color: AppColors.brandLemonSoft,
-                    width: 0.8,
-                  ),
-                ),
-                child: Text(
-                  store.monogram,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.brandLemonPressed,
-                    letterSpacing: 0.3,
-                  ),
-                ),
+              // Logo varsa logo, yoksa baş harfler (ortak işletme avatarı).
+              FirinNetAvatar(
+                name: store.name,
+                imageUrl: store.logoUrl,
+                size: FirinNetAvatarSize.l,
+                kind: FirinNetAvatarKind.business,
               ),
               const SizedBox(width: AppSpacing.m),
               Expanded(

@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/feature_lock.dart';
 import '../providers/subscription_providers.dart';
+import '../../../app/theme/app_typography.dart';
 import 'commercial_launch_sheet.dart' show formatCommercialLaunchDay;
 
 /// Kilitli bir özelliğe basıldığında açılan bilgilendirme sheet'i.
@@ -85,9 +86,7 @@ class _PaywallSheetBody extends ConsumerWidget {
                     ),
                     child: Text(
                       lock.requiredPlanTag,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.badge.copyWith(
                         color: AppColors.brandLemon,
                       ),
                     ),
@@ -97,20 +96,16 @@ class _PaywallSheetBody extends ConsumerWidget {
               const SizedBox(height: AppSpacing.m),
               Text(
                 lock.title,
-                style: const TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
                   height: 1.3,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 lock.body,
-                style: const TextStyle(
+                style: AppTypography.body.copyWith(
                   fontSize: 13.5,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
                   height: 1.45,
                 ),
               ),
@@ -128,9 +123,9 @@ class _PaywallSheetBody extends ConsumerWidget {
                       child: Text(
                         lock.priceHint,
                         key: const ValueKey('paywall_price_hint'),
-                        style: const TextStyle(
+                        style: AppTypography.infoLabel.copyWith(
                           fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.brandInk,
                         ),
                       ),
@@ -145,9 +140,8 @@ class _PaywallSheetBody extends ConsumerWidget {
                   '${formatCommercialLaunchDay(launchPriceUntil)}'
                   '${AppStrings.paywallLaunchPriceSuffix}',
                   key: const ValueKey('paywall_launch_price_until'),
-                  style: const TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -168,12 +162,7 @@ class _PaywallSheetBody extends ConsumerWidget {
                   const Expanded(
                     child: Text(
                       AppStrings.paywallBasicsStayFree,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textMuted,
-                        height: 1.35,
-                      ),
+                      style: AppTypography.caption,
                     ),
                   ),
                 ],
@@ -197,7 +186,8 @@ class _PaywallSheetBody extends ConsumerWidget {
                   ),
                   child: const Text(
                     AppStrings.paywallUpgradeCta,
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: AppTypography.buttonLabel,
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
@@ -209,6 +199,7 @@ class _PaywallSheetBody extends ConsumerWidget {
                   onPressed: () => Navigator.of(context).pop(),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.textSecondary,
+                    minimumSize: const Size.fromHeight(48),
                   ),
                   child: const Text(AppStrings.paywallNotNow),
                 ),

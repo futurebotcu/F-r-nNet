@@ -26,6 +26,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/interactions.dart';
@@ -317,9 +318,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
   Future<void> _submit() async {
     final text = _textCtrl.text.trim();
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedComposerEmptyErr)),
-      );
+      AppFeedback.error(context, AppStrings.feedComposerEmptyErr);
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -396,9 +395,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
         }
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedComposerSavedSnack)),
-      );
+      AppFeedback.success(context, AppStrings.feedComposerSavedSnack);
       context.pop();
     } catch (_) {
       if (!mounted) return;
@@ -426,15 +423,16 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
         backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
+          tooltip: AppStrings.socialCloseTooltip,
           icon: const Icon(Icons.close_rounded),
           color: AppColors.textPrimary,
           onPressed: _saving
               ? null
               : () => maybePopWithDirtyGuard(
-                    context,
-                    isDirty: _dirty,
-                    onConfirmed: () => context.pop(),
-                  ),
+                  context,
+                  isDirty: _dirty,
+                  onConfirmed: () => context.pop(),
+                ),
         ),
         title: const Text(
           'Yeni Gönderi',
@@ -919,16 +917,14 @@ class _MediaPreviewState extends State<_MediaPreview> {
   }
 
   void _resolve() {
-    final stream = MemoryImage(widget.bytes)
-        .resolve(createLocalImageConfiguration(context));
-    final listener = ImageStreamListener(
-      (info, _) {
-        final img = info.image;
-        if (!mounted || img.height == 0) return;
-        setState(() => _aspect = img.width / img.height);
-      },
-      onError: (_, __) {},
-    );
+    final stream = MemoryImage(
+      widget.bytes,
+    ).resolve(createLocalImageConfiguration(context));
+    final listener = ImageStreamListener((info, _) {
+      final img = info.image;
+      if (!mounted || img.height == 0) return;
+      setState(() => _aspect = img.width / img.height);
+    }, onError: (_, __) {});
     stream.addListener(listener);
     _stream = stream;
     _listener = listener;
@@ -965,21 +961,36 @@ class _MediaPreviewState extends State<_MediaPreview> {
             ),
           ),
           Positioned(
-            top: AppSpacing.s,
-            right: AppSpacing.s,
-            child: Material(
-              color: AppColors.textPrimary.withValues(alpha: 0.72),
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: onRemove,
-                customBorder: const CircleBorder(),
-                child: const Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Icon(
-                    Icons.close_rounded,
-                    color: AppColors.surface,
-                    size: 18,
+            top: AppSpacing.xs,
+            right: AppSpacing.xs,
+            // Görünür daire 30px; dokunma alanı 44px (+ tooltip/semantics).
+            child: Tooltip(
+              message: AppStrings.composerRemoveImageCta,
+              child: Semantics(
+                button: true,
+                label: AppStrings.composerRemoveImageCta,
+                child: InkWell(
+                  key: const ValueKey('composer_image_remove'),
+                  onTap: onRemove,
+                  customBorder: const CircleBorder(),
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Center(
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: AppColors.textPrimary.withValues(alpha: 0.72),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.surface,
+                          size: 18,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

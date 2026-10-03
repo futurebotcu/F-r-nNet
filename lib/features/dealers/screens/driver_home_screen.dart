@@ -6,6 +6,8 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../providers/dealer_providers.dart';
 import '../widgets/role_data_lock.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Bireysel şoför "henüz atanmamış" görünümü (fix/driver-normal-dealer-shell).
 ///
@@ -133,9 +135,7 @@ class MyDriverInvitesCard extends ConsumerWidget {
       if (isRoleDataLockError(e)) {
         await showRoleDataLockDialog(context, forInvite: true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('İşlem başarısız. Lütfen tekrar deneyin.')),
-        );
+        AppFeedback.error(context, AppStrings.polishDriverActionError);
       }
       return;
     }

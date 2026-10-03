@@ -18,6 +18,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -71,9 +72,7 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
       // V2: feedPagedNotifier + post detail header refresh.
       ref.invalidate(feedPagedNotifierProvider);
       ref.invalidate(feedPostByIdProvider(widget.postId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.postEditSavedSnack)),
-      );
+      AppFeedback.success(context, AppStrings.postEditSavedSnack);
       context.pop();
     } on GuestActionRequiredException {
       if (mounted) await showAuthRequiredSheet(context, ref);

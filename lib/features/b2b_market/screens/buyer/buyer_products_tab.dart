@@ -19,6 +19,7 @@ import '../../widgets/b2b_category_chip_row.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
 import '../../widgets/b2b_product_card.dart';
 import '../../widgets/b2b_search_field.dart';
+import '../../../../core/constants/app_strings.dart';
 
 class BuyerProductsTab extends ConsumerStatefulWidget {
   const BuyerProductsTab({super.key});
@@ -57,7 +58,7 @@ class _BuyerProductsTabState extends ConsumerState<BuyerProductsTab> {
             empty: const EmptyState(
               icon: Icons.inventory_2_outlined,
               title: 'Ürün bulunamadı',
-              subtitle: 'Farklı bir kategori veya arama deneyin.',
+              subtitle: AppStrings.polishB2bEmptySearch,
               compact: true,
             ),
             itemBuilder: (context, p) => B2bProductCard(

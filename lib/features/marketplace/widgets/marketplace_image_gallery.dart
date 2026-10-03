@@ -5,13 +5,13 @@
 // FırınNet'te video yok V1 (sadece image), Bagisto'nun gallery_media_picker
 // alınmadı.
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_network_image.dart';
 
 class MarketplaceImageGallery extends StatefulWidget {
   const MarketplaceImageGallery({
@@ -53,28 +53,14 @@ class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
     if (widget.imageUrls.isEmpty) {
       // İlanlar tasarım geçişi — görselsiz ilan: daha kısa 16:9 sakin alan +
       // tür ikonu + "Fotoğraf yok" (büyük boş gri blok yerine).
+      // Polish 2 — ortak "görsel yok" durumu (AppImageState).
       return AspectRatio(
         aspectRatio: 16 / 9,
-        child: Container(
+        child: KeyedSubtree(
           key: const ValueKey('market_gallery_no_photo'),
-          color: AppColors.surfaceLine,
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.placeholderIcon,
-                size: 34,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                AppStrings.listingsNoPhoto,
-                style: AppTypography.meta.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          child: AppImageState.empty(
+            icon: widget.placeholderIcon,
+            label: AppStrings.listingsNoPhoto,
           ),
         ),
       );
@@ -91,30 +77,17 @@ class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
               final url = widget.imageUrls[i];
               return GestureDetector(
                 onTap: () => _openFullscreen(url),
-                child: CachedNetworkImage(
-                  imageUrl: url,
-                  // Detayda görsel kırpılmaz (contain); boşluk sakin zemin.
-                  fit: BoxFit.contain,
-                  imageBuilder: (_, provider) => Container(
-                    color: AppColors.surfaceLine,
-                    alignment: Alignment.center,
-                    child: Image(image: provider, fit: BoxFit.contain),
-                  ),
-                  // Perf: carousel görseli ekran boyutunda decode edilir.
-                  memCacheWidth: 720,
-                  placeholder: (_, __) => Container(
-                    color: AppColors.surface,
-                    alignment: Alignment.center,
-                    child: const CircularProgressIndicator(strokeWidth: 1.8),
-                  ),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.surface,
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.broken_image_outlined,
-                      size: 36,
-                      color: AppColors.textMuted,
-                    ),
+                // Detayda görsel kırpılmaz (contain); boşluk sakin zemin.
+                // Yükleniyor/hata durumları AppNetworkImage'den (kırık ikon yok).
+                child: ColoredBox(
+                  color: AppColors.surfaceLine,
+                  child: AppNetworkImage(
+                    url: url,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: double.infinity,
+                    // Perf: carousel görseli ekran boyutunda decode edilir.
+                    memCacheWidth: 720,
                   ),
                 ),
               );
@@ -202,19 +175,9 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
                   minScale: 1,
                   maxScale: 5,
                   child: Center(
-                    child: CachedNetworkImage(
-                      imageUrl: widget.imageUrls[i],
+                    child: AppNetworkImage(
+                      url: widget.imageUrls[i],
                       fit: BoxFit.contain,
-                      placeholder: (_, __) => const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.surface,
-                        ),
-                      ),
-                      errorWidget: (_, __, ___) => const Icon(
-                        Icons.broken_image_outlined,
-                        color: AppColors.surface54,
-                        size: 64,
-                      ),
                     ),
                   ),
                 );
@@ -224,6 +187,9 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
               top: 8,
               right: 8,
               child: IconButton(
+                key: const ValueKey('market_gallery_close'),
+                tooltip: AppStrings.listingsCloseTooltip,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 icon: const Icon(Icons.close_rounded, color: AppColors.surface),
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
@@ -236,9 +202,8 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
                 child: Center(
                   child: Text(
                     '${_index + 1} / ${widget.imageUrls.length}',
-                    style: const TextStyle(
+                    style: AppTypography.chipLabel.copyWith(
                       color: AppColors.surface,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

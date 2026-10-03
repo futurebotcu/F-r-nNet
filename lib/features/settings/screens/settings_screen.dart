@@ -16,6 +16,8 @@ import '../../../core/widgets/premium/section_label.dart';
 import '../../auth/services/auth_actions.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../widgets/settings_tile.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 
 /// Sade ve gerçek Settings ekranı.
 ///
@@ -62,12 +64,9 @@ class SettingsScreen extends ConsumerWidget {
                             ClipboardData(text: firinnetId),
                           );
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  AppStrings.settingsFirinnetIdCopied,
-                                ),
-                              ),
+                            AppFeedback.info(
+                              context,
+                              AppStrings.settingsFirinnetIdCopied,
                             );
                           }
                         },
@@ -93,7 +92,18 @@ class SettingsScreen extends ConsumerWidget {
                       icon: Icons.logout_rounded,
                       title: AppStrings.settingsSignOut,
                       subtitle: AppStrings.settingsSignOutSubtitle,
-                      onTap: () => performSignOut(context, ref),
+                      onTap: () async {
+                        final ok = await showAppConfirmDialog(
+                          context,
+                          title: AppStrings.polishSignOutTitle,
+                          message: AppStrings.polishSignOutBody,
+                          confirmLabel: AppStrings.polishSignOutCta,
+                          icon: Icons.logout_rounded,
+                        );
+                        if (ok && context.mounted) {
+                          await performSignOut(context, ref);
+                        }
+                      },
                     ),
                   ],
                 ),

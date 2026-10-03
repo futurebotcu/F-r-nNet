@@ -10,12 +10,15 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/debt_expense_entry.dart';
 import '../providers/debt_expense_providers.dart';
 import '../widgets/debt_expense_widgets.dart';
 import 'debt_expense_entry_form_screen.dart';
 import 'debt_payment_sheet.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class DebtExpenseListTab extends ConsumerWidget {
   const DebtExpenseListTab({super.key, required this.kind});
@@ -75,15 +78,32 @@ class DebtExpenseListTab extends ConsumerWidget {
                 title: const Text(AppStrings.deMarkPaid),
                 onTap: () async {
                   Navigator.of(ctx).pop();
-                  await ref.read(debtExpenseRepositoryProvider).updateEntry(
-                        e.copyWith(paidAmount: e.totalAmount),
+                  try {
+                    await ref
+                        .read(debtExpenseRepositoryProvider)
+                        .updateEntry(e.copyWith(paidAmount: e.totalAmount));
+                    if (context.mounted) {
+                      AppFeedback.success(
+                        context,
+                        AppStrings.polishDebtMarkedPaid,
                       );
+                    }
+                  } catch (_) {
+                    if (context.mounted) {
+                      AppFeedback.error(
+                        context,
+                        AppStrings.polishDebtUpdateError,
+                      );
+                    }
+                  }
                 },
               ),
             ListTile(
-              leading:
-                  const Icon(Icons.delete_outline_rounded, color: AppColors.danger),
-              title: const Text('Sil'),
+              leading: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.danger,
+              ),
+              title: const Text(AppStrings.polishDelete),
               onTap: () async {
                 Navigator.of(ctx).pop();
                 await _confirmDelete(context, ref, e);
@@ -100,29 +120,25 @@ class DebtExpenseListTab extends ConsumerWidget {
     WidgetRef ref,
     DebtExpenseEntry e,
   ) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Kaydı sil'),
-        content: Text('"${e.title}" kaydı silinsin mi? Bu işlem geri alınamaz.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: AppStrings.polishDebtDeleteTitle,
+      message: '"${e.title}" kalıcı olarak silinir. Bu işlem geri alınamaz.',
+      confirmLabel: AppStrings.polishDelete,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true) return;
-    await ref.read(debtExpenseRepositoryProvider).deleteEntry(e.id);
+    if (!ok) return;
+    try {
+      await ref.read(debtExpenseRepositoryProvider).deleteEntry(e.id);
+      if (context.mounted) {
+        AppFeedback.success(context, AppStrings.polishDebtDeleted);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        AppFeedback.error(context, AppStrings.polishDebtDeleteError);
+      }
+    }
   }
 
   @override
@@ -149,8 +165,14 @@ class DebtExpenseListTab extends ConsumerWidget {
             Expanded(
               child: async.when(
                 skipLoadingOnReload: true,
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const PremiumListSkeleton(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.pageH,
+                    AppSpacing.m,
+                    AppSpacing.pageH,
+                    AppSpacing.xxl,
+                  ),
+                ),
                 error: (_, __) => ErrorRetryState(
                   onRetry: () =>
                       ref.invalidate(debtExpenseEntriesProvider(kind)),

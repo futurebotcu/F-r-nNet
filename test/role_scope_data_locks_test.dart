@@ -76,7 +76,7 @@ void main() {
       expect(isRoleDataLockError(Exception('network error')), isFalse);
     });
 
-    testWidgets('davet popup: temizleme açıklaması + Tamam', (tester) async {
+    testWidgets('davet popup: temizleme açıklaması + Anladım', (tester) async {
       late BuildContext ctx;
       await tester.pumpWidget(MaterialApp(
         home: Builder(builder: (c) {
@@ -88,7 +88,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Önce mevcut kayıtlarını temizlemelisin'), findsOneWidget);
       expect(find.textContaining('Şoför olarak atanırsan'), findsOneWidget);
-      expect(find.text('Tamam'), findsOneWidget);
+      expect(find.text('Anladım'), findsOneWidget);
     });
 
     testWidgets('profil tipi popup: ayrı açıklama', (tester) async {

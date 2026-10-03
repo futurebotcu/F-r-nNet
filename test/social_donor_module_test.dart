@@ -187,9 +187,10 @@ void main() {
       expect(src.contains('AppStrings.feedActionShare'), isTrue);
     });
 
-    test('P0 - Caption font 16.5 / author 15.5 / action label 12', () {
+    test('P0 - Caption font 16.5 / author authorName rolü / etiket 12', () {
       expect(src.contains('fontSize: 16.5'), isTrue);
-      expect(src.contains('fontSize: 15.5'), isTrue);
+      // Sosyal polish 2: yazar adı ortak tipografi rolünde (feed = detay).
+      expect(src.contains('AppTypography.authorName'), isTrue);
       expect(src.contains('fontSize: 12'), isTrue);
     });
   });

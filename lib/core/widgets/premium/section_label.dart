@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 
 /// Editorial section başlığı: başlık + opsiyonel yan link/chevron.
 class SectionLabel extends StatelessWidget {
@@ -35,10 +36,9 @@ class SectionLabel extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+              style: AppTypography.sectionTitle.copyWith(
                 fontSize: 15.5,
-                letterSpacing: -0.15,
+                fontWeight: FontWeight.w700,
                 color: AppColors.onBackgroundPrimary,
               ),
             ),
@@ -48,7 +48,12 @@ class SectionLabel extends StatelessWidget {
               onTap: onTrailingTap,
               borderRadius: BorderRadius.circular(AppRadius.s),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                // Dokunma alanı ≥ 40px yükseklik; görsel boşluk değişmesin
+                // diye dikey padding negatif margin yerine sabit tutuldu.
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 10,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -64,7 +69,7 @@ class SectionLabel extends StatelessWidget {
                     const Icon(
                       Icons.chevron_right_rounded,
                       size: 16,
-                      color: AppColors.brandLemonPressed,
+                      color: AppColors.brandInk,
                     ),
                   ],
                 ),

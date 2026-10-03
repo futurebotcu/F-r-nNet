@@ -23,6 +23,7 @@ import 'package:firin_defter/features/profile/providers/profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 // ─────────────────────────────────────── Fake
 
@@ -130,7 +131,27 @@ void main() {
     'P1.6 regression — başarılı save mevcut akışı korur (sadece smoke)',
     (tester) async {
       final repo = LocalRecipeRepository();
-      await tester.pumpWidget(_wrap(repo: repo));
+      // Uygulama polish 2: başarı/hata geri bildirimi artık bir öncekini
+      // kapatır (AppFeedback). Router'sız testte pushReplacement hatası
+      // hata snackbar'ını öne çıkarırdı; gerçek akış gibi GoRouter ile sar.
+      final router = GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, __) => const RecipeEditorScreen()),
+        ],
+        errorBuilder: (_, __) => const Scaffold(body: Text('detail')),
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recipeRepositoryProvider.overrideWithValue(repo),
+            profileControllerProvider.overrideWith(
+              (ref) => _SeededProfileController(ref, _realProfile),
+            ),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Default değerlerle save → success path.

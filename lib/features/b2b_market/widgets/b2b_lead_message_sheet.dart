@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../models/b2b_lead_message.dart';
 import '../providers/b2b_providers.dart';
 
@@ -66,9 +68,7 @@ class _LeadMessageSheetState extends ConsumerState<_LeadMessageSheet> {
       _input.clear();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mesaj gönderilemedi. Tekrar deneyin.')),
-        );
+        AppFeedback.error(context, AppStrings.polishB2bMessageError);
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -184,6 +184,7 @@ class _LeadMessageSheetState extends ConsumerState<_LeadMessageSheet> {
                   ),
                   const SizedBox(width: AppSpacing.s),
                   IconButton.filled(
+                    tooltip: AppStrings.polishSend,
                     onPressed: _sending ? null : _send,
                     icon: const Icon(Icons.send_rounded, size: 18),
                     style: IconButton.styleFrom(

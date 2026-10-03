@@ -123,6 +123,8 @@ import '../../features/settings/screens/data_info_screen.dart';
 import '../../features/settings/screens/support_screen.dart';
 import '../../features/subscriptions/screens/plans_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 
 class AppRoutes {
   const AppRoutes._();
@@ -1147,16 +1149,35 @@ class RouteNotFoundScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.explore_off_rounded, size: 44),
-              const SizedBox(height: 12),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  color: AppColors.brandLemonPale,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.explore_off_rounded,
+                  size: 30,
+                  color: AppColors.brandInk,
+                ),
+              ),
+              const SizedBox(height: 16),
               const Text(
                 AppStrings.routeNotFoundTitle,
                 key: ValueKey('route_not_found'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                style: AppTypography.sectionTitle,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
+              const Text(
+                AppStrings.polishRouteNotFoundBody,
+                textAlign: TextAlign.center,
+                style: AppTypography.body,
+              ),
+              const SizedBox(height: 20),
               FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
                 onPressed: () => context.go(AppRoutes.feed),
                 child: const Text(AppStrings.routeNotFoundCta),
               ),

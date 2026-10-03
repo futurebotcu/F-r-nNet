@@ -6,9 +6,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/theme/app_colors.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/widgets/premium/premium_top_banner.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/report_models.dart';
 import '../providers/safety_providers.dart';
@@ -24,55 +24,33 @@ Future<bool> confirmAndBlockUser(
     return false;
   }
   if (!context.mounted) return false;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.elevatedCard,
-      title: const Text(AppStrings.blockConfirmTitle),
-      content: const Text(
-        AppStrings.blockConfirmBody,
-        style: TextStyle(height: 1.45),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text(AppStrings.safetyCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.danger,
-            foregroundColor: AppColors.surface,
-          ),
-          child: const Text(AppStrings.blockConfirmCta),
-        ),
-      ],
-    ),
+  final confirmed = await showAppConfirmDialog(
+    context,
+    title: AppStrings.blockConfirmTitle,
+    message: AppStrings.blockConfirmBody,
+    confirmLabel: AppStrings.blockConfirmCta,
+    cancelLabel: AppStrings.safetyCancel,
+    destructive: true,
+    icon: Icons.block_rounded,
   );
-  if (confirmed != true || !context.mounted) return false;
+  if (!confirmed || !context.mounted) return false;
 
   final repo = ref.read(safetyRepositoryProvider);
   try {
     final result = await repo.blockUser(userId);
     if (!context.mounted) return true;
-    PremiumTopBannerController.show(
-      context,
-      message: result == BlockResult.alreadyBlocked
-          ? AppStrings.blockAlreadyBanner
-          : AppStrings.blockSuccessBanner,
-      tone: PremiumTopBannerTone.success,
-    );
+    if (result == BlockResult.alreadyBlocked) {
+      AppFeedback.info(context, AppStrings.blockAlreadyBanner);
+    } else {
+      AppFeedback.success(context, AppStrings.blockSuccessBanner);
+    }
     return true;
   } on GuestActionRequiredException {
     if (context.mounted) await showAuthRequiredSheet(context, ref);
     return false;
   } catch (_) {
     if (!context.mounted) return false;
-    PremiumTopBannerController.show(
-      context,
-      message: AppStrings.safetyErrorBanner,
-      tone: PremiumTopBannerTone.danger,
-    );
+    AppFeedback.error(context, AppStrings.polishBlockError);
     return false;
   }
 }
@@ -87,19 +65,11 @@ Future<void> unblockUser(
   try {
     await repo.unblockUser(userId);
     if (!context.mounted) return;
-    PremiumTopBannerController.show(
-      context,
-      message: AppStrings.unblockSuccessBanner,
-      tone: PremiumTopBannerTone.info,
-    );
+    AppFeedback.success(context, AppStrings.unblockSuccessBanner);
   } on GuestActionRequiredException {
     if (context.mounted) await showAuthRequiredSheet(context, ref);
   } catch (_) {
     if (!context.mounted) return;
-    PremiumTopBannerController.show(
-      context,
-      message: AppStrings.safetyErrorBanner,
-      tone: PremiumTopBannerTone.danger,
-    );
+    AppFeedback.error(context, AppStrings.polishUnblockError);
   }
 }

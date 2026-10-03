@@ -10,10 +10,10 @@
 //   * Multi-photo picker (max 6) — galeri + kamera, ext fallback.
 //   * Contact_preference (in_app / phone / whatsapp) + phone/whatsapp alanları.
 //   * Negotiable switch.
-//   * Sticky bottom Publish CTA (Scaffold.bottomNavigationBar).
+//   * Sticky bottom Publish CTA (Scaffold.bottomNavigationBar →
+//     ListingStickyBar: SafeArea + klavye üstünde kalır).
 //   * Photos post-create upload (storage rollback repository tarafında).
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,16 +22,20 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_network_image.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../listings/utils/listing_format.dart';
+import '../../listings/widgets/listing_ui.dart';
 import '../../subscriptions/models/listing_fee.dart';
 import '../../subscriptions/widgets/listing_fee_notice.dart';
 import '../data/marketplace_taxonomy.dart';
@@ -273,7 +277,9 @@ class _MarketListingFormScreenState
       });
     } catch (e) {
       debugPrint('[FirinNet][MarketForm] pickPhoto error: $e');
-      if (mounted) _showSnack(AppStrings.marketListingErrorGeneric);
+      if (mounted) {
+        AppFeedback.error(context, AppStrings.listingsPhotoPickError);
+      }
     }
   }
 
@@ -383,6 +389,7 @@ class _MarketListingFormScreenState
         ref.invalidate(marketListingByIdProvider(saved.id!));
       }
       if (!mounted) return;
+      AppHaptics.success();
       AppFeedback.success(
         context,
         listingSavedMessage(
@@ -464,7 +471,7 @@ class _MarketListingFormScreenState
         body: Center(
           child: ErrorRetryState(
             key: const ValueKey('market_form_load_error'),
-            title: 'İlan yüklenemedi',
+            title: AppStrings.listingsDetailLoadError,
             onRetry: _loadExisting,
           ),
         ),
@@ -477,6 +484,9 @@ class _MarketListingFormScreenState
     }
     final isEquip = _listingType == 'equipment_sale';
     final isTransfer = _listingType == 'bakery_transfer';
+    // Polish 2 — bölümlü form: Temel bilgi / Fiyat / Detaylar / Konum /
+    // Fotoğraf / İletişim (+ düzenlemede Yayın durumu). Sabit CTA klavye
+    // açıkken de klavyenin üstünde kalır (ListingStickyBar).
     final scaffold = PremiumScaffold(
       body: SafeArea(
         bottom: false,
@@ -487,7 +497,8 @@ class _MarketListingFormScreenState
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
             children: [
               FirinNetHeader(
                 title: widget.listingId == null
@@ -504,29 +515,17 @@ class _MarketListingFormScreenState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // ── İlan Ücretlendirme V1 — ücret bilgilendirmesi ──
-                    if (widget.listingId == null) ...[
+                    if (widget.listingId == null)
                       const ListingFeeNotice(kind: ListingKind.market),
-                      const SizedBox(height: AppSpacing.m),
-                    ],
-                    // ── Photos ──
-                    _SectionLabel(label: AppStrings.marketListingFieldPhotos),
-                    // Düzenlemede mevcut fotoğraflar (salt-okunur önizleme).
-                    if (_existingPhotoUrls.isNotEmpty) ...[
-                      _ExistingPhotosRow(urls: _existingPhotoUrls),
-                      const SizedBox(height: AppSpacing.s),
-                    ],
-                    _PhotosRow(
-                      photos: _newPhotos,
-                      max: _maxPhotos,
-                      onPickGallery: () => _pickPhoto(ImageSource.gallery),
-                      onPickCamera: () => _pickPhoto(ImageSource.camera),
-                      onRemove: _removePickedPhoto,
-                    ),
-                    const SizedBox(height: AppSpacing.m),
 
-                    // ── Listing type (controlled-vocabulary) ──
+                    // ── Temel bilgi ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionBasics,
+                    ),
+                    // Listing type (controlled-vocabulary)
                     DropdownButtonFormField<String>(
                       initialValue: _listingType,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: AppStrings.marketListingFieldListingType,
                       ),
@@ -544,10 +543,10 @@ class _MarketListingFormScreenState
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),
-
-                    // ── Title ──
                     TextFormField(
                       controller: _title,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         labelText: AppStrings.marketListingFieldTitle,
                         hintText: AppStrings.marketListingFieldTitleHint,
@@ -556,15 +555,14 @@ class _MarketListingFormScreenState
                           ? AppStrings.marketListingFieldTitleRequired
                           : null,
                     ),
-                    const SizedBox(height: AppSpacing.m),
 
                     // (V1 "Kategori" alanı kaldırıldı — ilan tipinden
                     // türetilir; bkz. _categoryForType.)
-
-                    // ── Equipment-only block ──
                     if (isEquip) ...[
+                      const SizedBox(height: AppSpacing.m),
                       DropdownButtonFormField<String?>(
                         initialValue: _equipmentCategory,
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           labelText:
                               AppStrings.marketListingFieldEquipmentCategory,
@@ -572,7 +570,14 @@ class _MarketListingFormScreenState
                         items: [
                           const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text('—'),
+                            // Boş seçim değer gibi kalın görünmesin.
+                            child: Text(
+                              AppStrings.listingsOptionNone,
+                              style: TextStyle(
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                           ...MarketplaceTaxonomy.equipmentCategories.entries
                               .map(
@@ -588,13 +593,21 @@ class _MarketListingFormScreenState
                       const SizedBox(height: AppSpacing.m),
                       DropdownButtonFormField<String?>(
                         initialValue: _condition,
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: AppStrings.marketListingFieldCondition,
                         ),
                         items: [
                           const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text('—'),
+                            // Boş seçim değer gibi kalın görünmesin.
+                            child: Text(
+                              AppStrings.listingsOptionNone,
+                              style: TextStyle(
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                           ...MarketplaceTaxonomy.conditions.entries.map(
                             (e) => DropdownMenuItem<String?>(
@@ -605,47 +618,13 @@ class _MarketListingFormScreenState
                         ],
                         onChanged: (v) => setState(() => _condition = v),
                       ),
-                      const SizedBox(height: AppSpacing.m),
+                    ],
+
+                    // ── Fiyat ──
+                    const ListingSectionHeader(AppStrings.listingsSectionPrice),
+                    if (isEquip)
                       Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _brand,
-                              decoration: const InputDecoration(
-                                labelText: AppStrings.marketListingFieldBrand,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.s),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _model,
-                              decoration: const InputDecoration(
-                                labelText: AppStrings.marketListingFieldModel,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.m),
-                      TextFormField(
-                        controller: _year,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: ListingFormat.integerInputFormatters,
-                        decoration: const InputDecoration(
-                          labelText: AppStrings.marketListingFieldYear,
-                        ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return null;
-                          final y = int.tryParse(v.trim());
-                          if (y == null || y < 1900 || y > 2100) {
-                            return '1900–2100 arası bir yıl gir.';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.m),
-                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: TextFormField(
@@ -654,6 +633,7 @@ class _MarketListingFormScreenState
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
+                              textInputAction: TextInputAction.next,
                               inputFormatters:
                                   ListingFormat.priceInputFormatters,
                               decoration: InputDecoration(
@@ -667,6 +647,7 @@ class _MarketListingFormScreenState
                           Expanded(
                             child: TextFormField(
                               controller: _unit,
+                              textInputAction: TextInputAction.next,
                               decoration: const InputDecoration(
                                 labelText: AppStrings.marketListingFieldUnit,
                                 hintText: AppStrings.marketListingFieldUnitHint,
@@ -675,17 +656,15 @@ class _MarketListingFormScreenState
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.m),
-                    ],
-
-                    // ── Bakery transfer-only block ──
-                    if (isTransfer) ...[
+                    if (isTransfer)
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: TextFormField(
                               controller: _transferPrice,
                               keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.next,
                               inputFormatters:
                                   ListingFormat.integerInputFormatters,
                               decoration: const InputDecoration(
@@ -699,6 +678,7 @@ class _MarketListingFormScreenState
                             child: TextFormField(
                               controller: _rentPrice,
                               keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.next,
                               inputFormatters:
                                   ListingFormat.integerInputFormatters,
                               decoration: const InputDecoration(
@@ -709,19 +689,109 @@ class _MarketListingFormScreenState
                           ),
                         ],
                       ),
+                    const SizedBox(height: AppSpacing.m),
+                    // Currency (controlled-vocabulary)
+                    DropdownButtonFormField<String>(
+                      initialValue: _currency,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Para birimi',
+                      ),
+                      items: MarketplaceTaxonomy.currencies.entries
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(
+                        () => _currency =
+                            v ?? MarketplaceTaxonomy.defaultCurrency,
+                      ),
+                    ),
+                    SwitchListTile(
+                      value: _negotiable,
+                      onChanged: (v) => setState(() {
+                        _negotiable = v;
+                        _dirty = true;
+                      }),
+                      title: Text(
+                        AppStrings.marketListingFieldNegotiable,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      activeThumbColor: AppColors.brandInk,
+                      activeTrackColor: AppColors.brandLemon,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+
+                    // ── Detaylar ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionDetails,
+                    ),
+                    if (isEquip) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _brand,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: AppStrings.marketListingFieldBrand,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.s),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _model,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: AppStrings.marketListingFieldModel,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: AppSpacing.m),
+                      TextFormField(
+                        controller: _year,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        inputFormatters: ListingFormat.integerInputFormatters,
+                        decoration: const InputDecoration(
+                          labelText: AppStrings.marketListingFieldYear,
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return null;
+                          final y = int.tryParse(v.trim());
+                          if (y == null || y < 1900 || y > 2100) {
+                            return AppStrings.listingsYearInvalid;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.m),
+                    ],
+                    if (isTransfer) ...[
                       TextFormField(
                         controller: _areaM2,
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
                         inputFormatters: ListingFormat.integerInputFormatters,
                         decoration: const InputDecoration(
                           labelText: AppStrings.marketListingFieldAreaM2,
+                          suffixText: 'm²',
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return null;
                           final a = int.tryParse(v.trim());
                           if (a == null || a <= 0) {
-                            return 'Pozitif bir m² gir.';
+                            return AppStrings.listingsAreaInvalid;
                           }
                           return null;
                         },
@@ -735,7 +805,7 @@ class _MarketListingFormScreenState
                           _dirty = true;
                         }),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.m),
                       _TriSwitch(
                         title: AppStrings.marketListingFieldHasLicense,
                         value: _hasLicense,
@@ -746,8 +816,23 @@ class _MarketListingFormScreenState
                       ),
                       const SizedBox(height: AppSpacing.m),
                     ],
+                    TextFormField(
+                      controller: _description,
+                      minLines: 3,
+                      maxLines: 6,
+                      keyboardType: TextInputType.multiline,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.marketListingFieldDescription,
+                        hintText: AppStrings.marketListingFieldDescriptionHint,
+                        alignLabelWithHint: true,
+                      ),
+                    ),
 
-                    // ── Location (controlled vocabulary picker) ──
+                    // ── Konum (controlled vocabulary picker) ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionLocation,
+                    ),
                     Row(
                       children: [
                         Expanded(
@@ -778,60 +863,31 @@ class _MarketListingFormScreenState
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.m),
 
-                    // ── Description ──
-                    TextFormField(
-                      controller: _description,
-                      minLines: 3,
-                      maxLines: 6,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.marketListingFieldDescription,
-                        hintText: AppStrings.marketListingFieldDescriptionHint,
-                      ),
+                    // ── Fotoğraf ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionPhotos,
                     ),
-                    const SizedBox(height: AppSpacing.m),
-
-                    // ── Negotiable ──
-                    SwitchListTile(
-                      value: _negotiable,
-                      onChanged: (v) => setState(() {
-                        _negotiable = v;
-                        _dirty = true;
-                      }),
-                      title: const Text(
-                        AppStrings.marketListingFieldNegotiable,
-                      ),
-                      activeThumbColor: AppColors.copper,
-                      contentPadding: EdgeInsets.zero,
+                    // Düzenlemede mevcut fotoğraflar (salt-okunur önizleme).
+                    if (_existingPhotoUrls.isNotEmpty) ...[
+                      _ExistingPhotosRow(urls: _existingPhotoUrls),
+                      const SizedBox(height: AppSpacing.s),
+                    ],
+                    _PhotosRow(
+                      photos: _newPhotos,
+                      max: _maxPhotos,
+                      onPickGallery: () => _pickPhoto(ImageSource.gallery),
+                      onPickCamera: () => _pickPhoto(ImageSource.camera),
+                      onRemove: _removePickedPhoto,
                     ),
-                    const SizedBox(height: AppSpacing.m),
 
-                    // ── Currency (controlled-vocabulary) ──
-                    DropdownButtonFormField<String>(
-                      initialValue: _currency,
-                      decoration: const InputDecoration(
-                        labelText: 'Para birimi',
-                      ),
-                      items: MarketplaceTaxonomy.currencies.entries
-                          .map(
-                            (e) => DropdownMenuItem(
-                              value: e.key,
-                              child: Text(e.value),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(
-                        () => _currency =
-                            v ?? MarketplaceTaxonomy.defaultCurrency,
-                      ),
+                    // ── İletişim ──
+                    const ListingSectionHeader(
+                      AppStrings.listingsSectionContact,
                     ),
-                    const SizedBox(height: AppSpacing.m),
-
-                    // ── Contact ──
-                    _SectionLabel(label: 'İletişim'),
                     DropdownButtonFormField<String>(
                       initialValue: _contactPreference,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Tercih edilen iletişim',
                       ),
@@ -852,6 +908,7 @@ class _MarketListingFormScreenState
                     TextFormField(
                       controller: _contactPhone,
                       keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.next,
                       enabled:
                           _contactPreference !=
                           MarketplaceTaxonomy.contactPreferenceInApp,
@@ -864,6 +921,7 @@ class _MarketListingFormScreenState
                     TextFormField(
                       controller: _contactWhatsapp,
                       keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.done,
                       enabled:
                           _contactPreference !=
                           MarketplaceTaxonomy.contactPreferenceInApp,
@@ -873,11 +931,14 @@ class _MarketListingFormScreenState
                       ),
                     ),
 
-                    // ── (Edit only) Status ──
+                    // ── (Edit only) Yayın durumu ──
                     if (widget.listingId != null) ...[
-                      const SizedBox(height: AppSpacing.m),
+                      const ListingSectionHeader(
+                        AppStrings.listingsSectionPublish,
+                      ),
                       DropdownButtonFormField<String>(
                         initialValue: _status,
+                        isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Durum'),
                         items: const [
                           DropdownMenuItem(
@@ -906,7 +967,7 @@ class _MarketListingFormScreenState
                       const SizedBox(height: AppSpacing.m),
                       Text(
                         _error!,
-                        style: const TextStyle(
+                        style: AppTypography.body.copyWith(
                           color: AppColors.danger,
                           fontWeight: FontWeight.w600,
                         ),
@@ -919,48 +980,37 @@ class _MarketListingFormScreenState
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.pageH,
-            AppSpacing.s,
-            AppSpacing.pageH,
-            AppSpacing.m,
-          ),
-          child: SizedBox(
-            height: 52,
-            child: FilledButton.icon(
-              onPressed: _saving ? null : _onPublishPressed,
-              icon: _saving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.8,
-                        valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
-                      ),
-                    )
-                  : const Icon(Icons.send_rounded, size: 18),
-              label: Text(
-                widget.listingId != null
-                    ? (_saving
-                          ? AppStrings.listingsUpdatingCta
-                          : AppStrings.listingsUpdateCta)
-                    : (_saving
-                          ? AppStrings.marketListingPublishingCta
-                          : AppStrings.marketListingPublishCta),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15.5,
-                ),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
-                foregroundColor: AppColors.brandInk,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                ),
+      bottomNavigationBar: ListingStickyBar(
+        child: SizedBox(
+          height: 52,
+          child: FilledButton.icon(
+            key: const ValueKey('market_form_submit'),
+            onPressed: _saving ? null : _onPublishPressed,
+            icon: _saving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.8,
+                      valueColor: AlwaysStoppedAnimation(AppColors.brandInk),
+                    ),
+                  )
+                : const Icon(Icons.send_rounded, size: 18),
+            label: Text(
+              widget.listingId != null
+                  ? (_saving
+                        ? AppStrings.listingsUpdatingCta
+                        : AppStrings.listingsUpdateCta)
+                  : (_saving
+                        ? AppStrings.marketListingPublishingCta
+                        : AppStrings.marketListingPublishCta),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.brandLemon,
+              foregroundColor: AppColors.brandInk,
+              textStyle: AppTypography.buttonLabel,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
               ),
             ),
           ),
@@ -968,26 +1018,6 @@ class _MarketListingFormScreenState
       ),
     );
     return DirtyFormGuard(isDirty: _dirty, child: scaffold);
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
-  final String label;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.m, bottom: AppSpacing.s),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w800,
-          fontSize: 14.5,
-          letterSpacing: -0.1,
-        ),
-      ),
-    );
   }
 }
 
@@ -1039,10 +1069,10 @@ class _PhotosRow extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           AppStrings.marketListingPhotoMaxHint,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+          style: AppTypography.caption,
         ),
       ],
     );
@@ -1060,14 +1090,7 @@ class _ExistingPhotosRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          AppStrings.listingsExistingPhotos,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        Text(AppStrings.listingsExistingPhotos, style: AppTypography.infoLabel),
         const SizedBox(height: 6),
         SizedBox(
           height: 64,
@@ -1076,25 +1099,14 @@ class _ExistingPhotosRow extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: urls.length,
             separatorBuilder: (_, __) => const SizedBox(width: 6),
-            itemBuilder: (_, i) => ClipRRect(
+            // Polish 2 — ortak görsel durumları (kırık görsel ikonu yok).
+            itemBuilder: (_, i) => AppNetworkImage(
+              url: urls[i],
+              width: 64,
+              height: 64,
+              memCacheWidth: 192,
+              compact: true,
               borderRadius: BorderRadius.circular(AppRadius.s),
-              child: CachedNetworkImage(
-                imageUrl: urls[i],
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                memCacheWidth: 192,
-                placeholder: (_, __) => Container(color: AppColors.surfaceLine),
-                errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLine,
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.broken_image_outlined,
-                    size: 18,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
             ),
           ),
         ),
@@ -1115,23 +1127,40 @@ class _PhotoThumb extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.s),
           child: Image.memory(bytes, width: 88, height: 88, fit: BoxFit.cover),
         ),
+        // Polish 2 — 44px dokunma alanı; görsel daire küçük kalır.
         Positioned(
-          right: 2,
-          top: 2,
-          child: Material(
-            // P0 hijyen — hardcoded siyah yerine palet scrim token'ı.
-            color: AppColors.imageScrimDark,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onRemove,
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(3),
-                child: Icon(
-                  Icons.close_rounded,
-                  color: AppColors.surface,
-                  size: 14,
+          right: 0,
+          top: 0,
+          child: Tooltip(
+            message: AppStrings.listingsRemovePhotoTooltip,
+            child: Semantics(
+              button: true,
+              label: AppStrings.listingsRemovePhotoTooltip,
+              excludeSemantics: true,
+              child: InkWell(
+                key: const ValueKey('market_form_remove_photo'),
+                onTap: onRemove,
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      margin: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        // P0 hijyen — palet scrim token'ı.
+                        color: AppColors.imageScrimDark,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: AppColors.surface,
+                        size: 14,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1172,12 +1201,12 @@ class _PhotoAddButton extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
+              style: AppTypography.chipLabel.copyWith(
                 color: AppColors.textPrimary,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
               ),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -1198,24 +1227,28 @@ class _TriSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    // Polish 2 — başlık üstte, seçim tam genişlikte (dar ekranda taşmaz;
+    // "—" yerine anlaşılır "Seçilmedi").
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
+        Text(title, style: AppTypography.infoLabel),
+        const SizedBox(height: 6),
         SegmentedButton<int>(
           showSelectedIcon: false,
           segments: const [
-            ButtonSegment(value: -1, label: Text('—')),
-            ButtonSegment(value: 1, label: Text('Evet')),
-            ButtonSegment(value: 0, label: Text('Hayır')),
+            ButtonSegment(
+              value: -1,
+              label: Text(AppStrings.listingsOptionNone, maxLines: 1),
+            ),
+            ButtonSegment(
+              value: 1,
+              label: Text(AppStrings.marketAttrYes, maxLines: 1),
+            ),
+            ButtonSegment(
+              value: 0,
+              label: Text(AppStrings.marketAttrNo, maxLines: 1),
+            ),
           ],
           selected: {value == null ? -1 : (value! ? 1 : 0)},
           onSelectionChanged: (s) {
@@ -1223,10 +1256,7 @@ class _TriSwitch extends StatelessWidget {
             onChanged(v == -1 ? null : (v == 1));
           },
           style: ButtonStyle(
-            visualDensity: VisualDensity.compact,
-            textStyle: WidgetStateProperty.all(
-              const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            ),
+            textStyle: WidgetStateProperty.all(AppTypography.chipLabel),
           ),
         ),
       ],

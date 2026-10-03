@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/premium/premium_card.dart';
@@ -15,6 +14,9 @@ import '../providers/dealer_providers.dart';
 import '../repositories/driver_permission.dart';
 import '../services/dealer_period.dart';
 import '../widgets/dealer_filter_chip.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Tam İşlem Geçmişi (Bayi Defteri Kullanılabilirlik Sprinti — B/C/D/E).
 ///
@@ -172,25 +174,15 @@ class _DealerTransactionHistoryScreenState
   }
 
   Future<void> _confirmDelete(DealerTransaction tx) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('İşlem silinsin mi?'),
-        content: const Text('Bu işlem silinsin mi? Bakiye yeniden hesaplanır.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            style: AppButtonStyles.destructive,
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+    final confirmed = await showAppConfirmDialog(
+      context,
+      title: AppStrings.polishTxDeleteTitle,
+      message: AppStrings.polishTxDeleteBody,
+      confirmLabel: AppStrings.polishDelete,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
       await ref.read(dealerRepositoryProvider).deleteTransaction(tx);
       ref.invalidate(transactionsByDealerProvider(widget.dealerId));
@@ -198,18 +190,13 @@ class _DealerTransactionHistoryScreenState
       if (!mounted) return;
       // Detay sheet'i (varsa) kapat.
       Navigator.of(context).maybePop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('İşlem silindi. Bakiye güncellendi.')),
-      );
+      AppFeedback.success(context, AppStrings.polishTxDeleted);
     } on DriverPermissionException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      AppFeedback.error(context, e.message);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('İşlem silinemedi. Tekrar deneyin.')),
-      );
+      AppFeedback.error(context, AppStrings.polishTxDeleteError);
     }
   }
 

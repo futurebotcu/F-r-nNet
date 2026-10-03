@@ -12,6 +12,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_network_image.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../services/b2b_media_upload_service.dart';
 
@@ -57,9 +60,9 @@ class _B2bImageUploadFieldState extends ConsumerState<B2bImageUploadField> {
       );
       widget.onChanged(url);
     } on B2bMediaTooLargeException {
-      _snack('Görsel 5MB sınırını aşıyor. Daha küçük bir görsel seçin.');
+      _snack(AppStrings.polishB2bImageTooLarge);
     } catch (_) {
-      _snack('Görsel yüklenemedi. Lütfen tekrar deneyin.');
+      _snack(AppStrings.polishB2bImageError);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -67,8 +70,7 @@ class _B2bImageUploadFieldState extends ConsumerState<B2bImageUploadField> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.error(context, msg);
   }
 
   @override
@@ -121,40 +123,35 @@ class _B2bImageUploadFieldState extends ConsumerState<B2bImageUploadField> {
             child: _uploading
                 ? const Center(child: CircularProgressIndicator())
                 : hasImage
-                    ? Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(
-                            url,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _placeholder(),
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      AppNetworkImage(url: url, memCacheWidth: 900),
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                          Positioned(
-                            right: 8,
-                            bottom: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.55),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
-                              ),
-                              child: const Text(
-                                'Değiştir',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: const Text(
+                            'Değiştir',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
                             ),
                           ),
-                        ],
-                      )
-                    : _placeholder(),
+                        ),
+                      ),
+                    ],
+                  )
+                : _placeholder(),
           ),
         ),
       ],
@@ -169,7 +166,7 @@ class _B2bImageUploadFieldState extends ConsumerState<B2bImageUploadField> {
           Icon(
             Icons.add_photo_alternate_outlined,
             size: 26,
-            color: AppColors.brandLemonPressed,
+            color: AppColors.brandInk,
           ),
           SizedBox(height: 6),
           Text(

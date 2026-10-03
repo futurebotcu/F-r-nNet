@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
@@ -15,8 +16,11 @@ import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/interactions.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../dealers/widgets/dealer_filter_chip.dart';
 import '../../listings/utils/listing_format.dart';
+import '../../listings/widgets/listing_ui.dart';
 import '../models/job_seek_post.dart';
 import '../providers/worker_providers.dart';
 
@@ -134,9 +138,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     }
     if (!mounted) return;
     if (p == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('İlan bulunamadı.')));
+      AppFeedback.error(context, AppStrings.listingsNotFound);
       Navigator.of(context).pop();
       return;
     }
@@ -179,7 +181,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      AppFeedback.warning(context, 'Başlık boş olamaz.');
+      AppFeedback.warning(context, AppStrings.listingsTitleRequired);
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -217,13 +219,11 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
       );
       await ref.read(workerRepositoryProvider).upsertJobSeekPost(draft);
       if (!mounted) return;
+      AppHaptics.success();
       // İş arama ilanı ücretsiz → ödeme bekleme durumu yok.
       AppFeedback.success(
         context,
-        listingSavedMessage(
-          isEdit: _existing != null,
-          isPendingPayment: false,
-        ),
+        listingSavedMessage(isEdit: _existing != null, isPendingPayment: false),
       );
       Navigator.of(context).pop();
     } catch (_) {
@@ -267,88 +267,96 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     }
     if (_loadFailed) {
       return PremiumScaffold(
-        appBar: AppBar(title: const Text('İlanı Düzenle')),
+        appBar: AppBar(title: const Text(AppStrings.listingsSeekEditTitle)),
         body: Center(
           child: ErrorRetryState(
             key: const ValueKey('job_seek_form_load_error'),
-            title: 'İlan yüklenemedi',
+            title: AppStrings.listingsDetailLoadError,
             onRetry: _load,
           ),
         ),
       );
     }
     final isEditing = _existing != null;
+    // Polish 2 — bölümlü form (Temel bilgi / Konum / Ücret / Detaylar /
+    // İletişim / Yayın durumu) + klavye üstünde kalan sabit CTA.
     return PremiumScaffold(
       appBar: AppBar(
         title: Text(
-          isEditing ? 'İlanı Düzenle' : AppStrings.listingsJobSeekFormTitleNew,
+          isEditing
+              ? AppStrings.listingsSeekEditTitle
+              : AppStrings.listingsJobSeekFormTitleNew,
         ),
         actions: [
           IconButton(
-            tooltip: 'Paylaş',
+            tooltip: AppStrings.listingsShareTooltip,
             onPressed: _previewShare,
             icon: const Icon(Icons.ios_share_rounded),
           ),
         ],
       ),
+      bottomNavigationBar: ListingStickyBar(
+        child: AppPrimaryButton(
+          key: const ValueKey('job_seek_form_submit'),
+          label: _saving
+              ? AppStrings.listingsSavingCta
+              : (isEditing
+                    ? AppStrings.listingsUpdateCta
+                    : AppStrings.listingsSeekPublishCta),
+          icon: Icons.check_rounded,
+          onPressed: _saving ? null : _save,
+        ),
+      ),
       body: SafeArea(
+        bottom: false,
         child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.pageH,
             0,
             AppSpacing.pageH,
-            AppSpacing.xxl,
+            AppSpacing.xl,
           ),
           children: [
             const _Hint(text: AppStrings.listingsJobSeekFormHint),
-            const SizedBox(height: AppSpacing.l),
+            // ── Temel bilgi ──
+            const ListingSectionHeader(AppStrings.listingsSectionBasics),
             TextField(
               controller: _title,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
-                labelText: 'Başlık',
-                hintText: 'Manisa civarı taş fırın ustası',
+                labelText: AppStrings.listingsSeekTitleLabel,
+                hintText: AppStrings.listingsSeekTitleHint,
               ),
             ),
-            const SizedBox(height: AppSpacing.l),
-            const _Section('MESLEK'),
+            const SizedBox(height: AppSpacing.m),
+            Text(
+              AppStrings.listingsDetailProfession,
+              style: AppTypography.infoLabel,
+            ),
+            const SizedBox(height: AppSpacing.s),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 6,
+              runSpacing: 6,
               children: [
                 for (final code in _professionCodes)
-                  ChoiceChip(
-                    label: Text(FirinnetTaxonomy.professionLabel(code) ?? code),
+                  DealerFilterChip(
+                    label: FirinnetTaxonomy.professionLabel(code) ?? code,
                     selected: _professionCode == code,
-                    onSelected: (v) =>
-                        setState(() => _professionCode = v ? code : null),
-                    selectedColor: AppColors.copperMuted.withValues(
-                      alpha: 0.28,
-                    ),
-                    backgroundColor: Colors.transparent,
-                    labelStyle: TextStyle(
-                      color: _professionCode == code
-                          ? AppColors.softGold
-                          : AppColors.textSecondary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      side: BorderSide(
-                        color: _professionCode == code
-                            ? AppColors.copperMuted
-                            : AppColors.surfaceVariant,
-                        width: 1,
-                      ),
-                    ),
+                    onSelected: _saving
+                        ? null
+                        : (v) =>
+                              setState(() => _professionCode = v ? code : null),
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.l),
+            // ── Konum ──
+            const ListingSectionHeader(AppStrings.listingsSectionLocation),
             LocationPickerField(
-              label: 'Şehir',
+              label: AppStrings.listingsSeekCity,
               value: _selectedProvince?.name,
-              hint: 'İl seç',
+              hint: AppStrings.listingsSeekCityHint,
               enabled: !_saving,
               onTap: () async {
                 final picked = await LocationPicker.showProvincePicker(
@@ -363,33 +371,42 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                   ? null
                   : () => setState(() => _selectedProvince = null),
             ),
-            const SizedBox(height: AppSpacing.s),
-            Row(
-              children: [
-                Expanded(
-                  child: AppNumberField(
-                    label: 'Tecrübe yılı',
-                    controller: _experience,
-                    suffix: 'yıl',
-                    allowDecimal: false,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                Expanded(
-                  child: AppNumberField(
-                    label: 'Maaş beklentisi',
-                    controller: _salary,
-                    suffix: 'TL',
-                    // Yalnız rakam: "25.000" yazılıp 25 okunması engellenir.
-                    allowDecimal: false,
-                  ),
-                ),
-              ],
+            // ── Ücret ──
+            const ListingSectionHeader(AppStrings.listingsSectionSalary),
+            AppNumberField(
+              label: AppStrings.listingsSeekSalary,
+              controller: _salary,
+              suffix: 'TL',
+              // Yalnız rakam: "25.000" yazılıp 25 okunması engellenir.
+              allowDecimal: false,
             ),
-            const SizedBox(height: AppSpacing.s),
+            // ── Detaylar ──
+            const ListingSectionHeader(AppStrings.listingsSectionDetails),
+            AppNumberField(
+              label: AppStrings.listingsSeekExperience,
+              controller: _experience,
+              suffix: 'yıl',
+              allowDecimal: false,
+            ),
+            const SizedBox(height: AppSpacing.m),
+            TextField(
+              controller: _description,
+              minLines: 3,
+              maxLines: 6,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: AppStrings.listingsSeekDescription,
+                hintText: AppStrings.listingsSeekDescriptionHint,
+                alignLabelWithHint: true,
+              ),
+            ),
+            // ── İletişim ──
+            const ListingSectionHeader(AppStrings.listingsSectionContact),
             TextField(
               controller: _contactPhone,
               keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.done,
               decoration: const InputDecoration(
                 labelText: AppStrings.listingContactPhoneLabel,
                 hintText: AppStrings.listingContactPhoneHint,
@@ -397,16 +414,8 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                 helperMaxLines: 2,
               ),
             ),
-            const SizedBox(height: AppSpacing.s),
-            TextField(
-              controller: _description,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Açıklama (opsiyonel)',
-                hintText: 'Vardiya tercihi, ulaşım durumu, özel beceriler…',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.l),
+            // ── Yayın durumu ──
+            const ListingSectionHeader(AppStrings.listingsSectionPublish),
             PremiumCard(
               padding: const EdgeInsets.all(AppSpacing.l),
               child: Row(
@@ -426,7 +435,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                           : Icons.lock_outline_rounded,
                       color: _isActive
                           ? AppColors.success
-                          : AppColors.textMuted,
+                          : AppColors.textSecondary,
                       size: 20,
                     ),
                   ),
@@ -437,21 +446,20 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _isActive ? 'Yayında' : 'Kapalı',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
+                          _isActive
+                              ? AppStrings.listingsPublishOpen
+                              : AppStrings.listingsPublishClosed,
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 14.5,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           _isActive
-                              ? 'Sektördeki diğer kullanıcılar görür.'
-                              : 'Sadece sen görürsün. Sonra açabilirsin.',
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12.5,
+                              ? AppStrings.listingsPublishOpenHint
+                              : AppStrings.listingsPublishClosedHint,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -464,14 +472,6 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            AppPrimaryButton(
-              label: _saving
-                  ? 'Kaydediliyor…'
-                  : (isEditing ? 'Güncelle' : 'İlanı Yayınla'),
-              icon: Icons.check_rounded,
-              onPressed: _saving ? null : _save,
             ),
           ],
         ),
@@ -491,41 +491,12 @@ class _Hint extends StatelessWidget {
         children: [
           const Icon(
             Icons.tips_and_updates_outlined,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
             size: 18,
           ),
           const SizedBox(width: AppSpacing.s),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                height: 1.4,
-              ),
-            ),
-          ),
+          Expanded(child: Text(text, style: AppTypography.body)),
         ],
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section(this.label);
-  final String label;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.s, left: 2),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.softGold,
-          fontWeight: FontWeight.w800,
-          fontSize: 11.5,
-          letterSpacing: 1.4,
-        ),
       ),
     );
   }

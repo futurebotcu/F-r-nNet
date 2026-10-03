@@ -235,7 +235,9 @@ void main() {
     });
 
     test('Sticky publish CTA bottomNavigationBar + negotiable + contact', () {
-      expect(src.contains('bottomNavigationBar: SafeArea'), isTrue);
+      // İlanlar polish 2 — sabit CTA ListingStickyBar (SafeArea + klavye
+      // üstünde kalır) ile bottomNavigationBar'da.
+      expect(src.contains('bottomNavigationBar: ListingStickyBar'), isTrue);
       expect(src.contains('marketListingPublishCta'), isTrue);
       expect(src.contains('marketListingFieldNegotiable'), isTrue);
       expect(src.contains('marketListingFieldContactPhone'), isTrue);

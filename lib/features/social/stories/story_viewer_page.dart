@@ -24,7 +24,12 @@ import '../../auth/providers/auth_providers.dart';
 import '../models/social_profile.dart';
 import '../providers/social_providers.dart';
 import 'models/social_story.dart';
-import '../../../core/utils/tr_case.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_network_image.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
+import 'story_media_frame.dart';
 
 class SocialStoryViewerPage extends ConsumerStatefulWidget {
   const SocialStoryViewerPage({super.key, required this.ownerId});
@@ -86,28 +91,15 @@ class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
 
   Future<void> _onDelete(SocialStory story) async {
     _progress?.stop();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.elevatedCard,
-        content: const Text(
-          AppStrings.storyDeleteConfirm,
-          style: TextStyle(fontSize: 15.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(AppStrings.storyDeleteCancelCta),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text(AppStrings.storyDeleteCta),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: AppStrings.storyDeleteConfirm,
+      confirmLabel: AppStrings.storyDeleteCta,
+      cancelLabel: AppStrings.storyDeleteCancelCta,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true || !mounted) {
+    if (!ok || !mounted) {
       _progress?.forward();
       return;
     }
@@ -119,18 +111,14 @@ class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
       if (!mounted) return;
       ref.invalidate(socialFreshStoriesProvider);
       ref.invalidate(socialUserFreshStoriesProvider(widget.ownerId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.storyDeletedSnack)),
-      );
+      AppFeedback.success(context, AppStrings.storyDeletedSnack);
       // Sil sonrası pop — listede kalan story'leri tekrar render etmeye
       // gerek yok (basit, user akışı kırılmaz).
       if (mounted) context.pop();
     } catch (e) {
       debugPrint('[FirinNet][StoryViewer] delete error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.storyDeleteFailed)),
-      );
+      AppFeedback.error(context, AppStrings.storyDeleteFailed);
       _progress?.forward();
     }
   }
@@ -192,25 +180,20 @@ class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Media
-                  Center(
+                  // Media — oluşturma önizlemesiyle AYNI 9:16 çerçeve + fit:
+                  // önizlemede görülen kadraj izleyicide birebir korunur.
+                  StoryMediaFrame(
                     child: CachedNetworkImage(
+                      key: const ValueKey('story_viewer_media'),
                       imageUrl: story.contentUrl,
-                      fit: BoxFit.contain,
+                      fit: StoryMediaFrame.fit,
                       // Perf: tam ekran story görseli ekran genişliğinde
                       // decode edilir (çok büyük orijinaller için bellek kalkanı).
                       memCacheWidth: 1080,
-                      placeholder: (_, __) => const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.surface,
-                        ),
-                      ),
-                      errorWidget: (_, __, ___) => const Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: AppColors.surface54,
-                          size: 48,
-                        ),
+                      placeholder: (_, __) =>
+                          const ColoredBox(color: AppColors.imageScrimDark),
+                      errorWidget: (_, __, ___) => AppImageState.error(
+                        label: AppStrings.feedPostImageLoadError,
                       ),
                     ),
                   ),
@@ -257,8 +240,12 @@ class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
                     right: 12,
                     child: Row(
                       children: [
-                        _OwnerChip(profileAsync: profileAsync),
-                        const Spacer(),
+                        Flexible(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: _OwnerChip(profileAsync: profileAsync),
+                          ),
+                        ),
                         if (isOwner)
                           IconButton(
                             tooltip: AppStrings.storyDeleteCta,
@@ -270,6 +257,7 @@ class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
                             onPressed: () => _onDelete(story),
                           ),
                         IconButton(
+                          tooltip: AppStrings.socialCloseTooltip,
                           icon: const Icon(
                             Icons.close_rounded,
                             color: AppColors.surface,
@@ -300,7 +288,6 @@ class _OwnerChip extends StatelessWidget {
       data: (p) => p.displayNameOrFallback,
       orElse: () => 'FırınNet Kullanıcısı',
     );
-    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.s,
@@ -313,30 +300,17 @@ class _OwnerChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.softGold.withValues(alpha: 0.34),
-            ),
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: AppColors.surface,
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-              ),
-            ),
-          ),
+          FirinNetAvatar(name: name, size: FirinNetAvatarSize.s),
           const SizedBox(width: 8),
-          Text(
-            name,
-            style: const TextStyle(
-              color: AppColors.surface,
-              fontWeight: FontWeight.w700,
-              fontSize: 13.5,
+          Flexible(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.authorName.copyWith(
+                color: AppColors.surface,
+                fontSize: 13.5,
+              ),
             ),
           ),
         ],

@@ -59,8 +59,9 @@ void main() {
       // Rozet artık brandLemon zemin + brandInk metin.
       expect(src.contains('color: AppColors.brandLemon'), isTrue);
       expect(src.contains('color: AppColors.brandInk'), isTrue);
-      // Avatar sıcak pale lemon zemin.
-      expect(src.contains('color: AppColors.brandLemonPale'), isTrue);
+      // Sosyal polish 2: avatar ortak FirinNetAvatar (nötr zemin + ink
+      // baş harf; limon metin/ikon ön planı yok).
+      expect(src.contains('FirinNetAvatar('), isTrue);
     });
   });
 
