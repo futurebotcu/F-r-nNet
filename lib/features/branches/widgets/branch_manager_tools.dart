@@ -149,6 +149,7 @@ class _ManagerMemberTile extends ConsumerWidget {
           if (manageable)
             PopupMenuButton<BranchMembershipStatus>(
               key: ValueKey('manager_member_menu_${member.id}'),
+              tooltip: AppStrings.finalMemberActionsTooltip,
               icon: const Icon(
                 Icons.more_vert_rounded,
                 size: 19,

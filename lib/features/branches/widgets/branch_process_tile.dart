@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/branch_models.dart';
 import '../providers/branch_providers.dart';
@@ -34,7 +35,7 @@ class BranchProcessTile extends ConsumerWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.brandLemonPale,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
                 border: Border.all(
                   color: AppColors.brandLemonPressed.withValues(alpha: 0.28),
                   width: 0.7,
@@ -97,9 +98,10 @@ class BranchProcessTile extends ConsumerWidget {
                 if (canEdit)
                   PopupMenuButton<BranchProcessStatus>(
                     key: ValueKey('process_status_menu_${p.id}'),
+                    tooltip: AppStrings.finalProcessStatusTooltip,
                     padding: EdgeInsets.zero,
                     icon: const Icon(
-                      Icons.more_horiz_rounded,
+                      Icons.more_vert_rounded,
                       size: 18,
                       color: AppColors.textMuted,
                     ),

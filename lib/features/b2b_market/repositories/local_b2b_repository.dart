@@ -418,7 +418,7 @@ class LocalB2bRepository implements B2bRepository {
       throw StateError('Kapalı/iptal talebe ilgi gönderilemez.');
     }
     if (_leads.any((l) => l.quoteReplyId == quoteReplyId)) {
-      throw StateError('Bu teklife zaten yanıt verdiniz.');
+      throw StateError('Bu teklife zaten yanıt verdin.');
     }
     final req = reqIndex >= 0 ? _myQuoteRequests[reqIndex] : null;
     _leads.add(B2bQuoteLead(

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_products.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -26,7 +27,6 @@ import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../repositories/driver_permission.dart';
 import '../widgets/quick_payment_sheet.dart';
-import '../../../core/utils/tr_case.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_confirm_dialog.dart';
 
@@ -56,7 +56,7 @@ class DealerDetailScreen extends ConsumerWidget {
                 : IconButton(
                     tooltip: AppStrings.dealerDetailEditTooltip,
                     onPressed: () => context.push(AppRoutes.dealerEdit(d.id)),
-                    icon: const Icon(Icons.edit_rounded),
+                    icon: const Icon(Icons.edit_outlined),
                   ),
             orElse: () => const SizedBox.shrink(),
           ),
@@ -88,7 +88,7 @@ class DealerDetailScreen extends ConsumerWidget {
             tooltip: AppStrings.dealerDetailShareTooltip,
             onPressed: () =>
                 context.push('${AppRoutes.dealers}/$dealerId/share'),
-            icon: const Icon(Icons.ios_share_rounded),
+            icon: const Icon(Icons.share_outlined),
           ),
         ],
       ),
@@ -414,12 +414,7 @@ class _BalanceHero extends StatelessWidget {
                 ),
                 child: Text(
                   tag,
-                  style: TextStyle(
-                    color: balanceColor,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 10.5,
-                    letterSpacing: 1.2,
-                  ),
+                  style: AppTypography.badge.copyWith(color: balanceColor),
                 ),
               ),
             ],
@@ -520,27 +515,14 @@ class _MiniMetric extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.trUpper,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w700,
-            fontSize: 10,
-            letterSpacing: 1.0,
-          ),
-        ),
+        Text(label, style: AppTypography.caption),
         const SizedBox(height: 2),
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Text(
             value,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 14.5,
-              letterSpacing: -0.2,
-            ),
+            style: AppTypography.price.copyWith(color: color, fontSize: 14.5),
           ),
         ),
       ],
@@ -569,19 +551,17 @@ class _ChipMini extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: AppTypography.caption.copyWith(
               color: AppColors.textSecondary,
-              fontSize: 11.5,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(width: 5),
           Text(
             value,
-            style: const TextStyle(
+            style: AppTypography.caption.copyWith(
               color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -601,7 +581,36 @@ class _HeroLoading extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
-      child: const Center(child: CircularProgressIndicator()),
+      padding: const EdgeInsets.all(AppSpacing.l),
+      // Klasik büyük spinner yerine sakin, statik yer tutucu (skeleton).
+      child: const Column(
+        key: ValueKey('dealer_hero_skeleton'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SkeletonBar(width: 120, height: 14),
+          SizedBox(height: AppSpacing.l),
+          _SkeletonBar(width: 180, height: 32),
+          SizedBox(height: AppSpacing.m),
+          _SkeletonBar(width: 140, height: 12),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonBar extends StatelessWidget {
+  const _SkeletonBar({required this.width, required this.height});
+  final double width;
+  final double height;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F2F4),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
     );
   }
 }
@@ -789,7 +798,7 @@ class _ActionsRow extends ConsumerWidget {
           onTap: () => context.push(AppRoutes.dealerReport(dealerId)),
         ),
         _ActionChip(
-          icon: Icons.ios_share_rounded,
+          icon: Icons.share_outlined,
           label: AppStrings.dealerActionShare,
           accent: AppColors.warningInk,
           onTap: () => context.push('${AppRoutes.dealers}/$dealerId/share'),

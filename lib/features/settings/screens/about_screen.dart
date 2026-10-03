@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -55,12 +56,7 @@ class AboutScreen extends StatelessWidget {
                           children: const [
                             Text(
                               AppStrings.aboutAppLine,
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 22,
-                                letterSpacing: -0.3,
-                              ),
+                              style: AppTypography.detailTitle,
                             ),
                             SizedBox(height: 4),
                             Text(

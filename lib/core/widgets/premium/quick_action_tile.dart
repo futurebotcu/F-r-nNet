@@ -257,13 +257,7 @@ class QuickActionMini extends StatelessWidget {
                         color: accent.withValues(alpha: 0.16),
                         width: 0.6,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                      boxShadow: AppShadow.subtle,
                     ),
                     child: Icon(icon, color: accent, size: 17),
                   ),

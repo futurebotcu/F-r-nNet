@@ -122,7 +122,7 @@ class _Detail extends StatelessWidget {
                 ),
                 if (p.address.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.s),
-                  _InfoRow(icon: Icons.place_outlined, text: p.address),
+                  _InfoRow(icon: Icons.location_on_outlined, text: p.address),
                 ],
               ],
             ),

@@ -158,7 +158,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.'),
+        find.text('Davet oluşturulamadı. FırınNet ID\'yi kontrol et.'),
         findsOneWidget,
       );
       // Rehber başlık şeridi kalır ama adımlar geri plana çekilir.

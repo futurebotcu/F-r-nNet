@@ -98,7 +98,7 @@ class B2bCampaignDetailScreen extends ConsumerWidget {
                       ),
                     if (c.region.isNotEmpty && c.region != 'Belirtilmedi')
                       B2bMetaPill(
-                        icon: Icons.place_outlined,
+                        icon: Icons.location_on_outlined,
                         label: c.region,
                       ),
                     B2bMetaPill(

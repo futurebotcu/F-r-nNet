@@ -134,7 +134,7 @@ class _DoughYieldCalculatorScreenState
           IconButton(
             tooltip: 'Paylaş',
             onPressed: _result == null ? null : _share,
-            icon: const Icon(Icons.ios_share_rounded),
+            icon: const Icon(Icons.share_outlined),
           ),
         ],
       ),
@@ -223,7 +223,7 @@ class _DoughYieldCalculatorScreenState
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: _share,
-                      icon: const Icon(Icons.ios_share_rounded, size: 18),
+                      icon: const Icon(Icons.share_outlined, size: 18),
                       label: const Text('Paylaş'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.copper,

@@ -348,7 +348,7 @@ class LocalBranchRepository implements BranchRepository {
     }
     final target = knownProfiles[firinnetId.trim().toUpperCase()];
     if (target == null || target.$2 != 'individual') {
-      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
+      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol et.');
     }
     final (targetId, _) = target;
     if (_memberships.any(

@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../providers/dealer_providers.dart';
 import '../../../core/utils/tr_case.dart';
@@ -35,7 +36,7 @@ class DriverListScreen extends ConsumerWidget {
       body: SafeArea(
         top: false,
         child: async.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const PremiumListSkeleton(),
           error: (_, __) => const Padding(
             padding: EdgeInsets.all(AppSpacing.l),
             child: Center(

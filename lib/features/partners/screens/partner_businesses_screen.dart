@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../models/partner_business.dart';
 import '../providers/partner_business_providers.dart';
 import '../widgets/partner_business_card.dart';
@@ -37,7 +38,7 @@ class _PartnerBusinessesScreenState
       body: SafeArea(
         top: false,
         child: partners.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const PremiumListSkeleton(),
           error: (_, __) => Center(
             child: ErrorRetryState(
               title: AppStrings.partnersListError,

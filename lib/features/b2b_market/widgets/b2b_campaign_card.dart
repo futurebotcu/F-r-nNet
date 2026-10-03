@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/b2b_campaign.dart';
 import 'b2b_media_image.dart';
@@ -88,26 +89,34 @@ class B2bCampaignCard extends StatelessWidget {
                           color: AppColors.brandInk,
                         ),
                         const SizedBox(width: 6),
+                        // Rozetler başlık altında Wrap'te — dar ekranda taşmaz.
                         Expanded(
-                          child: Text(
-                            campaign.title,
-                            style: const TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.2,
-                              height: 1.25,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                campaign.title,
+                                style: AppTypography.cardTitle,
+                              ),
+                              if ((!campaign.published && ownerContext) ||
+                                  _isMine) ...[
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
+                                    if (!campaign.published && ownerContext)
+                                      const B2bDraftBadge(),
+                                    if (_isMine)
+                                      const B2bOwnerBadge(
+                                        label: 'Benim kampanyam',
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        if (!campaign.published && ownerContext) ...[
-                          const SizedBox(width: 6),
-                          const B2bDraftBadge(),
-                        ],
-                        if (_isMine) ...[
-                          const SizedBox(width: AppSpacing.s),
-                          const B2bOwnerBadge(label: 'Benim kampanyam'),
-                        ],
                         if (_canManage) ...[
                           const SizedBox(width: 2),
                           B2bManageMenu(
@@ -147,12 +156,7 @@ class B2bCampaignCard extends StatelessWidget {
                         campaign.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.textSecondary,
-                          height: 1.35,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: AppTypography.body.copyWith(fontSize: 12.5, height: 1.35),
                       ),
                     ],
                     const SizedBox(height: AppSpacing.m),
@@ -165,7 +169,7 @@ class B2bCampaignCard extends StatelessWidget {
                           label: campaign.linkedProduct ?? campaign.category,
                         ),
                         B2bMetaPill(
-                          icon: Icons.place_outlined,
+                          icon: Icons.location_on_outlined,
                           label: campaign.region,
                         ),
                         B2bMetaPill(
@@ -203,10 +207,7 @@ class B2bCampaignCard extends StatelessWidget {
                                   borderRadius:
                                       BorderRadius.circular(AppRadius.m),
                                 ),
-                                textStyle: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                ),
+                                textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
                               ),
                               child: const Text('Teklif İste'),
                             ),

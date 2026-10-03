@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/b2b_store.dart';
 import 'b2b_meta_pill.dart';
@@ -48,24 +49,14 @@ class B2bStoreCard extends StatelessWidget {
                   children: [
                     Text(
                       store.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.2,
-                      ),
+                      style: AppTypography.cardTitle.copyWith(fontSize: 16),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       store.tagline,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textSecondary,
-                        height: 1.3,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: AppTypography.body.copyWith(fontSize: 12.5, height: 1.3),
                     ),
                   ],
                 ),
@@ -80,7 +71,7 @@ class B2bStoreCard extends StatelessWidget {
               for (final c in store.categories)
                 B2bMetaPill(icon: Icons.category_outlined, label: c),
               B2bMetaPill(
-                icon: Icons.place_outlined,
+                icon: Icons.location_on_outlined,
                 label: store.serviceRegions.join(', '),
               ),
             ],
@@ -116,10 +107,7 @@ class B2bStoreCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
+                    textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
                   ),
                   child: const Text('Profili gör'),
                 ),
@@ -135,10 +123,7 @@ class B2bStoreCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
+                    textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
                   ),
                   child: const Text('Teklif iste'),
                 ),

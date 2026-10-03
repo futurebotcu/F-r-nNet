@@ -108,7 +108,7 @@ class _IconWithBadge extends StatelessWidget {
               constraints: const BoxConstraints(minWidth: 16),
               decoration: BoxDecoration(
                 color: AppColors.danger,
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
                 border: Border.all(color: AppColors.surface, width: 1.5),
               ),
               child: Text(

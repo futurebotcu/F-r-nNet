@@ -10,6 +10,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../subscriptions/models/feature_lock.dart';
 import '../../subscriptions/providers/subscription_providers.dart';
@@ -44,7 +45,7 @@ class DealerOverviewScreen extends ConsumerWidget {
           // Perf: hareket/bayi mutasyonu sonrası panel KPI'ları eski değeri
           // korur, spinner flash yok.
           skipLoadingOnReload: true,
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const PremiumListSkeleton(),
           error: (e, _) =>
               const Center(child: Text(AppStrings.dealersErrorLoad)),
           data: (o) => SingleChildScrollView(

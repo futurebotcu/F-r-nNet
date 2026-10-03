@@ -10,12 +10,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/safety_providers.dart';
 import '../widgets/block_user_dialog.dart';
-import '../../../core/utils/tr_case.dart';
 
 class BlockedUsersScreen extends ConsumerWidget {
   const BlockedUsersScreen({super.key});
@@ -29,15 +32,11 @@ class BlockedUsersScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: blockedAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Text(
-                AppStrings.safetyErrorBanner,
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
+          loading: () => const PremiumListSkeleton(itemCount: 3, itemHeight: 56),
+          error: (_, __) => ErrorRetryState(
+            title: AppStrings.finalBlockedUsersLoadError,
+            subtitle: AppStrings.finalCheckConnectionRetry,
+            onRetry: () => ref.invalidate(blockedUserIdsProvider),
           ),
           data: (ids) {
             if (ids.isEmpty) {
@@ -75,7 +74,6 @@ class _BlockedUserRow extends ConsumerWidget {
           orElse: () => null,
         ) ??
         PublicProfile.fallbackName;
-    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.m,
@@ -88,42 +86,22 @@ class _BlockedUserRow extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.surfaceVariant,
-            ),
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
-          ),
+          FirinNetAvatar(name: name),
           const SizedBox(width: AppSpacing.m),
           Expanded(
             child: Text(
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 14.5,
-              ),
+              style: AppTypography.authorName,
             ),
           ),
           TextButton(
             onPressed: () => unblockUser(context, ref, userId: userId),
             style: TextButton.styleFrom(foregroundColor: AppColors.brandInk),
-            child: const Text(
+            child: Text(
               AppStrings.safetyActionUnblock,
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+              style: AppTypography.smallAction.copyWith(fontSize: 13),
             ),
           ),
         ],

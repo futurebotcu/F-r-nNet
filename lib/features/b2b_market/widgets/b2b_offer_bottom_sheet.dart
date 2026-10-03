@@ -492,7 +492,7 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
     _Field(
       controller: _message,
       label: 'Mesaj',
-      hint: 'Teklif detayınız…',
+      hint: 'Teklif detayın…',
       maxLines: 3,
     ),
     const SizedBox(height: AppSpacing.m),
@@ -763,7 +763,7 @@ class _PrivacyHint extends StatelessWidget {
         const SizedBox(width: 6),
         const Expanded(
           child: Text(
-            'İletişim bilginiz karşı tarafa otomatik açılmaz.',
+            'İletişim bilgin karşı tarafa otomatik açılmaz.',
             style: TextStyle(
               fontSize: 11.5,
               color: AppColors.textMuted,

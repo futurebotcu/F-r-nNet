@@ -11,6 +11,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -72,8 +73,7 @@ class RecipesListScreen extends ConsumerWidget {
           // Perf: reçete kaydedilince liste eski içeriğini korur, spinner
           // flash yok; spinner yalnız ilk yüklemede.
           skipLoadingOnReload: true,
-          loading: () =>
-              const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+          loading: () => const PremiumListSkeleton(),
           // Ham istisna gösterilmez; Tekrar dene provider'ı yeniden ister.
           error: (_, __) => Center(
             child: ErrorRetryState(

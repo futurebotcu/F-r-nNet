@@ -103,7 +103,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                       SizedBox(
                         height: 54,
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.share_rounded),
+                          icon: const Icon(Icons.share_outlined),
                           label: const Text(AppStrings.dealerShareWhatsapp),
                           onPressed: () {
                             Share.share(

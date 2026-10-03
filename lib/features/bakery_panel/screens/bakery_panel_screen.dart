@@ -12,6 +12,7 @@ import '../../../core/widgets/interactions.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/metric_pill.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/quick_action_tile.dart'
     show QuickActionMini;
@@ -225,7 +226,7 @@ class _TodayHero extends StatelessWidget {
               MetricPill(
                 label: AppStrings.ledgerEodWaste,
                 value: NumberFormatter.integer(waste),
-                color: const Color(0xFFEF4444),
+                color: AppColors.danger,
               ),
               MetricPill(
                 label: AppStrings.ledgerEodWasteRatio,
@@ -583,6 +584,16 @@ class _RecentList extends StatelessWidget {
     final hasBook =
         dayBook != null &&
         (dayBook!.revenueAmount != null || dayBook!.dayNote.isNotEmpty);
+    // İlk yüklemede "kayıt yok" metni yanıltıcı; kompakt yer tutucu göster.
+    if (data == null && summary.isLoading) {
+      return const PremiumListSkeleton(
+        key: ValueKey('panel_recent_skeleton'),
+        itemCount: 2,
+        itemHeight: 56,
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+      );
+    }
     if (data == null || (data.isEmpty && !hasBook)) {
       return const PremiumCard(
         padding: EdgeInsets.all(AppSpacing.l),
@@ -606,14 +617,14 @@ class _RecentList extends StatelessWidget {
               icon: Icons.bakery_dining_outlined,
               title: '${p.product} · ${p.quantity} adet',
               meta: 'Üretim',
-              accent: AppColors.primary,
+              accent: AppColors.brandInk,
             ),
           for (final w in data.wastes.take(3))
             _RecentRow(
               icon: Icons.delete_sweep_outlined,
               title: '${w.product} · ${w.quantity} adet · ${w.reason.label}',
               meta: 'Fire',
-              accent: const Color(0xFFEF4444),
+              accent: AppColors.danger,
             ),
           if (dayBook?.revenueAmount != null)
             _RecentRow(

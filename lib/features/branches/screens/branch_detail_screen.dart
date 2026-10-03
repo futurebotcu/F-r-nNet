@@ -116,11 +116,11 @@ class _GeneralTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.s),
                 _InfoRow(
-                  icon: Icons.place_outlined,
+                  icon: Icons.location_on_outlined,
                   text: branch.address.isEmpty ? '—' : branch.address,
                 ),
                 _InfoRow(
-                  icon: Icons.phone_outlined,
+                  icon: Icons.call_outlined,
                   text: branch.phone.isEmpty ? '—' : branch.phone,
                 ),
                 _InfoRow(
@@ -550,6 +550,7 @@ class _MemberCard extends ConsumerWidget {
             ),
             PopupMenuButton<BranchMembershipStatus>(
               key: ValueKey('member_menu_${m.id}'),
+              tooltip: AppStrings.finalMemberActionsTooltip,
               icon: const Icon(
                 Icons.more_vert_rounded,
                 size: 20,
