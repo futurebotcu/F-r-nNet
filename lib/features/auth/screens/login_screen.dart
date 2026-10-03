@@ -119,6 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(
+          tooltip: AppStrings.polishBack,
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () {
             if (context.canPop()) {

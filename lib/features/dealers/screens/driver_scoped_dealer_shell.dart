@@ -15,6 +15,7 @@ import '../models/dealer_transaction.dart';
 import '../models/driver_summary.dart';
 import '../providers/dealer_providers.dart';
 import 'add_driver_screen.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Faz 1 — Patron/toptancı: bir şoföre dokununca açılan ŞOFÖR-SCOPED mini Bayi
 /// Yönetimi (tek defter, scoped görünüm). Sadece o şoföre atanmış bayiler + o
@@ -43,9 +44,8 @@ class _DriverScopedDealerShellState
   @override
   Widget build(BuildContext context) {
     final driver = ref.watch(driverByIdProvider(widget.driverId)).valueOrNull;
-    final isWholesaler = ref.watch(
-          profileControllerProvider.select((p) => p?.accountType),
-        ) ==
+    final isWholesaler =
+        ref.watch(profileControllerProvider.select((p) => p?.accountType)) ==
         AccountType.wholesaler;
     return PremiumScaffold(
       appBar: AppBar(
@@ -54,13 +54,18 @@ class _DriverScopedDealerShellState
           preferredSize: const Size.fromHeight(26),
           child: Padding(
             padding: const EdgeInsets.only(
-                left: AppSpacing.pageH, bottom: 6, right: AppSpacing.pageH),
+              left: AppSpacing.pageH,
+              bottom: 6,
+              right: AppSpacing.pageH,
+            ),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 isWholesaler ? 'Şoför Müşteri Defteri' : 'Şoför Bayi Defteri',
                 style: const TextStyle(
-                    fontSize: 12, color: AppColors.textMuted),
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                ),
               ),
             ),
           ),
@@ -73,7 +78,9 @@ class _DriverScopedDealerShellState
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.pageH, vertical: AppSpacing.s),
+                horizontal: AppSpacing.pageH,
+                vertical: AppSpacing.s,
+              ),
               child: Row(
                 children: [
                   for (var i = 0; i < _segments.length; i++) ...[
@@ -120,22 +127,34 @@ void _showDriverPermissionInfo(BuildContext context) {
     builder: (_) => const SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-            AppSpacing.pageH, 0, AppSpacing.pageH, AppSpacing.l),
+          AppSpacing.pageH,
+          0,
+          AppSpacing.pageH,
+          AppSpacing.l,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Yarı Yetki',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            Text(
+              'Yarı Yetki',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+            ),
             SizedBox(height: 6),
-            Text(AddDriverScreen.halfPermissionInfo,
-                style: TextStyle(fontSize: 13, height: 1.4)),
+            Text(
+              AddDriverScreen.halfPermissionInfo,
+              style: TextStyle(fontSize: 13, height: 1.4),
+            ),
             SizedBox(height: AppSpacing.m),
-            Text('Tam Yetki',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            Text(
+              'Tam Yetki',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+            ),
             SizedBox(height: 6),
-            Text(AddDriverScreen.fullPermissionInfo,
-                style: TextStyle(fontSize: 13, height: 1.4)),
+            Text(
+              AddDriverScreen.fullPermissionInfo,
+              style: TextStyle(fontSize: 13, height: 1.4),
+            ),
           ],
         ),
       ),
@@ -144,20 +163,25 @@ void _showDriverPermissionInfo(BuildContext context) {
 }
 
 Widget _kpi(String label, String value) => Expanded(
-      child: Column(
-        children: [
-          Text(value,
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary)),
-          const SizedBox(height: 2),
-          Text(label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-        ],
+  child: Column(
+    children: [
+      Text(
+        value,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimary,
+        ),
       ),
-    );
+      const SizedBox(height: 2),
+      Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+      ),
+    ],
+  ),
+);
 
 class _OverviewSection extends ConsumerWidget {
   const _OverviewSection({required this.driverId});
@@ -165,40 +189,51 @@ class _OverviewSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final today = ref.watch(driverRangeSummaryProvider(
-        (driverId: driverId, range: DriverSummaryRange.today)));
-    final ids = ref.watch(assignedDealerIdsProvider(driverId)).valueOrNull ??
-        const [];
+    final today = ref.watch(
+      driverRangeSummaryProvider((
+        driverId: driverId,
+        range: DriverSummaryRange.today,
+      )),
+    );
+    final ids =
+        ref.watch(assignedDealerIdsProvider(driverId)).valueOrNull ?? const [];
     final recent =
         ref.watch(driverRecentTransactionsProvider(driverId)).valueOrNull ??
-            const [];
+        const [];
     final dealers = ref.watch(dealersListProvider).valueOrNull ?? const [];
     final byId = {for (final d in dealers) d.id: d.name};
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+        AppSpacing.pageH,
+        AppSpacing.s,
+        AppSpacing.pageH,
+        AppSpacing.xxl,
+      ),
       children: [
         PremiumCard(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.m),
             child: today.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, __) => const Text('Özet yüklenemedi.'),
               data: (s) => Column(
                 children: [
-                  Row(children: [
-                    _kpi('Atanan bayi', '${ids.length}'),
-                    _kpi('Bugün işlem', '${s.txCount}'),
-                    _kpi('Net', _tl(s.netChange)),
-                  ]),
+                  Row(
+                    children: [
+                      _kpi('Atanan bayi', '${ids.length}'),
+                      _kpi('Bugün işlem', '${s.txCount}'),
+                      _kpi('Net', _tl(s.netChange)),
+                    ],
+                  ),
                   const Divider(height: AppSpacing.l),
-                  Row(children: [
-                    _kpi('Teslimat', _tl(s.totalDelivery)),
-                    _kpi('Tahsilat', _tl(s.totalPayment)),
-                    _kpi('İade', _tl(s.totalReturn)),
-                  ]),
+                  Row(
+                    children: [
+                      _kpi('Teslimat', _tl(s.totalDelivery)),
+                      _kpi('Tahsilat', _tl(s.totalPayment)),
+                      _kpi('İade', _tl(s.totalReturn)),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -211,28 +246,42 @@ class _OverviewSection extends ConsumerWidget {
           onTap: () => context.push(AppRoutes.dealerDriverAssign(driverId)),
           child: const Padding(
             padding: EdgeInsets.all(AppSpacing.m),
-            child: Row(children: [
-              Icon(Icons.edit_location_alt_outlined,
-                  size: 18, color: AppColors.brandLemonPressed),
-              SizedBox(width: AppSpacing.s),
-              Expanded(
-                child: Text('Bayi ata / atamaları yönet',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.edit_location_alt_outlined,
+                  size: 18,
+                  color: AppColors.brandLemonPressed,
+                ),
+                SizedBox(width: AppSpacing.s),
+                Expanded(
+                  child: Text(
+                    'Bayi ata / atamaları yönet',
                     style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary)),
-              ),
-              Icon(Icons.chevron_right_rounded,
-                  size: 18, color: AppColors.textMuted),
-            ]),
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.textMuted,
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.l),
-        const Text('Son Hareketler',
-            style: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary)),
+        const Text(
+          'Son Hareketler',
+          style: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
         const SizedBox(height: AppSpacing.s),
         if (recent.isEmpty)
           const _EmptyBox('Bu şoförün henüz işlemi yok.')
@@ -264,7 +313,11 @@ class _ScopedDealersSection extends ConsumerWidget {
         }
         return ListView(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+            AppSpacing.pageH,
+            AppSpacing.s,
+            AppSpacing.pageH,
+            AppSpacing.xxl,
+          ),
           children: [
             for (final id in ids) ...[
               _ScopedDealerCard(dealer: byId[id], dealerId: id),
@@ -292,29 +345,41 @@ class _ScopedDealerCard extends ConsumerWidget {
         padding: const EdgeInsets.all(AppSpacing.m),
         child: Row(
           children: [
-            const Icon(Icons.storefront_outlined,
-                size: 18, color: AppColors.textSecondary),
+            const Icon(
+              Icons.storefront_outlined,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
             const SizedBox(width: AppSpacing.s),
             Expanded(
-              child: Text(dealer?.name ?? 'Bayi',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary)),
+              child: Text(
+                dealer?.name ?? 'Bayi',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ),
             if (bal != null)
-              Text(_tl(bal.currentBalance),
-                  style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: bal.currentBalance > 0
-                          ? AppColors.danger
-                          : AppColors.textPrimary)),
+              Text(
+                _tl(bal.currentBalance),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: bal.currentBalance > 0
+                      ? AppColors.danger
+                      : AppColors.textPrimary,
+                ),
+              ),
             const SizedBox(width: 6),
-            const Icon(Icons.chevron_right_rounded,
-                size: 18, color: AppColors.textMuted),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
           ],
         ),
       ),
@@ -340,7 +405,11 @@ class _ScopedTransactionsSection extends ConsumerWidget {
         }
         return ListView(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+            AppSpacing.pageH,
+            AppSpacing.s,
+            AppSpacing.pageH,
+            AppSpacing.xxl,
+          ),
           children: [
             for (final t in txs) ...[
               _TxRow(tx: t, dealerName: byId[t.dealerId] ?? 'Bayi'),
@@ -362,17 +431,21 @@ class _ScopedReportsSection extends ConsumerStatefulWidget {
       _ScopedReportsSectionState();
 }
 
-class _ScopedReportsSectionState
-    extends ConsumerState<_ScopedReportsSection> {
+class _ScopedReportsSectionState extends ConsumerState<_ScopedReportsSection> {
   DriverSummaryRange _range = DriverSummaryRange.today;
 
   @override
   Widget build(BuildContext context) {
-    final sum = ref.watch(driverRangeSummaryProvider(
-        (driverId: widget.driverId, range: _range)));
+    final sum = ref.watch(
+      driverRangeSummaryProvider((driverId: widget.driverId, range: _range)),
+    );
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+        AppSpacing.pageH,
+        AppSpacing.s,
+        AppSpacing.pageH,
+        AppSpacing.xxl,
+      ),
       children: [
         Row(
           children: [
@@ -394,19 +467,25 @@ class _ScopedReportsSectionState
           data: (s) => PremiumCard(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.m),
-              child: Column(children: [
-                Row(children: [
-                  _kpi('İşlem', '${s.txCount}'),
-                  _kpi('Net', _tl(s.netChange)),
-                  _kpi('Teslimat', _tl(s.totalDelivery)),
-                ]),
-                const Divider(height: AppSpacing.l),
-                Row(children: [
-                  _kpi('Tahsilat', _tl(s.totalPayment)),
-                  _kpi('İade', _tl(s.totalReturn)),
-                  _kpi('Düzeltme', _tl(s.totalAdjustment)),
-                ]),
-              ]),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      _kpi('İşlem', '${s.txCount}'),
+                      _kpi('Net', _tl(s.netChange)),
+                      _kpi('Teslimat', _tl(s.totalDelivery)),
+                    ],
+                  ),
+                  const Divider(height: AppSpacing.l),
+                  Row(
+                    children: [
+                      _kpi('Tahsilat', _tl(s.totalPayment)),
+                      _kpi('İade', _tl(s.totalReturn)),
+                      _kpi('Düzeltme', _tl(s.totalAdjustment)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -431,7 +510,11 @@ class _ManagementSection extends ConsumerWidget {
         }
         return ListView(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.xxl),
+            AppSpacing.pageH,
+            AppSpacing.s,
+            AppSpacing.pageH,
+            AppSpacing.xxl,
+          ),
           children: [
             PremiumCard(
               child: Padding(
@@ -439,99 +522,120 @@ class _ManagementSection extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(driver.name,
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary)),
+                    Text(
+                      driver.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     if (driver.phone.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(driver.phone,
-                          style: const TextStyle(
-                              fontSize: 13.5,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w600)),
+                      Text(
+                        driver.phone,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                     if (driver.note.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.s),
-                      Text(driver.note,
-                          style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                              height: 1.4)),
+                      Text(
+                        driver.note,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          height: 1.4,
+                        ),
+                      ),
                     ],
                     const SizedBox(height: AppSpacing.s),
-                    Row(children: [
-                      const Text('Aktif',
+                    Row(
+                      children: [
+                        const Text(
+                          'Aktif',
                           style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary)),
-                      const Spacer(),
-                      Switch(
-                        value: driver.isActive,
-                        onChanged: (v) async {
-                          await ref
-                              .read(dealerRepositoryProvider)
-                              .updateDriver(driver.copyWith(isActive: v));
-                          ref.invalidate(driverByIdProvider(driverId));
-                          ref.invalidate(driversListProvider);
-                        },
-                      ),
-                    ]),
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const Spacer(),
+                        Switch(
+                          value: driver.isActive,
+                          onChanged: (v) async {
+                            await ref
+                                .read(dealerRepositoryProvider)
+                                .updateDriver(driver.copyWith(isActive: v));
+                            ref.invalidate(driverByIdProvider(driverId));
+                            ref.invalidate(driversListProvider);
+                          },
+                        ),
+                      ],
+                    ),
                     // Yarı/Tam yetki — patron mevcut şoförü düzenler
                     // (feature/dealer-driver-permission-levels yüzey düzeltmesi).
                     const SizedBox(height: AppSpacing.s),
-                    Row(children: [
-                      const Text('Yetki',
+                    Row(
+                      children: [
+                        const Text(
+                          'Yetki',
                           style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary)),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.info_outline, size: 18),
-                        tooltip: 'Yetki seviyeleri',
-                        onPressed: () => _showDriverPermissionInfo(context),
-                      ),
-                      const Spacer(),
-                      SegmentedButton<DriverPermission>(
-                        showSelectedIcon: false,
-                        style: const ButtonStyle(
-                          visualDensity: VisualDensity.compact,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                        segments: const [
-                          ButtonSegment(
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.info_outline, size: 18),
+                          tooltip: 'Yetki seviyeleri',
+                          onPressed: () => _showDriverPermissionInfo(context),
+                        ),
+                        const Spacer(),
+                        SegmentedButton<DriverPermission>(
+                          showSelectedIcon: false,
+                          style: const ButtonStyle(
+                            visualDensity: VisualDensity.compact,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          segments: const [
+                            ButtonSegment(
                               value: DriverPermission.half,
-                              label: Text('Yarı')),
-                          ButtonSegment(
+                              label: Text('Yarı'),
+                            ),
+                            ButtonSegment(
                               value: DriverPermission.full,
-                              label: Text('Tam')),
-                        ],
-                        selected: {driver.permissionLevel},
-                        onSelectionChanged: (s) async {
-                          try {
-                            await ref
-                                .read(dealerRepositoryProvider)
-                                .updateDriver(driver.copyWith(
-                                    permissionLevel: s.first));
-                            ref.invalidate(driverByIdProvider(driverId));
-                            ref.invalidate(driversListProvider);
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(e is StateError
+                              label: Text('Tam'),
+                            ),
+                          ],
+                          selected: {driver.permissionLevel},
+                          onSelectionChanged: (s) async {
+                            try {
+                              await ref
+                                  .read(dealerRepositoryProvider)
+                                  .updateDriver(
+                                    driver.copyWith(permissionLevel: s.first),
+                                  );
+                              ref.invalidate(driverByIdProvider(driverId));
+                              ref.invalidate(driversListProvider);
+                            } catch (e) {
+                              if (context.mounted) {
+                                AppFeedback.error(
+                                  context,
+                                  e is StateError
                                       ? e.message
-                                      : 'Yetki güncellenemedi.'),
-                                ),
-                              );
+                                      : 'Yetki güncellenemedi.',
+                                );
+                              }
                             }
-                          }
-                        },
-                      ),
-                    ]),
+                          },
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -551,8 +655,10 @@ class _ManagementSection extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
-                  textStyle:
-                      const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -570,7 +676,8 @@ class _TxRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final negative = tx.type == DealerTransactionType.payment ||
+    final negative =
+        tx.type == DealerTransactionType.payment ||
         tx.type == DealerTransactionType.returned;
     return PremiumCard(
       padding: EdgeInsets.zero,
@@ -582,27 +689,36 @@ class _TxRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$dealerName · ${tx.type.label}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
+                  Text(
+                    '$dealerName · ${tx.type.label}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(_shortDate(tx.createdAt),
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textMuted)),
+                  Text(
+                    _shortDate(tx.createdAt),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: AppSpacing.s),
-            Text('${negative ? '−' : '+'}${_tl(tx.amount)}',
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color:
-                        negative ? AppColors.success : AppColors.textPrimary)),
+            Text(
+              '${negative ? '−' : '+'}${_tl(tx.amount)}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: negative ? AppColors.success : AppColors.textPrimary,
+              ),
+            ),
           ],
         ),
       ),
@@ -625,12 +741,15 @@ class _EmptyBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.m),
         border: Border.all(color: AppColors.borderHairline, width: 0.8),
       ),
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w600)),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 13,
+          color: AppColors.textMuted,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

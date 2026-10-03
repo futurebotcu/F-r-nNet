@@ -16,6 +16,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/worker_profile.dart';
 import '../providers/worker_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Ustalık Bilgilerim — bireysel kullanıcının profesyonel kartı.
 ///
@@ -258,17 +259,11 @@ class _WorkerProfileScreenState extends ConsumerState<WorkerProfileScreen> {
       );
       await repo.upsertMyProfile(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ustalık bilgilerin kaydedildi.')),
-      );
+      AppFeedback.success(context, 'Ustalık bilgilerin kaydedildi.');
       Navigator.of(context).maybePop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(content: Text(AppStrings.commonSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.polishWorkerProfileSaveError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -652,12 +647,9 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
         _selected.remove(code);
       } else {
         if (_selected.length >= widget.maxSelection) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'En fazla ${widget.maxSelection} beceri seçebilirsin.',
-              ),
-            ),
+          AppFeedback.warning(
+            context,
+            'En fazla ${widget.maxSelection} beceri seçebilirsin.',
           );
           return;
         }

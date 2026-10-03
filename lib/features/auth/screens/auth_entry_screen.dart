@@ -177,7 +177,7 @@ class _BrandMark extends StatelessWidget {
             color: AppColors.brandLemonPale,
             child: const Icon(
               Icons.local_fire_department_rounded,
-              color: AppColors.brandLemonPressed,
+              color: AppColors.brandInk,
               size: 46,
             ),
           ),

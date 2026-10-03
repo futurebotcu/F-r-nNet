@@ -1,13 +1,15 @@
 // B2B Pazar — görsel render yardımcısı.
 //
 // Yüklenmiş public URL'i (logo/cover/ürün/kampanya) gösterir; URL yoksa veya
-// yüklenemezse kategori/tip ikonlu şık placeholder. Kart ve detay ekranları
-// aynı görünümü paylaşsın diye tek yerde.
+// yüklenemezse kategori/tip ikonlu sakin placeholder. Kart ve detay ekranları
+// aynı görünümü paylaşsın diye tek yerde. Uygulama polish 2: ortak
+// [AppNetworkImage] durum diline (yükleniyor / hata / görsel yok) bağlandı —
+// kırık ağ resmi ikonu veya liste içinde spinner gösterilmez.
 
 import 'package:flutter/material.dart';
 
-import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/app_network_image.dart';
 
 class B2bMediaImage extends StatelessWidget {
   const B2bMediaImage({
@@ -27,49 +29,20 @@ class B2bMediaImage extends StatelessWidget {
   final double radius;
   final IconData placeholderIcon;
 
-  bool get _has => url != null && url!.isNotEmpty;
-
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    // Küçük küçük-resimlerde (logo vb.) etiket gizlenir, ikon küçülür.
+    final compact =
+        (height != null && height! <= 72) || (width != null && width! <= 72);
+    return AppNetworkImage(
+      url: url,
+      fit: fit,
+      height: height,
+      width: width,
       borderRadius: BorderRadius.circular(radius),
-      child: SizedBox(
-        height: height,
-        width: width,
-        child: _has
-            ? Image.network(
-                url!,
-                fit: fit,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return _Placeholder(icon: placeholderIcon, loading: true);
-                },
-                errorBuilder: (_, __, ___) =>
-                    _Placeholder(icon: placeholderIcon),
-              )
-            : _Placeholder(icon: placeholderIcon),
-      ),
-    );
-  }
-}
-
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.icon, this.loading = false});
-  final IconData icon;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surfaceVariant,
-      alignment: Alignment.center,
-      child: loading
-          ? const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(icon, size: 30, color: AppColors.borderHairline),
+      emptyIcon: placeholderIcon,
+      compact: compact,
+      memCacheWidth: width == null ? 900 : (width! * 3).round(),
     );
   }
 }

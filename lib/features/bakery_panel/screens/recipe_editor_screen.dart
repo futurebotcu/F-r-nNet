@@ -21,6 +21,7 @@ import '../models/recipe_quantities.dart';
 import '../models/recipe.dart' show RecipeResult;
 import '../models/recipe_record.dart';
 import '../providers/bakery_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Reçete oluşturma & düzenleme sihirbazı (V1.1).
 ///
@@ -114,9 +115,7 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
     if (!mounted) return;
     if (r == null) {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Reçete bulunamadı.')));
+      AppFeedback.error(context, 'Reçete bulunamadı.');
       Navigator.of(context).pop();
       return;
     }
@@ -336,14 +335,11 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       final repo = ref.read(recipeRepositoryProvider);
       final saved = await repo.save(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _existing == null
-                ? 'Reçete kaydedildi: ${saved.displayTitle}'
-                : 'Reçete güncellendi: ${saved.displayTitle}',
-          ),
-        ),
+      AppFeedback.success(
+        context,
+        _existing == null
+            ? 'Reçete kaydedildi: ${saved.displayTitle}'
+            : 'Reçete güncellendi: ${saved.displayTitle}',
       );
       if (_existing == null) {
         context.pushReplacement('${AppRoutes.recipes}/${saved.id}');
@@ -361,16 +357,14 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
       // form alanları korunur (setState reset edilmez), kullanıcı tek tıkla
       // tekrar deneyebilir.
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.recipeSaveError)));
+      AppFeedback.error(context, AppStrings.recipeSaveError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
   void _err(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.warning(context, msg);
   }
 
   @override

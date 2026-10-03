@@ -11,6 +11,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/b2b_store.dart';
 import 'b2b_meta_pill.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
 
 class B2bStoreCard extends StatelessWidget {
   const B2bStoreCard({
@@ -34,7 +35,12 @@ class B2bStoreCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Monogram(text: store.monogram),
+              FirinNetAvatar(
+                name: store.name,
+                imageUrl: store.logoUrl,
+                size: 48,
+                kind: FirinNetAvatarKind.business,
+              ),
               const SizedBox(width: AppSpacing.m),
               Expanded(
                 child: Column(
@@ -140,34 +146,6 @@ class B2bStoreCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Monogram extends StatelessWidget {
-  const _Monogram({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 48,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.brandLemonPale,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w800,
-          color: AppColors.brandLemonPressed,
-          letterSpacing: 0.3,
-        ),
       ),
     );
   }

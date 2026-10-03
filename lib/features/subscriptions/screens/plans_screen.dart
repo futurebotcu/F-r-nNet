@@ -19,6 +19,7 @@ import '../widgets/commercial_launch_sheet.dart'
 import '../widgets/individual_launch_sheet.dart'
     show formatIndividualLaunchDate;
 import '../widgets/supplier_launch_gift_sheet.dart';
+import '../../../app/theme/app_typography.dart';
 
 /// Commercial package screen. Store prices come from RevenueCat/Google Play;
 /// config prices are fallback copy only.
@@ -77,12 +78,7 @@ class PlansScreen extends ConsumerWidget {
                 ),
                 child: Text(
                   AppStrings.plansLaunchSubtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
+                  style: AppTypography.body.copyWith(fontSize: 13),
                 ),
               ),
             if (individualFreeUntil != null) ...[
@@ -166,11 +162,7 @@ class PlansScreen extends ConsumerWidget {
                   '${formatCommercialLaunchDay(launchPriceUntil)}'
                   '${AppStrings.paywallLaunchPriceSuffix}',
                   key: const ValueKey('plans_launch_price_note'),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
-                  ),
+                  style: AppTypography.caption.copyWith(fontSize: 12),
                 ),
               ),
             ],
@@ -200,10 +192,8 @@ class PlansScreen extends ConsumerWidget {
                     ),
                     child: const Text(
                       AppStrings.plansSupportCta,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                      ),
+                      style: AppTypography.buttonLabel,
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s),
@@ -213,10 +203,9 @@ class PlansScreen extends ConsumerWidget {
                     Text(
                       AppStrings.plansLaunchTrialCta,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.infoLabel.copyWith(
                         color: AppColors.brandInk,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   const SizedBox(height: 4),
@@ -224,11 +213,7 @@ class PlansScreen extends ConsumerWidget {
                     Text(
                       AppStrings.plansStoreReady,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textMuted,
-                      ),
+                      style: AppTypography.caption.copyWith(fontSize: 12),
                     ),
                   const SizedBox(height: AppSpacing.s),
                   // Mağaza kuralı: abonelik ekranında şartlar + gizlilik.
@@ -242,6 +227,20 @@ class PlansScreen extends ConsumerWidget {
     );
   }
 }
+
+/// Banner başlık / gövde rolleri (Paketler ekranındaki tüm bilgi şeritleri).
+const TextStyle _bannerTitle = TextStyle(
+  fontSize: 13.5,
+  fontWeight: FontWeight.w700,
+  color: AppColors.brandInk,
+  height: 1.3,
+);
+final TextStyle _bannerBody = AppTypography.meta.copyWith(
+  fontSize: 12,
+  fontWeight: FontWeight.w500,
+  color: AppColors.textSecondary,
+  height: 1.35,
+);
 
 /// Abonelik ekranı yasal linkleri (Kullanım Şartları · Gizlilik Politikası).
 class _PlansLegalLinks extends StatelessWidget {
@@ -262,11 +261,13 @@ class _PlansLegalLinks extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         TextButton(
+          style: TextButton.styleFrom(minimumSize: const Size(48, 44)),
           onPressed: () => GoRouter.of(context).push(AppRoutes.legalTerms),
           child: const Text(AppStrings.legalTermsTitle, style: linkStyle),
         ),
         const Text('·', style: TextStyle(color: AppColors.textMuted)),
         TextButton(
+          style: TextButton.styleFrom(minimumSize: const Size(48, 44)),
           onPressed: () => GoRouter.of(context).push(AppRoutes.legalPrivacy),
           child: const Text(AppStrings.legalPrivacyTitle, style: linkStyle),
         ),
@@ -307,22 +308,13 @@ class _FreePeriodBanner extends StatelessWidget {
                 Text(
                   '${AppStrings.commercialFreePeriodTitle} - $daysLeft '
                   '${AppStrings.planCardTrialDaysLeft}',
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.brandInk,
-                  ),
+                  style: _bannerTitle,
                 ),
                 const SizedBox(height: 1),
                 Text(
                   '${formatCommercialLaunchDay(endsAt)} '
                   '${AppStrings.commercialFreePeriodSubSuffix}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                    height: 1.35,
-                  ),
+                  style: _bannerBody,
                 ),
               ],
             ),
@@ -363,9 +355,7 @@ class _IndividualLaunchNote extends StatelessWidget {
           Expanded(
             child: Text(
               '$dateLabel${AppStrings.individualLaunchNoteSuffix}',
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.infoLabel.copyWith(
                 color: AppColors.brandInk,
                 height: 1.35,
               ),
@@ -412,21 +402,13 @@ class _SupplierLaunchBanner extends StatelessWidget {
                   Text(
                     '${AppStrings.supplierLaunchPlanTitle} — $dateLabel '
                     '${AppStrings.supplierLaunchFreeUntilSuffix}',
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.brandInk,
-                    ),
+                    style: _bannerTitle,
                   ),
                   const SizedBox(height: 1),
-                  const Text(
+                  Text(
                     AppStrings.supplierLaunchDetailsCta,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                    style: _bannerBody.copyWith(
                       decoration: TextDecoration.underline,
-                      height: 1.35,
                     ),
                   ),
                 ],
@@ -469,21 +451,12 @@ class _PromoBanner extends StatelessWidget {
                 Text(
                   '${AppStrings.planLaunchPromoTitle} - $daysLeft '
                   '${AppStrings.planCardTrialDaysLeft}',
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF92400E),
-                  ),
+                  style: _bannerTitle.copyWith(color: const Color(0xFF92400E)),
                 ),
                 const SizedBox(height: 1),
-                const Text(
+                Text(
                   AppStrings.planLaunchPromoSub,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFB45309),
-                    height: 1.35,
-                  ),
+                  style: _bannerBody.copyWith(color: const Color(0xFFB45309)),
                 ),
               ],
             ),
@@ -539,17 +512,12 @@ class _PlanTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: AppSpacing.s,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s),
+                Text(title, style: AppTypography.sectionTitle),
                 if (isCurrent)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -562,11 +530,7 @@ class _PlanTile extends StatelessWidget {
                     ),
                     child: const Text(
                       AppStrings.plansCurrentBadge,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.brandInk,
-                      ),
+                      style: AppTypography.badge,
                     ),
                   ),
               ],
@@ -575,21 +539,12 @@ class _PlanTile extends StatelessWidget {
             Text(
               price,
               key: ValueKey('plan_price_${plan.name}'),
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w900,
-                color: AppColors.brandInk,
-              ),
+              style: AppTypography.price.copyWith(color: AppColors.brandInk),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               features,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
+              style: AppTypography.body.copyWith(fontSize: 13, height: 1.5),
             ),
           ],
         ),

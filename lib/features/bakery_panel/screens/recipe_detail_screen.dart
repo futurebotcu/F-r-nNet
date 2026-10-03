@@ -6,8 +6,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/error_retry_state.dart';
@@ -23,6 +23,8 @@ import '../models/recipe_record.dart';
 import '../providers/bakery_providers.dart';
 import 'recipe_visibility_badge.dart';
 import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 
 /// Tek bir reçetenin detay ekranı.
 ///
@@ -92,27 +94,15 @@ class RecipeDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reçeteyi sil'),
-        content: const Text(
-          'Bu reçete kalıcı olarak silinecek. Devam edilsin mi?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: AppButtonStyles.destructive,
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: AppStrings.polishRecipeDeleteTitle,
+      message: AppStrings.polishRecipeDeleteBody,
+      confirmLabel: AppStrings.polishDelete,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true) return;
+    if (!ok) return;
     if (!context.mounted) return;
     // V1.3.2 — Sil owner-only kalıcı işlem; guest engellenir.
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -120,12 +110,17 @@ class RecipeDetailScreen extends ConsumerWidget {
       return;
     }
     final repo = ref.read(recipeRepositoryProvider);
-    await repo.delete(recipeId);
+    try {
+      await repo.delete(recipeId);
+    } catch (_) {
+      if (context.mounted) {
+        AppFeedback.error(context, AppStrings.polishRecipeDeleteError);
+      }
+      return;
+    }
     if (context.mounted) {
+      AppFeedback.success(context, AppStrings.polishRecipeDeleted);
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Reçete silindi.')));
     }
   }
 }
@@ -240,6 +235,8 @@ class _Body extends ConsumerWidget {
     if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
+      // Küçük ekran / büyük yazıda içerik kesilmesin: kaydırılabilir sheet.
+      isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
@@ -755,7 +752,7 @@ class _ShareSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.l,
           AppSpacing.m,
@@ -777,12 +774,9 @@ class _ShareSheet extends ConsumerWidget {
             ),
             Text(
               'Paylaş — $recipeTitle',
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 15,
-                letterSpacing: -0.1,
-              ),
+              style: AppTypography.cardTitle.copyWith(fontSize: 15),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             const Text(
@@ -848,27 +842,19 @@ class _ShareSheet extends ConsumerWidget {
       );
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Reçete akışa eklendi.')));
+        AppFeedback.success(context, 'Reçete akışa eklendi.');
       }
     } catch (_) {
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
-          const SnackBar(content: Text(AppStrings.commonFeedShareError)),
-        );
+        AppFeedback.error(context, AppStrings.commonFeedShareError);
       }
     }
   }
 
   void _comingSoon(BuildContext context, String feature) {
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature sonraki fazda aktif olacak.')),
-    );
+    AppFeedback.info(context, '$feature sonraki fazda aktif olacak.');
   }
 
   Future<void> _shareSystem(BuildContext context) async {

@@ -14,6 +14,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer.dart';
 import '../repositories/driver_permission.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class AddDealerScreen extends ConsumerStatefulWidget {
   const AddDealerScreen({
@@ -98,20 +99,14 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
       // Şoför, patron yetkisi gereken bayi oluştur/düzenle'yi tetikledi.
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      AppFeedback.error(context, e.message);
       return;
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isEditing
-                ? AppStrings.dealerUpdateError
-                : AppStrings.dealerSaveError,
-          ),
-        ),
+      AppFeedback.error(
+        context,
+        isEditing ? AppStrings.dealerUpdateError : AppStrings.dealerSaveError,
       );
       return;
     }
@@ -122,9 +117,7 @@ class _AddDealerScreenState extends ConsumerState<AddDealerScreen> {
         : widget.customerType == DealerCustomerType.wholesaleCustomer
         ? 'Müşteri eklendi: '
         : AppStrings.dealerSaveSnack;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$what${_name.text.trim()}')));
+    AppFeedback.success(context, '$what${_name.text.trim()}');
   }
 
   String? _validatePhone(String? value) {

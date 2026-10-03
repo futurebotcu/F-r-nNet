@@ -21,6 +21,8 @@ import '../../widgets/b2b_meta_pill.dart';
 import '../../widgets/b2b_media_image.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
 import 'b2b_detail_widgets.dart';
+import '../../../../core/widgets/firinnet_avatar.dart';
+import '../../../../app/theme/app_typography.dart';
 
 class B2bStoreDetailScreen extends ConsumerWidget {
   const B2bStoreDetailScreen({super.key, required this.storeId});
@@ -109,26 +111,14 @@ class _Header extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            B2bMediaImage(
-              url: store.logoUrl,
-              height: 56,
-              width: 56,
-              radius: AppRadius.m,
-              placeholderIcon: Icons.storefront_rounded,
+            FirinNetAvatar(
+              name: store.name,
+              imageUrl: store.logoUrl,
+              size: FirinNetAvatarSize.l,
+              kind: FirinNetAvatarKind.business,
             ),
             const SizedBox(width: AppSpacing.m),
-            Expanded(
-              child: Text(
-                store.name,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.3,
-                  height: 1.2,
-                ),
-              ),
-            ),
+            Expanded(child: Text(store.name, style: AppTypography.detailTitle)),
           ],
         ),
       ],

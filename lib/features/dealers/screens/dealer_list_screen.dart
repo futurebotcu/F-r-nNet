@@ -20,6 +20,8 @@ import '../providers/dealer_providers.dart';
 import '../widgets/dealer_avatar.dart';
 import '../widgets/dealer_filter_chip.dart';
 import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
+import '../../../core/widgets/error_retry_state.dart';
 
 class DealerListScreen extends ConsumerStatefulWidget {
   const DealerListScreen({super.key});
@@ -90,9 +92,13 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
           // Perf: yeni bayi eklenince/düzenlenince liste eski içeriğini korur
           // (spinner flash yok); spinner yalnız ilk yüklemede.
           skipLoadingOnReload: true,
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) =>
-              const Center(child: Text(AppStrings.dealersErrorLoad)),
+          // İlk yüklemede tek büyük spinner yerine hafif statik iskelet.
+          loading: () => const PremiumListSkeleton(),
+          error: (e, _) => ErrorRetryState(
+            title: AppStrings.dealersErrorLoad,
+            subtitle: null,
+            onRetry: () => ref.invalidate(dealersListProvider),
+          ),
           data: (all) {
             if (all.isEmpty) {
               return EmptyState(

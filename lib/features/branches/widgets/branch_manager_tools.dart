@@ -6,6 +6,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/branch_models.dart';
 import '../providers/branch_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// V2 — bireysel "Şube İşlerim" içinde branch_manager Sorumlu Araçları.
 ///
@@ -160,9 +161,7 @@ class _ManagerMemberTile extends ConsumerWidget {
                       .setMembershipStatus(member.id, status);
                 } on StateError catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(e.message)));
+                    AppFeedback.error(context, e.message);
                   }
                 }
               },

@@ -6,6 +6,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/branch_models.dart';
 import '../providers/branch_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Tek şube süreci kartı: tip ikonu + başlık + oluşturan + durum rozeti.
 /// [canEdit] true ise durum menüsü görünür (server yine de izni denetler).
@@ -109,9 +110,7 @@ class BranchProcessTile extends ConsumerWidget {
                             .updateProcess(p.id, status: status);
                       } on StateError catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(e.message)));
+                          AppFeedback.error(context, e.message);
                         }
                       }
                     },

@@ -5,6 +5,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/partner_business.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Harici bağlantı açma (tel: / map / web) — gömülü SDK YOK, yalnız launch.
 /// Başarısızlıkta Türkçe snackbar (kişisel veri basılmaz).
@@ -12,15 +13,11 @@ Future<void> launchPartnerLink(BuildContext context, Uri uri) async {
   try {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.partnersLinkError)),
-      );
+      AppFeedback.error(context, AppStrings.partnersLinkError);
     }
   } catch (_) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.partnersLinkError)),
-      );
+      AppFeedback.error(context, AppStrings.partnersLinkError);
     }
   }
 }

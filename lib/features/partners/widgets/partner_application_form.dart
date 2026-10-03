@@ -7,6 +7,7 @@ import '../../../core/constants/app_strings.dart';
 import '../models/partner_business.dart';
 import '../models/partner_business_application.dart';
 import '../providers/partner_business_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// "Anlaşmalı iş yeri olmak istiyorum" başvuru formu.
 ///
@@ -75,9 +76,7 @@ class _PartnerApplicationFormState
           .read(partnerBusinessRepositoryProvider)
           .submitApplication(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.partnersApplySuccess)),
-      );
+      AppFeedback.success(context, AppStrings.partnersApplySuccess);
       widget.onSubmitted?.call();
     } on StateError catch (e) {
       if (!mounted) return;

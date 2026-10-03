@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 
 /// V1.4 — Settings ekranı için ortak tile.
 ///
@@ -38,7 +39,9 @@ class SettingsTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        child: Padding(
+        child: Container(
+          // Tek satırlık tile da ≥ 56px dokunma alanında kalsın.
+          constraints: const BoxConstraints(minHeight: 56),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.l,
             vertical: AppSpacing.m,
@@ -63,20 +66,18 @@ class SettingsTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
+                      style: AppTypography.authorName.copyWith(
                         color: titleColor,
-                        fontWeight: FontWeight.w700,
                         fontSize: 14.5,
-                        letterSpacing: -0.1,
                       ),
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         subtitle!,
-                        style: const TextStyle(
+                        style: AppTypography.meta.copyWith(
                           color: AppColors.textSecondary,
-                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
                           height: 1.35,
                         ),
                       ),

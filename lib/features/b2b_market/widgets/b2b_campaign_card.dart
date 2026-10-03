@@ -85,7 +85,7 @@ class B2bCampaignCard extends StatelessWidget {
                         const Icon(
                           Icons.campaign_rounded,
                           size: 18,
-                          color: AppColors.brandLemonPressed,
+                          color: AppColors.brandInk,
                         ),
                         const SizedBox(width: 6),
                         Expanded(

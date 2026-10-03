@@ -62,7 +62,7 @@ class DebtExpenseOverviewTab extends ConsumerWidget {
                     error: (_, __) => ErrorRetryState(
                       compact: true,
                       title: 'Özet yüklenemedi',
-                      subtitle: 'Borç/gider özeti alınamadı. Tekrar deneyin.',
+                      subtitle: AppStrings.polishDebtSummaryError,
                       onRetry: () => ref.invalidate(debtExpenseSummaryProvider),
                     ),
                     data: (s) => _SummaryBlock(summary: s),
@@ -105,7 +105,7 @@ class DebtExpenseOverviewTab extends ConsumerWidget {
                     error: (_, __) => ErrorRetryState(
                       compact: true,
                       title: 'Hareketler yüklenemedi',
-                      subtitle: 'Son hareketler alınamadı. Tekrar deneyin.',
+                      subtitle: AppStrings.polishDebtRecentError,
                       onRetry: () =>
                           ref.invalidate(debtExpenseEntriesProvider(null)),
                     ),

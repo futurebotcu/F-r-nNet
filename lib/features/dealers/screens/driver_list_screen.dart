@@ -9,6 +9,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../providers/dealer_providers.dart';
 import '../../../core/utils/tr_case.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Şoförler — patron/ticari kullanıcı yönetim listesi (Sprint 2).
 ///
@@ -39,7 +40,7 @@ class DriverListScreen extends ConsumerWidget {
             padding: EdgeInsets.all(AppSpacing.l),
             child: Center(
               child: Text(
-                'Şoförler yüklenemedi. Tekrar deneyin.',
+                AppStrings.polishDriversLoadError,
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             ),

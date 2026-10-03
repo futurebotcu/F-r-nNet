@@ -17,6 +17,8 @@ import '../widgets/branch_permissions_sheet.dart';
 import '../widgets/branch_process_sheet.dart';
 import '../widgets/branch_process_tile.dart';
 import '../widgets/branch_template_row.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Şube detay mini app'i — Genel / Personel / Süreçler / Yetkiler / Geçmiş.
 class BranchDetailScreen extends ConsumerWidget {
@@ -201,30 +203,23 @@ class _GeneralTab extends ConsumerWidget {
     Branch branch,
   ) async {
     if (branch.isActive) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text(AppStrings.branchDeactivateConfirmTitle),
-          content: const Text(AppStrings.branchDeactivateConfirmBody),
-          actions: [
-            TextButton(
-              key: const ValueKey('branch_deactivate_cancel'),
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text(AppStrings.branchConfirmCancel),
-            ),
-            FilledButton(
-              key: const ValueKey('branch_deactivate_confirm'),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text(AppStrings.branchConfirmApprove),
-            ),
-          ],
-        ),
+      final ok = await showAppConfirmDialog(
+        context,
+        title: AppStrings.branchDeactivateConfirmTitle,
+        message: AppStrings.branchDeactivateConfirmBody,
+        confirmLabel: AppStrings.polishBranchDeactivateCta,
       );
-      if (ok != true) return;
+      if (!ok) return;
     }
-    await ref
-        .read(branchRepositoryProvider)
-        .setBranchActive(branch.id, !branch.isActive);
+    try {
+      await ref
+          .read(branchRepositoryProvider)
+          .setBranchActive(branch.id, !branch.isActive);
+    } catch (_) {
+      if (context.mounted) {
+        AppFeedback.error(context, AppStrings.polishBranchStatusError);
+      }
+    }
   }
 }
 
@@ -503,44 +498,19 @@ class _MemberCard extends ConsumerWidget {
     BranchMembershipStatus status,
   ) async {
     final removing = status == BranchMembershipStatus.removed;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          removing
-              ? AppStrings.branchStaffRemoveConfirmTitle
-              : AppStrings.branchStaffSuspendConfirmTitle,
-        ),
-        content: Text(
-          removing
-              ? AppStrings.branchStaffRemoveConfirmBody
-              : AppStrings.branchStaffSuspendConfirmBody,
-        ),
-        actions: [
-          TextButton(
-            key: const ValueKey('member_action_cancel'),
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text(AppStrings.branchConfirmCancel),
-          ),
-          FilledButton(
-            key: const ValueKey('member_action_confirm'),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: removing
-                  ? AppColors.danger
-                  : AppColors.brandLemon,
-              foregroundColor: removing ? Colors.white : AppColors.brandInk,
-            ),
-            child: Text(
-              removing
-                  ? AppStrings.branchStaffRemove
-                  : AppStrings.branchStaffSuspend,
-            ),
-          ),
-        ],
-      ),
+    return showAppConfirmDialog(
+      context,
+      title: removing
+          ? AppStrings.branchStaffRemoveConfirmTitle
+          : AppStrings.branchStaffSuspendConfirmTitle,
+      message: removing
+          ? AppStrings.branchStaffRemoveConfirmBody
+          : AppStrings.branchStaffSuspendConfirmBody,
+      confirmLabel: removing
+          ? AppStrings.branchStaffRemove
+          : AppStrings.branchStaffSuspend,
+      destructive: removing,
     );
-    return ok ?? false;
   }
 
   @override

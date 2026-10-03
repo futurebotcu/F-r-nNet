@@ -16,6 +16,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../data/debt_expense_categories.dart';
 import '../models/debt_expense_entry.dart';
 import '../providers/debt_expense_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class DebtExpenseEntryFormScreen extends ConsumerStatefulWidget {
   const DebtExpenseEntryFormScreen({super.key, required this.kind});
@@ -143,24 +144,19 @@ class _DebtExpenseEntryFormScreenState
       await ref.read(debtExpenseRepositoryProvider).addEntry(entry);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kayıt eklendi.')),
-      );
+      AppFeedback.success(context, 'Kayıt eklendi.');
     } on GuestActionRequiredException {
       if (!mounted) return;
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kayıt eklenemedi. Tekrar dene.')),
-      );
+      AppFeedback.error(context, 'Kayıt eklenemedi. Tekrar dene.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  void _err(String m) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(m)));
+  void _err(String m) => AppFeedback.warning(context, m);
 
   @override
   Widget build(BuildContext context) {
@@ -333,6 +329,7 @@ class _DateRow extends StatelessWidget {
         ),
         if (onClear != null)
           IconButton(
+            tooltip: AppStrings.polishClearDate,
             onPressed: onClear,
             icon: const Icon(Icons.close_rounded, size: 18),
             color: AppColors.textMuted,

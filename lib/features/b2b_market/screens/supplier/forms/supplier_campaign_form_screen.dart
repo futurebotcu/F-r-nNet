@@ -10,11 +10,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/dirty_form_guard.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
-import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
 import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
 import '../../../widgets/b2b_image_upload_field.dart';
+import '../../../../../core/widgets/app_feedback.dart';
+import '../../../../../core/constants/app_strings.dart';
 
 class SupplierCampaignFormScreen extends ConsumerStatefulWidget {
   const SupplierCampaignFormScreen({super.key, this.campaignId});
@@ -175,25 +176,20 @@ class _SupplierCampaignFormScreenState
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      PremiumTopBannerController.show(
-        context,
-        message: 'Kampanya kaydedilemedi. Tekrar deneyin.',
-        tone: PremiumTopBannerTone.danger,
-        duration: const Duration(seconds: 2),
-      );
+      AppFeedback.error(context, AppStrings.polishB2bCampaignError);
       return;
     }
 
     if (!mounted) return;
-    Navigator.of(context).pop();
-    PremiumTopBannerController.show(
+    AppFeedback.success(
       context,
-      message: _published
-          ? '${_editing ? 'Kampanya güncellendi' : 'Kampanya oluşturuldu'} — Mağazam ve Kampanyalar\'da görünür.'
-          : '${_editing ? 'Kampanya güncellendi' : 'Kampanya oluşturuldu'} — taslak; yalnız Mağazam\'da görünür.',
-      tone: PremiumTopBannerTone.success,
-      duration: const Duration(seconds: 2),
+      !_published
+          ? AppStrings.polishB2bCampaignDraft
+          : (_editing
+                ? AppStrings.polishB2bCampaignUpdated
+                : AppStrings.polishB2bCampaignAdded),
     );
+    Navigator.of(context).pop();
   }
 
   @override
@@ -237,7 +233,7 @@ class _SupplierCampaignFormScreenState
                   _dirty = true;
                 }),
                 errorText: _categoryTouched && _category == null
-                    ? 'Kategori seçin'
+                    ? AppStrings.polishB2bCategoryHint
                     : null,
               ),
               const SizedBox(height: AppSpacing.l),
