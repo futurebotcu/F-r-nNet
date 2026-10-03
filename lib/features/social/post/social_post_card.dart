@@ -26,7 +26,12 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
+import '../../../core/widgets/interactions.dart';
 import '../../../core/utils/relative_time.dart';
 import '../../academy/academy_navigation.dart';
 import '../../academy/providers/academy_providers.dart';
@@ -44,18 +49,20 @@ import '../../safety/widgets/report_sheet.dart';
 import '../comments/comments_page.dart';
 import 'widgets/feed_post_image.dart';
 import 'widgets/social_post_video.dart';
-import '../../../core/utils/tr_case.dart';
 
-class SocialPostCard extends ConsumerStatefulWidget {
-  const SocialPostCard({super.key, required this.post});
+/// Gönderi etkileşimleri (beğen / kaydet / yeniden paylaş / paylaş / sil +
+/// ⋮ menü) — feed kartı ve gönderi detayı AYNI handler'ları kullanır.
+/// Optimistic UI (flip + hata olursa geri al) burada tek yerde.
+///
+/// Kullanan state yalnız [post]'u sağlar; [buildPostHeader] ve
+/// [buildPostActionRow] ortak kimlik + aksiyon satırını üretir.
+mixin SocialPostInteractionsMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
+  FeedPost get post;
 
-  final FeedPost post;
+  /// Silme başarılı olunca çağrılır (detay sayfası kendini kapatır).
+  void onPostDeleted() {}
 
-  @override
-  ConsumerState<SocialPostCard> createState() => _SocialPostCardState();
-}
-
-class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   bool _likeBusy = false;
   bool _saveBusy = false;
   bool _shareBusy = false;
@@ -67,8 +74,6 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
   int? _likeCountOverride;
   bool? _repostedOverride;
   int? _repostCountOverride;
-
-  FeedPost get post => widget.post;
 
   bool get _displayLiked => _likedOverride ?? post.isLiked;
   bool get _displaySaved => _savedOverride ?? post.isSaved;
@@ -102,6 +107,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
+    AppHaptics.toggle();
     final wasLiked = _displayLiked;
     final wasCount = _displayLikeCount;
     final newLiked = !wasLiked;
@@ -134,9 +140,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
           _likedOverride = wasLiked;
           _likeCountOverride = wasCount;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.feedLikeUpdateError)),
-        );
+        AppFeedback.error(context, AppStrings.feedLikeUpdateError);
       }
     } finally {
       if (mounted) setState(() => _likeBusy = false);
@@ -148,6 +152,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       await showAuthRequiredSheet(context, ref);
       return;
     }
+    AppHaptics.toggle();
     final wasSaved = _displaySaved;
     setState(() {
       _saveBusy = true;
@@ -157,6 +162,13 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       await repo.toggleSave(post.id).timeout(const Duration(seconds: 15));
       if (!mounted) return;
       setState(() => _savedOverride = null);
+      // Kaydet görünür bir geri bildirim ister (sayaç yok): kısa onay.
+      AppFeedback.success(
+        context,
+        wasSaved
+            ? AppStrings.feedActionUnsavedSnack
+            : AppStrings.feedActionSavedSnack,
+      );
     } on GuestActionRequiredException {
       if (mounted) {
         setState(() => _savedOverride = wasSaved);
@@ -165,9 +177,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
     } catch (_) {
       if (mounted) {
         setState(() => _savedOverride = wasSaved);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.feedSaveUpdateError)),
-        );
+        AppFeedback.error(context, AppStrings.feedSaveUpdateError);
       }
     } finally {
       if (mounted) setState(() => _saveBusy = false);
@@ -198,15 +208,11 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
         _repostCountOverride = null;
       });
       // Toggle yönünü kullanıcıya kısa geri bildirimle bildir.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            newReposted
-                ? AppStrings.feedRepostedSnack
-                : AppStrings.feedRepostUndoneSnack,
-          ),
-          duration: const Duration(seconds: 2),
-        ),
+      AppFeedback.success(
+        context,
+        newReposted
+            ? AppStrings.feedRepostedSnack
+            : AppStrings.feedRepostUndoneSnack,
       );
     } on GuestActionRequiredException {
       if (mounted) {
@@ -222,9 +228,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
           _repostedOverride = wasReposted;
           _repostCountOverride = wasCount;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.feedRepostUpdateError)),
-        );
+        AppFeedback.error(context, AppStrings.feedRepostUpdateError);
       }
     } finally {
       if (mounted) setState(() => _repostBusy = false);
@@ -249,34 +253,23 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       await Share.share(buf.toString(), subject: AppStrings.feedShareSubject);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.feedShareError)));
+      AppFeedback.error(context, AppStrings.feedShareError);
     } finally {
       if (mounted) setState(() => _shareBusy = false);
     }
   }
 
   Future<void> _onDeleteTap() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dctx) => AlertDialog(
-        title: const Text(AppStrings.feedPostDeleteConfirmTitle),
-        content: const Text(AppStrings.feedPostDeleteConfirmBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dctx).pop(false),
-            child: const Text(AppStrings.feedPostDeleteCancelCta),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text(AppStrings.feedPostDeleteCta),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: AppStrings.feedPostDeleteConfirmTitle,
+      message: AppStrings.feedPostDeleteConfirmBody,
+      confirmLabel: AppStrings.feedPostDeleteCta,
+      cancelLabel: AppStrings.feedPostDeleteCancelCta,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     debugPrint('[FirinNet][PostCard] delete tap postId=${post.id}');
     final repo = ref.read(feedRepositoryProvider);
     try {
@@ -290,9 +283,8 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
       ref.invalidate(feedPagedNotifierProvider);
       ref.invalidate(feedPostByIdProvider(post.id));
       ref.invalidate(userPostsProvider(post.ownerId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedPostDeleteSuccess)),
-      );
+      AppFeedback.success(context, AppStrings.feedPostDeleteSuccess);
+      onPostDeleted();
     } on GuestActionRequiredException {
       debugPrint(
         '[FirinNet][PostCard] delete blocked: guest guard postId=${post.id}',
@@ -301,22 +293,92 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
     } catch (e) {
       debugPrint('[FirinNet][PostCard] delete error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedPostDeleteError)),
-      );
+      AppFeedback.error(context, AppStrings.feedPostDeleteError);
     }
   }
 
+  /// Yazar kimliği: avatar + ad + (tür · AI rozeti · rol · zaman) + ⋮ menü.
+  /// Feed kartı ve detay AYNI widget'ı çizer.
+  Widget buildPostHeader() {
+    final isOwner = _isOwner();
+    final bot = ref.watch(academyBotsByIdProvider).valueOrNull?[post.ownerId];
+    return SocialPostHeader(
+      post: post,
+      timeAgo: relativeTimeTr(post.createdAt),
+      isOwner: isOwner,
+      isAcademyBot: bot != null && !bot.isHumor,
+      academyBadge: switch (bot) {
+        null => null,
+        final b when b.isHumor => AppStrings.academyHumorBadge,
+        _ => AppStrings.academyAiBadge,
+      },
+      onAuthorTap: _onAuthorTap,
+      onDelete: isOwner ? _onDeleteTap : null,
+      onEdit: isOwner
+          ? () => context.push(AppRoutes.socialPostEditFor(post.id))
+          : null,
+      onGoToGroup: post.groupId == null
+          ? null
+          : () => context.push('${AppRoutes.groups}/${post.groupId}'),
+      // UGC Safety V1 — kendi gönderisi şikayet/engel SUNULMAZ.
+      onReport: (isOwner || post.ownerId.isEmpty)
+          ? null
+          : () => showReportSheet(
+              context,
+              ref,
+              targetType: ReportTargetType.feedPost,
+              targetId: post.id,
+              reportedUserId: post.ownerId,
+            ),
+      onBlock: (isOwner || post.ownerId.isEmpty)
+          ? null
+          : () => confirmAndBlockUser(context, ref, userId: post.ownerId),
+    );
+  }
+
+  /// Beğen · Yorum · Repost · Kaydet · Paylaş — sayılar ikon yanında.
+  Widget buildPostActionRow({required VoidCallback onComment}) {
+    final repo = ref.read(feedRepositoryProvider);
+    return SocialPostActionRow(
+      isLiked: _displayLiked,
+      isSaved: _displaySaved,
+      isReposted: _displayReposted,
+      likeBusy: _likeBusy,
+      saveBusy: _saveBusy,
+      shareBusy: _shareBusy,
+      likeCount: _displayLikeCount,
+      commentCount: _displayCommentCount,
+      repostCount: _displayRepostCount,
+      onLike: _likeBusy ? null : () => _onLikeTap(repo),
+      onComment: onComment,
+      onRepost: _repostBusy ? null : () => _onRepostTap(repo),
+      onShare: _shareBusy ? null : _onShareTap,
+      onSave: _saveBusy ? null : () => _onSaveTap(repo),
+    );
+  }
+}
+
+class SocialPostCard extends ConsumerStatefulWidget {
+  const SocialPostCard({super.key, required this.post});
+
+  final FeedPost post;
+
+  @override
+  ConsumerState<SocialPostCard> createState() => _SocialPostCardState();
+}
+
+class _SocialPostCardState extends ConsumerState<SocialPostCard>
+    with SocialPostInteractionsMixin<SocialPostCard> {
+  @override
+  FeedPost get post => widget.post;
 
   @override
   Widget build(BuildContext context) {
-    final repo = ref.read(feedRepositoryProvider);
     final theme = Theme.of(context);
     final firstImage = post.firstImage;
     // V2 Commit 3 — Video post desteği. Image yoksa video varsa player
     // render edilir. Tek post'ta image OR video (V3'te kombo).
     final videoUrl = post.firstVideo?.publicUrl;
-    final isOwner = _isOwner();
     return Container(
       margin: const EdgeInsets.fromLTRB(
         AppSpacing.pageH,
@@ -338,42 +400,11 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
           // Repost surfacing — "🔁 <Ad> yeniden paylaştı" attribution satırı.
           if (post.isRepostEntry)
             _RepostAttribution(
-              name: post.repostedByName ?? AppStrings.feedRepostAttributionFallback,
+              name:
+                  post.repostedByName ??
+                  AppStrings.feedRepostAttributionFallback,
             ),
-          _Header(
-            post: post,
-            timeAgo: relativeTimeTr(post.createdAt),
-            isOwner: isOwner,
-            academyBadge: switch (ref
-                .watch(academyBotsByIdProvider)
-                .valueOrNull?[post.ownerId]) {
-              null => null,
-              final bot when bot.isHumor => AppStrings.academyHumorBadge,
-              _ => AppStrings.academyAiBadge,
-            },
-            onAuthorTap: _onAuthorTap,
-            onDelete: isOwner ? _onDeleteTap : null,
-            onEdit: isOwner
-                ? () => context.push(AppRoutes.socialPostEditFor(post.id))
-                : null,
-            onGoToGroup: post.groupId == null
-                ? null
-                : () => context.push('${AppRoutes.groups}/${post.groupId}'),
-            // UGC Safety V1 — kendi gönderisi şikayet/engel SUNULMAZ.
-            onReport: (isOwner || post.ownerId.isEmpty)
-                ? null
-                : () => showReportSheet(
-                      context,
-                      ref,
-                      targetType: ReportTargetType.feedPost,
-                      targetId: post.id,
-                      reportedUserId: post.ownerId,
-                    ),
-            onBlock: (isOwner || post.ownerId.isEmpty)
-                ? null
-                : () =>
-                    confirmAndBlockUser(context, ref, userId: post.ownerId),
-          ),
+          buildPostHeader(),
           // Twitter/X: kart gövdesine (metin + etiket + görsel) dokunmak
           // detay sayfasını açar. Action ikonları kendi InkWell'leriyle bu
           // tap'i ezmez (en içteki handler kazanır → çakışma yok). Video
@@ -388,8 +419,8 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Caption(author: post.author, text: post.text),
-                if (post.tags.isNotEmpty) _TagsRow(tags: post.tags),
+                SocialPostCaption(text: post.text),
+                if (post.tags.isNotEmpty) SocialPostTags(tags: post.tags),
                 if (firstImage != null) _PostMedia(media: firstImage),
               ],
             ),
@@ -397,24 +428,11 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
           if (firstImage == null && videoUrl != null)
             SocialPostVideo(url: videoUrl),
           // Sayılar (beğeni/yorum/repost) action row'da ikon yanında.
-          _ActionRow(
-            isLiked: _displayLiked,
-            isSaved: _displaySaved,
-            isReposted: _displayReposted,
-            likeBusy: _likeBusy,
-            saveBusy: _saveBusy,
-            shareBusy: _shareBusy,
-            likeCount: _displayLikeCount,
-            commentCount: _displayCommentCount,
-            repostCount: _displayRepostCount,
-            onLike: _likeBusy ? null : () => _onLikeTap(repo),
+          buildPostActionRow(
             onComment: () {
               debugPrint('[FirinNet][PostCard] comment tap postId=${post.id}');
               SocialCommentsPage.show(context, post.id, initialPost: post);
             },
-            onRepost: _repostBusy ? null : () => _onRepostTap(repo),
-            onShare: _shareBusy ? null : _onShareTap,
-            onSave: _saveBusy ? null : () => _onSaveTap(repo),
           ),
           const SizedBox(height: 4),
         ],
@@ -450,11 +468,7 @@ class _RepostAttribution extends StatelessWidget {
               AppStrings.feedRepostedByLabel(name),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTypography.meta,
             ),
           ),
         ],
@@ -463,13 +477,16 @@ class _RepostAttribution extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({
+/// Gönderi kimlik satırı — feed kartı ve gönderi detayının ORTAK başlığı.
+class SocialPostHeader extends StatelessWidget {
+  const SocialPostHeader({
+    super.key,
     required this.post,
     required this.timeAgo,
     required this.isOwner,
     required this.onAuthorTap,
     this.academyBadge,
+    this.isAcademyBot = false,
     required this.onDelete,
     required this.onEdit,
     required this.onGoToGroup,
@@ -484,6 +501,9 @@ class _Header extends StatelessWidget {
 
   /// Bot içeriği rozeti ('Akademi • AI' / 'Mizah • AI'); null → insan.
   final String? academyBadge;
+
+  /// Akademi botu → marka avatarı (baş harf yerine).
+  final bool isAcademyBot;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
   final VoidCallback? onGoToGroup;
@@ -502,30 +522,24 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Avatar: 40px görsel, 48px dokunma alanı (backend avatar URL'i
+          // vermiyor → baş harf; Akademi botu → marka işareti).
           InkWell(
             onTap: onAuthorTap,
-            borderRadius: BorderRadius.circular(22),
-            child: Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.surface,
-                border: Border.all(color: AppColors.borderHairline, width: 1),
-                boxShadow: AppShadow.card,
-              ),
-              child: Text(
-                post.author.isNotEmpty ? post.author[0].trUpper : '?',
-                style: const TextStyle(
-                  color: AppColors.brandInk,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
+            customBorder: const CircleBorder(),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: FirinNetAvatar(
+                key: const ValueKey('post_author_avatar'),
+                name: post.author,
+                size: FirinNetAvatarSize.m,
+                kind: isAcademyBot
+                    ? FirinNetAvatarKind.academy
+                    : FirinNetAvatarKind.person,
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.s),
+          const SizedBox(width: AppSpacing.xs),
           // V1 P0 wiring-fix: author name area artık geniş Expanded InkWell
           // değil; sadece author Text + role/time satırı kendi tap target'ı
           // kadar tıklanabilir. Kartın ortasının (geniş Expanded) yanlışlıkla
@@ -543,14 +557,10 @@ class _Header extends StatelessWidget {
                     // büyük yazıda taşıyordu → meta satırına (Wrap) indi.
                     child: Text(
                       post.author,
+                      key: const ValueKey('post_author_name'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15.5,
-                        height: 1.2,
-                      ),
+                      style: AppTypography.authorName,
                     ),
                   ),
                 ),
@@ -583,21 +593,17 @@ class _Header extends StatelessWidget {
                             post.role,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: AppTypography.caption.copyWith(
                               color: AppColors.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              height: 1.15,
                             ),
                           ),
                         ),
                       ),
                     Text(
                       timeAgo,
-                      style: const TextStyle(
+                      key: const ValueKey('post_time'),
+                      style: AppTypography.caption.copyWith(
                         color: AppColors.textSecondary,
-                        fontSize: 12,
-                        height: 1.15,
                       ),
                     ),
                   ],
@@ -611,6 +617,8 @@ class _Header extends StatelessWidget {
               onReport != null ||
               onBlock != null)
             PopupMenuButton<String>(
+              key: const ValueKey('post_more_menu'),
+              tooltip: AppStrings.moreActionsTooltip,
               icon: const Icon(
                 Icons.more_horiz_rounded,
                 color: AppColors.textMuted,
@@ -736,9 +744,8 @@ class _TypeBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             type.label,
-            style: const TextStyle(
+            style: AppTypography.badge.copyWith(
               color: AppColors.textPrimary,
-              fontSize: 11.5,
               fontWeight: FontWeight.w600,
               letterSpacing: 0,
             ),
@@ -770,8 +777,9 @@ class _PostMedia extends StatelessWidget {
 /// paylaş. Beğeni ve yorum sayıları ikon+etiketin yanında gösterilir (0 ise
 /// gizli); ayrı "etkileşim özeti" satırı yok (çift gösterim istenmiyor).
 /// Kaydet/Paylaş'ta public sayı olmadığı için sayaç gösterilmez.
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
+class SocialPostActionRow extends StatelessWidget {
+  const SocialPostActionRow({
+    super.key,
     required this.isLiked,
     required this.isSaved,
     required this.isReposted,
@@ -806,7 +814,7 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(boxShadow: const []),
+      key: const ValueKey('post_action_row'),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xs,
         vertical: 0,
@@ -821,9 +829,7 @@ class _ActionRow extends StatelessWidget {
               icon: isLiked
                   ? Icons.thumb_up_alt_rounded
                   : Icons.thumb_up_alt_outlined,
-              color: isLiked
-                  ? AppColors.brandInk
-                  : AppColors.textPrimary,
+              color: isLiked ? AppColors.brandInk : AppColors.textPrimary,
               label: AppStrings.feedActionLike,
               count: likeCount,
               onTap: onLike,
@@ -854,9 +860,7 @@ class _ActionRow extends StatelessWidget {
               icon: isSaved
                   ? Icons.bookmark_rounded
                   : Icons.bookmark_border_rounded,
-              color: isSaved
-                  ? AppColors.brandInk
-                  : AppColors.textPrimary,
+              color: isSaved ? AppColors.brandInk : AppColors.textPrimary,
               label: AppStrings.feedActionSave,
               onTap: onSave,
             ),
@@ -899,51 +903,54 @@ class _ActionButton extends StatelessWidget {
     // Yazısız ikon satırı (Twitter/Instagram dili). Etiket görünmez;
     // erişilebilirlik için Tooltip + Icon.semanticLabel taşır. Sayı varsa
     // ikonun yanında (0/null gizli, kibar TR format: 142 / 1,2 B / 1,1 Mn).
+    // Dokunma alanı ≥ 48px (ikon 20px; satır yüksekliği sabit 48).
     return Tooltip(
       message: label,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Faz 2 Pass 3 — ikon değişiminde (toggle) zarif scale+fade pop.
-              AnimatedSwitcher(
-                duration: AppDuration.fast,
-                transitionBuilder: (child, anim) => ScaleTransition(
-                  scale: Tween<double>(begin: 0.82, end: 1.0).animate(anim),
-                  child: FadeTransition(opacity: anim, child: child),
-                ),
-                child: Icon(
-                  icon,
-                  key: ValueKey(icon),
-                  color: color,
-                  size: 20,
-                  semanticLabel: label,
-                ),
-              ),
-              if (count != null && count! > 0) ...[
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    _formatCount(count!),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: onTap == null ? AppColors.textMuted : color,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      height: 1.0,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Faz 2 Pass 3 — ikon değişiminde (toggle) zarif scale+fade pop.
+                AnimatedSwitcher(
+                  duration: AppDuration.fast,
+                  transitionBuilder: (child, anim) => ScaleTransition(
+                    scale: Tween<double>(begin: 0.82, end: 1.0).animate(anim),
+                    child: FadeTransition(opacity: anim, child: child),
+                  ),
+                  child: Icon(
+                    icon,
+                    key: ValueKey(icon),
+                    color: color,
+                    size: 20,
+                    semanticLabel: label,
                   ),
                 ),
+                if (count != null && count! > 0) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      _formatCount(count!),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.meta.copyWith(
+                        color: onTap == null ? AppColors.textMuted : color,
+                        fontWeight: FontWeight.w700,
+                        height: 1.0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -951,28 +958,37 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _Caption extends StatefulWidget {
-  const _Caption({required this.author, required this.text});
-  final String author;
+/// Gönderi metni — feed'de [collapsedMaxLines] satırda kesilir ve
+/// "devamını gör" açar; detayda ([expandable] false) metin tam gösterilir.
+class SocialPostCaption extends StatefulWidget {
+  const SocialPostCaption({
+    super.key,
+    required this.text,
+    this.expandable = true,
+  });
   final String text;
+  final bool expandable;
 
-  /// Uzun metin akışta bu kadar satırda kesilir; "devamını gör" açar.
-  static const int collapsedMaxLines = 6;
-
-  @override
-  State<_Caption> createState() => _CaptionState();
-}
-
-class _CaptionState extends State<_Caption> {
-  bool _expanded = false;
-
-  // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik.
-  static const TextStyle _style = TextStyle(
+  /// Feed ve detay aynı okuma stilini kullanır.
+  static const TextStyle textStyle = TextStyle(
     color: AppColors.textPrimary,
     fontSize: 16.5,
     height: 1.48,
     letterSpacing: 0,
   );
+
+  /// Uzun metin akışta bu kadar satırda kesilir; "devamını gör" açar.
+  static const int collapsedMaxLines = 6;
+
+  @override
+  State<SocialPostCaption> createState() => _CaptionState();
+}
+
+class _CaptionState extends State<SocialPostCaption> {
+  bool _expanded = false;
+
+  // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik.
+  static const TextStyle _style = SocialPostCaption.textStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -985,7 +1001,13 @@ class _CaptionState extends State<_Caption> {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          if (_expanded) return Text(widget.text, style: _style);
+          if (_expanded || !widget.expandable) {
+            return Text(
+              widget.text,
+              key: const ValueKey('post_caption'),
+              style: _style,
+            );
+          }
           final painter = TextPainter(
             // Ölçüm, Text'in gerçekte kullandığı stille (tema fontu dahil)
             // yapılmalı; aksi hâlde kısa metinde de "devamını gör" çıkıyordu.
@@ -993,7 +1015,7 @@ class _CaptionState extends State<_Caption> {
               text: widget.text,
               style: DefaultTextStyle.of(context).style.merge(_style),
             ),
-            maxLines: _Caption.collapsedMaxLines,
+            maxLines: SocialPostCaption.collapsedMaxLines,
             textDirection: Directionality.of(context),
             textScaler: MediaQuery.textScalerOf(context),
           )..layout(maxWidth: constraints.maxWidth);
@@ -1001,7 +1023,8 @@ class _CaptionState extends State<_Caption> {
           painter.dispose();
           final text = Text(
             widget.text,
-            maxLines: _Caption.collapsedMaxLines,
+            key: const ValueKey('post_caption'),
+            maxLines: SocialPostCaption.collapsedMaxLines,
             overflow: TextOverflow.ellipsis,
             style: _style,
           );
@@ -1015,13 +1038,11 @@ class _CaptionState extends State<_Caption> {
                 key: const ValueKey('post_caption_expand'),
                 onTap: () => setState(() => _expanded = true),
                 borderRadius: BorderRadius.circular(AppRadius.s),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     AppStrings.feedCaptionSeeMore,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
+                    style: AppTypography.body.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1035,8 +1056,8 @@ class _CaptionState extends State<_Caption> {
   }
 }
 
-class _TagsRow extends StatelessWidget {
-  const _TagsRow({required this.tags});
+class SocialPostTags extends StatelessWidget {
+  const SocialPostTags({super.key, required this.tags});
   final List<String> tags;
 
   @override
@@ -1071,11 +1092,9 @@ class _NeutralTag extends StatelessWidget {
       ),
       child: Text(
         '#$label',
-        style: const TextStyle(
+        style: AppTypography.caption.copyWith(
           color: AppColors.textSecondary,
           fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.1,
         ),
       ),
     );

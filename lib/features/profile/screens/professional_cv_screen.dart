@@ -12,6 +12,8 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
@@ -75,16 +77,10 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
           .read(workerRepositoryProvider)
           .upsertMyProfile(base.copyWith(bio: _bio.text.trim()));
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.cvBioSaved)));
+      AppFeedback.success(context, AppStrings.cvBioSaved);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(content: Text(AppStrings.commonSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.commonSaveError);
     } finally {
       if (mounted) setState(() => _savingBio = false);
     }
@@ -431,25 +427,15 @@ class _CvRecordCard extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('CV kaydını kaldır'),
-        content: Text('"${record.title}" silinsin mi?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: 'CV kaydını kaldır',
+      message: '"${record.title}" silinsin mi?',
+      confirmLabel: 'Sil',
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true || record.id == null) return;
+    if (!ok || record.id == null) return;
     if (!context.mounted) return;
     await runGuardedMutation(
       context,
@@ -526,9 +512,7 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Başlık / rol boş olamaz.')));
+      AppFeedback.warning(context, 'Başlık / rol boş olamaz.');
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -560,11 +544,7 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
       Navigator.of(context).pop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(content: Text(AppStrings.commonSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.commonSaveError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

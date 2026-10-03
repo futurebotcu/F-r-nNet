@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -66,9 +67,7 @@ class _GroupCreateScreenState extends ConsumerState<GroupCreateScreen> {
         limitErr != null) {
       // FormState validate name/desc'i errorText üzerinden gösterir.
       if (limitErr != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(limitErr)));
+        AppFeedback.error(context, limitErr);
       }
       return;
     }
@@ -95,10 +94,9 @@ class _GroupCreateScreenState extends ConsumerState<GroupCreateScreen> {
         );
         if (!mounted) return;
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppStrings.groupCreatedSnack}${group.name}'),
-          ),
+        AppFeedback.success(
+          context,
+          '${AppStrings.groupCreatedSnack}${group.name}',
         );
         context.push('${AppRoutes.groups}/${group.id}');
       },

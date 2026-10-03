@@ -8,8 +8,13 @@ import 'package:intl/intl.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_network_image.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_retry_state.dart';
@@ -32,7 +37,6 @@ import '../models/group_message.dart';
 import '../models/social_group.dart';
 import '../providers/social_group_providers.dart';
 import '../services/group_join_result.dart';
-import '../../../core/utils/tr_case.dart';
 
 /// V1 UX Reset — WhatsApp benzeri chat-centric grup ekranı.
 ///
@@ -137,11 +141,7 @@ class _AppBarTitle extends ConsumerWidget {
           subtitle.toString(),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 11.5,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTypography.caption,
         ),
       ],
     );
@@ -162,8 +162,10 @@ class _GroupBody extends ConsumerWidget {
     final isOwner = user != null && group.ownerId == user.id;
     final joined = ref.watch(isJoinedProvider(group.id));
     if (kDebugMode) {
-      debugPrint('[FirinNet][Groups] body BUILD group=${group.id} '
-          'uid=${user?.id} owner=$isOwner joined=$joined');
+      debugPrint(
+        '[FirinNet][Groups] body BUILD group=${group.id} '
+        'uid=${user?.id} owner=$isOwner joined=$joined',
+      );
     }
     // contentVisible = chat'i göstermeye yetkili miyim?
     // - Public grup: herkes görür.
@@ -250,8 +252,7 @@ class _GroupCommunityHeader extends ConsumerWidget {
     // Perf (jank): mesaj gönderim tick'i bu provider'ı recompute edince
     // maybeWhen(orElse:[]) üye avatarlarını ANLIK kaybediyordu (flicker).
     // valueOrNull reload sırasında son veriyi korur → flicker yok.
-    final members =
-        membersAsync.valueOrNull ?? const <GroupMemberProfile>[];
+    final members = membersAsync.valueOrNull ?? const <GroupMemberProfile>[];
 
     // Gösterilecek anlamlı içerik yoksa şeridi hiç çizme.
     if (desc.isEmpty && members.isEmpty) return const SizedBox.shrink();
@@ -293,11 +294,7 @@ class _GroupCommunityHeader extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.s),
                 Text(
                   AppStrings.groupInfoMembers(group.currentMemberCount),
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTypography.caption,
                 ),
               ],
             ),
@@ -335,24 +332,13 @@ class _GroupAvatarStack extends StatelessWidget {
   }
 
   Widget _avatarCircle(String name, double size) {
-    final initial = name.trim().isNotEmpty ? name.trim()[0].trUpper : '?';
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
+    // Ortak avatar + beyaz ayırıcı halka (üst üste binen yığında).
+    return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.brandLemonPale,
         border: Border.all(color: AppColors.surface, width: 1.4),
       ),
-      child: Text(
-        initial,
-        style: const TextStyle(
-          color: AppColors.brandInk,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+      child: FirinNetAvatar(name: name, size: size),
     );
   }
 }
@@ -611,8 +597,7 @@ class _ChatBubble extends ConsumerWidget {
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (ctx) => SafeArea(
         top: false,
@@ -620,8 +605,10 @@ class _ChatBubble extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.flag_outlined,
-                  color: AppColors.textPrimary),
+              leading: const Icon(
+                Icons.flag_outlined,
+                color: AppColors.textPrimary,
+              ),
               title: const Text(AppStrings.safetyActionReport),
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -635,8 +622,7 @@ class _ChatBubble extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.block_rounded,
-                  color: AppColors.danger),
+              leading: const Icon(Icons.block_rounded, color: AppColors.danger),
               title: const Text(
                 AppStrings.safetyActionBlock,
                 style: TextStyle(color: AppColors.danger),
@@ -668,124 +654,109 @@ class _ChatBubble extends ConsumerWidget {
           ? null
           : () => _showSafetyActions(context, ref),
       child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: AppColors.softGold.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppRadius.s),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              message.authorName.isNotEmpty
-                  ? message.authorName[0].trUpper
-                  : '?',
-              style: const TextStyle(
-                color: AppColors.softGold,
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.s),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FirinNetAvatar(name: message.authorName, size: 28),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          message.authorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        dt.format(message.createdAt),
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                      if (message.isPinned) ...[
+                        const SizedBox(width: 6),
+                        const _PinnedBadge(),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  // Sprint G — resim eki varsa image bubble; caption placeholder
+                  // değilse altında metin gösterilir. V1.1 — video eki varsa
+                  // video bubble; bilinmeyen media_type text fallback'e düşer.
+                  if (message.hasImage && (message.imageUrl ?? '').isNotEmpty)
+                    _GroupImageBubble(
+                      url: message.imageUrl!,
+                      caption: message.text == AppStrings.messagingImageFallback
+                          ? null
+                          : message.text,
+                    )
+                  else if (message.hasVideo &&
+                      (message.videoUrl ?? '').isNotEmpty)
+                    _GroupVideoBubble(
+                      url: message.videoUrl!,
+                      caption: message.text == AppStrings.messagingVideoFallback
+                          ? null
+                          : message.text,
+                    )
+                  // Medya eki var ama signed URL üretilememiş (geçici yetki/ağ
+                  // sorunu) → emoji-text yerine açık "Medya yüklenemedi" durumu.
+                  else if (message.hasImage || message.hasVideo)
+                    const _GroupMediaUnavailable()
+                  else
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.m),
+                      // Faz 2 Pass 4 — kendi mesajın hafif lemon tint + lemon
+                      // hairline; başkalarınınki beyaz. Grup feed'inde "benim
+                      // mesajım" ayrımı netleşir (tam genişlik layout korunur).
+                      decoration: BoxDecoration(
+                        color: isOwn
+                            ? AppColors.brandLemonPale
+                            : AppColors.surface,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(AppRadius.m),
+                          topRight: const Radius.circular(AppRadius.m),
+                          bottomLeft: const Radius.circular(AppRadius.m),
+                          bottomRight: const Radius.circular(AppRadius.s),
+                        ),
+                        border: isOwn
+                            ? Border.all(
+                                color: AppColors.brandLemonPressed.withValues(
+                                  alpha: 0.22,
+                                ),
+                                width: 0.6,
+                              )
+                            : null,
+                        boxShadow: AppShadow.card,
+                      ),
                       child: Text(
-                        message.authorName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        message.text,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12.5,
+                          fontSize: 13.5,
+                          height: 1.4,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      dt.format(message.createdAt),
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 11,
-                      ),
-                    ),
-                    if (message.isPinned) ...[
-                      const SizedBox(width: 6),
-                      const _PinnedBadge(),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                // Sprint G — resim eki varsa image bubble; caption placeholder
-                // değilse altında metin gösterilir. V1.1 — video eki varsa
-                // video bubble; bilinmeyen media_type text fallback'e düşer.
-                if (message.hasImage && (message.imageUrl ?? '').isNotEmpty)
-                  _GroupImageBubble(
-                    url: message.imageUrl!,
-                    caption: message.text == AppStrings.messagingImageFallback
-                        ? null
-                        : message.text,
-                  )
-                else if (message.hasVideo &&
-                    (message.videoUrl ?? '').isNotEmpty)
-                  _GroupVideoBubble(
-                    url: message.videoUrl!,
-                    caption: message.text == AppStrings.messagingVideoFallback
-                        ? null
-                        : message.text,
-                  )
-                // Medya eki var ama signed URL üretilememiş (geçici yetki/ağ
-                // sorunu) → emoji-text yerine açık "Medya yüklenemedi" durumu.
-                else if (message.hasImage || message.hasVideo)
-                  const _GroupMediaUnavailable()
-                else
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpacing.m),
-                    // Faz 2 Pass 4 — kendi mesajın hafif lemon tint + lemon
-                    // hairline; başkalarınınki beyaz. Grup feed'inde "benim
-                    // mesajım" ayrımı netleşir (tam genişlik layout korunur).
-                    decoration: BoxDecoration(
-                      color: isOwn ? AppColors.brandLemonPale : AppColors.surface,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(AppRadius.m),
-                        topRight: const Radius.circular(AppRadius.m),
-                        bottomLeft: const Radius.circular(AppRadius.m),
-                        bottomRight: const Radius.circular(AppRadius.s),
-                      ),
-                      border: isOwn
-                          ? Border.all(
-                              color: AppColors.brandLemonPressed
-                                  .withValues(alpha: 0.22),
-                              width: 0.6,
-                            )
-                          : null,
-                      boxShadow: AppShadow.card,
-                    ),
-                    child: Text(
-                      message.text,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 13.5,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -852,10 +823,12 @@ class _GroupImageBubble extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: url,
                   fit: BoxFit.contain,
-                  errorWidget: (_, __, ___) => const Icon(
-                    Icons.broken_image_rounded,
-                    color: AppColors.surface,
-                    size: 48,
+                  errorWidget: (_, __, ___) => SizedBox(
+                    width: 220,
+                    height: 160,
+                    child: AppImageState.error(
+                      label: AppStrings.feedPostImageLoadError,
+                    ),
                   ),
                 ),
               ),
@@ -864,8 +837,15 @@ class _GroupImageBubble extends StatelessWidget {
               child: Align(
                 alignment: Alignment.topRight,
                 child: IconButton(
-                  icon: const Icon(Icons.close_rounded,
-                      color: AppColors.surface),
+                  tooltip: AppStrings.socialCloseTooltip,
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.surface,
+                  ),
                   onPressed: () => Navigator.of(ctx).maybePop(),
                 ),
               ),
@@ -891,25 +871,19 @@ class _GroupImageBubble extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.cover,
-                memCacheWidth: 480, // Perf: bubble ~280px; tam-res decode'u önle.
-                placeholder: (_, __) => Container(
+                memCacheWidth:
+                    480, // Perf: bubble ~280px; tam-res decode'u önle.
+                placeholder: (_, __) => SizedBox(
                   height: 160,
                   width: 220,
-                  color: AppColors.surfaceVariant,
-                  alignment: Alignment.center,
-                  child: const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 1.6),
-                  ),
+                  child: AppImageState.loading(),
                 ),
-                errorWidget: (_, __, ___) => Container(
+                errorWidget: (_, __, ___) => SizedBox(
                   height: 120,
                   width: 220,
-                  color: AppColors.surfaceVariant,
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.broken_image_rounded,
-                      color: AppColors.textMuted),
+                  child: AppImageState.error(
+                    label: AppStrings.feedPostImageLoadError,
+                  ),
                 ),
               ),
             ),
@@ -952,7 +926,7 @@ class _GroupMediaUnavailable extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: const [
           Icon(
-            Icons.broken_image_rounded,
+            Icons.image_not_supported_outlined,
             color: AppColors.textMuted,
             size: 18,
           ),
@@ -1154,9 +1128,13 @@ class _JoinFooterCta extends ConsumerWidget {
                   action: () async {
                     final r = await repo.joinGroup(group.id);
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(
+                    AppFeedback.show(
                       context,
-                    ).showSnackBar(SnackBar(content: Text(r.message)));
+                      r.message,
+                      kind: r == GroupJoinResult.success
+                          ? AppFeedbackKind.success
+                          : AppFeedbackKind.warning,
+                    );
                   },
                 );
               }
@@ -1272,9 +1250,13 @@ class PrimaryActionButton extends ConsumerWidget {
                   action: () async {
                     final r = await repo.joinGroup(group.id);
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(
+                    AppFeedback.show(
                       context,
-                    ).showSnackBar(SnackBar(content: Text(r.message)));
+                      r.message,
+                      kind: r == GroupJoinResult.success
+                          ? AppFeedbackKind.success
+                          : AppFeedbackKind.warning,
+                    );
                   },
                 );
               }
@@ -1283,7 +1265,9 @@ class PrimaryActionButton extends ConsumerWidget {
         label: Text(label),
         style: FilledButton.styleFrom(
           backgroundColor: color,
-          foregroundColor: isJoined ? AppColors.textPrimary : AppColors.brandInk,
+          foregroundColor: isJoined
+              ? AppColors.textPrimary
+              : AppColors.brandInk,
           disabledBackgroundColor: color,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
@@ -1412,20 +1396,18 @@ class _RequestButton extends ConsumerWidget {
                     try {
                       await repo.requestJoinGroup(group.id);
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(AppStrings.groupJoinRequestSent),
-                        ),
+                      AppFeedback.success(
+                        context,
+                        AppStrings.groupJoinRequestSent,
                       );
                       ref.invalidate(myJoinRequestProvider(group.id));
                     } on GuestActionRequiredException {
                       rethrow;
                     } catch (_) {
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(AppStrings.groupJoinRequestError),
-                        ),
+                      AppFeedback.error(
+                        context,
+                        AppStrings.groupJoinRequestError,
                       );
                     }
                   },
@@ -1669,23 +1651,18 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
         await repo.rejectJoinRequest(widget.request.id);
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            approve
-                ? AppStrings.groupJoinRequestApproved
-                : AppStrings.groupJoinRequestRejected,
-          ),
-        ),
+      AppFeedback.success(
+        context,
+        approve
+            ? AppStrings.groupJoinRequestApproved
+            : AppStrings.groupJoinRequestRejected,
       );
       ref.invalidate(pendingJoinRequestsProvider(widget.groupId));
     } on GuestActionRequiredException {
       if (mounted) await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.groupJoinRequestDecideError)),
-      );
+      AppFeedback.error(context, AppStrings.groupJoinRequestDecideError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1707,25 +1684,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.softGold.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(AppRadius.s),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  (r.requesterName?.isNotEmpty == true)
-                      ? r.requesterName![0].trUpper
-                      : '?',
-                  style: const TextStyle(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
+              FirinNetAvatar(name: r.requesterName, size: FirinNetAvatarSize.s),
               const SizedBox(width: AppSpacing.s),
               Expanded(
                 child: Column(
@@ -1751,10 +1710,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                           if (r.requesterCity?.isNotEmpty == true)
                             r.requesterCity!,
                         ].join(' · '),
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.caption,
                       ),
                   ],
                 ),
@@ -1870,8 +1826,9 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     // doldurulur; bu değer local/optimistic gösterim sözleşmesini düzeltir.)
     final profile = ref.read(profileControllerProvider);
     final displayName = profile?.displayName.trim() ?? '';
-    final authorName =
-        displayName.isNotEmpty ? displayName : PublicProfile.fallbackName;
+    final authorName = displayName.isNotEmpty
+        ? displayName
+        : PublicProfile.fallbackName;
     setState(() => _sending = true);
     try {
       await repo.postMessage(
@@ -1958,7 +1915,8 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     // Owner path segmenti gerçek uid olmalı (storage RLS auth.uid). Tazelenmiş
     // cache → canlı fallback; local-user-me/'' fallback YOK. İkisi de null ise
     // gerçek oturum yok → guest guard (signOut yok).
-    final meId = ref.read(currentAuthUserProvider)?.id ??
+    final meId =
+        ref.read(currentAuthUserProvider)?.id ??
         ref.read(authRepositoryProvider)?.currentUser?.id;
     if (meId == null) {
       if (mounted) await showAuthRequiredSheet(context, ref);
@@ -1966,8 +1924,9 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     }
     final profile = ref.read(profileControllerProvider);
     final displayName = profile?.displayName.trim() ?? '';
-    final authorName =
-        displayName.isNotEmpty ? displayName : PublicProfile.fallbackName;
+    final authorName = displayName.isNotEmpty
+        ? displayName
+        : PublicProfile.fallbackName;
     setState(() => _sending = true);
     PremiumTopBannerController.show(
       context,
@@ -2003,20 +1962,24 @@ class _ComposerState extends ConsumerState<GroupComposer> {
     } on ChatMediaTooLargeException {
       PremiumTopBannerController.dismiss();
       if (mounted) {
-        PremiumTopBannerController.show(context,
-            message: isVideo
-                ? AppStrings.chatMediaVideoTooLarge
-                : AppStrings.chatMediaTooLarge,
-            tone: PremiumTopBannerTone.warning);
+        PremiumTopBannerController.show(
+          context,
+          message: isVideo
+              ? AppStrings.chatMediaVideoTooLarge
+              : AppStrings.chatMediaTooLarge,
+          tone: PremiumTopBannerTone.warning,
+        );
       }
     } on ChatMediaUnsupportedException {
       PremiumTopBannerController.dismiss();
       if (mounted) {
-        PremiumTopBannerController.show(context,
-            message: isVideo
-                ? AppStrings.chatMediaVideoUnsupported
-                : AppStrings.chatMediaUnsupported,
-            tone: PremiumTopBannerTone.warning);
+        PremiumTopBannerController.show(
+          context,
+          message: isVideo
+              ? AppStrings.chatMediaVideoUnsupported
+              : AppStrings.chatMediaUnsupported,
+          tone: PremiumTopBannerTone.warning,
+        );
       }
     } on GuestActionRequiredException {
       PremiumTopBannerController.dismiss();
@@ -2380,24 +2343,9 @@ class _MemberRow extends StatelessWidget {
     ];
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.softGold.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(AppRadius.s),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          member.displayName.isNotEmpty
-              ? member.displayName[0].trUpper
-              : '?',
-          style: const TextStyle(
-            color: AppColors.softGold,
-            fontWeight: FontWeight.w800,
-            fontSize: 14,
-          ),
-        ),
+      leading: FirinNetAvatar(
+        name: member.displayName,
+        size: FirinNetAvatarSize.m,
       ),
       title: Row(
         children: [
@@ -2440,10 +2388,7 @@ class _MemberRow extends StatelessWidget {
       ),
       subtitle: subtitleParts.isEmpty
           ? null
-          : Text(
-              subtitleParts.join(' · '),
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-            ),
+          : Text(subtitleParts.join(' · '), style: AppTypography.caption),
       trailing: canRemove
           ? IconButton(
               icon: const Icon(
@@ -2468,27 +2413,13 @@ Future<bool> _showConfirmDialog(
   required String confirmLabel,
   bool danger = false,
 }) async {
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (dctx) => AlertDialog(
-      title: Text(title),
-      content: Text(body),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dctx).pop(false),
-          child: const Text('İptal'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(dctx).pop(true),
-          style: danger
-              ? FilledButton.styleFrom(backgroundColor: AppColors.danger)
-              : null,
-          child: Text(confirmLabel),
-        ),
-      ],
-    ),
+  return showAppConfirmDialog(
+    context,
+    title: title,
+    message: body,
+    confirmLabel: confirmLabel,
+    destructive: danger,
   );
-  return ok == true;
 }
 
 Future<void> _confirmAndLeaveGroup(
@@ -2520,15 +2451,13 @@ Future<void> _confirmAndLeaveGroup(
       GroupLeaveOutcome.closed => AppStrings.groupLeftClosed,
       GroupLeaveOutcome.left => AppStrings.groupLeft,
     };
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.success(context, msg);
     context.go(AppRoutes.groups);
   } on GuestActionRequiredException {
     if (context.mounted) await showAuthRequiredSheet(context, ref);
   } catch (_) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text(AppStrings.groupLeaveError)));
+    AppFeedback.error(context, AppStrings.groupLeaveError);
   }
 }
 
@@ -2550,17 +2479,13 @@ Future<void> _confirmAndCloseGroup(
   try {
     await repo.closeGroup(group.id);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.groupDeleteSuccess)),
-    );
+    AppFeedback.success(context, AppStrings.groupDeleteSuccess);
     context.go(AppRoutes.groups);
   } on GuestActionRequiredException {
     if (context.mounted) await showAuthRequiredSheet(context, ref);
   } catch (_) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text(AppStrings.groupDeleteError)));
+    AppFeedback.error(context, AppStrings.groupDeleteError);
   }
 }
 
@@ -2583,16 +2508,12 @@ Future<void> _confirmAndRemoveMember(
   try {
     await repo.removeMember(group.id, member.userId);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.groupMemberRemoveSuccess)),
-    );
+    AppFeedback.success(context, AppStrings.groupMemberRemoveSuccess);
     ref.invalidate(groupMembersProvider(group.id));
   } on GuestActionRequiredException {
     if (context.mounted) await showAuthRequiredSheet(context, ref);
   } catch (_) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.groupMemberRemoveError)),
-    );
+    AppFeedback.error(context, AppStrings.groupMemberRemoveError);
   }
 }

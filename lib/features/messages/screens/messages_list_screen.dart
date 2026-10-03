@@ -24,7 +24,9 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../messaging/models/conversation.dart';
 import '../../messaging/providers/messaging_providers.dart';
-import '../../../core/utils/tr_case.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
+import '../../social/widgets/social_skeletons.dart';
 
 class MessagesListScreen extends ConsumerWidget {
   const MessagesListScreen({super.key});
@@ -53,10 +55,12 @@ class MessagesListScreen extends ConsumerWidget {
               // Perf (jank): yeni mesaj/okundu tick'i conversationsListProvider'ı
               // recompute ediyordu → liste spinner'a flash atıyordu.
               skipLoadingOnReload: true,
+              // İlk yükleme: tek başına dev spinner yerine statik satır
+              // iskeleti (sohbet kartlarının yerleşimi).
               loading: () => const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                  child: Center(child: CircularProgressIndicator()),
+                child: SocialListSkeleton(
+                  key: ValueKey('messages_skeleton'),
+                  avatarSize: FirinNetAvatarSize.m,
                 ),
               ),
               error: (_, __) => SliverToBoxAdapter(
@@ -145,7 +149,6 @@ class ConversationTile extends StatelessWidget {
     final name = (conversation.otherUserName ?? '').isNotEmpty
         ? conversation.otherUserName!
         : AppStrings.messagesUnknownUser;
-    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     final last = conversation.lastMessageContent ?? '';
     final ctxLabel = _contextLabel();
     final time = conversation.lastMessageCreatedAt;
@@ -171,29 +174,7 @@ class ConversationTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Avatar (initial) — Faz 2 P2: gri ink-tint yerine sıcak pale
-              // lemon + ink harf + ince lemon aksan çerçeve (premium, marka).
-              Container(
-                width: 46,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.brandLemonPale,
-                  border: Border.all(
-                    color: AppColors.brandLemonPressed.withValues(alpha: 0.35),
-                    width: 0.8,
-                  ),
-                ),
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: AppColors.brandInk,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 17,
-                  ),
-                ),
-              ),
+              FirinNetAvatar(name: name, size: FirinNetAvatarSize.m),
               const SizedBox(width: AppSpacing.m),
               Expanded(
                 child: Column(
@@ -206,12 +187,10 @@ class ConversationTile extends StatelessWidget {
                             name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
+                            style: AppTypography.authorName.copyWith(
                               fontWeight: unread
                                   ? FontWeight.w800
                                   : FontWeight.w600,
-                              fontSize: 15.5,
                             ),
                           ),
                         ),
@@ -220,11 +199,10 @@ class ConversationTile extends StatelessWidget {
                           Text(
                             timeLabel,
                             key: const ValueKey('conversation_tile_time'),
-                            style: TextStyle(
+                            style: AppTypography.caption.copyWith(
                               color: unread
                                   ? AppColors.textPrimary
                                   : AppColors.textMuted,
-                              fontSize: 12,
                               fontWeight: unread
                                   ? FontWeight.w700
                                   : FontWeight.w500,
@@ -237,27 +215,32 @@ class ConversationTile extends StatelessWidget {
                     Row(
                       children: [
                         if (ctxLabel.isNotEmpty) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceLine,
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.pill,
+                          // Bağlam etiketi dar ekran/büyük yazıda kısalır;
+                          // önizleme metnine yer bırakır (taşma yok).
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
                               ),
-                              border: Border.all(
-                                color: AppColors.borderHairline,
-                                width: 0.6,
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLine,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
+                                border: Border.all(
+                                  color: AppColors.borderHairline,
+                                  width: 0.6,
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              ctxLabel,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11,
+                              child: Text(
+                                ctxLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.badge.copyWith(
+                                  color: AppColors.textSecondary,
+                                  letterSpacing: 0,
+                                ),
                               ),
                             ),
                           ),
@@ -268,11 +251,11 @@ class ConversationTile extends StatelessWidget {
                             last.isEmpty ? '—' : last,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: AppTypography.body.copyWith(
+                              fontSize: 13,
                               color: unread
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,
-                              fontSize: 13,
                               fontWeight: unread
                                   ? FontWeight.w700
                                   : FontWeight.w400,
@@ -295,7 +278,9 @@ class ConversationTile extends StatelessWidget {
                     color: AppColors.brandLemon,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     border: Border.all(
-                      color: AppColors.brandLemonPressed.withValues(alpha: 0.45),
+                      color: AppColors.brandLemonPressed.withValues(
+                        alpha: 0.45,
+                      ),
                       width: 0.6,
                     ),
                   ),
@@ -319,4 +304,3 @@ class ConversationTile extends StatelessWidget {
     );
   }
 }
-

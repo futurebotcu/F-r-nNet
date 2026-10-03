@@ -6,6 +6,9 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
+import '../../social/widgets/social_skeletons.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_card.dart';
@@ -48,7 +51,13 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
       body: SafeArea(
         bottom: false,
         child: allAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            child: SocialListSkeleton(
+              key: ValueKey('groups_skeleton'),
+              avatarSize: FirinNetAvatarSize.l,
+            ),
+          ),
           error: (_, __) => ErrorRetryState(
             title: AppStrings.groupsErrorGeneric,
             onRetry: () => ref.invalidate(groupsListProvider(_category)),
@@ -415,21 +424,13 @@ class _GroupCardWired extends ConsumerWidget {
               try {
                 await repo.requestJoinGroup(group.id);
                 if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(AppStrings.groupJoinRequestSent),
-                  ),
-                );
+                AppFeedback.success(context, AppStrings.groupJoinRequestSent);
                 ref.invalidate(myJoinRequestProvider(group.id));
               } on GuestActionRequiredException {
                 rethrow;
               } catch (_) {
                 if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(AppStrings.groupJoinRequestError),
-                  ),
-                );
+                AppFeedback.error(context, AppStrings.groupJoinRequestError);
               }
             },
           );
@@ -442,9 +443,13 @@ class _GroupCardWired extends ConsumerWidget {
             final repo = ref.read(socialGroupRepositoryProvider);
             final r = await repo.joinGroup(group.id);
             if (!context.mounted) return;
-            ScaffoldMessenger.of(
+            AppFeedback.show(
               context,
-            ).showSnackBar(SnackBar(content: Text(r.message)));
+              r.message,
+              kind: r == GroupJoinResult.success
+                  ? AppFeedbackKind.success
+                  : AppFeedbackKind.warning,
+            );
             if (r == GroupJoinResult.success) {
               context.push('${AppRoutes.groups}/${group.id}');
             }
@@ -469,4 +474,3 @@ class _MiniLoading extends StatelessWidget {
     ),
   );
 }
-

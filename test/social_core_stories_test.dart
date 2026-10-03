@@ -265,8 +265,10 @@ void main() {
         isFalse,
         reason: 'Donor gradient ring widget\'ı kullanılmadı',
       );
-      expect(src.contains('color: AppColors.brandLemonPale'), isTrue);
+      expect(src.contains('AppColors.brandLemonPale'), isTrue);
       expect(src.contains('width: 1.6'), isTrue);
+      // Sosyal polish 2: halka içinde ortak avatar.
+      expect(src.contains('FirinNetAvatar('), isTrue);
     });
   });
 

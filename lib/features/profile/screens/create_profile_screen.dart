@@ -8,6 +8,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_products.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/location_picker.dart';
@@ -197,25 +199,16 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       password: _passwordCtrl.text,
     );
     if (dirty) {
-      final keep = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text(AppStrings.profileCreateDiscardTitle),
-          content: const Text(AppStrings.profileCreateDiscardBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text(AppStrings.profileCreateDiscardKeep),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              style: FilledButton.styleFrom(backgroundColor: AppColors.copper),
-              child: const Text(AppStrings.profileCreateDiscardLeave),
-            ),
-          ],
-        ),
+      // Taslağı atmak geri alınamaz → destructive onay; CTA eylemi adlandırır.
+      final leave = await showAppConfirmDialog(
+        context,
+        title: AppStrings.profileCreateDiscardTitle,
+        message: AppStrings.profileCreateDiscardBody,
+        confirmLabel: AppStrings.profileCreateDiscardLeave,
+        cancelLabel: AppStrings.profileCreateDiscardKeep,
+        destructive: true,
       );
-      if (keep != true) return;
+      if (!leave) return;
     }
 
     final auth = ref.read(authRepositoryProvider);
@@ -251,18 +244,14 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     // tamamlanmaz `_profileHydrated = true` olur ve tekrar Kaydet çalışır.
     if (_isCompletion && !_profileHydrated) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileStillLoadingError)),
-      );
+      AppFeedback.warning(context, AppStrings.profileStillLoadingError);
       return;
     }
 
     // V1.3.5 — Yeni signup'ta yasal kabul zorunlu.
     if (!_isCompletion && !_legalAccepted) {
       setState(() => _legalShowError = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.legalAcceptRequired)),
-      );
+      AppFeedback.warning(context, AppStrings.legalAcceptRequired);
       return;
     }
 
@@ -270,9 +259,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     // M6A — il seçimi zorunlu (controlled).
     final province = _selectedProvince;
     if (province == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Şehir seçilmedi.')));
+      AppFeedback.warning(context, 'Şehir seçilmedi.');
       return;
     }
     final city = province.name;
@@ -300,9 +287,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
             ),
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.authProfileSavedSnack)),
-      );
+      AppFeedback.success(context, AppStrings.authProfileSavedSnack);
       // Splash redirect mantığını yeniden tetikle (rol bazlı panel).
       context.go(AppRoutes.splash);
       return;
@@ -327,9 +312,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               ),
             );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.authProfileSavedSnack)),
-        );
+        AppFeedback.success(context, AppStrings.authProfileSavedSnack);
         context.go(AppRoutes.splash);
         return;
       }
@@ -375,9 +358,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       }
 
       // Auto-confirm AÇIK ya da provider doğrudan session verdi: normal akış.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.authProfileCreatedSnack)),
-      );
+      AppFeedback.success(context, AppStrings.authProfileCreatedSnack);
       context.go(AppRoutes.splash);
     } catch (e) {
       if (!mounted) return;

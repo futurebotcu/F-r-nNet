@@ -175,7 +175,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('1'), findsNothing); // 0 gizli
-      await tester.tap(find.byIcon(Icons.thumb_up_alt_outlined).first);
+      // Detay başlığı artık feed'le aynı aksiyon satırını taşır (gönderi
+      // beğenisi ilk ikon); yorumun beğeni ikonu listedeki son ikondur.
+      await tester.tap(find.byIcon(Icons.thumb_up_alt_outlined).last);
       await tester.pump();
       expect(find.text('1'), findsOneWidget); // optimistic +1
     });

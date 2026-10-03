@@ -84,12 +84,23 @@ void main() {
     test('profil avatar (header) memCacheWidth kullanır', () {
       final src =
           _read('lib/features/social/profile/widgets/profile_header.dart');
-      expect(src.contains('memCacheWidth:'), isTrue);
+      // Sosyal polish 2: ortak FirinNetAvatar ekran boyutunda decode eder.
+      expect(
+        src.contains('memCacheWidth:') || src.contains('FirinNetAvatar('),
+        isTrue,
+      );
+      expect(
+        _read('lib/core/widgets/firinnet_avatar.dart').contains('memCacheWidth:'),
+        isTrue,
+      );
     });
 
     test('profil avatar (düzenleme sheet) memCacheWidth kullanır', () {
       final src = _read('lib/features/profile/widgets/profile_edit_sheet.dart');
-      expect(src.contains('memCacheWidth:'), isTrue);
+      expect(
+        src.contains('memCacheWidth:') || src.contains('FirinNetAvatar('),
+        isTrue,
+      );
     });
 
     test('marketplace görsel galeri carousel memCacheWidth kullanır', () {

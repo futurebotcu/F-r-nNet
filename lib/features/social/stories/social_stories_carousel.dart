@@ -24,7 +24,8 @@ import '../../profile/providers/profile_provider.dart';
 import '../models/social_profile.dart';
 import '../providers/social_providers.dart';
 import 'models/social_story.dart';
-import '../../../core/utils/tr_case.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
 
 class SocialStoriesCarousel extends ConsumerWidget {
   const SocialStoriesCarousel({super.key});
@@ -100,11 +101,9 @@ class _MyStorySlot extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
     final user = ref.watch(currentAuthUserProvider);
-    final initial = (profile?.displayName.isNotEmpty ?? false)
-        ? profile!.displayName[0].trUpper
-        : (user?.email?.isNotEmpty == true
-              ? user!.email![0].trUpper
-              : 'M');
+    final myName = (profile?.displayName.isNotEmpty ?? false)
+        ? profile!.displayName
+        : (user?.email ?? '');
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -113,27 +112,10 @@ class _MyStorySlot extends ConsumerWidget {
         children: [
           Stack(
             children: [
-              Container(
-                width: 54,
-                height: 54,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.brandLemonPale,
-                  border: Border.all(
-                    color: AppColors.brandLemonSoft,
-                    width: 0.8,
-                  ),
-                  boxShadow: AppShadow.subtle,
-                ),
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: AppColors.brandInk,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 19,
-                  ),
-                ),
+              FirinNetAvatar(
+                name: myName,
+                imageUrl: profile?.avatarUrl,
+                size: 54,
               ),
               Positioned(
                 right: 0,
@@ -159,11 +141,10 @@ class _MyStorySlot extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             AppStrings.storiesMyStoryLabel,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               color: AppColors.textPrimary,
-              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -185,7 +166,6 @@ class _OwnerStorySlot extends ConsumerWidget {
       data: (p) => p.displayNameOrFallback,
       orElse: () => SocialProfile.fallbackName,
     );
-    final initial = name.isNotEmpty ? name[0].trUpper : '?';
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -209,20 +189,11 @@ class _OwnerStorySlot extends ConsumerWidget {
                 boxShadow: AppShadow.subtle,
               ),
               child: Container(
-                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.brandLemonPale,
                   border: Border.all(color: AppColors.card, width: 1.6),
                 ),
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: AppColors.brandInk,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 19,
-                  ),
-                ),
+                child: FirinNetAvatar(name: name, size: 46),
               ),
             ),
             const SizedBox(height: 4),
@@ -230,9 +201,8 @@ class _OwnerStorySlot extends ConsumerWidget {
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: AppTypography.caption.copyWith(
                 color: AppColors.textPrimary,
-                fontSize: 11,
                 fontWeight: FontWeight.w700,
               ),
             ),

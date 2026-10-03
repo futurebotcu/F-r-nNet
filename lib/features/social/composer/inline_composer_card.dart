@@ -10,7 +10,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
 import '../../profile/providers/profile_provider.dart';
 import 'social_composer_page.dart';
-import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
 
 /// Feed üstündeki Twitter/Facebook tarzı inline composer (Feed Premium Sprint).
 ///
@@ -27,9 +27,6 @@ class InlineComposerCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
-    final initial = (profile?.displayName.isNotEmpty ?? false)
-        ? profile!.displayName[0].trUpper
-        : 'M';
 
     return Column(
       children: [
@@ -55,26 +52,10 @@ class InlineComposerCard extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.brandLemonPale,
-                            border: Border.all(
-                              color: AppColors.brandLemonSoft,
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            initial,
-                            style: const TextStyle(
-                              color: AppColors.brandInk,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13.5,
-                            ),
-                          ),
+                        FirinNetAvatar(
+                          name: profile?.displayName,
+                          imageUrl: profile?.avatarUrl,
+                          size: FirinNetAvatarSize.m,
                         ),
                         const SizedBox(width: AppSpacing.m),
                         const Expanded(

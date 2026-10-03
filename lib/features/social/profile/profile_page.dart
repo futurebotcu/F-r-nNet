@@ -59,6 +59,8 @@ import 'widgets/profile_category_tabs.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_statistics.dart';
 import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../widgets/social_skeletons.dart';
 
 class SocialProfilePage extends ConsumerStatefulWidget {
   const SocialProfilePage({super.key, required this.userId});
@@ -97,14 +99,14 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
         // "FırınNet Akademi". Bot bilgisi çözülene kadar nötr başlık.
         title: switch (ref.watch(academyBotProfileProvider(userId))) {
           AsyncData(value: final bot?) when !bot.isHumor => const Text(
-              AppStrings.academyTitle,
-              key: ValueKey('profile_title_academy'),
-            ),
+            AppStrings.academyTitle,
+            key: ValueKey('profile_title_academy'),
+          ),
           AsyncLoading() => const Text(AppStrings.publicProfileTitle),
           _ => profileAsync.maybeWhen(
-              data: (p) => Text(p.displayNameOrFallback),
-              orElse: () => const Text(AppStrings.publicProfileTitle),
-            ),
+            data: (p) => Text(p.displayNameOrFallback),
+            orElse: () => const Text(AppStrings.publicProfileTitle),
+          ),
         },
         actions: [
           if (isSelf)
@@ -250,8 +252,8 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                                 const SizedBox(width: AppSpacing.s),
                                 Expanded(
                                   child: _ProfileMessageCta(
-                                    onTap: () => _openProfileChat(
-                                        context, ref, userId),
+                                    onTap: () =>
+                                        _openProfileChat(context, ref, userId),
                                   ),
                                 ),
                               ],
@@ -364,17 +366,17 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
 
   Widget _postsTab(String userId, AsyncValue<FeedPagedState> pagedAsync) {
     return pagedAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-        child: Center(child: CircularProgressIndicator()),
+      // İlk yükleme: gönderi kartı iskeleti (dev spinner yok).
+      loading: () => const Column(
+        key: ValueKey('profile_posts_skeleton'),
+        children: [FeedSkeletonCard(), FeedSkeletonCard(withMedia: true)],
       ),
       error: (_, __) => Padding(
         padding: const EdgeInsets.all(AppSpacing.l),
         child: ErrorRetryState(
           compact: true,
           subtitle: AppStrings.publicProfileLoadError,
-          onRetry: () =>
-              ref.invalidate(userPostsPagedNotifierProvider(userId)),
+          onRetry: () => ref.invalidate(userPostsPagedNotifierProvider(userId)),
         ),
       ),
       data: (paged) {
@@ -442,9 +444,7 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
     } catch (e) {
       debugPrint('[FirinNet][Profile] open chat error: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.messagingStartError)),
-        );
+        AppFeedback.error(context, AppStrings.messagingStartError);
       }
     }
   }
@@ -582,15 +582,11 @@ class _CvHeader extends StatelessWidget {
                   icon: const Icon(Icons.edit_outlined, size: 14),
                   label: const Text(
                     AppStrings.profileCvEditCta,
-                    style: TextStyle(
-                      color: AppColors.softGold,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12.5,
-                    ),
+                    style: AppTypography.smallAction,
                   ),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.softGold,
-                    minimumSize: const Size(0, 32),
+                    minimumSize: const Size(0, 44),
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     visualDensity: VisualDensity.compact,
                   ),
@@ -608,11 +604,7 @@ class _CvHeader extends StatelessWidget {
             ),
             child: Text(
               AppStrings.profileCvSectionSubtitle,
-              style: TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 12.5,
-                height: 1.35,
-              ),
+              style: AppTypography.meta,
             ),
           ),
         if (isSelf && !hasContent)
@@ -732,15 +724,11 @@ class _ExperienceSection extends StatelessWidget {
                       icon: const Icon(Icons.add, size: 14),
                       label: const Text(
                         AppStrings.profileExperienceAddCta,
-                        style: TextStyle(
-                          color: AppColors.softGold,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12.5,
-                        ),
+                        style: AppTypography.smallAction,
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.softGold,
-                        minimumSize: const Size(0, 32),
+                        minimumSize: const Size(0, 44),
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         visualDensity: VisualDensity.compact,
                       ),
@@ -806,25 +794,11 @@ class _ExperienceRow extends StatelessWidget {
           Text(exp.title, style: AppTypography.cardTitle),
           if (meta.isNotEmpty) ...[
             const SizedBox(height: 2),
-            Text(
-              meta,
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            Text(meta, style: AppTypography.meta),
           ],
           if ((exp.description ?? '').isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s),
-            Text(
-              exp.description!,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13.5,
-                height: 1.4,
-              ),
-            ),
+            Text(exp.description!, style: AppTypography.body),
           ],
         ],
       ),
@@ -898,7 +872,7 @@ class _JobSeekCard extends StatelessWidget {
             ),
             style: TextButton.styleFrom(
               foregroundColor: AppColors.softGold,
-              minimumSize: const Size(0, 32),
+              minimumSize: const Size(0, 44),
               padding: const EdgeInsets.symmetric(horizontal: 4),
               visualDensity: VisualDensity.compact,
             ),
@@ -946,33 +920,15 @@ class _JobSeekCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   AppStrings.profileJobSeekTitle,
-                  style: const TextStyle(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12.5,
-                  ),
+                  style: AppTypography.smallAction,
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              _capitalizeFirst(post.title),
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 14.5,
-              ),
-            ),
+            Text(_capitalizeFirst(post.title), style: AppTypography.cardTitle),
             if (meta.isNotEmpty) ...[
               const SizedBox(height: 2),
-              Text(
-                meta,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text(meta, style: AppTypography.meta),
             ],
             if ((post.description ?? '').isNotEmpty) ...[
               const SizedBox(height: AppSpacing.s),
@@ -980,11 +936,7 @@ class _JobSeekCard extends StatelessWidget {
                 post.description!,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13.5,
-                  height: 1.4,
-                ),
+                style: AppTypography.body,
               ),
             ],
             const SizedBox(height: AppSpacing.s),
@@ -1007,7 +959,7 @@ class _JobSeekCard extends StatelessWidget {
                 ),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.softGold,
-                  minimumSize: const Size(0, 32),
+                  minimumSize: const Size(0, 44),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   visualDensity: VisualDensity.compact,
                 ),
@@ -1097,11 +1049,7 @@ class _AboutBakerySection extends StatelessWidget {
                                   if ((bakery.district ?? '').isNotEmpty)
                                     bakery.district,
                                 ].whereType<String>().join(' · '),
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: AppTypography.meta,
                               ),
                             ),
                           ],
@@ -1109,14 +1057,7 @@ class _AboutBakerySection extends StatelessWidget {
                       ],
                       if ((bakery.description ?? '').isNotEmpty) ...[
                         const SizedBox(height: AppSpacing.s),
-                        Text(
-                          bakery.description!,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                            height: 1.4,
-                          ),
-                        ),
+                        Text(bakery.description!, style: AppTypography.body),
                       ],
                     ],
                   ),
@@ -1160,15 +1101,11 @@ class _ProfessionalSection extends StatelessWidget {
                       icon: const Icon(Icons.edit_outlined, size: 14),
                       label: const Text(
                         'Düzenle',
-                        style: TextStyle(
-                          color: AppColors.softGold,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12.5,
-                        ),
+                        style: AppTypography.smallAction,
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.softGold,
-                        minimumSize: const Size(0, 32),
+                        minimumSize: const Size(0, 44),
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         visualDensity: VisualDensity.compact,
                       ),
@@ -1329,11 +1266,7 @@ class _PublicRecipesSection extends StatelessWidget {
                         ),
                         child: Text(
                           '+$overflow ${AppStrings.profileRecipesMoreSuffix}',
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: AppTypography.caption,
                         ),
                       ),
                   ],
@@ -1421,10 +1354,7 @@ class _SectionEmptyHint extends StatelessWidget {
         horizontal: AppSpacing.pageH,
         vertical: AppSpacing.s,
       ),
-      child: Text(
-        message,
-        style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
-      ),
+      child: Text(message, style: AppTypography.meta),
     );
   }
 }

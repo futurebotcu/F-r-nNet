@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../providers/follow_providers.dart';
 
@@ -44,9 +45,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
           rethrow;
         } catch (_) {
           if (!mounted) return;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text(AppStrings.followError)));
+          AppFeedback.error(context, AppStrings.followError);
         }
       },
     );
