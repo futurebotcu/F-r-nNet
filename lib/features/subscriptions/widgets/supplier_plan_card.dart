@@ -11,6 +11,7 @@ import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
 import 'supplier_launch_gift_sheet.dart';
+import '../../../app/theme/app_typography.dart';
 
 /// Supplier plan/status card. It mirrors server-computed limits; server RLS/RPC
 /// remains the source of truth for paid feature access.
@@ -82,19 +83,14 @@ class SupplierPlanCard extends ConsumerWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
+                        style: AppTypography.cardTitle.copyWith(fontSize: 14.5),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         sub,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.meta.copyWith(
                           color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
                           height: 1.35,
                         ),
                       ),
@@ -123,9 +119,8 @@ class SupplierPlanCard extends ConsumerWidget {
               const SizedBox(height: AppSpacing.s),
               Text(
                 _priceHint(e),
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
+                style: AppTypography.caption.copyWith(
+                  fontWeight: FontWeight.w700,
                   color: AppColors.brandInk,
                 ),
               ),
@@ -148,13 +143,15 @@ class SupplierPlanCard extends ConsumerWidget {
                       color: AppColors.brandInk,
                     ),
                     SizedBox(width: 6),
-                    Text(
-                      AppStrings.supplierLaunchDetailsCta,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.brandInk,
-                        decoration: TextDecoration.underline,
+                    Flexible(
+                      child: Text(
+                        AppStrings.supplierLaunchDetailsCta,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.brandInk,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
                   ],
@@ -226,23 +223,14 @@ class _QuotaRow extends StatelessWidget {
           color: AppColors.textMuted,
         ),
         const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
+        Expanded(child: Text(label, style: AppTypography.infoLabel)),
         const SizedBox(width: AppSpacing.s),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
+          style: AppTypography.infoLabel.copyWith(
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ],

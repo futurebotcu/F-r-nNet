@@ -8,6 +8,8 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Şoför için READ-ONLY bayi detayı (Sprint 3).
 ///
@@ -88,9 +90,8 @@ class DriverDealerDetailScreen extends ConsumerWidget {
               error: (_, __) => ErrorRetryState(
                 compact: true,
                 title: 'Bakiye yüklenemedi',
-                subtitle: 'Güncel bakiye alınamadı. Tekrar deneyin.',
-                onRetry: () =>
-                    ref.invalidate(balanceSummaryProvider(dealerId)),
+                subtitle: AppStrings.polishBalanceLoadError,
+                onRetry: () => ref.invalidate(balanceSummaryProvider(dealerId)),
               ),
               data: (b) => PremiumCard(
                 child: Padding(
@@ -325,9 +326,7 @@ class _DriverTxSheetState extends ConsumerState<_DriverTxSheet> {
       ref.invalidate(balanceSummaryProvider(widget.dealerId));
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.type.label} eklendi.')),
-      );
+      AppFeedback.success(context, '${widget.type.label} eklendi.');
     } catch (e) {
       if (!mounted) return;
       setState(() {

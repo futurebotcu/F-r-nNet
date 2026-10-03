@@ -10,6 +10,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import 'cash_tendered_calculator.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Hızlı Tahsilat modal — tam borç kapatma akışı (Sprint 6C).
 ///
@@ -90,9 +91,7 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
 
     // Kural #3: paid < price → kısmi tahsilat hint; ledger'a yazma yok.
     if (_paid.value < _price.value) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.quickPaymentPartialHint)),
-      );
+      AppFeedback.warning(context, AppStrings.quickPaymentPartialHint);
       return;
     }
 
@@ -126,9 +125,7 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
                 '${AppStrings.quickPaymentChangeReturn} '
                 '${NumberFormatter.currency(change)}'
           : AppStrings.quickPaymentSuccess;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(successMsg)));
+      AppFeedback.success(context, successMsg);
     } on GuestActionRequiredException {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -136,9 +133,7 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerPaymentSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.dealerPaymentSaveError);
     }
   }
 

@@ -172,14 +172,14 @@ class B2bQuoteRequestCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.brandLemonPressed,
+                        color: AppColors.brandInk,
                       ),
                     ),
                     SizedBox(width: 2),
                     Icon(
                       Icons.chevron_right_rounded,
                       size: 18,
-                      color: AppColors.brandLemonPressed,
+                      color: AppColors.brandInk,
                     ),
                   ],
                 ),

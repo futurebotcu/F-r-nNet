@@ -6,6 +6,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/branch_models.dart';
 import '../providers/branch_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// V2 — üyelik süreç izinlerini düzenleme sheet'i (rol DEĞİŞMEZ).
 ///
@@ -61,9 +62,7 @@ class _PermissionsSheetState extends ConsumerState<_PermissionsSheet> {
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.branchPermissionsUpdated)),
-      );
+      AppFeedback.success(context, AppStrings.branchPermissionsUpdated);
     } on StateError catch (e) {
       if (!mounted) return;
       setState(() {

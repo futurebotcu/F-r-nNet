@@ -47,8 +47,11 @@ void main() {
     test('public DeleteAccountConfirmDialog tanımlı', () {
       expect(src.contains('class DeleteAccountConfirmDialog'), isTrue);
       expect(src.contains('class DeleteAccountLoading'), isTrue);
+      // Uygulama polish 2: kırmızı/beyaz yıkıcı stil ortak
+      // AppButtonStyles.destructive üzerinden (AppColors.danger zemini).
       expect(
-        src.contains('AppColors.danger'),
+        src.contains('AppColors.danger') ||
+            src.contains('AppButtonStyles.destructive'),
         isTrue,
         reason: 'Onay butonu danger renkte vurgulanmalı',
       );

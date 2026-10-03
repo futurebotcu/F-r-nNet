@@ -23,6 +23,8 @@ import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../../subscriptions/widgets/plan_status_card.dart';
 import '../../subscriptions/widgets/supplier_launch_gift_sheet.dart';
 import '../services/role_panel_cards.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../app/theme/app_typography.dart';
 
 /// Panel tab'ının yeni kök ekranı.
 ///
@@ -180,12 +182,7 @@ class RoleDashboardScreen extends ConsumerWidget {
     BusinessEntitlements? entitlements,
   ) {
     if (card.comingSoon || card.route == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${card.label} — ${AppStrings.comingSoon}'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppFeedback.info(context, '${card.label} — ${AppStrings.comingSoon}');
       return;
     }
     // Kilitli ticari modül → navigasyon yerine paywall (server zaten korur).
@@ -268,23 +265,18 @@ class _RoleBadgeStrip extends ConsumerWidget {
               children: [
                 Text(
                   account.label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.5,
-                  ),
+                  style: AppTypography.infoLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   profile?.roleBadge.isNotEmpty == true
                       ? profile!.roleBadge
                       : 'Profil oluşturmadın',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    letterSpacing: -0.1,
-                  ),
+                  style: AppTypography.authorName.copyWith(fontSize: 14),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -292,6 +284,10 @@ class _RoleBadgeStrip extends ConsumerWidget {
           if (profile == null)
             TextButton(
               onPressed: () => context.push(AppRoutes.createProfile),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.brandInk,
+                minimumSize: const Size(48, 44),
+              ),
               child: const Text('Oluştur'),
             ),
         ],

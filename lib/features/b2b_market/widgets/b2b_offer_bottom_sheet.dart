@@ -21,14 +21,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../subscriptions/models/supplier_paywall.dart';
 import '../../subscriptions/providers/subscription_providers.dart';
 import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../providers/b2b_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 enum B2bOfferKind { requestQuote, askPrice, giveOffer, newRequest }
 
@@ -76,13 +77,11 @@ Future<void> showB2bOfferFlow(
     quoteRequestId: quoteRequestId,
   );
   if (!submitted || !context.mounted) return;
-  PremiumTopBannerController.show(
+  AppFeedback.success(
     context,
-    message: kind == B2bOfferKind.giveOffer
-        ? 'Teklifin gönderildi.'
-        : 'Talebin alındı. Yanıtlar "Tekliflerim" altında görünür.',
-    tone: PremiumTopBannerTone.success,
-    duration: const Duration(seconds: 2),
+    kind == B2bOfferKind.giveOffer
+        ? AppStrings.polishB2bOfferSent
+        : AppStrings.polishB2bQuoteSent,
   );
 }
 
@@ -274,7 +273,7 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
           _selectedCity == null;
     }
     if (missing) {
-      setState(() => _error = 'Lütfen gerekli alanları doldurun.');
+      setState(() => _error = AppStrings.polishB2bRequiredFields);
       return;
     }
     // Tedarikçi teklif cevabı aylık kotası dolduysa paywall (server zaten
@@ -327,7 +326,7 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
         // hatası kullanıcıya gösterilmez.
         _error = (_isReply && _looksLikeRlsError(err))
             ? AppStrings.supErrorReplyQuota
-            : 'Gönderilemedi. Lütfen tekrar deneyin.';
+            : AppStrings.polishQuoteSendError;
       });
     }
   }
@@ -393,19 +392,25 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
                       child: Icon(
                         widget.kind.icon,
                         size: 20,
-                        color: AppColors.brandLemonPressed,
+                        color: AppColors.brandInk,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.m),
                     Expanded(
                       child: Text(
                         widget.kind.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.2,
+                        style: AppTypography.sectionTitle.copyWith(
+                          fontSize: 17,
                         ),
+                      ),
+                    ),
+                    IconButton(
+                      key: const ValueKey('b2b_offer_sheet_close'),
+                      tooltip: AppStrings.polishClose,
+                      onPressed: () => Navigator.of(context).pop(false),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -698,7 +703,7 @@ class _LockedField extends StatelessWidget {
               const Icon(
                 Icons.lock_outline_rounded,
                 size: 15,
-                color: AppColors.brandLemonPressed,
+                color: AppColors.brandInk,
               ),
               const SizedBox(width: 8),
               Expanded(

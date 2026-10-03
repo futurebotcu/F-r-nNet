@@ -1,7 +1,7 @@
 // B2B Pazar — AsyncValue<List<T>> → liste/loading/error/empty tek tip render.
 //
 // Tüm B2B tab'ları repository'den FutureProvider ile veri alır; bu widget o
-// AsyncValue'yu premium dilde gösterir: yükleniyor (spinner), hata
+// AsyncValue'yu premium dilde gösterir: yükleniyor (statik iskelet), hata
 // (ErrorRetryState + yeniden dene), boş (verilen empty), veri (ListView).
 // skipLoadingOnReload: write sonrası yenilemede eski içerik korunur, spinner
 // flash olmaz. Supabase hatası ekranı çökertmez.
@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 
 class B2bAsyncList<T> extends StatelessWidget {
   const B2bAsyncList({
@@ -43,12 +44,8 @@ class B2bAsyncList<T> extends StatelessWidget {
     return async.when(
       skipLoadingOnReload: true,
       skipLoadingOnRefresh: true,
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xxl),
-          child: CircularProgressIndicator(),
-        ),
-      ),
+      // İlk yükleme: kart yerlerini tutan hafif statik iskelet (spinner yok).
+      loading: () => PremiumListSkeleton(padding: padding),
       error: (_, __) => ErrorRetryState(compact: true, onRetry: onRetry),
       data: (items) {
         if (items.isEmpty) return empty;

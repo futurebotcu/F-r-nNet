@@ -14,6 +14,8 @@ import '../providers/auth_providers.dart';
 import '../repositories/auth_repository.dart';
 import '../providers/guest_mode_provider.dart';
 import '../../../core/utils/tr_case.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../app/theme/app_theme.dart';
 
 /// Push token'ı pasifleştirip oturumu kapatır. Tüm çıkış yolları (Ayarlar,
 /// Profil, yarım kalmış profil oluşturma) bunu kullanır.
@@ -68,17 +70,13 @@ Future<void> performSignOut(BuildContext context, WidgetRef ref) async {
 /// olarak vardı; aynı kontrat ile bu shared service'e taşındı.
 Future<void> performDeleteAccount(BuildContext context, WidgetRef ref) async {
   if (!AppConfig.supabaseEnabled) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.accountDeleteUnsupportedOffline)),
-    );
+    AppFeedback.info(context, AppStrings.accountDeleteUnsupportedOffline);
     return;
   }
   final auth = ref.read(authRepositoryProvider);
   final user = ref.read(currentAuthUserProvider);
   if (auth == null || user == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.accountDeleteRequireAuth)),
-    );
+    AppFeedback.info(context, AppStrings.accountDeleteRequireAuth);
     return;
   }
 
@@ -117,9 +115,7 @@ Future<void> performDeleteAccount(BuildContext context, WidgetRef ref) async {
     ref.read(profileControllerProvider.notifier).clear();
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.accountDeleteSuccessSnack)),
-    );
+    AppFeedback.success(context, AppStrings.accountDeleteSuccessSnack);
     context.go(AppRoutes.authEntry);
   } catch (_) {
     // Hata yolu: loading dialog kapanır, ham exception sızmaz, kullanıcı
@@ -129,9 +125,7 @@ Future<void> performDeleteAccount(BuildContext context, WidgetRef ref) async {
       Navigator.of(context, rootNavigator: true).pop();
     }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.accountDeleteErrorGeneric)),
-    );
+    AppFeedback.error(context, AppStrings.accountDeleteErrorGeneric);
   }
 }
 
@@ -203,15 +197,27 @@ class _DeleteAccountConfirmDialogState
         ],
       ),
       actions: [
+        // Ortak onay dialogu ile aynı buton dili: solda metin "Vazgeç",
+        // sağda kırmızı/beyaz eylem CTA'sı (anahtar kelime yazılana dek pasif).
         TextButton(
+          key: const ValueKey('delete_account_cancel'),
           onPressed: () => Navigator.of(context).pop(false),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.textSecondary,
+            minimumSize: const Size(0, 44),
+          ),
           child: const Text(AppStrings.accountDeleteCancel),
         ),
         FilledButton(
+          key: const ValueKey('delete_account_confirm'),
           onPressed: _enabled ? () => Navigator.of(context).pop(true) : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.danger,
-            foregroundColor: AppColors.surface,
+          style: AppButtonStyles.destructive.merge(
+            FilledButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+            ),
           ),
           child: const Text(AppStrings.accountDeleteConfirmButton),
         ),

@@ -14,6 +14,7 @@ import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class DealerShareScreen extends ConsumerStatefulWidget {
   const DealerShareScreen({super.key, required this.dealerId});
@@ -92,10 +93,9 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                         onPressed: () async {
                           await Clipboard.setData(ClipboardData(text: text));
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(AppStrings.dealerShareCopiedSnack),
-                            ),
+                          AppFeedback.info(
+                            context,
+                            AppStrings.dealerShareCopiedSnack,
                           );
                         },
                       ),
@@ -202,9 +202,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
       debugPrint('[FirinNet][DealerShare] pdf failed: $e');
       if (!mounted) return;
       // Ham istisna metni kullanıcıya gösterilmez.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerSharePdfErr)),
-      );
+      AppFeedback.error(context, AppStrings.dealerSharePdfErr);
     } finally {
       if (mounted) setState(() => _pdfBusy = false);
     }

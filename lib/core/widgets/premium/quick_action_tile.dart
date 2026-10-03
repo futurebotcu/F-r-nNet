@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../interactions.dart';
+import '../../../app/theme/app_typography.dart';
 
 /// Geniş yatay liste tile'ı — kalın border yok, soft yüzey, hairline kenar.
 class QuickActionTile extends StatelessWidget {
@@ -35,7 +36,6 @@ class QuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return PressScale(
       onTap: onTap,
       child: Container(
@@ -100,22 +100,24 @@ class QuickActionTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Kart başlığı rolü; öne çıkan kart yalnız ağırlıkla
+                        // ayrışır (boyut sıçraması yok).
                         Text(
                           label,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: featured
-                                ? FontWeight.w800
-                                : FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            fontSize: featured ? 15.5 : 15,
-                            letterSpacing: -0.1,
-                          ),
+                          style: featured
+                              ? AppTypography.cardTitle.copyWith(fontSize: 15)
+                              : AppTypography.authorName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         if (subtitle != null) ...[
                           const SizedBox(height: 2),
                           Text(
                             subtitle!,
-                            style: theme.textTheme.bodySmall,
+                            style: AppTypography.meta.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

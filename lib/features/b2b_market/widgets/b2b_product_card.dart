@@ -235,7 +235,7 @@ class _PriceTypePill extends StatelessWidget {
           const Icon(
             Icons.request_quote_rounded,
             size: 13,
-            color: AppColors.brandLemonPressed,
+            color: AppColors.brandInk,
           ),
           const SizedBox(width: 4),
           Text(

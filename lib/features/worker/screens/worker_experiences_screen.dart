@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
@@ -14,6 +13,8 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/worker_profile.dart';
 import '../providers/worker_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_confirm_dialog.dart';
 
 /// Tecrübe / Çalışma Geçmişi — bireysel ustanın iş geçmişi kalemleri.
 class WorkerExperiencesScreen extends ConsumerWidget {
@@ -162,25 +163,15 @@ class _ExperienceCard extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Tecrübe kaldır'),
-        content: Text('"${experience.title}" silinsin mi?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: AppButtonStyles.destructive,
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+    final ok = await showAppConfirmDialog(
+      context,
+      title: AppStrings.polishExperienceDeleteTitle,
+      message: '"${experience.title}" mesleki CV\'nden kaldırılır.',
+      confirmLabel: AppStrings.polishDelete,
+      destructive: true,
+      icon: Icons.delete_outline_rounded,
     );
-    if (ok != true || experience.id == null) return;
+    if (!ok || experience.id == null) return;
     if (!context.mounted) return;
     await runGuardedMutation(
       context,
@@ -308,9 +299,7 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Pozisyon adı boş olamaz.')));
+      AppFeedback.warning(context, 'Pozisyon adı boş olamaz.');
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -339,14 +328,11 @@ class _AddExperienceSheetState extends ConsumerState<_AddExperienceSheet> {
             ),
           );
       if (!mounted) return;
+      AppFeedback.success(context, AppStrings.polishExperienceSaved);
       Navigator.of(context).pop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(content: Text(AppStrings.commonSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.polishExperienceSaveError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

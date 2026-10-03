@@ -5,6 +5,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Şoföre bayi atama (Sprint 2): patronun KENDİ bayileri listelenir, çoklu seçim.
 /// Seçim `setDriverAssignments` ile tam eşitlenir. Başka patronun bayisi
@@ -36,15 +38,11 @@ class _DriverAssignDealersScreenState
       ref.invalidate(driversListProvider);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Atamalar kaydedildi.')),
-      );
+      AppFeedback.success(context, 'Bayi atamaları kaydedildi');
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kaydedilemedi. Tekrar deneyin.')),
-      );
+      AppFeedback.error(context, AppStrings.polishDriverAssignError);
     }
   }
 

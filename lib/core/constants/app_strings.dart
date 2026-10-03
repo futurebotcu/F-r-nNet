@@ -1584,7 +1584,7 @@ class AppStrings {
   // ── Anlaşmalı İş Yerleri V1 ──
   static const String partnersTitle = 'Anlaşmalı İş Yerleri';
   static const String partnersCardSub =
-      'Şehrinizdeki avantajlı iş yerlerini keşfedin.';
+      'Şehrindeki avantajlı iş yerlerini keşfet.';
   static const String partnersSearchHint = 'İş yeri, kategori veya şehir ara';
   static const String partnersFilterCity = 'Şehir';
   static const String partnersFilterDistrict = 'İlçe';
@@ -1595,7 +1595,7 @@ class AppStrings {
       'Bu bölgede henüz anlaşmalı iş yeri yok.';
   static const String partnersEmptyBody =
       'Anlaşmalı iş yeri olmak için destek bölümünden başvuru '
-      'yapabilirsiniz.';
+      'yapabilirsin.';
   static const String partnersListError = 'Anlaşmalı iş yerleri yüklenemedi.';
   static const String partnersBadge = 'Anlaşmalı İş Yeri';
   static const String partnersCall = 'Ara';
@@ -1607,7 +1607,7 @@ class AppStrings {
   static const String partnersDetailContact = 'İletişim';
   static const String partnersDetailWebsite = 'Web sitesi';
   static const String partnersDetailReportHint =
-      'Bilgilerde hata mı var? Destek ile iletişime geçin.';
+      'Bilgilerde hata mı var? Destek ile iletişime geç.';
   static const String partnersLinkError = 'Bağlantı açılamadı.';
   // Başvuru formu.
   static const String partnersApplyTitle = 'Anlaşmalı İş Yeri Başvurusu';
@@ -1729,7 +1729,7 @@ class AppStrings {
   static const String planCardTrialTitle = 'Premium — Ücretsiz Kullanım';
   static const String planCardTrialDaysLeft = 'gün kaldı';
   static const String planCardTrialSub =
-      'Ücretsiz kullanım boyunca Premium özellikleri kullanabilirsiniz.';
+      'Ücretsiz kullanım boyunca Premium özellikleri kullanabilirsin.';
   static const String planCardFreeTitle = 'Free plan';
   static const String planCardFreeSub =
       'Temel Fırın Defteri, 5 reçete ve temel hesaplamalar açık.';
@@ -1752,7 +1752,7 @@ class AppStrings {
   // Store ödeme (RevenueCat).
   static const String storePaymentPreparing = 'Mağaza ödemeleri hazırlanıyor.';
   static const String storePaymentSuccess =
-      'Ödemeniz alındı. Paketiniz birkaç saniye içinde açılacak.';
+      'Ödemen alındı. Paketin birkaç saniye içinde açılacak.';
   static const String storePaymentFailed = 'Ödeme tamamlanmadı.';
   static const String storePaymentRestoreCta = 'Satın alımları geri yükle';
   static const String storePaymentRestored = 'Satın alımlar geri yüklendi.';
@@ -1803,12 +1803,12 @@ class AppStrings {
   // Modül paywall metinleri.
   static const String paywallBranchesTitle = 'Şube Yönetimi Premium’da açılır.';
   static const String paywallBranchesBody =
-      'Şube, personel, süreç ve aktivite takibi için Premium’a geçin.';
+      'Şube, personel, süreç ve aktivite takibi için Premium’a geç.';
   static const String paywallDealerBookTitle =
       'Bayi Defteri Premium’da açılır.';
   static const String paywallDealerBookBody =
       'Pro’da sınırsız bayi defteri tutabilir, tahsilat/iade/hareketleri '
-      'yönetebilirsiniz. (Bayi Defteri tek kullanıcı/işletme sahibi '
+      'yönetebilirsin. (Bayi Defteri tek kullanıcı/işletme sahibi '
       'kullanımıyla açıktır; bayi sayısı sınırsızdır.)';
   static const String paywallDealerDriverTitle =
       'Şoförlü ve ekipli bayi operasyonu Premium’da açılır.';
@@ -1818,15 +1818,15 @@ class AppStrings {
       'Borç-Gider kayıtları Premium’da açılır.';
   static const String paywallDebtExpenseBody =
       'Borç, gider ve personel ödeme kayıtlarını Pro veya Premium ile '
-      'takip edin.';
+      'takip et.';
   static const String paywallRecipeFreeTitle =
-      '5 reçeteye kadar ücretsiz kullanabilirsiniz.';
+      '5 reçeteye kadar ücretsiz kullanabilirsin.';
   static const String paywallRecipeFreeBody =
-      'Daha fazla reçete için Premium’a geçin.';
+      'Daha fazla reçete için Premium’a geç.';
   static const String paywallRecipeProTitle =
       'Sınırsız reçete Premium’da açılır.';
   static const String paywallRecipeProBody =
-      'Sınırsız reçete için Premium’a geçin.';
+      'Sınırsız reçete için Premium’a geç.';
   static const String paywallCalcProTitle = 'Bu hesaplama Premium’da açılır.';
   static const String paywallCalcPremiumTitle =
       'Bu hesaplama Premium’da açılır.';
@@ -1856,8 +1856,8 @@ class AppStrings {
       'yayınlanır.';
   static const String listingFeePendingBadge = 'Ödeme bekliyor';
   static const String listingFeePendingNotice =
-      'İlanınız ödeme onayından sonra yayınlanır. Ödeme için destek ile '
-      'iletişime geçin.';
+      'İlanın ödeme onayından sonra yayınlanır. Ödeme için destek ile '
+      'iletişime geç.';
   static const String listingFeePendingSupportCta = 'Destek ile iletişime geç';
 
   // ── Tedarikçi / Toptancı Paywall UI V1 ──
@@ -1877,32 +1877,32 @@ class AppStrings {
   static const String supQuotaCampaigns = 'Kampanya';
   static const String supQuotaReplies = 'Aylık teklif cevabı';
   static const String supQuotaUnlimited = 'Sınırsız';
-  static const String supQuotaReplyExhausted = 'Bu ayki hakkınız doldu';
+  static const String supQuotaReplyExhausted = 'Bu ayki hakkın doldu';
   static const String supPaywallProductFreeTitle =
       'Free tedarikçiler 1 ürün yayınlayabilir.';
   static const String supPaywallProductFreeBody =
-      'Daha fazla ürün için Premium’a geçin. Premium’da sınırsız ürün '
-      'yayınlayabilirsiniz.';
+      'Daha fazla ürün için Premium’a geç. Premium’da sınırsız ürün '
+      'yayınlayabilirsin.';
   static const String supPaywallProductProTitle =
       'Sınırsız ürün Premium’da açılır.';
   static const String supPaywallProductProBody =
-      'Sınırsız ürün için Premium’a geçin.';
+      'Sınırsız ürün için Premium’a geç.';
   static const String supPaywallCampaignFreeTitle =
       'Kampanya yayınlama Premium’da açılır.';
   static const String supPaywallCampaignFreeBody =
-      'Premium’da sınırsız kampanya yayınlayabilirsiniz.';
+      'Premium’da sınırsız kampanya yayınlayabilirsin.';
   static const String supPaywallCampaignProTitle =
       'Sınırsız kampanya Premium’da açılır.';
   static const String supPaywallCampaignProBody =
-      'Sınırsız kampanya için Premium’a geçin.';
+      'Sınırsız kampanya için Premium’a geç.';
   static const String supPaywallReplyFreeTitle =
       'Free tedarikçiler ayda 3 teklif cevabı verebilir.';
   static const String supPaywallReplyFreeBody =
-      'Daha fazla teklif cevabı için Premium’a geçin.';
+      'Daha fazla teklif cevabı için Premium’a geç.';
   static const String supPaywallReplyProTitle =
       'Sınırsız teklif cevabı Premium’da açılır.';
   static const String supPaywallReplyProBody =
-      'Sınırsız teklif cevabı için Premium’a geçin.';
+      'Sınırsız teklif cevabı için Premium’a geç.';
   static const String supErrorProductQuota = 'Ürün kotanız doldu.';
   static const String supErrorCampaignQuota = 'Kampanya kotanız doldu.';
   static const String supErrorReplyQuota =
@@ -1981,7 +1981,7 @@ class AppStrings {
   static const String notificationsMarkAllReadFailed =
       'İşaretlenemedi. Biraz sonra tekrar dene.';
   static const String closeTooltip = 'Kapat';
-  static const String routeNotFoundTitle = 'Aradığınız sayfa bulunamadı';
+  static const String routeNotFoundTitle = 'Aradığın sayfa bulunamadı';
   static const String routeNotFoundCta = 'Ana sayfaya dön';
   static const String academyLoadMoreError =
       'Daha fazla içerik yüklenemedi · Tekrar dene';
@@ -2208,6 +2208,115 @@ class AppStrings {
   static const String panelEmptyCta = 'İlk üretimi gir';
 
   // Bakery panel actions
+  // ── Uygulama polish 2 ──
+  // Ortak onay / geri bildirim dili (sen hitabı, eylemi adlandıran CTA).
+  static const String polishCancel = 'Vazgeç';
+  static const String polishDelete = 'Sil';
+  static const String polishGotIt = 'Anladım';
+  static const String polishClose = 'Kapat';
+  static const String polishRetry = 'Tekrar dene';
+  static const String polishDiscardTitle = 'Değişiklikler silinsin mi?';
+  static const String polishDiscardBody =
+      'Kaydetmediğin değişiklikler kaybolacak.';
+  static const String polishDiscardCta = 'Değişiklikleri sil';
+  // Çıkış yap.
+  static const String polishSignOutTitle = 'Çıkış yapılsın mı?';
+  static const String polishSignOutBody =
+      'Tekrar giriş yapana kadar kayıtlarını bu cihazda göremezsin.';
+  static const String polishSignOutCta = 'Çıkış yap';
+  // Engelle.
+  static const String polishBlockCta = 'Engelle';
+  // Reçete.
+  static const String polishRecipeDeleteTitle = 'Reçete silinsin mi?';
+  static const String polishRecipeDeleteBody =
+      'Reçete kalıcı olarak silinir. Bu işlem geri alınamaz.';
+  static const String polishRecipeDeleted = 'Reçete silindi';
+  static const String polishRecipeDeleteError =
+      'Reçete silinemedi. Tekrar dene.';
+  // Bayi hareketi.
+  static const String polishTxDeleteTitle = 'İşlem silinsin mi?';
+  static const String polishTxDeleteBody =
+      'Kayıt silinir ve bayi bakiyesi yeniden hesaplanır.';
+  static const String polishTxDeleted = 'İşlem silindi, bakiye güncellendi';
+  static const String polishTxDeleteError = 'İşlem silinemedi. Tekrar dene.';
+  // Borç / gider.
+  static const String polishDebtDeleteTitle = 'Kayıt silinsin mi?';
+  static const String polishDebtDeleted = 'Kayıt silindi';
+  static const String polishDebtDeleteError = 'Kayıt silinemedi. Tekrar dene.';
+  // Tecrübe.
+  static const String polishExperienceDeleteTitle = 'Tecrübe silinsin mi?';
+  // Şube.
+  static const String polishBranchDeactivateCta = 'Pasifleştir';
+  static const String polishBranchStatusError =
+      'Şube durumu güncellenemedi. Tekrar dene.';
+  // Rol veri kilidi (bilgilendirme).
+  static const String polishRoleLockAck = 'Anladım';
+  // B2B talep.
+  static const String polishQuoteStatusBody =
+      'Talebin durumu değişir; tedarikçiler yeni teklif gönderemez.';
+  static const String polishQuoteActionError =
+      'Talep güncellenemedi. Tekrar dene.';
+  static const String polishQuoteAcceptError =
+      'Teklif kabul edilemedi. Tekrar dene.';
+  static const String polishQuoteSendError = 'Gönderilemedi. Tekrar dene.';
+  static const String polishB2bProductAdded = 'Ürün eklendi';
+  static const String polishB2bProductUpdated = 'Ürün güncellendi';
+  static const String polishB2bProductDraft = 'Ürün taslak olarak kaydedildi';
+  static const String polishB2bProductError =
+      'Ürün kaydedilemedi. Tekrar dene.';
+  static const String polishB2bCampaignAdded = 'Kampanya oluşturuldu';
+  static const String polishB2bCampaignUpdated = 'Kampanya güncellendi';
+  static const String polishB2bCampaignDraft =
+      'Kampanya taslak olarak kaydedildi';
+  static const String polishB2bCampaignError =
+      'Kampanya kaydedilemedi. Tekrar dene.';
+  static const String polishB2bStoreUpdated = 'Mağaza bilgilerin güncellendi';
+  static const String polishB2bOfferSent = 'Teklifin gönderildi';
+  static const String polishB2bQuoteSent =
+      'Talebin alındı — yanıtlar Tekliflerim altında';
+  static const String polishB2bImageTooLarge =
+      'Görsel 5 MB sınırını aşıyor. Daha küçük bir görsel seç.';
+  static const String polishB2bImageError = 'Görsel yüklenemedi. Tekrar dene.';
+  static const String polishB2bMessageError =
+      'Mesaj gönderilemedi. Tekrar dene.';
+  static const String polishB2bEmptySearch =
+      'Farklı bir kategori veya arama dene.';
+  static const String polishB2bCategoryHint = 'Kategori seç';
+  static const String polishB2bRequiredFields = 'Gerekli alanları doldur.';
+  // Bayi / şoför.
+  static const String polishDriverAssignError =
+      'Bayi ataması kaydedilemedi. Tekrar dene.';
+  static const String polishDriverActionError =
+      'Davet yanıtlanamadı. Tekrar dene.';
+  static const String polishBalanceLoadError =
+      'Güncel bakiye alınamadı. Tekrar dene.';
+  static const String polishDriversLoadError =
+      'Şoförler yüklenemedi. Tekrar dene.';
+  static const String polishDebtSummaryError =
+      'Borç/gider özeti alınamadı. Tekrar dene.';
+  static const String polishDebtRecentError =
+      'Son hareketler alınamadı. Tekrar dene.';
+  static const String polishExperienceSaved = 'Tecrübe kaydedildi';
+  static const String polishExperienceSaveError =
+      'Tecrübe kaydedilemedi. Tekrar dene.';
+  static const String polishWorkerProfileSaveError =
+      'Ustalık bilgilerin kaydedilemedi. Tekrar dene.';
+  static const String polishLedgerDaySaved = 'Günün cirosu ve notu kaydedildi';
+  static const String polishBlockError =
+      'Kullanıcı engellenemedi. Tekrar dene.';
+  static const String polishUnblockError = 'Engel kaldırılamadı. Tekrar dene.';
+  static const String polishB2bStoreError =
+      'Mağaza bilgilerin kaydedilemedi. Tekrar dene.';
+  // Simge butonu ipuçları (erişilebilirlik).
+  static const String polishBack = 'Geri';
+  static const String polishSend = 'Gönder';
+  static const String polishTaskDelete = 'Görevi sil';
+  static const String polishClearDate = 'Tarihi temizle';
+  static const String polishRouteNotFoundBody =
+      'Bağlantı eski olabilir ya da sayfa kaldırılmış olabilir.';
+  static const String polishDebtMarkedPaid = 'Kayıt ödendi olarak işaretlendi';
+  static const String polishDebtUpdateError =
+      'Kayıt güncellenemedi. Tekrar dene.';
   static const String calculate = 'Hesapla';
   static const String calculateSub = 'Reçete / hamur hesabı';
   static const String addProduction = 'Üretim Gir';
@@ -2759,6 +2868,5 @@ class AppStrings {
       'Kısa ve net yaz: meslek, şehir, tecrübe ve maaş beklentin işverenin '
       'ilk baktığı bilgiler.';
 
-  static const String dealerSharePdfErr =
-      'PDF oluşturulamadı. Lütfen tekrar deneyin.';
+  static const String dealerSharePdfErr = 'PDF oluşturulamadı. Tekrar dene.';
 }

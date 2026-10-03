@@ -12,7 +12,10 @@
          running.
 
          This Theme is only used starting with V2 of Flutter's Android embedding. -->
+    <!-- Uygulama yalnız açık tema (ThemeMode.light): koyu modlu cihazda
+         Flutter ilk kareyi çizene kadar / şeffaf gezinme çubuğunun arkasında
+         siyah zemin görünmesin diye pencere zemini beyaz. -->
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
-        <item name="android:windowBackground">?android:colorBackground</item>
+        <item name="android:windowBackground">@android:color/white</item>
     </style>
 </resources>

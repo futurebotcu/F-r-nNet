@@ -15,6 +15,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class DealerReturnFormScreen extends ConsumerStatefulWidget {
   const DealerReturnFormScreen({super.key, required this.dealerId});
@@ -92,14 +93,11 @@ class _DealerReturnFormScreenState
       );
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${AppStrings.dealerSaveSnackReturn}'
-            '$qty $productName · '
-            '${NumberFormatter.currency(qty * price)}',
-          ),
-        ),
+      AppFeedback.success(
+        context,
+        '${AppStrings.dealerSaveSnackReturn}'
+        '$qty $productName · '
+        '${NumberFormatter.currency(qty * price)}',
       );
     } on GuestActionRequiredException {
       // V1.4 P1.7 — Defense-in-depth: pre-check sonrası repo katmanı yine
@@ -110,14 +108,12 @@ class _DealerReturnFormScreenState
       // V1.4 P1.7 — Ham PostgrestException/network UI'a sızmaz. Form AÇIK
       // kalır (Navigator.pop çağrılmaz) ki kullanıcı tekrar deneyebilsin.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.dealerReturnSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.dealerReturnSaveError);
     }
   }
 
   void _err(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.warning(context, msg);
   }
 
   @override

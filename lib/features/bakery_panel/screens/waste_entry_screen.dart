@@ -13,6 +13,7 @@ import '../../../core/widgets/product_choice_chips.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/waste_entry.dart';
 import '../providers/bakery_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 class WasteEntryScreen extends ConsumerStatefulWidget {
   const WasteEntryScreen({super.key});
@@ -82,9 +83,7 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
           );
           if (!mounted) return;
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Fire kaydedildi: $qty $productName')),
-          );
+          AppFeedback.success(context, 'Fire kaydedildi: $qty $productName');
         },
       );
     } finally {
@@ -93,7 +92,7 @@ class _WasteEntryScreenState extends ConsumerState<WasteEntryScreen> {
   }
 
   void _err(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppFeedback.warning(context, msg);
   }
 
   @override

@@ -11,11 +11,12 @@ import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/dirty_form_guard.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
-import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
 import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
 import '../../../widgets/b2b_image_upload_field.dart';
+import '../../../../../core/widgets/app_feedback.dart';
+import '../../../../../core/constants/app_strings.dart';
 
 class SupplierProductFormScreen extends ConsumerStatefulWidget {
   const SupplierProductFormScreen({super.key, this.productId});
@@ -135,25 +136,20 @@ class _SupplierProductFormScreenState
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      PremiumTopBannerController.show(
-        context,
-        message: 'Ürün kaydedilemedi. Tekrar deneyin.',
-        tone: PremiumTopBannerTone.danger,
-        duration: const Duration(seconds: 2),
-      );
+      AppFeedback.error(context, AppStrings.polishB2bProductError);
       return;
     }
 
     if (!mounted) return;
-    Navigator.of(context).pop();
-    PremiumTopBannerController.show(
+    AppFeedback.success(
       context,
-      message: _published
-          ? '${_editing ? 'Ürün güncellendi' : 'Ürün eklendi'} — Mağazam ve Ürünler\'de görünür.'
-          : '${_editing ? 'Ürün güncellendi' : 'Ürün eklendi'} — taslak; yalnız Mağazam\'da görünür.',
-      tone: PremiumTopBannerTone.success,
-      duration: const Duration(seconds: 2),
+      !_published
+          ? AppStrings.polishB2bProductDraft
+          : (_editing
+                ? AppStrings.polishB2bProductUpdated
+                : AppStrings.polishB2bProductAdded),
     );
+    Navigator.of(context).pop();
   }
 
   @override
@@ -195,7 +191,7 @@ class _SupplierProductFormScreenState
                   _dirty = true;
                 }),
                 errorText: _categoryTouched && _category == null
-                    ? 'Kategori seçin'
+                    ? AppStrings.polishB2bCategoryHint
                     : null,
               ),
               const SizedBox(height: AppSpacing.l),

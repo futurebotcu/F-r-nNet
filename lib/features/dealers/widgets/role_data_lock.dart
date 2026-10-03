@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Rol/Scope veri kilidi (role_data_lock) — DB guard'larının (respond_driver_
 /// invite + profiles account_type trigger) fırlattığı hatayı yakalayıp
@@ -35,7 +36,7 @@ Future<void> showRoleDataLockDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text('Tamam'),
+          child: const Text(AppStrings.polishRoleLockAck),
         ),
       ],
     ),

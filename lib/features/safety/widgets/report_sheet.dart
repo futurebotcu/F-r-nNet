@@ -2,7 +2,7 @@
 //
 // Tüm UGC yüzeylerinden (feed post, yorum, grup mesajı, ilan, profil) ortak
 // kullanılır. Guest → AuthRequiredSheet (auth gerekli kararı V1).
-// Başarı/duplicate/hata PremiumTopBanner ile bildirilir; içerik silinmez.
+// Başarı/duplicate AppFeedback ile; sheet açıkken hata üst şeritte bildirilir.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +14,7 @@ import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/report_models.dart';
 import '../providers/safety_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 /// Şikayet akışını başlatır: guard → sheet → submit → banner.
 ///
@@ -89,16 +90,13 @@ class _ReportSheetState extends State<_ReportSheet> {
         details: _details.text,
       );
       if (!mounted) return;
+      // Sheet kapanmadan önce (bağlam hâlâ bağlı) ortak geri bildirim.
+      if (result == ReportResult.duplicate) {
+        AppFeedback.info(context, AppStrings.reportDuplicateBanner);
+      } else {
+        AppFeedback.success(context, AppStrings.reportSuccessBanner);
+      }
       Navigator.of(context).pop();
-      PremiumTopBannerController.show(
-        context,
-        message: result == ReportResult.duplicate
-            ? AppStrings.reportDuplicateBanner
-            : AppStrings.reportSuccessBanner,
-        tone: result == ReportResult.duplicate
-            ? PremiumTopBannerTone.info
-            : PremiumTopBannerTone.success,
-      );
     } on GuestActionRequiredException {
       if (!mounted) return;
       Navigator.of(context).pop();

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/app_number_field.dart';
@@ -13,6 +14,7 @@ import '../../../core/widgets/app_primary_button.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/debt_expense_entry.dart';
 import '../providers/debt_expense_providers.dart';
+import '../../../core/widgets/app_feedback.dart';
 
 Future<void> showDebtPaymentSheet(
   BuildContext context,
@@ -26,9 +28,10 @@ Future<void> showDebtPaymentSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
-    builder: (_) => Padding(
+    // Klavye payı SHEET bağlamından okunur (sayfa bağlamı klavyeyi görmez).
+    builder: (sheetContext) => Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
       ),
       child: _PaymentSheet(entry: entry),
     ),
@@ -57,9 +60,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     if (_saving) return;
     final amount = NumberFormatter.parseLoose(_amount.text);
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tutar sıfırdan büyük olmalı.')),
-      );
+      AppFeedback.warning(context, 'Tutar sıfırdan büyük olmalı.');
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -73,18 +74,17 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           .addPayment(widget.entry.id, amount);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${NumberFormatter.currency(amount)} ödeme '
-            'eklendi.')),
+      AppFeedback.success(
+        context,
+        '${NumberFormatter.currency(amount)} ödeme '
+        'eklendi.',
       );
     } on GuestActionRequiredException {
       if (!mounted) return;
       await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ödeme eklenemedi. Tekrar dene.')),
-      );
+      AppFeedback.error(context, 'Ödeme eklenemedi. Tekrar dene.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -95,7 +95,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     final e = widget.entry;
     return SafeArea(
       top: false,
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.pageH,
           AppSpacing.l,
@@ -108,11 +108,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           children: [
             Text(
               '${AppStrings.deAddPayment} — ${e.title}',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
+              style: AppTypography.sectionTitle,
             ),
             const SizedBox(height: 4),
             Text(

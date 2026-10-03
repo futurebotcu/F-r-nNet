@@ -9,11 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
-import '../../../../../core/widgets/premium/premium_top_banner.dart';
 import '../../../providers/b2b_providers.dart';
 import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
 import '../../../widgets/b2b_image_upload_field.dart';
+import '../../../../../core/widgets/app_feedback.dart';
+import '../../../../../core/constants/app_strings.dart';
 
 class SupplierStoreEditScreen extends ConsumerStatefulWidget {
   const SupplierStoreEditScreen({super.key});
@@ -65,23 +66,26 @@ class _SupplierStoreEditScreenState
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    await ref.read(b2bMarketControllerProvider.notifier).updateStore(
-          name: _name.text.trim(),
-          description: _description.text.trim(),
-          serviceRegions: _regions.toList(),
-          categories: _categories.toList(),
-          logoUrl: _logoUrl,
-          coverUrl: _coverUrl,
-        );
+    try {
+      await ref
+          .read(b2bMarketControllerProvider.notifier)
+          .updateStore(
+            name: _name.text.trim(),
+            description: _description.text.trim(),
+            serviceRegions: _regions.toList(),
+            categories: _categories.toList(),
+            logoUrl: _logoUrl,
+            coverUrl: _coverUrl,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      AppFeedback.error(context, AppStrings.polishB2bStoreError);
+      return;
+    }
 
     if (!mounted) return;
+    AppFeedback.success(context, AppStrings.polishB2bStoreUpdated);
     Navigator.of(context).pop();
-    PremiumTopBannerController.show(
-      context,
-      message: 'Mağaza güncellendi. Vitrin bilgilerin Mağazam\'da yenilendi.',
-      tone: PremiumTopBannerTone.success,
-      duration: const Duration(seconds: 2),
-    );
   }
 
   @override

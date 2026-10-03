@@ -62,7 +62,7 @@ class FirinNetHeader extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.local_fire_department_rounded,
-                  color: AppColors.brandLemonPressed,
+                  color: AppColors.brandInk,
                   size: 18,
                 ),
               ),
