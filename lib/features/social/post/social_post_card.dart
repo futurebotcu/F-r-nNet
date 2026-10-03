@@ -239,11 +239,11 @@ mixin SocialPostInteractionsMixin<T extends ConsumerStatefulWidget>
     setState(() => _shareBusy = true);
     try {
       final buf = StringBuffer()
-        ..writeln("FırınNet'te bir paylaşım")
+        ..writeln(AppStrings.feedShareHeadline)
         ..writeln()
         ..writeln(post.text.trim())
         ..writeln()
-        ..write('Paylaşan: ${post.author}');
+        ..write(AppStrings.feedShareAuthorLine(post.author));
       if (post.tags.isNotEmpty) {
         buf
           ..writeln()
@@ -619,10 +619,11 @@ class SocialPostHeader extends StatelessWidget {
             PopupMenuButton<String>(
               key: const ValueKey('post_more_menu'),
               tooltip: AppStrings.moreActionsTooltip,
+              // Kanonik "daha fazla" ikonu (uygulama geneli more_vert).
               icon: const Icon(
-                Icons.more_horiz_rounded,
-                color: AppColors.textMuted,
-                size: 20,
+                Icons.more_vert_rounded,
+                color: AppColors.textSecondary,
+                size: 22,
               ),
               color: theme.colorScheme.surface,
               onSelected: (v) {
@@ -679,37 +680,37 @@ class SocialPostHeader extends StatelessWidget {
                     ),
                   ),
                 if (onBlock != null)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'block',
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.block_rounded,
                           size: 18,
                           color: AppColors.danger,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           AppStrings.safetyActionBlock,
-                          style: TextStyle(color: AppColors.danger),
+                          style: _dangerMenuStyle,
                         ),
                       ],
                     ),
                   ),
                 if (onDelete != null)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.delete_outline_rounded,
                           size: 18,
                           color: AppColors.danger,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           AppStrings.feedPostDeleteCta,
-                          style: TextStyle(color: AppColors.danger),
+                          style: _dangerMenuStyle,
                         ),
                       ],
                     ),
@@ -721,6 +722,11 @@ class SocialPostHeader extends StatelessWidget {
     );
   }
 }
+
+/// ⋮ menüdeki yıkıcı seçenek (Engelle / Sil) metni.
+final TextStyle _dangerMenuStyle = AppTypography.bodyMedium.copyWith(
+  color: AppColors.danger,
+);
 
 class _TypeBadge extends StatelessWidget {
   const _TypeBadge({required this.type});
@@ -811,6 +817,9 @@ class SocialPostActionRow extends StatelessWidget {
   final VoidCallback? onShare;
   final VoidCallback? onSave;
 
+  /// Aksiyon satırındaki tüm ikonların ortak boyutu.
+  static const double iconSize = 22;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -867,7 +876,7 @@ class SocialPostActionRow extends StatelessWidget {
           ),
           Expanded(
             child: _ActionButton(
-              icon: Icons.ios_share_rounded,
+              icon: Icons.share_outlined,
               color: AppColors.textPrimary,
               label: AppStrings.feedActionShare,
               onTap: onShare,
@@ -929,7 +938,8 @@ class _ActionButton extends StatelessWidget {
                     icon,
                     key: ValueKey(icon),
                     color: color,
-                    size: 20,
+                    // Kanonik aksiyon ikonu boyutu (22) — beş ikon eşit.
+                    size: SocialPostActionRow.iconSize,
                     semanticLabel: label,
                   ),
                 ),
@@ -969,12 +979,14 @@ class SocialPostCaption extends StatefulWidget {
   final String text;
   final bool expandable;
 
-  /// Feed ve detay aynı okuma stilini kullanır.
-  static const TextStyle textStyle = TextStyle(
-    color: AppColors.textPrimary,
-    fontSize: 16.5,
-    height: 1.48,
-    letterSpacing: 0,
+  /// Feed okuma stili — `bodyLarge` rolü (yalnız-metin gönderi ağır
+  /// görünmesin diye 16.5 → 15.5; satır aralığı rahat).
+  static const TextStyle textStyle = AppTypography.bodyLarge;
+
+  /// Detay okuma stili — aynı aile, biraz daha ferah (büyük satır aralığı).
+  static final TextStyle detailTextStyle = AppTypography.bodyLarge.copyWith(
+    fontSize: 16,
+    height: 1.6,
   );
 
   /// Uzun metin akışta bu kadar satırda kesilir; "devamını gör" açar.
@@ -987,17 +999,19 @@ class SocialPostCaption extends StatefulWidget {
 class _CaptionState extends State<SocialPostCaption> {
   bool _expanded = false;
 
-  // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik.
-  static const TextStyle _style = SocialPostCaption.textStyle;
-
   @override
   Widget build(BuildContext context) {
+    // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik. Detayda
+    // (expandable=false) aynı aile, daha ferah satır aralığı + nefes.
+    final style = widget.expandable
+        ? SocialPostCaption.textStyle
+        : SocialPostCaption.detailTextStyle;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.m,
-        AppSpacing.s,
+        widget.expandable ? AppSpacing.xs : AppSpacing.s,
         AppSpacing.m,
-        AppSpacing.m,
+        widget.expandable ? AppSpacing.m : AppSpacing.l,
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -1005,7 +1019,7 @@ class _CaptionState extends State<SocialPostCaption> {
             return Text(
               widget.text,
               key: const ValueKey('post_caption'),
-              style: _style,
+              style: style,
             );
           }
           final painter = TextPainter(
@@ -1013,7 +1027,7 @@ class _CaptionState extends State<SocialPostCaption> {
             // yapılmalı; aksi hâlde kısa metinde de "devamını gör" çıkıyordu.
             text: TextSpan(
               text: widget.text,
-              style: DefaultTextStyle.of(context).style.merge(_style),
+              style: DefaultTextStyle.of(context).style.merge(style),
             ),
             maxLines: SocialPostCaption.collapsedMaxLines,
             textDirection: Directionality.of(context),
@@ -1026,7 +1040,7 @@ class _CaptionState extends State<SocialPostCaption> {
             key: const ValueKey('post_caption'),
             maxLines: SocialPostCaption.collapsedMaxLines,
             overflow: TextOverflow.ellipsis,
-            style: _style,
+            style: style,
           );
           if (!overflows) return text;
           return Column(
@@ -1092,10 +1106,7 @@ class _NeutralTag extends StatelessWidget {
       ),
       child: Text(
         '#$label',
-        style: AppTypography.caption.copyWith(
-          color: AppColors.textSecondary,
-          fontSize: 12,
-        ),
+        style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
       ),
     );
   }

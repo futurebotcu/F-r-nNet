@@ -1995,6 +1995,64 @@ class AppStrings {
   static const String socialMyProfileTooltip = 'Profilim';
   static const String composerRemoveImageCta = 'Fotoğrafı kaldır';
 
+  // ── Final sosyal ──
+  static const String feedShareHeadline = "FırınNet'te bir paylaşım";
+  static String feedShareAuthorLine(String author) => 'Paylaşan: $author';
+  static const String feedCommentSendTooltip = 'Yorumu gönder';
+  static const String profileProfessionalEditCta = 'Düzenle';
+  static const String feedLoadErrorTitle = 'Akış yüklenemedi';
+  static const String feedLoadErrorHint =
+      'Bağlantını kontrol edip yeniden dener misin?';
+  static const String chatAttachTooltip = 'Fotoğraf veya video ekle';
+  static const String chatSendTooltip = 'Mesajı gönder';
+  static const String composerNewPostTitle = 'Yeni Gönderi';
+  static const String composerVideoSelected = 'Video seçildi';
+  static const String postEditNotVisible = 'Bu gönderi artık görünür değil.';
+  static const String postEditOwnerOnly =
+      'Sadece kendi gönderini düzenleyebilirsin.';
+  static const String storyLoadError =
+      'Hikaye yüklenemedi. Biraz sonra yeniden dene.';
+  static const String storyChangeFromGallery = 'Galeriden değiştir';
+  static const String storyRetake = 'Yeniden çek';
+  static const String groupsHeaderSubtitle =
+      'Sektör konuşmaları, bölgesel ağlar';
+  static const String groupCreateLimit25 = '25 kişi';
+  static const String groupCreateLimit50 = '50 kişi';
+  static const String groupCreateLimit100 = '100 kişi';
+  static const String groupCreateLimit250 = '250 kişi';
+  static const String profileCreateNameHint = 'Örn. Hasan Usta';
+  static const String legalAcceptJoiner = ' ve ';
+  static const String legalAcceptSuffix = "'nı okudum, kabul ediyorum.";
+  static const String profileCreateSaveError =
+      'Profilin kaydedilemedi. Bağlantını kontrol edip yeniden dene.';
+  static const String cvSavingLabel = 'Kaydediliyor…';
+  static const String cvRecordsLoadError =
+      'CV kayıtların yüklenemedi. Biraz sonra yeniden dene.';
+  static const String cvRangeOngoing = 'devam';
+  static const String cvRecordRemoveTooltip = 'Kaldır';
+  static const String cvRecordRemoveTitle = 'CV kaydını kaldır';
+  static String cvRecordRemoveMessage(String title) => '"$title" silinsin mi?';
+  static const String cvRecordRemoveConfirm = 'Sil';
+  static const String cvTitleRequired = 'Başlık / rol boş olamaz.';
+  static const String cvTitleLabel = 'Başlık / rol';
+  static const String cvTitleHint = 'Taş Fırın Ustası';
+  static const String cvWorkplaceLabel = 'Kurum / işletme (opsiyonel)';
+  static const String cvWorkplaceHint = 'Konak Fırını';
+  static const String cvCityLabel = 'Şehir';
+  static const String cvCityHint = 'İl seç';
+  static const String cvStartLabel = 'Başlangıç';
+  static const String cvEndLabel = 'Bitiş (boşsa: devam)';
+  static const String cvDescriptionLabel = 'Açıklama (opsiyonel)';
+  static const String cvRecordSaveCta = 'CV kaydını kaydet';
+  static const String academyEmptyTitle = 'Akademi içeriği hazırlanıyor';
+  static const String academyLoadErrorTitle = 'Akademi yüklenemedi';
+  static const String groupDetailLoadErrorTitle = 'Grup yüklenemedi';
+  static const String profilePostsLoadErrorTitle = 'Gönderiler yüklenemedi';
+  static const String cvBioSaveError =
+      'Hakkımda yazın kaydedilemedi. Yeniden dene.';
+  static const String cvRecordSaveError =
+      'CV kaydın kaydedilemedi. Bağlantını kontrol edip yeniden dene.';
+
   static const String routeNotFoundTitle = 'Aradığın sayfa bulunamadı';
   static const String routeNotFoundCta = 'Ana sayfaya dön';
   static const String academyLoadMoreError =

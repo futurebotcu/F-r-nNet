@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/interactions.dart';
 
@@ -87,6 +88,8 @@ class _Segment extends StatelessWidget {
         duration: AppDuration.fast,
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(vertical: 9),
+        // Dokunma alanı ≥ 44px.
+        constraints: const BoxConstraints(minHeight: 44),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppColors.copper : Colors.transparent,
@@ -99,11 +102,9 @@ class _Segment extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.chipLabel.copyWith(
             color: selected ? AppColors.brandInk : AppColors.textSecondary,
             fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-            fontSize: 13,
-            letterSpacing: -0.1,
           ),
         ),
       ),

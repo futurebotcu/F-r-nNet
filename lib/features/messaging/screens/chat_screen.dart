@@ -454,7 +454,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     required bool isSentByMe,
     fcc.MessageGroupStatus? groupStatus,
   }) {
-    final bubble = fcu.SimpleTextMessage(message: message, index: index);
+    // Final görsel: bubble radius/padding/tipografi tasarım sisteminden.
+    final bubble = fcu.SimpleTextMessage(
+      message: message,
+      index: index,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.m + 2,
+        vertical: AppSpacing.s + 2,
+      ),
+      borderRadius: BorderRadius.circular(AppRadius.l),
+      sentTextStyle: AppTypography.bodyMedium,
+      receivedTextStyle: AppTypography.bodyMedium,
+      // Saat: caption rolü; limon balon üstünde de okunur ikincil ton.
+      timeStyle: AppTypography.caption.copyWith(
+        color: AppColors.textSecondary,
+        fontSize: 10.5,
+      ),
+    );
     if (message.resolvedStatus != fcc.MessageStatus.error) return bubble;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -469,24 +485,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               if (t != null) _trySend(t, tempId: message.id);
             },
             borderRadius: BorderRadius.circular(AppRadius.s),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.refresh_rounded,
-                  size: 13,
-                  color: AppColors.danger,
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  AppStrings.messagingRetryCta,
-                  style: const TextStyle(
+            child: Padding(
+              // Dokunma alanı: küçük etiket için dikey nefes.
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xs,
+                vertical: AppSpacing.xs,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.refresh_rounded,
+                    size: 13,
                     color: AppColors.danger,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 3),
+                  Text(
+                    AppStrings.messagingRetryCta,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.danger,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -569,18 +591,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               bottom: 8,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(
+                children: [
+                  const Icon(
                     Icons.videocam_rounded,
                     color: AppColors.surface,
                     size: 14,
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
                     AppStrings.chatMediaVideoLabel,
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       color: AppColors.surface,
-                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -755,8 +776,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             emptyChatListBuilder: (_) =>
                 _ChatEmptyState(contextLabel: subtitle),
             // Paket varsayılanı İngilizce "Type a message" — Türkçe ipucu.
-            composerBuilder: (_) =>
-                const fcu.Composer(hintText: AppStrings.chatComposerHint),
+            // Final görsel: kanonik ikonlar + AppRadius'lu giriş + marka
+            // renkleri (paket varsayılan ataş/send ikonları yerine).
+            composerBuilder: (_) => fcu.Composer(
+              hintText: AppStrings.chatComposerHint,
+              attachmentIcon: const Icon(
+                Icons.add_photo_alternate_outlined,
+                size: 24,
+                semanticLabel: AppStrings.chatAttachTooltip,
+              ),
+              sendIcon: const Icon(
+                Icons.send_rounded,
+                size: 22,
+                semanticLabel: AppStrings.chatSendTooltip,
+              ),
+              attachmentIconColor: AppColors.textSecondary,
+              sendIconColor: AppColors.brandInk,
+              emptyFieldSendIconColor: AppColors.textMuted,
+              hintColor: AppColors.textMuted,
+              textColor: AppColors.textPrimary,
+              inputFillColor: AppColors.surfaceLine,
+              backgroundColor: AppColors.surface,
+              inputBorder: const OutlineInputBorder(
+                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.all(Radius.circular(AppRadius.l)),
+              ),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.s,
+                AppSpacing.s,
+                AppSpacing.s,
+                AppSpacing.s,
+              ),
+            ),
             // M-5 deepening — Default bubble (SimpleTextMessage) korunur;
             // yalnız error durumundaki bubble'ın altına görünür "Tekrar
             // dene" eklenir. chatMessageBuilder override EDİLMEZ → hizalama
@@ -836,7 +887,7 @@ class _ChatSafetyMenu extends ConsumerWidget {
     final isBlocked = blocked.contains(otherUserId);
     return PopupMenuButton<String>(
       key: const ValueKey('chat_safety_menu'),
-      icon: const Icon(Icons.more_horiz_rounded, color: AppColors.textPrimary),
+      icon: const Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),
       tooltip: AppStrings.moreActionsTooltip,
       onSelected: (v) {
         if (v == 'report') {
@@ -866,11 +917,11 @@ class _ChatSafetyMenu extends ConsumerWidget {
             child: Text(AppStrings.safetyActionUnblock),
           )
         else
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'block',
             child: Text(
               AppStrings.safetyActionBlock,
-              style: TextStyle(color: AppColors.danger),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.danger),
             ),
           ),
       ],

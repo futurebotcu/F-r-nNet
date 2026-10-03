@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
@@ -58,29 +59,24 @@ class InlineComposerCard extends ConsumerWidget {
                           size: FirinNetAvatarSize.m,
                         ),
                         const SizedBox(width: AppSpacing.m),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 AppStrings.feedComposerPanelPlaceholder,
-                                style: TextStyle(
+                                style: AppTypography.bodyMedium.copyWith(
                                   color: AppColors.textSecondary,
-                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              SizedBox(height: 2),
-                              Text(
+                              const SizedBox(height: 2),
+                              const Text(
                                 AppStrings.feedComposerPanelSubtitle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                                style: AppTypography.caption,
                               ),
                             ],
                           ),
@@ -228,9 +224,7 @@ class _ComposerAction extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 label,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
+                style: AppTypography.chipLabel.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -259,11 +253,7 @@ class _ShareButton extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           child: Text(
             AppStrings.feedComposerActionShare,
-            style: TextStyle(
-              color: AppColors.brandInk,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTypography.smallAction,
           ),
         ),
       ),
@@ -293,11 +283,7 @@ class _MediaActionSheet extends StatelessWidget {
             ),
             child: Text(
               AppStrings.mediaSheetTitle,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
+              style: AppTypography.sectionTitle,
             ),
           ),
           _MediaSheetTile(
@@ -355,11 +341,7 @@ class _MediaSheetTile extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 14.5,
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../app/theme/app_typography.dart';
 import '../data/academy_repository.dart';
 import '../providers/academy_providers.dart';
 
@@ -40,13 +41,15 @@ class HumorPrefsTiles extends ConsumerWidget {
                     allowComments: v,
                     allowDm: prefs.allowDm,
                   )),
-          title: const Text(
+          title: Text(
             AppStrings.humorPrefCommentsTitle,
-            style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
           subtitle: const Text(
             AppStrings.humorPrefCommentsSubtitle,
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+            style: AppTypography.meta,
           ),
           activeThumbColor: AppColors.brandInk,
           activeTrackColor: AppColors.brandLemon,
@@ -60,13 +63,15 @@ class HumorPrefsTiles extends ConsumerWidget {
                     allowComments: prefs.allowComments,
                     allowDm: v,
                   )),
-          title: const Text(
+          title: Text(
             AppStrings.humorPrefDmTitle,
-            style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
           subtitle: const Text(
             AppStrings.humorPrefDmSubtitle,
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+            style: AppTypography.meta,
           ),
           activeThumbColor: AppColors.brandInk,
           activeTrackColor: AppColors.brandLemon,

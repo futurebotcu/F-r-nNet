@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../providers/follow_providers.dart';
@@ -118,7 +119,7 @@ class _FollowButtonShell extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
         ),
       );
     }
@@ -142,7 +143,7 @@ class _FollowButtonShell extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-        textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+        textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
       ),
     );
   }

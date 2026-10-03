@@ -81,25 +81,25 @@ class ProfileHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (role != null && role.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         role,
+                        // Rol/meslek: meta rolü, bir ton koyu (şehirden önce).
                         style: AppTypography.meta.copyWith(
-                          color: AppColors.brandInk,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w700,
-                          fontSize: 13,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                     if (city != null && city.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.place_outlined,
+                            Icons.location_on_outlined,
                             size: 14,
                             color: AppColors.textMuted,
                           ),

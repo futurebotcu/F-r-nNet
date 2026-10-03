@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -84,7 +85,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                 if (!widget.embedded) ...[
                   FirinNetHeader(
                     title: AppStrings.groupsTitle,
-                    subtitle: 'Sektör konuşmaları, bölgesel ağlar',
+                    subtitle: AppStrings.groupsHeaderSubtitle,
                     showLogo: false,
                     actions: [
                       // G.N1 — Gruplar header'da bildirim bell + badge. Owner
@@ -117,17 +118,11 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                   // hairline border, focus'ta bakır vurgu. İşlev değişmedi.
                   child: TextField(
                     onChanged: (v) => setState(() => _query = v.trim()),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: AppTypography.bodyMedium,
                     decoration: InputDecoration(
                       hintText: AppStrings.groupsSearchHint,
-                      hintStyle: const TextStyle(
+                      hintStyle: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textMuted,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w500,
                       ),
                       prefixIcon: const Icon(
                         Icons.search_rounded,
@@ -165,15 +160,14 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                 if (isDefaultView) ...[
                   joinedAsync.when(
                     loading: () => const _MiniLoading(),
-                    error: (_, __) => const Padding(
+                    error: (_, __) => Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.pageH,
                       ),
                       child: Text(
                         AppStrings.groupsErrorGeneric,
-                        style: TextStyle(
+                        style: AppTypography.meta.copyWith(
                           color: AppColors.textSecondary,
-                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -323,11 +317,8 @@ class _CatChip extends StatelessWidget {
           ),
           child: Text(
             label,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               color: selected ? AppColors.brandInk : AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.05,
             ),
           ),
         ),

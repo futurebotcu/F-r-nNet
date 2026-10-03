@@ -8,6 +8,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_products.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_confirm_dialog.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
@@ -362,24 +363,15 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
       context.go(AppRoutes.splash);
     } catch (e) {
       if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
-      // V1.4 — Default 4 sn snackbar kullanıcı tarafından kaçırılıyordu.
-      // 7 sn göster + "Tamam" action ile dismiss edebilsin.
-      messenger.showSnackBar(
-        SnackBar(
-          // Auth repo hataları zaten Türkçeye çevrilmiş düz Exception;
-          // diğer (Postgrest/ağ) istisnaların ham metni gösterilmez.
-          content: Text(
-            e.toString().startsWith('Exception: ')
-                ? e.toString().replaceFirst('Exception: ', '')
-                : AppStrings.errorGenericTitle,
-          ),
-          duration: const Duration(seconds: 7),
-          action: SnackBarAction(
-            label: AppStrings.commonOk,
-            onPressed: messenger.hideCurrentSnackBar,
-          ),
-        ),
+      // Ortak geri bildirim dili (AppFeedback) + "Tamam" aksiyonu. Auth repo
+      // hataları zaten Türkçeye çevrilmiş düz Exception; diğer (Postgrest/
+      // ağ) istisnaların ham metni gösterilmez → bağlama özel mesaj.
+      AppFeedback.error(
+        context,
+        e.toString().startsWith('Exception: ')
+            ? e.toString().replaceFirst('Exception: ', '')
+            : AppStrings.profileCreateSaveError,
+        actionLabel: AppStrings.commonOk,
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -429,7 +421,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               controller: _nameCtrl,
               decoration: const InputDecoration(
                 labelText: AppStrings.displayName,
-                hintText: 'Örn. Hasan Usta',
+                hintText: AppStrings.profileCreateNameHint,
               ),
               validator: (v) => _validateRequired(v, 'Profil adı gerekli'),
             ),
@@ -526,7 +518,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                 ),
                 child: const Text(
                   AppStrings.profileCreateGuestEscape,
-                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                  style: AppTypography.chipLabel,
                 ),
               ),
             ),
@@ -596,6 +588,13 @@ class _AccountTypePicker extends StatelessWidget {
 /// Tıklanabilir Kullanım Şartları + Gizlilik Politikası link'leri içerir.
 /// Kabul edilmediğinde [showError] true olur ve kırmızı border + uyarı yazısı
 /// gösterilir.
+/// Kullanım şartları / gizlilik bağlantı metni (altı çizili, mürekkep).
+final TextStyle _legalLinkStyle = AppTypography.body.copyWith(
+  color: AppColors.softGold,
+  fontWeight: FontWeight.w700,
+  decoration: TextDecoration.underline,
+);
+
 class _LegalAcceptCheckbox extends StatefulWidget {
   const _LegalAcceptCheckbox({
     required this.value,
@@ -667,32 +666,20 @@ class _LegalAcceptCheckboxState extends State<_LegalAcceptCheckbox> {
                   padding: const EdgeInsets.only(top: 12, bottom: 12, right: 4),
                   child: RichText(
                     text: TextSpan(
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.45,
-                      ),
+                      style: AppTypography.body.copyWith(height: 1.45),
                       children: [
                         TextSpan(
                           text: AppStrings.legalTermsTitle,
-                          style: const TextStyle(
-                            color: AppColors.softGold,
-                            fontWeight: FontWeight.w700,
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: _legalLinkStyle,
                           recognizer: _termsTap,
                         ),
-                        const TextSpan(text: ' ve '),
+                        const TextSpan(text: AppStrings.legalAcceptJoiner),
                         TextSpan(
                           text: AppStrings.legalPrivacyTitle,
-                          style: const TextStyle(
-                            color: AppColors.softGold,
-                            fontWeight: FontWeight.w700,
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: _legalLinkStyle,
                           recognizer: _privacyTap,
                         ),
-                        const TextSpan(text: '\'nı okudum, kabul ediyorum.'),
+                        const TextSpan(text: AppStrings.legalAcceptSuffix),
                       ],
                     ),
                   ),
@@ -706,11 +693,9 @@ class _LegalAcceptCheckboxState extends State<_LegalAcceptCheckbox> {
             padding: const EdgeInsets.only(top: 8, left: AppSpacing.s),
             child: Text(
               AppStrings.legalAcceptRequired,
-              style: const TextStyle(
+              style: AppTypography.caption.copyWith(
                 color: AppColors.danger,
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
-                height: 1.35,
               ),
             ),
           ),
@@ -766,13 +751,11 @@ class _AccountTypeChip extends StatelessWidget {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: AppTypography.chipLabel.copyWith(
                   color: isSelected
                       ? AppColors.textPrimary
                       : AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
                   fontSize: 13,
-                  letterSpacing: 0.1,
                 ),
               ),
             ],

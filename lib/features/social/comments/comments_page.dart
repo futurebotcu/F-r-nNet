@@ -105,7 +105,7 @@ class SocialCommentsPage extends ConsumerWidget {
         leadingWidth: 56,
         leading: IconButton(
           tooltip: AppStrings.socialBackTooltip,
-          icon: const Icon(Icons.arrow_back_rounded, size: 26),
+          icon: const Icon(Icons.arrow_back_rounded, size: 24),
           color: AppColors.textPrimary,
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -445,8 +445,8 @@ class _EmptyState extends StatelessWidget {
               isGuest
                   ? AppStrings.feedCommentEmptyGuest
                   : AppStrings.feedCommentEmpty,
-              style: AppTypography.body.copyWith(
-                fontSize: 15,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -557,7 +557,7 @@ class _CommentItem extends ConsumerWidget {
                       const SizedBox(width: 6),
                       Text(
                         '· ${relativeTimeShortTr(comment.createdAt)}',
-                        style: AppTypography.meta,
+                        style: AppTypography.caption,
                       ),
                       const Spacer(),
                       if (isOwn)
@@ -581,7 +581,7 @@ class _CommentItem extends ConsumerWidget {
                         PopupMenuButton<String>(
                           tooltip: AppStrings.moreActionsTooltip,
                           icon: const Icon(
-                            Icons.more_horiz_rounded,
+                            Icons.more_vert_rounded,
                             size: 20,
                             color: AppColors.textMuted,
                           ),
@@ -603,8 +603,8 @@ class _CommentItem extends ConsumerWidget {
                               );
                             }
                           },
-                          itemBuilder: (_) => const [
-                            PopupMenuItem(
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(
                               value: 'report',
                               child: Text(AppStrings.safetyActionReport),
                             ),
@@ -612,22 +612,23 @@ class _CommentItem extends ConsumerWidget {
                               value: 'block',
                               child: Text(
                                 AppStrings.safetyActionBlock,
-                                style: TextStyle(color: AppColors.danger),
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.danger,
+                                ),
                               ),
                             ),
                           ],
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
+                  // Detay ailesi: gövde metni bodyMedium, ferah satır aralığı.
                   Text(
                     comment.text,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textPrimary,
-                      fontSize: 15.5,
-                    ),
+                    key: const ValueKey('comment_text'),
+                    style: AppTypography.bodyMedium.copyWith(height: 1.5),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xs),
                   // PR #2 — yoruma beğeni + (üst yoruma) cevap.
                   Row(
                     children: [
@@ -763,7 +764,8 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
   @override
   Widget build(BuildContext context) {
     final liked = _liked;
-    final color = liked ? AppColors.brandLemonPressed : AppColors.textMuted;
+    // Aktif: mürekkep (limon tonu beyaz zeminde okunmaz) — feed ile aynı.
+    final color = liked ? AppColors.brandInk : AppColors.textMuted;
     // Yazısız ikon (feed ile tutarlı): etiket Tooltip/semanticLabel'da; sayı
     // yalnız > 0 ise ikon yanında (0 gizli, görünür "Beğen" metni yok).
     return Tooltip(
@@ -966,7 +968,7 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
             icon: const Icon(Icons.login_rounded, size: 18),
             label: const Text(
               AppStrings.feedCommentGuestCta,
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+              style: AppTypography.buttonLabel,
             ),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -1076,9 +1078,8 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                 Expanded(
                   child: Text(
                     _inlineError!,
-                    style: const TextStyle(
+                    style: AppTypography.body.copyWith(
                       color: AppColors.danger,
-                      fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1104,17 +1105,13 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                     focusNode: _focus,
                     minLines: 1,
                     maxLines: 5,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: AppTypography.bodyLarge.copyWith(height: 1.4),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _onSend(),
                     decoration: InputDecoration(
                       hintText: AppStrings.feedCommentComposerHint,
-                      hintStyle: const TextStyle(
+                      hintStyle: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textMuted,
-                        fontSize: 15.5,
                       ),
                       isDense: false,
                       filled: true,
@@ -1124,14 +1121,14 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                         vertical: 14,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadius.m),
                         borderSide: const BorderSide(
                           color: AppColors.borderHairline,
                           width: 0.6,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadius.m),
                         borderSide: const BorderSide(
                           color: AppColors.primary,
                           width: 1.2,
@@ -1145,30 +1142,35 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
               SizedBox(
                 width: 52,
                 height: 52,
-                child: Material(
-                  color: AppColors.primary,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: _sending ? null : _onSend,
-                    customBorder: const CircleBorder(),
-                    child: Center(
-                      child: _sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  AppColors.brandInk,
+                child: Tooltip(
+                  message: AppStrings.feedCommentSendTooltip,
+                  child: Material(
+                    color: AppColors.primary,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: _sending ? null : _onSend,
+                      customBorder: const CircleBorder(),
+                      child: Center(
+                        child: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    AppColors.brandInk,
+                                  ),
                                 ),
+                              )
+                            : const Icon(
+                                Icons.send_rounded,
+                                color: AppColors.brandInk,
+                                size: 22,
+                                semanticLabel:
+                                    AppStrings.feedCommentSendTooltip,
                               ),
-                            )
-                          : const Icon(
-                              Icons.send_rounded,
-                              color: AppColors.brandInk,
-                              size: 22,
-                            ),
+                      ),
                     ),
                   ),
                 ),

@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../social/post/widgets/social_post_video.dart';
 
 /// Tam ekran karartmalı video oynatma dialog'u. Kapatma: sağ üst X.
@@ -27,6 +28,7 @@ Future<void> showChatVideoViewer(BuildContext context, String url) {
           child: Align(
             alignment: Alignment.topRight,
             child: IconButton(
+              tooltip: AppStrings.socialCloseTooltip,
               icon: const Icon(Icons.close_rounded, color: AppColors.surface),
               onPressed: () => Navigator.of(ctx).maybePop(),
             ),

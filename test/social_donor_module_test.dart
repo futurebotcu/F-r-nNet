@@ -187,11 +187,13 @@ void main() {
       expect(src.contains('AppStrings.feedActionShare'), isTrue);
     });
 
-    test('P0 - Caption font 16.5 / author authorName rolü / etiket 12', () {
-      expect(src.contains('fontSize: 16.5'), isTrue);
+    test('Final sosyal - caption bodyLarge rolü / author authorName rolü', () {
+      // Final sosyal: yalnız-metin gönderi ağır görünmesin → caption
+      // `bodyLarge` (15.5); detay aynı aile, daha ferah satır aralığı.
+      expect(src.contains('AppTypography.bodyLarge'), isTrue);
+      expect(src.contains('detailTextStyle'), isTrue);
       // Sosyal polish 2: yazar adı ortak tipografi rolünde (feed = detay).
       expect(src.contains('AppTypography.authorName'), isTrue);
-      expect(src.contains('fontSize: 12'), isTrue);
     });
   });
 

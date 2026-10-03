@@ -211,7 +211,7 @@ class ConversationTile extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
                         if (ctxLabel.isNotEmpty) ...[
@@ -252,7 +252,6 @@ class ConversationTile extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.body.copyWith(
-                              fontSize: 13,
                               color: unread
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,
@@ -290,10 +289,11 @@ class ConversationTile extends StatelessWidget {
                     conversation.unreadCount > 99
                         ? '99+'
                         : '${conversation.unreadCount}',
-                    style: const TextStyle(
+                    style: AppTypography.badge.copyWith(
                       color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
-                      fontSize: 11,
+                      letterSpacing: 0,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),

@@ -22,10 +22,10 @@ class GroupCreateScreen extends ConsumerStatefulWidget {
 }
 
 const _limitOptions = <_LimitChoice>[
-  _LimitChoice(label: '25 kişi', value: 25),
-  _LimitChoice(label: '50 kişi', value: 50),
-  _LimitChoice(label: '100 kişi', value: 100),
-  _LimitChoice(label: '250 kişi', value: 250),
+  _LimitChoice(label: AppStrings.groupCreateLimit25, value: 25),
+  _LimitChoice(label: AppStrings.groupCreateLimit50, value: 50),
+  _LimitChoice(label: AppStrings.groupCreateLimit100, value: 100),
+  _LimitChoice(label: AppStrings.groupCreateLimit250, value: 250),
   _LimitChoice(label: AppStrings.groupCreateLimitUnlimited, value: null),
 ];
 
