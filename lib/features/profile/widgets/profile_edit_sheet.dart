@@ -13,7 +13,6 @@
 //   4) ProfileController + publicProfileDetailProvider invalidate
 //   5) Sheet kapat + başarı snackbar
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +24,9 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -35,7 +36,6 @@ import '../models/bakery_profile.dart';
 import '../providers/profile_provider.dart';
 import '../providers/public_profile_detail_provider.dart';
 import '../services/avatar_upload_service.dart';
-import '../../../core/utils/tr_case.dart';
 
 /// Sheet içi hata satırı (danger ikon + kısa metin).
 class _InlineError extends StatelessWidget {
@@ -200,6 +200,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       final result = await service.upload(userId: user.id, file: picked);
       if (!mounted) return;
       setState(() => _avatarUrl = result.publicUrl);
+      AppFeedback.success(context, AppStrings.profileAvatarAddedSnack);
     } catch (e) {
       debugPrint('[FirinNet][ProfileEdit] avatar upload error: $e');
       if (!mounted) return;
@@ -343,9 +344,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                     const SizedBox(height: AppSpacing.l),
                     _AvatarTile(
                       avatarUrl: _avatarUrl,
-                      initial: _name.text.trim().isNotEmpty
-                          ? _name.text.trim()[0].trUpper
-                          : '?',
+                      name: _name.text.trim(),
                       uploading: _uploading,
                       onTap: _uploading || _saving
                           ? null
@@ -510,58 +509,27 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
 class _AvatarTile extends StatelessWidget {
   const _AvatarTile({
     required this.avatarUrl,
-    required this.initial,
+    required this.name,
     required this.uploading,
     required this.onTap,
   });
 
   final String? avatarUrl;
-  final String initial;
+  final String name;
   final bool uploading;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    const double size = 72;
-    final radius = BorderRadius.circular(AppRadius.l);
-    final hasUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
-    final fallback = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.softGold, AppColors.copperMuted],
-        ),
-        borderRadius: radius,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w800,
-          fontSize: 30,
-        ),
-      ),
-    );
     return Row(
       children: [
-        SizedBox(
-          width: size,
-          height: size,
-          child: hasUrl
-              ? ClipRRect(
-                  borderRadius: radius,
-                  child: CachedNetworkImage(
-                    imageUrl: avatarUrl!,
-                    fit: BoxFit.cover,
-                    // Perf: avatar ekran boyutunda decode edilir.
-                    memCacheWidth: (size * 2).round(),
-                    placeholder: (_, __) => fallback,
-                    errorWidget: (_, __, ___) => fallback,
-                  ),
-                )
-              : fallback,
+        // Ortak avatar: fotoğraf (memCacheWidth ile ekran boyutunda decode)
+        // → yüklenirken/bozuksa baş harfler; kırık resim ikonu yok.
+        FirinNetAvatar(
+          key: const ValueKey('profile_edit_avatar'),
+          name: name,
+          imageUrl: avatarUrl,
+          size: FirinNetAvatarSize.l,
         ),
         const SizedBox(width: AppSpacing.l),
         Expanded(
@@ -578,7 +546,9 @@ class _AvatarTile extends StatelessWidget {
               uploading
                   ? AppStrings.profileEditAvatarUploading
                   : AppStrings.profileEditAvatarChange,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: AppTypography.buttonLabel.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textPrimary,

@@ -38,7 +38,9 @@ import '../composer/inline_composer_card.dart';
 import '../post/social_post_card.dart';
 import '../stories/social_stories_carousel.dart';
 import 'feed_segment_provider.dart';
-import '../../../core/utils/tr_case.dart';
+import '../widgets/social_skeletons.dart';
+import '../../../core/widgets/interactions.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
 
 /// FırınNet'in ana sosyal feed sayfası — donor-first.
 ///
@@ -132,9 +134,7 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
         data: (state) => _FeedList(
           posts: blocked.isEmpty
               ? state.posts
-              : state.posts
-                  .where((p) => !blocked.contains(p.ownerId))
-                  .toList(),
+              : state.posts.where((p) => !blocked.contains(p.ownerId)).toList(),
           isLoadingMore: state.isLoadingMore,
           hasMore: state.hasMore,
           scrollController: _scrollController,
@@ -182,9 +182,6 @@ class ProfileAvatarAction extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
-    final initial = (profile?.displayName.isNotEmpty ?? false)
-        ? profile!.displayName[0].trUpper
-        : 'M';
     void onTap() {
       final user = ref.read(currentAuthUserProvider);
       if (user != null) {
@@ -194,29 +191,23 @@ class ProfileAvatarAction extends ConsumerWidget {
       }
     }
 
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(
-        side: BorderSide(color: AppColors.borderHairline, width: 0.6),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          height: 30,
-          width: 30,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.brandLemonPale,
-          ),
-          child: Text(
-            initial,
-            style: const TextStyle(
-              color: AppColors.brandInk,
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
+    // 32px avatar, 44px dokunma alanı.
+    return Tooltip(
+      message: AppStrings.socialMyProfileTooltip,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: FirinNetAvatar(
+              key: const ValueKey('header_profile_avatar'),
+              name: profile?.displayName,
+              imageUrl: profile?.avatarUrl,
+              size: FirinNetAvatarSize.s,
             ),
           ),
         ),
@@ -346,88 +337,10 @@ class _FeedLoading extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       children: const [
         if (_kShowStories) SocialStoriesCarousel(),
-        _FeedSkeletonCard(),
-        _FeedSkeletonCard(withMedia: true),
-        _FeedSkeletonCard(),
+        FeedSkeletonCard(),
+        FeedSkeletonCard(withMedia: true),
+        FeedSkeletonCard(),
       ],
-    );
-  }
-}
-
-/// Statik iskelet kart — gönderi kartının yerleşimini (avatar, isim, metin,
-/// görsel, aksiyonlar) gri bloklarla taklit eder.
-class _FeedSkeletonCard extends StatelessWidget {
-  const _FeedSkeletonCard({this.withMedia = false});
-
-  final bool withMedia;
-
-  static Widget _bar(double width, {double height = 12}) => Container(
-    width: width,
-    height: height,
-    decoration: BoxDecoration(
-      color: AppColors.surfaceLine,
-      borderRadius: BorderRadius.circular(AppRadius.s),
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.pageH,
-        10,
-        AppSpacing.pageH,
-        10,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.m),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.l),
-        boxShadow: AppShadow.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceLine,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [_bar(120), const SizedBox(height: 8), _bar(72)],
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.m),
-          _bar(double.infinity),
-          const SizedBox(height: 8),
-          _bar(220),
-          if (withMedia) ...[
-            const SizedBox(height: AppSpacing.m),
-            AspectRatio(
-              aspectRatio: 4 / 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLine,
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.m),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [_bar(28), _bar(28), _bar(28), _bar(28)],
-          ),
-        ],
-      ),
     );
   }
 }
@@ -533,13 +446,19 @@ class _FeedSegment extends ConsumerWidget {
               label: AppStrings.feedSegmentAll,
               icon: Icons.dynamic_feed_rounded,
               selected: segment == 0,
-              onTap: () => ref.read(feedSegmentProvider.notifier).state = 0,
+              onTap: () {
+                AppHaptics.selection();
+                ref.read(feedSegmentProvider.notifier).state = 0;
+              },
             ),
             _SegmentTab(
               label: AppStrings.feedSegmentFollowing,
               icon: Icons.people_alt_rounded,
               selected: segment == 1,
-              onTap: () => ref.read(feedSegmentProvider.notifier).state = 1,
+              onTap: () {
+                AppHaptics.selection();
+                ref.read(feedSegmentProvider.notifier).state = 1;
+              },
             ),
           ],
         ),

@@ -1981,6 +1981,20 @@ class AppStrings {
   static const String notificationsMarkAllReadFailed =
       'İşaretlenemedi. Biraz sonra tekrar dene.';
   static const String closeTooltip = 'Kapat';
+  // ── Sosyal polish 2 ──
+  static const String socialLoadingLabel = 'Yükleniyor';
+  static const String socialCloseTooltip = 'Kapat';
+  static const String socialBackTooltip = 'Geri';
+  static const String chatLoadErrorTitle = 'Mesajlar yüklenemedi';
+  static const String chatLoadErrorSubtitle =
+      'Bağlantını kontrol edip tekrar dene.';
+  static const String chatEmptyTitle = 'Henüz mesaj yok';
+  static const String feedCommentSentSnack = 'Yorumun eklendi';
+  static const String feedReplySentSnack = 'Cevabın eklendi';
+  static const String profileAvatarAddedSnack = 'Profil fotoğrafı eklendi';
+  static const String socialMyProfileTooltip = 'Profilim';
+  static const String composerRemoveImageCta = 'Fotoğrafı kaldır';
+
   static const String routeNotFoundTitle = 'Aradığınız sayfa bulunamadı';
   static const String routeNotFoundCta = 'Ana sayfaya dön';
   static const String academyLoadMoreError =

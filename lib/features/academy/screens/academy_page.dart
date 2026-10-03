@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../social/post/social_post_card.dart';
+import '../../social/widgets/social_skeletons.dart';
 import '../models/academy_bot_profile.dart';
 import '../models/academy_recipe.dart';
 import '../providers/academy_providers.dart';
@@ -36,8 +38,7 @@ class AcademyPage extends ConsumerWidget {
             return false;
           },
           child: RefreshIndicator(
-            onRefresh: () =>
-                ref.read(academyFeedProvider.notifier).refresh(),
+            onRefresh: () => ref.read(academyFeedProvider.notifier).refresh(),
             child: ListView(
               padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
               children: [
@@ -46,9 +47,7 @@ class AcademyPage extends ConsumerWidget {
                 const _RecipesStrip(),
                 bots.when(
                   data: (list) => _BotFilterChips(
-                    bots: list
-                        .where((b) => !b.isHumor)
-                        .toList(growable: false),
+                    bots: list.where((b) => !b.isHumor).toList(growable: false),
                     selected: feed.filterBotId,
                     onSelect: (id) => ref
                         .read(academyFeedProvider.notifier)
@@ -62,6 +61,16 @@ class AcademyPage extends ConsumerWidget {
                   _RetryState(
                     onRetry: () =>
                         ref.read(academyFeedProvider.notifier).refresh(),
+                  )
+                else if (feed.loading && feed.posts.isEmpty)
+                  // İlk yükleme: tek başına küçük çark yerine gönderi
+                  // kartı iskeleti (sonraki sayfa satır-içi küçük gösterge).
+                  const Column(
+                    key: ValueKey('academy_skeleton'),
+                    children: [
+                      FeedSkeletonCard(),
+                      FeedSkeletonCard(withMedia: true),
+                    ],
                   )
                 else if (!feed.loading && feed.posts.isEmpty)
                   const _EmptyState()
@@ -117,7 +126,11 @@ class _AcademyHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageH, AppSpacing.s, AppSpacing.pageH, AppSpacing.m),
+        AppSpacing.pageH,
+        AppSpacing.s,
+        AppSpacing.pageH,
+        AppSpacing.m,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -145,15 +158,7 @@ class _AcademyHero extends StatelessWidget {
               children: [
                 AcademyAiBadge(),
                 SizedBox(height: 6),
-                Text(
-                  AppStrings.academyBio,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                    height: 1.35,
-                  ),
-                ),
+                Text(AppStrings.academyBio, style: AppTypography.body),
               ],
             ),
           ),
@@ -211,11 +216,17 @@ class _BotFilterChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
         children: [
-          _chip(AppStrings.academyFilterAll, selected == null,
-              () => onSelect(null)),
+          _chip(
+            AppStrings.academyFilterAll,
+            selected == null,
+            () => onSelect(null),
+          ),
           for (final b in bots)
-            _chip(b.topic.label, selected == b.profileId,
-                () => onSelect(b.profileId)),
+            _chip(
+              b.topic.label,
+              selected == b.profileId,
+              () => onSelect(b.profileId),
+            ),
         ],
       ),
     );
@@ -229,9 +240,7 @@ class _BotFilterChips extends StatelessWidget {
         label: Text(label),
         selected: active,
         onSelected: (_) => onTap(),
-        labelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
+        labelStyle: AppTypography.chipLabel.copyWith(
           color: active ? AppColors.brandInk : AppColors.textSecondary,
         ),
         selectedColor: AppColors.brandLemonPale,
@@ -275,15 +284,15 @@ class _RecipesStrip extends ConsumerWidget {
           children: [
             const Padding(
               padding: EdgeInsets.fromLTRB(
-                AppSpacing.pageH, 0, AppSpacing.pageH, AppSpacing.xs),
+                AppSpacing.pageH,
+                0,
+                AppSpacing.pageH,
+                AppSpacing.xs,
+              ),
               child: Text(
                 AppStrings.academyRecipesTitle,
                 key: ValueKey('academy_recipes_title'),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTypography.sectionTitle,
               ),
             ),
             SizedBox(
@@ -294,12 +303,12 @@ class _RecipesStrip extends ConsumerWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.pageH),
+                  horizontal: AppSpacing.pageH,
+                ),
                 itemCount: list.length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(width: AppSpacing.s),
-                itemBuilder: (context, i) =>
-                    _RecipeCard(recipe: list[i]),
+                itemBuilder: (context, i) => _RecipeCard(recipe: list[i]),
               ),
             ),
             const SizedBox(height: AppSpacing.m),
@@ -317,7 +326,8 @@ class _RecipeCard extends StatelessWidget {
 
   /// Kart yüksekliği: padding + ikon + 2 satır başlık + meta + yazar.
   static double heightFor(TextScaler scaler) {
-    final text = scaler.scale(13.5) * 1.25 * 2 +
+    final text =
+        scaler.scale(13.5) * 1.25 * 2 +
         scaler.scale(11.5) * 1.3 +
         scaler.scale(11) * 1.3;
     return (AppSpacing.m * 2 + 18 + 6 + text + 8).ceilToDouble();
@@ -344,8 +354,11 @@ class _RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.restaurant_menu_rounded,
-                size: 18, color: AppColors.brandInk),
+            const Icon(
+              Icons.restaurant_menu_rounded,
+              size: 18,
+              color: AppColors.brandInk,
+            ),
             const SizedBox(height: 6),
             Expanded(
               child: Text(
@@ -363,9 +376,7 @@ class _RecipeCard extends StatelessWidget {
             if (meta.isNotEmpty)
               Text(
                 meta,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.caption.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -373,10 +384,9 @@ class _RecipeCard extends StatelessWidget {
               recipe.authorName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textMuted,
               ),
             ),
           ],
@@ -398,19 +408,16 @@ void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
       builder: (context, controller) => ListView(
         controller: controller,
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.pageH, 0, AppSpacing.pageH, AppSpacing.xxl),
+          AppSpacing.pageH,
+          0,
+          AppSpacing.pageH,
+          AppSpacing.xxl,
+        ),
         children: [
           Row(
             children: [
               Expanded(
-                child: Text(
-                  recipe.title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
+                child: Text(recipe.title, style: AppTypography.detailTitle),
               ),
               const AcademyAiBadge(label: AppStrings.academyRecipeBadge),
               IconButton(
@@ -431,20 +438,12 @@ void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
               if (recipe.ovenC != null) '${recipe.ovenC}°C',
               if (recipe.minutes != null) '${recipe.minutes} dk',
             ].join(' · '),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
+            style: AppTypography.meta.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.m),
           const Text(
             AppStrings.academyRecipeIngredients,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
+            style: AppTypography.sectionTitle,
           ),
           const SizedBox(height: AppSpacing.xs),
           for (final ing in recipe.ingredients)
@@ -452,11 +451,9 @@ void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
               padding: const EdgeInsets.only(bottom: 3),
               child: Text(
                 ing.display,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.body.copyWith(
                   color: AppColors.textPrimary,
-                  height: 1.3,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -464,34 +461,17 @@ void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
             const SizedBox(height: AppSpacing.m),
             const Text(
               AppStrings.academyRecipeSteps,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
+              style: AppTypography.sectionTitle,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               recipe.steps,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-                height: 1.45,
-              ),
+              style: AppTypography.body.copyWith(color: AppColors.textPrimary),
             ),
           ],
           if (recipe.notes.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.m),
-            Text(
-              recipe.notes,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
-            ),
+            Text(recipe.notes, style: AppTypography.body),
           ],
         ],
       ),
@@ -508,19 +488,13 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         children: const [
-          Icon(Icons.menu_book_outlined,
-              size: 40, color: AppColors.textMuted),
+          Icon(Icons.menu_book_outlined, size: 40, color: AppColors.textMuted),
           SizedBox(height: AppSpacing.s),
           Text(
             AppStrings.academyEmpty,
             key: ValueKey('academy_empty'),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
-              height: 1.4,
-            ),
+            style: AppTypography.meta,
           ),
         ],
       ),
@@ -542,11 +516,7 @@ class _RetryState extends StatelessWidget {
           const Text(
             AppStrings.academyLoadError,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
-            ),
+            style: AppTypography.meta,
           ),
           const SizedBox(height: AppSpacing.s),
           OutlinedButton(

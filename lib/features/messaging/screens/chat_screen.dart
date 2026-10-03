@@ -31,7 +31,13 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/permissions/app_permission_service.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../core/widgets/app_network_image.dart';
+import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/firinnet_avatar.dart';
 import '../../../core/widgets/premium/chat_media_picker_sheet.dart';
+import '../../social/post/widgets/feed_post_image.dart'
+    show FeedImageErrorState;
 import '../../../core/widgets/premium/premium_top_banner.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -65,12 +71,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   int _localSeq = 0;
 
   ProviderSubscription<AsyncValue<our.Message>>? _realtimeSub;
-  bool _initialized = false;
+
+  /// İlk yükleme durumu: yükleniyor → (hata | boş | mesajlar). Ağ hatası
+  /// ASLA boş sohbet gibi görünmez; ayrı hata durumu + gerçek "Tekrar dene".
+  _ChatLoadState _loadState = _ChatLoadState.loading;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  /// Hata durumundaki "Tekrar dene": cache'i bırakıp listeyi GERÇEKTEN
+  /// yeniden çeker (bootstrap tekrar koşar).
+  Future<void> _retryLoad() async {
+    ref.invalidate(messagesListProvider(widget.conversationId));
+    ref.invalidate(conversationByIdProvider(widget.conversationId));
+    setState(() => _loadState = _ChatLoadState.loading);
+    await _bootstrap();
   }
 
   Future<void> _bootstrap() async {
@@ -80,7 +98,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final mapped = list.map(_toUiMessage).toList();
       _seenMessageIds.addAll(list.map((m) => m.id));
       await _chatController.setMessages(mapped);
-      if (mounted) setState(() => _initialized = true);
+      if (mounted) setState(() => _loadState = _ChatLoadState.ready);
 
       // markAsRead — guarded (guest reddi sessizce yutar).
       try {
@@ -93,7 +111,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         debugPrint('[FirinNet][Chat] markAsRead skip: $e');
       }
 
-      // Realtime INSERT listener.
+      // Realtime INSERT listener (retry'da ikinci kez bağlanmaz).
+      if (!mounted || _realtimeSub != null) return;
       _realtimeSub = ref.listenManual<AsyncValue<our.Message>>(
         messagesStreamProvider(widget.conversationId),
         (prev, next) {
@@ -112,7 +131,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     } catch (e) {
       debugPrint('[FirinNet][Chat] bootstrap error: $e');
-      if (mounted) setState(() => _initialized = true);
+      if (mounted) setState(() => _loadState = _ChatLoadState.error);
     }
   }
 
@@ -212,7 +231,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Owner path segmenti gerçek uid olmalı (storage RLS auth.uid). Tazelenmiş
     // cache → canlı fallback; local-user-me fallback YOK. İkisi de null ise
     // gerçek oturum yok → guest guard (signOut yok).
-    final meId = ref.read(currentAuthUserProvider)?.id ??
+    final meId =
+        ref.read(currentAuthUserProvider)?.id ??
         ref.read(authRepositoryProvider)?.currentUser?.id;
     if (meId == null) {
       if (mounted) await showAuthRequiredSheet(context, ref);
@@ -249,19 +269,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       PremiumTopBannerController.dismiss();
       if (mounted) {
         _showMediaBanner(
-            isVideo
-                ? AppStrings.chatMediaVideoTooLarge
-                : AppStrings.chatMediaTooLarge,
-            PremiumTopBannerTone.warning);
+          isVideo
+              ? AppStrings.chatMediaVideoTooLarge
+              : AppStrings.chatMediaTooLarge,
+          PremiumTopBannerTone.warning,
+        );
       }
     } on ChatMediaUnsupportedException {
       PremiumTopBannerController.dismiss();
       if (mounted) {
         _showMediaBanner(
-            isVideo
-                ? AppStrings.chatMediaVideoUnsupported
-                : AppStrings.chatMediaUnsupported,
-            PremiumTopBannerTone.warning);
+          isVideo
+              ? AppStrings.chatMediaVideoUnsupported
+              : AppStrings.chatMediaUnsupported,
+          PremiumTopBannerTone.warning,
+        );
       }
     } on GuestActionRequiredException {
       PremiumTopBannerController.dismiss();
@@ -303,10 +325,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 child: CachedNetworkImage(
                   imageUrl: url,
                   fit: BoxFit.contain,
-                  errorWidget: (_, __, ___) => const Icon(
-                    Icons.broken_image_rounded,
-                    color: AppColors.surface,
-                    size: 48,
+                  errorWidget: (_, __, ___) => const SizedBox(
+                    width: 220,
+                    height: 160,
+                    child: FeedImageErrorState(),
                   ),
                 ),
               ),
@@ -315,8 +337,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: Align(
                 alignment: Alignment.topRight,
                 child: IconButton(
-                  icon: const Icon(Icons.close_rounded,
-                      color: AppColors.surface),
+                  tooltip: AppStrings.socialCloseTooltip,
+                  iconSize: 26,
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.surface,
+                  ),
                   onPressed: () => Navigator.of(ctx).maybePop(),
                 ),
               ),
@@ -342,7 +372,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final repo = ref.read(messagingRepositoryProvider);
     final meId = ref.read(currentAuthUserProvider)?.id ?? 'local-user-me';
     final id =
-        tempId ?? 'local_${_localSeq++}_${DateTime.now().microsecondsSinceEpoch}';
+        tempId ??
+        'local_${_localSeq++}_${DateTime.now().microsecondsSinceEpoch}';
 
     final sending = fcc.TextMessage(
       id: id,
@@ -482,25 +513,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           imageUrl: message.source,
           fit: BoxFit.cover,
           memCacheWidth: 480, // Perf: bubble ~240px; tam-res decode'u önle.
-          placeholder: (_, __) => Container(
+          placeholder: (_, __) =>
+              SizedBox(width: 240, height: 180, child: AppImageState.loading()),
+          errorWidget: (_, __, ___) => SizedBox(
             width: 240,
             height: 180,
-            color: AppColors.surfaceLine,
-            child: const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          ),
-          errorWidget: (_, __, ___) => Container(
-            width: 240,
-            height: 180,
-            color: AppColors.surfaceLine,
-            child: const Icon(
-              Icons.broken_image_rounded,
-              color: AppColors.textMuted,
+            child: AppImageState.error(
+              label: AppStrings.feedPostImageLoadError,
             ),
           ),
         ),
@@ -665,33 +684,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         backgroundColor: AppColors.elevatedCard,
         elevation: 0,
         leading: IconButton(
+          tooltip: AppStrings.socialBackTooltip,
           icon: const Icon(Icons.arrow_back_rounded),
           color: AppColors.textPrimary,
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        titleSpacing: 0,
+        title: Row(
           children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 17,
-                letterSpacing: -0.2,
-              ),
-              overflow: TextOverflow.ellipsis,
+            FirinNetAvatar(
+              key: const ValueKey('chat_appbar_avatar'),
+              name: convAsync.hasValue ? title : null,
+              size: FirinNetAvatarSize.s,
             ),
-            if (subtitle.isNotEmpty)
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: AppColors.softGold,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11.5,
-                ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    style: AppTypography.authorName,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                ],
               ),
+            ),
           ],
         ),
         actions: [
@@ -704,40 +733,93 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           child: Divider(height: 1, color: AppColors.borderHairline),
         ),
       ),
-      body: !_initialized
-          ? const Center(child: CircularProgressIndicator())
-          : fcu.Chat(
-              chatController: _chatController,
-              currentUserId: meId,
-              theme: _brandChatTheme(),
-              builders: fcc.Builders(
-                emptyChatListBuilder: (_) =>
-                    _ChatEmptyState(contextLabel: subtitle),
-                // Paket varsayılanı İngilizce "Type a message" — Türkçe ipucu.
-                composerBuilder: (_) =>
-                    const fcu.Composer(hintText: AppStrings.chatComposerHint),
-                // M-5 deepening — Default bubble (SimpleTextMessage) korunur;
-                // yalnız error durumundaki bubble'ın altına görünür "Tekrar
-                // dene" eklenir. chatMessageBuilder override EDİLMEZ → hizalama
-                // ve animasyon paketin varsayılanından gelir (güvenli).
-                textMessageBuilder: _buildTextMessage,
-                // P0 — paket ImageMessage için builder ZORUNLU: builder yoksa
-                // Chat widget exception fırlatır ve resimli sohbetin tüm
-                // listesi ErrorWidget'a (kırmızı ekran) döner.
-                imageMessageBuilder: _buildImageMessage,
-                // V1.1 — VideoMessage için de builder zorunlu (aynı sebep).
-                videoMessageBuilder: _buildVideoMessage,
-              ),
-              resolveUser: (id) async {
-                // V1: bilinen 2 katılımcı — direct DM. Detail için sadece
-                // id'ye göre dummy User döner; UI bubble'da author adı
-                // göstermek istemiyoruz (AppBar zaten karşı tarafı yazıyor).
-                return fcc.User(id: id);
-              },
-              onMessageSend: _onSend,
-              onMessageTap: _onMessageTap,
-              onAttachmentTap: _onAttach,
+      body: switch (_loadState) {
+        _ChatLoadState.loading => const _ChatLoading(),
+        _ChatLoadState.error => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: ErrorRetryState(
+              key: const ValueKey('chat_load_error'),
+              title: AppStrings.chatLoadErrorTitle,
+              subtitle: AppStrings.chatLoadErrorSubtitle,
+              retryLabel: AppStrings.messagingRetryCta,
+              onRetry: _retryLoad,
             ),
+          ),
+        ),
+        _ChatLoadState.ready => fcu.Chat(
+          chatController: _chatController,
+          currentUserId: meId,
+          theme: _brandChatTheme(),
+          builders: fcc.Builders(
+            emptyChatListBuilder: (_) =>
+                _ChatEmptyState(contextLabel: subtitle),
+            // Paket varsayılanı İngilizce "Type a message" — Türkçe ipucu.
+            composerBuilder: (_) =>
+                const fcu.Composer(hintText: AppStrings.chatComposerHint),
+            // M-5 deepening — Default bubble (SimpleTextMessage) korunur;
+            // yalnız error durumundaki bubble'ın altına görünür "Tekrar
+            // dene" eklenir. chatMessageBuilder override EDİLMEZ → hizalama
+            // ve animasyon paketin varsayılanından gelir (güvenli).
+            textMessageBuilder: _buildTextMessage,
+            // P0 — paket ImageMessage için builder ZORUNLU: builder yoksa
+            // Chat widget exception fırlatır ve resimli sohbetin tüm
+            // listesi ErrorWidget'a (kırmızı ekran) döner.
+            imageMessageBuilder: _buildImageMessage,
+            // V1.1 — VideoMessage için de builder zorunlu (aynı sebep).
+            videoMessageBuilder: _buildVideoMessage,
+          ),
+          resolveUser: (id) async {
+            // V1: bilinen 2 katılımcı — direct DM. Detail için sadece
+            // id'ye göre dummy User döner; UI bubble'da author adı
+            // göstermek istemiyoruz (AppBar zaten karşı tarafı yazıyor).
+            return fcc.User(id: id);
+          },
+          onMessageSend: _onSend,
+          onMessageTap: _onMessageTap,
+          onAttachmentTap: _onAttach,
+        ),
+      },
+    );
+  }
+}
+
+enum _ChatLoadState { loading, error, ready }
+
+/// İlk yükleme: hafif, statik balon iskeleti (dev spinner yok).
+class _ChatLoading extends StatelessWidget {
+  const _ChatLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget bubble(double w, {required bool mine}) => Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        width: w,
+        height: 36,
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLine,
+          borderRadius: BorderRadius.circular(AppRadius.l),
+        ),
+      ),
+    );
+    return Semantics(
+      key: const ValueKey('chat_loading'),
+      label: AppStrings.socialLoadingLabel,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.pageH),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            bubble(180, mine: false),
+            bubble(140, mine: true),
+            bubble(210, mine: false),
+            bubble(120, mine: true),
+            const SizedBox(height: 72),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -835,13 +917,10 @@ class _ChatEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.m),
             const Text(
-              AppStrings.messagingEmptyTitle,
+              AppStrings.chatEmptyTitle,
+              key: ValueKey('chat_empty_state'),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
+              style: AppTypography.sectionTitle,
             ),
             const SizedBox(height: 6),
             Text(
@@ -849,11 +928,7 @@ class _ChatEmptyState extends StatelessWidget {
                   ? '$contextLabel · ${AppStrings.messagingEmptySubtitle}'
                   : AppStrings.messagingEmptySubtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13.5,
-                height: 1.35,
-              ),
+              style: AppTypography.body,
             ),
           ],
         ),
