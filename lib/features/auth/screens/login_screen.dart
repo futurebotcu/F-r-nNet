@@ -34,6 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _submitting = false;
+  bool _obscurePassword = true;
   bool _backendBannerQueued = false;
 
   @override
@@ -160,17 +161,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         height: 64,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: AppColors.brandLemon,
                           borderRadius: BorderRadius.circular(AppRadius.l),
                           border: Border.all(
-                            color: AppColors.borderHairline,
+                            color: AppColors.brandLemonPressed,
                             width: 0.6,
                           ),
                           boxShadow: AppShadow.card,
                         ),
+                        // Limon ikon beyaz zeminde görünmüyordu: limon kutu
+                        // + mürekkep ikon.
                         child: const Icon(
                           Icons.local_fire_department_rounded,
-                          color: AppColors.primary,
+                          color: AppColors.brandInk,
                           size: 32,
                         ),
                       ),
@@ -228,12 +231,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextFormField(
                 controller: _passwordCtrl,
                 enabled: supabaseOn && !_submitting,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
                   labelText: AppStrings.password,
-                  prefixIcon: Icon(
+                  prefixIcon: const Icon(
                     Icons.lock_outline,
                     color: AppColors.textSecondary,
+                  ),
+                  suffixIcon: IconButton(
+                    key: const ValueKey('login_password_visibility'),
+                    tooltip: _obscurePassword
+                        ? AppStrings.authShowPassword
+                        : AppStrings.authHidePassword,
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 validator: supabaseOn ? _validatePassword : null,
@@ -275,14 +292,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ? null
                       : () => context.push(AppRoutes.roleSelect),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
+                    foregroundColor: AppColors.brandInk,
                   ),
                   child: const Text(
-                    'Hesap oluştur',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
-                    ),
+                    AppStrings.authRequiredCreate,
+                    style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
               ),

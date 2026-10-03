@@ -40,6 +40,8 @@ import '../../safety/widgets/report_sheet.dart';
 import '../models/social_comment.dart';
 import '../post/widgets/feed_post_image.dart';
 import '../providers/social_providers.dart';
+import '../../../core/utils/relative_time.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/utils/tr_case.dart';
 
 /// Cevap hedefi (tek-seviye): bir ÜST yoruma cevap yazılırken composer bunu
@@ -341,7 +343,7 @@ class _PostContextHeader extends StatelessWidget {
           boxShadow: AppShadow.card,
         ),
         child: const Text(
-          'Bu gönderiye ait yorumlar.',
+          AppStrings.commentsPostFallback,
           style: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 14,
@@ -381,14 +383,17 @@ class _PostContextHeader extends StatelessWidget {
                   width: 44,
                   height: 44,
                   alignment: Alignment.center,
+                  // Limon üstüne limon baş harf okunmuyordu → nötr zemin +
+                  // mürekkep harf.
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.10),
+                    color: AppColors.surfaceLine,
+                    border: Border.all(color: AppColors.borderHairline),
                   ),
                   child: Text(
                     post.author.isNotEmpty ? post.author[0].trUpper : '?',
                     style: const TextStyle(
-                      color: AppColors.primary,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 17,
                     ),
@@ -411,7 +416,10 @@ class _PostContextHeader extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${post.role} · ${_timeAgo(post.createdAt)}',
+                        post.role.isEmpty
+                            ? relativeTimeTr(post.createdAt)
+                            : '${post.role} · '
+                                  '${relativeTimeTr(post.createdAt)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -468,15 +476,6 @@ class _PostContextHeader extends StatelessWidget {
       ),
     );
   }
-
-  static String _timeAgo(DateTime t) {
-    final d = DateTime.now().difference(t);
-    if (d.inMinutes < 1) return 'şimdi';
-    if (d.inMinutes < 60) return '${d.inMinutes} dk';
-    if (d.inHours < 24) return '${d.inHours} sa';
-    if (d.inDays < 2) return 'dün';
-    return '${d.inDays} gün';
-  }
 }
 
 class _EmptyState extends StatelessWidget {
@@ -497,13 +496,13 @@ class _EmptyState extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.10),
+                color: AppColors.surfaceLine,
               ),
               alignment: Alignment.center,
               child: const Icon(
                 Icons.chat_bubble_outline_rounded,
                 size: 30,
-                color: AppColors.primary,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: AppSpacing.m),
@@ -580,14 +579,6 @@ class _CommentItem extends ConsumerWidget {
   final String postId;
   final bool isReply;
 
-  String _timeAgo(DateTime t) {
-    final d = DateTime.now().difference(t);
-    if (d.inMinutes < 1) return 'şimdi';
-    if (d.inMinutes < 60) return '${d.inMinutes} dk';
-    if (d.inHours < 24) return '${d.inHours} sa';
-    if (d.inDays < 2) return 'dün';
-    return '${d.inDays} gün';
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -612,12 +603,12 @@ class _CommentItem extends ConsumerWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.10),
+                color: AppColors.surfaceLine,
               ),
               child: Text(
                 initial,
                 style: const TextStyle(
-                  color: AppColors.primary,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,
                   fontSize: 17,
                 ),
@@ -646,7 +637,7 @@ class _CommentItem extends ConsumerWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '· ${_timeAgo(comment.createdAt)}',
+                        '· ${relativeTimeShortTr(comment.createdAt)}',
                         style: const TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 12.5,
@@ -777,7 +768,10 @@ class _CommentItem extends ConsumerWidget {
       // Yorum sayısı (post header'daki "N yorum") da refresh.
       ref.invalidate(feedPostByIdProvider(postId));
       messenger?.showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedCommentDeletedSnack)),
+        AppFeedback.build(
+          AppStrings.feedCommentDeletedSnack,
+          kind: AppFeedbackKind.success,
+        ),
       );
     } on GuestActionRequiredException {
       debugPrint('[FirinNet][Comments] delete blocked: guest guard');
@@ -785,7 +779,10 @@ class _CommentItem extends ConsumerWidget {
     } catch (e) {
       debugPrint('[FirinNet][Comments] delete error: $e');
       messenger?.showSnackBar(
-        const SnackBar(content: Text(AppStrings.feedCommentDeleteFailed)),
+        AppFeedback.build(
+          AppStrings.feedCommentDeleteFailed,
+          kind: AppFeedbackKind.error,
+        ),
       );
     }
   }
@@ -1091,7 +1088,7 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '${reply.author} adlı kişiye cevap',
+                    '${reply.author}${AppStrings.commentReplyingToSuffix}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -1230,13 +1227,13 @@ class _CommentComposerState extends ConsumerState<_CommentComposer> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation(
-                                  AppColors.surface,
+                                  AppColors.brandInk,
                                 ),
                               ),
                             )
                           : const Icon(
                               Icons.send_rounded,
-                              color: AppColors.surface,
+                              color: AppColors.brandInk,
                               size: 22,
                             ),
                     ),

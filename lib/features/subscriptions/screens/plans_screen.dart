@@ -230,12 +230,47 @@ class PlansScreen extends ConsumerWidget {
                         color: AppColors.textMuted,
                       ),
                     ),
+                  const SizedBox(height: AppSpacing.s),
+                  // Mağaza kuralı: abonelik ekranında şartlar + gizlilik.
+                  const _PlansLegalLinks(),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Abonelik ekranı yasal linkleri (Kullanım Şartları · Gizlilik Politikası).
+class _PlansLegalLinks extends StatelessWidget {
+  const _PlansLegalLinks();
+
+  @override
+  Widget build(BuildContext context) {
+    const linkStyle = TextStyle(
+      fontSize: 12.5,
+      fontWeight: FontWeight.w600,
+      color: AppColors.textSecondary,
+      decoration: TextDecoration.underline,
+      decorationColor: AppColors.textMuted,
+    );
+    return Wrap(
+      key: const ValueKey('plans_legal_links'),
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        TextButton(
+          onPressed: () => GoRouter.of(context).push(AppRoutes.legalTerms),
+          child: const Text(AppStrings.legalTermsTitle, style: linkStyle),
+        ),
+        const Text('·', style: TextStyle(color: AppColors.textMuted)),
+        TextButton(
+          onPressed: () => GoRouter.of(context).push(AppRoutes.legalPrivacy),
+          child: const Text(AppStrings.legalPrivacyTitle, style: linkStyle),
+        ),
+      ],
     );
   }
 }

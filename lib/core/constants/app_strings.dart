@@ -1962,6 +1962,22 @@ class AppStrings {
       'onayın olmadan hiçbir ücret alınmaz.';
 
   // ── FırınNet Akademi (bot içerikleri + toplu profil sayfası) ──
+  // ── Sosyal/ekran tasarım geçişi ──
+  static const String chatComposerHint = 'Mesaj yaz…';
+  static const String moreActionsTooltip = 'Diğer';
+  static const String paywallNotNow = 'Şimdi değil';
+  static const String authShowPassword = 'Şifreyi göster';
+  static const String authHidePassword = 'Şifreyi gizle';
+  static const String feedCaptionSeeMore = 'devamını gör';
+  static const String feedPostImageLoadError = 'Görsel yüklenemedi';
+  static const String commentsPostFallback = 'Bu gönderiye ait yorumlar.';
+  static const String commentReplyingToSuffix = ' adlı kişiye cevap';
+  static const String notificationsErrorTitle = 'Bildirimler yüklenemedi';
+  static const String notificationsMarkAllReadDone =
+      'Tümü okundu olarak işaretlendi';
+  static const String notificationsMarkAllReadFailed =
+      'İşaretlenemedi. Biraz sonra tekrar dene.';
+  static const String closeTooltip = 'Kapat';
   static const String routeNotFoundTitle = 'Aradığınız sayfa bulunamadı';
   static const String routeNotFoundCta = 'Ana sayfaya dön';
   static const String academyLoadMoreError =

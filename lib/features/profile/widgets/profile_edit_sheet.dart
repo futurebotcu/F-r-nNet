@@ -25,6 +25,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -35,6 +36,51 @@ import '../providers/profile_provider.dart';
 import '../providers/public_profile_detail_provider.dart';
 import '../services/avatar_upload_service.dart';
 import '../../../core/utils/tr_case.dart';
+
+/// Sheet içi hata satırı (danger ikon + kısa metin).
+class _InlineError extends StatelessWidget {
+  const _InlineError({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('profile_edit_inline_error'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.m,
+        vertical: AppSpacing.s,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 18,
+            color: AppColors.danger,
+          ),
+          const SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class ProfileEditSheet extends ConsumerStatefulWidget {
   const ProfileEditSheet({super.key});
@@ -68,6 +114,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   bool _loading = true;
   bool _saving = false;
   bool _uploading = false;
+
+  /// Sheet içi hata metni: snackbar modal'ın arkasında kalıp görünmüyordu.
+  String? _inlineError;
 
   String? _avatarUrl;
   BakeryProfile? _initial;
@@ -138,14 +187,15 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     } catch (e) {
       debugPrint('[FirinNet][ProfileEdit] avatar pick error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileEditAvatarErrorPick)),
-      );
+      setState(() => _inlineError = AppStrings.profileEditAvatarErrorPick);
       return;
     }
     if (picked == null) return;
 
-    setState(() => _uploading = true);
+    setState(() {
+      _uploading = true;
+      _inlineError = null;
+    });
     try {
       final result = await service.upload(userId: user.id, file: picked);
       if (!mounted) return;
@@ -153,9 +203,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     } catch (e) {
       debugPrint('[FirinNet][ProfileEdit] avatar upload error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileEditAvatarErrorUpload)),
-      );
+      setState(() => _inlineError = AppStrings.profileEditAvatarErrorUpload);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -164,16 +212,17 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   Future<void> _save() async {
     final name = _name.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileEditNameRequired)),
-      );
+      setState(() => _inlineError = AppStrings.profileEditNameRequired);
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
       await showAuthRequiredSheet(context, ref);
       return;
     }
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _inlineError = null;
+    });
     final previousAvatarUrl = _initial?.avatarUrl;
     try {
       // M5 — meslek dual-write: code (taxonomy) + label (backward compat).
@@ -221,10 +270,17 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
         ref.invalidate(publicProfileDetailProvider(user.id));
       }
       if (!mounted) return;
+      // Başarı geri bildirimi sheet kapandıktan sonra görünür.
+      final messenger = ScaffoldMessenger.maybeOf(context);
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.profileEditSaveSuccess)),
-      );
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          AppFeedback.build(
+            AppStrings.profileEditSaveSuccess,
+            kind: AppFeedbackKind.success,
+          ),
+        );
     } catch (e) {
       debugPrint('[FirinNet][ProfileEdit] save error: $e');
       if (!mounted) return;
@@ -233,9 +289,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       if (isRoleDataLockError(e)) {
         await showRoleDataLockDialog(context, forInvite: false);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.profileEditSaveError)),
-        );
+        setState(() => _inlineError = AppStrings.profileEditSaveError);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -427,6 +481,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
+                    if (_inlineError != null) ...[
+                      _InlineError(message: _inlineError!),
+                      const SizedBox(height: AppSpacing.s),
+                    ],
                     AppPrimaryButton(
                       label: _saving
                           ? AppStrings.profileEditSaving

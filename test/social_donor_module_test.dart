@@ -158,13 +158,16 @@ void main() {
       expect(src.contains('Icons.favorite_border_rounded'), isFalse);
     });
 
-    test('P0 - Active like color is brandLemonPressed', () {
+    test('P0 - Active like is ink filled icon (lemon not a foreground)', () {
+      // Tasarım geçişi: limon beyaz üstünde ikon rengi olarak okunmuyordu;
+      // aktif beğeni dolu ikon + mürekkep.
       expect(
         src.contains('isLiked') &&
-            src.contains('AppColors.brandLemonPressed') &&
+            src.contains('Icons.thumb_up_alt_rounded') &&
+            src.contains('AppColors.brandInk') &&
             src.contains('AppColors.textPrimary'),
         isTrue,
-        reason: 'Active like color should use brandLemonPressed',
+        reason: 'Active like should be filled icon in brandInk',
       );
     });
 

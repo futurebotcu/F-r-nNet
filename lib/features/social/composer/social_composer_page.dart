@@ -588,13 +588,16 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                   onTap: null,
                   child: ChoiceChip(
                     selected: selected,
-                    selectedColor: AppColors.primary.withValues(alpha: 0.10),
+                    // Seçili: soluk limon zemin + limon kenar + mürekkep
+                    // etiket (limon yazı soluk zeminde okunmuyordu).
+                    selectedColor: AppColors.brandLemonPale,
                     backgroundColor: Colors.transparent,
+                    showCheckmark: false,
                     side: BorderSide(
                       color: selected
-                          ? AppColors.primary
+                          ? AppColors.brandLemonPressed
                           : AppColors.borderHairline,
-                      width: 1,
+                      width: selected ? 1.4 : 1,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.s),
@@ -602,15 +605,23 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                     label: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(t.icon, size: 14, color: t.accent),
+                        Icon(
+                          t.icon,
+                          size: 14,
+                          color: selected
+                              ? AppColors.brandInk
+                              : AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           t.label,
                           style: TextStyle(
                             color: selected
-                                ? AppColors.primary
+                                ? AppColors.brandInk
                                 : AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: selected
+                                ? FontWeight.w800
+                                : FontWeight.w600,
                             fontSize: 12,
                           ),
                         ),
@@ -767,7 +778,7 @@ class _MediaButton extends StatelessWidget {
               Icon(
                 icon,
                 size: 22,
-                color: enabled ? AppColors.primary : AppColors.textMuted,
+                color: enabled ? AppColors.brandInk : AppColors.textMuted,
               ),
               const SizedBox(width: AppSpacing.s),
               Flexible(
@@ -830,7 +841,7 @@ class _VideoPickedPreview extends StatelessWidget {
             ),
             child: const Icon(
               Icons.play_circle_outlined,
-              color: AppColors.primary,
+              color: AppColors.brandInk,
               size: 28,
             ),
           ),

@@ -370,7 +370,7 @@ class _MediaSheetTile extends StatelessWidget {
           color: AppColors.brandLemonPale,
           border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
         ),
-        child: Icon(icon, size: 20, color: AppColors.brandLemonPressed),
+        child: Icon(icon, size: 20, color: AppColors.brandInk),
       ),
       title: Text(
         label,
