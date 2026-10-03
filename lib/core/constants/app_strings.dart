@@ -615,7 +615,7 @@ class AppStrings {
   // Topluluk sekmesi (Feed + Gruplar)
   static const String communityTitle = 'Topluluk';
   static const String communitySubtitle =
-      'Fırıncıların gündemi, paylaşımları ve grupları';
+      'Fırıncıların gündemi ve grupları';
   static const String communitySegFeed = 'Genel Akış';
   static const String communitySegGroups = 'Gruplar';
 

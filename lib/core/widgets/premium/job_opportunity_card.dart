@@ -251,12 +251,17 @@ class JobKindBadge extends StatelessWidget {
             color: fg,
           ),
           const SizedBox(width: 4),
+          // Tür etiketi kesilmez ("PERSONEL …" olmaz): dar ekran / büyük
+          // yazıda tamamı sığacak şekilde küçülür.
           Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.badge.copyWith(color: fg),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: AppTypography.badge.copyWith(color: fg),
+              ),
             ),
           ),
         ],

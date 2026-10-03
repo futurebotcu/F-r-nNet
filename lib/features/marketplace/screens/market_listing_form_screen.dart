@@ -570,7 +570,14 @@ class _MarketListingFormScreenState
                         items: [
                           const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text(AppStrings.listingsOptionNone),
+                            // Boş seçim değer gibi kalın görünmesin.
+                            child: Text(
+                              AppStrings.listingsOptionNone,
+                              style: TextStyle(
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                           ...MarketplaceTaxonomy.equipmentCategories.entries
                               .map(
@@ -593,7 +600,14 @@ class _MarketListingFormScreenState
                         items: [
                           const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text(AppStrings.listingsOptionNone),
+                            // Boş seçim değer gibi kalın görünmesin.
+                            child: Text(
+                              AppStrings.listingsOptionNone,
+                              style: TextStyle(
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                           ...MarketplaceTaxonomy.conditions.entries.map(
                             (e) => DropdownMenuItem<String?>(
