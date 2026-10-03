@@ -9,10 +9,11 @@
 // duyarlı "+" burada. Lazy IndexedStack → segment geçişinde reload/spinner yok.
 //
 // "+" segment bağlamı:
-//   * Eleman: hesap tipine göre commercial/wholesaler → Usta Arıyor formu;
-//     bireysel → İş Arıyor formu (JobsScreen'in commercial-only kuralıyla
-//     tutarlı, ekstra guard'a gerek kalmadan doğru forma götürür).
-//   * İş yeri / Ekipman: marketplace ilan formu.
+//   * Eleman: commercial/wholesaler → "Personel arıyorum / İş arıyorum"
+//     seçim sheet'i; bireysel → doğrudan İş Arıyor formu (JobsScreen'in
+//     commercial-only kuralıyla tutarlı).
+//   * İş yeri / Ekipman: marketplace ilan formu; ilan tipi segmentten
+//     (`?type=`) önceden seçili gelir. Tooltip segmente göre değişir.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -62,19 +65,92 @@ class _ListingsScreenState extends ConsumerState<ListingsScreen> {
     if (!mounted) return;
     switch (_segment) {
       case 0:
-        // Eleman: hesap tipine göre doğru forma.
+        // Eleman: ticari/toptancı hem personel arayabilir hem iş arayabilir →
+        // küçük seçim sheet'i. Bireysel yalnız "İş arıyorum" → doğrudan form.
         final profile = ref.read(profileControllerProvider);
-        final isCommercial = profile?.accountType == AccountType.commercial ||
+        final isCommercial =
+            profile?.accountType == AccountType.commercial ||
             profile?.accountType == AccountType.wholesaler;
-        context.push(
-          isCommercial ? AppRoutes.jobOfferNew : AppRoutes.jobSeekNew,
-        );
+        if (!isCommercial) {
+          context.push(AppRoutes.jobSeekNew);
+          return;
+        }
+        final route = await _chooseStaffListingKind();
+        if (route != null && mounted) context.push(route);
       case 1:
       case 2:
-        // İş yeri / Ekipman: marketplace ilan formu (tip formda seçilir).
-        context.push(AppRoutes.marketListingNew);
+        // İş yeri / Ekipman: marketplace ilan formu, tip segmentten gelir.
+        final type = _segment == 1
+            ? MarketplaceTaxonomy.listingTypeBakeryTransfer
+            : MarketplaceTaxonomy.listingTypeEquipmentSale;
+        context.push(
+          Uri(
+            path: AppRoutes.marketListingNew,
+            queryParameters: {'type': type},
+          ).toString(),
+        );
     }
   }
+
+  Future<String?> _chooseStaffListingKind() {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.s),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.pageH,
+                  AppSpacing.l,
+                  AppSpacing.pageH,
+                  AppSpacing.s,
+                ),
+                child: Text(
+                  AppStrings.listingsChooserTitle,
+                  style: AppTypography.sectionTitle,
+                ),
+              ),
+              ListTile(
+                key: const ValueKey('listings_choose_hiring'),
+                leading: const Icon(
+                  Icons.work_outline_rounded,
+                  color: AppColors.textPrimary,
+                ),
+                title: const Text(AppStrings.listingsChooserHiring),
+                subtitle: const Text(AppStrings.listingsChooserHiringSub),
+                onTap: () => Navigator.of(ctx).pop(AppRoutes.jobOfferNew),
+              ),
+              ListTile(
+                key: const ValueKey('listings_choose_seeking'),
+                leading: const Icon(
+                  Icons.person_search_outlined,
+                  color: AppColors.textPrimary,
+                ),
+                title: const Text(AppStrings.listingsChooserSeeking),
+                subtitle: const Text(AppStrings.listingsChooserSeekingSub),
+                onTap: () => Navigator.of(ctx).pop(AppRoutes.jobSeekNew),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String get _addTooltip => switch (_segment) {
+    1 => AppStrings.listingsAddWorkplaceTooltip,
+    2 => AppStrings.listingsAddEquipmentTooltip,
+    _ => AppStrings.listingsAddStaffTooltip,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +167,7 @@ class _ListingsScreenState extends ConsumerState<ListingsScreen> {
                 const SizedBox(width: 4),
                 HeaderActionButton(
                   icon: Icons.add_rounded,
-                  tooltip: AppStrings.marketListingAddCta,
+                  tooltip: _addTooltip,
                   onTap: _onAdd,
                 ),
               ],

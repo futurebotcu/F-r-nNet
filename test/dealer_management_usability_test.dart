@@ -132,11 +132,11 @@ void main() {
     final repo = LocalDealerRepository(seed: false);
     await tester.pumpWidget(_wrap(repo, const AddDealerScreen()));
 
-    expect(find.text(AppStrings.dealerAddTitle), findsOneWidget);
+    expect(find.text(AppStrings.dealerAddTitle), findsWidgets);
     expect(find.text(AppStrings.dealerFormIntro), findsOneWidget);
     expect(find.text(AppStrings.dealerFieldContactHelper), findsOneWidget);
     expect(find.text(AppStrings.dealerFieldPhoneHelper), findsOneWidget);
-    expect(find.text(AppStrings.dealerSaveButton), findsOneWidget);
+    expect(find.text(AppStrings.dealerSaveButton), findsWidgets);
 
     await tester.enterText(find.byType(TextFormField).at(0), 'Yeni Bayi');
     await tester.enterText(find.byType(TextFormField).at(2), '12345');

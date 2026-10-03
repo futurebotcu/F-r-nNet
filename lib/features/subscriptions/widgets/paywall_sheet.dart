@@ -46,159 +46,175 @@ class _PaywallSheetBody extends ConsumerWidget {
     final launchPriceUntil = entitlement?.launchPriceUntil;
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.l,
-          AppSpacing.s,
-          AppSpacing.l,
-          AppSpacing.l,
-        ),
-        child: Column(
-          key: const ValueKey('paywall_sheet'),
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandLemonPale,
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  child: const Icon(
-                    Icons.lock_rounded,
-                    size: 20,
-                    color: AppColors.brandInk,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandInk,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    lock.requiredPlanTag,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.brandLemon,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.m),
-            Text(
-              lock.title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                height: 1.3,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              lock.body,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-                height: 1.45,
-              ),
-            ),
-            if (lock.priceHint.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.s),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.l,
+            AppSpacing.s,
+            AppSpacing.l,
+            AppSpacing.l,
+          ),
+          child: Column(
+            key: const ValueKey('paywall_sheet'),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 children: [
-                  const Icon(
-                    Icons.sell_outlined,
-                    size: 15,
-                    color: AppColors.brandInk,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    lock.priceHint,
-                    key: const ValueKey('paywall_price_hint'),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandLemonPale,
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    child: const Icon(
+                      Icons.lock_rounded,
+                      size: 20,
                       color: AppColors.brandInk,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandInk,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: Text(
+                      lock.requiredPlanTag,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.brandLemon,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-            if (launchPriceUntil != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.m),
               Text(
-                '${AppStrings.paywallLaunchPricePrefix}'
-                '${formatCommercialLaunchDay(launchPriceUntil)}'
-                '${AppStrings.paywallLaunchPriceSuffix}',
-                key: const ValueKey('paywall_launch_price_until'),
+                lock.title,
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  height: 1.3,
                 ),
               ),
-            ],
-            const SizedBox(height: AppSpacing.s),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 1),
-                  child: Icon(
-                    Icons.check_circle_outline_rounded,
-                    size: 14,
-                    color: AppColors.textMuted,
-                  ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                lock.body,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                  height: 1.45,
                 ),
-                const SizedBox(width: 6),
-                const Expanded(
-                  child: Text(
-                    AppStrings.paywallBasicsStayFree,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
-                      height: 1.35,
+              ),
+              if (lock.priceHint.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.sell_outlined,
+                      size: 15,
+                      color: AppColors.brandInk,
                     ),
+                    const SizedBox(width: 5),
+                    Flexible(
+                      child: Text(
+                        lock.priceHint,
+                        key: const ValueKey('paywall_price_hint'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.brandInk,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (launchPriceUntil != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${AppStrings.paywallLaunchPricePrefix}'
+                  '${formatCommercialLaunchDay(launchPriceUntil)}'
+                  '${AppStrings.paywallLaunchPriceSuffix}',
+                  key: const ValueKey('paywall_launch_price_until'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: AppSpacing.l),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                key: const ValueKey('paywall_view_plans'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  GoRouter.of(context).push(AppRoutes.plans);
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.brandInk,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.m),
+              const SizedBox(height: AppSpacing.s),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 1),
+                    child: Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 14,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text(
+                      AppStrings.paywallBasicsStayFree,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.l),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  key: const ValueKey('paywall_view_plans'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    GoRouter.of(context).push(AppRoutes.plans);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.brandInk,
+                    minimumSize: const Size.fromHeight(52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                  ),
+                  child: const Text(
+                    AppStrings.paywallUpgradeCta,
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                 ),
-                child: const Text(
-                  AppStrings.paywallUpgradeCta,
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  key: const ValueKey('paywall_not_now'),
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textSecondary,
+                  ),
+                  child: const Text(AppStrings.paywallNotNow),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

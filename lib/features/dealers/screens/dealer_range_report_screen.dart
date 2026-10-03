@@ -13,6 +13,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_range_metrics.dart';
 import '../providers/dealer_providers.dart';
 import '../services/dealer_period.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi için sabit-6 periyot arasında metrik raporu (Sprint 3).
 ///
@@ -207,7 +208,7 @@ class _MetricsGrid extends StatelessWidget {
         _MetricTile(
           label: AppStrings.dealerTxFilterTypeDelivery,
           value: NumberFormatter.currency(metrics.totalDelivery),
-          accent: AppColors.copper,
+          accent: AppColors.warningInk,
         ),
         _MetricTile(
           label: AppStrings.dealerTxFilterTypeReturn,
@@ -229,7 +230,7 @@ class _MetricsGrid extends StatelessWidget {
           value: NumberFormatter.currency(metrics.netChange),
           accent: metrics.netChange == 0
               ? AppColors.textMuted
-              : (metrics.netChange > 0 ? AppColors.copper : AppColors.success),
+              : (metrics.netChange > 0 ? AppColors.warningInk : AppColors.success),
           emphasized: true,
         ),
         _MetricTile(
@@ -269,7 +270,7 @@ class _MetricTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            label.toUpperCase(),
+            label.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,

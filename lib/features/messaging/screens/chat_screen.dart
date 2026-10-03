@@ -37,7 +37,10 @@ import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/conversation.dart' as our;
 import '../models/message.dart' as our;
+import '../../safety/models/report_models.dart';
 import '../../safety/providers/safety_providers.dart';
+import '../../safety/widgets/block_user_dialog.dart';
+import '../../safety/widgets/report_sheet.dart';
 import '../providers/messaging_providers.dart';
 import '../services/chat_media_upload_service.dart';
 import '../widgets/chat_video_viewer.dart';
@@ -651,6 +654,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       data: _contextSubtitle,
       orElse: () => '',
     );
+    final otherUserId = convAsync.maybeWhen(
+      data: (c) => c?.otherUserId,
+      orElse: () => null,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -687,6 +694,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
           ],
         ),
+        actions: [
+          // UGC Safety — 1:1 sohbette karşı tarafı şikayet et / engelle.
+          if (otherUserId != null && otherUserId.isNotEmpty)
+            _ChatSafetyMenu(otherUserId: otherUserId),
+        ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, color: AppColors.borderHairline),
@@ -701,6 +713,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               builders: fcc.Builders(
                 emptyChatListBuilder: (_) =>
                     _ChatEmptyState(contextLabel: subtitle),
+                // Paket varsayılanı İngilizce "Type a message" — Türkçe ipucu.
+                composerBuilder: (_) =>
+                    const fcu.Composer(hintText: AppStrings.chatComposerHint),
                 // M-5 deepening — Default bubble (SimpleTextMessage) korunur;
                 // yalnız error durumundaki bubble'ın altına görünür "Tekrar
                 // dene" eklenir. chatMessageBuilder override EDİLMEZ → hizalama
@@ -723,6 +738,60 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onMessageTap: _onMessageTap,
               onAttachmentTap: _onAttach,
             ),
+    );
+  }
+}
+
+/// UGC Safety — sohbet başlığındaki ⋯ menüsü (şikayet et / engelle).
+class _ChatSafetyMenu extends ConsumerWidget {
+  const _ChatSafetyMenu({required this.otherUserId});
+
+  final String otherUserId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final blocked = ref.watch(blockedUserIdsSyncProvider);
+    final isBlocked = blocked.contains(otherUserId);
+    return PopupMenuButton<String>(
+      key: const ValueKey('chat_safety_menu'),
+      icon: const Icon(Icons.more_horiz_rounded, color: AppColors.textPrimary),
+      tooltip: AppStrings.moreActionsTooltip,
+      onSelected: (v) {
+        if (v == 'report') {
+          showReportSheet(
+            context,
+            ref,
+            targetType: ReportTargetType.profile,
+            targetId: otherUserId,
+            reportedUserId: otherUserId,
+          );
+        }
+        if (v == 'block') {
+          confirmAndBlockUser(context, ref, userId: otherUserId);
+        }
+        if (v == 'unblock') {
+          unblockUser(context, ref, userId: otherUserId);
+        }
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem(
+          value: 'report',
+          child: Text(AppStrings.safetyActionReport),
+        ),
+        if (isBlocked)
+          const PopupMenuItem(
+            value: 'unblock',
+            child: Text(AppStrings.safetyActionUnblock),
+          )
+        else
+          const PopupMenuItem(
+            value: 'block',
+            child: Text(
+              AppStrings.safetyActionBlock,
+              style: TextStyle(color: AppColors.danger),
+            ),
+          ),
+      ],
     );
   }
 }

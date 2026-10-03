@@ -14,7 +14,9 @@ import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../listings/utils/listing_format.dart';
 import '../models/job_seek_post.dart';
 import '../providers/worker_providers.dart';
 
@@ -177,9 +179,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Başlık boş olamaz.')));
+      AppFeedback.warning(context, 'Başlık boş olamaz.');
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -217,21 +217,18 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
       );
       await ref.read(workerRepositoryProvider).upsertJobSeekPost(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _existing == null ? 'İlan yayınlandı.' : 'İlan güncellendi.',
-          ),
+      // İş arama ilanı ücretsiz → ödeme bekleme durumu yok.
+      AppFeedback.success(
+        context,
+        listingSavedMessage(
+          isEdit: _existing != null,
+          isPendingPayment: false,
         ),
       );
       Navigator.of(context).pop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(content: Text(AppStrings.commonSaveError)),
-      );
+      AppFeedback.error(context, AppStrings.listingsSaveError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -283,7 +280,9 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
     final isEditing = _existing != null;
     return PremiumScaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'İlanı Düzenle' : 'Yeni İş İlanı'),
+        title: Text(
+          isEditing ? 'İlanı Düzenle' : AppStrings.listingsJobSeekFormTitleNew,
+        ),
         actions: [
           IconButton(
             tooltip: 'Paylaş',
@@ -301,11 +300,7 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
             AppSpacing.xxl,
           ),
           children: [
-            const _Hint(
-              text:
-                  'Kısa, net ve dürüst yaz — şehir, tecrübe ve maaş beklentin '
-                  'işverenin ilk filtrelediği şey.',
-            ),
+            const _Hint(text: AppStrings.listingsJobSeekFormHint),
             const SizedBox(height: AppSpacing.l),
             TextField(
               controller: _title,
@@ -385,6 +380,8 @@ class _JobSeekPostFormScreenState extends ConsumerState<JobSeekPostFormScreen> {
                     label: 'Maaş beklentisi',
                     controller: _salary,
                     suffix: 'TL',
+                    // Yalnız rakam: "25.000" yazılıp 25 okunması engellenir.
+                    allowDecimal: false,
                   ),
                 ),
               ],

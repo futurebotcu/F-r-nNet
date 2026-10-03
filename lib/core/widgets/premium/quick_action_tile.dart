@@ -52,28 +52,26 @@ class QuickActionTile extends StatelessWidget {
             splashColor: accent.withValues(alpha: 0.06),
             highlightColor: accent.withValues(alpha: 0.04),
             child: Container(
+              // Öne çıkan kart: rastgele siyah şerit yerine ince marka kenarı.
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppRadius.l),
+                border: featured
+                    ? Border.all(
+                        color: AppColors.brandLemonPressed.withValues(
+                          alpha: 0.45,
+                        ),
+                        width: 1,
+                      )
+                    : null,
               ),
-              padding: EdgeInsets.fromLTRB(
-                featured ? AppSpacing.m : AppSpacing.l,
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.l,
                 AppSpacing.m,
                 AppSpacing.m,
                 AppSpacing.m,
               ),
               child: Row(
                 children: [
-                  if (featured) ...[
-                    Container(
-                      width: 3,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.softGold,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.m),
-                  ],
                   Container(
                     width: featured ? 38 : 36,
                     height: featured ? 38 : 36,
@@ -89,15 +87,6 @@ class QuickActionTile extends StatelessWidget {
                         ),
                         width: 0.7,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.brandLemonPressed.withValues(
-                            alpha: 0.10,
-                          ),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
                     child: Icon(
                       icon,
@@ -199,8 +188,8 @@ class QuickActionTile extends StatelessWidget {
                   ],
                   Icon(
                     Icons.arrow_forward_ios_rounded,
-                    size: featured ? 16 : 14,
-                    color: featured ? AppColors.softGold : AppColors.textMuted,
+                    size: 14,
+                    color: AppColors.textMuted,
                   ),
                 ],
               ),

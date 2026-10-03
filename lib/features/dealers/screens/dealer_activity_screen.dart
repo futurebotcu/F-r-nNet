@@ -14,6 +14,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../widgets/dealer_filter_chip.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi Defteri Hareketler tab içeriği (Sprint Activity).
 ///
@@ -155,7 +156,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
                   bottom: AppSpacing.s,
                 ),
                 child: Text(
-                  g.label.toUpperCase(),
+                  g.label.trUpper,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: AppColors.textMuted,
                     fontWeight: FontWeight.w700,
@@ -391,7 +392,7 @@ class _ActivityRow extends StatelessWidget {
   (IconData, Color, String) _meta(DealerTransactionType t) {
     switch (t) {
       case DealerTransactionType.delivery:
-        return (Icons.bakery_dining_rounded, AppColors.copper, '+');
+        return (Icons.bakery_dining_rounded, AppColors.warningInk, '+');
       case DealerTransactionType.returned:
         return (Icons.assignment_returned_rounded, AppColors.info, '−');
       case DealerTransactionType.payment:

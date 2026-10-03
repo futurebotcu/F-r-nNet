@@ -249,16 +249,16 @@ class _RoleBadgeStrip extends ConsumerWidget {
           Container(
             width: 32,
             height: 32,
+            // Limon ikon soluk limon kutuda okunmuyordu → mürekkep ikon.
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
+              color: AppColors.brandLemonPale,
               borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.18),
+                color: AppColors.brandLemonSoft,
                 width: 0.6,
               ),
-              boxShadow: AppShadow.card,
             ),
-            child: Icon(_iconFor(account), color: AppColors.primary, size: 16),
+            child: Icon(_iconFor(account), color: AppColors.brandInk, size: 16),
           ),
           const SizedBox(width: AppSpacing.s),
           Expanded(
@@ -267,12 +267,11 @@ class _RoleBadgeStrip extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  account.label.toUpperCase(),
+                  account.label,
                   style: const TextStyle(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11,
-                    letterSpacing: 1.2,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5,
                   ),
                 ),
                 const SizedBox(height: 2),

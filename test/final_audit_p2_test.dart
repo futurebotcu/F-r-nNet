@@ -112,7 +112,7 @@ void main() {
     final src = File(
       'lib/features/social/post/social_post_card.dart',
     ).readAsStringSync();
-    expect(src.contains("if (d.inMinutes < 1) return 'şimdi';"), isTrue);
-    expect(src.contains(r"return '${d.inMinutes} dk önce';"), isTrue);
+    // Tasarım geçişi: ortak relativeTimeTr ('şimdi' / '12 dk önce' / ...).
+    expect(src.contains('relativeTimeTr(post.createdAt)'), isTrue);
   });
 }

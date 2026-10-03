@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 // Test-deterministik referans zaman: 2026-05-24 10:00 (Pazar).
 final _refNow = DateTime(2026, 5, 24, 10, 0);
@@ -147,17 +148,17 @@ void main() {
       );
       // KPI label'ları gizli (KPI grid render edilmedi)
       expect(
-        find.text(AppStrings.dealerReportsKpiDelivery.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiDelivery.trUpper),
         findsNothing,
       );
       // Bayi bazlı bölüm de yok
       expect(
-        find.text(AppStrings.dealerEndOfDayByDealerTitle.toUpperCase()),
+        find.text(AppStrings.dealerEndOfDayByDealerTitle.trUpper),
         findsNothing,
       );
       // Header (Bugün) yine de görünür
       expect(
-        find.text(AppStrings.dealerEndOfDayHeaderToday.toUpperCase()),
+        find.text(AppStrings.dealerEndOfDayHeaderToday.trUpper),
         findsOneWidget,
       );
       // Share CTA yine de görünür
@@ -177,28 +178,28 @@ void main() {
 
       // 5 KPI label (uppercase)
       expect(
-        find.text(AppStrings.dealerReportsKpiDelivery.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiDelivery.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiReturn.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiReturn.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiPayment.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiPayment.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiTxCount.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiTxCount.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiNetChange.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiNetChange.trUpper),
         findsOneWidget,
       );
       // Summary başlığı
       expect(
-        find.text(AppStrings.dealerEndOfDaySummaryTitle.toUpperCase()),
+        find.text(AppStrings.dealerEndOfDaySummaryTitle.trUpper),
         findsOneWidget,
       );
     });

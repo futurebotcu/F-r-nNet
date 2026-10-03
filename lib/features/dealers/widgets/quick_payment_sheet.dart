@@ -217,7 +217,7 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
                           Text(
                             NumberFormatter.currency(widget.currentBalance),
                             style: theme.textTheme.titleLarge?.copyWith(
-                              color: AppColors.copper,
+                              color: AppColors.brandInk,
                               fontWeight: FontWeight.w800,
                               fontFeatures: const [
                                 FontFeature.tabularFigures(),

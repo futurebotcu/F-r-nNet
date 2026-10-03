@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 class _SeededProfileController extends ProfileController {
   _SeededProfileController(super.ref, BakeryProfile initial) {
@@ -127,7 +128,7 @@ void main() {
         findsNothing,
       );
       expect(
-        find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
+        find.text(AppStrings.dealerOverviewKpiOpenBalance.trUpper),
         findsOneWidget,
       );
     });

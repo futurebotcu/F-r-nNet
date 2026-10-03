@@ -219,7 +219,8 @@ void main() {
       expect(src.contains('FirinnetTaxonomy.shiftLabel'), isTrue);
       // shift artık taxonomy üzerinden çiziliyor (eski direkt offer.shiftType
       // kullanımı kaldırıldı).
-      expect(src.contains('shift: _formatShift()'), isTrue);
+      // İlanlar tasarım geçişi: vardiya artık yalnız doluysa etiket olur.
+      expect(src.contains('?_formatShift()'), isTrue);
     });
   });
 
@@ -445,35 +446,40 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('salaryMin negatif → negatif snackbar', (tester) async {
+    // İlanlar tasarım geçişi: ücret alanları yalnız rakam kabul eder →
+    // negatif değer artık girilemez (eksi işareti süzülür). Negatif
+    // kontrolü kodda savunma olarak kalır.
+    testWidgets('salaryMin eksi işareti süzülür (yalnız rakam)',
+        (tester) async {
       await openForm(tester);
       await fillBaseFields(tester);
-      await tester.enterText(
-        find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMin),
-        '-100',
+      final field =
+          find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMin);
+      await tester.enterText(field, '-100');
+      await tester.pump();
+      expect(
+        tester.widget<EditableText>(
+          find.descendant(of: field, matching: find.byType(EditableText)),
+        ).controller.text,
+        '100',
       );
       await tapSave(tester);
-
-      expect(
-        find.text(AppStrings.jobOfferSalaryNegative),
-        findsOneWidget,
-      );
-      // Save success snack çıkmamış olmalı
-      expect(find.text(AppStrings.jobOfferSavedSnack), findsNothing);
+      expect(find.text(AppStrings.jobOfferSalaryNegative), findsNothing);
     });
 
-    testWidgets('salaryMax negatif → negatif snackbar', (tester) async {
+    testWidgets('salaryMax "25.000" girişi 25000 olarak kalır (nokta süzülür)',
+        (tester) async {
       await openForm(tester);
       await fillBaseFields(tester);
-      await tester.enterText(
-        find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMax),
-        '-50',
-      );
-      await tapSave(tester);
-
+      final field =
+          find.widgetWithText(TextFormField, AppStrings.jobOfferFieldSalaryMax);
+      await tester.enterText(field, '25.000');
+      await tester.pump();
       expect(
-        find.text(AppStrings.jobOfferSalaryNegative),
-        findsOneWidget,
+        tester.widget<EditableText>(
+          find.descendant(of: field, matching: find.byType(EditableText)),
+        ).controller.text,
+        '25000',
       );
     });
 
@@ -494,7 +500,7 @@ void main() {
         find.text(AppStrings.jobOfferSalaryMinGtMax),
         findsOneWidget,
       );
-      expect(find.text(AppStrings.jobOfferSavedSnack), findsNothing);
+      expect(find.text(AppStrings.listingsPublished), findsNothing);
     });
 
     testWidgets('Boş salary alanları validation error üretmez (save geçer)',
@@ -507,8 +513,9 @@ void main() {
       // Salary snackbar'ları görünmez
       expect(find.text(AppStrings.jobOfferSalaryNegative), findsNothing);
       expect(find.text(AppStrings.jobOfferSalaryMinGtMax), findsNothing);
-      // Save success snack görünür (Local repo flush sonrası)
-      expect(find.text(AppStrings.jobOfferSavedSnack), findsOneWidget);
+      // Save success geri bildirimi görünür (Local repo flush sonrası;
+      // ücretsiz ilan → "İlan yayınlandı").
+      expect(find.text(AppStrings.listingsPublished), findsOneWidget);
     });
   });
 }

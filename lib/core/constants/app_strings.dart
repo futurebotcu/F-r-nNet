@@ -658,7 +658,7 @@ class AppStrings {
   // Jobs
   static const String jobsTitle = 'İş İlanları';
   static const String jobsSubtitle = 'Sektörün iş ağı';
-  static const String jobsSegHiring = 'Usta Arıyor';
+  static const String jobsSegHiring = 'Personel Arıyor';
   static const String jobsSegLooking = 'İş Arıyor';
   static const String jobsListHiring = 'Çalışan arayan fırınlar';
   static const String jobsListLooking = 'İş arayan ustalar';
@@ -820,18 +820,21 @@ class AppStrings {
       'E-posta uygulaması açılamadı. Destek adresi: ';
 
   // V1 — Jobs gerçek veri durumları (P0 mock temizliği)
+  // Boş durum: kısa başlık + açıklama (tek uzun kalın cümle yerine).
+  static const String jobsLookingEmptyTitle = 'Henüz iş arayan ilanı yok';
+  static const String jobOfferEmptyTitle = 'Henüz personel ilanı yok';
   static const String jobsLookingEmpty =
-      'Henüz aktif iş arayan ilanı yok. İlk ilanı sen ver veya daha sonra tekrar bak.';
+      'İlk ilanı sen ver ya da daha sonra tekrar bak.';
   static const String jobsLookingEmptyGuest =
-      'Henüz aktif iş arayan ilanı yok. Üye olunca kendin de ilan verebilirsin.';
+      'Üye olunca sen de iş arıyorum ilanı verebilirsin.';
   // V1 — Job offer ("Usta Arıyor") UI copy.
   static const String jobOfferEmpty =
-      'Henüz aktif "Usta Arıyor" ilanı yok. Sektörden ilk ilanı bekliyoruz.';
+      'Yeni personel ilanları burada görünecek.';
   static const String jobOfferEmptyGuest =
-      'Henüz aktif "Usta Arıyor" ilanı yok. Üye olunca sen de yayınlayabilirsin.';
+      'Üye olunca sen de personel ilanı verebilirsin.';
   static const String jobOfferErrorGeneric =
       'İlanlar yüklenemedi. Bağlantını kontrol edip yeniden dene.';
-  static const String jobOfferAddCta = 'Usta Arıyorum İlanı Ver';
+  static const String jobOfferAddCta = 'Personel İlanı Ver';
   static const String jobOfferSavedSnack = 'İlanın yayında.';
 
   // Form
@@ -1962,6 +1965,22 @@ class AppStrings {
       'onayın olmadan hiçbir ücret alınmaz.';
 
   // ── FırınNet Akademi (bot içerikleri + toplu profil sayfası) ──
+  // ── Sosyal/ekran tasarım geçişi ──
+  static const String chatComposerHint = 'Mesaj yaz…';
+  static const String moreActionsTooltip = 'Diğer';
+  static const String paywallNotNow = 'Şimdi değil';
+  static const String authShowPassword = 'Şifreyi göster';
+  static const String authHidePassword = 'Şifreyi gizle';
+  static const String feedCaptionSeeMore = 'devamını gör';
+  static const String feedPostImageLoadError = 'Görsel yüklenemedi';
+  static const String commentsPostFallback = 'Bu gönderiye ait yorumlar.';
+  static const String commentReplyingToSuffix = ' adlı kişiye cevap';
+  static const String notificationsErrorTitle = 'Bildirimler yüklenemedi';
+  static const String notificationsMarkAllReadDone =
+      'Tümü okundu olarak işaretlendi';
+  static const String notificationsMarkAllReadFailed =
+      'İşaretlenemedi. Biraz sonra tekrar dene.';
+  static const String closeTooltip = 'Kapat';
   static const String routeNotFoundTitle = 'Aradığınız sayfa bulunamadı';
   static const String routeNotFoundCta = 'Ana sayfaya dön';
   static const String academyLoadMoreError =
@@ -2671,6 +2690,75 @@ class AppStrings {
   static const String dealerSharePdfBuilding = 'PDF hazırlanıyor…';
   static const String dealerSharePdfButton = 'PDF Oluştur ve Paylaş';
   static const String dealerSharePdfSuffix = ' ve paylaşım açıldı.';
+  // ── İlanlar tasarım geçişi ──
+  static const String listingsBadgeHiring = 'Personel aranıyor';
+  static const String listingsBadgeSeeking = 'İş arıyor';
+  static const String listingsSalaryNegotiable = 'Ücret görüşülür';
+  static const String listingsSalaryExpectation = 'Beklenti';
+  static const String listingsPriceAsk = 'Fiyat sorunuz';
+  static const String listingsPriceTransferSuffix = 'devir';
+  static const String listingsPriceRentSuffix = '/ay kira';
+  static const String listingsNoPhoto = 'Fotoğraf yok';
+  static const String listingsOwnerFallback = 'FırınNet üyesi';
+  static const String listingsTitleHiringSuffix = 'aranıyor';
+  static const String listingsTitleSeekingSuffix = 'iş arıyor';
+  static const String listingsTitleFallback = 'İş ilanı';
+  static const String listingsExperienceYearsSuffix = 'yıl tecrübe';
+  static const String listingsExperienceNone = 'Yeni başlıyor';
+  static const String listingsPublished = 'İlan yayınlandı';
+  static const String listingsUpdated = 'Değişiklikler kaydedildi';
+  static const String listingsSavedPendingPayment =
+      'İlan kaydedildi · Ödeme sonrası yayınlanır';
+  static const String listingsSaveError = 'Kaydedilemedi. Tekrar dene.';
+  static const String listingsDeleted = 'İlan silindi';
+  static const String listingsActionError = 'İşlem yapılamadı. Tekrar dene.';
+  static const String listingsPendingPayHint =
+      'İlanın ödeme sonrası yayınlanır.';
+  static const String listingsFilterClear = 'Temizle';
+  static const String listingsAddStaffTooltip = 'Eleman ilanı ver';
+  static const String listingsAddWorkplaceTooltip = 'İş yeri ilanı ver';
+  static const String listingsAddEquipmentTooltip = 'Ekipman ilanı ver';
+  static const String listingsChooserTitle = 'Ne tür ilan vereceksin?';
+  static const String listingsChooserHiring = 'Personel arıyorum';
+  static const String listingsChooserHiringSub =
+      'İşletmen için usta veya eleman ilanı';
+  static const String listingsChooserSeeking = 'İş arıyorum';
+  static const String listingsChooserSeekingSub = 'Kendin için iş arama ilanı';
+  static const String listingsStatusActive = 'Yayında';
+  static const String listingsStatusPaused = 'Duraklatıldı';
+  static const String listingsStatusSold = 'Satıldı';
+  static const String listingsStatusExpired = 'Süresi doldu';
+  static const String listingsStatusActiveHint = 'İlanın herkese açık.';
+  static const String listingsStatusPausedHint =
+      'İlanın şu an listede görünmüyor.';
+  static const String listingsStatusSoldHint =
+      'İlan satıldı olarak işaretlendi.';
+  static const String listingsStatusExpiredHint =
+      'İlanın süresi doldu, listede görünmüyor.';
+  static const String listingsRepublish = 'Yeniden yayınla';
+  static const String listingsEdit = 'Düzenle';
+  static const String listingsUpdateCta = 'Güncelle';
+  static const String listingsUpdatingCta = 'Güncelleniyor…';
+  static const String listingsExistingPhotos = 'Mevcut fotoğraflar';
+  static const String listingsPublishedOn = 'Yayın';
+  static const String listingsExpiresOn = 'Bitiş';
+  static const String listingsMoreActions = 'Diğer işlemler';
+  static const String listingsDetailRole = 'Pozisyon';
+  static const String listingsDetailProfession = 'Meslek';
+  static const String listingsDetailShift = 'Vardiya';
+  static const String listingsDetailExperience = 'Tecrübe';
+  static const String listingsDetailSalary = 'Ücret';
+  static const String listingsDetailLocation = 'Konum';
+  static const String listingsDetailOwner = 'İlan sahibi';
+  static const String listingsDetailDescription = 'Açıklama';
+  static const String listingsLoadError = 'İlanlar yüklenemedi';
+  static const String listingsDetailLoadError = 'İlan yüklenemedi';
+  static const String listingsMarketPriceLabel = 'Fiyat';
+  static const String listingsJobSeekFormTitleNew = 'İş Arıyorum İlanı';
+  static const String listingsJobSeekFormHint =
+      'Kısa ve net yaz: meslek, şehir, tecrübe ve maaş beklentin işverenin '
+      'ilk baktığı bilgiler.';
+
   static const String dealerSharePdfErr =
       'PDF oluşturulamadı. Lütfen tekrar deneyin.';
 }

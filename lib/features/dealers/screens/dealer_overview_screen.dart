@@ -21,6 +21,7 @@ import '../widgets/dealer_kpi_tile.dart';
 import '../widgets/dealer_picker_sheet.dart';
 import '../widgets/dealer_pulse_card.dart';
 import '../widgets/quick_payment_sheet.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi Defteri Genel Bakış ekranı (Sprint 6B).
 ///
@@ -150,7 +151,7 @@ class _KpiGrid extends StatelessWidget {
             DealerKpiTile(
               label: AppStrings.dealerOverviewKpiOpenBalance,
               value: NumberFormatter.currency(overview.openBalance),
-              accent: AppColors.copper,
+              accent: AppColors.warningInk,
             ),
             DealerKpiTile(
               label: AppStrings.dealerOverviewKpiTodayDelivery,
@@ -178,7 +179,7 @@ class _KpiGrid extends StatelessWidget {
           accent: overview.monthNetChange == 0
               ? AppColors.textMuted
               : (overview.monthNetChange > 0
-                    ? AppColors.copper
+                    ? AppColors.warningInk
                     : AppColors.success),
           emphasized: true,
           fullWidth: true,
@@ -205,7 +206,7 @@ class _RecentActivitySection extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                AppStrings.dealerOverviewRecentActivityTitle.toUpperCase(),
+                AppStrings.dealerOverviewRecentActivityTitle.trUpper,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,
@@ -224,7 +225,7 @@ class _RecentActivitySection extends ConsumerWidget {
                     vertical: 0,
                   ),
                   visualDensity: VisualDensity.compact,
-                  foregroundColor: AppColors.copper,
+                  foregroundColor: AppColors.brandInk,
                 ),
                 child: const Text(AppStrings.dealerOverviewSeeAll),
               ),
@@ -359,7 +360,7 @@ class _RecentTxRow extends StatelessWidget {
   (IconData, Color, String) _meta(DealerTransactionType t) {
     switch (t) {
       case DealerTransactionType.delivery:
-        return (Icons.bakery_dining_rounded, AppColors.copper, '+');
+        return (Icons.bakery_dining_rounded, AppColors.warningInk, '+');
       case DealerTransactionType.returned:
         return (Icons.assignment_returned_rounded, AppColors.info, '−');
       case DealerTransactionType.payment:
@@ -402,7 +403,7 @@ class _QuickActionsSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
-            AppStrings.dealerOverviewQuickActionsTitle.toUpperCase(),
+            AppStrings.dealerOverviewQuickActionsTitle.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,
@@ -423,7 +424,7 @@ class _QuickActionsSection extends ConsumerWidget {
             _QuickActionChip(
               icon: Icons.bakery_dining_rounded,
               label: AppStrings.dealerOverviewQuickDelivery,
-              accent: AppColors.copper,
+              accent: AppColors.warningInk,
               onTap: () => _pickThen(
                 context,
                 ref,
@@ -463,7 +464,7 @@ class _QuickActionsSection extends ConsumerWidget {
             _QuickActionChip(
               icon: Icons.warning_amber_rounded,
               label: AppStrings.dealerOverviewQuickDebtDealers,
-              accent: AppColors.copper,
+              accent: AppColors.warningInk,
               // Sprint 6B.x: Bayiler tab'a switch + debtOnly filter
               // chip'i bir kez preset et. DealerListScreen initState'te
               // prefilter'ı tüketir ve false'a reset eder (one-shot).
@@ -485,7 +486,7 @@ class _QuickActionsSection extends ConsumerWidget {
               _QuickActionChip(
                 icon: Icons.local_shipping_outlined,
                 label: 'Şoförler',
-                accent: AppColors.copper,
+                accent: AppColors.warningInk,
                 onTap: () {
                   // Şoförlü/ekipli bayi operasyonu = Premium. Pro owner burada
                   // paywall görür; server zaten korur. Entitlement yüklü

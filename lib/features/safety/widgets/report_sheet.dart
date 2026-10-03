@@ -179,7 +179,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                                     : Icons.radio_button_off_rounded,
                                 size: 20,
                                 color: _reason == reason
-                                    ? AppColors.copper
+                                    ? AppColors.brandInk
                                     : AppColors.textMuted,
                               ),
                               const SizedBox(width: AppSpacing.m),
@@ -223,7 +223,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                     (_reason != null && !_submitting) ? _submit : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.copper,
-                  foregroundColor: AppColors.surface,
+                  foregroundColor: AppColors.brandInk,
                   disabledBackgroundColor: AppColors.surfaceLine,
                   disabledForegroundColor: AppColors.textMuted,
                   shape: RoundedRectangleBorder(

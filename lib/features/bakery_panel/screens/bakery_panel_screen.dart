@@ -473,7 +473,7 @@ class _TasksCard extends ConsumerWidget {
               icon: const Icon(Icons.add_rounded, size: 16),
               label: const Text(AppStrings.ledgerQuickTask),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
+                foregroundColor: AppColors.brandInk,
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,

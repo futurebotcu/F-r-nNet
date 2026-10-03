@@ -13,6 +13,7 @@ import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../models/dealer.dart';
 import '../providers/dealer_providers.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Toptancı kullanıcı için müşteri/bayi listesi.
 ///
@@ -194,7 +195,7 @@ class _CustomerCard extends ConsumerWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  dealer.name.isNotEmpty ? dealer.name[0].toUpperCase() : 'M',
+                  dealer.name.isNotEmpty ? dealer.name[0].trUpper : 'M',
                   style: TextStyle(
                     color: dealer.isActive
                         ? AppColors.softGold
@@ -262,7 +263,7 @@ class _CustomerCard extends ConsumerWidget {
             ),
             data: (s) {
               final balanceColor = s.currentBalance > 0
-                  ? AppColors.copper
+                  ? AppColors.warningInk
                   : s.currentBalance < 0
                   ? AppColors.success
                   : AppColors.textSecondary;
@@ -274,7 +275,7 @@ class _CustomerCard extends ConsumerWidget {
               return Row(
                 children: [
                   Text(
-                    label.toUpperCase(),
+                    label.trUpper,
                     style: const TextStyle(
                       color: AppColors.textMuted,
                       fontWeight: FontWeight.w700,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import 'premium_card.dart';
+import '../../utils/tr_case.dart';
 
 /// Büyük rakamı öne çıkaran metrik kartı. Editorial hiyerarşi:
 ///  - üstte küçük, sakin etiket (uppercase)
@@ -48,7 +49,7 @@ class StatCard extends StatelessWidget {
               ],
               Expanded(
                 child: Text(
-                  label.toUpperCase(),
+                  label.trUpper,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w700,

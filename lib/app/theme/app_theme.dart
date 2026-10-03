@@ -6,6 +6,21 @@ import 'app_tokens.dart';
 
 final TextStyle premiumFont = const TextStyle(fontFamily: 'Inter');
 
+/// Ortak buton varyantları (tema varsayılanı = birincil sarı CTA).
+class AppButtonStyles {
+  const AppButtonStyles._();
+
+  /// Geri alınamaz işlem (sil, engelle, hesabı sil): kırmızı zemin + beyaz
+  /// metin. Yalnız `backgroundColor: danger` vermek tema mürekkep metnini
+  /// kırmızı üstünde bırakıyordu (okunmaz).
+  static final ButtonStyle destructive = FilledButton.styleFrom(
+    backgroundColor: AppColors.danger,
+    foregroundColor: Colors.white,
+    disabledBackgroundColor: AppColors.danger.withValues(alpha: 0.35),
+    disabledForegroundColor: Colors.white70,
+  );
+}
+
 class AppTheme {
   const AppTheme._();
 
@@ -316,31 +331,127 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: AppColors.brandInk,
           disabledForegroundColor: AppColors.textMuted,
+          minimumSize: const Size(0, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.s),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.brandInk,
           disabledForegroundColor: AppColors.textMuted,
-          side: const BorderSide(color: AppColors.warmBorder),
+          // F2F2F2 kenar beyaz zeminde görünmüyordu → ikincil buton
+          // "buton" olarak okunmuyordu.
+          side: const BorderSide(color: Color(0xFFDDE0E5)),
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
       iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 22),
       shadowColor: Colors.black,
+      // Ortak işlem geri bildirimi: koyu mürekkep zemin + beyaz metin, alttan
+      // yüzen kısa bildirim. Beyaz ekran üstünde beyaz snackbar kayboluyordu;
+      // 167 çağrı yeri tema üzerinden tek dile geçer (bkz. AppFeedback).
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.brandInk,
         contentTextStyle: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 14.5,
+          fontFamily: 'Inter',
+          color: Colors.white,
+          fontSize: 14,
           fontWeight: FontWeight.w600,
+          height: 1.35,
         ),
+        actionTextColor: AppColors.brandLemon,
+        closeIconColor: Colors.white70,
         behavior: SnackBarBehavior.floating,
+        elevation: 2,
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.m),
+          borderRadius: BorderRadius.circular(AppRadius.s),
         ),
+      ),
+      // Popup'lar ham Android dialog gibi görünmesin: beyaz yüzey, yumuşak
+      // köşe, tutarlı başlık/gövde tipografisi, tint yok.
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+        ),
+        titleTextStyle: const TextStyle(
+          fontFamily: 'Inter',
+          color: AppColors.textPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          height: 1.3,
+          letterSpacing: -0.2,
+        ),
+        contentTextStyle: const TextStyle(
+          fontFamily: 'Inter',
+          color: AppColors.textSecondary,
+          fontSize: 14.5,
+          fontWeight: FontWeight.w500,
+          height: 1.45,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: AppColors.surface,
+        elevation: 0,
+        modalElevation: 0,
+        // showDragHandle global açılmaz: birçok sheet kendi tutamacını çizer.
+        dragHandleColor: Color(0xFFD9DCE1),
+        dragHandleSize: Size(36, 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.l),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+        ),
+        textStyle: const TextStyle(
+          fontFamily: 'Inter',
+          color: AppColors.textPrimary,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      // İmleç/seçim: sarı imleç beyaz alanda görünmüyordu.
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: AppColors.brandInk,
+        selectionColor: AppColors.brandLemon.withValues(alpha: 0.45),
+        selectionHandleColor: AppColors.brandInk,
+      ),
+      // Yükleme göstergesi: ince, mürekkep tonu (sarı halka beyazda
+      // kayboluyordu); dev kalın spinner yok.
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.brandInk,
+        linearTrackColor: AppColors.surfaceLine,
+        circularTrackColor: Colors.transparent,
+        strokeWidth: 2.4,
       ),
     );
   }

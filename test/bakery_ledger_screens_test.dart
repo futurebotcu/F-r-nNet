@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 /// Fırın Defteri V1 — ekran testleri.
 class _FixedProfileController extends ProfileController {
@@ -342,14 +343,14 @@ void main() {
       (tester) async {
         final repo = LocalBakeryRepository();
         await _pump(tester, const ProductionEntryScreen(), repo: repo);
-        await tester.tap(find.text('KAYDET'));
+        await tester.tap(find.text('Kaydet'));
         await tester.pump();
         expect(find.text('Önce bir ürün seç.'), findsOneWidget);
         // Ürün + adet → kaydet.
         await tester.tap(find.text('Ekmek').first);
         await tester.pumpAndSettle();
         await tester.enterText(find.widgetWithText(TextField, 'Adet'), '120');
-        await tester.tap(find.text('KAYDET'));
+        await tester.tap(find.text('Kaydet'));
         await tester.pumpAndSettle();
         final list = await repo.listProduction(day: DateTime.now());
         expect(list.single.quantity, 120);
@@ -364,13 +365,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.widgetWithText(TextField, 'Adet'), '7');
       // Sebep seçilmedi → hata.
-      await tester.tap(find.text('KAYDET'));
+      await tester.tap(find.text('Kaydet'));
       await tester.pump();
       expect(find.text(AppStrings.ledgerWasteReasonRequired), findsOneWidget);
       // Sebep seç → kaydet.
       await tester.tap(find.byKey(const ValueKey('waste_reason_burnt')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('KAYDET'));
+      await tester.tap(find.text('Kaydet'));
       await tester.pumpAndSettle();
       final list = await repo.listWastes(day: DateTime.now());
       expect(list.single.quantity, 7);
@@ -415,7 +416,7 @@ void main() {
       }
       // Bugün: üretim + ciro görünür (StatCard etiketleri uppercase).
       expect(
-        find.text(AppStrings.ledgerEodProduction.toUpperCase()),
+        find.text(AppStrings.ledgerEodProduction.trUpper),
         findsOneWidget,
       );
       expect(find.text('200 adet'), findsOneWidget);

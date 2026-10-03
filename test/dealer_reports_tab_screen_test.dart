@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 // Test-deterministik referans zaman: 2026-05-24 10:00 (Pazar).
 final _refNow = DateTime(2026, 5, 24, 10, 0);
@@ -129,7 +130,7 @@ void main() {
 
       // Genel Toplam başlığı (uppercase)
       expect(
-        find.text(AppStrings.dealerReportsSummaryTitle.toUpperCase()),
+        find.text(AppStrings.dealerReportsSummaryTitle.trUpper),
         findsOneWidget,
       );
       // "2 aktif bayi" satırı (pasif Şenel hariç)
@@ -147,23 +148,23 @@ void main() {
 
       // 5 KPI label (uppercase)
       expect(
-        find.text(AppStrings.dealerReportsKpiDelivery.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiDelivery.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiReturn.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiReturn.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiPayment.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiPayment.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiTxCount.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiTxCount.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerReportsKpiNetChange.toUpperCase()),
+        find.text(AppStrings.dealerReportsKpiNetChange.trUpper),
         findsOneWidget,
       );
 
@@ -196,7 +197,7 @@ void main() {
 
       // "Bayi Bazlı Rapor" başlığı (uppercase)
       expect(
-        find.text(AppStrings.dealerReportsByDealerTitle.toUpperCase()),
+        find.text(AppStrings.dealerReportsByDealerTitle.trUpper),
         findsOneWidget,
       );
 

@@ -38,6 +38,7 @@ import '../composer/inline_composer_card.dart';
 import '../post/social_post_card.dart';
 import '../stories/social_stories_carousel.dart';
 import 'feed_segment_provider.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// FırınNet'in ana sosyal feed sayfası — donor-first.
 ///
@@ -182,7 +183,7 @@ class ProfileAvatarAction extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
     final initial = (profile?.displayName.isNotEmpty ?? false)
-        ? profile!.displayName[0].toUpperCase()
+        ? profile!.displayName[0].trUpper
         : 'M';
     void onTap() {
       final user = ref.read(currentAuthUserProvider);
@@ -338,15 +339,95 @@ class _FeedLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // İlk yükleme: tam ekran spinner yerine statik iskelet kartlar (animasyon
+    // yok → jank yok). Sonraki sayfa yüklemesi listede küçük spinner kalır.
     return ListView(
+      key: const ValueKey('feed_skeleton'),
       physics: const AlwaysScrollableScrollPhysics(),
       children: const [
         if (_kShowStories) SocialStoriesCarousel(),
-        Padding(
-          padding: EdgeInsets.only(top: AppSpacing.xxxl),
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        _FeedSkeletonCard(),
+        _FeedSkeletonCard(withMedia: true),
+        _FeedSkeletonCard(),
       ],
+    );
+  }
+}
+
+/// Statik iskelet kart — gönderi kartının yerleşimini (avatar, isim, metin,
+/// görsel, aksiyonlar) gri bloklarla taklit eder.
+class _FeedSkeletonCard extends StatelessWidget {
+  const _FeedSkeletonCard({this.withMedia = false});
+
+  final bool withMedia;
+
+  static Widget _bar(double width, {double height = 12}) => Container(
+    width: width,
+    height: height,
+    decoration: BoxDecoration(
+      color: AppColors.surfaceLine,
+      borderRadius: BorderRadius.circular(AppRadius.s),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.pageH,
+        10,
+        AppSpacing.pageH,
+        10,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        boxShadow: AppShadow.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceLine,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_bar(120), const SizedBox(height: 8), _bar(72)],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _bar(double.infinity),
+          const SizedBox(height: 8),
+          _bar(220),
+          if (withMedia) ...[
+            const SizedBox(height: AppSpacing.m),
+            AspectRatio(
+              aspectRatio: 4 / 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLine,
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.m),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [_bar(28), _bar(28), _bar(28), _bar(28)],
+          ),
+        ],
+      ),
     );
   }
 }

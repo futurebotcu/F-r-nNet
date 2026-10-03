@@ -23,7 +23,7 @@ void main() {
           accent: AppColors.copper,
         ),
       ));
-      // Label `.toUpperCase()` ile render edilir.
+      // Label Türkçe büyük harfle (trUpper) render edilir.
       expect(find.text('AÇIK ALACAKLAR'), findsOneWidget);
       expect(find.text('Açık Alacaklar'), findsNothing);
     });

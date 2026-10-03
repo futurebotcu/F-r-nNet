@@ -7,14 +7,22 @@
 //   * Listing_type rozet (Ekipman satışı / Fırın devri).
 //   * Image thumbnail (cached_network_image); placeholder içeride.
 //   * Tap → detail route. Save action sağ üst köşede.
+//
+// İlanlar tasarım geçişi: hiyerarşi tür rozeti → başlık → fiyat (doğru para
+// birimi + binlik ayıraç) → konum → ilan sahibi · göreli tarih. Görselsiz
+// ilan 4:3 gri blok yerine daha kısa 16:9 tür-özel yer tutucu
+// ("Fotoğraf yok") gösterir.
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../listings/utils/listing_format.dart';
 import '../../subscriptions/widgets/listing_fee_notice.dart';
+import '../data/marketplace_taxonomy.dart';
 import '../models/market_listing.dart';
 
 class MarketplaceListingCard extends StatelessWidget {
@@ -29,41 +37,61 @@ class MarketplaceListingCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onToggleSave;
 
-  String _priceLabel() {
+  /// Kart/paylaşım için tek satır fiyat: "₺ 850.000 devir",
+  /// "€ 1.200 / adet", fiyat yoksa "Fiyat sorunuz".
+  static String priceLabel(MarketListing listing) {
+    final cur = listing.currency;
     if (listing.isBakeryTransfer) {
       final transfer = listing.transferPrice;
       if (transfer != null) {
-        return '₺ ${transfer.toStringAsFixed(0)} devir';
+        return '${ListingFormat.price(transfer, currency: cur)} '
+            '${AppStrings.listingsPriceTransferSuffix}';
       }
       final rent = listing.rentPrice;
       if (rent != null) {
-        return '₺ ${rent.toStringAsFixed(0)}/ay kira';
+        return '${ListingFormat.price(rent, currency: cur)}'
+            '${AppStrings.listingsPriceRentSuffix}';
       }
-      return '—';
+      return AppStrings.listingsPriceAsk;
     }
-    if (listing.price == null) return '—';
-    return '₺ ${listing.price!.toStringAsFixed(0)}'
-        '${listing.unit != null && listing.unit!.isNotEmpty ? ' / ${listing.unit}' : ''}';
+    final price = listing.price;
+    if (price == null) return AppStrings.listingsPriceAsk;
+    final unit = (listing.unit ?? '').trim();
+    return '${ListingFormat.price(price, currency: cur)}'
+        '${unit.isNotEmpty ? ' / $unit' : ''}';
   }
 
-  String _locationLabel() {
+  String? _locationLabel() {
     final city = (listing.city ?? '').trim();
     final district = (listing.district ?? '').trim();
-    if (city.isEmpty && district.isEmpty) return '—';
+    if (city.isEmpty && district.isEmpty) return null;
     if (district.isEmpty) return city;
     if (city.isEmpty) return district;
     return '$city · $district';
   }
 
   String _typeLabel() {
-    return AppStrings.marketListingTypeLabels[listing.listingType] ??
+    return MarketplaceTaxonomy.listingTypes[listing.listingType] ??
         listing.listingType;
+  }
+
+  String _metaLabel() {
+    final owner = (listing.authorName ?? '').trim();
+    final created = listing.createdAt;
+    return [
+      if (owner.isNotEmpty) owner,
+      if (created != null) ListingFormat.relative(created),
+    ].join(' · ');
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final imageUrl = listing.firstMedia?.publicUrl;
+    final location = _locationLabel();
+    final meta = _metaLabel();
+    final hasPrice = listing.isBakeryTransfer
+        ? (listing.transferPrice != null || listing.rentPrice != null)
+        : listing.price != null;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -85,8 +113,10 @@ class MarketplaceListingCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Image + listing_type rozet + save toggle ──
+              // Kart küçük resmi BoxFit.cover ile kırpılır (detay/tam ekran
+              // contain kullanır). Görselsiz ilan daha kısa 16:9 alan.
               AspectRatio(
-                aspectRatio: 4 / 3,
+                aspectRatio: imageUrl != null ? 4 / 3 : 16 / 9,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -105,15 +135,23 @@ class MarketplaceListingCard extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 1.6),
                           ),
                         ),
-                        errorWidget: (_, __, ___) => const _PlaceholderArt(),
+                        errorWidget: (_, __, ___) => _PlaceholderArt(
+                          isBakeryTransfer: listing.isBakeryTransfer,
+                        ),
                       )
                     else
-                      const _PlaceholderArt(),
+                      _PlaceholderArt(
+                        isBakeryTransfer: listing.isBakeryTransfer,
+                      ),
                     // Listing type rozet (sol üst)
                     Positioned(
                       left: 10,
                       top: 10,
-                      child: _TypeBadge(label: _typeLabel()),
+                      right: 56,
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: _TypeBadge(label: _typeLabel()),
+                      ),
                     ),
                     // İlan Ücretlendirme V1 — owner kendi pending ilanında
                     // "Ödeme bekliyor" görür (public zaten pending görmez).
@@ -143,7 +181,7 @@ class MarketplaceListingCard extends StatelessWidget {
                                     ? Icons.bookmark_rounded
                                     : Icons.bookmark_border_rounded,
                                 color: listing.isSavedByMe
-                                    ? AppColors.brandLemonPressed
+                                    ? AppColors.brandLemon
                                     : AppColors.surface,
                                 size: 20,
                               ),
@@ -154,7 +192,7 @@ class MarketplaceListingCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // ── Title + price + location ──
+              // ── Title + price + location + owner/date ──
               Padding(
                 // Faz 2 Pass 4 — ferah dikey ritim (kart sıkışık görünmesin).
                 padding: const EdgeInsets.fromLTRB(
@@ -168,52 +206,40 @@ class MarketplaceListingCard extends StatelessWidget {
                   children: [
                     Text(
                       listing.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 16.5,
-                        letterSpacing: -0.2,
-                        color: AppColors.textPrimary,
                         height: 1.25,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: AppSpacing.s),
-                    Text(
-                      _priceLabel(),
-                      style: const TextStyle(
-                        color: AppColors.brandInk,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15.5,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.s),
-                    Row(
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.place_outlined,
-                          size: 14,
-                          color: AppColors.textMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            _locationLabel(),
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          priceLabel(listing),
+                          style: TextStyle(
+                            color: hasPrice
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: hasPrice ? 15.5 : 14,
                           ),
                         ),
-                        if (listing.negotiable) ...[
-                          const SizedBox(width: 8),
-                          const _NegotiableChip(),
-                        ],
+                        if (listing.negotiable) const _NegotiableChip(),
                       ],
                     ),
+                    if (location != null) ...[
+                      const SizedBox(height: 6),
+                      _MetaLine(icon: Icons.place_outlined, text: location),
+                    ],
+                    if (meta.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      _MetaLine(icon: Icons.person_outline_rounded, text: meta),
+                    ],
                   ],
                 ),
               ),
@@ -221,6 +247,30 @@ class MarketplaceListingCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MetaLine extends StatelessWidget {
+  const _MetaLine({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: AppColors.textSecondary),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTypography.meta.copyWith(color: AppColors.textSecondary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -240,6 +290,8 @@ class _TypeBadge extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: const TextStyle(
           color: AppColors.surface,
           fontSize: 11.5,
@@ -265,7 +317,7 @@ class _NegotiableChip extends StatelessWidget {
       child: const Text(
         'Pazarlık',
         style: TextStyle(
-          color: AppColors.brandLemonPressed,
+          color: AppColors.brandInk,
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
         ),
@@ -275,35 +327,34 @@ class _NegotiableChip extends StatelessWidget {
 }
 
 class _PlaceholderArt extends StatelessWidget {
-  const _PlaceholderArt();
+  const _PlaceholderArt({required this.isBakeryTransfer});
+
+  final bool isBakeryTransfer;
 
   @override
   Widget build(BuildContext context) {
-    // Gorselsiz ilan - white-first yuzey + lemon accent detay.
-    // ikon (sahte görsel değil; FırınNet premium placeholder dili).
+    // Görselsiz ilan — sakin nötr yüzey + tür ikonu + "Fotoğraf yok"
+    // (sahte görsel değil).
     return Container(
+      key: const ValueKey('market_card_no_photo'),
+      color: AppColors.surfaceLine,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.heroFrom, AppColors.heroTo],
-        ),
-      ),
-      child: Container(
-        width: 60,
-        height: 60,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.card.withValues(alpha: 0.7),
-          border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
-        ),
-        child: const Icon(
-          Icons.storefront_outlined,
-          size: 30,
-          color: AppColors.brandLemonPressed,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isBakeryTransfer
+                ? Icons.storefront_outlined
+                : Icons.kitchen_outlined,
+            size: 30,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            AppStrings.listingsNoPhoto,
+            style: AppTypography.meta.copyWith(color: AppColors.textSecondary),
+          ),
+        ],
       ),
     );
   }

@@ -117,7 +117,7 @@ class _DealerAdjustmentFormScreenState
   Widget build(BuildContext context) {
     final amount = NumberFormatter.parseLoose(_amount.text);
     final preview = _direction == _AdjustDirection.add ? amount : -amount;
-    final previewColor = preview >= 0 ? AppColors.copper : AppColors.success;
+    final previewColor = preview >= 0 ? AppColors.warningInk : AppColors.success;
     final previewSign = preview >= 0 ? '+' : '−';
 
     return PremiumScaffold(

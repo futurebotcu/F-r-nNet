@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../models/group_category.dart';
 import '../models/social_group.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Grupların hem listelerde hem Feed carousel'inde kullanılan ortak kartı.
 class GroupCard extends StatelessWidget {
@@ -122,7 +123,7 @@ class GroupCard extends StatelessWidget {
                           ),
                           child: Icon(
                             _categoryIcon(group.category),
-                            color: AppColors.brandLemonPressed,
+                            color: AppColors.brandInk,
                             size: 16,
                           ),
                         ),
@@ -318,8 +319,10 @@ class _PrimaryCta extends StatelessWidget {
     final bool enabled;
 
     if (isJoined) {
+      // Üye olunan grup: ikincil (nötr) — listede sarı buton duvarı olmasın;
+      // sarı yalnız "Katıl" birincil eylemi.
       label = AppStrings.groupActionOpen;
-      bg = AppColors.brandLemon;
+      bg = AppColors.surfaceLine;
       fg = AppColors.brandInk;
       enabled = true;
     } else if (group.isFull) {
@@ -357,9 +360,9 @@ class _PrimaryCta extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
           textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-            letterSpacing: 1.2,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            letterSpacing: 0.1,
           ),
         ),
         child: Text(label),
@@ -395,13 +398,13 @@ class _PendingRequestsPill extends StatelessWidget {
           const Icon(
             Icons.hourglass_top_rounded,
             size: 13,
-            color: AppColors.brandLemonPressed,
+            color: AppColors.brandInk,
           ),
           const SizedBox(width: 5),
           Text(
             AppStrings.groupPendingRequestCount(count),
             style: const TextStyle(
-              color: AppColors.brandLemonPressed,
+              color: AppColors.brandInk,
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0,
@@ -428,7 +431,7 @@ class _MiniBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.22), width: 0.6),
       ),
       child: Text(
-        label.toUpperCase(),
+        label.trUpper,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w800,

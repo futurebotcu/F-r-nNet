@@ -7,11 +7,13 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/firinnet_taxonomy.dart';
 import '../../../core/data/turkey_locations.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
+import '../../listings/utils/listing_format.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../dealers/widgets/dealer_filter_chip.dart';
@@ -69,9 +71,7 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
       if (profile != null &&
           profile.accountType != AccountType.commercial &&
           profile.accountType != AccountType.wholesaler) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.jobOfferCommercialOnly)),
-        );
+        AppFeedback.info(context, AppStrings.jobOfferCommercialOnly);
         if (context.canPop()) {
           context.pop();
         }
@@ -162,26 +162,21 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
   Future<void> _onSavePressed() async {
     if (!_formKey.currentState!.validate()) return;
     if (_roleCode == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.jobOfferFieldRoleRequired)),
-      );
+      AppFeedback.warning(context, AppStrings.jobOfferFieldRoleRequired);
       return;
     }
     // M8 Cleanup P1-2: salary cross-field + negatif validation. Boş
-    // bırakmak serbest; sadece girilmiş değerler kontrol edilir.
-    final minSalary = double.tryParse(_salaryMin.text.trim());
-    final maxSalary = double.tryParse(_salaryMax.text.trim());
+    // bırakmak serbest; sadece girilmiş değerler kontrol edilir. (Alanlar
+    // yalnız rakam kabul eder; negatif kontrolü savunma amaçlı kalır.)
+    final minSalary = ListingFormat.parseAmount(_salaryMin.text);
+    final maxSalary = ListingFormat.parseAmount(_salaryMax.text);
     if ((minSalary != null && minSalary < 0) ||
         (maxSalary != null && maxSalary < 0)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.jobOfferSalaryNegative)),
-      );
+      AppFeedback.warning(context, AppStrings.jobOfferSalaryNegative);
       return;
     }
     if (minSalary != null && maxSalary != null && minSalary > maxSalary) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.jobOfferSalaryMinGtMax)),
-      );
+      AppFeedback.warning(context, AppStrings.jobOfferSalaryMinGtMax);
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -209,8 +204,8 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
       description: _description.text.trim().isEmpty
           ? null
           : _description.text.trim(),
-      salaryMin: double.tryParse(_salaryMin.text.trim()),
-      salaryMax: double.tryParse(_salaryMax.text.trim()),
+      salaryMin: minSalary,
+      salaryMax: maxSalary,
       shiftType: shiftLabel,
       shiftCode: _shiftCode,
       experienceRequired: experienceLabel,
@@ -219,21 +214,24 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
       isActive: _isActive,
     );
     try {
-      await repo.upsertOffer(post);
+      final saved = await repo.upsertOffer(post);
       ref.invalidate(activeJobOffersProvider);
       ref.invalidate(myJobOffersProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.jobOfferSavedSnack)),
+      // Ücretli ilan ödeme bekliyorsa "yayında" denmez.
+      AppFeedback.success(
+        context,
+        listingSavedMessage(
+          isEdit: widget.postId != null,
+          isPendingPayment: saved.isPendingPayment,
+        ),
       );
       context.pop();
     } on GuestActionRequiredException {
       if (mounted) await showAuthRequiredSheet(context, ref);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.jobOfferErrorGeneric)),
-        );
+        AppFeedback.error(context, AppStrings.listingsSaveError);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -371,6 +369,8 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                           child: TextFormField(
                             controller: _salaryMin,
                             keyboardType: TextInputType.number,
+                            inputFormatters:
+                                ListingFormat.integerInputFormatters,
                             decoration: const InputDecoration(
                               labelText: AppStrings.jobOfferFieldSalaryMin,
                             ),
@@ -381,6 +381,8 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                           child: TextFormField(
                             controller: _salaryMax,
                             keyboardType: TextInputType.number,
+                            inputFormatters:
+                                ListingFormat.integerInputFormatters,
                             decoration: const InputDecoration(
                               labelText: AppStrings.jobOfferFieldSalaryMax,
                             ),
@@ -455,7 +457,11 @@ class _JobOfferFormScreenState extends ConsumerState<JobOfferFormScreen> {
                                 ),
                               )
                             : const Icon(Icons.send_rounded, size: 18),
-                        label: const Text(AppStrings.jobOfferFormSaveCta),
+                        label: Text(
+                          widget.postId == null
+                              ? AppStrings.jobOfferFormSaveCta
+                              : AppStrings.listingsUpdateCta,
+                        ),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.copper,
                           foregroundColor: AppColors.brandInk,

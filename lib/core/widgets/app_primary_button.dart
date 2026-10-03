@@ -11,7 +11,7 @@ class AppPrimaryButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.icon,
-    this.height = 56,
+    this.height = 52,
   });
 
   final String label;
@@ -44,12 +44,18 @@ class AppPrimaryButton extends StatelessWidget {
                 Icon(icon, size: 20),
                 const SizedBox(width: 8),
               ],
-              Text(
-                label.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
+              // Cümle düzeni: uygulamadaki diğer butonlarla aynı dil
+              // ("KAYDET" / "Kaydet" karışıklığı yok; Türkçe İ hatası yok).
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
             ],

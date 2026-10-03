@@ -53,8 +53,8 @@ void main() {
 
   testWidgets('Hesapla butonu sonucu yeniden üretir', (tester) async {
     await pumpTall(tester);
-    // AppPrimaryButton label'ı büyük harfe çevirir → 'HESAPLA'.
-    await tester.tap(find.text(AppStrings.calculate.toUpperCase()));
+    // AppPrimaryButton cümle düzeninde etiket gösterir.
+    await tester.tap(find.text(AppStrings.calculate));
     await tester.pumpAndSettle();
     expect(find.text('316'), findsOneWidget);
   });

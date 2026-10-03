@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/turkey_locations.dart';
@@ -29,7 +30,7 @@ class WorkerExperiencesScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Tecrübe ekle'),
         backgroundColor: AppColors.copper,
-        foregroundColor: AppColors.surface,
+        foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
         child: async.when(
@@ -173,7 +174,7 @@ class _ExperienceCard extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            style: AppButtonStyles.destructive,
             child: const Text('Sil'),
           ),
         ],

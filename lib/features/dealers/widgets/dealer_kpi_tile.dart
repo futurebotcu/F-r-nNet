@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi Defteri KPI kartı — Genel Bakış / Raporlar / (Gün Sonu V1)
 /// ortak widget'ı (Quality Patch v2).
@@ -49,7 +50,7 @@ class DealerKpiTile extends StatelessWidget {
         mainAxisSize: fullWidth ? MainAxisSize.min : MainAxisSize.max,
         children: [
           Text(
-            label.toUpperCase(),
+            label.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,

@@ -5,6 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/relative_time.dart';
+import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/app_notification.dart';
@@ -33,9 +37,25 @@ class NotificationsScreen extends ConsumerWidget {
             tooltip: AppStrings.notificationsMarkAllRead,
             icon: const Icon(Icons.done_all_rounded),
             onPressed: () async {
-              await repo.markAllAsRead();
-              ref.invalidate(notificationsProvider);
-              ref.invalidate(unreadNotificationsCountProvider);
+              try {
+                await repo.markAllAsRead();
+                ref.invalidate(notificationsProvider);
+                ref.invalidate(unreadNotificationsCountProvider);
+                if (context.mounted) {
+                  AppFeedback.success(
+                    context,
+                    AppStrings.notificationsMarkAllReadDone,
+                  );
+                }
+              } catch (e) {
+                debugPrint('[FirinNet][Notifications] markAll error: $e');
+                if (context.mounted) {
+                  AppFeedback.error(
+                    context,
+                    AppStrings.notificationsMarkAllReadFailed,
+                  );
+                }
+              }
             },
           ),
         ],
@@ -44,34 +64,58 @@ class NotificationsScreen extends ConsumerWidget {
         top: false,
         child: async.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Padding(
-            padding: EdgeInsets.all(AppSpacing.l),
-            child: Center(
-              child: Text(
-                AppStrings.notificationsErrorGeneric,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13.5,
-                  height: 1.45,
-                ),
-                textAlign: TextAlign.center,
+          error: (_, __) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.l),
+              child: ErrorRetryState(
+                title: AppStrings.notificationsErrorTitle,
+                subtitle: AppStrings.notificationsErrorGeneric,
+                onRetry: () => ref.invalidate(notificationsProvider),
               ),
             ),
           ),
           data: (items) {
-            if (items.isEmpty) {
-              return const _NotificationsEmpty();
+            Future<void> refresh() async {
+              ref.invalidate(notificationsProvider);
+              ref.invalidate(unreadNotificationsCountProvider);
+              try {
+                await ref.read(notificationsProvider.future);
+              } catch (_) {
+                // Hata durumu ekranın error dalında gösterilir.
+              }
             }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageH,
-                AppSpacing.s,
-                AppSpacing.pageH,
-                AppSpacing.xxl,
+
+            if (items.isEmpty) {
+              return RefreshIndicator(
+                onRefresh: refresh,
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: const Center(child: _NotificationsEmpty()),
+                    ),
+                  ),
+                ),
+              );
+            }
+            return RefreshIndicator(
+              onRefresh: refresh,
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageH,
+                  AppSpacing.s,
+                  AppSpacing.pageH,
+                  AppSpacing.xxl,
+                ),
+                itemCount: items.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.s),
+                itemBuilder: (_, i) => NotificationRow(item: items[i]),
               ),
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.s),
-              itemBuilder: (_, i) => NotificationRow(item: items[i]),
             );
           },
         ),
@@ -115,7 +159,7 @@ class NotificationRow extends ConsumerWidget {
               height: 8,
               margin: const EdgeInsets.only(top: 6, right: AppSpacing.s),
               decoration: BoxDecoration(
-                color: isUnread ? AppColors.copper : Colors.transparent,
+                color: isUnread ? AppColors.brandInk : Colors.transparent,
                 shape: BoxShape.circle,
               ),
             ),
@@ -141,6 +185,16 @@ class NotificationRow extends ConsumerWidget {
                       height: 1.4,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    relativeTimeTr(item.createdAt),
+                    key: const ValueKey('notification_row_time'),
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -156,47 +210,10 @@ class _NotificationsEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.softGold.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(AppRadius.m),
-              ),
-              child: const Icon(
-                Icons.notifications_none_rounded,
-                color: AppColors.softGold,
-                size: 26,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.m),
-            const Text(
-              AppStrings.notificationsEmptyTitle,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              AppStrings.notificationsEmptyBody,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                height: 1.45,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return const EmptyState(
+      icon: Icons.notifications_none_rounded,
+      title: AppStrings.notificationsEmptyTitle,
+      subtitle: AppStrings.notificationsEmptyBody,
     );
   }
 }

@@ -26,6 +26,7 @@ import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../repositories/driver_permission.dart';
 import '../widgets/quick_payment_sheet.dart';
+import '../../../core/utils/tr_case.dart';
 
 class DealerDetailScreen extends ConsumerWidget {
   const DealerDetailScreen({super.key, required this.dealerId});
@@ -373,7 +374,7 @@ class _BalanceHero extends StatelessWidget {
     final theme = Theme.of(context);
     final balance = summary.currentBalance;
     final balanceColor = balance > 0
-        ? AppColors.copper
+        ? AppColors.warningInk
         : balance < 0
         ? AppColors.success
         : AppColors.softGold;
@@ -540,7 +541,7 @@ class _MiniMetric extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label.toUpperCase(),
+          label.trUpper,
           style: const TextStyle(
             color: AppColors.textMuted,
             fontWeight: FontWeight.w700,
@@ -797,7 +798,7 @@ class _ActionsRow extends ConsumerWidget {
         _ActionChip(
           icon: Icons.tune_rounded,
           label: AppStrings.dealerActionAdjustment,
-          accent: AppColors.copper,
+          accent: AppColors.warningInk,
           onTap: () =>
               context.push('${AppRoutes.dealers}/$dealerId/adjustment'),
         ),
@@ -810,7 +811,7 @@ class _ActionsRow extends ConsumerWidget {
         _ActionChip(
           icon: Icons.ios_share_rounded,
           label: AppStrings.dealerActionShare,
-          accent: AppColors.copper,
+          accent: AppColors.warningInk,
           onTap: () => context.push('${AppRoutes.dealers}/$dealerId/share'),
         ),
       ],
@@ -1479,7 +1480,7 @@ class _TxRow extends StatelessWidget {
       case DealerTransactionType.adjustment:
         return (
           Icons.tune_rounded,
-          AppColors.copper,
+          AppColors.warningInk,
           AppStrings.dealerTxKindAdjustment,
         );
     }

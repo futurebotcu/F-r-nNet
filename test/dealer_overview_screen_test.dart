@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 GoRouter _testRouter() => GoRouter(
       initialLocation: '/dealers',
@@ -104,23 +105,23 @@ void main() {
       );
       // 5 KPI tile label görünür (uppercase)
       expect(
-        find.text(AppStrings.dealerOverviewKpiOpenBalance.toUpperCase()),
+        find.text(AppStrings.dealerOverviewKpiOpenBalance.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerOverviewKpiTodayDelivery.toUpperCase()),
+        find.text(AppStrings.dealerOverviewKpiTodayDelivery.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerOverviewKpiTodayPayment.toUpperCase()),
+        find.text(AppStrings.dealerOverviewKpiTodayPayment.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerOverviewKpiMonthTxCount.toUpperCase()),
+        find.text(AppStrings.dealerOverviewKpiMonthTxCount.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerOverviewKpiMonthNetChange.toUpperCase()),
+        find.text(AppStrings.dealerOverviewKpiMonthNetChange.trUpper),
         findsOneWidget,
       );
     });
@@ -145,7 +146,7 @@ void main() {
 
       // Son Hareketler section başlığı (uppercase)
       expect(
-        find.text(AppStrings.dealerOverviewRecentActivityTitle.toUpperCase()),
+        find.text(AppStrings.dealerOverviewRecentActivityTitle.trUpper),
         findsOneWidget,
       );
       // En az 1 satır bayi adıyla — Hamdi Bakkal son tx'lere ait

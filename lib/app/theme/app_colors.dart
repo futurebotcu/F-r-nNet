@@ -65,6 +65,11 @@ class AppColors {
   static const Color danger = Color(0xFFDC2626);
   static const Color info = Color(0xFF2563EB);
 
+  /// Beyaz zeminde okunur semantik metin tonları (sarı/yeşil yüzeyli rozet ve
+  /// tutar metinleri için). Sarı (brandLemon) metin rengi OLARAK kullanılmaz.
+  static const Color warningInk = Color(0xFFB45309);
+  static const Color successInk = Color(0xFF166534);
+
   // Background text aliases
   static const Color onBackgroundPrimary = textPrimary;
   static const Color onBackgroundSecondary = textSecondary;

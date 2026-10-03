@@ -19,6 +19,7 @@ import '../providers/dealer_providers.dart';
 import '../services/dealer_period.dart';
 import '../widgets/dealer_avatar.dart';
 import '../widgets/dealer_kpi_tile.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Bayi Defteri mini-app Gün Sonu tab — pasif günlük rapor (V1).
 ///
@@ -144,7 +145,7 @@ class _Header extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppStrings.dealerEndOfDayHeaderToday.toUpperCase(),
+              AppStrings.dealerEndOfDayHeaderToday.trUpper,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: AppColors.textMuted,
                 fontWeight: FontWeight.w700,
@@ -215,7 +216,7 @@ class _SummarySection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
-            AppStrings.dealerEndOfDaySummaryTitle.toUpperCase(),
+            AppStrings.dealerEndOfDaySummaryTitle.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,
@@ -270,7 +271,7 @@ class _SummarySection extends StatelessWidget {
 
 Color _netColor(double net) {
   if (net == 0) return AppColors.textMuted;
-  return net > 0 ? AppColors.copper : AppColors.success;
+  return net > 0 ? AppColors.warningInk : AppColors.success;
 }
 
 class _ByDealerSection extends StatelessWidget {
@@ -302,7 +303,7 @@ class _ByDealerSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
-            AppStrings.dealerEndOfDayByDealerTitle.toUpperCase(),
+            AppStrings.dealerEndOfDayByDealerTitle.trUpper,
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w700,
@@ -449,7 +450,7 @@ class _RecentSection extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                AppStrings.dealerEndOfDayRecentTitle.toUpperCase(),
+                AppStrings.dealerEndOfDayRecentTitle.trUpper,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w700,
@@ -467,7 +468,7 @@ class _RecentSection extends ConsumerWidget {
                     vertical: 0,
                   ),
                   visualDensity: VisualDensity.compact,
-                  foregroundColor: AppColors.copper,
+                  foregroundColor: AppColors.brandInk,
                 ),
                 child: const Text(AppStrings.dealerEndOfDaySeeAll),
               ),
@@ -574,7 +575,7 @@ class _TodayTxRow extends StatelessWidget {
   (IconData, Color, String) _meta(DealerTransactionType t) {
     switch (t) {
       case DealerTransactionType.delivery:
-        return (Icons.bakery_dining_rounded, AppColors.copper, '+');
+        return (Icons.bakery_dining_rounded, AppColors.warningInk, '+');
       case DealerTransactionType.returned:
         return (Icons.assignment_returned_rounded, AppColors.info, '−');
       case DealerTransactionType.payment:
@@ -599,7 +600,7 @@ class _ShareCta extends StatelessWidget {
         label: const Text(AppStrings.dealerEndOfDayShareCta),
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.copper,
+          foregroundColor: AppColors.brandInk,
           side: const BorderSide(color: AppColors.copper, width: 1.0),
         ),
       ),

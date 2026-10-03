@@ -16,3 +16,9 @@ library;
 /// ü→Ü). Zaten büyük harfli bir metni tekrar geçirmek güvenlidir (idempotent).
 String trUpperCase(String input) =>
     input.replaceAll('i', 'İ').replaceAll('ı', 'I').toUpperCase();
+
+/// `metin.trUpper` — [trUpperCase] kısayolu (UI gösterimi için; ham
+/// `toUpperCase()` Türkçede "GIRIŞ" gibi hatalı sonuç verir).
+extension TrCaseX on String {
+  String get trUpper => trUpperCase(this);
+}

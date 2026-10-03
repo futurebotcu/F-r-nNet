@@ -10,6 +10,7 @@ import '../../auth/services/auth_required_guard.dart';
 import '../../feed/models/post_type.dart';
 import '../../profile/providers/profile_provider.dart';
 import 'social_composer_page.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Feed üstündeki Twitter/Facebook tarzı inline composer (Feed Premium Sprint).
 ///
@@ -27,7 +28,7 @@ class InlineComposerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileControllerProvider);
     final initial = (profile?.displayName.isNotEmpty ?? false)
-        ? profile!.displayName[0].toUpperCase()
+        ? profile!.displayName[0].trUpper
         : 'M';
 
     return Column(
@@ -369,7 +370,7 @@ class _MediaSheetTile extends StatelessWidget {
           color: AppColors.brandLemonPale,
           border: Border.all(color: AppColors.brandLemonSoft, width: 0.8),
         ),
-        child: Icon(icon, size: 20, color: AppColors.brandLemonPressed),
+        child: Icon(icon, size: 20, color: AppColors.brandInk),
       ),
       title: Text(
         label,

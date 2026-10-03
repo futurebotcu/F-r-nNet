@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firin_defter/core/utils/tr_case.dart';
 
 GoRouter _testRouter() => GoRouter(
       initialLocation: '/dealers',
@@ -141,15 +142,15 @@ void main() {
       // 3 grup başlığı (Bu hafta boş olabilir bugün haftası başına bağlı)
       // En az "Bugün" + "Dün" + "Daha eski" görünür
       expect(
-        find.text(AppStrings.dealerActivityGroupToday.toUpperCase()),
+        find.text(AppStrings.dealerActivityGroupToday.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerActivityGroupYesterday.toUpperCase()),
+        find.text(AppStrings.dealerActivityGroupYesterday.trUpper),
         findsOneWidget,
       );
       expect(
-        find.text(AppStrings.dealerActivityGroupOlder.toUpperCase()),
+        find.text(AppStrings.dealerActivityGroupOlder.trUpper),
         findsOneWidget,
       );
       // Bayi adları en az 1 yerde

@@ -1,3 +1,5 @@
+import '../../../core/utils/tr_case.dart';
+
 /// FırınNet Social — Public profile snapshot.
 ///
 /// Donor (itsezlife) `User` model'inden esinli. Yalnız public-safe alanlar
@@ -30,6 +32,6 @@ class SocialProfile {
   /// İlk harf — avatar placeholder için.
   String get initial {
     final n = displayNameOrFallback;
-    return n.isNotEmpty ? n[0].toUpperCase() : '?';
+    return n.isNotEmpty ? n[0].trUpper : '?';
   }
 }

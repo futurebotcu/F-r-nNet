@@ -13,6 +13,7 @@ import '../../profile/providers/profile_provider.dart';
 import '../providers/auth_providers.dart';
 import '../repositories/auth_repository.dart';
 import '../providers/guest_mode_provider.dart';
+import '../../../core/utils/tr_case.dart';
 
 /// Push token'ı pasifleştirip oturumu kapatır. Tüm çıkış yolları (Ayarlar,
 /// Profil, yarım kalmış profil oluşturma) bunu kullanır.
@@ -159,7 +160,7 @@ class _DeleteAccountConfirmDialogState
 
   void _onChanged(String value) {
     final ok =
-        value.trim().toUpperCase() == AppStrings.accountDeleteConfirmKeyword;
+        value.trim().trUpper == AppStrings.accountDeleteConfirmKeyword;
     if (ok != _enabled) {
       setState(() => _enabled = ok);
     }

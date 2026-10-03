@@ -27,7 +27,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/widgets/tag_chip.dart';
+import '../../../core/utils/relative_time.dart';
 import '../../academy/academy_navigation.dart';
 import '../../academy/providers/academy_providers.dart';
 import '../../academy/screens/academy_page.dart' show AcademyAiBadge;
@@ -44,6 +44,7 @@ import '../../safety/widgets/report_sheet.dart';
 import '../comments/comments_page.dart';
 import 'widgets/feed_post_image.dart';
 import 'widgets/social_post_video.dart';
+import '../../../core/utils/tr_case.dart';
 
 class SocialPostCard extends ConsumerStatefulWidget {
   const SocialPostCard({super.key, required this.post});
@@ -306,14 +307,6 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
     }
   }
 
-  String _timeAgo(DateTime t) {
-    final d = DateTime.now().difference(t);
-    if (d.inMinutes < 1) return 'şimdi';
-    if (d.inMinutes < 60) return '${d.inMinutes} dk önce';
-    if (d.inHours < 24) return '${d.inHours} sa önce';
-    if (d.inDays < 2) return 'dün';
-    return '${d.inDays} gün önce';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -349,7 +342,7 @@ class _SocialPostCardState extends ConsumerState<SocialPostCard> {
             ),
           _Header(
             post: post,
-            timeAgo: _timeAgo(post.createdAt),
+            timeAgo: relativeTimeTr(post.createdAt),
             isOwner: isOwner,
             academyBadge: switch (ref
                 .watch(academyBotsByIdProvider)
@@ -523,7 +516,7 @@ class _Header extends StatelessWidget {
                 boxShadow: AppShadow.card,
               ),
               child: Text(
-                post.author.isNotEmpty ? post.author[0].toUpperCase() : '?',
+                post.author.isNotEmpty ? post.author[0].trUpper : '?',
                 style: const TextStyle(
                   color: AppColors.brandInk,
                   fontWeight: FontWeight.w800,
@@ -546,45 +539,44 @@ class _Header extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            post.author,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15.5,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        _TypeBadge(type: post.type),
-                        if (academyBadge != null) ...[
-                          const SizedBox(width: 4),
-                          AcademyAiBadge(label: academyBadge!),
-                        ],
-                      ],
+                    // İsim satırında yalnız isim: rozetler dar ekranda /
+                    // büyük yazıda taşıyordu → meta satırına (Wrap) indi.
+                    child: Text(
+                      post.author,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                        height: 1.2,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                // Meta satırı: tür · AI rozeti · rol · zaman. Wrap → dar
+                // genişlikte alt satıra kayar, taşma yok.
+                Wrap(
+                  key: const ValueKey('post_card_meta'),
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    // Feed Premium Sprint - rol rozeti: sade lemon pale pill.
-                    if (post.role.isNotEmpty) ...[
-                      Flexible(
+                    _TypeBadge(type: post.type),
+                    if (academyBadge != null)
+                      AcademyAiBadge(label: academyBadge!),
+                    // Rol: nötr gri pill (sarı aşırı kullanımı azaltıldı).
+                    if (post.role.isNotEmpty)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 180),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.brandLemonPale,
+                            color: AppColors.surfaceLine,
                             borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: Text(
@@ -592,7 +584,7 @@ class _Header extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: AppColors.brandInk,
+                              color: AppColors.textSecondary,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               height: 1.15,
@@ -600,8 +592,6 @@ class _Header extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                    ],
                     Text(
                       timeAgo,
                       style: const TextStyle(
@@ -730,27 +720,26 @@ class _TypeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Nötr tür rozeti: açık gri zemin + mürekkep/ikincil metin. Limon
+    // tonlu accent beyaz üstünde okunmuyordu; sarı CTA/seçili duruma kaldı.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: type.accent.withValues(alpha: 0.14),
+        color: AppColors.surfaceLine,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: type.accent.withValues(alpha: 0.32),
-          width: 0.6,
-        ),
+        border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(type.icon, size: 13, color: type.accent),
+          Icon(type.icon, size: 13, color: AppColors.textSecondary),
           const SizedBox(width: 4),
           Text(
             type.label,
-            style: TextStyle(
-              color: type.accent,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
               fontSize: 11.5,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               letterSpacing: 0,
             ),
           ),
@@ -833,7 +822,7 @@ class _ActionRow extends StatelessWidget {
                   ? Icons.thumb_up_alt_rounded
                   : Icons.thumb_up_alt_outlined,
               color: isLiked
-                  ? AppColors.brandLemonPressed
+                  ? AppColors.brandInk
                   : AppColors.textPrimary,
               label: AppStrings.feedActionLike,
               count: likeCount,
@@ -866,7 +855,7 @@ class _ActionRow extends StatelessWidget {
                   ? Icons.bookmark_rounded
                   : Icons.bookmark_border_rounded,
               color: isSaved
-                  ? AppColors.brandLemonPressed
+                  ? AppColors.brandInk
                   : AppColors.textPrimary,
               label: AppStrings.feedActionSave,
               onTap: onSave,
@@ -962,10 +951,28 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _Caption extends StatelessWidget {
+class _Caption extends StatefulWidget {
   const _Caption({required this.author, required this.text});
   final String author;
   final String text;
+
+  /// Uzun metin akışta bu kadar satırda kesilir; "devamını gör" açar.
+  static const int collapsedMaxLines = 6;
+
+  @override
+  State<_Caption> createState() => _CaptionState();
+}
+
+class _CaptionState extends State<_Caption> {
+  bool _expanded = false;
+
+  // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik.
+  static const TextStyle _style = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 16.5,
+    height: 1.48,
+    letterSpacing: 0,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -976,16 +983,53 @@ class _Caption extends StatelessWidget {
         AppSpacing.m,
         AppSpacing.m,
       ),
-      // V1 P0 — Twitter/Facebook okunabilirlik: caption ana içerik, 17 px.
-      // Post card polish — height 1.4 → 1.5 (daha rahat satır aralığı).
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 16.5,
-          height: 1.48,
-          letterSpacing: 0,
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (_expanded) return Text(widget.text, style: _style);
+          final painter = TextPainter(
+            // Ölçüm, Text'in gerçekte kullandığı stille (tema fontu dahil)
+            // yapılmalı; aksi hâlde kısa metinde de "devamını gör" çıkıyordu.
+            text: TextSpan(
+              text: widget.text,
+              style: DefaultTextStyle.of(context).style.merge(_style),
+            ),
+            maxLines: _Caption.collapsedMaxLines,
+            textDirection: Directionality.of(context),
+            textScaler: MediaQuery.textScalerOf(context),
+          )..layout(maxWidth: constraints.maxWidth);
+          final overflows = painter.didExceedMaxLines;
+          painter.dispose();
+          final text = Text(
+            widget.text,
+            maxLines: _Caption.collapsedMaxLines,
+            overflow: TextOverflow.ellipsis,
+            style: _style,
+          );
+          if (!overflows) return text;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              text,
+              const SizedBox(height: 2),
+              InkWell(
+                key: const ValueKey('post_caption_expand'),
+                onTap: () => setState(() => _expanded = true),
+                borderRadius: BorderRadius.circular(AppRadius.s),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    AppStrings.feedCaptionSeeMore,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1005,7 +1049,34 @@ class _TagsRow extends StatelessWidget {
       child: Wrap(
         spacing: 5,
         runSpacing: 4,
-        children: [for (final t in tags) TagChip(label: t)],
+        children: [for (final t in tags) _NeutralTag(label: t)],
+      ),
+    );
+  }
+}
+
+/// Nötr hashtag etiketi: açık gri zemin + ikincil metin. Sarı pill her
+/// gönderide tekrarlanınca akışı boğuyordu; sarı CTA/seçili duruma kaldı.
+class _NeutralTag extends StatelessWidget {
+  const _NeutralTag({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLine,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        '#$label',
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.1,
+        ),
       ),
     );
   }

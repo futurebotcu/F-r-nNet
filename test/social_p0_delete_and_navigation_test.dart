@@ -110,8 +110,8 @@ void main() {
       expect(src.contains('count: commentCount'), isTrue);
       expect(src.contains('postViewAllComments'), isFalse);
       expect(src.contains('_PostEngagementSummary'), isFalse);
-      // Aktif beğeni rengi korunur.
-      expect(src.contains('AppColors.brandLemonPressed'), isTrue);
+      // Aktif beğeni: dolu ikon (limon ön plan rengi kullanılmaz).
+      expect(src.contains('Icons.thumb_up_alt_rounded'), isTrue);
     });
   });
 

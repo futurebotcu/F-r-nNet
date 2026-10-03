@@ -57,7 +57,7 @@ class OnboardingScreen extends ConsumerWidget {
                   ),
                   child: const Icon(
                     Icons.local_fire_department_rounded,
-                    color: AppColors.primary,
+                    color: AppColors.brandInk,
                     size: 38,
                   ),
                 ),
@@ -163,7 +163,7 @@ class _OnboardingHighlights extends StatelessWidget {
                       width: 0.6,
                     ),
                   ),
-                  child: Icon(item.icon, color: AppColors.primary, size: 17),
+                  child: Icon(item.icon, color: AppColors.brandInk, size: 17),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

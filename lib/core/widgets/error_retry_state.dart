@@ -60,9 +60,13 @@ class ErrorRetryState extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
+            // Boş/hata başlığı sakin: 16.5 / w700 (eski 19 / w800 bağırıyordu).
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontSize: 16.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+              height: 1.3,
+              color: AppColors.textPrimary,
             ),
           ),
           if (subtitle != null) ...[
@@ -70,7 +74,10 @@ class ErrorRetryState extends StatelessWidget {
             Text(
               subtitle!,
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                height: 1.45,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
           if (onRetry != null) ...[
