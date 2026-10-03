@@ -9,6 +9,7 @@ import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/worker_profile.dart';
@@ -35,8 +36,7 @@ class WorkerExperiencesScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: async.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+          loading: () => const PremiumListSkeleton(),
           error: (e, _) => Padding(
             padding: const EdgeInsets.all(AppSpacing.l),
             child: Text(
@@ -114,7 +114,7 @@ class _ExperienceCard extends ConsumerWidget {
                 tooltip: 'Kaldır',
                 onPressed: () => _confirmDelete(context, ref),
                 icon: const Icon(
-                  Icons.delete_outline,
+                  Icons.delete_outline_rounded,
                   color: AppColors.textMuted,
                   size: 18,
                 ),

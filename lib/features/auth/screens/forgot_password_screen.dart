@@ -107,7 +107,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       end: Alignment.bottomRight,
                       colors: [AppColors.copper, AppColors.copperMuted],
                     ),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppRadius.l),
                   ),
                   child: const Icon(
                     Icons.lock_reset_rounded,

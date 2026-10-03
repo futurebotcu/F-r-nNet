@@ -12,6 +12,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../../auth/services/auth_required_guard.dart';
@@ -57,7 +58,7 @@ class RecipeDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             tooltip: 'Sil',
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline_rounded),
             onPressed: () => _confirmDelete(context, ref),
           ),
         ],
@@ -67,8 +68,7 @@ class RecipeDetailScreen extends ConsumerWidget {
           // Perf: reçete düzenlenince detay eski içeriğini korur, spinner
           // flash yok.
           skipLoadingOnReload: true,
-          loading: () =>
-              const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+          loading: () => const PremiumListSkeleton(itemCount: 3),
           error: (e, _) => ErrorRetryState(
             title: 'Reçete açılamadı',
             onRetry: () => ref.invalidate(recipesListProvider),
@@ -425,7 +425,7 @@ class _ResultGrid extends StatelessWidget {
                 icon: Icons.bakery_dining_outlined,
                 label: 'Tahmini adet',
                 value: NumberFormatter.integer(r.estimatedPieces),
-                accent: AppColors.primary,
+                accent: AppColors.brandInk,
               ),
             ),
           ],
@@ -805,7 +805,7 @@ class _ShareSheet extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.s),
             _ShareOption(
-              icon: Icons.ios_share_rounded,
+              icon: Icons.share_outlined,
               title: 'WhatsApp / Sistem paylaşımı',
               subtitle: 'WhatsApp, mesaj, kopyala — sistem menüsü',
               onTap: () => _shareSystem(context),

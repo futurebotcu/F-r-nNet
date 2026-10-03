@@ -106,7 +106,7 @@ class _ActivityTile extends StatelessWidget {
             height: 30,
             decoration: BoxDecoration(
               color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
             child: Icon(entry.icon, size: 16, color: accent),
           ),

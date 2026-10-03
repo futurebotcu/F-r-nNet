@@ -54,7 +54,7 @@ class DealerEndOfDayTabScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: AppStrings.dealerEndOfDayShareTooltip,
-            icon: const Icon(Icons.share_rounded),
+            icon: const Icon(Icons.share_outlined),
             onPressed: () => _share(ref, ref0),
           ),
         ],
@@ -596,7 +596,7 @@ class _ShareCta extends StatelessWidget {
       width: double.infinity,
       height: 54,
       child: OutlinedButton.icon(
-        icon: const Icon(Icons.share_rounded),
+        icon: const Icon(Icons.share_outlined),
         label: const Text(AppStrings.dealerEndOfDayShareCta),
         onPressed: onTap,
         style: OutlinedButton.styleFrom(

@@ -171,7 +171,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   end: Alignment.bottomRight,
                   colors: [AppColors.copper, AppColors.copperMuted],
                 ),
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(AppRadius.l),
                 boxShadow: AppShadow.card,
               ),
               child: const Icon(

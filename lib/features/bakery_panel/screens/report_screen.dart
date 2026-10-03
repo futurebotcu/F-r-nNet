@@ -7,6 +7,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../../profile/models/bakery_profile.dart';
@@ -101,9 +102,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             ),
             const SizedBox(height: AppSpacing.m),
             report.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                child: Center(child: CircularProgressIndicator()),
+              loading: () => const PremiumListSkeleton(
+                itemCount: 3,
+                itemHeight: 72,
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
               ),
               error: (e, _) => ErrorRetryState(
                 onRetry: () => ref.invalidate(ledgerReportProvider(_period)),

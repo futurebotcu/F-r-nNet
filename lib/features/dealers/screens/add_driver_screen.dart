@@ -58,7 +58,7 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
     final name = _name.text.trim();
     if (fnId.isEmpty) {
       setState(
-        () => _error = 'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.',
+        () => _error = 'Davet oluşturulamadı. FırınNet ID\'yi kontrol et.',
       );
       return;
     }
@@ -95,7 +95,7 @@ class _AddDriverScreenState extends ConsumerState<AddDriverScreen> {
         _saving = false;
         _error = e is StateError
             ? e.message
-            : 'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.';
+            : 'Davet oluşturulamadı. FırınNet ID\'yi kontrol et.';
       });
     }
   }

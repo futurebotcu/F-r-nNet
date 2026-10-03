@@ -11,6 +11,7 @@ import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -371,7 +372,7 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const PremiumScaffold(
-        body: Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+        body: PremiumListSkeleton(itemCount: 3),
       );
     }
     if (_loadFailed) {

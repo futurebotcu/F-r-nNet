@@ -239,7 +239,7 @@ class _LeadCard extends StatelessWidget {
                     label: lead.requestQuantity,
                   ),
                 if (loc.isNotEmpty)
-                  B2bMetaPill(icon: Icons.place_outlined, label: loc),
+                  B2bMetaPill(icon: Icons.location_on_outlined, label: loc),
               ],
             ),
             if ((lead.buyerMessage ?? '').isNotEmpty) ...[

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/b2b_quote_request.dart';
 import 'b2b_meta_pill.dart';
@@ -53,13 +54,7 @@ class B2bQuoteRequestCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   request.productOrCategory,
-                  style: const TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
-                    height: 1.25,
-                  ),
+                  style: AppTypography.cardTitle,
                 ),
               ),
               const SizedBox(width: AppSpacing.s),
@@ -78,7 +73,7 @@ class B2bQuoteRequestCard extends StatelessWidget {
                 ),
               if (_locationLabel.isNotEmpty)
                 B2bMetaPill(
-                  icon: Icons.place_outlined,
+                  icon: Icons.location_on_outlined,
                   label: _locationLabel,
                 ),
               if (request.buyerType.isNotEmpty)
@@ -97,12 +92,7 @@ class B2bQuoteRequestCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.m),
             Text(
               request.note,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.35,
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTypography.body.copyWith(fontSize: 13, height: 1.35),
             ),
           ],
           const SizedBox(height: AppSpacing.m),
@@ -157,10 +147,7 @@ class B2bQuoteRequestCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
+                    textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
                   ),
                 )
               else if (onTap != null)

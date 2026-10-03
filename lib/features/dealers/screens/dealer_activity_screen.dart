@@ -10,6 +10,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
@@ -48,7 +49,7 @@ class _DealerActivityScreenState extends ConsumerState<DealerActivityScreen> {
         top: false,
         child: txsAsync.when(
           skipLoadingOnReload: true,
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const PremiumListSkeleton(),
           error: (e, _) =>
               const Center(child: Text(AppStrings.dealersErrorLoad)),
           data: (txs) {

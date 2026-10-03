@@ -585,7 +585,7 @@ class SupabaseDealerRepository implements DealerRepository {
     } on sb.PostgrestException catch (e) {
       // 23503 FK ihlali → geçersiz profile id; 23505 unique → zaten ekli.
       if (e.code == '23503') {
-        throw StateError('Geçerli bir FırınNet kullanıcı ID girin.');
+        throw StateError('Geçerli bir FırınNet kullanıcı ID gir.');
       }
       if (e.code == '23505') {
         throw StateError('Bu kullanıcı zaten şoför olarak eklenmiş.');
@@ -749,7 +749,7 @@ class SupabaseDealerRepository implements DealerRepository {
       }
       // FN-AUDIT-012: FN-ID var/yok + ilişki durumu (self/zaten-şoför/bekleyen)
       // MESAJDAN anlaşılmasın → hepsi tek nötr mesaj.
-      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
+      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol et.');
     }
     _notify();
   }

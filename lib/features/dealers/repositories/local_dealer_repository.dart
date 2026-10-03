@@ -293,7 +293,7 @@ class LocalDealerRepository implements DealerRepository {
     // → nötr hata.
     final fn = firinnetId.trim().toUpperCase();
     if (fn.isEmpty) {
-      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.');
+      throw StateError('Davet oluşturulamadı. FırınNet ID\'yi kontrol et.');
     }
     if (fn == (currentUserId ?? '').toUpperCase()) {
       throw StateError('Kendini davet edemezsin.');

@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_tokens.dart';
+import '../constants/app_strings.dart';
 import '../data/turkey_locations.dart';
 
 class LocationPicker {
@@ -238,6 +239,7 @@ class _SheetHeader extends StatelessWidget {
             ),
           ),
           IconButton(
+            tooltip: AppStrings.closeTooltip,
             onPressed: () => Navigator.of(context).maybePop(),
             icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary),
           ),
@@ -383,6 +385,7 @@ class LocationPickerField extends StatelessWidget {
           enabled: enabled,
           suffixIcon: hasValue && onClear != null
               ? IconButton(
+                  tooltip: AppStrings.finalClearTooltip,
                   icon: const Icon(Icons.close_rounded, size: 18),
                   onPressed: onClear,
                 )

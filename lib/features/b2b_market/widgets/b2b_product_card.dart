@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/premium/premium_card.dart';
 import '../models/b2b_product.dart';
 import 'b2b_media_image.dart';
@@ -68,26 +69,32 @@ class B2bProductCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.m),
               ],
+              // Rozetler başlığın altında Wrap'te: dar ekran/büyük yazıda
+              // başlık + rozet + menü aynı satıra sığmaya zorlanmaz.
               Expanded(
-                child: Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
-                    height: 1.25,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: AppTypography.cardTitle.copyWith(fontSize: 16),
+                    ),
+                    if ((!product.published && ownerContext) || _isMine) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (!product.published && ownerContext)
+                            const B2bDraftBadge(),
+                          if (_isMine)
+                            const B2bOwnerBadge(label: 'Benim ürünüm'),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              if (!product.published && ownerContext) ...[
-                const SizedBox(width: 6),
-                const B2bDraftBadge(),
-              ],
-              if (_isMine) ...[
-                const SizedBox(width: AppSpacing.s),
-                const B2bOwnerBadge(label: 'Benim ürünüm'),
-              ],
               if (_canManage) ...[
                 const SizedBox(width: 2),
                 B2bManageMenu(
@@ -127,12 +134,7 @@ class B2bProductCard extends StatelessWidget {
               product.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textSecondary,
-                height: 1.35,
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTypography.body.copyWith(fontSize: 12.5, height: 1.35),
             ),
           ],
           const SizedBox(height: AppSpacing.m),
@@ -155,8 +157,12 @@ class B2bProductCard extends StatelessWidget {
           // Fiyat tipi + (kendi ilanı ise) durum metni tek satır.
           Row(
             children: [
-              _PriceTypePill(label: product.priceType),
-              const Spacer(),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: _PriceTypePill(label: product.priceType),
+                ),
+              ),
               if (_isMine)
                 const Text(
                   'Senin ilanın',
@@ -171,8 +177,10 @@ class B2bProductCard extends StatelessWidget {
           // Aksiyonlar kendi satırında, sağa yaslı — dar ekranda taşmaz.
           if (!_isMine) ...[
             const SizedBox(height: AppSpacing.s),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 4,
+              runSpacing: 4,
               children: [
                 if (onAskPrice != null) ...[
                   TextButton(
@@ -188,7 +196,6 @@ class B2bProductCard extends StatelessWidget {
                     ),
                     child: const Text('Fiyat Sor'),
                   ),
-                  const SizedBox(width: 4),
                 ],
                 FilledButton(
                   onPressed: onRequestQuote,
@@ -200,10 +207,7 @@ class B2bProductCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
+                    textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
                   ),
                   child: const Text('Teklif İste'),
                 ),
@@ -238,13 +242,17 @@ class _PriceTypePill extends StatelessWidget {
             color: AppColors.brandInk,
           ),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: AppColors.brandInk,
-              letterSpacing: 0.1,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.brandInk,
+                letterSpacing: 0.1,
+              ),
             ),
           ),
         ],

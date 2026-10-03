@@ -83,7 +83,7 @@ class _DealerTransactionHistoryScreenState
         actions: [
           IconButton(
             tooltip: 'Döküm paylaş',
-            icon: const Icon(Icons.ios_share_rounded),
+            icon: const Icon(Icons.share_outlined),
             onPressed: (dealer == null || summary == null)
                 ? null
                 : () => _shareStatement(

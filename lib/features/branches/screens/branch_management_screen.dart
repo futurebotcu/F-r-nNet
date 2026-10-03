@@ -8,6 +8,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../models/branch_models.dart';
@@ -46,7 +47,7 @@ class BranchManagementScreen extends ConsumerWidget {
       body: SafeArea(
         top: false,
         child: branches.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const PremiumListSkeleton(),
           error: (_, __) => Center(
             child: ErrorRetryState(
               title: AppStrings.branchListError,

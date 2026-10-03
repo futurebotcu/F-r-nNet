@@ -112,7 +112,7 @@ class _TopRow extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             color: AppColors.brandLemonPale,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
             border: Border.all(
               color: AppColors.brandLemonPressed.withValues(alpha: 0.28),
               width: 0.7,

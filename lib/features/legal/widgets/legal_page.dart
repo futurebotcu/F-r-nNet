@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Tek bir yasal bölüm — başlık + gövde.
 class LegalSection {
@@ -41,6 +42,7 @@ class LegalScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         leading: IconButton(
+          tooltip: AppStrings.finalBackTooltip,
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () {
             if (context.canPop()) {

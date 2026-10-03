@@ -809,7 +809,7 @@ class AppStrings {
   static const String settingsSupportSubtitle =
       'Sık sorulan sorular ve bize ulaşma.';
   static const String supportFaqSection = 'Sık sorulan sorular';
-  static const String supportContactSection = 'Bize ulaşın';
+  static const String supportContactSection = 'Bize ulaş';
   static const String supportContactDesc =
       'Sorun, öneri veya geri bildirimin için e-posta gönderebilirsin. '
       'Genelde 1-2 iş günü içinde dönüş yapılır.';
@@ -1468,7 +1468,7 @@ class AppStrings {
   static const String branchInviteSend = 'Davet Gönder';
   static const String branchInviteSending = 'Gönderiliyor…';
   static const String branchInviteFnIdRequired =
-      'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.';
+      'Davet oluşturulamadı. FırınNet ID\'yi kontrol et.';
   static const String branchInviteBranchRequired = 'Şube seç.';
   // Bireysel "Şube İşlerim".
   static const String myBranchTitle = 'Şube İşlerim';
@@ -1627,7 +1627,7 @@ class AppStrings {
   static const String partnersApplySubmit = 'Başvuruyu Gönder';
   static const String partnersApplySubmitting = 'Gönderiliyor…';
   static const String partnersApplySuccess =
-      'Başvurunuz alındı. Ekibimiz sizinle iletişime geçecek.';
+      'Başvurun alındı. Ekibimiz seninle iletişime geçecek.';
   static const String partnersApplyError =
       'Başvuru gönderilemedi. Tekrar dene.';
 
@@ -1842,7 +1842,7 @@ class AppStrings {
   // ── İlan Ücretlendirme V1 ──
   static const String listingFeeFreeSeek = 'İş arama ilanları ücretsizdir.';
   static const String listingFeeFreePlan =
-      'Planınızla ilan yayınlama ücretsiz.';
+      'Planınla ilan yayınlama ücretsiz.';
   static const String listingFeePaidTitle =
       'Bu ilan türü 50 TL yayın ücretlidir.';
   static const String listingFeePaidBody =
@@ -1903,10 +1903,10 @@ class AppStrings {
       'Sınırsız teklif cevabı Premium’da açılır.';
   static const String supPaywallReplyProBody =
       'Sınırsız teklif cevabı için Premium’a geç.';
-  static const String supErrorProductQuota = 'Ürün kotanız doldu.';
-  static const String supErrorCampaignQuota = 'Kampanya kotanız doldu.';
+  static const String supErrorProductQuota = 'Ürün kotan doldu.';
+  static const String supErrorCampaignQuota = 'Kampanya kotan doldu.';
   static const String supErrorReplyQuota =
-      'Bu ayki teklif cevabı hakkınız doldu.';
+      'Bu ayki teklif cevabı hakkın doldu.';
   static const String supPlanFreeFeatures =
       '1 ürün · kampanya yok · ayda 3 teklif cevabı · ilanlar ücretsiz';
   static const String supPlanProFeatures =
@@ -1925,13 +1925,13 @@ class AppStrings {
       'günü sonuna kadar tamamen ücretsiz';
   static const String supplierLaunchGiftBody =
       "FırınNet'in tedarikçilere sunduğu tüm özellikleri lansmana özel "
-      'ücretsiz kullanın.';
+      'ücretsiz kullan.';
   static const String supplierLaunchGiftContinueInfo =
-      'Ücretsiz dönem sona ermeden önce size hatırlatma yapacak, devam '
-      'edebileceğiniz paketleri ve fiyatlarını bildireceğiz. Dilerseniz size '
-      'uygun paketi seçerek ücretli devam edebilirsiniz.';
+      'Ücretsiz dönem sona ermeden önce sana hatırlatma yapacak, devam '
+      'edebileceğin paketleri ve fiyatlarını bildireceğiz. Dilersen sana '
+      'uygun paketi seçerek ücretli devam edebilirsin.';
   static const String supplierLaunchGiftAssurance =
-      'Onayınız olmadan ücret alınmaz veya ücretli abonelik başlatılmaz.';
+      'Onayın olmadan ücret alınmaz veya ücretli abonelik başlatılmaz.';
   static const String supplierLaunchGiftCta = 'Ücretsiz kullanmaya başla';
   static const String supplierLaunchPlanTitle = 'Tedarikçi Premium';
 
@@ -2389,6 +2389,17 @@ class AppStrings {
   static const String polishDebtMarkedPaid = 'Kayıt ödendi olarak işaretlendi';
   static const String polishDebtUpdateError =
       'Kayıt güncellenemedi. Tekrar dene.';
+  // ── Final uygulama ──
+  static const String finalAuthErrorGeneric =
+      'Giriş yapılamadı. Bağlantını kontrol edip tekrar dene.';
+  static const String finalCheckConnectionRetry =
+      'Bağlantını kontrol edip tekrar dene.';
+  static const String finalBlockedUsersLoadError =
+      'Engellenen kullanıcılar yüklenemedi';
+  static const String finalMemberActionsTooltip = 'Üye işlemleri';
+  static const String finalProcessStatusTooltip = 'Durumu değiştir';
+  static const String finalBackTooltip = 'Geri';
+  static const String finalClearTooltip = 'Temizle';
   static const String calculate = 'Hesapla';
   static const String calculateSub = 'Reçete / hamur hesabı';
   static const String addProduction = 'Üretim Gir';
@@ -2876,7 +2887,7 @@ class AppStrings {
   static const String listingsBadgeSeeking = 'İş arıyor';
   static const String listingsSalaryNegotiable = 'Ücret görüşülür';
   static const String listingsSalaryExpectation = 'Beklenti';
-  static const String listingsPriceAsk = 'Fiyat sorunuz';
+  static const String listingsPriceAsk = 'Fiyatı sor';
   static const String listingsPriceTransferSuffix = 'devir';
   static const String listingsPriceRentSuffix = '/ay kira';
   static const String listingsNoPhoto = 'Fotoğraf yok';

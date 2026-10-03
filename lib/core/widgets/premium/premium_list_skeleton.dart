@@ -19,11 +19,16 @@ class PremiumListSkeleton extends StatelessWidget {
       AppSpacing.pageH,
       AppSpacing.xxl,
     ),
+    this.shrinkWrap = false,
   });
 
   final int itemCount;
   final double itemHeight;
   final EdgeInsetsGeometry padding;
+
+  /// Kaydırılabilir bir listenin İÇİNE gömüldüğünde (kart/section yer
+  /// tutucusu) true verilir; skeleton kendi yüksekliği kadar yer kaplar.
+  final bool shrinkWrap;
 
   static const Color _block = Color(0xFFF1F2F4);
 
@@ -36,6 +41,7 @@ class PremiumListSkeleton extends StatelessWidget {
         child: ListView.separated(
           key: const ValueKey('premium_list_skeleton'),
           physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: shrinkWrap,
           padding: padding,
           itemCount: itemCount,
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.m),
