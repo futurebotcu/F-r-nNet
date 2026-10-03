@@ -24,6 +24,8 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
@@ -310,14 +312,7 @@ class _FeedList extends ConsumerWidget {
             vertical: AppSpacing.l,
           ),
           child: Center(
-            child: Text(
-              AppStrings.feedEndOfList,
-              style: TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Text(AppStrings.feedEndOfList, style: AppTypography.meta),
           ),
         );
       },
@@ -355,44 +350,14 @@ class _FeedError extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         if (_kShowStories) const SocialStoriesCarousel(),
+        // Uygulama geneli hata/yeniden dene dili (mini-app hissi yok).
         Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Center(
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.cloud_off_rounded,
-                  color: AppColors.textMuted,
-                  size: 36,
-                ),
-                const SizedBox(height: AppSpacing.s),
-                Text(
-                  AppStrings.feedLoadError,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.m),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text(
-                    AppStrings.retry,
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandLemon,
-                    foregroundColor: AppColors.brandInk,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.l,
-                      vertical: AppSpacing.s,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          padding: const EdgeInsets.all(AppSpacing.l),
+          child: ErrorRetryState(
+            key: const ValueKey('feed_error_retry'),
+            title: AppStrings.feedLoadErrorTitle,
+            subtitle: AppStrings.feedLoadErrorHint,
+            onRetry: onRetry,
           ),
         ),
       ],
@@ -501,16 +466,16 @@ class _SegmentTab extends StatelessWidget {
               Icon(
                 icon,
                 size: 15,
-                color: selected ? AppColors.brandInk : AppColors.textMuted,
+                color: selected ? AppColors.brandInk : AppColors.textSecondary,
               ),
               const SizedBox(width: 5),
               Text(
                 label,
-                style: TextStyle(
-                  color: selected ? AppColors.brandInk : AppColors.textMuted,
-                  fontSize: 12.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  letterSpacing: 0,
+                style: AppTypography.chipLabel.copyWith(
+                  color: selected
+                      ? AppColors.brandInk
+                      : AppColors.textSecondary,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 ),
               ),
             ],

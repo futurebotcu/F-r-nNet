@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -131,11 +132,8 @@ class GroupCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             group.category.label,
-                            style: const TextStyle(
+                            style: AppTypography.badge.copyWith(
                               color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 11,
-                              letterSpacing: 0.6,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -222,7 +220,7 @@ class GroupCard extends StatelessWidget {
       case GroupCategory.recipe:
         return Icons.menu_book_rounded;
       case GroupCategory.regional:
-        return Icons.place_rounded;
+        return Icons.location_on_outlined;
       case GroupCategory.wholesale:
         return Icons.warehouse_rounded;
     }
@@ -251,10 +249,8 @@ class _MembersRow extends StatelessWidget {
               group.isUnlimited
                   ? '$fmt üye · ${AppStrings.groupBadgeUnlimited.toLowerCase()}'
                   : '$fmt / ${NumberFormatter.integer(group.maxMembers!)} üye',
-              style: const TextStyle(
+              style: AppTypography.caption.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
               ),
             ),
             const Spacer(),
@@ -263,16 +259,15 @@ class _MembersRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
-                    Icons.place_outlined,
+                    Icons.location_on_outlined,
                     size: 13,
                     color: AppColors.textMuted,
                   ),
                   const SizedBox(width: 3),
                   Text(
                     group.city,
-                    style: const TextStyle(
+                    style: AppTypography.caption.copyWith(
                       color: AppColors.textSecondary,
-                      fontSize: 11.5,
                     ),
                   ),
                 ],
@@ -359,11 +354,7 @@ class _PrimaryCta extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            letterSpacing: 0.1,
-          ),
+          textStyle: AppTypography.buttonLabel,
         ),
         child: Text(label),
       ),
@@ -403,12 +394,7 @@ class _PendingRequestsPill extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             AppStrings.groupPendingRequestCount(count),
-            style: const TextStyle(
-              color: AppColors.brandInk,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0,
-            ),
+            style: AppTypography.badge,
           ),
         ],
       ),
@@ -432,12 +418,7 @@ class _MiniBadge extends StatelessWidget {
       ),
       child: Text(
         label.trUpper,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w800,
-          fontSize: 9,
-          letterSpacing: 0.7,
-        ),
+        style: AppTypography.badge.copyWith(color: color),
       ),
     );
   }

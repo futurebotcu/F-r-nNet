@@ -5,6 +5,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../social/post/social_post_card.dart';
@@ -181,17 +183,15 @@ class AcademyAiBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: AppColors.brandLemonPale,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
         border: Border.all(color: AppColors.brandLemon, width: 1),
       ),
+      // Ortak rozet rolü (mürekkep metin; limon yalnız zemin/kenar).
       child: Text(
         label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: AppColors.brandInk,
-          letterSpacing: 0.2,
-        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.badge.copyWith(letterSpacing: 0.2),
       ),
     );
   }
@@ -341,14 +341,14 @@ class _RecipeCard extends StatelessWidget {
     ].join(' · ');
     return InkWell(
       key: ValueKey('academy_recipe_${recipe.id}'),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       onTap: () => _showRecipeSheet(context, recipe),
       child: Container(
         width: 190,
         padding: const EdgeInsets.all(AppSpacing.m),
         decoration: BoxDecoration(
           color: AppColors.brandLemonPale,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           border: Border.all(color: AppColors.brandLemon, width: 1),
         ),
         child: Column(
@@ -365,10 +365,10 @@ class _RecipeCard extends StatelessWidget {
                 recipe.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                // Kart başlığı rolü; şerit yüksekliği (heightFor) 13.5/1.25
+                // ölçüsüyle hesaplanır.
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
                   height: 1.25,
                 ),
               ),
@@ -448,11 +448,10 @@ void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
           const SizedBox(height: AppSpacing.xs),
           for (final ing in recipe.ingredients)
             Padding(
-              padding: const EdgeInsets.only(bottom: 3),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: Text(
                 ing.display,
-                style: AppTypography.body.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTypography.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -466,7 +465,7 @@ void _showRecipeSheet(BuildContext context, AcademyRecipe recipe) {
             const SizedBox(height: AppSpacing.xs),
             Text(
               recipe.steps,
-              style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+              style: AppTypography.bodyMedium.copyWith(height: 1.55),
             ),
           ],
           if (recipe.notes.isNotEmpty) ...[
@@ -484,20 +483,13 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        children: const [
-          Icon(Icons.menu_book_outlined, size: 40, color: AppColors.textMuted),
-          SizedBox(height: AppSpacing.s),
-          Text(
-            AppStrings.academyEmpty,
-            key: ValueKey('academy_empty'),
-            textAlign: TextAlign.center,
-            style: AppTypography.meta,
-          ),
-        ],
-      ),
+    // Uygulama geneli boş durum dili (mini-app hissi yok).
+    return const EmptyState(
+      key: ValueKey('academy_empty'),
+      compact: true,
+      icon: Icons.menu_book_outlined,
+      title: AppStrings.academyEmptyTitle,
+      subtitle: AppStrings.academyEmpty,
     );
   }
 }
@@ -509,23 +501,33 @@ class _RetryState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        children: [
-          const Text(
-            AppStrings.academyLoadError,
-            textAlign: TextAlign.center,
-            style: AppTypography.meta,
+    // Uygulama geneli hata dili: ErrorRetryState görünümü (ikon kutusu +
+    // başlık + açıklama) ve aynı biçimde birincil "Tekrar dene" butonu.
+    return Column(
+      children: [
+        const ErrorRetryState(
+          compact: true,
+          title: AppStrings.academyLoadErrorTitle,
+          subtitle: AppStrings.academyLoadError,
+        ),
+        FilledButton.icon(
+          key: const ValueKey('academy_retry'),
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh_rounded, size: 16),
+          label: const Text(AppStrings.academyRetryCta),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.copper,
+            foregroundColor: AppColors.brandInk,
+            minimumSize: const Size(0, 44),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+            ),
+            textStyle: AppTypography.buttonLabel,
           ),
-          const SizedBox(height: AppSpacing.s),
-          OutlinedButton(
-            key: const ValueKey('academy_retry'),
-            onPressed: onRetry,
-            child: const Text(AppStrings.academyRetryCta),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppSpacing.l),
+      ],
     );
   }
 }

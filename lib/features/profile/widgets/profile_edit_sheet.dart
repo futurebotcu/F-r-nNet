@@ -68,11 +68,9 @@ class _InlineError extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
+              style: AppTypography.body.copyWith(
                 color: AppColors.textPrimary,
-                fontSize: 13,
                 fontWeight: FontWeight.w600,
-                height: 1.35,
               ),
             ),
           ),
@@ -335,11 +333,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                     ),
                     const Text(
                       AppStrings.profileEditSheetTitle,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                      ),
+                      style: AppTypography.sectionTitle,
                     ),
                     const SizedBox(height: AppSpacing.l),
                     _AvatarTile(
@@ -380,12 +374,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                     const SizedBox(height: AppSpacing.l),
                     const Text(
                       AppStrings.profileEditProfessionLabel,
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        letterSpacing: 0.4,
-                      ),
+                      style: AppTypography.infoLabel,
                     ),
                     const SizedBox(height: AppSpacing.s),
                     Wrap(
@@ -407,12 +396,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                               alpha: 0.28,
                             ),
                             backgroundColor: Colors.transparent,
-                            labelStyle: TextStyle(
+                            labelStyle: AppTypography.chipLabel.copyWith(
                               color: _professionCode == e.key
                                   ? AppColors.softGold
                                   : AppColors.textSecondary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12.5,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
@@ -431,12 +418,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                     const SizedBox(height: AppSpacing.l),
                     const Text(
                       AppStrings.profileEditAccountTypeLabel,
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        letterSpacing: 0.4,
-                      ),
+                      style: AppTypography.infoLabel,
                     ),
                     const SizedBox(height: AppSpacing.s),
                     Wrap(
@@ -458,12 +440,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                               alpha: 0.28,
                             ),
                             backgroundColor: Colors.transparent,
-                            labelStyle: TextStyle(
+                            labelStyle: AppTypography.chipLabel.copyWith(
                               color: _accountType == t
                                   ? AppColors.softGold
                                   : AppColors.textSecondary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
@@ -595,11 +575,7 @@ class _WorkerLinkRow extends StatelessWidget {
               const Expanded(
                 child: Text(
                   AppStrings.profileEditWorkerLink,
-                  style: TextStyle(
-                    color: AppColors.softGold,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                  ),
+                  style: AppTypography.smallAction,
                 ),
               ),
               const Icon(

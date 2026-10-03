@@ -123,7 +123,7 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                 final isBlocked = blocked.contains(userId);
                 return PopupMenuButton<String>(
                   tooltip: AppStrings.moreActionsTooltip,
-                  icon: const Icon(Icons.more_horiz_rounded),
+                  icon: const Icon(Icons.more_vert_rounded),
                   onSelected: (v) {
                     if (v == 'report') {
                       showReportSheet(
@@ -152,11 +152,13 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
                         child: Text(AppStrings.safetyActionUnblock),
                       )
                     else
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'block',
                         child: Text(
                           AppStrings.safetyActionBlock,
-                          style: TextStyle(color: AppColors.danger),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.danger,
+                          ),
                         ),
                       ),
                   ],
@@ -375,6 +377,7 @@ class _SocialProfilePageState extends ConsumerState<SocialProfilePage> {
         padding: const EdgeInsets.all(AppSpacing.l),
         child: ErrorRetryState(
           compact: true,
+          title: AppStrings.profilePostsLoadErrorTitle,
           subtitle: AppStrings.publicProfileLoadError,
           onRetry: () => ref.invalidate(userPostsPagedNotifierProvider(userId)),
         ),
@@ -462,10 +465,12 @@ class _SelfEditCta extends StatelessWidget {
       height: 44,
       child: OutlinedButton.icon(
         onPressed: onTap,
-        icon: const Icon(Icons.edit_rounded, size: 18),
+        icon: const Icon(Icons.edit_outlined, size: 18),
         label: const Text(
           AppStrings.profileEditCta,
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.buttonLabel,
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
@@ -491,7 +496,9 @@ class _ProfileMessageCta extends StatelessWidget {
         icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
         label: const Text(
           AppStrings.messagingMessageCtaProfile,
-          style: TextStyle(fontWeight: FontWeight.w700),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.buttonLabel,
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
@@ -529,14 +536,7 @@ class _AccountTypeBadge extends StatelessWidget {
                   width: 0.6,
                 ),
               ),
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.softGold,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11.5,
-                ),
-              ),
+              child: Text(label, style: AppTypography.badge),
             ),
           ),
         );
@@ -617,7 +617,7 @@ class _CvHeader extends StatelessWidget {
             ),
             child: Text(
               AppStrings.profileCvEmptySelf,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: AppTypography.body,
             ),
           ),
       ],
@@ -676,12 +676,12 @@ class _StatusChip extends StatelessWidget {
             children: [
               const Icon(Icons.circle, size: 8, color: AppColors.brandInk),
               const SizedBox(width: 6),
-              Text(
-                status,
-                style: const TextStyle(
-                  color: AppColors.brandInk,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11.5,
+              Flexible(
+                child: Text(
+                  status,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.badge,
                 ),
               ),
             ],
@@ -868,7 +868,7 @@ class _JobSeekCard extends StatelessWidget {
             icon: const Icon(Icons.campaign_outlined, size: 16),
             label: const Text(
               AppStrings.profileJobSeekManageCta,
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+              style: AppTypography.smallAction,
             ),
             style: TextButton.styleFrom(
               foregroundColor: AppColors.softGold,
@@ -918,9 +918,11 @@ class _JobSeekCard extends StatelessWidget {
                   color: AppColors.softGold,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  AppStrings.profileJobSeekTitle,
-                  style: AppTypography.smallAction,
+                const Flexible(
+                  child: Text(
+                    AppStrings.profileJobSeekTitle,
+                    style: AppTypography.smallAction,
+                  ),
                 ),
               ],
             ),
@@ -952,10 +954,7 @@ class _JobSeekCard extends StatelessWidget {
                   isSelf
                       ? AppStrings.profileJobSeekManageCta
                       : AppStrings.profileJobSeekViewCta,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                  ),
+                  style: AppTypography.smallAction,
                 ),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.softGold,
@@ -1036,7 +1035,7 @@ class _AboutBakerySection extends StatelessWidget {
                         Row(
                           children: [
                             const Icon(
-                              Icons.place_outlined,
+                              Icons.location_on_outlined,
                               size: 14,
                               color: AppColors.textMuted,
                             ),
@@ -1100,7 +1099,7 @@ class _ProfessionalSection extends StatelessWidget {
                       onPressed: onEdit,
                       icon: const Icon(Icons.edit_outlined, size: 14),
                       label: const Text(
-                        'Düzenle',
+                        AppStrings.profileProfessionalEditCta,
                         style: AppTypography.smallAction,
                       ),
                       style: TextButton.styleFrom(
@@ -1169,13 +1168,9 @@ class _WorkerSnapshot extends StatelessWidget {
         if (chips.isNotEmpty) Wrap(spacing: 6, runSpacing: 6, children: chips),
         if (worker.effectiveSkills.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s),
-          Text(
+          const Text(
             AppStrings.profileWorkerSkillsLabel,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppTypography.caption,
           ),
           const SizedBox(height: 4),
           Wrap(
@@ -1189,13 +1184,9 @@ class _WorkerSnapshot extends StatelessWidget {
         ],
         if (worker.effectiveCities.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s),
-          Text(
+          const Text(
             AppStrings.profileWorkerCitiesLabel,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppTypography.caption,
           ),
           const SizedBox(height: 4),
           Wrap(
@@ -1334,11 +1325,7 @@ class _MiniChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 11.5,
-        ),
+        style: AppTypography.chipLabel.copyWith(color: AppColors.textPrimary),
       ),
     );
   }
@@ -1393,7 +1380,7 @@ class _LoadMoreCta extends StatelessWidget {
                 )
               : const Text(
                   AppStrings.profilePostsLoadMore,
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                  style: AppTypography.buttonLabel,
                 ),
         ),
       ),

@@ -117,7 +117,8 @@ void main() {
       expect(find.byIcon(Icons.mode_comment_outlined), findsOneWidget);
       expect(find.byIcon(Icons.repeat_rounded), findsOneWidget);
       expect(find.byIcon(Icons.bookmark_border_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.ios_share_rounded), findsOneWidget);
+      // Final sosyal: kanonik paylaş ikonu.
+      expect(find.byIcon(Icons.share_outlined), findsOneWidget);
     });
 
     testWidgets('Dar genişlikte overflow yok', (tester) async {

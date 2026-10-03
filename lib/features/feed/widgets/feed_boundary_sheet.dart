@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../services/feed_boundary_classifier.dart';
@@ -159,13 +160,7 @@ Future<FeedBoundaryAction> showFeedBoundarySheet(
                 Expanded(
                   child: Text(
                     copy.title,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16.5,
-                      letterSpacing: -0.2,
-                      height: 1.25,
-                    ),
+                    style: AppTypography.sectionTitle,
                   ),
                 ),
               ],
@@ -173,11 +168,7 @@ Future<FeedBoundaryAction> showFeedBoundarySheet(
             const SizedBox(height: AppSpacing.m),
             Text(
               copy.body,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13.5,
-                height: 1.5,
-              ),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.s),
             // "Neden Feed'de değil?" — yönlendirme kategorilerinde küçük not.
@@ -191,23 +182,15 @@ Future<FeedBoundaryAction> showFeedBoundarySheet(
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       AppStrings.boundaryWhyLabel,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12.5,
-                      ),
+                      style: AppTypography.meta.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
                     ),
                     SizedBox(height: 4),
                     Text(
                       AppStrings.boundaryWhyBody,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        height: 1.45,
-                      ),
+                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -229,10 +212,7 @@ Future<FeedBoundaryAction> showFeedBoundarySheet(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14.5,
-                    ),
+                    textStyle: AppTypography.buttonLabel,
                   ),
                 ),
               ),
@@ -255,7 +235,7 @@ Future<FeedBoundaryAction> showFeedBoundarySheet(
                 ),
                 child: const Text(
                   AppStrings.boundaryEditCta,
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  style: AppTypography.buttonLabel,
                 ),
               ),
             ),
