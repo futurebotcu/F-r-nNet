@@ -11,6 +11,7 @@ import '../../../core/widgets/app_number_field.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -371,7 +372,7 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const PremiumScaffold(
-        body: Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+        body: PremiumListSkeleton(itemCount: 3),
       );
     }
     if (_loadFailed) {
@@ -477,9 +478,9 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
               icon: const Icon(Icons.calculate_outlined, size: 18),
               label: const Text('Hesabı yenile'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.softGold,
+                foregroundColor: AppColors.brandInk,
                 side: BorderSide(
-                  color: AppColors.copper.withValues(alpha: 0.45),
+                  color: AppColors.brandLemon.withValues(alpha: 0.45),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
@@ -539,9 +540,9 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
               icon: const Icon(Icons.add_rounded, size: 16),
               label: const Text('Malzeme ekle'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.softGold,
+                foregroundColor: AppColors.brandInk,
                 side: BorderSide(
-                  color: AppColors.copper.withValues(alpha: 0.45),
+                  color: AppColors.brandLemon.withValues(alpha: 0.45),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
@@ -568,9 +569,9 @@ class _RecipeEditorScreenState extends ConsumerState<RecipeEditorScreen> {
               icon: const Icon(Icons.add_rounded, size: 16),
               label: const Text('Adım ekle'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.softGold,
+                foregroundColor: AppColors.brandInk,
                 side: BorderSide(
-                  color: AppColors.copper.withValues(alpha: 0.45),
+                  color: AppColors.brandLemon.withValues(alpha: 0.45),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.m),
@@ -723,7 +724,7 @@ class _Section extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-          color: AppColors.softGold,
+          color: AppColors.brandInk,
           fontWeight: FontWeight.w800,
           fontSize: 11.5,
           letterSpacing: 1.4,
@@ -802,7 +803,7 @@ class _UnitChips extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: o == selected
-                      ? AppColors.copper.withValues(alpha: 0.30)
+                      ? AppColors.brandLemon.withValues(alpha: 0.30)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
@@ -810,7 +811,7 @@ class _UnitChips extends StatelessWidget {
                   o.label,
                   style: TextStyle(
                     color: o == selected
-                        ? AppColors.softGold
+                        ? AppColors.brandInk
                         : AppColors.textMuted,
                     fontWeight: FontWeight.w800,
                     fontSize: 12,
@@ -851,11 +852,11 @@ class _ProductPicker extends StatelessWidget {
                 label: Text(p),
                 selected: selected == p,
                 onSelected: (v) => onSelected(v ? p : null),
-                selectedColor: AppColors.copperMuted.withValues(alpha: 0.28),
+                selectedColor: AppColors.brandLemonSoft.withValues(alpha: 0.28),
                 backgroundColor: Colors.transparent,
                 labelStyle: TextStyle(
                   color: selected == p
-                      ? AppColors.softGold
+                      ? AppColors.brandInk
                       : AppColors.textSecondary,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
@@ -864,7 +865,7 @@ class _ProductPicker extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   side: BorderSide(
                     color: selected == p
-                        ? AppColors.copperMuted
+                        ? AppColors.brandLemonSoft
                         : AppColors.surfaceVariant,
                     width: 1,
                   ),
@@ -1013,7 +1014,7 @@ class _CalcPreview extends StatelessWidget {
                 icon: Icons.bakery_dining_outlined,
                 label: 'Tahmini adet',
                 value: NumberFormatter.integer(result.estimatedPieces),
-                accent: AppColors.softGold,
+                accent: AppColors.brandInk,
               ),
             ),
           ],
@@ -1132,13 +1133,13 @@ class _StepRow extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 14),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.softGold.withValues(alpha: 0.16),
+                  color: AppColors.brandInk.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
                 child: Text(
                   '$order',
                   style: const TextStyle(
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     fontWeight: FontWeight.w800,
                     fontSize: 13,
                   ),
@@ -1197,12 +1198,12 @@ class _MediaPlaceholder extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.softGold.withValues(alpha: 0.10),
+              color: AppColors.brandInk.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(AppRadius.s),
             ),
             child: const Icon(
               Icons.photo_camera_outlined,
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               size: 22,
             ),
           ),

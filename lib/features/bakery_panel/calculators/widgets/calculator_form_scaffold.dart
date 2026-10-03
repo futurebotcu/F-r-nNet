@@ -119,7 +119,7 @@ class _Hint extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.m),
       child: Row(
         children: [
-          const Icon(Icons.bolt_rounded, color: AppColors.softGold, size: 18),
+          const Icon(Icons.bolt_rounded, color: AppColors.brandInk, size: 18),
           const SizedBox(width: AppSpacing.s),
           Expanded(
             child: Text(
@@ -154,7 +154,7 @@ class _ResultSectionLabel extends StatelessWidget {
           child: Text(
             'SONUÇ',
             style: TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w800,
               fontSize: 12.5,
               letterSpacing: 1.4,

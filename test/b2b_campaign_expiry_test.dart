@@ -71,7 +71,7 @@ void main() {
       );
       // FN-AUDIT-015 unique violation → anlaşılır mesaj.
       expect(r.contains("'23505'"), isTrue);
-      expect(r.contains('Bu talebe zaten teklif verdiniz.'), isTrue);
+      expect(r.contains('Bu talebe zaten teklif verdin.'), isTrue);
     });
   });
 }

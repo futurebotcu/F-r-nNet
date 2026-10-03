@@ -63,7 +63,7 @@ class _WholesaleCustomersScreenState
         onPressed: () => context.push(AppRoutes.wholesaleCustomerNew),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Müşteri ekle'),
-        backgroundColor: AppColors.copper,
+        backgroundColor: AppColors.brandLemon,
         foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
@@ -121,7 +121,7 @@ class _WholesaleCustomersScreenState
                       hintText: 'Müşteri adı, bölge, kişi ara…',
                       prefixIcon: Icon(
                         Icons.search_rounded,
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                       ),
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.l,
@@ -189,7 +189,7 @@ class _CustomerCard extends ConsumerWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   color: dealer.isActive
-                      ? AppColors.softGold.withValues(alpha: 0.14)
+                      ? AppColors.brandInk.withValues(alpha: 0.14)
                       : AppColors.surfaceLine.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
@@ -198,7 +198,7 @@ class _CustomerCard extends ConsumerWidget {
                   dealer.name.isNotEmpty ? dealer.name[0].trUpper : 'M',
                   style: TextStyle(
                     color: dealer.isActive
-                        ? AppColors.softGold
+                        ? AppColors.brandInk
                         : AppColors.textMuted,
                     fontWeight: FontWeight.w800,
                     fontSize: 17,

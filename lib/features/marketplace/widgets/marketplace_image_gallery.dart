@@ -108,7 +108,7 @@ class _MarketplaceImageGalleryState extends State<MarketplaceImageGallery> {
                   height: 6,
                   decoration: BoxDecoration(
                     color: selected
-                        ? AppColors.copper
+                        ? AppColors.brandLemon
                         : AppColors.borderHairline,
                     borderRadius: BorderRadius.circular(3),
                   ),
@@ -161,8 +161,11 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
 
   @override
   Widget build(BuildContext context) {
+    // Tam ekran: opak koyu yüzey (yarı saydam scrim altında açık gri
+    // yükleme bloğu görünmesin). Yükleniyor/hata durumları da koyu.
     return Scaffold(
-      backgroundColor: AppColors.imageScrimDark,
+      key: const ValueKey('market_gallery_fullscreen'),
+      backgroundColor: AppImageState.darkSurface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -178,6 +181,7 @@ class _FullscreenViewerState extends State<_FullscreenViewer> {
                     child: AppNetworkImage(
                       url: widget.imageUrls[i],
                       fit: BoxFit.contain,
+                      dark: true,
                     ),
                   ),
                 );

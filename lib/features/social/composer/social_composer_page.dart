@@ -26,6 +26,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
@@ -435,12 +436,8 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                 ),
         ),
         title: const Text(
-          'Yeni Gönderi',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 16.5,
-          ),
+          AppStrings.composerNewPostTitle,
+          style: AppTypography.pageTitle,
         ),
         centerTitle: true,
         bottom: const PreferredSize(
@@ -479,10 +476,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                 _saving
                     ? AppStrings.composerSharingCta
                     : AppStrings.composerShareCta,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15.5,
-                ),
+                style: AppTypography.buttonLabel,
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -513,11 +507,7 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
             // "What's happening?" muadili FırınNet dilinde).
             const Text(
               AppStrings.composerPromptHeadline,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14.5,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTypography.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.m),
             if (_pickedBytes != null)
@@ -568,12 +558,10 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.m),
-            const Text(
+            Text(
               AppStrings.feedComposerTypeLabel,
-              style: TextStyle(
+              style: AppTypography.meta.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: AppSpacing.s),
@@ -613,14 +601,11 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                         const SizedBox(width: 4),
                         Text(
                           t.label,
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             color: selected
                                 ? AppColors.brandInk
                                 : AppColors.textPrimary,
-                            fontWeight: selected
-                                ? FontWeight.w800
-                                : FontWeight.w600,
-                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -639,12 +624,10 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
             // V2 Commit 3.5 — Medya section label + 4-buton 2x2 grid.
             // Donor `selector` + image_picker_plus muadili: galeri seç /
             // anlık çek için ayrı butonlar (foto + video).
-            const Text(
+            Text(
               AppStrings.composerMediaSectionLabel,
-              style: TextStyle(
+              style: AppTypography.meta.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: AppSpacing.s),
@@ -716,10 +699,8 @@ class _SocialComposerPageState extends ConsumerState<SocialComposerPage> {
                     Expanded(
                       child: Text(
                         _composerError!,
-                        style: const TextStyle(
+                        style: AppTypography.meta.copyWith(
                           color: AppColors.danger,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -784,12 +765,10 @@ class _MediaButton extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: AppTypography.bodyMedium.copyWith(
                     color: enabled
                         ? AppColors.textPrimary
                         : AppColors.textMuted,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -849,21 +828,11 @@ class _VideoPickedPreview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Video seçildi',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
+                  AppStrings.composerVideoSelected,
+                  style: AppTypography.cardTitle,
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  _humanSize(bytes.length),
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 12.5,
-                  ),
-                ),
+                Text(_humanSize(bytes.length), style: AppTypography.meta),
               ],
             ),
           ),

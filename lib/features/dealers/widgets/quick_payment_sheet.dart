@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/premium/premium_card.dart';
@@ -137,102 +140,132 @@ class _QuickPaymentSheetState extends ConsumerState<QuickPaymentSheet> {
     }
   }
 
+  /// Başlık + hesaplayıcının alanları + tuş takımının en az bir kısmı için
+  /// gereken yükseklik. Bu değerin altında tüm içerik dış kaydırmaya geçer
+  /// (320px / 1.5x yazı / açık klavye — taşma yok).
+  static double minContentHeight(double textScale) => 300 + 120 * textScale;
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final viewInsets = MediaQuery.of(context).viewInsets;
+    final mq = MediaQuery.of(context);
+    final viewInsets = mq.viewInsets;
+    final textScale = mq.textScaler.scale(16) / 16;
+
+    // Kök neden (eski): sabit `0.78 × ekran` yükseklik; klavye/viewInsets
+    // ve büyük yazıda üst kart + alanlar sığmayıp Column taşıyordu.
+    // Şimdi yükseklik kullanılabilir alana göre sınırlanır; yetmezse
+    // içerik kaydırılır. Ödeme mantığı değişmedi.
+    final available =
+        mq.size.height -
+        viewInsets.bottom -
+        mq.padding.top -
+        mq.padding.bottom -
+        AppSpacing.l;
+    final sheetHeight = math.max(
+      0.0,
+      math.min(mq.size.height * 0.78, available),
+    );
+    final minContent = minContentHeight(textScale);
+
+    final content = Column(
+      children: [
+        // Sheet drag handle
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.borderHairline,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageH,
+            AppSpacing.xs,
+            AppSpacing.pageH,
+            AppSpacing.m,
+          ),
+          child: PremiumCard(
+            warm: true,
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.quickPaymentTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.labelSmall,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.dealerName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.cardTitle,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.m),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        AppStrings.quickPaymentDebtLabel,
+                        maxLines: 1,
+                        style: AppTypography.labelSmall,
+                      ),
+                      const SizedBox(height: 2),
+                      // Uzun tutar dar ekranda küçülür, kesilmez.
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          NumberFormatter.currency(widget.currentBalance),
+                          maxLines: 1,
+                          style: AppTypography.priceLarge,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: CashTenderedCalculator(
+            price: _price,
+            paid: _paid,
+            onSubmit: _onSubmit,
+          ),
+        ),
+      ],
+    );
 
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.78,
-          child: Column(
-            children: [
-              // Sheet drag handle
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.borderHairline,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pageH,
-                  AppSpacing.xs,
-                  AppSpacing.pageH,
-                  AppSpacing.m,
-                ),
-                child: PremiumCard(
-                  warm: true,
-                  padding: const EdgeInsets.all(AppSpacing.l),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppStrings.quickPaymentTitle,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppColors.textMuted,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.6,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              widget.dealerName,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            AppStrings.quickPaymentDebtLabel,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.textMuted,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            NumberFormatter.currency(widget.currentBalance),
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: AppColors.brandInk,
-                              fontWeight: FontWeight.w800,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Expanded(
-                child: CashTenderedCalculator(
-                  price: _price,
-                  paid: _paid,
-                  onSubmit: _onSubmit,
-                ),
-              ),
-            ],
+          key: const ValueKey('quick_payment_sheet'),
+          height: sheetHeight,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxHeight >= minContent) return content;
+              return SingleChildScrollView(
+                key: const ValueKey('quick_payment_scroll'),
+                child: SizedBox(height: minContent, child: content),
+              );
+            },
           ),
         ),
       ),

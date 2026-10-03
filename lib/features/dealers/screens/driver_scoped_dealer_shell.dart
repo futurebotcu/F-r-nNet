@@ -251,7 +251,7 @@ class _OverviewSection extends ConsumerWidget {
                 Icon(
                   Icons.edit_location_alt_outlined,
                   size: 18,
-                  color: AppColors.brandLemonPressed,
+                  color: AppColors.brandInk,
                 ),
                 SizedBox(width: AppSpacing.s),
                 Expanded(

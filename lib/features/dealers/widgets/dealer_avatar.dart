@@ -102,8 +102,8 @@ _AvatarColors _resolveColors(DealerAvatarPalette palette, bool isActive) {
     case DealerAvatarPalette.autoActivity:
       if (isActive) {
         return _AvatarColors(
-          background: AppColors.softGold.withValues(alpha: 0.14),
-          foreground: AppColors.softGold,
+          background: AppColors.brandInk.withValues(alpha: 0.14),
+          foreground: AppColors.brandInk,
         );
       }
       return _AvatarColors(
@@ -121,8 +121,8 @@ _AvatarColors _resolveColors(DealerAvatarPalette palette, bool isActive) {
       );
     case DealerAvatarPalette.softGold:
       return _AvatarColors(
-        background: AppColors.softGold.withValues(alpha: 0.14),
-        foreground: AppColors.softGold,
+        background: AppColors.brandInk.withValues(alpha: 0.14),
+        foreground: AppColors.brandInk,
       );
   }
 }

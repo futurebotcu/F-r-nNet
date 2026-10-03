@@ -83,7 +83,7 @@ class _DealerTransactionHistoryScreenState
         actions: [
           IconButton(
             tooltip: 'Döküm paylaş',
-            icon: const Icon(Icons.ios_share_rounded),
+            icon: const Icon(Icons.share_outlined),
             onPressed: (dealer == null || summary == null)
                 ? null
                 : () => _shareStatement(
@@ -227,7 +227,7 @@ class _DealerTransactionHistoryScreenState
     case DealerTransactionType.payment:
       return (icon: Icons.payments_rounded, color: AppColors.success, sign: '−');
     case DealerTransactionType.adjustment:
-      return (icon: Icons.tune_rounded, color: AppColors.softGold, sign: '±');
+      return (icon: Icons.tune_rounded, color: AppColors.brandInk, sign: '±');
   }
 }
 

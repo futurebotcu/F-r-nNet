@@ -136,10 +136,12 @@ class _SocialStoryViewerPageState extends ConsumerState<SocialStoryViewerPage>
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.surface),
         ),
-        error: (_, __) => const Center(
+        error: (_, __) => Center(
           child: Text(
-            'Hikaye yüklenemedi.',
-            style: TextStyle(color: AppColors.surface70),
+            AppStrings.storyLoadError,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.surface70,
+            ),
           ),
         ),
         data: (stories) {

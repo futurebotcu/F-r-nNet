@@ -204,7 +204,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                         runSpacing: 8,
                         children: [
                           _Chip(
-                            label: 'Tümü',
+                            label: AppStrings.finalFilterAll,
                             selected: _f.listingType == null,
                             onTap: () => setState(
                               () => _f = _f.copyWith(clearListingType: true),
@@ -234,7 +234,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                         runSpacing: 8,
                         children: [
                           _Chip(
-                            label: 'Tümü',
+                            label: AppStrings.finalFilterAll,
                             selected: _f.equipmentCategory == null,
                             onTap: () => setState(
                               () => _f = _f.copyWith(
@@ -334,7 +334,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                       runSpacing: 8,
                       children: [
                         _Chip(
-                          label: 'Tümü',
+                          label: AppStrings.finalFilterAll,
                           selected: _f.condition == null,
                           onTap: () => setState(
                             () => _f = _f.copyWith(clearCondition: true),
@@ -357,7 +357,7 @@ class _MarketplaceFiltersSheetState extends State<MarketplaceFiltersSheet> {
                       onChanged: (v) =>
                           setState(() => _f = _f.copyWith(negotiableOnly: v)),
                       title: const Text(AppStrings.marketFilterNegotiable),
-                      activeThumbColor: AppColors.copper,
+                      activeThumbColor: AppColors.brandLemon,
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                   ],
@@ -431,7 +431,7 @@ class _Chip extends StatelessWidget {
       onTap: null,
       child: Material(
         color: selected
-            ? AppColors.softGold.withValues(alpha: 0.18)
+            ? AppColors.brandInk.withValues(alpha: 0.18)
             : AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.m),
         child: InkWell(
@@ -442,7 +442,7 @@ class _Chip extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                color: selected ? AppColors.softGold : AppColors.borderHairline,
+                color: selected ? AppColors.brandInk : AppColors.borderHairline,
                 width: selected ? 1.0 : 0.6,
               ),
             ),

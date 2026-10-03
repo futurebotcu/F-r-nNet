@@ -34,7 +34,7 @@ class DealerFilterChip extends StatelessWidget {
         backgroundColor: AppColors.surface,
         side: BorderSide.none,
         labelStyle: TextStyle(
-          color: selected ? AppColors.softGold : AppColors.textSecondary,
+          color: selected ? AppColors.brandInk : AppColors.textSecondary,
           fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
           fontSize: 13,
           letterSpacing: 0.15,

@@ -34,7 +34,7 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final a = accent ?? AppColors.softGold;
+    final a = accent ?? AppColors.brandInk;
     return PremiumCard(
       warm: warm,
       padding: EdgeInsets.all(hero ? AppSpacing.xl : AppSpacing.l),
@@ -93,7 +93,7 @@ class StatCard extends StatelessWidget {
             Text(
               helper!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: hero ? AppColors.softGold : AppColors.textMuted,
+                color: hero ? AppColors.brandInk : AppColors.textMuted,
                 fontWeight: hero ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

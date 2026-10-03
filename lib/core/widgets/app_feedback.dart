@@ -14,7 +14,7 @@ enum AppFeedbackKind { success, error, warning, info }
 ///
 /// ```dart
 /// AppFeedback.success(context, 'İlan yayınlandı');
-/// AppFeedback.error(context, 'Kaydedilemedi. Tekrar deneyin.');
+/// AppFeedback.error(context, 'Kaydedilemedi. Tekrar dene.');
 /// ```
 ///
 /// Tema (`snackBarTheme`) aynı zemini kullandığından doğrudan

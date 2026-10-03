@@ -105,9 +105,24 @@ class _StatTile extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$value', style: AppTypography.titleLarge),
+          // Sayı vurgulu (tabular), etiket caption — dar ekran/büyük
+          // yazıda taşmasın diye tek satır + ellipsis.
+          Text(
+            '$value',
+            maxLines: 1,
+            style: AppTypography.titleLarge.copyWith(
+              fontWeight: FontWeight.w800,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: AppTypography.meta),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: AppTypography.caption,
+          ),
         ],
       ),
     );

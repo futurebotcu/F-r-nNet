@@ -63,25 +63,22 @@ class ProfileAboutSection extends StatelessWidget {
             InkWell(
               onTap: onAddBio,
               borderRadius: BorderRadius.circular(AppRadius.s),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+              // Dokunma alanı ≥ 44px (metin satırı kısa kalsa da).
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
                       Icons.add_rounded,
                       size: 15,
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                     ),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         AppStrings.profileAboutAddCta,
-                        style: const TextStyle(
-                          color: AppColors.softGold,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
+                        style: AppTypography.smallAction.copyWith(fontSize: 13),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

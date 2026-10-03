@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/error_retry_state.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
 import '../../../subscriptions/models/supplier_paywall.dart';
@@ -25,7 +26,6 @@ import '../../models/b2b_store.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_campaign_card.dart';
 import '../../widgets/b2b_product_card.dart';
-import '../../../../core/utils/tr_case.dart';
 import '../../../../core/widgets/firinnet_avatar.dart';
 
 class SupplierStoreTab extends ConsumerWidget {
@@ -225,11 +225,9 @@ class _StoreHero extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       store.tagline,
-                      style: const TextStyle(
+                      style: AppTypography.body.copyWith(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
                         height: 1.35,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -239,7 +237,7 @@ class _StoreHero extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.l),
           _LabeledChips(
-            icon: Icons.place_outlined,
+            icon: Icons.location_on_outlined,
             label: 'Hizmet bölgeleri',
             values: store.serviceRegions,
           ),
@@ -252,12 +250,7 @@ class _StoreHero extends StatelessWidget {
           const SizedBox(height: AppSpacing.l),
           Text(
             store.description,
-            style: const TextStyle(
-              fontSize: 13.5,
-              color: AppColors.textSecondary,
-              height: 1.45,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTypography.body.copyWith(fontSize: 13.5, height: 1.45),
           ),
         ],
       ),
@@ -313,13 +306,12 @@ class _LabeledChips extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: AppColors.textMuted),
             const SizedBox(width: 5),
-            Text(
-              label.trUpper,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textMuted,
-                letterSpacing: 0.8,
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.infoLabel,
               ),
             ),
           ],
@@ -375,30 +367,27 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 17, color: AppColors.brandLemonPressed),
+        Icon(icon, size: 17, color: AppColors.brandInk),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.2,
-            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.sectionTitle.copyWith(fontSize: 15),
           ),
         ),
-        TextButton.icon(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add_rounded, size: 16),
-          label: Text(addLabel),
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.brandInk,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            minimumSize: const Size(0, 34),
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 13,
+        const SizedBox(width: 4),
+        Flexible(
+          child: TextButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add_rounded, size: 16),
+            label: Text(addLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.brandInk,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 34),
+              textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
             ),
           ),
         ),

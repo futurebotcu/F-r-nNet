@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../providers/dealer_providers.dart';
 import '../../../core/utils/tr_case.dart';
@@ -35,7 +36,7 @@ class DriverListScreen extends ConsumerWidget {
       body: SafeArea(
         top: false,
         child: async.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const PremiumListSkeleton(),
           error: (_, __) => const Padding(
             padding: EdgeInsets.all(AppSpacing.l),
             child: Center(
@@ -117,11 +118,11 @@ class _GeneralAccountCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.softGold.withValues(alpha: 0.14),
+                color: AppColors.brandInk.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(AppRadius.m),
               ),
               child: const Icon(Icons.summarize_rounded,
-                  color: AppColors.softGold, size: 20),
+                  color: AppColors.brandInk, size: 20),
             ),
             const SizedBox(width: AppSpacing.m),
             const Expanded(
@@ -349,11 +350,11 @@ class _DriversEmpty extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.softGold.withValues(alpha: 0.14),
+              color: AppColors.brandInk.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(AppRadius.m),
             ),
             child: const Icon(Icons.local_shipping_outlined,
-                color: AppColors.softGold, size: 26),
+                color: AppColors.brandInk, size: 26),
           ),
           const SizedBox(height: AppSpacing.m),
           const Text('Henüz şoför yok',

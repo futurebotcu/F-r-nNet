@@ -18,6 +18,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -104,7 +105,8 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
         backgroundColor: AppColors.elevatedCard,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, size: 26),
+          tooltip: AppStrings.socialBackTooltip,
+          icon: const Icon(Icons.arrow_back_rounded, size: 24),
           color: AppColors.textPrimary,
           onPressed: _saving ? null : () => context.pop(),
         ),
@@ -124,7 +126,7 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
             child: FilledButton(
               onPressed: (_saving || !isOwner) ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
+                backgroundColor: AppColors.brandLemon,
                 foregroundColor: AppColors.brandInk,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.s),
@@ -178,11 +180,9 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
                 padding: EdgeInsets.all(AppSpacing.xl),
                 child: Center(
                   child: Text(
-                    'Bu gönderi artık görünür değil.',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14.5,
-                    ),
+                    AppStrings.postEditNotVisible,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyMedium,
                   ),
                 ),
               );
@@ -192,11 +192,9 @@ class _SocialPostEditPageState extends ConsumerState<SocialPostEditPage> {
                 padding: EdgeInsets.all(AppSpacing.xl),
                 child: Center(
                   child: Text(
-                    'Sadece kendi gönderini düzenleyebilirsin.',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14.5,
-                    ),
+                    AppStrings.postEditOwnerOnly,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyMedium,
                   ),
                 ),
               );

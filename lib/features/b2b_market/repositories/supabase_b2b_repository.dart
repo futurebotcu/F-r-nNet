@@ -767,7 +767,7 @@ class SupabaseB2bRepository implements B2bRepository {
     } on sb.PostgrestException catch (e) {
       // FN-AUDIT-015: aynı talebe aynı mağazadan tek teklif (unique violation).
       if (e.code == '23505') {
-        throw StateError('Bu talebe zaten teklif verdiniz.');
+        throw StateError('Bu talebe zaten teklif verdin.');
       }
       rethrow;
     }

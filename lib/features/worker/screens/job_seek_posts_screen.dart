@@ -30,11 +30,19 @@ class JobSeekPostsScreen extends ConsumerWidget {
     final async = ref.watch(myJobSeekPostsProvider);
 
     return PremiumScaffold(
-      appBar: AppBar(title: const Text('İş Arıyorum İlanlarım')),
+      appBar: AppBar(
+        title: const Text(
+          AppStrings.finalSeekMyPostsTitle,
+          style: AppTypography.sectionTitle,
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(AppRoutes.jobSeekNew),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Yeni ilan'),
+        label: const Text(
+          AppStrings.finalSeekNewPost,
+          style: AppTypography.buttonLabel,
+        ),
         backgroundColor: AppColors.brandLemon,
         foregroundColor: AppColors.brandInk,
       ),
@@ -139,12 +147,14 @@ class JobSeekPostCard extends ConsumerWidget {
               const Spacer(),
               IconButton(
                 tooltip: AppStrings.listingsShareTooltip,
-                onPressed: () =>
-                    Share.share(post.toShareText(), subject: 'FırınNet — İş'),
+                onPressed: () => Share.share(
+                  post.toShareText(),
+                  subject: AppStrings.finalSeekShareSubject,
+                ),
                 icon: const Icon(
-                  Icons.ios_share_rounded,
-                  color: AppColors.softGold,
-                  size: 18,
+                  Icons.share_outlined,
+                  color: AppColors.textSecondary,
+                  size: 20,
                 ),
               ),
               IconButton(
@@ -166,7 +176,7 @@ class JobSeekPostCard extends ConsumerWidget {
                 tooltip: AppStrings.listingsDeleteTooltip,
                 onPressed: () => _delete(context, ref),
                 icon: const Icon(
-                  Icons.delete_outline,
+                  Icons.delete_outline_rounded,
                   color: AppColors.textSecondary,
                   size: 20,
                 ),

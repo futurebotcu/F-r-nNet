@@ -14,8 +14,7 @@ import '../../profile/providers/profile_provider.dart';
 import '../models/business_plan.dart';
 import '../models/pricing_config.dart';
 import '../providers/subscription_providers.dart';
-import '../widgets/commercial_launch_sheet.dart'
-    show formatCommercialLaunchDay;
+import '../widgets/commercial_launch_sheet.dart' show formatCommercialLaunchDay;
 import '../widgets/individual_launch_sheet.dart'
     show formatIndividualLaunchDate;
 import '../widgets/supplier_launch_gift_sheet.dart';
@@ -35,12 +34,12 @@ class PlansScreen extends ConsumerWidget {
         ? entitlement?.supplierEffectivePlan
         : entitlement?.effectivePlan;
     final promoActive = entitlement?.isLaunchPromoActive ?? false;
-    final isIndividual =
-        account == null || account == AccountType.individual;
+    final isIndividual = account == null || account == AccountType.individual;
     // Bireysel ücretsiz dönem notu (server tarihi; eski backend'de null →
     // hiçbir bireysel kampanya yüzeyi gösterilmez).
-    final individualFreeUntil =
-        isIndividual ? entitlement?.individualFreeUntil : null;
+    final individualFreeUntil = isIndividual
+        ? entitlement?.individualFreeUntil
+        : null;
     // Tedarikçi: kişisel promo modeli geçerli değil (kampanya modeli);
     // satın alma/fiyat yalnız server "uygun" derse gösterilir (yüklenene
     // kadar fail-closed). Bireysel: server kararı (ücretsiz dönemde her
@@ -48,15 +47,17 @@ class PlansScreen extends ConsumerWidget {
     final purchaseAllowed = isWholesaler || isIndividual
         ? (entitlement?.subscriptionPurchaseAllowed ?? false)
         : true;
-    final launchActive = isWholesaler &&
+    final launchActive =
+        isWholesaler &&
         (entitlement?.supplierLaunchFreeActive ?? false) &&
         entitlement?.supplierLaunchFreeUntil != null;
     final isCommercial = account == AccountType.commercial;
     // Ticari kayıt bazlı ücretsiz ay + lansman fiyat dönemi bilgisi.
     final freePeriodActive =
         isCommercial && (entitlement?.freePeriodActive ?? false);
-    final launchPriceUntil =
-        isCommercial ? entitlement?.launchPriceUntil : null;
+    final launchPriceUntil = isCommercial
+        ? entitlement?.launchPriceUntil
+        : null;
     final (freeFeatures, premiumFeatures) = isWholesaler
         ? (AppStrings.supPlanFreeFeatures, AppStrings.supPlanPremiumFeatures)
         : (AppStrings.planFreeFeatures, AppStrings.planPremiumFeatures);
@@ -186,6 +187,10 @@ class PlansScreen extends ConsumerWidget {
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.brandInk,
                       minimumSize: const Size.fromHeight(52),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.m,
+                        vertical: AppSpacing.s,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.m),
                       ),
@@ -229,8 +234,7 @@ class PlansScreen extends ConsumerWidget {
 }
 
 /// Banner başlık / gövde rolleri (Paketler ekranındaki tüm bilgi şeritleri).
-const TextStyle _bannerTitle = TextStyle(
-  fontSize: 13.5,
+final TextStyle _bannerTitle = AppTypography.bodyMedium.copyWith(
   fontWeight: FontWeight.w700,
   color: AppColors.brandInk,
   height: 1.3,
@@ -248,10 +252,7 @@ class _PlansLegalLinks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const linkStyle = TextStyle(
-      fontSize: 12.5,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textSecondary,
+    final linkStyle = AppTypography.infoLabel.copyWith(
       decoration: TextDecoration.underline,
       decorationColor: AppColors.textMuted,
     );
@@ -263,13 +264,13 @@ class _PlansLegalLinks extends StatelessWidget {
         TextButton(
           style: TextButton.styleFrom(minimumSize: const Size(48, 44)),
           onPressed: () => GoRouter.of(context).push(AppRoutes.legalTerms),
-          child: const Text(AppStrings.legalTermsTitle, style: linkStyle),
+          child: Text(AppStrings.legalTermsTitle, style: linkStyle),
         ),
-        const Text('·', style: TextStyle(color: AppColors.textMuted)),
+        const Text('·', style: AppTypography.meta),
         TextButton(
           style: TextButton.styleFrom(minimumSize: const Size(48, 44)),
           onPressed: () => GoRouter.of(context).push(AppRoutes.legalPrivacy),
-          child: const Text(AppStrings.legalPrivacyTitle, style: linkStyle),
+          child: Text(AppStrings.legalPrivacyTitle, style: linkStyle),
         ),
       ],
     );
@@ -441,7 +442,7 @@ class _PromoBanner extends StatelessWidget {
           const Icon(
             Icons.auto_awesome_rounded,
             size: 18,
-            color: Color(0xFFB45309),
+            color: AppColors.warningInk,
           ),
           const SizedBox(width: AppSpacing.s),
           Expanded(
@@ -456,7 +457,7 @@ class _PromoBanner extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   AppStrings.planLaunchPromoSub,
-                  style: _bannerBody.copyWith(color: const Color(0xFFB45309)),
+                  style: _bannerBody.copyWith(color: AppColors.warningInk),
                 ),
               ],
             ),

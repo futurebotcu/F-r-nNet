@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../models/business_entitlements.dart';
 import '../models/business_plan.dart';
@@ -24,7 +25,11 @@ class PlanBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: fg),
+        maxLines: 1,
+        style: AppTypography.badge.copyWith(
+          color: fg,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -96,10 +101,11 @@ class LockedFeatureBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             label,
-            style: TextStyle(
+            maxLines: 1,
+            style: AppTypography.badge.copyWith(
+              color: fg,
               fontSize: 10.5,
               fontWeight: FontWeight.w800,
-              color: fg,
             ),
           ),
         ],

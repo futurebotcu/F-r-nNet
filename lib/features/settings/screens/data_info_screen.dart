@@ -31,7 +31,7 @@ class DataInfoScreen extends StatelessWidget {
                 children: const [
                   Icon(
                     Icons.info_outline_rounded,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     size: 22,
                   ),
                   SizedBox(height: AppSpacing.s),

@@ -28,11 +28,11 @@ class SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = danger ? AppColors.danger : AppColors.softGold;
+    final accent = danger ? AppColors.danger : AppColors.brandInk;
     final titleColor = danger ? AppColors.danger : AppColors.textPrimary;
     final iconBg = danger
         ? AppColors.danger.withValues(alpha: 0.10)
-        : AppColors.softGold.withValues(alpha: 0.12);
+        : AppColors.brandInk.withValues(alpha: 0.12);
 
     return Material(
       color: Colors.transparent,

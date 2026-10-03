@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_confirm_dialog.dart';
@@ -80,7 +81,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
       AppFeedback.success(context, AppStrings.cvBioSaved);
     } catch (_) {
       if (!mounted) return;
-      AppFeedback.error(context, AppStrings.commonSaveError);
+      AppFeedback.error(context, AppStrings.cvBioSaveError);
     } finally {
       if (mounted) setState(() => _savingBio = false);
     }
@@ -153,10 +154,8 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
           children: [
             Text(
               AppStrings.cvCenterIntro,
-              style: const TextStyle(
+              style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 13.5,
-                height: 1.4,
               ),
             ),
             const SizedBox(height: AppSpacing.l),
@@ -173,19 +172,18 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.copper.withValues(alpha: 0.12),
+                    color: AppColors.brandLemon.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     border: Border.all(
-                      color: AppColors.copper.withValues(alpha: 0.34),
+                      color: AppColors.brandLemon.withValues(alpha: 0.34),
                       width: 0.6,
                     ),
                   ),
                   child: Text(
                     status,
-                    style: const TextStyle(
+                    style: AppTypography.meta.copyWith(
                       color: AppColors.brandInk,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -204,7 +202,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
             ),
             const SizedBox(height: AppSpacing.xs),
             AppPrimaryButton(
-              label: _savingBio ? 'Kaydediliyor…' : AppStrings.cvBioSaveCta,
+              label: _savingBio ? AppStrings.cvSavingLabel : AppStrings.cvBioSaveCta,
               icon: Icons.check_rounded,
               onPressed: _savingBio ? null : () => _saveBio(worker),
             ),
@@ -219,7 +217,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: const Text(AppStrings.cvAddRecordCta),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.softGold,
+                    foregroundColor: AppColors.brandInk,
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
@@ -233,9 +231,12 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                   child: CircularProgressIndicator(strokeWidth: 1.6),
                 ),
               ),
+              // Ham istisna metni gösterilmez — bağlama özel, sade mesaj.
               error: (e, _) => Text(
-                'Okunamadı: $e',
-                style: const TextStyle(color: AppColors.danger),
+                AppStrings.cvRecordsLoadError,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.danger,
+                ),
               ),
               data: (items) {
                 if (items.isEmpty) {
@@ -243,10 +244,7 @@ class _ProfessionalCvScreenState extends ConsumerState<ProfessionalCvScreen> {
                     padding: EdgeInsets.symmetric(vertical: AppSpacing.s),
                     child: Text(
                       AppStrings.cvEmptyRecords,
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 13,
-                      ),
+                      style: AppTypography.meta,
                     ),
                   );
                 }
@@ -297,11 +295,9 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        color: AppColors.softGold,
-        fontWeight: FontWeight.w800,
-        fontSize: 11.5,
-        letterSpacing: 1.2,
+      style: AppTypography.caption.copyWith(
+        color: AppColors.brandInk,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
@@ -319,7 +315,7 @@ class _CvRecordCard extends ConsumerWidget {
       if (record.endDate != null)
         df.format(record.endDate!)
       else if (record.startDate != null)
-        'devam',
+        AppStrings.cvRangeOngoing,
     ].join(' — ');
     final typeLabel =
         AppStrings.cvEntryTypeLabels[record.entryType] ?? record.entryType;
@@ -332,14 +328,7 @@ class _CvRecordCard extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  record.title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                  ),
-                ),
+                child: Text(record.title, style: AppTypography.cardTitle),
               ),
               // Görünürlük toggle
               IconButton(
@@ -362,18 +351,18 @@ class _CvRecordCard extends ConsumerWidget {
                       : Icons.visibility_off_outlined,
                   size: 18,
                   color: record.isPublic
-                      ? AppColors.softGold
+                      ? AppColors.brandInk
                       : AppColors.textMuted,
                 ),
               ),
               IconButton(
-                tooltip: 'Kaldır',
-                visualDensity: VisualDensity.compact,
+                tooltip: AppStrings.cvRecordRemoveTooltip,
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 onPressed: () => _confirmDelete(context, ref),
                 icon: const Icon(
-                  Icons.delete_outline,
+                  Icons.delete_outline_rounded,
                   color: AppColors.textMuted,
-                  size: 18,
+                  size: 20,
                 ),
               ),
             ],
@@ -381,11 +370,7 @@ class _CvRecordCard extends ConsumerWidget {
           if ((record.workplace ?? '').isNotEmpty)
             Text(
               record.workplace!,
-              style: const TextStyle(
-                color: AppColors.softGold,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
+              style: AppTypography.meta.copyWith(color: AppColors.brandInk),
             ),
           const SizedBox(height: 4),
           Wrap(
@@ -402,11 +387,7 @@ class _CvRecordCard extends ConsumerWidget {
                     if (range.isNotEmpty) range,
                     if (record.city != null) record.city!,
                   ].where((s) => s.isNotEmpty).join(' · '),
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
+                  style: AppTypography.caption,
                 ),
             ],
           ),
@@ -414,10 +395,8 @@ class _CvRecordCard extends ConsumerWidget {
             const SizedBox(height: AppSpacing.s),
             Text(
               record.description!,
-              style: const TextStyle(
+              style: AppTypography.meta.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 13,
-                height: 1.4,
               ),
             ),
           ],
@@ -429,9 +408,9 @@ class _CvRecordCard extends ConsumerWidget {
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final ok = await showAppConfirmDialog(
       context,
-      title: 'CV kaydını kaldır',
-      message: '"${record.title}" silinsin mi?',
-      confirmLabel: 'Sil',
+      title: AppStrings.cvRecordRemoveTitle,
+      message: AppStrings.cvRecordRemoveMessage(record.title),
+      confirmLabel: AppStrings.cvRecordRemoveConfirm,
       destructive: true,
       icon: Icons.delete_outline_rounded,
     );
@@ -462,10 +441,8 @@ class _Pill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: AppTypography.badge.copyWith(
           color: muted ? AppColors.textMuted : AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 11,
         ),
       ),
     );
@@ -512,7 +489,7 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
 
   Future<void> _save() async {
     if (_title.text.trim().isEmpty) {
-      AppFeedback.warning(context, 'Başlık / rol boş olamaz.');
+      AppFeedback.warning(context, AppStrings.cvTitleRequired);
       return;
     }
     if (!AuthRequiredGuard.canWriteWithRef(ref)) {
@@ -544,7 +521,7 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
       Navigator.of(context).pop();
     } catch (_) {
       if (!mounted) return;
-      AppFeedback.error(context, AppStrings.commonSaveError);
+      AppFeedback.error(context, AppStrings.cvRecordSaveError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -583,36 +560,28 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
               ),
               const Text(
                 AppStrings.cvAddRecordCta,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                ),
+                style: AppTypography.sectionTitle,
               ),
               const SizedBox(height: AppSpacing.m),
               TextField(
                 controller: _title,
                 decoration: const InputDecoration(
-                  labelText: 'Başlık / rol',
-                  hintText: 'Taş Fırın Ustası',
+                  labelText: AppStrings.cvTitleLabel,
+                  hintText: AppStrings.cvTitleHint,
                 ),
               ),
               const SizedBox(height: AppSpacing.s),
               TextField(
                 controller: _workplace,
                 decoration: const InputDecoration(
-                  labelText: 'Kurum / işletme (opsiyonel)',
-                  hintText: 'Konak Fırını',
+                  labelText: AppStrings.cvWorkplaceLabel,
+                  hintText: AppStrings.cvWorkplaceHint,
                 ),
               ),
               const SizedBox(height: AppSpacing.m),
               const Text(
                 AppStrings.cvEntryTypeLabel,
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
+                style: AppTypography.caption,
               ),
               const SizedBox(height: 6),
               Wrap(
@@ -624,31 +593,29 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                       label: Text(entry.value),
                       selected: _entryType == entry.key,
                       onSelected: (_) => setState(() => _entryType = entry.key),
-                      selectedColor: AppColors.copperMuted.withValues(
+                      selectedColor: AppColors.brandLemonSoft.withValues(
                         alpha: 0.28,
                       ),
                       backgroundColor: Colors.transparent,
                       side: BorderSide(
                         color: _entryType == entry.key
-                            ? AppColors.copperMuted
+                            ? AppColors.brandLemonSoft
                             : AppColors.surfaceVariant,
                         width: 1,
                       ),
-                      labelStyle: TextStyle(
+                      labelStyle: AppTypography.meta.copyWith(
                         color: _entryType == entry.key
-                            ? AppColors.softGold
+                            ? AppColors.brandInk
                             : AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
                       ),
                     ),
                 ],
               ),
               const SizedBox(height: AppSpacing.s),
               LocationPickerField(
-                label: 'Şehir',
+                label: AppStrings.cvCityLabel,
                 value: _province?.name,
-                hint: 'İl seç',
+                hint: AppStrings.cvCityHint,
                 enabled: !_saving,
                 onTap: () async {
                   final picked = await LocationPicker.showProvincePicker(
@@ -668,7 +635,7 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                     child: OutlinedButton(
                       onPressed: () => _pickDate(start: true),
                       child: Text(
-                        _start == null ? 'Başlangıç' : df.format(_start!),
+                        _start == null ? AppStrings.cvStartLabel : df.format(_start!),
                       ),
                     ),
                   ),
@@ -678,7 +645,7 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                       onPressed: () => _pickDate(start: false),
                       child: Text(
                         _end == null
-                            ? 'Bitiş (boşsa: devam)'
+                            ? AppStrings.cvEndLabel
                             : df.format(_end!),
                       ),
                     ),
@@ -690,7 +657,7 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                 controller: _description,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                  labelText: 'Açıklama (opsiyonel)',
+                  labelText: AppStrings.cvDescriptionLabel,
                 ),
               ),
               const SizedBox(height: AppSpacing.s),
@@ -703,16 +670,12 @@ class _AddCvRecordSheetState extends ConsumerState<_AddCvRecordSheet> {
                   _isPublic
                       ? AppStrings.cvVisibilityPublic
                       : AppStrings.cvVisibilityHidden,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
+                  style: AppTypography.bodyMedium,
                 ),
               ),
               const SizedBox(height: AppSpacing.m),
               AppPrimaryButton(
-                label: _saving ? 'Kaydediliyor…' : 'CV kaydını kaydet',
+                label: _saving ? AppStrings.cvSavingLabel : AppStrings.cvRecordSaveCta,
                 icon: Icons.check_rounded,
                 onPressed: _saving ? null : _save,
               ),

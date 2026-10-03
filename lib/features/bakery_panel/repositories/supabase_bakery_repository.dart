@@ -218,7 +218,7 @@ class SupabaseBakeryRepository implements BakeryRepository {
     // dealer_id ve dealer kaydı orada yönetilir. Bu çağrı yapılırsa kullanıcıyı
     // doğru ekrana yönlendir.
     throw StateError(
-      'Bu ekran artık kullanılmıyor. Bayi Yönetimi → bayi seç → "Ürün Ver" üzerinden teslimat ekleyin.',
+      'Bu ekran artık kullanılmıyor. Bayi Yönetimi → bayi seç → "Ürün Ver" üzerinden teslimat ekle.',
     );
   }
 

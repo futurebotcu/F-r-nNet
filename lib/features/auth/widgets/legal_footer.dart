@@ -57,7 +57,7 @@ class _LegalFooterState extends State<LegalFooter> {
             TextSpan(
               text: AppStrings.legalTermsTitle,
               style: const TextStyle(
-                color: AppColors.softGold,
+                color: AppColors.brandInk,
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
               ),
@@ -67,7 +67,7 @@ class _LegalFooterState extends State<LegalFooter> {
             TextSpan(
               text: AppStrings.legalPrivacyTitle,
               style: const TextStyle(
-                color: AppColors.softGold,
+                color: AppColors.brandInk,
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
               ),

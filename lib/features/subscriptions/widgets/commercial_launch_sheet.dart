@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/business_entitlements.dart';
@@ -45,10 +46,8 @@ Future<void> showCommercialLaunchSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
-    builder: (sheetContext) => CommercialLaunchSheetBody(
-      notice: notice,
-      entitlement: entitlement,
-    ),
+    builder: (sheetContext) =>
+        CommercialLaunchSheetBody(notice: notice, entitlement: entitlement),
   ).whenComplete(() {
     // Görüldü kaydı kapanış yolundan bağımsız düşer.
     final callback = onClosed;
@@ -76,10 +75,12 @@ class CommercialLaunchSheetBody extends StatelessWidget {
     final String headline;
     switch (notice) {
       case CommercialLaunchNotice.welcome:
-        headline = '${AppStrings.commercialWelcomePrefix}$endDay '
+        headline =
+            '${AppStrings.commercialWelcomePrefix}$endDay '
             '${AppStrings.commercialWelcomeSuffix}';
       case CommercialLaunchNotice.ending:
-        headline = '${AppStrings.commercialEndingPrefix}'
+        headline =
+            '${AppStrings.commercialEndingPrefix}'
             '${entitlement.freePeriodDaysLeft}'
             '${AppStrings.commercialEndingMid}$endDay '
             '${AppStrings.commercialWelcomeSuffix}';
@@ -125,10 +126,8 @@ class CommercialLaunchSheetBody extends StatelessWidget {
                     child: Text(
                       headline,
                       key: const ValueKey('commercial_launch_headline'),
-                      style: const TextStyle(
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 16.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
                         height: 1.3,
                       ),
                     ),
@@ -141,26 +140,16 @@ class CommercialLaunchSheetBody extends StatelessWidget {
               ended
                   ? AppStrings.commercialEndedKeepHeader
                   : AppStrings.commercialBasicsHeader,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                height: 1.4,
-              ),
+              style: _sheetSubhead,
             ),
             const SizedBox(height: AppSpacing.xs),
             for (final item in AppStrings.commercialBasicsList)
               _BulletRow(item, icon: Icons.check_circle_outline_rounded),
             if (ended) ...[
               const SizedBox(height: AppSpacing.m),
-              const Text(
+              Text(
                 AppStrings.commercialEndedLockedHeader,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  height: 1.4,
-                ),
+                style: _sheetSubhead,
               ),
               const SizedBox(height: AppSpacing.xs),
               for (final item in AppStrings.commercialPremiumLockedList)
@@ -183,7 +172,7 @@ class CommercialLaunchSheetBody extends StatelessWidget {
                   '${AppStrings.commercialPriceMid}'
                   '${PricingConfig.premiumMonthlyLabel.replaceAll(' / ay', '')}. '
                   '${AppStrings.commercialPriceAssurance}',
-                  style: const TextStyle(
+                  style: AppTypography.body.copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: AppColors.brandInk,
@@ -211,7 +200,7 @@ class CommercialLaunchSheetBody extends StatelessWidget {
                 ),
                 child: const Text(
                   AppStrings.commercialEndedContinuePremium,
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  style: AppTypography.buttonLabel,
                 ),
               ),
               const SizedBox(height: AppSpacing.s),
@@ -220,7 +209,7 @@ class CommercialLaunchSheetBody extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text(
                   AppStrings.commercialEndedStayFree,
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  style: AppTypography.buttonLabel,
                 ),
               ),
             ] else
@@ -238,7 +227,7 @@ class CommercialLaunchSheetBody extends StatelessWidget {
                 ),
                 child: const Text(
                   AppStrings.commercialWelcomeCta,
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  style: AppTypography.buttonLabel,
                 ),
               ),
           ],
@@ -269,12 +258,7 @@ class _BulletRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-                height: 1.35,
-              ),
+              style: AppTypography.body.copyWith(fontSize: 13, height: 1.35),
             ),
           ),
         ],
@@ -349,3 +333,9 @@ Future<void> maybeShowCommercialLaunchSheet(
     },
   );
 }
+
+/// Sheet içi alt başlık ("Temel özellikler" vb.).
+final TextStyle _sheetSubhead = AppTypography.bodyMedium.copyWith(
+  fontWeight: FontWeight.w700,
+  height: 1.4,
+);

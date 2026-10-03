@@ -9,6 +9,7 @@ import '../../../core/data/turkey_locations.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/location_picker.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../models/worker_profile.dart';
@@ -30,13 +31,12 @@ class WorkerExperiencesScreen extends ConsumerWidget {
         onPressed: () => _openAddSheet(context, ref),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Tecrübe ekle'),
-        backgroundColor: AppColors.copper,
+        backgroundColor: AppColors.brandLemon,
         foregroundColor: AppColors.brandInk,
       ),
       body: SafeArea(
         child: async.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(strokeWidth: 1.6)),
+          loading: () => const PremiumListSkeleton(),
           error: (e, _) => Padding(
             padding: const EdgeInsets.all(AppSpacing.l),
             child: Text(
@@ -114,7 +114,7 @@ class _ExperienceCard extends ConsumerWidget {
                 tooltip: 'Kaldır',
                 onPressed: () => _confirmDelete(context, ref),
                 icon: const Icon(
-                  Icons.delete_outline,
+                  Icons.delete_outline_rounded,
                   color: AppColors.textMuted,
                   size: 18,
                 ),
@@ -127,7 +127,7 @@ class _ExperienceCard extends ConsumerWidget {
               child: Text(
                 experience.workplace!,
                 style: const TextStyle(
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w700,
                   fontSize: 13.5,
                 ),
@@ -209,12 +209,12 @@ class _EmptyState extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.softGold.withValues(alpha: 0.12),
+                    color: AppColors.brandInk.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.s),
                   ),
                   child: const Icon(
                     Icons.history_edu_outlined,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     size: 22,
                   ),
                 ),

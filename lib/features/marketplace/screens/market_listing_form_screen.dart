@@ -568,14 +568,13 @@ class _MarketListingFormScreenState
                               AppStrings.marketListingFieldEquipmentCategory,
                         ),
                         items: [
-                          const DropdownMenuItem<String?>(
+                          DropdownMenuItem<String?>(
                             value: null,
                             // Boş seçim değer gibi kalın görünmesin.
                             child: Text(
                               AppStrings.listingsOptionNone,
-                              style: TextStyle(
+                              style: AppTypography.bodyMedium.copyWith(
                                 color: AppColors.textMuted,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -598,14 +597,13 @@ class _MarketListingFormScreenState
                           labelText: AppStrings.marketListingFieldCondition,
                         ),
                         items: [
-                          const DropdownMenuItem<String?>(
+                          DropdownMenuItem<String?>(
                             value: null,
                             // Boş seçim değer gibi kalın görünmesin.
                             child: Text(
                               AppStrings.listingsOptionNone,
-                              style: TextStyle(
+                              style: AppTypography.bodyMedium.copyWith(
                                 color: AppColors.textMuted,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -695,7 +693,7 @@ class _MarketListingFormScreenState
                       initialValue: _currency,
                       isExpanded: true,
                       decoration: const InputDecoration(
-                        labelText: 'Para birimi',
+                        labelText: AppStrings.marketAttrCurrency,
                       ),
                       items: MarketplaceTaxonomy.currencies.entries
                           .map(
@@ -889,7 +887,7 @@ class _MarketListingFormScreenState
                       initialValue: _contactPreference,
                       isExpanded: true,
                       decoration: const InputDecoration(
-                        labelText: 'Tercih edilen iletişim',
+                        labelText: AppStrings.finalFormContactPreference,
                       ),
                       items: MarketplaceTaxonomy.contactPreferences.entries
                           .map(
@@ -914,7 +912,7 @@ class _MarketListingFormScreenState
                           MarketplaceTaxonomy.contactPreferenceInApp,
                       decoration: const InputDecoration(
                         labelText: AppStrings.marketListingFieldContactPhone,
-                        hintText: '+90 …',
+                        hintText: AppStrings.listingContactPhoneHint,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.m),
@@ -927,7 +925,7 @@ class _MarketListingFormScreenState
                           MarketplaceTaxonomy.contactPreferenceInApp,
                       decoration: const InputDecoration(
                         labelText: AppStrings.marketListingFieldContactWhatsapp,
-                        hintText: '+90 …',
+                        hintText: AppStrings.listingContactPhoneHint,
                       ),
                     ),
 
@@ -939,19 +937,21 @@ class _MarketListingFormScreenState
                       DropdownButtonFormField<String>(
                         initialValue: _status,
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Durum'),
+                        decoration: const InputDecoration(
+                          labelText: AppStrings.finalFormStatusLabel,
+                        ),
                         items: const [
                           DropdownMenuItem(
                             value: 'active',
-                            child: Text('Aktif'),
+                            child: Text(AppStrings.listingsStatusActive),
                           ),
                           DropdownMenuItem(
                             value: 'paused',
-                            child: Text('Duraklatıldı'),
+                            child: Text(AppStrings.listingsStatusPaused),
                           ),
                           DropdownMenuItem(
                             value: 'sold',
-                            child: Text('Satıldı/Devredildi'),
+                            child: Text(AppStrings.finalFormStatusSold),
                           ),
                           DropdownMenuItem(
                             value: 'expired',

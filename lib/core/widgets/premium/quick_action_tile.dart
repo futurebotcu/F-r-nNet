@@ -13,7 +13,7 @@ class QuickActionTile extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.subtitle,
-    this.accent = AppColors.softGold,
+    this.accent = AppColors.brandInk,
     this.featured = false,
     this.badgeCount = 0,
     this.lockedTag,
@@ -210,7 +210,7 @@ class QuickActionMini extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
-    this.accent = AppColors.softGold,
+    this.accent = AppColors.brandInk,
   });
 
   final String label;
@@ -257,13 +257,7 @@ class QuickActionMini extends StatelessWidget {
                         color: accent.withValues(alpha: 0.16),
                         width: 0.6,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                      boxShadow: AppShadow.subtle,
                     ),
                     child: Icon(icon, color: accent, size: 17),
                   ),

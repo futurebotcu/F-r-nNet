@@ -77,7 +77,7 @@ class _Segment extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 9),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.copper : Colors.transparent,
+          color: selected ? AppColors.brandLemon : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           boxShadow: selected ? AppShadow.subtle : null,
         ),

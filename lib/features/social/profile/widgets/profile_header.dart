@@ -81,25 +81,25 @@ class ProfileHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (role != null && role.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         role,
+                        // Rol/meslek: meta rolü, bir ton koyu (şehirden önce).
                         style: AppTypography.meta.copyWith(
-                          color: AppColors.brandInk,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w700,
-                          fontSize: 13,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                     if (city != null && city.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.place_outlined,
+                            Icons.location_on_outlined,
                             size: 14,
                             color: AppColors.textMuted,
                           ),
@@ -127,10 +127,10 @@ class ProfileHeader extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.softGold.withValues(alpha: 0.14),
+                          color: AppColors.brandInk.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(AppRadius.pill),
                           border: Border.all(
-                            color: AppColors.softGold.withValues(alpha: 0.36),
+                            color: AppColors.brandInk.withValues(alpha: 0.36),
                             width: 0.6,
                           ),
                         ),

@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../auth/services/auth_required_guard.dart';
 import '../../jobs/models/job_offer_post.dart';
@@ -81,9 +83,7 @@ class _StartJobConversationSheetState
   Future<void> _onSendPressed() async {
     final body = _ctrl.text.trim();
     if (body.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.startConvoEmptyError)),
-      );
+      AppFeedback.warning(context, AppStrings.startConvoEmptyError);
       return;
     }
 
@@ -98,17 +98,13 @@ class _StartJobConversationSheetState
     final me = ref.read(currentAuthUserProvider)?.id;
 
     if (postId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.startConvoGenericError)),
-      );
+      AppFeedback.error(context, AppStrings.startConvoGenericError);
       return;
     }
     // Kendi ilanı / eksik sahip → mesaj başlatma (generic RPC de reddeder;
     // burada erken ve net feedback ver).
     if (ownerId == null || ownerId == me) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.startConvoOwnPostError)),
-      );
+      AppFeedback.warning(context, AppStrings.startConvoOwnPostError);
       return;
     }
 
@@ -127,9 +123,7 @@ class _StartJobConversationSheetState
       if (!mounted) return;
       Navigator.of(context).pop();
       context.push('/messages/$convId');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.startConvoOpenedSnack)),
-      );
+      AppFeedback.success(context, AppStrings.startConvoOpenedSnack);
     } on GuestActionRequiredException {
       if (mounted) {
         Navigator.of(context).pop();
@@ -139,17 +133,12 @@ class _StartJobConversationSheetState
       // UGC Safety V1.1 — çift yön engel: engellenenle DM açılamaz.
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(AppStrings.blockedMessageStartBanner)),
-        );
+        AppFeedback.warning(context, AppStrings.blockedMessageStartBanner);
       }
     } catch (_) {
       // Hata → sheet açık kalır, metin korunur, kullanıcı tekrar deneyebilir.
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.startConvoGenericError)),
-        );
+        AppFeedback.error(context, AppStrings.startConvoGenericError);
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -198,7 +187,7 @@ class _StartJobConversationSheetState
               Text(
                 _relatedTitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   fontWeight: FontWeight.w700,
                   fontSize: 13.5,
                 ),
@@ -273,15 +262,12 @@ class _StartJobConversationSheetState
                   onPressed: _sending ? null : _onSendPressed,
                   label: const Text(AppStrings.startConvoSendCta),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
+                    backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                    textStyle: AppTypography.buttonLabel,
                   ),
                 ),
               ),

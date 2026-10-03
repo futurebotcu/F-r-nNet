@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../../../core/widgets/premium/premium_card.dart';
@@ -172,21 +173,12 @@ class SupportScreen extends StatelessWidget {
                           children: const [
                             Text(
                               AppStrings.partnersApplyEntry,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                              ),
+                              style: AppTypography.cardTitle,
                             ),
                             SizedBox(height: 2),
                             Text(
                               AppStrings.partnersApplyEntrySub,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                height: 1.4,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: AppTypography.body,
                             ),
                           ],
                         ),
@@ -212,12 +204,7 @@ class SupportScreen extends StatelessWidget {
                   children: [
                     Text(
                       AppStrings.supportContactDesc,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        height: 1.55,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: AppTypography.body.copyWith(fontSize: 13.5, height: 1.55),
                     ),
                     const SizedBox(height: AppSpacing.s),
                     Row(
@@ -272,7 +259,7 @@ class _FaqItem extends StatelessWidget {
         AppSpacing.l,
         AppSpacing.m,
       ),
-      iconColor: AppColors.brandLemonPressed,
+      iconColor: AppColors.brandInk,
       collapsedIconColor: AppColors.textMuted,
       title: Text(
         faq.q,
@@ -288,12 +275,7 @@ class _FaqItem extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text(
             faq.a,
-            style: const TextStyle(
-              fontSize: 13.5,
-              height: 1.55,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTypography.body.copyWith(fontSize: 13.5, height: 1.55),
           ),
         ),
       ],

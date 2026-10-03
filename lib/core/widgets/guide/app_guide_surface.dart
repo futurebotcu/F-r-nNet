@@ -375,7 +375,7 @@ class _GuideStepRow extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: AppColors.brandLemonPale,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
             border: Border.all(
               color: AppColors.brandLemonPressed.withValues(alpha: 0.3),
               width: 0.7,

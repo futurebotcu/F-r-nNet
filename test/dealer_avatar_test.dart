@@ -55,7 +55,7 @@ void main() {
         ),
       ));
       final text = tester.widget<Text>(find.text('H'));
-      expect(text.style?.color, AppColors.softGold);
+      expect(text.style?.color, AppColors.brandInk);
     });
 
     testWidgets('autoActivity + pasif → textMuted tonu', (tester) async {

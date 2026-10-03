@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/subscription_providers.dart';
@@ -28,9 +29,8 @@ Future<void> showSupplierLaunchGiftSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
-    builder: (sheetContext) => SupplierLaunchGiftSheetBody(
-      freeUntil: freeUntil,
-    ),
+    builder: (sheetContext) =>
+        SupplierLaunchGiftSheetBody(freeUntil: freeUntil),
   ).whenComplete(() {
     // Görüldü kaydı kapanış yolundan bağımsız düşer (buton veya kaydırarak
     // kapatma) — pop-up kullanıcı/kampanya bazında yeniden açılmaz.
@@ -94,11 +94,7 @@ class SupplierLaunchGiftSheetBody extends StatelessWidget {
                     padding: EdgeInsets.only(top: 6),
                     child: Text(
                       AppStrings.supplierLaunchGiftTitle,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
+                      style: AppTypography.sectionTitle,
                     ),
                   ),
                 ),
@@ -129,12 +125,7 @@ class SupplierLaunchGiftSheetBody extends StatelessWidget {
                     child: Text(
                       '$dateLabel '
                       '${AppStrings.supplierLaunchGiftFreeSuffix}',
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.brandInk,
-                        height: 1.3,
-                      ),
+                      style: AppTypography.cardTitle,
                     ),
                   ),
                 ],
@@ -142,23 +133,13 @@ class SupplierLaunchGiftSheetBody extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.m),
             const Text(
-              AppStrings.supplierLaunchGiftBody,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                height: 1.45,
-              ),
+              AppStrings.finalSupplierGiftBody,
+              style: AppTypography.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.s),
             const Text(
-              AppStrings.supplierLaunchGiftContinueInfo,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-                height: 1.45,
-              ),
+              AppStrings.finalSupplierGiftContinueInfo,
+              style: AppTypography.body,
             ),
             const SizedBox(height: AppSpacing.m),
             Row(
@@ -175,13 +156,8 @@ class SupplierLaunchGiftSheetBody extends StatelessWidget {
                 const SizedBox(width: 6),
                 const Expanded(
                   child: Text(
-                    AppStrings.supplierLaunchGiftAssurance,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
-                      height: 1.4,
-                    ),
+                    AppStrings.finalSupplierGiftAssurance,
+                    style: AppTypography.meta,
                   ),
                 ),
               ],
@@ -201,7 +177,7 @@ class SupplierLaunchGiftSheetBody extends StatelessWidget {
               ),
               child: const Text(
                 AppStrings.supplierLaunchGiftCta,
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                style: AppTypography.buttonLabel,
               ),
             ),
           ],

@@ -51,8 +51,8 @@ class CalculatorMiniCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             customBorder: shape,
-            splashColor: AppColors.softGold.withValues(alpha: 0.06),
-            highlightColor: AppColors.softGold.withValues(alpha: 0.04),
+            splashColor: AppColors.brandInk.withValues(alpha: 0.06),
+            highlightColor: AppColors.brandInk.withValues(alpha: 0.04),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.m),
               child: Column(
@@ -112,7 +112,7 @@ class _TopRow extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             color: AppColors.brandLemonPale,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
             border: Border.all(
               color: AppColors.brandLemonPressed.withValues(alpha: 0.28),
               width: 0.7,

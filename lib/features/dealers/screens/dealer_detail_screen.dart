@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_products.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -26,7 +27,6 @@ import '../models/dealer_transaction.dart';
 import '../providers/dealer_providers.dart';
 import '../repositories/driver_permission.dart';
 import '../widgets/quick_payment_sheet.dart';
-import '../../../core/utils/tr_case.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_confirm_dialog.dart';
 
@@ -56,7 +56,7 @@ class DealerDetailScreen extends ConsumerWidget {
                 : IconButton(
                     tooltip: AppStrings.dealerDetailEditTooltip,
                     onPressed: () => context.push(AppRoutes.dealerEdit(d.id)),
-                    icon: const Icon(Icons.edit_rounded),
+                    icon: const Icon(Icons.edit_outlined),
                   ),
             orElse: () => const SizedBox.shrink(),
           ),
@@ -88,7 +88,7 @@ class DealerDetailScreen extends ConsumerWidget {
             tooltip: AppStrings.dealerDetailShareTooltip,
             onPressed: () =>
                 context.push('${AppRoutes.dealers}/$dealerId/share'),
-            icon: const Icon(Icons.ios_share_rounded),
+            icon: const Icon(Icons.share_outlined),
           ),
         ],
       ),
@@ -357,7 +357,7 @@ class _BalanceHero extends StatelessWidget {
         ? AppColors.warningInk
         : balance < 0
         ? AppColors.success
-        : AppColors.softGold;
+        : AppColors.brandInk;
     final tag = balance > 0
         ? AppStrings.dealerDetailHeroDebt
         : balance < 0
@@ -379,7 +379,7 @@ class _BalanceHero extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.18),
+          color: AppColors.brandLemon.withValues(alpha: 0.18),
           width: 0.8,
         ),
         boxShadow: AppShadow.heroGlow,
@@ -414,12 +414,7 @@ class _BalanceHero extends StatelessWidget {
                 ),
                 child: Text(
                   tag,
-                  style: TextStyle(
-                    color: balanceColor,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 10.5,
-                    letterSpacing: 1.2,
-                  ),
+                  style: AppTypography.badge.copyWith(color: balanceColor),
                 ),
               ),
             ],
@@ -457,7 +452,7 @@ class _BalanceHero extends StatelessWidget {
                 child: _MiniMetric(
                   label: AppStrings.dealerDetailMetricDelivery,
                   value: NumberFormatter.currency(summary.totalDelivery),
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                 ),
               ),
               Expanded(
@@ -520,27 +515,14 @@ class _MiniMetric extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.trUpper,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w700,
-            fontSize: 10,
-            letterSpacing: 1.0,
-          ),
-        ),
+        Text(label, style: AppTypography.caption),
         const SizedBox(height: 2),
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Text(
             value,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 14.5,
-              letterSpacing: -0.2,
-            ),
+            style: AppTypography.price.copyWith(color: color, fontSize: 14.5),
           ),
         ),
       ],
@@ -560,7 +542,7 @@ class _ChipMini extends StatelessWidget {
         color: AppColors.overlay.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: AppColors.softGold.withValues(alpha: 0.18),
+          color: AppColors.brandInk.withValues(alpha: 0.18),
           width: 0.6,
         ),
       ),
@@ -569,19 +551,17 @@ class _ChipMini extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: AppTypography.caption.copyWith(
               color: AppColors.textSecondary,
-              fontSize: 11.5,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(width: 5),
           Text(
             value,
-            style: const TextStyle(
+            style: AppTypography.caption.copyWith(
               color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -601,7 +581,36 @@ class _HeroLoading extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(color: AppColors.borderHairline, width: 0.6),
       ),
-      child: const Center(child: CircularProgressIndicator()),
+      padding: const EdgeInsets.all(AppSpacing.l),
+      // Klasik büyük spinner yerine sakin, statik yer tutucu (skeleton).
+      child: const Column(
+        key: ValueKey('dealer_hero_skeleton'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SkeletonBar(width: 120, height: 14),
+          SizedBox(height: AppSpacing.l),
+          _SkeletonBar(width: 180, height: 32),
+          SizedBox(height: AppSpacing.m),
+          _SkeletonBar(width: 140, height: 12),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonBar extends StatelessWidget {
+  const _SkeletonBar({required this.width, required this.height});
+  final double width;
+  final double height;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F2F4),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
     );
   }
 }
@@ -696,13 +705,13 @@ class _SectionHeaderWithCta extends StatelessWidget {
                   const Icon(
                     Icons.add_rounded,
                     size: 16,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                   ),
                   const SizedBox(width: 2),
                   Text(
                     ctaLabel,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w700,
                       fontSize: 12.5,
                     ),
@@ -789,7 +798,7 @@ class _ActionsRow extends ConsumerWidget {
           onTap: () => context.push(AppRoutes.dealerReport(dealerId)),
         ),
         _ActionChip(
-          icon: Icons.ios_share_rounded,
+          icon: Icons.share_outlined,
           label: AppStrings.dealerActionShare,
           accent: AppColors.warningInk,
           onTap: () => context.push('${AppRoutes.dealers}/$dealerId/share'),
@@ -804,7 +813,7 @@ class _ActionChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.accent = AppColors.softGold,
+    this.accent = AppColors.brandInk,
   });
   final IconData icon;
   final String label;
@@ -894,12 +903,12 @@ class _PricesCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppColors.softGold.withValues(alpha: 0.12),
+                  color: AppColors.brandInk.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
                 child: const Icon(
                   Icons.local_offer_rounded,
-                  color: AppColors.softGold,
+                  color: AppColors.brandInk,
                   size: 16,
                 ),
               ),
@@ -925,7 +934,7 @@ class _PricesCard extends StatelessWidget {
                   Text(
                     NumberFormatter.currency(prices[i].unitPrice),
                     style: const TextStyle(
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                       fontWeight: FontWeight.w800,
                       fontSize: 14.5,
                     ),
@@ -1434,7 +1443,7 @@ class _TxRow extends StatelessWidget {
       case DealerTransactionType.delivery:
         return (
           Icons.bakery_dining_rounded,
-          AppColors.softGold,
+          AppColors.brandInk,
           '${t.productName ?? "Ürün"} x${t.quantity ?? 0}',
         );
       case DealerTransactionType.returned:
@@ -1548,7 +1557,7 @@ class _NotesCardState extends ConsumerState<NotesCard> {
                         const Icon(
                           Icons.sticky_note_2_outlined,
                           size: 16,
-                          color: AppColors.softGold,
+                          color: AppColors.brandInk,
                         ),
                         const SizedBox(width: AppSpacing.s),
                         Expanded(
@@ -1610,7 +1619,7 @@ class _NotesCardState extends ConsumerState<NotesCard> {
               child: FilledButton(
                 onPressed: _saving ? null : _add,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.copper,
+                  backgroundColor: AppColors.brandLemon,
                   // P0 hijyen — copper zemin üstünde beyaz ikon (standart);
                   // koyu textPrimary kontrastı düşüktü.
                   foregroundColor: Colors.white,

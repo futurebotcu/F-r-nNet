@@ -57,7 +57,7 @@ class ListingFee {
     final free =
         amountCents(kind: kind, account: account, entitlements: entitlements) ==
         0;
-    if (free) return AppStrings.listingFeeFreePlan;
+    if (free) return AppStrings.finalListingFeeFreePlan;
     switch (account) {
       case AccountType.wholesaler:
         return AppStrings.listingFeeSupplierBody;

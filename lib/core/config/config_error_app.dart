@@ -31,7 +31,7 @@ class ConfigErrorApp extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Bu sürüm hatalı derlenmiş ($reason). Lütfen uygulamayı '
-                    'mağazadan güncelleyin.',
+                    'mağazadan güncelle.',
                     textAlign: TextAlign.center,
                   ),
                 ],

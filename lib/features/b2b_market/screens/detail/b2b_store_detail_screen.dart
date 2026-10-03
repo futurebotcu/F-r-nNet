@@ -71,7 +71,7 @@ class B2bStoreDetailScreen extends ConsumerWidget {
                       for (final c in store.categories)
                         B2bMetaPill(icon: Icons.category_outlined, label: c),
                       for (final r in store.serviceRegions)
-                        B2bMetaPill(icon: Icons.place_outlined, label: r),
+                        B2bMetaPill(icon: Icons.location_on_outlined, label: r),
                     ],
                   ),
                 if (store.description.isNotEmpty) ...[

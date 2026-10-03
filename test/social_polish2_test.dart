@@ -330,7 +330,8 @@ void main() {
         ),
       );
       expect(caption.maxLines, isNull);
-      expect(caption.style, SocialPostCaption.textStyle);
+      // Final sosyal: detay aynı aile, daha ferah (detailTextStyle).
+      expect(caption.style, SocialPostCaption.detailTextStyle);
     });
   });
 

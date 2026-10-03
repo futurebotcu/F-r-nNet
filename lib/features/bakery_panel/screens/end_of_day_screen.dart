@@ -8,6 +8,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/error_retry_state.dart';
 import '../../../core/widgets/premium/premium_card.dart';
+import '../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../core/widgets/premium/stat_card.dart';
 import '../providers/bakery_providers.dart';
@@ -33,7 +34,7 @@ class EndOfDayScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text(AppStrings.ledgerEodTitle)),
       body: SafeArea(
         child: summary.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const PremiumListSkeleton(itemCount: 4),
           error: (e, _) => ErrorRetryState(
             onRetry: () => ref.invalidate(todaySummaryProvider),
           ),
@@ -101,7 +102,7 @@ class EndOfDayScreen extends ConsumerWidget {
                       ? '₺ —'
                       : NumberFormatter.currency(book!.revenueAmount!),
                   helper: AppStrings.ledgerRevenueHint,
-                  accent: AppColors.softGold,
+                  accent: AppColors.brandInk,
                 ),
                 const SizedBox(height: AppSpacing.m),
                 Row(

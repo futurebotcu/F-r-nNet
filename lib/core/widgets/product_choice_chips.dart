@@ -110,7 +110,7 @@ class _ProductChoiceChipsState extends State<ProductChoiceChips> {
                   label: Text(p),
                   selected: !_otherMode && p == widget.selected,
                   onSelected: (_) => _onPredefined(p),
-                  selectedColor: AppColors.copper,
+                  selectedColor: AppColors.brandLemon,
                   backgroundColor: AppColors.surfaceVariant,
                   side: BorderSide.none,
                   shape: RoundedRectangleBorder(
@@ -124,7 +124,7 @@ class _ProductChoiceChipsState extends State<ProductChoiceChips> {
                 label: Text(widget.otherChipLabel),
                 selected: _otherMode,
                 onSelected: (_) => _onOtherChip(),
-                selectedColor: AppColors.copper,
+                selectedColor: AppColors.brandLemon,
                 backgroundColor: AppColors.surfaceVariant,
                 side: BorderSide.none,
                 shape: RoundedRectangleBorder(

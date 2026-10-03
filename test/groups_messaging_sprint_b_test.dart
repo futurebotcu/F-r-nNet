@@ -133,7 +133,9 @@ void main() {
 
     test('textMessageBuilder default SimpleTextMessage\'ı korur', () {
       expect(src.contains('textMessageBuilder: _buildTextMessage'), isTrue);
-      expect(src.contains('fcu.SimpleTextMessage(message: message'), isTrue);
+      // Final sosyal: bubble stil parametreleri eklendi (çok satır).
+      expect(src.contains('fcu.SimpleTextMessage('), isTrue);
+      expect(src.contains('message: message,'), isTrue);
     });
 
     test('Error bubble inline "Tekrar dene" + resend', () {

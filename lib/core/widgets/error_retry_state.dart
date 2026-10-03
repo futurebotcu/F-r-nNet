@@ -87,7 +87,7 @@ class ErrorRetryState extends StatelessWidget {
               icon: const Icon(Icons.refresh_rounded, size: 16),
               label: Text(retryLabel),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
+                backgroundColor: AppColors.brandLemon,
                 foregroundColor: AppColors.brandInk,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.l,

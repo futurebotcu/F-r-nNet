@@ -2,7 +2,7 @@
 //
 // Ortak "Ara" CTA widget'ı. Telefon numarası varsa görünür; tıklanınca
 // url_launcher ile `tel:<phone>` URI'sini açar. Hata olursa Türkçe
-// snackbar gösterir.
+// AppFeedback gösterir.
 //
 // Doğrulama yok. Sahibinin rızasıyla ilana eklenmiş public telefon
 // numarasıdır. Guest kullanıcı da arayabilir.
@@ -55,8 +55,12 @@ class ListingPhoneCta extends StatelessWidget {
       child: OutlinedButton.icon(
         key: const ValueKey('listing_phone_cta'),
         onPressed: () => _onTap(context),
-        icon: const Icon(Icons.phone_rounded, size: 16),
-        label: const Text(AppStrings.listingContactCallCta),
+        icon: const Icon(Icons.call_outlined, size: 16),
+        label: const Text(
+          AppStrings.listingContactCallCta,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.brandInk,
           textStyle: AppTypography.buttonLabel,

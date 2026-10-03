@@ -103,7 +103,7 @@ class _DealerShareScreenState extends ConsumerState<DealerShareScreen> {
                       SizedBox(
                         height: 54,
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.share_rounded),
+                          icon: const Icon(Icons.share_outlined),
                           label: const Text(AppStrings.dealerShareWhatsapp),
                           onPressed: () {
                             Share.share(
@@ -225,7 +225,7 @@ class _Header extends StatelessWidget {
         ? AppColors.warningInk
         : balance < 0
         ? AppColors.success
-        : AppColors.softGold;
+        : AppColors.brandInk;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.l),
@@ -237,7 +237,7 @@ class _Header extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(AppRadius.l),
         border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.18),
+          color: AppColors.brandLemon.withValues(alpha: 0.18),
           width: 0.8,
         ),
         boxShadow: AppShadow.heroGlow,
@@ -248,12 +248,12 @@ class _Header extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.copper.withValues(alpha: 0.18),
+              color: AppColors.brandLemon.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(AppRadius.s),
             ),
             child: const Icon(
               Icons.storefront_rounded,
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               size: 22,
             ),
           ),

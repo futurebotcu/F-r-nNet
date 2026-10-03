@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -173,7 +174,7 @@ class _DealerListScreenState extends ConsumerState<DealerListScreen> {
                           : AppStrings.dealerSearchHint,
                       prefixIcon: const Icon(
                         Icons.search_rounded,
-                        color: AppColors.softGold,
+                        color: AppColors.brandInk,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.l,
@@ -370,12 +371,7 @@ class _DealerCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             dealer.name,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                              letterSpacing: -0.2,
-                            ),
+                            style: AppTypography.cardTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -393,9 +389,8 @@ class _DealerCard extends StatelessWidget {
                         if (dealer.area.isNotEmpty) dealer.area,
                         dealer.workingType.label,
                       ].join(' · '),
-                      style: const TextStyle(
+                      style: AppTypography.meta.copyWith(
                         color: AppColors.textSecondary,
-                        fontSize: 12.5,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -448,53 +443,51 @@ class _BalanceFooter extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                label.trUpper,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10.5,
-                  letterSpacing: 1.2,
-                ),
-              ),
+              Text(label, style: AppTypography.caption),
               const SizedBox(height: 2),
-              Text(
-                NumberFormatter.currency(balance.abs()),
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
-                  letterSpacing: -0.4,
+              // Büyük tutar / büyük yazıda taşmak yerine tek satırda küçülür.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  NumberFormatter.currency(balance.abs()),
+                  maxLines: 1,
+                  style: AppTypography.priceLarge.copyWith(
+                    color: color,
+                    fontSize: 20,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        if (lastTx != null)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                AppStrings.dealerCardLastTxLabel.trUpper,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
-                  letterSpacing: 1.0,
+        if (lastTx != null) ...[
+          const SizedBox(width: AppSpacing.s),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  AppStrings.dealerCardLastTxLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption,
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _shortLabel(lastTx!),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
+                const SizedBox(height: 2),
+                Text(
+                  _shortLabel(lastTx!),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: AppTypography.meta.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+        ],
       ],
     );
   }
@@ -532,12 +525,7 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         label.trUpper,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w800,
-          fontSize: 10,
-          letterSpacing: 1.0,
-        ),
+        style: AppTypography.badge.copyWith(color: color, fontSize: 10),
       ),
     );
   }

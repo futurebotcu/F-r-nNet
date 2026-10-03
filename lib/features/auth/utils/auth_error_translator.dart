@@ -3,7 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_strings.dart';
 
 /// Supabase Auth + ağ hatalarını Türkçe, kullanıcıya gösterilebilir
-/// mesajlara çevirir. Bilinmeyen hata için makul bir geri dönüş döndürür.
+/// mesajlara çevirir. Bilinmeyen hata için bağlama uygun kısa metin döner;
+/// ham backend mesajı kullanıcıya ASLA gösterilmez.
 ///
 /// UI katmanı SnackBar/dialog'ta doğrudan bu string'i gösterir; ek
 /// işleme gerek yok.
@@ -51,7 +52,7 @@ String translateAuthError(Object error) {
     if (msg.contains('rate limit') || code == 'over_request_rate_limit') {
       return 'Çok fazla deneme. Birkaç dakika sonra tekrar dene.';
     }
-    return 'Sunucu hatası: ${error.message}';
+    return AppStrings.finalAuthErrorGeneric;
   }
   // 5xx veya geçici fetch hatası: gotrue retryable olarak işaretler.
   if (error is AuthRetryableFetchException) {
@@ -63,11 +64,11 @@ String translateAuthError(Object error) {
     return 'Sunucu bağlantısı yapılandırılamadı. Lütfen daha sonra tekrar dene.';
   }
   if (error is AuthException) {
-    return error.message.isEmpty ? 'Kimlik doğrulama hatası.' : error.message;
+    return AppStrings.finalAuthErrorGeneric;
   }
   final s = error.toString();
   if (s.contains('SocketException') || s.contains('Failed host lookup')) {
     return 'İnternet bağlantısı yok. Bağlantını kontrol et.';
   }
-  return 'Beklenmeyen bir hata oluştu. Tekrar dene.';
+  return AppStrings.finalAuthErrorGeneric;
 }

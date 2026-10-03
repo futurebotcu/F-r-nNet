@@ -398,7 +398,7 @@ class _Hint extends StatelessWidget {
         children: [
           const Icon(
             Icons.lightbulb_outline_rounded,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
             size: 18,
           ),
           const SizedBox(width: AppSpacing.s),
@@ -428,7 +428,7 @@ class _Section extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-          color: AppColors.softGold,
+          color: AppColors.brandInk,
           fontWeight: FontWeight.w800,
           fontSize: 11.5,
           letterSpacing: 1.4,
@@ -461,11 +461,11 @@ class _ChipPicker extends StatelessWidget {
             label: Text(labelOf(o)),
             selected: selected == o,
             onSelected: (v) => onChanged(v ? o : null),
-            selectedColor: AppColors.copperMuted.withValues(alpha: 0.28),
+            selectedColor: AppColors.brandLemonSoft.withValues(alpha: 0.28),
             backgroundColor: Colors.transparent,
             labelStyle: TextStyle(
               color: selected == o
-                  ? AppColors.softGold
+                  ? AppColors.brandInk
                   : AppColors.textSecondary,
               fontWeight: FontWeight.w700,
               fontSize: 13,
@@ -474,7 +474,7 @@ class _ChipPicker extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.pill),
               side: BorderSide(
                 color: selected == o
-                    ? AppColors.copperMuted
+                    ? AppColors.brandLemonSoft
                     : AppColors.surfaceVariant,
                 width: 1,
               ),
@@ -508,9 +508,9 @@ class _CitiesPicker extends StatelessWidget {
         for (final p in selected)
           InputChip(
             label: Text(p.name),
-            backgroundColor: AppColors.copperMuted.withValues(alpha: 0.22),
+            backgroundColor: AppColors.brandLemonSoft.withValues(alpha: 0.22),
             labelStyle: const TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
             ),
@@ -522,19 +522,19 @@ class _CitiesPicker extends StatelessWidget {
             onDeleted: onRemove == null ? null : () => onRemove!(p),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              side: BorderSide(color: AppColors.copperMuted, width: 1),
+              side: BorderSide(color: AppColors.brandLemonSoft, width: 1),
             ),
           ),
         ActionChip(
           avatar: const Icon(
             Icons.add_rounded,
             size: 16,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
           ),
           label: const Text(
             'İl ekle',
             style: TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
             ),
@@ -574,9 +574,9 @@ class _SkillsPicker extends StatelessWidget {
         for (final code in selectedCodes)
           InputChip(
             label: Text(FirinnetTaxonomy.workerSkillLabel(code) ?? code),
-            backgroundColor: AppColors.copperMuted.withValues(alpha: 0.22),
+            backgroundColor: AppColors.brandLemonSoft.withValues(alpha: 0.22),
             labelStyle: const TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
             ),
@@ -588,19 +588,19 @@ class _SkillsPicker extends StatelessWidget {
             onDeleted: onRemove == null ? null : () => onRemove!(code),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              side: BorderSide(color: AppColors.copperMuted, width: 1),
+              side: BorderSide(color: AppColors.brandLemonSoft, width: 1),
             ),
           ),
         ActionChip(
           avatar: const Icon(
             Icons.add_rounded,
             size: 16,
-            color: AppColors.softGold,
+            color: AppColors.brandInk,
           ),
           label: Text(
             selectedCodes.isEmpty ? 'Beceri ekle' : 'Beceri değiştir',
             style: const TextStyle(
-              color: AppColors.softGold,
+              color: AppColors.brandInk,
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
             ),
@@ -713,13 +713,13 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                       label: Text(e.value),
                       selected: _selected.contains(e.key),
                       onSelected: (_) => _toggle(e.key),
-                      selectedColor: AppColors.copperMuted.withValues(
+                      selectedColor: AppColors.brandLemonSoft.withValues(
                         alpha: 0.28,
                       ),
                       backgroundColor: Colors.transparent,
                       labelStyle: TextStyle(
                         color: _selected.contains(e.key)
-                            ? AppColors.softGold
+                            ? AppColors.brandInk
                             : AppColors.textSecondary,
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
@@ -728,7 +728,7 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                         borderRadius: BorderRadius.circular(AppRadius.pill),
                         side: BorderSide(
                           color: _selected.contains(e.key)
-                              ? AppColors.copperMuted
+                              ? AppColors.brandLemonSoft
                               : AppColors.surfaceVariant,
                           width: 1,
                         ),
@@ -749,7 +749,7 @@ class _SkillPickerSheetState extends State<_SkillPickerSheet> {
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
+                    backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),

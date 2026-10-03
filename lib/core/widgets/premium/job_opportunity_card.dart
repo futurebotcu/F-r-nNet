@@ -128,7 +128,7 @@ class JobOpportunityCard extends StatelessWidget {
           ),
           if (hasLocation) ...[
             const SizedBox(height: 6),
-            _MetaRow(icon: Icons.place_outlined, text: location!.trim()),
+            _MetaRow(icon: Icons.location_on_outlined, text: location!.trim()),
           ],
           if (ownerText.isNotEmpty || time.isNotEmpty) ...[
             const SizedBox(height: 4),

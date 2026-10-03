@@ -213,7 +213,7 @@ class _AuthRequiredSheet extends StatelessWidget {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppColors.copper, AppColors.copperMuted],
+                      colors: [AppColors.brandLemon, AppColors.brandLemonSoft],
                     ),
                     borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
@@ -257,7 +257,7 @@ class _AuthRequiredSheet extends StatelessWidget {
                 icon: const Icon(Icons.account_circle_rounded),
                 label: const Text(AppStrings.authContinueWithGoogle),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.copper,
+                  backgroundColor: AppColors.brandLemon,
                   foregroundColor: AppColors.brandInk,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.m),

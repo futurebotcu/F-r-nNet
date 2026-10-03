@@ -81,6 +81,7 @@ class GroupDetailScreen extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.l),
             child: ErrorRetryState(
+              title: AppStrings.groupDetailLoadErrorTitle,
               subtitle: AppStrings.groupDetailErrorGeneric,
               onRetry: () => ref.invalidate(groupByIdProvider(groupId)),
             ),
@@ -128,13 +129,7 @@ class _AppBarTitle extends ConsumerWidget {
           g.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-            letterSpacing: -0.2,
-            color: AppColors.textPrimary,
-            height: 1.15,
-          ),
+          style: AppTypography.sectionTitle,
         ),
         const SizedBox(height: 1),
         Text(
@@ -211,14 +206,13 @@ class _GroupBody extends ConsumerWidget {
               // pürüzsüz güncellenir.
               skipLoadingOnReload: true,
               loading: () => const _MiniLoading(),
-              error: (_, __) => const Padding(
+              error: (_, __) => Padding(
                 padding: EdgeInsets.all(AppSpacing.l),
                 child: Center(
                   child: Text(
                     AppStrings.groupMessagesErrorGeneric,
-                    style: TextStyle(
+                    style: AppTypography.meta.copyWith(
                       color: AppColors.textSecondary,
-                      fontSize: 13,
                     ),
                   ),
                 ),
@@ -280,10 +274,8 @@ class _GroupCommunityHeader extends ConsumerWidget {
               desc,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: AppTypography.meta.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 13,
-                height: 1.35,
               ),
             ),
           if (members.isNotEmpty) ...[
@@ -432,14 +424,7 @@ class _MenuRow extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: color),
         const SizedBox(width: AppSpacing.s),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
+        Text(label, style: AppTypography.bodyMedium.copyWith(color: color)),
       ],
     );
   }
@@ -476,10 +461,10 @@ class _OwnerPendingAlert extends ConsumerWidget {
               vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: AppColors.copper.withValues(alpha: 0.12),
+              color: AppColors.brandLemon.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                color: AppColors.copper.withValues(alpha: 0.32),
+                color: AppColors.brandLemon.withValues(alpha: 0.32),
                 width: 0.6,
               ),
             ),
@@ -494,10 +479,9 @@ class _OwnerPendingAlert extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     AppStrings.groupJoinRequestsCompact(count),
-                    style: const TextStyle(
+                    style: AppTypography.meta.copyWith(
                       color: AppColors.brandInk,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -540,21 +524,15 @@ class _ChatMessageList extends StatelessWidget {
               const SizedBox(height: AppSpacing.s),
               Text(
                 AppStrings.groupFirstMessage,
-                style: const TextStyle(
+                style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
               const Text(
                 AppStrings.groupDetailMessagesEmpty,
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12.5,
-                  height: 1.4,
-                ),
+                style: AppTypography.meta,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -623,9 +601,11 @@ class _ChatBubble extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.block_rounded, color: AppColors.danger),
-              title: const Text(
+              title: Text(
                 AppStrings.safetyActionBlock,
-                style: TextStyle(color: AppColors.danger),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.danger,
+                ),
               ),
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -672,20 +652,15 @@ class _ChatBubble extends ConsumerWidget {
                           message.authorName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: AppTypography.meta.copyWith(
                             color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12.5,
                           ),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         dt.format(message.createdAt),
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 11,
-                        ),
+                        style: AppTypography.caption,
                       ),
                       if (message.isPinned) ...[
                         const SizedBox(width: 6),
@@ -745,11 +720,7 @@ class _ChatBubble extends ConsumerWidget {
                       ),
                       child: Text(
                         message.text,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 13.5,
-                          height: 1.4,
-                        ),
+                        style: AppTypography.bodyMedium,
                       ),
                     ),
                 ],
@@ -782,18 +753,13 @@ class _BlockedMessagePlaceholder extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
         child: Row(
-          children: const [
+          children: [
             Icon(Icons.block_rounded, size: 16, color: AppColors.textMuted),
             SizedBox(width: AppSpacing.s),
             Expanded(
               child: Text(
                 AppStrings.blockedContentPlaceholder,
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12.5,
-                  fontStyle: FontStyle.italic,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTypography.meta.copyWith(fontStyle: FontStyle.italic),
               ),
             ),
           ],
@@ -891,14 +857,7 @@ class _GroupImageBubble extends StatelessWidget {
         ),
         if (caption != null && caption!.trim().isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text(
-            caption!,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 13.5,
-              height: 1.4,
-            ),
-          ),
+          Text(caption!, style: AppTypography.bodyMedium),
         ],
       ],
     );
@@ -924,7 +883,7 @@ class _GroupMediaUnavailable extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           Icon(
             Icons.image_not_supported_outlined,
             color: AppColors.textMuted,
@@ -933,11 +892,7 @@ class _GroupMediaUnavailable extends StatelessWidget {
           SizedBox(width: AppSpacing.s),
           Text(
             AppStrings.chatMediaUnavailable,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTypography.meta.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -992,7 +947,7 @@ class _GroupVideoBubble extends StatelessWidget {
                     bottom: 8,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Icon(
                           Icons.videocam_rounded,
                           color: AppColors.surface,
@@ -1001,10 +956,8 @@ class _GroupVideoBubble extends StatelessWidget {
                         SizedBox(width: 4),
                         Text(
                           AppStrings.chatMediaVideoLabel,
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             color: AppColors.surface,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -1017,14 +970,7 @@ class _GroupVideoBubble extends StatelessWidget {
         ),
         if (caption != null && caption!.trim().isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text(
-            caption!,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 13.5,
-              height: 1.4,
-            ),
-          ),
+          Text(caption!, style: AppTypography.bodyMedium),
         ],
       ],
     );
@@ -1038,21 +984,16 @@ class _PinnedBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.16),
+        color: AppColors.brandLemon.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.32),
+          color: AppColors.brandLemon.withValues(alpha: 0.32),
           width: 0.6,
         ),
       ),
-      child: const Text(
+      child: Text(
         AppStrings.groupDetailPinnedBadge,
-        style: TextStyle(
-          color: AppColors.softGold,
-          fontWeight: FontWeight.w800,
-          fontSize: 11,
-          letterSpacing: 0.4,
-        ),
+        style: AppTypography.badge.copyWith(color: AppColors.brandInk),
       ),
     );
   }
@@ -1146,18 +1087,14 @@ class _JoinFooterCta extends ConsumerWidget {
               : AppStrings.groupJoinNowCta,
         ),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.copper,
+          backgroundColor: AppColors.brandLemon,
           foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surfaceLine,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 14,
-            letterSpacing: 1.2,
-          ),
+          textStyle: AppTypography.buttonLabel,
         ),
       ),
     );
@@ -1225,7 +1162,7 @@ class PrimaryActionButton extends ConsumerWidget {
     } else {
       label = AppStrings.groupActionJoin;
       icon = Icons.add_rounded;
-      color = AppColors.copper;
+      color = AppColors.brandLemon;
       enabled = true;
     }
 
@@ -1276,11 +1213,7 @@ class PrimaryActionButton extends ConsumerWidget {
                 ? const BorderSide(color: AppColors.borderHairline, width: 0.6)
                 : BorderSide.none,
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 14.5,
-            letterSpacing: 1.2,
-          ),
+          textStyle: AppTypography.buttonLabel,
         ),
       ),
     );
@@ -1300,10 +1233,10 @@ class _OwnerStatusCard extends StatelessWidget {
         vertical: AppSpacing.m,
       ),
       decoration: BoxDecoration(
-        color: AppColors.copper.withValues(alpha: 0.12),
+        color: AppColors.brandLemon.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.m),
         border: Border.all(
-          color: AppColors.copper.withValues(alpha: 0.32),
+          color: AppColors.brandLemon.withValues(alpha: 0.32),
           width: 0.6,
         ),
       ),
@@ -1315,27 +1248,20 @@ class _OwnerStatusCard extends StatelessWidget {
             size: 20,
           ),
           const SizedBox(width: AppSpacing.s),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   AppStrings.groupOwnerStatusTitle,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14.5,
-                    letterSpacing: -0.1,
-                  ),
+                  style: AppTypography.cardTitle,
                 ),
                 SizedBox(height: 2),
                 Text(
                   AppStrings.groupOwnerStatusSubtitle,
-                  style: TextStyle(
+                  style: AppTypography.meta.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: 12.5,
-                    height: 1.35,
                   ),
                 ),
               ],
@@ -1417,18 +1343,14 @@ class _RequestButton extends ConsumerWidget {
         icon: Icon(icon, size: 18),
         label: Text(label),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.copper,
+          backgroundColor: AppColors.brandLemon,
           foregroundColor: AppColors.brandInk,
           disabledBackgroundColor: AppColors.surface,
           disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 14.5,
-            letterSpacing: 1.2,
-          ),
+          textStyle: AppTypography.buttonLabel,
         ),
       ),
     );
@@ -1454,20 +1376,18 @@ class _PrivateGated extends StatelessWidget {
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Icon(
                 Icons.lock_outline_rounded,
-                color: AppColors.softGold,
+                color: AppColors.brandInk,
                 size: 20,
               ),
               SizedBox(width: AppSpacing.m),
               Expanded(
                 child: Text(
                   AppStrings.groupPrivateInfo,
-                  style: TextStyle(
+                  style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: 13.5,
-                    height: 1.45,
                   ),
                 ),
               ),
@@ -1498,17 +1418,13 @@ class _FullBanner extends StatelessWidget {
         ),
       ),
       child: Row(
-        children: const [
+        children: [
           Icon(Icons.lock_rounded, color: AppColors.danger, size: 18),
           SizedBox(width: AppSpacing.s),
           Expanded(
             child: Text(
               AppStrings.groupDetailFullBanner,
-              style: TextStyle(
-                color: AppColors.danger,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTypography.meta.copyWith(color: AppColors.danger),
             ),
           ),
         ],
@@ -1555,18 +1471,14 @@ void _openJoinRequestsSheet(
                 children: [
                   Icon(
                     Icons.hourglass_top_rounded,
-                    color: AppColors.softGold,
+                    color: AppColors.brandInk,
                     size: 18,
                   ),
                   SizedBox(width: AppSpacing.s),
                   Expanded(
                     child: Text(
                       AppStrings.groupJoinRequestsTitle,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
+                      style: AppTypography.sectionTitle,
                     ),
                   ),
                 ],
@@ -1598,9 +1510,9 @@ class PendingRequestsSection extends ConsumerWidget {
     final async = ref.watch(pendingJoinRequestsProvider(groupId));
     return async.when(
       loading: () => const _MiniLoading(),
-      error: (_, __) => const Text(
+      error: (_, __) => Text(
         AppStrings.groupJoinRequestDecideError,
-        style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        style: AppTypography.meta.copyWith(color: AppColors.textSecondary),
       ),
       data: (items) {
         if (items.isEmpty) {
@@ -1608,9 +1520,8 @@ class PendingRequestsSection extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
             child: Text(
               AppStrings.groupJoinRequestsEmpty,
-              style: const TextStyle(
+              style: AppTypography.meta.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 13,
               ),
             ),
           );
@@ -1721,10 +1632,8 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
             const SizedBox(height: 6),
             Text(
               r.message!,
-              style: const TextStyle(
+              style: AppTypography.meta.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 13,
-                height: 1.4,
               ),
             ),
           ],
@@ -1743,10 +1652,7 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                    textStyle: AppTypography.buttonLabel,
                   ),
                   child: const Text(AppStrings.groupJoinRequestRejectCta),
                 ),
@@ -1756,15 +1662,12 @@ class _PendingRequestRowState extends ConsumerState<_PendingRequestRow> {
                 child: FilledButton(
                   onPressed: _busy ? null : () => _decide(true),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.copper,
+                    backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                    textStyle: AppTypography.buttonLabel,
                   ),
                   child: const Text(AppStrings.groupJoinRequestApproveCta),
                 ),
@@ -2011,7 +1914,7 @@ class _ComposerState extends ConsumerState<GroupComposer> {
       // Backwards compat — direct widget usage (non-joined non-owner).
       return PremiumCard(
         padding: const EdgeInsets.all(AppSpacing.m),
-        child: const Row(
+        child: Row(
           children: [
             Icon(
               Icons.lock_outline_rounded,
@@ -2022,9 +1925,8 @@ class _ComposerState extends ConsumerState<GroupComposer> {
             Expanded(
               child: Text(
                 AppStrings.groupDetailComposeJoinedOnly,
-                style: TextStyle(
+                style: AppTypography.meta.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: 12.5,
                 ),
               ),
             ),
@@ -2064,18 +1966,15 @@ class _ComposerState extends ConsumerState<GroupComposer> {
           child: FilledButton(
             onPressed: _sending ? null : _send,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.copper,
+              backgroundColor: AppColors.brandLemon,
               foregroundColor: AppColors.brandInk,
-              disabledBackgroundColor: AppColors.copper.withValues(alpha: 0.6),
+              disabledBackgroundColor: AppColors.brandLemon.withValues(alpha: 0.6),
               disabledForegroundColor: AppColors.brandInk,
               padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.m),
               ),
-              textStyle: const TextStyle(
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-              ),
+              textStyle: AppTypography.buttonLabel,
             ),
             child: _sending
                 ? const SizedBox(
@@ -2191,11 +2090,7 @@ class _ManageSheetTile extends StatelessWidget {
       leading: Icon(icon, color: color),
       title: Text(
         label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w700,
-          fontSize: 14.5,
-        ),
+        style: AppTypography.bodyMedium.copyWith(color: color),
       ),
       onTap: onTap,
     );
@@ -2252,18 +2147,14 @@ class _MembersSheetBody extends ConsumerWidget {
             children: [
               const Icon(
                 Icons.group_rounded,
-                color: AppColors.softGold,
+                color: AppColors.brandInk,
                 size: 18,
               ),
               const SizedBox(width: AppSpacing.s),
               Expanded(
                 child: Text(
                   '${AppStrings.groupMembers} · ${group.currentMemberCount}',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
+                  style: AppTypography.sectionTitle,
                 ),
               ),
             ],
@@ -2272,28 +2163,26 @@ class _MembersSheetBody extends ConsumerWidget {
         Expanded(
           child: async.when(
             loading: () => const _MiniLoading(),
-            error: (_, __) => const Padding(
+            error: (_, __) => Padding(
               padding: EdgeInsets.all(AppSpacing.l),
               child: Center(
                 child: Text(
                   AppStrings.groupMembersEmpty,
-                  style: TextStyle(
+                  style: AppTypography.meta.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: 13,
                   ),
                 ),
               ),
             ),
             data: (members) {
               if (members.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.all(AppSpacing.l),
                   child: Center(
                     child: Text(
                       AppStrings.groupMembersEmpty,
-                      style: TextStyle(
+                      style: AppTypography.meta.copyWith(
                         color: AppColors.textSecondary,
-                        fontSize: 13,
                       ),
                     ),
                   ),
@@ -2352,11 +2241,7 @@ class _MemberRow extends StatelessWidget {
           Flexible(
             child: Text(
               member.displayName,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-              ),
+              style: AppTypography.bodyMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -2366,21 +2251,16 @@ class _MemberRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.copper.withValues(alpha: 0.16),
+                color: AppColors.brandLemon.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 border: Border.all(
-                  color: AppColors.copper.withValues(alpha: 0.32),
+                  color: AppColors.brandLemon.withValues(alpha: 0.32),
                   width: 0.6,
                 ),
               ),
               child: const Text(
                 AppStrings.groupFounder,
-                style: TextStyle(
-                  color: AppColors.brandInk,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11,
-                  letterSpacing: 0.4,
-                ),
+                style: AppTypography.badge,
               ),
             ),
           ],

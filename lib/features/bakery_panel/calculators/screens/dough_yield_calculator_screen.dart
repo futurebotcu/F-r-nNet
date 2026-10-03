@@ -134,7 +134,7 @@ class _DoughYieldCalculatorScreenState
           IconButton(
             tooltip: 'Paylaş',
             onPressed: _result == null ? null : _share,
-            icon: const Icon(Icons.ios_share_rounded),
+            icon: const Icon(Icons.share_outlined),
           ),
         ],
       ),
@@ -208,9 +208,9 @@ class _DoughYieldCalculatorScreenState
                       icon: const Icon(Icons.bookmark_add_outlined, size: 18),
                       label: const Text('Reçete olarak kaydet'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.softGold,
+                        foregroundColor: AppColors.brandInk,
                         side: BorderSide(
-                          color: AppColors.copper.withValues(alpha: 0.45),
+                          color: AppColors.brandLemon.withValues(alpha: 0.45),
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.m),
@@ -223,10 +223,10 @@ class _DoughYieldCalculatorScreenState
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: _share,
-                      icon: const Icon(Icons.ios_share_rounded, size: 18),
+                      icon: const Icon(Icons.share_outlined, size: 18),
                       label: const Text('Paylaş'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.copper,
+                        backgroundColor: AppColors.brandLemon,
                         foregroundColor: AppColors.brandInk,
                         minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
@@ -253,7 +253,7 @@ class _Hint extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.m),
       child: Row(
         children: const [
-          Icon(Icons.bolt_rounded, color: AppColors.softGold, size: 18),
+          Icon(Icons.bolt_rounded, color: AppColors.brandInk, size: 18),
           SizedBox(width: AppSpacing.s),
           Expanded(
             child: Text(
@@ -281,7 +281,7 @@ class _Section extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-          color: AppColors.softGold,
+          color: AppColors.brandInk,
           fontWeight: FontWeight.w800,
           fontSize: 11.5,
           letterSpacing: 1.4,

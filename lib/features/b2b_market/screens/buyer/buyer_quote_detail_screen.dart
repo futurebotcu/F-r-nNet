@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/app_confirm_dialog.dart';
 import '../../../../core/widgets/app_feedback.dart';
@@ -107,13 +108,7 @@ class _RequestSummary extends StatelessWidget {
               Expanded(
                 child: Text(
                   req.productOrCategory,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
-                    height: 1.25,
-                  ),
+                  style: AppTypography.cardTitle.copyWith(fontSize: 16),
                 ),
               ),
               const SizedBox(width: AppSpacing.s),
@@ -128,7 +123,7 @@ class _RequestSummary extends StatelessWidget {
               if (req.quantity.isNotEmpty)
                 B2bMetaPill(icon: Icons.scale_outlined, label: req.quantity),
               if (loc.isNotEmpty)
-                B2bMetaPill(icon: Icons.place_outlined, label: loc),
+                B2bMetaPill(icon: Icons.location_on_outlined, label: loc),
               if (req.buyerType.isNotEmpty)
                 B2bMetaPill(icon: Icons.badge_outlined, label: req.buyerType),
               if (req.deliveryTime.isNotEmpty)
@@ -142,12 +137,7 @@ class _RequestSummary extends StatelessWidget {
             const SizedBox(height: AppSpacing.m),
             Text(
               req.note,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.35,
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTypography.body.copyWith(fontSize: 13, height: 1.35),
             ),
           ],
         ],
@@ -207,11 +197,7 @@ class _QuoteActions extends ConsumerWidget {
           status == B2bQuoteStatus.closed
               ? 'Bu talep kapatıldı. Yeni teklif kabul edilmiyor.'
               : 'Bu talep iptal edildi.',
-          style: const TextStyle(
-            fontSize: 12.5,
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTypography.meta,
         ),
       );
     }

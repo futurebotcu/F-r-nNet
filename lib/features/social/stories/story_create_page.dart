@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/permissions/app_permission_service.dart';
@@ -156,12 +157,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
         ),
         title: const Text(
           AppStrings.storyCreateTitle,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: -0.2,
-          ),
+          style: AppTypography.sectionTitle,
         ),
         centerTitle: true,
         bottom: const PreferredSize(
@@ -197,15 +193,12 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                   : const Icon(Icons.send_rounded, size: 18),
               label: Text(
                 _saving ? AppStrings.storySharingCta : AppStrings.storyShareCta,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15.5,
-                ),
+                style: AppTypography.buttonLabel,
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.copper,
+                backgroundColor: AppColors.brandLemon,
                 foregroundColor: AppColors.brandInk,
-                disabledBackgroundColor: AppColors.copper.withValues(
+                disabledBackgroundColor: AppColors.brandLemon.withValues(
                   alpha: 0.35,
                 ),
                 disabledForegroundColor: AppColors.surface.withValues(
@@ -244,25 +237,18 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                     const Icon(
                       Icons.photo_library_outlined,
                       size: 44,
-                      color: AppColors.softGold,
+                      color: AppColors.brandInk,
                     ),
                     const SizedBox(height: AppSpacing.s),
                     const Text(
                       AppStrings.storyAddMyHint,
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTypography.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     const Text(
                       AppStrings.storyExpiresInHint,
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 13,
-                      ),
+                      style: AppTypography.meta,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.m),
@@ -279,10 +265,10 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                             ),
                             label: const Text(
                               AppStrings.storyCreatePickCta,
-                              style: TextStyle(fontWeight: FontWeight.w800),
+                              style: AppTypography.buttonLabel,
                             ),
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.copper,
+                              backgroundColor: AppColors.brandLemon,
                               foregroundColor: AppColors.brandInk,
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.s,
@@ -300,7 +286,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                             ),
                             label: const Text(
                               AppStrings.storyCapturePhotoCta,
-                              style: TextStyle(fontWeight: FontWeight.w800),
+                              style: AppTypography.buttonLabel,
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.textPrimary,
@@ -336,7 +322,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                     child: OutlinedButton.icon(
                       onPressed: _saving ? null : _pickImage,
                       icon: const Icon(Icons.photo_library_outlined, size: 16),
-                      label: const Text('Galeriden değiştir'),
+                      label: const Text(AppStrings.storyChangeFromGallery),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
                         side: const BorderSide(
@@ -354,7 +340,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                     child: OutlinedButton.icon(
                       onPressed: _saving ? null : _capturePhoto,
                       icon: const Icon(Icons.photo_camera_outlined, size: 16),
-                      label: const Text('Yeniden çek'),
+                      label: const Text(AppStrings.storyRetake),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.textPrimary,
                         side: const BorderSide(
@@ -372,7 +358,7 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
               const SizedBox(height: AppSpacing.s),
               const Text(
                 AppStrings.storyExpiresInHint,
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                style: AppTypography.meta,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -399,10 +385,8 @@ class _SocialStoryCreatePageState extends ConsumerState<SocialStoryCreatePage> {
                     Expanded(
                       child: Text(
                         _inlineError!,
-                        style: const TextStyle(
+                        style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.danger,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),

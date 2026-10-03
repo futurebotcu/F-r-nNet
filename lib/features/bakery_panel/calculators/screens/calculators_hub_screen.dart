@@ -132,7 +132,7 @@ class _SectionHeader extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             color: AppColors.brandLemonPale,
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
             border: Border.all(
               color: AppColors.brandLemonPressed.withValues(alpha: 0.28),
               width: 0.7,

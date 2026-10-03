@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_tokens.dart';
+import '../constants/app_strings.dart';
 import '../data/turkey_locations.dart';
 
 class LocationPicker {
@@ -238,6 +239,7 @@ class _SheetHeader extends StatelessWidget {
             ),
           ),
           IconButton(
+            tooltip: AppStrings.closeTooltip,
             onPressed: () => Navigator.of(context).maybePop(),
             icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary),
           ),
@@ -301,7 +303,7 @@ class _SheetTile extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: selected
-              ? AppColors.softGold.withValues(alpha: 0.10)
+              ? AppColors.brandInk.withValues(alpha: 0.10)
               : Colors.transparent,
           border: const Border(
             bottom: BorderSide(color: AppColors.borderHairline, width: 0.4),
@@ -317,7 +319,7 @@ class _SheetTile extends StatelessWidget {
                     title,
                     style: TextStyle(
                       color: selected
-                          ? AppColors.softGold
+                          ? AppColors.brandInk
                           : AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -341,7 +343,7 @@ class _SheetTile extends StatelessWidget {
               const Icon(
                 Icons.check_rounded,
                 size: 18,
-                color: AppColors.softGold,
+                color: AppColors.brandInk,
               ),
           ],
         ),
@@ -383,6 +385,7 @@ class LocationPickerField extends StatelessWidget {
           enabled: enabled,
           suffixIcon: hasValue && onClear != null
               ? IconButton(
+                  tooltip: AppStrings.finalClearTooltip,
                   icon: const Icon(Icons.close_rounded, size: 18),
                   onPressed: onClear,
                 )

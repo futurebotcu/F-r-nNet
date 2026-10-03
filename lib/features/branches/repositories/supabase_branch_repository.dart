@@ -29,7 +29,7 @@ class SupabaseBranchRepository implements BranchRepository {
   }
 
   static const _neutralInviteError =
-      'Davet oluşturulamadı. FırınNet ID\'yi kontrol edin.';
+      'Davet oluşturulamadı. FırınNet ID\'yi kontrol et.';
 
   /// Diğer kullanıcıların display_name'i — profiles RLS owner-only olduğu
   /// için embedded join yerine mevcut `public_profile_snapshot` RPC'si

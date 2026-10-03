@@ -45,7 +45,7 @@ class CalculatorResultGrid extends StatelessWidget {
           icon: Icons.bakery_dining_outlined,
           label: trUpperCase('Tahmini adet'),
           value: NumberFormatter.integer(result.estimatedPieces),
-          accent: AppColors.softGold,
+          accent: AppColors.brandInk,
         ),
       ],
     );

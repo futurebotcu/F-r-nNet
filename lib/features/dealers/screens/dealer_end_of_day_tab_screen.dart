@@ -54,7 +54,7 @@ class DealerEndOfDayTabScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: AppStrings.dealerEndOfDayShareTooltip,
-            icon: const Icon(Icons.share_rounded),
+            icon: const Icon(Icons.share_outlined),
             onPressed: () => _share(ref, ref0),
           ),
         ],
@@ -236,7 +236,7 @@ class _SummarySection extends StatelessWidget {
             DealerKpiTile(
               label: AppStrings.dealerReportsKpiDelivery,
               value: NumberFormatter.currency(metrics.totalDelivery),
-              accent: AppColors.softGold,
+              accent: AppColors.brandInk,
             ),
             DealerKpiTile(
               label: AppStrings.dealerReportsKpiReturn,
@@ -581,7 +581,7 @@ class _TodayTxRow extends StatelessWidget {
       case DealerTransactionType.payment:
         return (Icons.payments_rounded, AppColors.success, '−');
       case DealerTransactionType.adjustment:
-        return (Icons.tune_rounded, AppColors.softGold, '±');
+        return (Icons.tune_rounded, AppColors.brandInk, '±');
     }
   }
 }
@@ -596,12 +596,12 @@ class _ShareCta extends StatelessWidget {
       width: double.infinity,
       height: 54,
       child: OutlinedButton.icon(
-        icon: const Icon(Icons.share_rounded),
+        icon: const Icon(Icons.share_outlined),
         label: const Text(AppStrings.dealerEndOfDayShareCta),
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.brandInk,
-          side: const BorderSide(color: AppColors.copper, width: 1.0),
+          side: const BorderSide(color: AppColors.brandLemon, width: 1.0),
         ),
       ),
     );

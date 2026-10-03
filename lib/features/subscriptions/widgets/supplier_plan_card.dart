@@ -146,12 +146,7 @@ class SupplierPlanCard extends ConsumerWidget {
                     Flexible(
                       child: Text(
                         AppStrings.supplierLaunchDetailsCta,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.brandInk,
-                          decoration: TextDecoration.underline,
-                        ),
+                        style: AppTypography.smallAction,
                       ),
                     ),
                   ],

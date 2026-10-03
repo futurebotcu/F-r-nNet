@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/premium/firinnet_header.dart';
 import '../../../core/widgets/premium/premium_card.dart';
@@ -110,25 +111,9 @@ class _Hero extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.l),
-          Text(
-            AppStrings.pazarComingTitle,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.3,
-            ),
-          ),
+          Text(AppStrings.pazarComingTitle, style: AppTypography.headlineSmall),
           const SizedBox(height: AppSpacing.s),
-          Text(
-            AppStrings.pazarComingSubtitle,
-            style: const TextStyle(
-              fontSize: 14.5,
-              height: 1.4,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Text(AppStrings.pazarComingSubtitle, style: AppTypography.body),
         ],
       ),
     );
@@ -148,23 +133,14 @@ class _ComingSoonBadge extends StatelessWidget {
       ),
       child: const Text(
         AppStrings.pazarComingBadge,
-        style: TextStyle(
-          color: AppColors.brandInk,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
-        ),
+        style: AppTypography.badge,
       ),
     );
   }
 }
 
 class _Bullet extends StatelessWidget {
-  const _Bullet({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
+  const _Bullet({required this.icon, required this.title, required this.body});
 
   final IconData icon;
   final String title;
@@ -191,25 +167,9 @@ class _Bullet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.1,
-                  ),
-                ),
+                Text(title, style: AppTypography.cardTitle),
                 const SizedBox(height: 3),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.35,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text(body, style: AppTypography.body),
               ],
             ),
           ),
@@ -236,12 +196,7 @@ class _Footnote extends StatelessWidget {
         Expanded(
           child: Text(
             AppStrings.pazarComingFootnote,
-            style: const TextStyle(
-              fontSize: 12.5,
-              height: 1.35,
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTypography.bodySmall,
           ),
         ),
       ],
