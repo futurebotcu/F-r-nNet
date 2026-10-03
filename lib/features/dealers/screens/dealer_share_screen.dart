@@ -224,7 +224,7 @@ class _Header extends StatelessWidget {
         ? 'ALACAK'
         : 'KAPALI';
     final color = balance > 0
-        ? AppColors.copper
+        ? AppColors.warningInk
         : balance < 0
         ? AppColors.success
         : AppColors.softGold;

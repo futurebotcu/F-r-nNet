@@ -319,8 +319,10 @@ class _PrimaryCta extends StatelessWidget {
     final bool enabled;
 
     if (isJoined) {
+      // Üye olunan grup: ikincil (nötr) — listede sarı buton duvarı olmasın;
+      // sarı yalnız "Katıl" birincil eylemi.
       label = AppStrings.groupActionOpen;
-      bg = AppColors.brandLemon;
+      bg = AppColors.surfaceLine;
       fg = AppColors.brandInk;
       enabled = true;
     } else if (group.isFull) {
@@ -358,9 +360,9 @@ class _PrimaryCta extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.m),
           ),
           textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-            letterSpacing: 1.2,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            letterSpacing: 0.1,
           ),
         ),
         child: Text(label),

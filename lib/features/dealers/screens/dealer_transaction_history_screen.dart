@@ -234,7 +234,7 @@ class _DealerTransactionHistoryScreenState
 ({IconData icon, Color color, String sign}) _meta(DealerTransactionType t) {
   switch (t) {
     case DealerTransactionType.delivery:
-      return (icon: Icons.bakery_dining_rounded, color: AppColors.copper, sign: '+');
+      return (icon: Icons.bakery_dining_rounded, color: AppColors.warningInk, sign: '+');
     case DealerTransactionType.returned:
       return (icon: Icons.assignment_returned_rounded, color: AppColors.info, sign: '−');
     case DealerTransactionType.payment:

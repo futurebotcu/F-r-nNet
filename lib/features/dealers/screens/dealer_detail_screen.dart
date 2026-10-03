@@ -374,7 +374,7 @@ class _BalanceHero extends StatelessWidget {
     final theme = Theme.of(context);
     final balance = summary.currentBalance;
     final balanceColor = balance > 0
-        ? AppColors.copper
+        ? AppColors.warningInk
         : balance < 0
         ? AppColors.success
         : AppColors.softGold;
@@ -798,7 +798,7 @@ class _ActionsRow extends ConsumerWidget {
         _ActionChip(
           icon: Icons.tune_rounded,
           label: AppStrings.dealerActionAdjustment,
-          accent: AppColors.copper,
+          accent: AppColors.warningInk,
           onTap: () =>
               context.push('${AppRoutes.dealers}/$dealerId/adjustment'),
         ),
@@ -811,7 +811,7 @@ class _ActionsRow extends ConsumerWidget {
         _ActionChip(
           icon: Icons.ios_share_rounded,
           label: AppStrings.dealerActionShare,
-          accent: AppColors.copper,
+          accent: AppColors.warningInk,
           onTap: () => context.push('${AppRoutes.dealers}/$dealerId/share'),
         ),
       ],
@@ -1480,7 +1480,7 @@ class _TxRow extends StatelessWidget {
       case DealerTransactionType.adjustment:
         return (
           Icons.tune_rounded,
-          AppColors.copper,
+          AppColors.warningInk,
           AppStrings.dealerTxKindAdjustment,
         );
     }

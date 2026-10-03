@@ -76,6 +76,13 @@ class MessagesListScreen extends ConsumerWidget {
                       subtitle: user == null
                           ? AppStrings.messagesEmptyGuest
                           : AppStrings.messagesEmptySubtitle,
+                      // Misafir: "giriş yap" deyip butonsuz bırakma.
+                      actionLabel: user == null
+                          ? AppStrings.authRequiredSignIn
+                          : null,
+                      onAction: user == null
+                          ? () => context.push(AppRoutes.authEntry)
+                          : null,
                     ),
                   );
                 }

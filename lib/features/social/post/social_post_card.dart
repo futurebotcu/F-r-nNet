@@ -987,7 +987,12 @@ class _CaptionState extends State<_Caption> {
         builder: (context, constraints) {
           if (_expanded) return Text(widget.text, style: _style);
           final painter = TextPainter(
-            text: TextSpan(text: widget.text, style: _style),
+            // Ölçüm, Text'in gerçekte kullandığı stille (tema fontu dahil)
+            // yapılmalı; aksi hâlde kısa metinde de "devamını gör" çıkıyordu.
+            text: TextSpan(
+              text: widget.text,
+              style: DefaultTextStyle.of(context).style.merge(_style),
+            ),
             maxLines: _Caption.collapsedMaxLines,
             textDirection: Directionality.of(context),
             textScaler: MediaQuery.textScalerOf(context),

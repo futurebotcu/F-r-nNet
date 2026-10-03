@@ -190,8 +190,9 @@ class _LookingList extends ConsumerWidget {
           final user = ref.watch(currentAuthUserProvider);
           return EmptyState(
             compact: true,
-            icon: Icons.inbox_outlined,
-            title: user == null
+            icon: Icons.person_search_outlined,
+            title: AppStrings.jobsLookingEmptyTitle,
+            subtitle: user == null
                 ? AppStrings.jobsLookingEmptyGuest
                 : AppStrings.jobsLookingEmpty,
           );
@@ -446,7 +447,7 @@ class _JobSeekCard extends ConsumerWidget {
 
 /// V1 — "Usta Arıyor" segmenti: ticari/toptancı işletmelerin yayınladığı
 /// aktif `job_offer_posts` listesi. Empty state dürüst; ticari rol kullanıcı
-/// için CTA "Usta Arıyorum İlanı Ver".
+/// için CTA "Personel İlanı Ver".
 class _HiringList extends ConsumerWidget {
   const _HiringList();
 
@@ -478,8 +479,9 @@ class _HiringList extends ConsumerWidget {
             children: [
               EmptyState(
                 compact: true,
-                icon: Icons.inbox_outlined,
-                title: user == null
+                icon: Icons.work_outline_rounded,
+                title: AppStrings.jobOfferEmptyTitle,
+                subtitle: user == null
                     ? AppStrings.jobOfferEmptyGuest
                     : AppStrings.jobOfferEmpty,
               ),

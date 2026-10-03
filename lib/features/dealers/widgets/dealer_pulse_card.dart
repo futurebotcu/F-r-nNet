@@ -122,7 +122,7 @@ class _PulseCard extends StatelessWidget {
               label: AppStrings.dealerPulseMetricDelivery,
               today: snapshot.todayDelivery,
               baseline: snapshot.baselineDelivery,
-              accent: AppColors.copper,
+              accent: AppColors.warningInk,
             ),
             const _RowDivider(),
             _PulseRow(

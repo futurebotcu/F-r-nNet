@@ -271,7 +271,7 @@ class _SummarySection extends StatelessWidget {
 
 Color _netColor(double net) {
   if (net == 0) return AppColors.textMuted;
-  return net > 0 ? AppColors.copper : AppColors.success;
+  return net > 0 ? AppColors.warningInk : AppColors.success;
 }
 
 class _ByDealerSection extends StatelessWidget {
@@ -575,7 +575,7 @@ class _TodayTxRow extends StatelessWidget {
   (IconData, Color, String) _meta(DealerTransactionType t) {
     switch (t) {
       case DealerTransactionType.delivery:
-        return (Icons.bakery_dining_rounded, AppColors.copper, '+');
+        return (Icons.bakery_dining_rounded, AppColors.warningInk, '+');
       case DealerTransactionType.returned:
         return (Icons.assignment_returned_rounded, AppColors.info, '−');
       case DealerTransactionType.payment:

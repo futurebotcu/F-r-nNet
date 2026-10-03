@@ -283,7 +283,7 @@ class _KpiBlock extends StatelessWidget {
 
 Color _netColor(double net) {
   if (net == 0) return AppColors.textMuted;
-  return net > 0 ? AppColors.copper : AppColors.success;
+  return net > 0 ? AppColors.warningInk : AppColors.success;
 }
 
 class _ByDealerSection extends StatelessWidget {

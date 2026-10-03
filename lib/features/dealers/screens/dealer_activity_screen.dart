@@ -392,7 +392,7 @@ class _ActivityRow extends StatelessWidget {
   (IconData, Color, String) _meta(DealerTransactionType t) {
     switch (t) {
       case DealerTransactionType.delivery:
-        return (Icons.bakery_dining_rounded, AppColors.copper, '+');
+        return (Icons.bakery_dining_rounded, AppColors.warningInk, '+');
       case DealerTransactionType.returned:
         return (Icons.assignment_returned_rounded, AppColors.info, '−');
       case DealerTransactionType.payment:

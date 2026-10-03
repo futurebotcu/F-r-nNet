@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../profile/models/bakery_profile.dart';
 import '../../subscriptions/models/pricing_config.dart';
@@ -105,7 +106,7 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
     if (!mounted) return;
     if (result == PaymentResult.success) {
       ref.invalidate(myEntitlementProvider);
-      _snack(AppStrings.storePaymentRestored);
+      AppFeedback.success(context, AppStrings.storePaymentRestored);
     } else {
       _feedback(result);
     }
@@ -114,22 +115,17 @@ class _PlanPurchaseActionsState extends ConsumerState<PlanPurchaseActions> {
   void _feedback(PaymentResult result) {
     switch (result) {
       case PaymentResult.success:
-        _snack(AppStrings.storePaymentSuccess);
       case PaymentResult.pending:
-        _snack(AppStrings.storePaymentSuccess);
+        AppFeedback.success(context, AppStrings.storePaymentSuccess);
       case PaymentResult.unavailable:
-        _snack(AppStrings.storePaymentPreparing);
+        AppFeedback.info(context, AppStrings.storePaymentPreparing);
       case PaymentResult.cancelled:
       case PaymentResult.error:
-        _snack(AppStrings.storePaymentFailed);
+        AppFeedback.error(context, AppStrings.storePaymentFailed);
     }
   }
 
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: const Duration(seconds: 3)),
-    );
-  }
+  void _snack(String msg) => AppFeedback.info(context, msg);
 
   @override
   Widget build(BuildContext context) {

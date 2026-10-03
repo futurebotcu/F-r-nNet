@@ -423,7 +423,7 @@ class _BalanceFooter extends StatelessWidget {
     final balance = summary.currentBalance;
     // Quality Patch v1 P0-1: 0 bakiye rengi diğer 3 ekranla aynı (textMuted).
     final color = balance > 0
-        ? AppColors.copper
+        ? AppColors.warningInk
         : balance < 0
         ? AppColors.success
         : AppColors.textMuted;

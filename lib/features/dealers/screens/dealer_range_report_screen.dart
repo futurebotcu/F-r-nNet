@@ -208,7 +208,7 @@ class _MetricsGrid extends StatelessWidget {
         _MetricTile(
           label: AppStrings.dealerTxFilterTypeDelivery,
           value: NumberFormatter.currency(metrics.totalDelivery),
-          accent: AppColors.copper,
+          accent: AppColors.warningInk,
         ),
         _MetricTile(
           label: AppStrings.dealerTxFilterTypeReturn,
@@ -230,7 +230,7 @@ class _MetricsGrid extends StatelessWidget {
           value: NumberFormatter.currency(metrics.netChange),
           accent: metrics.netChange == 0
               ? AppColors.textMuted
-              : (metrics.netChange > 0 ? AppColors.copper : AppColors.success),
+              : (metrics.netChange > 0 ? AppColors.warningInk : AppColors.success),
           emphasized: true,
         ),
         _MetricTile(

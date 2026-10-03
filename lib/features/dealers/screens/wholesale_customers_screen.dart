@@ -263,7 +263,7 @@ class _CustomerCard extends ConsumerWidget {
             ),
             data: (s) {
               final balanceColor = s.currentBalance > 0
-                  ? AppColors.copper
+                  ? AppColors.warningInk
                   : s.currentBalance < 0
                   ? AppColors.success
                   : AppColors.textSecondary;

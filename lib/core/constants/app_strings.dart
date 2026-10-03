@@ -658,7 +658,7 @@ class AppStrings {
   // Jobs
   static const String jobsTitle = 'İş İlanları';
   static const String jobsSubtitle = 'Sektörün iş ağı';
-  static const String jobsSegHiring = 'Usta Arıyor';
+  static const String jobsSegHiring = 'Personel Arıyor';
   static const String jobsSegLooking = 'İş Arıyor';
   static const String jobsListHiring = 'Çalışan arayan fırınlar';
   static const String jobsListLooking = 'İş arayan ustalar';
@@ -820,18 +820,21 @@ class AppStrings {
       'E-posta uygulaması açılamadı. Destek adresi: ';
 
   // V1 — Jobs gerçek veri durumları (P0 mock temizliği)
+  // Boş durum: kısa başlık + açıklama (tek uzun kalın cümle yerine).
+  static const String jobsLookingEmptyTitle = 'Henüz iş arayan ilanı yok';
+  static const String jobOfferEmptyTitle = 'Henüz personel ilanı yok';
   static const String jobsLookingEmpty =
-      'Henüz aktif iş arayan ilanı yok. İlk ilanı sen ver veya daha sonra tekrar bak.';
+      'İlk ilanı sen ver ya da daha sonra tekrar bak.';
   static const String jobsLookingEmptyGuest =
-      'Henüz aktif iş arayan ilanı yok. Üye olunca kendin de ilan verebilirsin.';
+      'Üye olunca sen de iş arıyorum ilanı verebilirsin.';
   // V1 — Job offer ("Usta Arıyor") UI copy.
   static const String jobOfferEmpty =
-      'Henüz aktif "Usta Arıyor" ilanı yok. Sektörden ilk ilanı bekliyoruz.';
+      'Yeni personel ilanları burada görünecek.';
   static const String jobOfferEmptyGuest =
-      'Henüz aktif "Usta Arıyor" ilanı yok. Üye olunca sen de yayınlayabilirsin.';
+      'Üye olunca sen de personel ilanı verebilirsin.';
   static const String jobOfferErrorGeneric =
       'İlanlar yüklenemedi. Bağlantını kontrol edip yeniden dene.';
-  static const String jobOfferAddCta = 'Usta Arıyorum İlanı Ver';
+  static const String jobOfferAddCta = 'Personel İlanı Ver';
   static const String jobOfferSavedSnack = 'İlanın yayında.';
 
   // Form
