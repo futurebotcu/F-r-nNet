@@ -140,9 +140,13 @@ class AppTheme {
         centerTitle: false,
         titleSpacing: 4,
         toolbarHeight: 60,
+        // Sayfa başlığı her yerde aynı (AppTypography.pageTitle ile eş).
         titleTextStyle: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.15,
+          height: 1.15,
           color: AppColors.textPrimary,
         ),
         iconTheme: IconThemeData(color: AppColors.textPrimary, size: 22),
@@ -284,8 +288,8 @@ class AppTheme {
         secondaryLabelStyle: const TextStyle(
           color: AppColors.brandInk,
           fontSize: 13,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
         ),
       ),
       dividerTheme: const DividerThemeData(
@@ -301,6 +305,31 @@ class AppTheme {
           fontWeight: FontWeight.w500,
         ),
         hintStyle: const TextStyle(color: AppColors.textMuted),
+        floatingLabelStyle: const TextStyle(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w600,
+        ),
+        helperStyle: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+          height: 1.3,
+        ),
+        helperMaxLines: 2,
+        errorStyle: const TextStyle(
+          color: AppColors.danger,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
+        ),
+        errorMaxLines: 2,
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          borderSide: const BorderSide(color: AppColors.danger, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -362,6 +391,86 @@ class AppTheme {
         ),
       ),
       iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 22),
+      // İkon butonlar: görsel ikon 22px, dokunma alanı en az 44px.
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: AppColors.textPrimary,
+          minimumSize: const Size(44, 44),
+          iconSize: 22,
+        ),
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: AppColors.textPrimary,
+        textColor: AppColors.textPrimary,
+        titleTextStyle: TextStyle(
+          fontFamily: 'Inter',
+          color: AppColors.textPrimary,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
+        ),
+        subtitleTextStyle: TextStyle(
+          fontFamily: 'Inter',
+          color: AppColors.textSecondary,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          height: 1.35,
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 20),
+        minVerticalPadding: 10,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? AppColors.brandInk
+              : Colors.white,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? AppColors.brandLemon
+              : const Color(0xFFE5E7EB),
+        ),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? AppColors.brandInk
+              : Colors.transparent,
+        ),
+        checkColor: WidgetStateProperty.all(AppColors.brandLemon),
+        side: const BorderSide(color: Color(0xFFB8BEC7), width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? AppColors.brandInk
+              : const Color(0xFFB8BEC7),
+        ),
+      ),
+      tabBarTheme: const TabBarThemeData(
+        labelColor: AppColors.brandInk,
+        unselectedLabelColor: AppColors.textSecondary,
+        indicatorColor: AppColors.brandInk,
+        dividerColor: AppColors.borderHairline,
+        labelStyle: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.brandLemon,
+        foregroundColor: AppColors.brandInk,
+        elevation: 2,
+        highlightElevation: 3,
+      ),
       shadowColor: Colors.black,
       // Ortak işlem geri bildirimi: koyu mürekkep zemin + beyaz metin, alttan
       // yüzen kısa bildirim. Beyaz ekran üstünde beyaz snackbar kayboluyordu;
