@@ -337,6 +337,27 @@ aynı kaynak gerçekleriyle yeni kurallara göre yazım (kaynak dışı çıkar�
   danışmanlıktır. Karşılığı: bilgi paylaşımı; doğrudan üretim etkisi yok,
   bu yüzden kısa not olarak ve haber kotasından yayınlanır."
 
+## Son katman (deploy öncesi eklendi)
+
+- **Yerel gerçeklik:** başlıkta Türkiye fırın pratiği terimleri (somun, pide,
+  simit, poğaça, yaş/kuru maya, çuval, bayi, kasalama, gramaj, fire, iade,
+  vardiya, doğalgaz…) aday puanına artı; yabancı basın bülteni pratik/yerel
+  köprüsüzse ek eksi. Taslakta hiç yerel terim yoksa `no_local_context` uyarısı.
+- **FırınNet notu guard'ı (`checkEditorialNote`):** notta kaynakta geçmeyen
+  sayı/ölçü, mevzuat-sağlık ifadesi veya kesinlik dili → bloker.
+- **Konu yorgunluğu:** başlık+payoff+ilk cümle kök imzası son 30 günün
+  yayınlarıyla ≥0.45 örtüşürse `topic_fatigue` blokeri; aday seçiminde
+  başlık imzası örtüşmesi −6.
+- **Pratiklik puanı:** payoff türü + `tomorrow_action` + eylem fiili + yerel
+  terim → 0–100; üretim/ustalıkta <60, diğer pratik türlerde <40 bloker.
+- **Kalite tabanı:** `academy_min_quality_score` (70) altı yayınlanmaz;
+  günlük hedef 6 bir tavandır, zorunluluk değil.
+- **Günlük plan:** 2 üretim, 1 işletme, 1 ürün kalitesi, 1 hijyen/satış
+  (yumuşak: tavanı dolan kova sıranın sonuna), haber+derin teknik toplam 1
+  (sert).
+- **Dil:** "Ustam/abi/kanka/valla" vb. yapay esnaf ağzı 1 isabet uyarı,
+  2 isabet bloker; prompt'ta açık yasak.
+
 ## Deploy sonrası izleme
 
 - İlk 3 gün: yayınlanan her taslağın `quality.payoff_kind`, `angle` ve

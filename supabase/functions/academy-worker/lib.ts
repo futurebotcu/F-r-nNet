@@ -379,7 +379,7 @@ export function extractQuantities(text: string): Quantity[] {
 }
 
 /** Miktar eşdeğerliği: aynı boyut + taban değerde ~eşitlik. */
-function quantitySupported(q: Quantity, inText: string): boolean {
+export function quantitySupported(q: Quantity, inText: string): boolean {
   const cands = extractQuantities(inText);
   if (q.dim === null) {
     // Birimsiz sayı: metinde tam-sayı sınırıyla geçmesi yeterli.
@@ -899,6 +899,8 @@ export interface DraftOutput {
   angle: string;
   /** Seri parçası ise "1/2" gibi; yoksa boş. */
   series: string;
+  /** "Yarın sabah fırında neyi farklı yapabilir?" — tek cümle. */
+  tomorrow_action: string;
 }
 
 /**
@@ -1002,6 +1004,7 @@ export function validateDraftOutput(
       payoff_kind: normalizePayoffKind(str("payoff_kind")),
       angle: (str("angle") ?? "serbest").trim().slice(0, 40),
       series: sanitizeSeries(str("series") ?? ""),
+      tomorrow_action: (str("tomorrow_action") ?? "").trim(),
     },
   };
 }
@@ -1089,6 +1092,13 @@ export function buildDraftPrompt(opts: {
     "yaz-kış sıcaklık farkı, enerji maliyeti, gramaj, fire, tezgâh satışı,",
     "bayi dağıtımı, günlük nakit: içerik bu gerçek şartlara dokunur,",
     "laboratuvar şartlarında ideal bir işletme varsaymaz.",
+    "YEREL GERÇEKLİK: Konuyu Türkiye'deki fırının gününe çevir — somun,",
+    "pide, ramazan pidesi, simit, poğaça/açma, ekşi mayalı ve standart ekmek,",
+    "un çuvalı/parti değişimi, yaş-kuru maya, yaz-kış hamur sıcaklığı, gece",
+    "üretimi, sabah ilk pişirim, bayi çıkışı, kasalama, gramaj, fire, iade,",
+    "tezgâhta kalan ürün, vardiya, usta değişimi, elektrik/doğalgaz, fırın ve",
+    "mikser kullanımı, mahalle fırını ölçeği. Yabancı kaynak olabilir; konu",
+    "Türkiye'deki fırıncının hayatına çevrilemiyorsa publishable=false yap.",
     "AMAÇ: Okuyan 'doğru, bizde de oluyor', 'bunu ustaya göstereyim',",
     "'yarın deneyelim' desin. Fırıncılık ansiklopedisi DEĞİL; iş arkadaşının",
     "tezgâhta anlattığı doğru bilgi.",
@@ -1100,6 +1110,9 @@ export function buildDraftPrompt(opts: {
     "Doğal köprüler: 'Bunun fırındaki karşılığı şu', 'Ustanın dikkat edeceği",
     "nokta', 'Günlük üretimde işine yarayacak tarafı', 'Hamur bunu sana",
     "şöyle belli eder' — ama her yazıda aynısını kullanma.",
+    "YAPAY AĞIZ YOK: 'Ustam şöyle yap', 'abi', 'kanka', 'valla', esnaf ağzı",
+    "taklidi, argo ve herkese 'usta' deme yok. Dil: samimi + profesyonel +",
+    "sade; sektörün içinden birinin yazdığı hissi.",
     "AÇILIŞ: İlk cümle fırındaki bir durumla ya da okurun sorusuyla başlasın.",
     "'X, 5 Ekim 2026 tarihli duyurusunda...' gibi tarih-kurum açılışı yapma;",
     "kaynak ve tarih sonda sistem tarafından eklenir.",
@@ -1130,6 +1143,25 @@ export function buildDraftPrompt(opts: {
       "maliyet_satis|bilgi. 'bilgi' yalnız haber/araştırmada kabul edilir;",
     "diğer türlerde gerçek bir karşılık yoksa publishable=false yap.",
     "payoff cümlesi body içinde de geçsin (son paragraf ya da akış içinde).",
+    "YARIN SABAH TESTİ: tomorrow_action alanına TEK cümle yaz — okuyan yarın",
+    "sabah fırında neyi farklı yapar ya da neye dikkat eder? Net bir cevap",
+    "yoksa (yalnız 'bilgi sahibi oldum' kalıyorsa) üretim/ustalık türü seçme;",
+    "news/research seç ya da publishable=false yap.",
+    "FIRINNET NOTU GUARD'I: editorial_note kaynakta OLMAYAN çıkarımdır; bu",
+    "yüzden güvenli, muhafazakâr ve genel olur ('yardımcı olabilir',",
+    "'genellikle', 'kontrol etmek işe yarar'). Notta sayı, derece, dakika,",
+    "yüzde, gram, mevzuat hükmü, sağlık/gıda güvenliği iddiası veya kesin",
+    "teknik sonuç YAZMA ('4 derece düşürün, %20 yavaşlar' yasak; 'suyu biraz",
+    "soğutmak yardımcı olabilir' olur). Sayı gerekiyorsa yalnız kaynaktaysa",
+    "ve body'de, claim olarak.",
+    "REFERANS KONU KARAKTERİ (zorunlu metin değil, hedef tür): 'Sabah ilk",
+    "hamur neden öğlen hamurundan farklı davranır?', 'Unun partisi",
+    "değiştiğinde ilk hangi üç şeye bakılır?', '250 gramlık üründe 10 gram",
+    "kaçak ay sonunda ne yapar?', 'Tezgâhta her akşam aynı ürün kalıyorsa",
+    "sana ne anlatıyor?', 'Hamur fazla yapışıyorsa hemen un eklemek doğru",
+    "mu?', 'Bayiye giden ürünün iadesi nasıl takip edilir?', 'Fırının",
+    "gereksiz enerji tükettiğini nasıl fark edersin?', 'Müşteri dünkü ekmek",
+    "daha iyiydi dediğinde ilk ne kontrol edilir?'.",
     "KAYNAK GERÇEĞİ ile YORUM AYRIDIR: body YALNIZ kaynaktaki gerçekleri",
     "anlatır. Kaynakta olmayan fırın çıkarımı/önerisi editorial_note",
     "alanına yazılır (yayında 'FırınNet notu' olarak ayrı görünür); pratik",
@@ -1171,7 +1203,7 @@ export function buildDraftPrompt(opts: {
       'hygiene|craft|quick_note",',
     '"angle":"sorun_neden_cozum|durum_3nokta|gozlem_aciklama|haber_etkisi|serbest",',
     '"topic":str,"title":str,"body":str,"editorial_note":str,' +
-      '"payoff":str,"payoff_kind":str,"series":str,' +
+      '"payoff":str,"payoff_kind":str,"series":str,"tomorrow_action":str,' +
       '"visual_needed":bool,"practical_notes":str,"tags":[str],',
     '"claims":[{"claim":str,"source_slug":str,"quote":str}],' +
       '"date_context":str,',
@@ -1496,6 +1528,10 @@ export interface EditorialQuality {
   blockers: string[];
   words: number;
   imperatives: number;
+  /** "Yarın sabah neyi farklı yapar?" puanı 0-100. */
+  practicalScore: number;
+  /** Türkiye fırın pratiği terim isabeti. */
+  localHits: number;
 }
 
 export function editorialQuality(i: {
@@ -1509,6 +1545,9 @@ export function editorialQuality(i: {
   recentOpenings?: string[];
   payoff?: string;
   payoffKind?: PayoffKind;
+  tomorrowAction?: string;
+  /** Son 30 günün yayınları (başlık+payoff+ilk cümle) — konu yorgunluğu. */
+  recentSignatures?: Set<string>[];
 }): EditorialQuality {
   const warnings: string[] = [];
   const blockers: string[] = [];
@@ -1542,6 +1581,42 @@ export function editorialQuality(i: {
   } else if (payoffWords >= 4 && !payoffInText(i.payoff ?? "", visible)) {
     // Kapıdaki karşılık metinde de görünmeli (yalnız JSON alanında kalmasın).
     warnings.push("payoff_not_in_text");
+  }
+
+  // ── Yapay esnaf ağzı / argo ─────────────────────────────────────────
+  const fake = (i.title + "\n" + visible).match(FAKE_VOICE_RE) ?? [];
+  if (fake.length >= 2) blockers.push(`fake_voice:${fake.length}`);
+  else if (fake.length === 1) warnings.push("fake_voice");
+
+  // ── Yerel gerçeklik: Türkiye fırın pratiği terimleri ────────────────
+  const localHits = localityHits(i.title + "\n" + visible);
+  const bucket = bucketOf(i.contentType);
+  if (localHits === 0 && bucket !== "haber_mevzuat" && bucket !== "derin_teknik") {
+    warnings.push("no_local_context");
+  }
+
+  // ── Pratiklik: yarın sabah fırında ne değişir? ──────────────────────
+  const practicalScore = practicalityScore({
+    payoffKind: i.payoffKind ?? "bilgi",
+    payoffWords,
+    tomorrowAction: i.tomorrowAction ?? "",
+    localHits,
+  });
+  if (bucket === "uretim_ustalik" && practicalScore < 60) {
+    blockers.push(`low_practical:${practicalScore}`);
+  } else if (bucket !== "haber_mevzuat" && bucket !== "derin_teknik" &&
+    practicalScore < 40) {
+    blockers.push(`low_practical:${practicalScore}`);
+  } else if (practicalScore < 50) {
+    warnings.push(`practical:${practicalScore}`);
+  }
+
+  // ── Konu yorgunluğu: aynı sorun + aynı çözüm + aynı payoff ─────────
+  if (i.recentSignatures && i.recentSignatures.length) {
+    const sig = topicSignature(i.title, i.payoff ?? "", i.body);
+    if (i.recentSignatures.some((r) => jaccard(sig, r) >= 0.45)) {
+      blockers.push("topic_fatigue");
+    }
   }
   const [lo, hi, hard] = LENGTH_BANDS[i.contentType];
   if (words > hard) blockers.push(`excessive_length:${words}>${hard}`);
@@ -1580,7 +1655,9 @@ export function editorialQuality(i: {
   }
 
   const score = Math.max(0, 100 - 12 * warnings.length - 45 * blockers.length);
-  return { score, warnings, blockers, words, imperatives };
+  return {
+    score, warnings, blockers, words, imperatives, practicalScore, localHits,
+  };
 }
 
 /** İstanbul (UTC+3, yaz saati yok) yayın penceresi: [start, end). Pencere
@@ -1821,11 +1898,22 @@ export function scoreDraftCandidate(
   c: DraftCandidate,
   deficits: Record<TopicBucket, number>,
   nowMs: number,
+  recentTitles: string[] = [],
 ): number {
   let score = 0;
   const practical = (c.title.match(PRACTICAL_TITLE_RE) ?? []).length;
   score += Math.min(6, practical * 3);
-  if (PRESS_TITLE_RE.test(c.title)) score -= 4;
+  const press = PRESS_TITLE_RE.test(c.title);
+  if (press) score -= 4;
+  // Yerel gerçeklik: Türkiye fırın pratiğine çevrilebilirlik.
+  const local = localityScore(c.title);
+  score += local;
+  // Yabancı basın haberi ve pratik/yerel köprüsü yoksa Türkiye'deki fırına
+  // çevrilemez sayılır: ek eksi.
+  if (c.source_lang !== "tr" && press && practical === 0 && local === 0) {
+    score -= 3;
+  }
+  score += fatiguePenalty(c.title, recentTitles);
   switch (c.source_type) {
     case "archive":
     case "edu":
@@ -1856,13 +1944,175 @@ export function pickDraftCandidates<T extends DraftCandidate>(
   deficits: Record<TopicBucket, number>,
   nowMs: number,
   n: number,
+  recentTitles: string[] = [],
 ): T[] {
   return cands
-    .map((c) => ({ c, s: scoreDraftCandidate(c, deficits, nowMs) }))
+    .map((c) => ({
+      c,
+      s: scoreDraftCandidate(c, deficits, nowMs, recentTitles),
+    }))
     .sort((a, b) =>
       b.s - a.s ||
       (Date.parse(b.c.published_at ?? "") || 0) -
         (Date.parse(a.c.published_at ?? "") || 0)
     )
     .slice(0, n).map((x) => x.c);
+}
+
+// ── Son katman: yerel gerçeklik, pratiklik, konu yorgunluğu, not guard'ı ──
+const FAKE_VOICE_RE =
+  /(\bustam\b|\babi\b|\bkanka\b|\bvalla\b|\byav\b|\bbe usta\b|hadi bakalım|\bbirader\b|\bmoruk\b|\blan\b)/giu;
+
+/** Türkiye fırın pratiği sözlüğü (TR + yabancı kaynakta karşılığı). */
+const LOCAL_TERMS_RE = new RegExp(
+  "(somun|pide|ramazan|simit|poğaça|açma|börek|lavaş|ekşi maya|yaş maya|" +
+    "kuru maya|çuval|parti değiş|un partisi|hamur sıcaklığı|gece üretim|" +
+    "sabah ilk|ilk pişir|bayi|kasalama|kasa\\b|gramaj|fire\\b|iade|tezgâh|" +
+    "tezgah|vardiya|usta değiş|usta\\b|çırak|doğalgaz|elektrik|mikser|" +
+    "yoğurma|mahalle fırın|fırın taşı|tava\\b|kürek|hamur teknesi|bez\\b|" +
+    "mayalanma|dinlendirme|kabuk|bayat|dilimleme|ayçekirdek|susam)",
+  "giu",
+);
+export function localityHits(text: string): number {
+  return (text ?? "").match(LOCAL_TERMS_RE)?.length ?? 0;
+}
+
+const ACTION_VERB_RE =
+  /(ölç|tart|kontrol|not (al|et|tut)|deftere|kaydet|ayarla|karşılaştır|dene|bak\b|izle|say\b|değiştir|soğut|ılıt|kısalt|uzat|erken|geç\b|ayır|temizle|yıka|planla|sor\b)/iu;
+
+/** "Yarın sabah fırında neyi farklı yapar?" — 0-100. */
+export function practicalityScore(i: {
+  payoffKind: PayoffKind;
+  payoffWords: number;
+  tomorrowAction: string;
+  localHits: number;
+}): number {
+  let sc = 0;
+  if (i.payoffKind !== "bilgi") sc += 40;
+  else if (i.payoffWords >= 6) sc += 15;
+  const ta = countWords(i.tomorrowAction);
+  if (ta >= 6) sc += 30;
+  else if (ta >= 3) sc += 15;
+  if (ACTION_VERB_RE.test(i.tomorrowAction)) sc += 15;
+  if (i.localHits >= 2) sc += 15;
+  else if (i.localHits === 1) sc += 8;
+  return Math.min(100, sc);
+}
+
+const TR_STOP = new Set([
+  "neden", "nasıl", "için", "ile", "ve", "bir", "bu", "şu", "o", "da", "de",
+  "mi", "mı", "mu", "mü", "ne", "her", "çok", "daha", "gibi", "ama", "veya",
+  "olan", "olur", "olarak", "kadar", "sonra", "önce", "ilk", "yeni", "eski",
+  "gün", "gerçekten", "önemli", "değil", "var", "yok", "the", "of", "and",
+]);
+/** Kök-benzeri: Türkçe ekleri kabaca atmak için ilk 5 harf. */
+function stemTr(w: string): string {
+  return w.length > 5 ? w.slice(0, 5) : w;
+}
+/** Konu imzası: başlık + payoff + ilk cümle → kök kümesi. */
+export function topicSignature(
+  title: string,
+  payoff: string,
+  body: string,
+): Set<string> {
+  const first = sentencesOf(body)[0] ?? "";
+  const words = (title + " " + payoff + " " + first)
+    .toLocaleLowerCase("tr-TR").split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length > 2 && !TR_STOP.has(w));
+  return new Set(words.map(stemTr));
+}
+
+/** FırınNet notu guard'ı: kaynakta olmayan çıkarımda ölçü/sıcaklık/süre/
+ * yüzde, mevzuat hükmü, sağlık-gıda güvenliği iddiası ya da kesinlik dili
+ * yasak. Nottaki sayı kaynak metinde aynı değerle geçiyorsa kabul. */
+const NOTE_REGULATION_RE =
+  /(yönetmelik|tebliğ|mevzuat|kanun|zorunlu(dur)?|yasak(tır)?|bakanlık|haccp|mg\/kg|ppm|salmonella|listeria|küf toksin|mikotoksin|akrilamid|sağlığ|hastalık|zehirlen)/iu;
+const NOTE_CERTAINTY_RE =
+  /(kesinlikle|garanti|mutlaka|her zaman|asla|kanıtlanmış|%\s*\d|\d\s*%|yüzde\s*\d)/iu;
+export function checkEditorialNote(
+  note: string,
+  sourceText: string,
+): { ok: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+  const n = (note ?? "").trim();
+  if (!n) return { ok: true, reasons };
+  for (const q of extractQuantities(n)) {
+    if (!quantitySupported(q, sourceText)) {
+      reasons.push(`note_quantity:${q.num}${q.dim ? ":" + q.dim : ""}`);
+    }
+  }
+  if (NOTE_REGULATION_RE.test(n)) reasons.push("note_regulation_or_health");
+  if (NOTE_CERTAINTY_RE.test(n)) reasons.push("note_certainty");
+  return { ok: reasons.length === 0, reasons: [...new Set(reasons)] };
+}
+
+// ── Günlük karışım planı (yumuşak tavanlar) ───────────────────────────
+/** Normal gün: 2 üretim/ustalık, 1 işletme, 1 ürün kalitesi, 1 hijyen/satış,
+ * en fazla 1 haber+derin teknik (ortak). Eksik kategori ve kaliteye göre
+ * esner: tavanı dolan kova sıranın SONUNA gider, haber/derin tavanı serttir. */
+export const DAILY_PLAN: Record<TopicBucket, number> = {
+  uretim_ustalik: 2,
+  isletme_maliyet: 1,
+  urun_kalite: 1,
+  hijyen: 1,
+  satis_musteri: 1,
+  haber_mevzuat: 1,
+  derin_teknik: 1,
+};
+export function orderForDailyPlan<T extends MixCandidate>(
+  cands: T[],
+  last: { bot_key: string; content_type: string | null } | null,
+  deficits: Record<TopicBucket, number>,
+  todayCounts: Partial<Record<TopicBucket, number>>,
+  opts: { newsCap: number },
+): T[] {
+  const b = (c: T) =>
+    bucketOf(c.content_type, [c.topic ?? "", ...(c.tags ?? [])].join(" "));
+  const newsLike = (k: TopicBucket) =>
+    k === "haber_mevzuat" || k === "derin_teknik";
+  const newsToday = (todayCounts.haber_mevzuat ?? 0) +
+    (todayCounts.derin_teknik ?? 0);
+  const softCount = { ...todayCounts } as Record<TopicBucket, number>;
+  const pool = cands.filter((c) => !newsLike(b(c)) || newsToday < opts.newsCap);
+  // hijyen + satış ortak kova sayılır
+  const combined = (k: TopicBucket) =>
+    k === "hijyen" || k === "satis_musteri"
+      ? (softCount.hijyen ?? 0) + (softCount.satis_musteri ?? 0)
+      : (softCount[k] ?? 0);
+  const over = (k: TopicBucket) => combined(k) >= DAILY_PLAN[k];
+  const ordered = orderForMix(pool, last, deficits, { newsAllowed: true });
+  const first: T[] = [];
+  const later: T[] = [];
+  let newsSeen = newsToday;
+  for (const c of ordered) {
+    const k = b(c);
+    if (newsLike(k)) {
+      if (newsSeen >= opts.newsCap) continue; // sert tavan
+      newsSeen++;
+      first.push(c);
+      continue;
+    }
+    if (over(k)) later.push(c);
+    else {
+      first.push(c);
+      softCount[k] = (softCount[k] ?? 0) + 1;
+    }
+  }
+  return [...first, ...later];
+}
+
+// ── Aday seçimi: yerel çevrilebilirlik + konu yorgunluğu ──────────────
+export function localityScore(title: string): number {
+  return Math.min(4, localityHits(title) * 2);
+}
+export function fatiguePenalty(
+  title: string,
+  recentTitles: string[],
+): number {
+  const t = topicSignature(title, "", "");
+  if (t.size < 2) return 0;
+  for (const r of recentTitles) {
+    if (jaccard(t, topicSignature(r, "", "")) >= 0.5) return -6;
+  }
+  return 0;
 }

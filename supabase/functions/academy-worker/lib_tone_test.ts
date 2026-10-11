@@ -5,15 +5,21 @@
 import {
   bucketOf,
   buildDraftPrompt,
+  checkEditorialNote,
   detectJargon,
   editorialQuality,
+  fatiguePenalty,
+  localityHits,
   mixDeficits,
   normalizePayoffKind,
   openingKey,
+  orderForDailyPlan,
   orderForMix,
   pickDraftCandidates,
+  practicalityScore,
   sanitizeSeries,
   scoreDraftCandidate,
+  topicSignature,
   validateDraftOutput,
 } from "./lib.ts";
 
@@ -93,6 +99,8 @@ Deno.test("Payoff kapısı: üretim yazısında karşılık yoksa BLOKER, haberd
     recentTitles: [],
     payoff: "Vardiya boyunca aynı sonucu alırsın, fire düşer.",
     payoffKind: "fire",
+    tomorrowAction:
+      "Yarın yoğurma bitince hamur sıcaklığını ölç ve deftere not al.",
   });
   assert(ok.blockers.length === 0, ok.blockers.join(","));
   assert(!ok.warnings.includes("payoff_not_in_text"), ok.warnings.join(","));
@@ -281,4 +289,193 @@ Deno.test("Prompt: ton kuralları + guard'lar birlikte; açılış/mix ipucu", (
   assert(sys.includes("günlük üretim ve ustalık"), "mix ipucu");
   assert(!sys.includes("IGNORE PREVIOUS"), "kaynak metin sisteme sızmaz");
   assert(sys.includes('"payoff_kind":str'), "şemada payoff");
+});
+
+// ── Son katman ───────────────────────────────────────────────────────
+Deno.test("Yapay esnaf ağzı: tek isabet uyarı, iki isabet BLOKER", () => {
+  const base = {
+    contentType: "craft" as const,
+    body: GOOD_BODY,
+    editorialNote: "",
+    practicalNotes: "",
+    recentTitles: [],
+    payoff: "Vardiya boyunca aynı sonucu alırsın, fire düşer.",
+    payoffKind: "fire" as const,
+    tomorrowAction: "Yarın yoğurma bitince hamur sıcaklığını ölç.",
+  };
+  const one = editorialQuality({
+    ...base,
+    title: "Ustam, hamur neden yayılır?",
+  });
+  assert(one.warnings.includes("fake_voice"), one.warnings.join(","));
+  const two = editorialQuality({
+    ...base,
+    title: "Ustam bak abi, hamur neden yayılır?",
+  });
+  assert(
+    two.blockers.some((b) => b.startsWith("fake_voice")),
+    two.blockers.join(","),
+  );
+});
+
+Deno.test("Pratiklik puanı: yarın-sabah cevabı yoksa üretim türünde BLOKER", () => {
+  const low = editorialQuality({
+    contentType: "craft",
+    title: "Gluten ağı nedir?",
+    body: "Gluten ağı unun proteinlerinden oluşur ve su ile gelişir. ".repeat(
+      6,
+    ),
+    editorialNote: "",
+    practicalNotes: "",
+    recentTitles: [],
+    payoff: "",
+    payoffKind: "bilgi",
+    tomorrowAction: "",
+  });
+  assert(
+    low.blockers.some((b) => b.startsWith("low_practical")),
+    low.blockers.join(","),
+  );
+  assert(low.warnings.includes("no_local_context"), low.warnings.join(","));
+  assert(
+    practicalityScore({
+      payoffKind: "fire",
+      payoffWords: 8,
+      tomorrowAction: "Yarın kesim tartısını kontrol et ve on ekmeği tart.",
+      localHits: 3,
+    }) === 100,
+    "tam puan",
+  );
+  assert(
+    localityHits("Simit ve pide üretiminde gramaj ve fire") >= 3,
+    "yerel terim",
+  );
+});
+
+Deno.test("Konu yorgunluğu: başlığı değişmiş aynı sorun/çözüm BLOKER", () => {
+  const prev = topicSignature(
+    "Hamur neden yayılıyor?",
+    "Yoğurmayı pencere testine göre uzatmak fireyi azaltır.",
+    "Hamur tezgâhta yayılıyorsa çoğu zaman yoğurma kısa kalmıştır.",
+  );
+  const q = editorialQuality({
+    contentType: "craft",
+    title: "Tezgâhta hamur neden kendini bırakıyor?",
+    body:
+      "Hamur tezgâhta kendini bırakıyorsa çoğu zaman yoğurma kısa kalmıştır. " +
+      GOOD_BODY,
+    editorialNote: "",
+    practicalNotes: "",
+    recentTitles: ["Hamur neden yayılıyor?"],
+    payoff: "Yoğurmayı pencere testine göre uzatmak fireyi azaltır.",
+    payoffKind: "fire",
+    tomorrowAction: "Yarın yoğurma sonunda pencere testi yap.",
+    recentSignatures: [prev],
+  });
+  assert(q.blockers.includes("topic_fatigue"), q.blockers.join(","));
+  assert(
+    !q.blockers.includes("duplicate_topic"),
+    "başlık farklı: eski kapı yakalamaz",
+  );
+  assert(
+    fatiguePenalty("Hamur neden yayılıyor", ["Hamur neden yayılır?"]) < 0,
+    "aday cezası",
+  );
+});
+
+Deno.test("FırınNet notu guard'ı: kaynaksız ölçü/mevzuat/kesinlik reddedilir", () => {
+  const src = "Dough temperature target is 24 °C in this bakery.";
+  const bad = checkEditorialNote(
+    "Su sıcaklığını 4 derece düşürün, fermantasyon %20 yavaşlar; bu kesinlikle işe yarar.",
+    src,
+  );
+  assert(!bad.ok, "reddedilmeli");
+  assert(
+    bad.reasons.some((r) => r.startsWith("note_quantity")),
+    bad.reasons.join(","),
+  );
+  assert(bad.reasons.includes("note_certainty"), bad.reasons.join(","));
+  const reg = checkEditorialNote("Yönetmelik gereği bu zorunludur.", src);
+  assert(
+    reg.reasons.includes("note_regulation_or_health"),
+    reg.reasons.join(","),
+  );
+  const good = checkEditorialNote(
+    "Suyu biraz soğutmak çoğu gün yardımcı olabilir; hamur sıcaklığını ölçmek işe yarar.",
+    src,
+  );
+  assert(good.ok, good.reasons.join(","));
+  const supported = checkEditorialNote(
+    "Kaynaktaki hedef 24 °C olarak geçiyor.",
+    src,
+  );
+  assert(
+    supported.ok,
+    "kaynakta geçen sayı kabul: " + supported.reasons.join(","),
+  );
+});
+
+Deno.test("Günlük plan: üretim 2 ile sınırlı (yumuşak), haber+derin toplam 1 (sert)", () => {
+  const d = mixDeficits([]);
+  const cands = [
+    { id: "c1", bot_key: "ekmek_fermantasyon", content_type: "craft" },
+    { id: "c2", bot_key: "ustalik_dunya", content_type: "craft" },
+    {
+      id: "c3",
+      bot_key: "firin_teknoloji",
+      content_type: "technical_explainer",
+    },
+    { id: "b1", bot_key: "isletme", content_type: "business" },
+    { id: "n1", bot_key: "sektor_gundemi", content_type: "news" },
+    { id: "r1", bot_key: "bilim_arge", content_type: "research" },
+  ];
+  const out = orderForDailyPlan(cands, null, d, {}, { newsCap: 1 });
+  const ids = out.map((c) => c.id);
+  const newsLike = ids.filter((i) => i === "n1" || i === "r1");
+  assert(newsLike.length === 1, "haber+derin toplam 1: " + ids.join(","));
+  assert(
+    ids.indexOf("c3") > ids.indexOf("b1"),
+    "3. üretim işletmenin arkasına: " + ids,
+  );
+  assert(ids.length === 5, "üçüncü üretim düşmez, sona gider");
+  const full = orderForDailyPlan(cands, null, d, { haber_mevzuat: 1 }, {
+    newsCap: 1,
+  });
+  assert(
+    !full.some((c) => c.id === "n1" || c.id === "r1"),
+    "bugün haber çıktıysa yok",
+  );
+});
+
+Deno.test("Aday puanı: çevrilemeyen yabancı basın bülteni ek eksi; yerel başlık artı", () => {
+  const d = mixDeficits([]);
+  const now = Date.parse("2026-10-11T12:00:00Z");
+  const foreignPress = scoreDraftCandidate(
+    {
+      id: "x",
+      title: "Group announces partnership with distributor",
+      published_at: "2026-10-10T00:00:00Z",
+      source_type: "news",
+      source_lang: "en",
+      source_topics: ["sektor_gundemi"],
+      is_commercial: true,
+    },
+    d,
+    now,
+  );
+  const localCraft = scoreDraftCandidate(
+    {
+      id: "y",
+      title: "Simit hamurunda gramaj ve fire takibi",
+      published_at: "2026-10-01T00:00:00Z",
+      source_type: "news",
+      source_lang: "tr",
+      source_topics: ["turk_urunleri"],
+      is_commercial: false,
+    },
+    d,
+    now,
+  );
+  assert(foreignPress < -5, "yabancı basın: " + foreignPress);
+  assert(localCraft > 8, "yerel üretim: " + localCraft);
 });

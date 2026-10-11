@@ -18,10 +18,12 @@ import {
   estimateLlmTokens,
   BAKERY_TOPICAL_RE,
   bucketOf,
+  checkEditorialNote,
   mixDeficits,
   openingKey,
-  orderForMix,
+  orderForDailyPlan,
   pickDraftCandidates,
+  topicSignature,
   type TopicBucket,
   bakeryRelevance,
   buildDraftPrompt,
@@ -639,9 +641,18 @@ async function handleDraft(c: any, payload: any): Promise<string> {
 
   // Son yayınlar: aynı açılış kalıbı ve aynı konu tekrarı için.
   const { data: recent } = await c.from("academy_drafts")
-    .select("title, body, content_type, topic, tags")
-    .eq("status", "published").order("updated_at", { ascending: false })
-    .limit(30);
+    .select("title, body, content_type, topic, tags, quality")
+    .eq("status", "published")
+    .gte("updated_at", new Date(Date.now() - 30 * 86_400_000).toISOString())
+    .order("updated_at", { ascending: false })
+    .limit(120);
+  const recentSignatures = (recent ?? []).map((x: any) =>
+    topicSignature(
+      String(x.title ?? ""),
+      String(x.quality?.payoff ?? ""),
+      String(x.body ?? ""),
+    )
+  );
   const recentOpenings = (recent ?? []).slice(0, 8)
     .map((x: any) => openingKey(x.body ?? "")).filter(Boolean);
   const deficitsNow = mixDeficits(recent ?? []);
@@ -697,7 +708,22 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     recentOpenings,
     payoff: d.payoff,
     payoffKind: d.payoff_kind,
+    tomorrowAction: d.tomorrow_action,
+    recentSignatures,
   });
+  // FırınNet notu guard'ı: kaynakta olmayan çıkarımda ölçü/mevzuat/sağlık/
+  // kesinlik yok (deterministik; modelin sözü yetmez).
+  const noteCheck = checkEditorialNote(d.editorial_note, fullText);
+  if (!noteCheck.ok) quality.blockers.push(...noteCheck.reasons);
+  // Sayı uğruna yayın yok: kalite tabanı.
+  const minScore = await cfgInt(c, "academy_min_quality_score", 70);
+  const adjScore = Math.max(
+    0,
+    100 - 12 * quality.warnings.length - 45 * quality.blockers.length,
+  );
+  if (adjScore < minScore && !quality.blockers.length) {
+    quality.blockers.push(`quality_below_min:${adjScore}<${minScore}`);
+  }
   const needsVisual = decideNeedsVisual(d.content_type, d.visual_needed);
   const publishable = d.publishable && evidence.ok &&
     quality.blockers.length === 0;
@@ -721,7 +747,7 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     editorial_note: d.editorial_note,
     needs_visual: needsVisual,
     quality: {
-      score: quality.score,
+      score: adjScore,
       warnings: quality.warnings,
       blockers: quality.blockers,
       words: quality.words,
@@ -731,6 +757,12 @@ async function handleDraft(c: any, payload: any): Promise<string> {
       payoff_kind: d.payoff_kind,
       angle: d.angle,
       series: d.series,
+      practical_score: quality.practicalScore,
+      local_hits: quality.localHits,
+      tomorrow_action: d.tomorrow_action,
+      source_lang: src.lang ?? null,
+      source_country: src.country ?? null,
+      source_type: src.source_type ?? null,
     },
     practical_notes: d.practical_notes,
     tags: d.tags,
@@ -1084,8 +1116,12 @@ async function handleMaintenance(c: any): Promise<string> {
     source_topics: it.academy_sources?.topics ?? null,
     is_commercial: !!it.academy_sources?.is_commercial,
   }));
+  const { data: recentPub } = await c.from("academy_drafts").select("title")
+    .eq("status", "published")
+    .gte("updated_at", new Date(now.getTime() - 30 * 86_400_000).toISOString())
+    .limit(200);
   const items = pickDraftCandidates(cands, deficits, now.getTime(),
-    target * 2);
+    target * 2, (recentPub ?? []).map((x: any) => x.title as string));
   for (const it of items ?? []) {
     await c.rpc("academy_enqueue_job", {
       p_job_type: "draft",
@@ -1156,10 +1192,15 @@ async function handleMaintenance(c: any): Promise<string> {
   const { data: todayPub } = await c.from("academy_drafts")
     .select("content_type").eq("status", "published")
     .gte("updated_at", dayStartIso);
-  const newsToday = (todayPub ?? []).filter((d: any) =>
-    bucketOf(d.content_type) === "haber_mevzuat"
-  ).length;
-  const ordered = orderForMix(
+  const todayCounts: Partial<Record<TopicBucket, number>> = {};
+  for (const d of todayPub ?? []) {
+    const k = bucketOf(d.content_type);
+    todayCounts[k] = (todayCounts[k] ?? 0) + 1;
+  }
+  // Günlük plan (yumuşak): 2 üretim, 1 işletme, 1 ürün kalitesi, 1 hijyen/
+  // satış, en fazla 1 haber+derin. Sayı uğruna yayın YOK: hedef tavandır,
+  // kalite kapısından geçen kadar yayınlanır.
+  const ordered = orderForDailyPlan(
     (ready ?? []) as {
       id: string; bot_key: string; content_type: string;
       topic?: string | null; tags?: string[] | null;
@@ -1168,7 +1209,8 @@ async function handleMaintenance(c: any): Promise<string> {
       ? { bot_key: lastPub.bot_key, content_type: lastPub.content_type }
       : null,
     deficits,
-    { newsAllowed: newsToday < newsCap },
+    todayCounts,
+    { newsCap },
   );
   for (const d of ordered) {
     const slot = nextPublishSlot(base, winStart, winEnd);
