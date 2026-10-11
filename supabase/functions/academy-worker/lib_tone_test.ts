@@ -479,3 +479,32 @@ Deno.test("Aday puanı: çevrilemeyen yabancı basın bülteni ek eksi; yerel ba
   assert(foreignPress < -5, "yabancı basın: " + foreignPress);
   assert(localCraft > 8, "yerel üretim: " + localCraft);
 });
+
+Deno.test("Türkçe kelime sınırı: 'kullanılan' yapay ağız sayılmaz; payoff paragrafta", () => {
+  const q = editorialQuality({
+    contentType: "hygiene",
+    title: "Fırının içi yağ bağladığında temizlik nereden başlar?",
+    body: "Sürekli kullanılan fırının camı yağ bağlar; yumuşak bez ve uygun " +
+      "deterjan öneriliyor. Tel fırça yüzeyi çizer.\n\nFırında biriken yağ ve " +
+      "koku pişen ürünün tadını bozar, müşteri şikâyetine yol açar; düzenli " +
+      "bakım bunu azaltır.",
+    editorialNote: "",
+    practicalNotes: "",
+    recentTitles: [],
+    payoff:
+      "Biriken yağ ve koku ürünün tadını bozarak müşteri şikâyetine yol açabilir; düzenli bakım bunu azaltır.",
+    payoffKind: "sikayet",
+    tomorrowAction:
+      "Yarın fırını çalıştırmadan önce iç yüzeyde yağ tabakasına bak.",
+  });
+  assert(!q.warnings.includes("fake_voice"), q.warnings.join(","));
+  assert(
+    !q.blockers.some((b) => b.startsWith("fake_voice")),
+    q.blockers.join(","),
+  );
+  assert(!q.warnings.includes("payoff_not_in_text"), q.warnings.join(","));
+  assert(
+    localityHits("Sürekli kullanılan fırın kasası ve tezgâh bezi") >= 2,
+    "yerel terim",
+  );
+});

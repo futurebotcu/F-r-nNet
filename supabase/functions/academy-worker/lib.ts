@@ -1745,11 +1745,21 @@ export function openingKey(text: string): string {
     .split(/[^\p{L}\p{N}]+/u).filter(Boolean).slice(0, 4).join(" ");
 }
 
+function stemSet(s: string): Set<string> {
+  return new Set([...wordSet(s)].map(stemTr));
+}
+/** Payoff cümlesi metinde (kök tabanlı; cümle ya da paragraf) geçiyor mu. */
 function payoffInText(payoff: string, text: string): boolean {
-  const pw = wordSet(payoff);
+  const pw = stemSet(payoff);
   if (pw.size < 3) return true;
   for (const s of sentencesOf(text)) {
-    if (jaccard(pw, wordSet(s)) >= 0.4) return true;
+    if (jaccard(pw, stemSet(s)) >= 0.35) return true;
+  }
+  for (const para of text.split(/\n\s*\n/)) {
+    const ps = stemSet(para);
+    let hit = 0;
+    for (const w of pw) if (ps.has(w)) hit++;
+    if (hit / pw.size >= 0.6) return true;
   }
   return false;
 }
@@ -1865,18 +1875,22 @@ export interface DraftCandidate {
 
 const PRACTICAL_TITLE_RE = new RegExp(
   "(hamur|dough|proof|ferment|maya|yeast|kabuk|crust|crumb|bayat|stale|" +
-    "\\btuz|\\bsalt|su sıcaklığı|water temp|hydration|oven|fırın|buhar|steam|" +
-    "gramaj|fire\\b|waste|maliyet|cost|vardiya|shift|hijyen|hygiene|temizlik|" +
-    "clean|raf ömrü|shelf life|\\bun\\b|flour|yoğurma|mixing|knead|" +
-    "şekillendir|shaping|scoring|pişir|baking|\\bbake|troubleshoot|neden|" +
-    "nasıl|\\bwhy\\b|how to|tips|mistake|hata|sorun|sıcaklık|temperature)",
+    "(?<![\\p{L}])tuz|(?<![\\p{L}])salt|su sıcaklığı|water temp|hydration|" +
+    "oven|fırın|buhar|steam|gramaj|(?<![\\p{L}])fire|waste|maliyet|cost|" +
+    "vardiya|shift|hijyen|hygiene|temizlik|clean|raf ömrü|shelf life|" +
+    "(?<![\\p{L}])un(?![\\p{L}])|flour|yoğurma|mixing|knead|şekillendir|" +
+    "shaping|scoring|pişir|baking|(?<![\\p{L}])bake|troubleshoot|neden|" +
+    "nasıl|(?<![\\p{L}])why(?![\\p{L}])|how to|tips|mistake|hata|sorun|" +
+    "sıcaklık|temperature)",
   "giu",
 );
 const PRESS_TITLE_RE = new RegExp(
   "(announc|launch|appoint|acqui|merger|award|conference|expo|trade show|" +
     "fuar|ödül|atama|satın al|duyurdu|lansman|sponsor|anniversary|" +
-    "yıl dönümü|celebrat|kutla|partnership|iş birliği|\\bceo\\b|revenue|" +
-    "quarter|\\bq[1-4]\\b|\\bipo\\b|invest|opens new|yeni tesis)",
+    "yıl dönümü|celebrat|kutla|partnership|iş birliği|" +
+    "(?<![\\p{L}])ceo(?![\\p{L}])|revenue|quarter|" +
+    "(?<![\\p{L}])q[1-4](?![\\p{L}\\p{N}])|(?<![\\p{L}])ipo(?![\\p{L}])|" +
+    "invest|opens new|yeni tesis)",
   "giu",
 );
 const TOPIC_BUCKET: Record<string, TopicBucket> = {
@@ -1960,25 +1974,40 @@ export function pickDraftCandidates<T extends DraftCandidate>(
 }
 
 // ── Son katman: yerel gerçeklik, pratiklik, konu yorgunluğu, not guard'ı ──
-const FAKE_VOICE_RE =
-  /(\bustam\b|\babi\b|\bkanka\b|\bvalla\b|\byav\b|\bbe usta\b|hadi bakalım|\bbirader\b|\bmoruk\b|\blan\b)/giu;
+// JS `\b` yalnız ASCII harfleri kelime sayar: "kullanılan" içindeki "lan"
+// 'ı' önünde sınır sayılır. Türkçe için harf-tabanlı lookaround kullanılır.
+const NB = "(?<![\\p{L}\\p{N}])"; // kelime başı
+const NE = "(?![\\p{L}\\p{N}])"; // kelime sonu
+const W = (w: string) => NB + w + NE;
+const FAKE_VOICE_RE = new RegExp(
+  [
+    W("ustam"), W("abi"), W("kanka"), W("valla"), W("yav"), W("be usta"),
+    "hadi bakalım", W("birader"), W("moruk"), W("lan"),
+  ].join("|"),
+  "giu",
+);
 
 /** Türkiye fırın pratiği sözlüğü (TR + yabancı kaynakta karşılığı). */
 const LOCAL_TERMS_RE = new RegExp(
   "(somun|pide|ramazan|simit|poğaça|açma|börek|lavaş|ekşi maya|yaş maya|" +
     "kuru maya|çuval|parti değiş|un partisi|hamur sıcaklığı|gece üretim|" +
-    "sabah ilk|ilk pişir|bayi|kasalama|kasa\\b|gramaj|fire\\b|iade|tezgâh|" +
-    "tezgah|vardiya|usta değiş|usta\\b|çırak|doğalgaz|elektrik|mikser|" +
-    "yoğurma|mahalle fırın|fırın taşı|tava\\b|kürek|hamur teknesi|bez\\b|" +
-    "mayalanma|dinlendirme|kabuk|bayat|dilimleme|ayçekirdek|susam)",
+    "sabah ilk|ilk pişir|bayi|kasalama|" + NB + "kasa|gramaj|" + NB +
+    "fire|iade|tezgâh|tezgah|vardiya|usta değiş|" + NB + "usta|çırak|" +
+    "doğalgaz|elektrik|mikser|yoğurma|mahalle fırın|fırın taşı|" + NB +
+    "tava|kürek|hamur teknesi|" + NB + "bez|mayalanma|dinlendirme|kabuk|" +
+    "bayat|dilimleme|ayçekirdek|susam)",
   "giu",
 );
 export function localityHits(text: string): number {
   return (text ?? "").match(LOCAL_TERMS_RE)?.length ?? 0;
 }
 
-const ACTION_VERB_RE =
-  /(ölç|tart|kontrol|not (al|et|tut)|deftere|kaydet|ayarla|karşılaştır|dene|bak\b|izle|say\b|değiştir|soğut|ılıt|kısalt|uzat|erken|geç\b|ayır|temizle|yıka|planla|sor\b)/iu;
+const ACTION_VERB_RE = new RegExp(
+  "(ölç|tart|kontrol|not (al|et|tut)|deftere|kaydet|ayarla|karşılaştır|" +
+    "dene|" + NB + "bak|izle|" + NB + "say|değiştir|soğut|ılıt|kısalt|uzat|" +
+    "erken|" + NB + "geç|ayır|temizle|yıka|planla|" + NB + "sor)",
+  "iu",
+);
 
 /** "Yarın sabah fırında neyi farklı yapar?" — 0-100. */
 export function practicalityScore(i: {
