@@ -595,7 +595,8 @@ Deno.test("E2: fırıncılık ilgisi — protein yaz okulu RED, ekmek/un haberi 
 });
 
 Deno.test("E3: uzun haber + emir listesi kalite kapısında işaretlenir", () => {
-  const longNews = "SIAL Paris 17-21 Ekim'de Paris'te düzenleniyor. ".repeat(40);
+  // Ton turu: haber yumuşak üst sınırı 160 kelime, sert sınır 260.
+  const longNews = "SIAL Paris 17-21 Ekim'de Paris'te düzenleniyor. ".repeat(30);
   const q = editorialQuality({
     contentType: "news",
     title: "SIAL Paris 17-21 Ekim'de",
