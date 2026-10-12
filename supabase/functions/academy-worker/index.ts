@@ -17,12 +17,19 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   estimateLlmTokens,
   BAKERY_TOPICAL_RE,
+  bucketOf,
+  checkEditorialNote,
+  mixDeficits,
+  openingKey,
+  orderForDailyPlan,
+  pickDraftCandidates,
+  topicSignature,
+  type TopicBucket,
   bakeryRelevance,
   buildDraftPrompt,
   decideNeedsVisual,
   editorialQuality,
   nextPublishSlot,
-  orderForDiversity,
   decodeBody,
   buildHumorPrompt,
   checkClaimsAgainstSource,
@@ -50,6 +57,16 @@ const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 const FETCH_TIMEOUT_MS = 15000;
 const MAX_BODY_BYTES = 1_500_000;
 const UA = "FirinNetAcademyBot/1.1 (+https://firinnet.app; icerik-takibi)";
+
+const MIX_LABEL: Record<TopicBucket, string> = {
+  uretim_ustalik: "günlük üretim ve ustalık",
+  isletme_maliyet: "işletme ve maliyet",
+  urun_kalite: "ürün kalitesi / hata çözümü",
+  hijyen: "hijyen ve gıda güvenliği",
+  haber_mevzuat: "sektör haberi / mevzuat",
+  satis_musteri: "satış, müşteri ve ürün sunumu",
+  derin_teknik: "derin teknik bilgi",
+};
 
 function db() {
   return createClient(SUPABASE_URL, SERVICE_KEY);
@@ -622,6 +639,25 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     .select("style_prompt").eq("bot_key", botKey).maybeSingle();
   if (!bot || !bot.is_active) return "bot_disabled";
 
+  // Son yayınlar: aynı açılış kalıbı ve aynı konu tekrarı için.
+  const { data: recent } = await c.from("academy_drafts")
+    .select("title, body, content_type, topic, tags, quality")
+    .eq("status", "published")
+    .gte("updated_at", new Date(Date.now() - 30 * 86_400_000).toISOString())
+    .order("updated_at", { ascending: false })
+    .limit(120);
+  const recentSignatures = (recent ?? []).map((x: any) =>
+    topicSignature(
+      String(x.title ?? ""),
+      String(x.quality?.payoff ?? ""),
+      String(x.body ?? ""),
+    )
+  );
+  const recentOpenings = (recent ?? []).slice(0, 8)
+    .map((x: any) => openingKey(x.body ?? "")).filter(Boolean);
+  const deficitsNow = mixDeficits(recent ?? []);
+  const mostMissing = (Object.keys(deficitsNow) as TopicBucket[])
+    .sort((x, y) => deficitsNow[y] - deficitsNow[x])[0];
   const prompt = buildDraftPrompt({
     botName: botKey,
     style: style?.style_prompt ?? "",
@@ -633,6 +669,10 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     title: item.title,
     publishedAt: item.published_at,
     text: fullText,
+    avoidOpenings: (recent ?? []).slice(0, 6)
+      .map((x: any) => String(x.body ?? "").split(/(?<=[.!?])\s+/)[0] ?? "")
+      .filter((o: string) => o.length > 12).map((o: string) => o.slice(0, 90)),
+    mixHint: MIX_LABEL[mostMissing],
   });
   const r = await deepseek(c, prompt.system, prompt.user, 8000);
   if (!r.ok) {
@@ -658,9 +698,6 @@ async function handleDraft(c: any, payload: any): Promise<string> {
   );
   // Editoryal kalite kapısı: uyarılar kayda geçer, yalnız blokerler
   // (aşırı uzunluk, aynı konunun tekrarı) yayını durdurur.
-  const { data: recent } = await c.from("academy_drafts").select("title")
-    .eq("status", "published").order("updated_at", { ascending: false })
-    .limit(30);
   const quality = editorialQuality({
     contentType: d.content_type,
     title: d.title,
@@ -668,7 +705,25 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     editorialNote: d.editorial_note,
     practicalNotes: d.practical_notes,
     recentTitles: (recent ?? []).map((x: any) => x.title as string),
+    recentOpenings,
+    payoff: d.payoff,
+    payoffKind: d.payoff_kind,
+    tomorrowAction: d.tomorrow_action,
+    recentSignatures,
   });
+  // FırınNet notu guard'ı: kaynakta olmayan çıkarımda ölçü/mevzuat/sağlık/
+  // kesinlik yok (deterministik; modelin sözü yetmez).
+  const noteCheck = checkEditorialNote(d.editorial_note, fullText);
+  if (!noteCheck.ok) quality.blockers.push(...noteCheck.reasons);
+  // Sayı uğruna yayın yok: kalite tabanı.
+  const minScore = await cfgInt(c, "academy_min_quality_score", 70);
+  const adjScore = Math.max(
+    0,
+    100 - 12 * quality.warnings.length - 45 * quality.blockers.length,
+  );
+  if (adjScore < minScore && !quality.blockers.length) {
+    quality.blockers.push(`quality_below_min:${adjScore}<${minScore}`);
+  }
   const needsVisual = decideNeedsVisual(d.content_type, d.visual_needed);
   const publishable = d.publishable && evidence.ok &&
     quality.blockers.length === 0;
@@ -687,17 +742,27 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     kind: d.kind,
     content_type: d.content_type,
     topic: d.topic || bot.topic,
-    title: d.title,
+    title: d.series ? `${d.title} (${d.series})` : d.title,
     body: d.body,
     editorial_note: d.editorial_note,
     needs_visual: needsVisual,
     quality: {
-      score: quality.score,
+      score: adjScore,
       warnings: quality.warnings,
       blockers: quality.blockers,
       words: quality.words,
       imperatives: quality.imperatives,
       relevance,
+      payoff: d.payoff,
+      payoff_kind: d.payoff_kind,
+      angle: d.angle,
+      series: d.series,
+      practical_score: quality.practicalScore,
+      local_hits: quality.localHits,
+      tomorrow_action: d.tomorrow_action,
+      source_lang: src.lang ?? null,
+      source_country: src.country ?? null,
+      source_type: src.source_type ?? null,
     },
     practical_notes: d.practical_notes,
     tags: d.tags,
@@ -799,7 +864,15 @@ async function handlePublish(c: any, payload: any): Promise<string> {
   });
   if (error) return "publish_rpc_error";
   const row = Array.isArray(data) ? data[0] : data;
-  return String(row?.result ?? "unknown");
+  const result = String(row?.result ?? "unknown");
+  // Botu kapalı taslak kuyrukta dönüp durmasın: kenara al (bot açılınca
+  // elle geri alınabilir; içerik silinmez).
+  if (result === "bot_disabled") {
+    await c.from("academy_drafts")
+      .update({ status: "rejected", status_reason: "bot_disabled" })
+      .eq("id", payload.draft_id);
+  }
+  return result;
 }
 
 // ── Mizah üretim/etkileşim işleri ────────────────────────────────────
@@ -1019,12 +1092,36 @@ async function handleMaintenance(c: any): Promise<string> {
     });
   }
 
-  // 3) Uygun adaylar → draft.
+  // 3) Uygun adaylar → draft. En yeni haber değil, "günlük işe yarar"
+  // puanı: pratik başlık, usta/arşiv kaynağı, Türkçe yerel gerçeklik ve
+  // akışta eksik kalan konu kovası öne çıkar; basın bülteni geri düşer.
   const target = await cfgInt(c, "academy_daily_post_target", 6);
-  const { data: items } = await c.from("academy_content_items")
-    .select("id").in("status", ["discovered", "read", "eligible"])
+  const mixDays = await cfgInt(c, "academy_mix_window_days", 14);
+  const { data: pubMix } = await c.from("academy_drafts")
+    .select("content_type, topic, tags").eq("status", "published")
+    .gte("updated_at", new Date(now.getTime() - mixDays * 86_400_000)
+      .toISOString());
+  const deficits = mixDeficits(pubMix ?? []);
+  const { data: pool } = await c.from("academy_content_items")
+    .select("id, title, published_at, academy_sources!inner(source_type, lang, topics, is_commercial)")
+    .in("status", ["discovered", "read", "eligible"])
     .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(target * 2);
+    .limit(300);
+  const cands = (pool ?? []).map((it: any) => ({
+    id: it.id as string,
+    title: (it.title ?? "") as string,
+    published_at: it.published_at as string | null,
+    source_type: it.academy_sources?.source_type ?? null,
+    source_lang: it.academy_sources?.lang ?? null,
+    source_topics: it.academy_sources?.topics ?? null,
+    is_commercial: !!it.academy_sources?.is_commercial,
+  }));
+  const { data: recentPub } = await c.from("academy_drafts").select("title")
+    .eq("status", "published")
+    .gte("updated_at", new Date(now.getTime() - 30 * 86_400_000).toISOString())
+    .limit(200);
+  const items = pickDraftCandidates(cands, deficits, now.getTime(),
+    target * 2, (recentPub ?? []).map((x: any) => x.title as string));
   for (const it of items ?? []) {
     await c.rpc("academy_enqueue_job", {
       p_job_type: "draft",
@@ -1054,11 +1151,25 @@ async function handleMaintenance(c: any): Promise<string> {
   const readyStatuses = dryRun
     ? ["media_ready", "scheduled"]
     : ["media_ready", "scheduled", "dry_run_done"];
-  const { data: ready } = await c.from("academy_drafts")
-    .select("id, bot_key, content_type")
+  // Yayını kapalı botun (ör. mizah posting_enabled=false) taslakları kuyruğa
+  // ALINMAZ: publish RPC'si bunları 'bot_disabled' ile geri çevirir, taslak
+  // durumu değişmez ve aynı taslaklar her turda `limit(target)` slotlarını
+  // doldurup haber taslaklarını aç bırakır (2026-10-07 kesintisinin nedeni).
+  const { data: disabledBots } = await c.from("academy_bot_profiles")
+    .select("bot_key").or("is_active.eq.false,posting_enabled.eq.false");
+  const disabledKeys = (disabledBots ?? []).map((b: { bot_key: string }) =>
+    b.bot_key
+  );
+  let readyQ = c.from("academy_drafts")
+    .select("id, bot_key, content_type, topic, tags")
     .in("status", readyStatuses)
     .or(`scheduled_for.is.null,scheduled_for.lte.${now.toISOString()}`)
+    .order("created_at", { ascending: true })
     .limit(target);
+  if (disabledKeys.length > 0) {
+    readyQ = readyQ.not("bot_key", "in", `(${disabledKeys.join(",")})`);
+  }
+  const { data: ready } = await readyQ;
   // Yayın aralığı FARKLI maintenance turlarında da korunur: taban zaman,
   // SON yayının zamanından türetilir (feed tek dakikada dolmaz). Her slot
   // İstanbul yayın penceresine (varsayılan 08:00-21:30) taşınır; sıra,
@@ -1074,11 +1185,32 @@ async function handleMaintenance(c: any): Promise<string> {
     .order("updated_at", { ascending: false }).limit(1).maybeSingle();
   const lastMs = lastPub ? Date.parse(lastPub.updated_at) : 0;
   let base = Math.max(now.getTime(), lastMs + gapMs);
-  const ordered = orderForDiversity(
-    (ready ?? []) as { id: string; bot_key: string; content_type: string }[],
+  // Günlük haber tavanı: bugün yayınlanan haber sayısı tavana ulaştıysa
+  // haberler bu turda sıraya alınmaz (ertesi güne bekler).
+  const newsCap = await cfgInt(c, "academy_news_daily_cap", 1);
+  const dayStartIso = istDay() + "T00:00:00+03:00";
+  const { data: todayPub } = await c.from("academy_drafts")
+    .select("content_type").eq("status", "published")
+    .gte("updated_at", dayStartIso);
+  const todayCounts: Partial<Record<TopicBucket, number>> = {};
+  for (const d of todayPub ?? []) {
+    const k = bucketOf(d.content_type);
+    todayCounts[k] = (todayCounts[k] ?? 0) + 1;
+  }
+  // Günlük plan (yumuşak): 2 üretim, 1 işletme, 1 ürün kalitesi, 1 hijyen/
+  // satış, en fazla 1 haber+derin. Sayı uğruna yayın YOK: hedef tavandır,
+  // kalite kapısından geçen kadar yayınlanır.
+  const ordered = orderForDailyPlan(
+    (ready ?? []) as {
+      id: string; bot_key: string; content_type: string;
+      topic?: string | null; tags?: string[] | null;
+    }[],
     lastPub
       ? { bot_key: lastPub.bot_key, content_type: lastPub.content_type }
       : null,
+    deficits,
+    todayCounts,
+    { newsCap },
   );
   for (const d of ordered) {
     const slot = nextPublishSlot(base, winStart, winEnd);
@@ -1095,7 +1227,14 @@ async function handleMaintenance(c: any): Promise<string> {
 
   // 6) Günde bir mizah gönderisi (başarı sonrası cooldown — aynı gün
   // yeniden üretilmez; partial dedupe yalnız queued/running'i kilitler).
-  await c.rpc("academy_enqueue_job", {
+  // Mizah botunun yayını kapalıysa üretim de yapılmaz (her gün yayınlanamayan
+  // taslak + boşa LLM maliyeti birikiyordu).
+  const { data: humorBot } = await c.from("academy_bot_profiles")
+    .select("is_active, posting_enabled").eq("is_humor", true).limit(1)
+    .maybeSingle();
+  const humorPostingOn = !!humorBot && humorBot.is_active &&
+    humorBot.posting_enabled;
+  if (humorPostingOn) await c.rpc("academy_enqueue_job", {
     p_job_type: "humor_post",
     p_payload: {},
     p_dedupe_key: `humor:${day}`,
