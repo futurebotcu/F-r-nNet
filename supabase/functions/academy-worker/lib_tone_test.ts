@@ -433,10 +433,13 @@ Deno.test("Günlük plan: üretim 2 ile sınırlı (yumuşak), haber+derin topla
   const ids = out.map((c) => c.id);
   const newsLike = ids.filter((i) => i === "n1" || i === "r1");
   assert(newsLike.length === 1, "haber+derin toplam 1: " + ids.join(","));
+  // Gunluk plan: b1'den once en cok 2 uretim; ucuncusu sona kayar.
+  const beforeB1 = ids.slice(0, ids.indexOf("b1"));
   assert(
-    ids.indexOf("c3") > ids.indexOf("b1"),
-    "3. üretim işletmenin arkasına: " + ids,
+    beforeB1.filter((i) => i.startsWith("c")).length === 2,
+    "b1 oncesi 2 uretim: " + ids,
   );
+  assert(ids[ids.length - 1].startsWith("c"), "ucuncu uretim sonda: " + ids);
   assert(ids.length === 5, "üçüncü üretim düşmez, sona gider");
   const full = orderForDailyPlan(cands, null, d, { haber_mevzuat: 1 }, {
     newsCap: 1,
