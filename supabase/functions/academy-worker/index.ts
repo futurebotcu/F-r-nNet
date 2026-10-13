@@ -19,6 +19,8 @@ import {
   BAKERY_TOPICAL_RE,
   bucketOf,
   checkEditorialNote,
+  isLowValueCandidate,
+  unquoteTranslated,
   mixDeficits,
   openingKey,
   orderForDailyPlan,
@@ -614,6 +616,20 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     }).eq("id", item.id);
     return "rejected_low_relevance";
   }
+  // Token tasarrufu: yabancı basın/etkinlik bülteni, pratik/yerel köprüsü
+  // yok ve ilgi zayıf → LLM'e gitmeden elenir (model zaten reddediyordu).
+  if (
+    isLowValueCandidate({
+      title: item.title ?? "",
+      lang: src.lang ?? null,
+      relevanceScore: relevance.score,
+    })
+  ) {
+    await c.from("academy_content_items").update({
+      status: "rejected", status_reason: "press_release_prior",
+    }).eq("id", item.id);
+    return "rejected_press_prior";
+  }
 
   // Adil bot seçimi: kaynağın eşleştiği botlar arasından bugün en az
   // taslak üretmiş olan (ilk-konu tekeli YOK).
@@ -688,6 +704,13 @@ async function handleDraft(c: any, payload: any): Promise<string> {
     return "invalid_output_" + v.reason;
   }
   const d = v.draft;
+  // Çeviri tırnağı: kaynakta birebir geçmeyen tırnaklı span atıflı
+  // paraphrase'e döner (tırnaklar kalkar, metin ve kaynak satırı kalır).
+  const uq = unquoteTranslated(d.body, fullText);
+  d.body = uq.body;
+  const uqNote = unquoteTranslated(d.editorial_note, fullText);
+  d.editorial_note = uqNote.body;
+  const unquoted = uq.changed + uqNote.changed;
   // OTOMATİK iddia-kanıt denetimi: quote kaynakta + sayı/birim korunur +
   // başlık/gövde/pratik not birlikte kapsanır (modelin publishable'ı ve
   // ikinci bir modelin onayı YETMEZ — deterministik).
@@ -759,6 +782,7 @@ async function handleDraft(c: any, payload: any): Promise<string> {
       series: d.series,
       practical_score: quality.practicalScore,
       local_hits: quality.localHits,
+      unquoted_translations: unquoted,
       tomorrow_action: d.tomorrow_action,
       source_lang: src.lang ?? null,
       source_country: src.country ?? null,
