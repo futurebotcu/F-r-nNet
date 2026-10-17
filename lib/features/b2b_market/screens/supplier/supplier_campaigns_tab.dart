@@ -16,6 +16,7 @@ import '../../models/b2b_campaign.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_async_list.dart';
 import '../../widgets/b2b_campaign_card.dart';
+import '../../widgets/b2b_manage_actions.dart';
 import '../../widgets/b2b_category_chip_row.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
 
@@ -68,6 +69,7 @@ class _SupplierCampaignsTabState extends ConsumerState<SupplierCampaignsTab> {
               onTogglePublish: () => ref
                   .read(b2bMarketControllerProvider.notifier)
                   .setCampaignPublished(c.id, !c.published),
+              onDelete: () => confirmAndDeleteCampaign(context, ref, c),
             ),
           ),
         ),

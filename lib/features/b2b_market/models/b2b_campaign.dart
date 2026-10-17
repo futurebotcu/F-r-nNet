@@ -14,6 +14,7 @@ class B2bCampaign {
     required this.minPurchase,
     required this.validUntil,
     this.linkedProduct,
+    this.linkedProductId,
     this.isMine = false,
     this.description = '',
     this.published = true,
@@ -35,8 +36,11 @@ class B2bCampaign {
   /// Geçerlilik tarihi — serbest metin (ör. "30 Haziran 2026").
   final String validUntil;
 
-  /// Bağlı ürün adı (opsiyonel).
+  /// Bağlı ürün adı (opsiyonel; gösterim).
   final String? linkedProduct;
+
+  /// Bağlı ürün id'si (DB linked_product_id; S3'te gerçekten yazılır).
+  final String? linkedProductId;
 
   /// Tedarikçinin kendi kampanyası mı (mock sahiplik).
   final bool isMine;
@@ -75,6 +79,7 @@ class B2bCampaign {
     String? minPurchase,
     String? validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String? description,
     bool? published,
     String? imageUrl,
@@ -89,6 +94,7 @@ class B2bCampaign {
       minPurchase: minPurchase ?? this.minPurchase,
       validUntil: validUntil ?? this.validUntil,
       linkedProduct: linkedProduct ?? this.linkedProduct,
+      linkedProductId: linkedProductId ?? this.linkedProductId,
       isMine: isMine,
       description: description ?? this.description,
       published: published ?? this.published,

@@ -23,6 +23,8 @@ class B2bProductCard extends StatelessWidget {
     this.ownerContext = true,
     this.onEdit,
     this.onTogglePublish,
+    this.onDuplicate,
+    this.onDelete,
     this.onTap,
   });
 
@@ -37,6 +39,10 @@ class B2bProductCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onTogglePublish;
 
+  /// S3 — çoğalt / sil (yalnız sahip; menüde).
+  final VoidCallback? onDuplicate;
+  final VoidCallback? onDelete;
+
   /// Tedarikçi önizlemesinde true → kendi ürününde "Benim ürünüm" rozeti +
   /// aksiyon gizli. Fırıncı (alıcı) görünümünde false → sahiplik yok sayılır
   /// (her ürün normal pazar ürünü gibi davranır).
@@ -44,7 +50,11 @@ class B2bProductCard extends StatelessWidget {
 
   bool get _isMine => product.isMine && ownerContext;
   bool get _canManage =>
-      _isMine && (onEdit != null || onTogglePublish != null);
+      _isMine &&
+      (onEdit != null ||
+          onTogglePublish != null ||
+          onDuplicate != null ||
+          onDelete != null);
 
   bool get _hasImage =>
       product.imageUrl != null && product.imageUrl!.isNotEmpty;
@@ -101,6 +111,8 @@ class B2bProductCard extends StatelessWidget {
                   published: product.published,
                   onEdit: onEdit,
                   onTogglePublish: onTogglePublish,
+                  onDuplicate: onDuplicate,
+                  onDelete: onDelete,
                 ),
               ],
             ],

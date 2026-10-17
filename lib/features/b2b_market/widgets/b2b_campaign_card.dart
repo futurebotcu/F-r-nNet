@@ -22,6 +22,7 @@ class B2bCampaignCard extends StatelessWidget {
     this.ownerContext = true,
     this.onEdit,
     this.onTogglePublish,
+    this.onDelete,
     this.onTap,
   });
 
@@ -35,13 +36,17 @@ class B2bCampaignCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onTogglePublish;
 
+  /// S3 — sil (yalnız sahip; menüde, onay dialogu çağıranda).
+  final VoidCallback? onDelete;
+
   /// Tedarikçi önizlemesinde true → kendi kampanyasında "Benim kampanyam"
   /// rozeti + aksiyon gizli. Fırıncı görünümünde false → sahiplik yok sayılır.
   final bool ownerContext;
 
   bool get _isMine => campaign.isMine && ownerContext;
   bool get _canManage =>
-      _isMine && (onEdit != null || onTogglePublish != null);
+      _isMine &&
+      (onEdit != null || onTogglePublish != null || onDelete != null);
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +128,7 @@ class B2bCampaignCard extends StatelessWidget {
                             published: campaign.published,
                             onEdit: onEdit,
                             onTogglePublish: onTogglePublish,
+                            onDelete: onDelete,
                           ),
                         ],
                       ],

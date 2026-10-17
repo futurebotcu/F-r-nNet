@@ -17,6 +17,7 @@ import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_async_list.dart';
 import '../../widgets/b2b_category_chip_row.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
+import '../../widgets/b2b_manage_actions.dart';
 import '../../widgets/b2b_product_card.dart';
 import '../../widgets/b2b_search_field.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -79,6 +80,8 @@ class _SupplierProductsTabState extends ConsumerState<SupplierProductsTab> {
               onTogglePublish: () => ref
                   .read(b2bMarketControllerProvider.notifier)
                   .setProductPublished(p.id, !p.published),
+              onDuplicate: () => duplicateProductWithFeedback(context, ref, p),
+              onDelete: () => confirmAndDeleteProduct(context, ref, p),
             ),
           ),
         ),

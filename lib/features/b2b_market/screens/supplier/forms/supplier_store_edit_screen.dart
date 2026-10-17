@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_tokens.dart';
+import '../../../../../core/widgets/dirty_form_guard.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
 import '../../../providers/b2b_providers.dart';
 import '../../../services/b2b_media_upload_service.dart';
@@ -29,10 +30,22 @@ class _SupplierStoreEditScreenState
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _description = TextEditingController();
+  // S3 — iletişim alanları (opsiyonel; sunucuda uzunluk CHECK, RLS owner).
+  final _phone = TextEditingController();
+  final _whatsapp = TextEditingController();
+  final _website = TextEditingController();
+  final _address = TextEditingController();
   final Set<String> _regions = <String>{};
   final Set<String> _categories = <String>{};
   String? _logoUrl;
   String? _coverUrl;
+  bool _saving = false; // çift-submit guard (ürün/kampanya formlarıyla aynı)
+  bool _dirty = false;
+  bool _hydrating = true;
+  void _markDirty() {
+    if (_hydrating || _dirty) return;
+    setState(() => _dirty = true);
+  }
 
   @override
   void initState() {
@@ -54,6 +67,13 @@ class _SupplierStoreEditScreenState
         ..addAll(store.categories);
       _logoUrl = store.logoUrl;
       _coverUrl = store.coverUrl;
+      _phone.text = store.phone ?? '';
+      _whatsapp.text = store.whatsapp ?? '';
+      _website.text = store.website ?? '';
+      _address.text = store.address ?? '';
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _hydrating = false;
     });
   }
 
@@ -61,11 +81,22 @@ class _SupplierStoreEditScreenState
   void dispose() {
     _name.dispose();
     _description.dispose();
+    _phone.dispose();
+    _whatsapp.dispose();
+    _website.dispose();
+    _address.dispose();
     super.dispose();
   }
 
+  static String? validatePhone(String? v) =>
+      SupplierStoreEditScreenValidators.phone(v);
+  static String? validateWebsite(String? v) =>
+      SupplierStoreEditScreenValidators.website(v);
+
   Future<void> _save() async {
+    if (_saving) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _saving = true);
     try {
       await ref
           .read(b2bMarketControllerProvider.notifier)
@@ -76,14 +107,20 @@ class _SupplierStoreEditScreenState
             categories: _categories.toList(),
             logoUrl: _logoUrl,
             coverUrl: _coverUrl,
+            phone: _phone.text.trim(),
+            whatsapp: _whatsapp.text.trim(),
+            website: _website.text.trim(),
+            address: _address.text.trim(),
           );
     } catch (_) {
       if (!mounted) return;
+      setState(() => _saving = false);
       AppFeedback.error(context, AppStrings.polishB2bStoreError);
       return;
     }
 
     if (!mounted) return;
+    _dirty = false;
     AppFeedback.success(context, AppStrings.polishB2bStoreUpdated);
     Navigator.of(context).pop();
   }
@@ -93,11 +130,12 @@ class _SupplierStoreEditScreenState
     final regionOptions = ref.read(b2bRepositoryProvider).serviceRegions();
     final categoryOptions = ref.read(b2bRepositoryProvider).productCategories();
 
-    return PremiumScaffold(
+    final scaffold = PremiumScaffold(
       appBar: AppBar(title: const Text('Mağazanı düzenle')),
       body: SafeArea(
         child: Form(
           key: _formKey,
+          onChanged: _markDirty,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pageH,
@@ -143,6 +181,53 @@ class _SupplierStoreEditScreenState
                 }),
               ),
               const SizedBox(height: AppSpacing.l),
+              // S3 — İletişim (opsiyonel). Yalnız oturum açmış kullanıcılara
+              // mağaza sayfasında gösterilir (RLS).
+              Text(
+                AppStrings.b2bStoreContactSection,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: AppSpacing.s),
+              B2bTextField(
+                key: const ValueKey('b2b_store_phone'),
+                label: AppStrings.b2bStorePhoneLabel,
+                controller: _phone,
+                hint: AppStrings.b2bStorePhoneHint,
+                validator: validatePhone,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: AppSpacing.l),
+              B2bTextField(
+                key: const ValueKey('b2b_store_whatsapp'),
+                label: AppStrings.b2bStoreWhatsappLabel,
+                controller: _whatsapp,
+                hint: AppStrings.b2bStoreWhatsappHint,
+                validator: validatePhone,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: AppSpacing.l),
+              B2bTextField(
+                key: const ValueKey('b2b_store_website'),
+                label: AppStrings.b2bStoreWebsiteLabel,
+                controller: _website,
+                hint: AppStrings.b2bStoreWebsiteHint,
+                validator: validateWebsite,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: AppSpacing.l),
+              B2bTextField(
+                key: const ValueKey('b2b_store_address'),
+                label: AppStrings.b2bStoreAddressLabel,
+                controller: _address,
+                hint: AppStrings.b2bStoreAddressHint,
+                maxLines: 2,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                AppStrings.b2bStoreContactPrivacy,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.l),
               B2bImageUploadField(
                 kind: B2bMediaKind.shopLogo,
                 label: 'Logo',
@@ -158,11 +243,41 @@ class _SupplierStoreEditScreenState
                 onChanged: (u) => setState(() => _coverUrl = u),
               ),
               const SizedBox(height: AppSpacing.xl),
-              B2bSaveButton(label: 'Mağazayı kaydet', onTap: _save),
+              B2bSaveButton(
+                label: _saving ? 'Kaydediliyor…' : 'Mağazayı kaydet',
+                onTap: _saving ? null : _save,
+              ),
             ],
           ),
         ),
       ),
     );
+    return DirtyFormGuard(isDirty: _dirty, child: scaffold);
+  }
+}
+
+/// S3 — mağaza formu doğrulayıcıları (test edilebilir, saf).
+class SupplierStoreEditScreenValidators {
+  const SupplierStoreEditScreenValidators._();
+
+  /// Opsiyonel telefon: boş geçerli; doluysa en az 10 rakam.
+  static String? phone(String? v) {
+    final t = (v ?? '').trim();
+    if (t.isEmpty) return null;
+    final digits = t.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits.length < 10 ? AppStrings.b2bPhoneInvalid : null;
+  }
+
+  /// Opsiyonel web: boş geçerli; doluysa nokta içeren host olmalı.
+  static String? website(String? v) {
+    final t = (v ?? '').trim();
+    if (t.isEmpty) return null;
+    final withScheme = t.startsWith('http://') || t.startsWith('https://')
+        ? t
+        : 'https://$t';
+    final u = Uri.tryParse(withScheme);
+    return (u == null || u.host.isEmpty || !u.host.contains('.'))
+        ? AppStrings.b2bWebsiteInvalid
+        : null;
   }
 }

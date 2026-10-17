@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/app_strings.dart';
 import '../models/b2b_quote_request.dart';
 
 /// İkon + etiketli nötr meta pill (kategori, bölge, miktar vb.).
@@ -118,11 +119,17 @@ class B2bManageMenu extends StatelessWidget {
     required this.published,
     this.onEdit,
     this.onTogglePublish,
+    this.onDuplicate,
+    this.onDelete,
   });
 
   final bool published;
   final VoidCallback? onEdit;
   final VoidCallback? onTogglePublish;
+
+  /// S3 — çoğalt (yalnız ürün) ve sil (onay dialogu çağıranda).
+  final VoidCallback? onDuplicate;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +148,8 @@ class B2bManageMenu extends StatelessWidget {
         onSelected: (v) {
           if (v == 'edit') onEdit?.call();
           if (v == 'toggle') onTogglePublish?.call();
+          if (v == 'duplicate') onDuplicate?.call();
+          if (v == 'delete') onDelete?.call();
         },
         itemBuilder: (_) => <PopupMenuEntry<String>>[
           if (onEdit != null)
@@ -158,6 +167,25 @@ class B2bManageMenu extends StatelessWidget {
                 label: published ? 'Taslağa al' : 'Yayına al',
               ),
             ),
+          if (onDuplicate != null)
+            const PopupMenuItem<String>(
+              value: 'duplicate',
+              child: _MenuRow(
+                icon: Icons.copy_outlined,
+                label: AppStrings.b2bMenuDuplicate,
+              ),
+            ),
+          if (onDelete != null) ...[
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: 'delete',
+              child: _MenuRow(
+                icon: Icons.delete_outline_rounded,
+                label: AppStrings.b2bMenuDelete,
+                danger: true,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -165,23 +193,27 @@ class B2bManageMenu extends StatelessWidget {
 }
 
 class _MenuRow extends StatelessWidget {
-  const _MenuRow({required this.icon, required this.label});
+  const _MenuRow({required this.icon, required this.label, this.danger = false});
   final IconData icon;
   final String label;
 
+  /// Yıkıcı aksiyon (Sil) — tehlike rengi.
+  final bool danger;
+
   @override
   Widget build(BuildContext context) {
+    final color = danger ? AppColors.danger : AppColors.textPrimary;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 17, color: AppColors.textPrimary),
+        Icon(icon, size: 17, color: color),
         const SizedBox(width: 10),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: color,
           ),
         ),
       ],
