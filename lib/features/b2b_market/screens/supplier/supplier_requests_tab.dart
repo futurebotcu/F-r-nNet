@@ -53,6 +53,45 @@ class _SupplierRequestsTabState extends ConsumerState<SupplierRequestsTab> {
       widget.initialSegment ?? SupplierRequestsSegment.fresh;
   SupplierRequestFilter _filter = const SupplierRequestFilter();
 
+  /// S3 — sunucu sayfalama: ilk sayfa provider'dan, sonraki sayfalar burada
+  /// birikir (filtre anahtarına göre). Yazma revizyonunda sıfırlanır.
+  static const _pageSize = 20;
+  final Map<String, List<B2bQuoteRequest>> _extraPages = {};
+  bool _loadingMore = false;
+
+  String get _serverFilterKey => encodeFreshPageKey((
+    categories: _filter.category == null ? null : [_filter.category!],
+    cities: _filter.city == null ? null : [_filter.city!],
+    offset: 0,
+    limit: _pageSize,
+  ));
+
+  Future<void> _loadMore(int loaded) async {
+    if (_loadingMore) return;
+    setState(() => _loadingMore = true);
+    try {
+      final page = await ref
+          .read(b2bRepositoryProvider)
+          .listOpenQuoteRequestsPage(
+            categories: _filter.category == null ? null : [_filter.category!],
+            cities: _filter.city == null ? null : [_filter.city!],
+            excludeReplied: true,
+            limit: _pageSize,
+            offset: loaded,
+          );
+      if (!mounted) return;
+      setState(() {
+        if (page != null) {
+          (_extraPages[_serverFilterKey] ??= []).addAll(page.items);
+        }
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+    }
+  }
+
   bool get _filterable =>
       _seg == SupplierRequestsSegment.fresh ||
       _seg == SupplierRequestsSegment.replied;
@@ -61,6 +100,10 @@ class _SupplierRequestsTabState extends ConsumerState<SupplierRequestsTab> {
   Widget build(BuildContext context) {
     final async = ref.watch(supplierRequestsInboxProvider);
     final inbox = async.valueOrNull;
+    // Yazma (teklif ver vb.) → biriken sayfalar geçersiz.
+    ref.listen<int>(b2bMarketControllerProvider, (_, __) {
+      if (_extraPages.isNotEmpty) setState(_extraPages.clear);
+    });
 
     return Column(
       children: [
@@ -120,6 +163,25 @@ class _SupplierRequestsTabState extends ConsumerState<SupplierRequestsTab> {
   Widget _body(SupplierRequestsInbox box) {
     switch (_seg) {
       case SupplierRequestsSegment.fresh:
+        // S3: sunucu sayfası varsa (migration uygulanmış) onu kullan; yoksa
+        // S2 istemci listesi. Metin araması her iki modda istemci tarafı.
+        final key = _serverFilterKey;
+        final page = ref.watch(b2bFreshRequestsPageProvider(key)).valueOrNull;
+        final textOnly = SupplierRequestFilter(query: _filter.query);
+        if (page != null) {
+          final extra = _extraPages[key] ?? const <B2bQuoteRequest>[];
+          final loaded = [...page.items, ...extra];
+          return _FreshList(
+            items: loaded.where(textOnly.matchesRequest).toList(),
+            filtered: !_filter.isEmpty,
+            onClearFilter: () =>
+                setState(() => _filter = const SupplierRequestFilter()),
+            totalCount: page.totalCount,
+            hasMore: loaded.length < page.totalCount,
+            loadingMore: _loadingMore,
+            onLoadMore: () => _loadMore(loaded.length),
+          );
+        }
         return _FreshList(
           items: box.fresh.where(_filter.matchesRequest).toList(),
           filtered: !_filter.isEmpty,
@@ -396,10 +458,20 @@ class _FreshList extends ConsumerWidget {
     required this.items,
     required this.filtered,
     required this.onClearFilter,
+    this.totalCount,
+    this.hasMore = false,
+    this.loadingMore = false,
+    this.onLoadMore,
   });
   final List<B2bQuoteRequest> items;
   final bool filtered;
   final VoidCallback onClearFilter;
+
+  /// S3 — sunucu sayfalama (null → istemci modu, sayfa yok).
+  final int? totalCount;
+  final bool hasMore;
+  final bool loadingMore;
+  final VoidCallback? onLoadMore;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -429,10 +501,18 @@ class _FreshList extends ConsumerWidget {
         AppSpacing.pageH,
         AppSpacing.xxl,
       ),
-      itemCount: items.length + 1,
+      itemCount: items.length + 1 + (hasMore ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.m),
       itemBuilder: (context, i) {
         if (i == 0) return const _AnonymityNote();
+        if (i == items.length + 1) {
+          return _LoadMoreRow(
+            shown: items.length,
+            total: totalCount ?? items.length,
+            loading: loadingMore,
+            onTap: onLoadMore,
+          );
+        }
         final r = items[i - 1];
         final target = SupplierRequestsInbox.targetOf(
           r,
@@ -818,6 +898,57 @@ class _LeadList extends StatelessWidget {
       itemCount: items.length,
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.m),
       itemBuilder: (context, i) => B2bLeadCard(lead: items[i]),
+    );
+  }
+}
+
+/// S3 — "Daha fazla talep yükle" satırı (44px, sayaç: gösterilen / toplam).
+class _LoadMoreRow extends StatelessWidget {
+  const _LoadMoreRow({
+    required this.shown,
+    required this.total,
+    required this.loading,
+    required this.onTap,
+  });
+  final int shown;
+  final int total;
+  final bool loading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          AppStrings.supReqShownOf(shown, total),
+          style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: OutlinedButton.icon(
+            key: const ValueKey('sup_req_load_more'),
+            onPressed: loading ? null : onTap,
+            icon: loading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.expand_more_rounded, size: 18),
+            label: const Text(AppStrings.supReqLoadMore),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              side: const BorderSide(color: AppColors.borderHairline),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+              textStyle: AppTypography.buttonLabel.copyWith(fontSize: 13),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

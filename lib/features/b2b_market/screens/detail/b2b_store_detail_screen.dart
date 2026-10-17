@@ -20,6 +20,7 @@ import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_meta_pill.dart';
 import '../../widgets/b2b_media_image.dart';
 import '../../widgets/b2b_offer_bottom_sheet.dart';
+import '../../widgets/b2b_store_contact.dart';
 import 'b2b_detail_widgets.dart';
 import '../../../../core/widgets/firinnet_avatar.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -80,6 +81,12 @@ class B2bStoreDetailScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: AppSpacing.xl),
                 _Actions(store: store),
+                // S3 — iletişim (telefon/WhatsApp/web/adres); boşsa çizilmez.
+                if (store.hasContact ||
+                    (store.address ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.m),
+                  B2bStoreContact(store: store),
+                ],
                 const SizedBox(height: AppSpacing.xl),
                 _StoreProducts(storeId: storeId),
                 const SizedBox(height: AppSpacing.xl),
