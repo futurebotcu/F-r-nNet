@@ -12,6 +12,7 @@ import 'package:firin_defter/features/b2b_market/models/b2b_product.dart';
 import 'package:firin_defter/features/b2b_market/models/b2b_quote_lead.dart';
 import 'package:firin_defter/features/b2b_market/models/b2b_quote_reply.dart';
 import 'package:firin_defter/features/b2b_market/models/b2b_quote_request.dart';
+import 'package:firin_defter/features/b2b_market/models/b2b_replied_request.dart';
 import 'package:firin_defter/features/b2b_market/models/supplier_requests_inbox.dart';
 import 'package:firin_defter/features/b2b_market/providers/b2b_providers.dart';
 import 'package:firin_defter/features/b2b_market/repositories/local_b2b_repository.dart';
@@ -122,6 +123,12 @@ List<FlutterErrorDetails> _captureOverflows() {
   };
   addTearDown(() => FlutterError.onError = previous);
   return overflows;
+}
+
+/// S3 geçmiş RPC'si olmayan backend (migration uygulanmamış) → S2 fallback.
+class _NoHistoryRepo extends LocalB2bRepository {
+  @override
+  Future<List<B2bRepliedRequest>?> listMyRepliedRequests() async => null;
 }
 
 Widget _tab({List<Override> extra = const []}) => ProviderScope(
@@ -352,18 +359,33 @@ void main() {
       expect(find.textContaining('@'), findsNothing);
     });
 
-    testWidgets('Yanıtladıklarım: açık olmayan talep için dürüst "artık açık '
-        'değil" kartı', (tester) async {
+    testWidgets('Yanıtladıklarım (S3 geçmiş RPC yokken): açık olmayan talep '
+        'için dürüst "artık açık değil" kartı', (tester) async {
       await _setSurface(tester);
-      await tester.pumpWidget(_tab());
+      await tester.pumpWidget(
+        _tab(
+          extra: [b2bRepositoryProvider.overrideWithValue(_NoHistoryRepo())],
+        ),
+      );
       await tester.pumpAndSettle();
       await _tapSeg(tester, 'replied');
-      // Seed: s1'in r1 cevabı m1 talebine (alıcının kendi listesinde, açık
-      // talepler RPC'sinde değil) → talep ayrıntısı yok.
+      // Seed: s1'in r1 cevabı m1 talebine (açık talepler RPC'sinde değil) →
+      // geçmiş RPC yoksa talep ayrıntısı yok.
       expect(find.byKey(const ValueKey('sup_replied_card_r1')), findsOneWidget);
       expect(find.text(AppStrings.supReqClosedUnknown), findsWidgets);
       expect(find.text(AppStrings.supReqMyOffer), findsOneWidget);
       expect(find.text(AppStrings.supReqGiveOffer), findsNothing);
+    });
+
+    testWidgets('Yanıtladıklarım (S3 geçmiş RPC varken): kapanmış talebin '
+        'ayrıntısı görünür, "artık açık değil" yok', (tester) async {
+      await _setSurface(tester);
+      await tester.pumpWidget(_tab());
+      await tester.pumpAndSettle();
+      await _tapSeg(tester, 'replied');
+      expect(find.byKey(const ValueKey('sup_replied_card_r1')), findsOneWidget);
+      expect(find.text(AppStrings.supReqClosedUnknown), findsNothing);
+      expect(find.text('Ekmeklik Un (Tip 650)'), findsWidgets);
     });
 
     testWidgets(
