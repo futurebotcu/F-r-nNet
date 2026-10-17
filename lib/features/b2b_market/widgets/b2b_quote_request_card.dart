@@ -6,7 +6,8 @@
 // zaten yoktur — kart da hiçbir kimlik alanı render etmez.)
 //
 // İki kullanım:
-//  * Teklif Ağı (tedarikçi): [onReply] dolu → "Teklif Ver" butonu.
+//  * Talepler (tedarikçi): [onReply] dolu → "Teklif Ver" butonu; [contextChip]
+//    ile "Ürünün: X / Mağazana yönelik" bağlamı; [dateLabel] talep zamanı.
 //  * Tekliflerim (alıcı): [onReply] null → durum + cevap sayısı vurgusu.
 
 import 'package:flutter/material.dart';
@@ -24,6 +25,8 @@ class B2bQuoteRequestCard extends StatelessWidget {
     required this.request,
     this.onReply,
     this.onTap,
+    this.contextChip,
+    this.dateLabel,
   });
 
   final B2bQuoteRequest request;
@@ -33,6 +36,12 @@ class B2bQuoteRequestCard extends StatelessWidget {
 
   /// Dolu ise kart tıklanabilir → teklif detayı (alıcı / Tekliflerim).
   final VoidCallback? onTap;
+
+  /// Başlığın altında bağlam çipi (S2: "Ürünün: X", "Mağazana yönelik").
+  final Widget? contextChip;
+
+  /// Talep zamanı etiketi (S2: "3 sa önce"). Boş/null → gizli.
+  final String? dateLabel;
 
   /// İl/ilçe etiketi — boş alanları atlar (form talepleri ilçesiz olabilir).
   String get _locationLabel {
@@ -58,9 +67,28 @@ class B2bQuoteRequestCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.s),
-              B2bStatusPill(status: request.status),
+              // Row non-flex çocuğa sınırsız genişlik verir; büyük yazıda
+              // durum pili taşmasın diye Flexible (pil metni ellipsis'li).
+              Flexible(child: B2bStatusPill(status: request.status)),
             ],
           ),
+          if (contextChip != null || (dateLabel ?? '').isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Row(
+              children: [
+                if (contextChip != null) Flexible(child: contextChip!),
+                if (contextChip != null && (dateLabel ?? '').isNotEmpty)
+                  const SizedBox(width: AppSpacing.s),
+                if ((dateLabel ?? '').isNotEmpty)
+                  Text(
+                    dateLabel!,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: AppSpacing.m),
           Wrap(
             spacing: 6,
@@ -96,43 +124,60 @@ class B2bQuoteRequestCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: AppSpacing.m),
-          Row(
+          // Alt satır: bilgi (teklif sayısı / seçilen) + aksiyon. Wrap ile dar
+          // ekranda / büyük yazıda buton alt satıra iner; taşma yok.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.s,
+            runSpacing: AppSpacing.s,
             children: [
-              if (request.replyCount > 0)
+              if (request.replyCount > 0 || request.hasAcceptedReply)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.forum_outlined,
-                      size: 14,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${request.replyCount} teklif',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
+                    if (request.replyCount > 0) ...[
+                      const Icon(
+                        Icons.forum_outlined,
+                        size: 14,
                         color: AppColors.textMuted,
                       ),
-                    ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '${request.replyCount} teklif',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (request.replyCount > 0 && request.hasAcceptedReply)
+                      const SizedBox(width: 8),
+                    if (request.hasAcceptedReply) ...[
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 14,
+                        color: AppColors.successInk,
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'Seçilen teklif',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.successInk,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-              if (request.hasAcceptedReply) ...[
-                if (request.replyCount > 0) const SizedBox(width: 8),
-                const Icon(Icons.verified_rounded,
-                    size: 14, color: Color(0xFF166534)),
-                const SizedBox(width: 4),
-                const Text(
-                  'Seçilen teklif',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF166534),
-                  ),
-                ),
-              ],
-              const Spacer(),
               if (onReply != null)
                 FilledButton.icon(
                   onPressed: onReply,
@@ -141,9 +186,11 @@ class B2bQuoteRequestCard extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.brandLemon,
                     foregroundColor: AppColors.brandInk,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.l),
-                    minimumSize: const Size(0, 38),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.l,
+                    ),
+                    // Erişilebilir dokunma alanı (S2): 38 → 44.
+                    minimumSize: const Size(0, 44),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),

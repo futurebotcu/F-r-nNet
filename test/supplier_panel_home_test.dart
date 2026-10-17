@@ -10,6 +10,7 @@ import 'package:firin_defter/core/widgets/error_retry_state.dart';
 import 'package:firin_defter/features/b2b_market/models/b2b_campaign.dart';
 import 'package:firin_defter/features/b2b_market/models/b2b_product.dart';
 import 'package:firin_defter/features/b2b_market/models/b2b_store.dart';
+import 'package:firin_defter/features/b2b_market/models/supplier_requests_inbox.dart';
 import 'package:firin_defter/features/b2b_market/providers/b2b_providers.dart';
 import 'package:firin_defter/features/b2b_market/repositories/local_b2b_repository.dart';
 import 'package:firin_defter/features/b2b_market/screens/b2b_shell_screen.dart';
@@ -43,17 +44,17 @@ class _WholesalerProfile extends ProfileController {
 class _NoStoreRepo extends LocalB2bRepository {
   @override
   Future<B2bStore> myStore() async => const B2bStore(
-        id: '',
-        name: '',
-        monogram: '?',
-        tagline: '',
-        description: '',
-        categories: [],
-        serviceRegions: [],
-        productCount: 0,
-        campaignCount: 0,
-        isMine: true,
-      );
+    id: '',
+    name: '',
+    monogram: '?',
+    tagline: '',
+    description: '',
+    categories: [],
+    serviceRegions: [],
+    productCount: 0,
+    campaignCount: 0,
+    isMine: true,
+  );
 }
 
 Future<void> _setSurface(
@@ -105,16 +106,16 @@ Widget _panel({
 }
 
 B2bProduct _product({bool published = true}) => B2bProduct(
-      id: 'p',
-      name: 'Un',
-      supplierId: 's1',
-      supplierName: 'X',
-      category: 'Un',
-      minOrder: '-',
-      deliveryRegion: '-',
-      published: published,
-      isMine: true,
-    );
+  id: 'p',
+  name: 'Un',
+  supplierId: 's1',
+  supplierName: 'X',
+  category: 'Un',
+  minOrder: '-',
+  deliveryRegion: '-',
+  published: published,
+  isMine: true,
+);
 
 void main() {
   setUpAll(() => initializeDateFormatting('tr_TR'));
@@ -161,15 +162,15 @@ void main() {
 
   group('B2bCampaign.isExpiredAt', () {
     B2bCampaign c(String until) => B2bCampaign(
-          id: 'c',
-          title: 'K',
-          supplierId: 's1',
-          supplierName: 'X',
-          category: 'Un',
-          region: '-',
-          minPurchase: '-',
-          validUntil: until,
-        );
+      id: 'c',
+      title: 'K',
+      supplierId: 's1',
+      supplierName: 'X',
+      category: 'Un',
+      region: '-',
+      minPurchase: '-',
+      validUntil: until,
+    );
     final now = DateTime(2026, 10, 16, 15);
 
     test('ISO tarih dünse süresi dolmuş, bugün/yarınsa dolmamış', () {
@@ -207,7 +208,10 @@ void main() {
     });
 
     test('AppRoutes.pazarTab query üretir', () {
-      expect(AppRoutes.pazarTab(AppRoutes.pazarTabRequests), '/pazar?tab=talepler');
+      expect(
+        AppRoutes.pazarTab(AppRoutes.pazarTabRequests),
+        '/pazar?tab=talepler',
+      );
       expect(AppRoutes.pazarTab(AppRoutes.pazarTabStore), '/pazar?tab=magazam');
     });
   });
@@ -238,121 +242,164 @@ void main() {
   });
 
   group('SupplierPanelHome widget', () {
-    testWidgets('mağaza varken: durum kartı, 4 KPI, 4 hızlı işlem, kart listesi',
-        (tester) async {
-      await _setSurface(tester, width: 360);
-      await tester.pumpWidget(_panel());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'mağaza varken: durum kartı, 4 KPI, 4 hızlı işlem, kart listesi',
+      (tester) async {
+        await _setSurface(tester, width: 360);
+        await tester.pumpWidget(_panel());
+        await tester.pumpAndSettle();
 
-      expect(find.byType(SupplierPanelHome), findsOneWidget);
-      expect(find.byKey(const ValueKey('supplier_panel_store_card')),
-          findsOneWidget);
-      expect(find.text('Anadolu Un & Maya'), findsOneWidget);
-      for (final k in const [
-        'supplier_kpi_requests',
-        'supplier_kpi_products',
-        'supplier_kpi_campaigns',
-        'supplier_kpi_leads',
-        'supplier_quick_add_product',
-        'supplier_quick_add_campaign',
-        'supplier_quick_requests',
-        'supplier_quick_edit_store',
-      ]) {
-        expect(find.byKey(ValueKey(k)), findsOneWidget, reason: k);
-      }
-      expect(find.text(AppStrings.supPanelSectionStore), findsOneWidget);
-      expect(find.text(AppStrings.supPanelSectionKpi), findsOneWidget);
-      expect(find.text(AppStrings.supPanelSectionQuick), findsOneWidget);
-      expect(find.text(AppStrings.supPanelSectionTools), findsOneWidget);
-      // Boş vaat / yanlış hedef kartları yok.
-      expect(find.text('Duyuru / Fiyat Listesi'), findsNothing);
-      expect(find.text('Ürün/Hizmet İlanı Ver'), findsNothing);
-      expect(find.text('Firma Profilim'), findsNothing);
-      expect(find.text(AppStrings.comingSoon), findsNothing);
-      // Diğer araçlar kartları duruyor.
-      expect(find.text(AppStrings.cardWholesaleCustomersPanel), findsOneWidget);
-      expect(find.text(AppStrings.cardIncomingMessages), findsOneWidget);
-      // Açık talep KPI'si gerçek listeden (mock seed > 0) sayılır.
-      final seed = LocalB2bRepository();
-      final open = (await seed.listOpenQuoteRequests()).length;
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('supplier_kpi_requests')),
-          matching: find.text('$open'),
+        expect(find.byType(SupplierPanelHome), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('supplier_panel_store_card')),
+          findsOneWidget,
+        );
+        expect(find.text('Anadolu Un & Maya'), findsOneWidget);
+        for (final k in const [
+          'supplier_kpi_requests',
+          'supplier_kpi_products',
+          'supplier_kpi_campaigns',
+          'supplier_kpi_leads',
+          'supplier_quick_add_product',
+          'supplier_quick_add_campaign',
+          'supplier_quick_requests',
+          'supplier_quick_edit_store',
+        ]) {
+          expect(find.byKey(ValueKey(k)), findsOneWidget, reason: k);
+        }
+        expect(find.text(AppStrings.supPanelSectionStore), findsOneWidget);
+        expect(find.text(AppStrings.supPanelSectionKpi), findsOneWidget);
+        expect(find.text(AppStrings.supPanelSectionQuick), findsOneWidget);
+        expect(find.text(AppStrings.supPanelSectionTools), findsOneWidget);
+        // Boş vaat / yanlış hedef kartları yok.
+        expect(find.text('Duyuru / Fiyat Listesi'), findsNothing);
+        expect(find.text('Ürün/Hizmet İlanı Ver'), findsNothing);
+        expect(find.text('Firma Profilim'), findsNothing);
+        expect(find.text(AppStrings.comingSoon), findsNothing);
+        // Diğer araçlar kartları duruyor.
+        expect(
+          find.text(AppStrings.cardWholesaleCustomersPanel),
+          findsOneWidget,
+        );
+        expect(find.text(AppStrings.cardIncomingMessages), findsOneWidget);
+        // S2: "Yanıt bekleyen" = yanıtlamadığım aktif talepler (gelen kutusu).
+        final seed = LocalB2bRepository();
+        final box = SupplierRequestsInbox.build(
+          openRequests: await seed.listOpenQuoteRequests(),
+          myReplies: await seed.listMyQuoteReplies(),
+          leads: await seed.leadsForMySupplierShop(),
+        );
+        expect(box.fresh, isNotEmpty);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('supplier_kpi_requests')),
+            matching: find.text('${box.fresh.length}'),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('mağaza yokken: tek CTA kartı, durum kartı yok', (
+      tester,
+    ) async {
+      await _setSurface(tester, width: 360);
+      await tester.pumpWidget(
+        _panel(
+          extra: [b2bRepositoryProvider.overrideWithValue(_NoStoreRepo())],
         ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('supplier_panel_no_store')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('supplier_panel_no_store_cta')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('supplier_panel_store_card')),
+        findsNothing,
+      );
+      expect(find.text(AppStrings.supPanelOpenStore), findsNothing);
+      // KPI ve hızlı işlemler yine var (ürün ekle vb. mağaza oluşturmaya götürür).
+      expect(
+        find.byKey(const ValueKey('supplier_kpi_products')),
         findsOneWidget,
       );
     });
 
-    testWidgets('mağaza yokken: tek CTA kartı, durum kartı yok',
-        (tester) async {
-      await _setSurface(tester, width: 360);
-      await tester.pumpWidget(_panel(extra: [
-        b2bRepositoryProvider.overrideWithValue(_NoStoreRepo()),
-      ]));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('supplier_panel_no_store')),
-          findsOneWidget);
-      expect(find.byKey(const ValueKey('supplier_panel_no_store_cta')),
-          findsOneWidget);
-      expect(find.byKey(const ValueKey('supplier_panel_store_card')),
-          findsNothing);
-      expect(find.text(AppStrings.supPanelOpenStore), findsNothing);
-      // KPI ve hızlı işlemler yine var (ürün ekle vb. mağaza oluşturmaya götürür).
-      expect(find.byKey(const ValueKey('supplier_kpi_products')),
-          findsOneWidget);
-    });
+    testWidgets(
+      'mağaza yüklenemezse ErrorRetryState; diğer paneller etkilenmez',
+      (tester) async {
+        await _setSurface(tester, width: 360);
+        await tester.pumpWidget(
+          _panel(
+            extra: [
+              b2bMyStoreProvider.overrideWith(
+                (ref) async => throw StateError('offline'),
+              ),
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('supplier_panel_error')),
+          findsOneWidget,
+        );
+        expect(find.byType(ErrorRetryState), findsOneWidget);
+        expect(find.text(AppStrings.supPanelErrorTitle), findsOneWidget);
+        expect(
+          find.text(AppStrings.cardWholesaleCustomersPanel),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('mağaza yüklenemezse ErrorRetryState; diğer paneller etkilenmez',
-        (tester) async {
-      await _setSurface(tester, width: 360);
-      await tester.pumpWidget(_panel(extra: [
-        b2bMyStoreProvider.overrideWith(
-          (ref) async => throw StateError('offline'),
-        ),
-      ]));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('supplier_panel_error')),
-          findsOneWidget);
-      expect(find.byType(ErrorRetryState), findsOneWidget);
-      expect(find.text(AppStrings.supPanelErrorTitle), findsOneWidget);
-      expect(find.text(AppStrings.cardWholesaleCustomersPanel), findsOneWidget);
-    });
-
-    testWidgets('Free planda ürün limiti doluysa "Ürün ekle" paywall açar',
-        (tester) async {
+    testWidgets('Free planda ürün limiti doluysa "Ürün ekle" paywall açar', (
+      tester,
+    ) async {
       await _setSurface(tester, width: 360);
       // Mock seed'de s1 mağazasının ürünleri var (>= 1) → Free limit (1) dolu.
       await tester.pumpWidget(_panel(plan: BusinessPlan.free));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('supplier_quick_add_product')));
+      await tester.tap(
+        find.byKey(const ValueKey('supplier_quick_add_product')),
+      );
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('paywall_sheet')), findsOneWidget);
     });
 
-    testWidgets('Free planda kampanya (limit 0) "Kampanya oluştur" paywall açar',
-        (tester) async {
-      await _setSurface(tester, width: 360);
-      await tester.pumpWidget(_panel(plan: BusinessPlan.free));
-      await tester.pumpAndSettle();
-      await tester
-          .tap(find.byKey(const ValueKey('supplier_quick_add_campaign')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('paywall_sheet')), findsOneWidget);
-    });
+    testWidgets(
+      'Free planda kampanya (limit 0) "Kampanya oluştur" paywall açar',
+      (tester) async {
+        await _setSurface(tester, width: 360);
+        await tester.pumpWidget(_panel(plan: BusinessPlan.free));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey('supplier_quick_add_campaign')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('paywall_sheet')), findsOneWidget);
+      },
+    );
 
-    testWidgets('ticari ve bireysel panelde SupplierPanelHome yok',
-        (tester) async {
+    testWidgets('ticari ve bireysel panelde SupplierPanelHome yok', (
+      tester,
+    ) async {
       await _setSurface(tester, width: 360);
-      await tester.pumpWidget(ProviderScope(
-        overrides: [
-          totalUnreadMessagesProvider.overrideWith((ref) => 0),
-          subscriptionRepositoryProvider.overrideWithValue(
-            LocalSubscriptionRepository(plan: BusinessPlan.free),
-          ),
-        ],
-        child: const MaterialApp(home: RoleDashboardScreen()),
-      ));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            totalUnreadMessagesProvider.overrideWith((ref) => 0),
+            subscriptionRepositoryProvider.overrideWithValue(
+              LocalSubscriptionRepository(plan: BusinessPlan.free),
+            ),
+          ],
+          child: const MaterialApp(home: RoleDashboardScreen()),
+        ),
+      );
       await tester.pumpAndSettle();
       // Profil yok → bireysel varsayılan.
       expect(find.byType(SupplierPanelHome), findsNothing);

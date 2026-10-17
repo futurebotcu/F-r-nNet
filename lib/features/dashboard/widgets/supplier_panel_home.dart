@@ -33,9 +33,8 @@ import '../../../core/widgets/premium/quick_action_tile.dart';
 import '../../../core/widgets/premium/section_label.dart';
 import '../../b2b_market/models/b2b_campaign.dart';
 import '../../b2b_market/models/b2b_product.dart';
-import '../../b2b_market/models/b2b_quote_lead.dart';
-import '../../b2b_market/models/b2b_quote_request.dart';
 import '../../b2b_market/models/b2b_store.dart';
+import '../../b2b_market/models/supplier_requests_inbox.dart';
 import '../../b2b_market/providers/b2b_providers.dart';
 import '../../subscriptions/models/business_entitlements.dart';
 import '../../subscriptions/models/business_plan.dart';
@@ -74,8 +73,7 @@ class SupplierPanelHome extends ConsumerWidget {
     ref.invalidate(b2bMyStoreProvider);
     ref.invalidate(b2bMyProductsProvider);
     ref.invalidate(b2bMyCampaignsProvider);
-    ref.invalidate(b2bOpenQuoteRequestsProvider);
-    ref.invalidate(b2bSupplierLeadsProvider);
+    supplierRequestsInboxRefresh(ref);
   }
 
   @override
@@ -83,8 +81,9 @@ class SupplierPanelHome extends ConsumerWidget {
     final storeAsync = ref.watch(b2bMyStoreProvider);
     final productsAsync = ref.watch(b2bMyProductsProvider);
     final campaignsAsync = ref.watch(b2bMyCampaignsProvider);
-    final requestsAsync = ref.watch(b2bOpenQuoteRequestsProvider);
-    final leadsAsync = ref.watch(b2bSupplierLeadsProvider);
+    // S2 — KPI'lar Talepler sekmesiyle aynı gelen kutusundan: "Yanıt bekleyen"
+    // = yanıtlamadığım açık talepler; ağ toplamı yalnız yardımcı metinde.
+    final inboxAsync = ref.watch(supplierRequestsInboxProvider);
     final entitlement = ref.watch(myEntitlementProvider).valueOrNull;
 
     return storeAsync.when(
@@ -143,8 +142,7 @@ class SupplierPanelHome extends ConsumerWidget {
               child: _KpiGrid(
                 products: productsAsync,
                 campaigns: campaignsAsync,
-                requests: requestsAsync,
-                leads: leadsAsync,
+                inbox: inboxAsync,
                 entitlement: entitlement,
               ),
             ),
@@ -449,23 +447,23 @@ class _KpiGrid extends StatelessWidget {
   const _KpiGrid({
     required this.products,
     required this.campaigns,
-    required this.requests,
-    required this.leads,
+    required this.inbox,
     required this.entitlement,
   });
 
   final AsyncValue<List<B2bProduct>> products;
   final AsyncValue<List<B2bCampaign>> campaigns;
-  final AsyncValue<List<B2bQuoteRequest>> requests;
-  final AsyncValue<List<B2bQuoteLead>> leads;
+  final AsyncValue<SupplierRequestsInbox> inbox;
   final BusinessEntitlements? entitlement;
 
   @override
   Widget build(BuildContext context) {
-    final openCount = requests.valueOrNull?.length;
+    final box = inbox.valueOrNull;
+    final openCount = box?.fresh.length;
+    final networkCount = box?.networkOpenCount;
     final productList = products.valueOrNull;
     final campaignList = campaigns.valueOrNull;
-    final leadCount = leads.valueOrNull?.where((l) => l.isInterested).length;
+    final leadCount = box?.interested.length;
 
     final publishedProducts = productList?.where((p) => p.published).length;
     final draftProducts = productList == null
@@ -482,7 +480,9 @@ class _KpiGrid extends StatelessWidget {
         icon: Icons.request_quote_outlined,
         label: AppStrings.supPanelKpiOpenRequests,
         value: _n(openCount),
-        helper: AppStrings.supPanelKpiOpenRequestsHelper,
+        helper: networkCount == null
+            ? AppStrings.supPanelKpiOpenRequestsHelper
+            : AppStrings.supPanelKpiNetworkHelper(networkCount),
         highlight: (openCount ?? 0) > 0,
         onTap: () => context.go(AppRoutes.pazarTab(AppRoutes.pazarTabRequests)),
       ),

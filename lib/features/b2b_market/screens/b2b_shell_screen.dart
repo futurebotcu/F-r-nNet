@@ -4,7 +4,7 @@
 // çözülür; kullanıcıya rol değiştirme UI'ı YOKTUR. Role göre doğru sekme seti
 // ve sade header alt metni gösterilir (önizleme/demo metni yok).
 //
-// Tedarikçi:  Mağazam · Ürünler · Kampanyalar · Teklif Ağı
+// Tedarikçi:  Mağazam · Ürünler · Kampanyalar · Talepler (S2)
 // Alıcı:      Ürünler · Kampanyalar · Tedarikçiler · Tekliflerim
 
 import 'package:flutter/material.dart';
@@ -21,7 +21,7 @@ import 'buyer/buyer_products_tab.dart';
 import 'buyer/buyer_quotes_tab.dart';
 import 'buyer/buyer_suppliers_tab.dart';
 import 'supplier/supplier_campaigns_tab.dart';
-import 'supplier/supplier_offer_network_tab.dart';
+import 'supplier/supplier_requests_tab.dart';
 import 'supplier/supplier_products_tab.dart';
 import 'supplier/supplier_store_tab.dart';
 
@@ -89,7 +89,7 @@ class _B2bShellScreenState extends ConsumerState<B2bShellScreen> {
     'Mağazam',
     'Ürünler',
     'Kampanyalar',
-    'Teklif Ağı',
+    'Talepler',
   ];
   static const _buyerLabels = <String>[
     'Ürünler',
@@ -133,11 +133,7 @@ class _B2bShellScreenState extends ConsumerState<B2bShellScreen> {
               actions: const [NotificationsHeaderAction()],
             ),
             const Divider(height: 1, color: AppColors.borderHairline),
-            SegmentTabBar(
-              labels: labels,
-              index: _segment,
-              onChanged: _select,
-            ),
+            SegmentTabBar(labels: labels, index: _segment, onChanged: _select),
             Expanded(
               child: IndexedStack(
                 index: _segment,
@@ -151,18 +147,18 @@ class _B2bShellScreenState extends ConsumerState<B2bShellScreen> {
   }
 
   List<Widget> _supplierTabs() => [
-        _lazy(0, const SupplierStoreTab()),
-        _lazy(1, const SupplierProductsTab()),
-        _lazy(2, const SupplierCampaignsTab()),
-        _lazy(3, const SupplierOfferNetworkTab()),
-      ];
+    _lazy(0, const SupplierStoreTab()),
+    _lazy(1, const SupplierProductsTab()),
+    _lazy(2, const SupplierCampaignsTab()),
+    _lazy(3, const SupplierRequestsTab()),
+  ];
 
   List<Widget> _buyerTabs() => [
-        _lazy(0, const BuyerProductsTab()),
-        _lazy(1, const BuyerCampaignsTab()),
-        _lazy(2, const BuyerSuppliersTab()),
-        _lazy(3, const BuyerQuotesTab()),
-      ];
+    _lazy(0, const BuyerProductsTab()),
+    _lazy(1, const BuyerCampaignsTab()),
+    _lazy(2, const BuyerSuppliersTab()),
+    _lazy(3, const BuyerQuotesTab()),
+  ];
 
   Widget _lazy(int index, Widget child) =>
       _visited.contains(index) ? child : const SizedBox.shrink();

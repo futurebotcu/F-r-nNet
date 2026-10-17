@@ -61,6 +61,12 @@ abstract class B2bRepository {
   /// Bir talebe gelen teklif cevapları.
   Future<List<B2bQuoteReply>> repliesFor(String requestId);
 
+  /// Tedarikçinin KENDİ mağazasından verdiği tüm teklif cevapları (S2 —
+  /// "Yanıtladıklarım" / "Kazanılan"). RLS: supplier_shop_id = kendi mağazası.
+  /// Talep detayı taşımaz; talep bilgisi açık talepler RPC'si veya lead
+  /// kaydıyla istemci tarafında eşlenir (bkz. SupplierRequestsInbox).
+  Future<List<B2bQuoteReply>> listMyQuoteReplies();
+
   // ---- Write ----
 
   /// Yeni ürün ekler; eklenen ürünü döner.

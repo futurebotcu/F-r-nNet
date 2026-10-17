@@ -49,14 +49,25 @@ class SupabaseB2bRepository implements B2bRepository {
   // ---- Sabit referans (DB tablosu değil) ----
   @override
   List<String> productCategories() => const [
-        'Un', 'Maya', 'Katkı', 'Yağ', 'Ambalaj', 'Ekipman',
-      ];
+    'Un',
+    'Maya',
+    'Katkı',
+    'Yağ',
+    'Ambalaj',
+    'Ekipman',
+  ];
 
   @override
   List<String> serviceRegions() => const [
-        'Marmara', 'Ege', 'İç Anadolu', 'Akdeniz', 'Karadeniz',
-        'Doğu Anadolu', 'Güneydoğu', 'Tüm Türkiye',
-      ];
+    'Marmara',
+    'Ege',
+    'İç Anadolu',
+    'Akdeniz',
+    'Karadeniz',
+    'Doğu Anadolu',
+    'Güneydoğu',
+    'Tüm Türkiye',
+  ];
 
   // ---- Mapper'lar (test edilebilir; gerçek client gerekmez) ----
 
@@ -179,8 +190,14 @@ class SupabaseB2bRepository implements B2bRepository {
       status: statusFromText(row['status'] as String?),
       createdByMe: createdByMe,
       acceptedReplyId: row['accepted_reply_id']?.toString(),
+      targetType: (row['target_type'] ?? 'category').toString(),
+      targetId: row['target_id']?.toString(),
+      createdAt: _tryDateTime(row['created_at']),
     );
   }
+
+  static DateTime? _tryDateTime(dynamic v) =>
+      v == null ? null : DateTime.tryParse(v.toString());
 
   static B2bQuoteReply quoteReplyFromRow(Map<String, dynamic> row) {
     final shop = row['b2b_supplier_shops'] as Map<String, dynamic>?;
@@ -194,6 +211,8 @@ class SupabaseB2bRepository implements B2bRepository {
       deliveryNote: row['delivery_note'] as String?,
       supplierShopId: row['supplier_shop_id']?.toString(),
       accepted: (row['accepted'] as bool?) ?? false,
+      status: B2bReplyStatusX.fromText(row['status'] as String?),
+      createdAt: _tryDateTime(row['created_at']),
     );
   }
 
@@ -250,23 +269,27 @@ class SupabaseB2bRepository implements B2bRepository {
         .eq('is_active', true)
         .order('created_at', ascending: false);
     final uid = _uid;
-    final stores =
-        rows.map((r) => storeFromRow(r, currentUserId: uid)).toList();
+    final stores = rows
+        .map((r) => storeFromRow(r, currentUserId: uid))
+        .toList();
     if (stores.isEmpty) return stores;
     // Yayındaki ürün/kampanya sayıları — tek grouped sorgu (kartta doğru sayı).
     final ids = stores.map((s) => s.id).toList();
     final counts = await _shopCounts(ids);
     return stores
-        .map((s) => s.copyWith(
-              productCount: counts.products[s.id] ?? 0,
-              campaignCount: counts.campaigns[s.id] ?? 0,
-            ))
+        .map(
+          (s) => s.copyWith(
+            productCount: counts.products[s.id] ?? 0,
+            campaignCount: counts.campaigns[s.id] ?? 0,
+          ),
+        )
         .toList(growable: false);
   }
 
   /// Mağaza id'leri için yayındaki ürün/kampanya sayıları (bellekte say).
-  Future<({Map<String, int> products, Map<String, int> campaigns})>
-      _shopCounts(List<String> shopIds) async {
+  Future<({Map<String, int> products, Map<String, int> campaigns})> _shopCounts(
+    List<String> shopIds,
+  ) async {
     final prod = <String, int>{};
     final camp = <String, int>{};
     final pRows = await _client
@@ -360,23 +383,27 @@ class SupabaseB2bRepository implements B2bRepository {
   // ---- Ürünler ----
 
   @override
-  Future<List<B2bProduct>> listProducts({String? category, String? query}) async {
-    final base = _client.from('b2b_products').select(_productCols).eq(
-          'published',
-          true,
-        );
+  Future<List<B2bProduct>> listProducts({
+    String? category,
+    String? query,
+  }) async {
+    final base = _client
+        .from('b2b_products')
+        .select(_productCols)
+        .eq('published', true);
     final filtered = category != null ? base.eq('category', category) : base;
     final rows = await filtered.order('created_at', ascending: false);
     final uid = _uid;
-    var list =
-        rows.map((r) => productFromRow(r, currentUserId: uid)).toList();
+    var list = rows.map((r) => productFromRow(r, currentUserId: uid)).toList();
     final q = (query ?? '').trim().toLowerCase();
     if (q.isNotEmpty) {
       list = list
-          .where((p) =>
-              p.name.toLowerCase().contains(q) ||
-              p.supplierName.toLowerCase().contains(q) ||
-              p.category.toLowerCase().contains(q))
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(q) ||
+                p.supplierName.toLowerCase().contains(q) ||
+                p.category.toLowerCase().contains(q),
+          )
           .toList();
     }
     return list;
@@ -469,7 +496,8 @@ class SupabaseB2bRepository implements B2bRepository {
   Future<void> setProductPublished(String id, bool published) async {
     await _client
         .from('b2b_products')
-        .update({'published': published}).eq('id', id);
+        .update({'published': published})
+        .eq('id', id);
   }
 
   // ---- Kampanyalar ----
@@ -582,7 +610,8 @@ class SupabaseB2bRepository implements B2bRepository {
   Future<void> setCampaignPublished(String id, bool published) async {
     await _client
         .from('b2b_campaigns')
-        .update({'published': published}).eq('id', id);
+        .update({'published': published})
+        .eq('id', id);
   }
 
   // ---- Teklif talepleri ----
@@ -592,10 +621,12 @@ class SupabaseB2bRepository implements B2bRepository {
     // ANONİM: tablo değil RPC. buyer_id dönmez.
     final rows = await _client.rpc('b2b_open_quote_requests') as List;
     return rows
-        .map((r) => quoteRequestFromRow(
-              Map<String, dynamic>.from(r as Map),
-              createdByMe: false,
-            ))
+        .map(
+          (r) => quoteRequestFromRow(
+            Map<String, dynamic>.from(r as Map),
+            createdByMe: false,
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -612,8 +643,9 @@ class SupabaseB2bRepository implements B2bRepository {
         .select(_qrCols)
         .eq('buyer_id', uid)
         .order('created_at', ascending: false);
-    final requests =
-        rows.map((r) => quoteRequestFromRow(r, createdByMe: true)).toList();
+    final requests = rows
+        .map((r) => quoteRequestFromRow(r, createdByMe: true))
+        .toList();
     // Cevap sayıları: alıcı kendi taleplerine gelen cevapları RLS ile görebilir.
     // Tek sorguda çekip bellekte say (migration/sayaç kolonu gerekmez).
     final ids = requests.map((q) => q.id).toList();
@@ -649,16 +681,31 @@ class SupabaseB2bRepository implements B2bRepository {
     return base.copyWith(replyCount: replyRows.length);
   }
 
+  static const _replyCols =
+      'id, quote_request_id, supplier_shop_id, message, price_note, '
+      'delivery_note, accepted, status, created_at, '
+      'b2b_supplier_shops!inner(shop_name)';
+
   @override
   Future<List<B2bQuoteReply>> repliesFor(String requestId) async {
     final rows = await _client
         .from('b2b_quote_replies')
-        .select(
-          'id, quote_request_id, supplier_shop_id, message, price_note, '
-          'delivery_note, accepted, created_at, '
-          'b2b_supplier_shops!inner(shop_name)',
-        )
+        .select(_replyCols)
         .eq('quote_request_id', requestId)
+        .order('created_at', ascending: false);
+    return rows.map(quoteReplyFromRow).toList(growable: false);
+  }
+
+  @override
+  Future<List<B2bQuoteReply>> listMyQuoteReplies() async {
+    // RLS b2b_replies_select zaten kendi mağazasıyla sınırlar; eq filtresi
+    // sorguyu daraltır (ve alıcı rolünde boş döner).
+    final shopId = await _myShopId();
+    if (shopId == null) return const [];
+    final rows = await _client
+        .from('b2b_quote_replies')
+        .select(_replyCols)
+        .eq('supplier_shop_id', shopId)
         .order('created_at', ascending: false);
     return rows.map(quoteReplyFromRow).toList(growable: false);
   }
@@ -679,20 +726,19 @@ class SupabaseB2bRepository implements B2bRepository {
     String buyerType = '',
     String deliveryTime = '',
     String note = '',
-  }) =>
-      {
-        'buyer_id': buyerId,
-        'target_type': targetType,
-        'target_id': targetId,
-        'category': category,
-        'quantity': quantity,
-        'city': city,
-        'district': district,
-        'buyer_type': buyerType,
-        'delivery_time': deliveryTime,
-        'note': note,
-        'status': 'open',
-      };
+  }) => {
+    'buyer_id': buyerId,
+    'target_type': targetType,
+    'target_id': targetId,
+    'category': category,
+    'quantity': quantity,
+    'city': city,
+    'district': district,
+    'buyer_type': buyerType,
+    'delivery_time': deliveryTime,
+    'note': note,
+    'status': 'open',
+  };
 
   /// b2b_quote_replies insert payload (test edilebilir). status daima 'sent'.
   static Map<String, dynamic> quoteReplyInsert({
@@ -701,15 +747,14 @@ class SupabaseB2bRepository implements B2bRepository {
     required String message,
     String? priceNote,
     String? deliveryNote,
-  }) =>
-      {
-        'quote_request_id': quoteRequestId,
-        'supplier_shop_id': supplierShopId,
-        'message': message,
-        'price_note': priceNote,
-        'delivery_note': deliveryNote,
-        'status': 'sent',
-      };
+  }) => {
+    'quote_request_id': quoteRequestId,
+    'supplier_shop_id': supplierShopId,
+    'message': message,
+    'price_note': priceNote,
+    'delivery_note': deliveryNote,
+    'status': 'sent',
+  };
 
   @override
   Future<B2bQuoteRequest> addQuoteRequest({
@@ -727,18 +772,20 @@ class SupabaseB2bRepository implements B2bRepository {
     if (uid == null) throw StateError('Oturum bulunamadı.');
     final row = await _client
         .from('b2b_quote_requests')
-        .insert(quoteRequestInsert(
-          buyerId: uid,
-          targetType: targetType,
-          targetId: targetId,
-          category: category,
-          quantity: quantity,
-          city: city,
-          district: district,
-          buyerType: buyerType,
-          deliveryTime: deliveryTime,
-          note: note,
-        ))
+        .insert(
+          quoteRequestInsert(
+            buyerId: uid,
+            targetType: targetType,
+            targetId: targetId,
+            category: category,
+            quantity: quantity,
+            city: city,
+            district: district,
+            buyerType: buyerType,
+            deliveryTime: deliveryTime,
+            note: note,
+          ),
+        )
         .select(
           'id, target_type, target_id, category, quantity, city, district, '
           'buyer_type, delivery_time, note, status, created_at',
@@ -757,13 +804,17 @@ class SupabaseB2bRepository implements B2bRepository {
     final shopId = await _myShopId();
     if (shopId == null) throw StateError('Önce mağaza oluşturun.');
     try {
-      await _client.from('b2b_quote_replies').insert(quoteReplyInsert(
-            quoteRequestId: quoteRequestId,
-            supplierShopId: shopId,
-            message: message,
-            priceNote: priceNote,
-            deliveryNote: deliveryNote,
-          ));
+      await _client
+          .from('b2b_quote_replies')
+          .insert(
+            quoteReplyInsert(
+              quoteRequestId: quoteRequestId,
+              supplierShopId: shopId,
+              message: message,
+              priceNote: priceNote,
+              deliveryNote: deliveryNote,
+            ),
+          );
     } on sb.PostgrestException catch (e) {
       // FN-AUDIT-015: aynı talebe aynı mağazadan tek teklif (unique violation).
       if (e.code == '23505') {
@@ -816,8 +867,8 @@ class SupabaseB2bRepository implements B2bRepository {
       requestCity: (row['request_city'] ?? '').toString(),
       replyAccepted:
           ((row['b2b_quote_replies'] as Map<String, dynamic>?)?['accepted']
-                  as bool?) ??
-              false,
+              as bool?) ??
+          false,
     );
   }
 
@@ -828,27 +879,34 @@ class SupabaseB2bRepository implements B2bRepository {
     bool phoneShared = false,
     String? phone,
   }) async {
-    await _client.rpc('create_b2b_quote_lead', params: {
-      'p_quote_reply_id': quoteReplyId,
-      'p_status': 'interested',
-      'p_buyer_message': message,
-      'p_phone_shared': phoneShared,
-      'p_shared_phone': phoneShared ? phone : null,
-    });
+    await _client.rpc(
+      'create_b2b_quote_lead',
+      params: {
+        'p_quote_reply_id': quoteReplyId,
+        'p_status': 'interested',
+        'p_buyer_message': message,
+        'p_phone_shared': phoneShared,
+        'p_shared_phone': phoneShared ? phone : null,
+      },
+    );
   }
 
   @override
   Future<void> rejectQuoteReply(String quoteReplyId) async {
-    await _client.rpc('create_b2b_quote_lead', params: {
-      'p_quote_reply_id': quoteReplyId,
-      'p_status': 'rejected',
-      'p_phone_shared': false,
-    });
+    await _client.rpc(
+      'create_b2b_quote_lead',
+      params: {
+        'p_quote_reply_id': quoteReplyId,
+        'p_status': 'rejected',
+        'p_phone_shared': false,
+      },
+    );
   }
 
   @override
   Future<List<B2bQuoteLead>> leadsForMyQuoteRequest(
-      String quoteRequestId) async {
+    String quoteRequestId,
+  ) async {
     // Alıcı kendi talebindeki lead'leri görür (RLS buyer_id=auth.uid()).
     // Mağaza adı için shop embed.
     final rows = await _client
@@ -876,8 +934,10 @@ class SupabaseB2bRepository implements B2bRepository {
 
   @override
   Future<void> acceptQuoteReply(String quoteReplyId) async {
-    await _client.rpc('b2b_accept_quote_reply',
-        params: {'p_reply_id': quoteReplyId});
+    await _client.rpc(
+      'b2b_accept_quote_reply',
+      params: {'p_reply_id': quoteReplyId},
+    );
   }
 
   @override
@@ -885,8 +945,10 @@ class SupabaseB2bRepository implements B2bRepository {
     required String leadId,
     required String message,
   }) async {
-    await _client.rpc('b2b_send_lead_message',
-        params: {'p_lead_id': leadId, 'p_message': message});
+    await _client.rpc(
+      'b2b_send_lead_message',
+      params: {'p_lead_id': leadId, 'p_message': message},
+    );
   }
 
   @override
