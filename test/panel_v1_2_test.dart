@@ -66,6 +66,10 @@ void main() {
       final routes = cards.map((c) => c.route).whereType<String>().toList();
       expect(routes, contains(AppRoutes.dealers));
       expect(routes, isNot(contains(AppRoutes.wholesaleCustomers)));
+      // Tedarikçi Paneli S1: B2B girişleri SupplierPanelHome'da; kart listesi
+      // yalnız "Diğer araçlar" (Müşteriler / Mesajlar / Anlaşmalı İş Yerleri).
+      expect(routes, isNot(contains(AppRoutes.marketListingNew)));
+      expect(cards.any((c) => c.comingSoon), isFalse);
     });
 
     test('comingSoon kartların route\'u null', () {
