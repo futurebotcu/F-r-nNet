@@ -23,6 +23,7 @@ import '../../subscriptions/widgets/paywall_sheet.dart';
 import '../../subscriptions/widgets/plan_status_card.dart';
 import '../../subscriptions/widgets/supplier_launch_gift_sheet.dart';
 import '../services/role_panel_cards.dart';
+import '../widgets/supplier_panel_home.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../app/theme/app_typography.dart';
 
@@ -120,6 +121,9 @@ class RoleDashboardScreen extends ConsumerWidget {
                 child: PlanStatusCard(),
               ),
             ],
+            // Tedarikçi Paneli S1 — B2B yönetim özeti (mağaza durumu + KPI +
+            // hızlı işlemler) gerçek veriden; kartlar "Diğer araçlar" olur.
+            if (account == AccountType.wholesaler) const SupplierPanelHome(),
             SectionLabel(title: _sectionTitleFor(account)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageH),
@@ -156,7 +160,7 @@ class RoleDashboardScreen extends ConsumerWidget {
       case AccountType.individual:
         return 'Sektör ağı';
       case AccountType.wholesaler:
-        return 'Toptan ağ';
+        return AppStrings.supPanelSectionTools;
     }
   }
 

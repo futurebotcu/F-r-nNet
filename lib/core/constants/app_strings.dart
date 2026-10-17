@@ -2256,14 +2256,48 @@ class AppStrings {
   static const String cardWholesalePriceListSub = 'Toptan fiyatları yönet';
 
   // Toptancı kartlar
-  static const String cardPostProductListing = 'Ürün/Hizmet İlanı Ver';
-  static const String cardPostProductListingSub = 'Market\'te yayına al';
   static const String cardIncomingMessages = 'Gelen Mesajlar';
   static const String cardIncomingMessagesSub = 'Müşteri talepleri';
-  static const String cardCompanyProfile = 'Firma Profilim';
-  static const String cardCompanyProfileSub = 'Kart, iletişim, bölge';
-  static const String cardPriceAnnouncements = 'Duyuru / Fiyat Listesi';
-  static const String cardPriceAnnouncementsSub = 'Toptan fiyat bildir';
+  // Tedarikçi Paneli S1 — Panel ana ekranı (gerçek veri KPI + mağaza durumu
+  // + hızlı işlemler). "Fiyat Duyuruları (Yakında)" boş vaat kartı kaldırıldı;
+  // "Ürün/Hizmet İlanı Ver" (ekipman ilanı) ve "Firma Profilim" (sosyal
+  // profil) yanlış hedefleri B2B mağazaya bağlandı.
+  static const String supPanelSectionStore = 'Mağaza durumu';
+  static const String supPanelSectionKpi = 'Bugün';
+  static const String supPanelSectionQuick = 'Hızlı işlemler';
+  static const String supPanelSectionTools = 'Diğer araçlar';
+  static const String supPanelNoStoreTitle = 'Mağazanı oluştur';
+  static const String supPanelNoStoreSub =
+      'Firma adı, bölge ve kategorilerini gir; fırınlar seni Pazar\'da görsün.';
+  static const String supPanelNoStoreCta = 'Mağaza bilgilerini gir';
+  static const String supPanelOpenStore = 'Mağazamı gör';
+  static const String supPanelCompletion = 'Profil tamamlanma';
+  static const String supPanelCompletionDone = 'Mağaza profilin tamam';
+  static const String supPanelStepLogo = 'Logo';
+  static const String supPanelStepDescription = 'Açıklama';
+  static const String supPanelStepRegions = 'Hizmet bölgesi';
+  static const String supPanelStepCategories = 'Kategori';
+  static const String supPanelStepProduct = 'Yayında ürün';
+  static const String supPanelKpiOpenRequests = 'Açık talep';
+  static const String supPanelKpiOpenRequestsHelper = 'Ağdaki teklif talepleri';
+  static const String supPanelKpiProducts = 'Yayında ürün';
+  static const String supPanelKpiCampaigns = 'Aktif kampanya';
+  static const String supPanelKpiLeads = 'İlgilenen';
+  static const String supPanelKpiLeadsHelper = 'Teklifine olumlu dönüş';
+  static const String supPanelKpiDrafts = 'taslak';
+  static const String supPanelKpiExpired = 'süresi dolmuş';
+  static const String supPanelQuickAddProduct = 'Ürün ekle';
+  static const String supPanelQuickAddCampaign = 'Kampanya oluştur';
+  static const String supPanelQuickRequests = 'Talepleri gör';
+  static const String supPanelQuickEditStore = 'Mağazayı düzenle';
+  static const String supPanelPlanFree = 'Free';
+  static const String supPanelPlanPremium = 'Premium';
+  static const String supPanelPlanLaunch = 'Lansman hediyesi';
+  static const String supPanelErrorTitle = 'Mağaza özeti yüklenemedi';
+  static const String supPanelStoreDraftsHint = 'Taslak ürünler Ürünler sekmesinde';
+  static const String supPanelStoreInactiveHint =
+      'Taslak veya süresi dolmuş kampanyalar Kampanyalar sekmesinde';
+  static const String cardWholesaleCustomersPanel = 'Müşteriler';
 
   // Panel
   static const String panelTitle = 'Panel';

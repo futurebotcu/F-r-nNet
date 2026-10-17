@@ -75,7 +75,8 @@ class PremiumNavItem {
   /// Okunmamış sayaç (Mesajlar). 0 → rozet gösterilmez.
   final int badgeCount;
 
-  /// "Yakında" mini rozeti (Pazar tab'ı).
+  /// "Yakında" mini rozeti (kullanılmıyor — Pazar canlı; API uyumluluğu için
+  /// korunur).
   final bool comingSoon;
 }
 

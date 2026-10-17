@@ -26,7 +26,34 @@ import 'supplier/supplier_products_tab.dart';
 import 'supplier/supplier_store_tab.dart';
 
 class B2bShellScreen extends ConsumerStatefulWidget {
-  const B2bShellScreen({super.key});
+  const B2bShellScreen({super.key, this.initialTab});
+
+  /// Açılışta seçili sekme anahtarı (`/pazar?tab=`). Role göre çözülür;
+  /// bilinmeyen/null → 0. Aynı widget yeni `tab` ile yeniden kurulursa
+  /// (Panel'den `go`) segment güncellenir.
+  final String? initialTab;
+
+  /// Tedarikçi sekme anahtarları (sıra = IndexedStack sırası).
+  static const supplierTabKeys = <String>[
+    'magazam',
+    'urunler',
+    'kampanyalar',
+    'talepler',
+  ];
+
+  /// Alıcı sekme anahtarları.
+  static const buyerTabKeys = <String>[
+    'urunler',
+    'kampanyalar',
+    'tedarikciler',
+    'tekliflerim',
+  ];
+
+  static int resolveTab(String? key, {required bool isSupplier}) {
+    if (key == null) return 0;
+    final i = (isSupplier ? supplierTabKeys : buyerTabKeys).indexOf(key);
+    return i < 0 ? 0 : i;
+  }
 
   @override
   ConsumerState<B2bShellScreen> createState() => _B2bShellScreenState();
@@ -35,6 +62,28 @@ class B2bShellScreen extends ConsumerStatefulWidget {
 class _B2bShellScreenState extends ConsumerState<B2bShellScreen> {
   int _segment = 0;
   Set<int> _visited = <int>{0};
+
+  @override
+  void initState() {
+    super.initState();
+    _applyInitialTab();
+  }
+
+  @override
+  void didUpdateWidget(covariant B2bShellScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialTab != widget.initialTab) _applyInitialTab();
+  }
+
+  void _applyInitialTab() {
+    final isSupplier = ref.read(b2bRoleProvider) == B2bRole.supplier;
+    final i = B2bShellScreen.resolveTab(
+      widget.initialTab,
+      isSupplier: isSupplier,
+    );
+    _segment = i;
+    _visited = <int>{..._visited, i};
+  }
 
   static const _supplierLabels = <String>[
     'Mağazam',

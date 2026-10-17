@@ -1,8 +1,9 @@
-// B2B Pazar — Tedarikçi > ürün ekleme formu (mock).
+// B2B Pazar — Tedarikçi > ürün ekleme/düzenleme formu.
 //
-// Mağazam içinden "Ürün ekle" ile açılır (shell dışı full-screen route).
-// Kaydet → in-memory repo'ya eklenir (b2bMarketControllerProvider), Mağazam'a
-// ve (yayında ise) genel Ürünler sekmesine yansır. Backend/upload YOK.
+// Mağazam veya Panel hızlı işlemlerinden açılır (shell dışı full-screen route).
+// Kaydet → b2bMarketControllerProvider üzerinden repo'ya (canlıda Supabase
+// b2b_products + market-media görsel yükleme) yazılır; Mağazam'a ve (yayında
+// ise) genel Ürünler sekmesine yansır.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
