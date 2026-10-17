@@ -14,6 +14,7 @@ import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/error_retry_state.dart';
 import '../../../../core/widgets/premium/premium_card.dart';
 import '../../../subscriptions/models/supplier_paywall.dart';
@@ -40,6 +41,8 @@ class SupplierStoreTab extends ConsumerWidget {
         ref.watch(b2bMyProductsProvider).valueOrNull ?? const <B2bProduct>[];
     final campaigns =
         ref.watch(b2bMyCampaignsProvider).valueOrNull ?? const <B2bCampaign>[];
+    final featuredProducts = products.where((p) => p.published).toList();
+    final activeCampaigns = campaigns.where((c) => c.isActive).toList();
 
     return storeAsync.when(
       skipLoadingOnReload: true,
@@ -70,7 +73,7 @@ class SupplierStoreTab extends ConsumerWidget {
           // Tedarikçi plan/trial kartı + kota göstergeleri (Paywall UI V1).
           SupplierPlanCard(
             productCount: products.length,
-            campaignCount: campaigns.where((c) => c.published).length,
+            campaignCount: activeCampaigns.length,
           ),
           const SizedBox(height: AppSpacing.m),
           _StoreHero(store: store),
@@ -95,10 +98,16 @@ class SupplierStoreTab extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.s),
+          // S1 hızlı kazanım — "Öne çıkan" yalnız YAYINDAKİ ürünler (alıcının
+          // gördüğü vitrinle aynı); taslaklar Ürünler sekmesinden yönetilir.
           if (products.isEmpty)
             const _EmptyHint(text: 'Henüz ürün eklemedin.')
+          else if (featuredProducts.isEmpty)
+            const _EmptyHint(
+              text: 'Yayında ürün yok. ${AppStrings.supPanelStoreDraftsHint}.',
+            )
           else
-            for (final p in products) ...[
+            for (final p in featuredProducts) ...[
               B2bProductCard(
                 product: p,
                 onEdit: () => context.push(AppRoutes.b2bProductEdit(p.id)),
@@ -115,10 +124,12 @@ class SupplierStoreTab extends ConsumerWidget {
             addLabel: 'Kampanya oluştur',
             onAdd: () {
               final e = ref.watch(myEntitlementProvider).valueOrNull;
-              final active = campaigns.where((c) => c.published).length;
+              // Sunucu limiti yayında + süresi dolmamış kampanyaları sayar;
+              // UI aynası da aynı kümeyi kullanır (önceden süresi dolmuşlar
+              // da sayılıp erken paywall gösterebiliyordu).
               final lock = e == null
                   ? null
-                  : SupplierPaywall.campaignLock(e, active);
+                  : SupplierPaywall.campaignLock(e, activeCampaigns.length);
               if (lock != null) {
                 showPaywallSheet(context, lock);
                 return;
@@ -127,10 +138,17 @@ class SupplierStoreTab extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.s),
+          // "Aktif kampanyalar" = yayında + süresi dolmamış (alıcı listesiyle
+          // aynı kural); taslak/süresi dolmuşlar Kampanyalar sekmesinde.
           if (campaigns.isEmpty)
             const _EmptyHint(text: 'Henüz kampanya oluşturmadın.')
+          else if (activeCampaigns.isEmpty)
+            const _EmptyHint(
+              text: 'Aktif kampanya yok. '
+                  '${AppStrings.supPanelStoreInactiveHint}.',
+            )
           else
-            for (final c in campaigns) ...[
+            for (final c in activeCampaigns) ...[
               B2bCampaignCard(
                 campaign: c,
                 onEdit: () => context.push(AppRoutes.b2bCampaignEdit(c.id)),
