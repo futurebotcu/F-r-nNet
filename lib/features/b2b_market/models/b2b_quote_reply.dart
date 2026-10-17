@@ -14,6 +14,8 @@ class B2bQuoteReply {
     this.deliveryNote,
     this.supplierShopId,
     this.accepted = false,
+    this.status = B2bReplyStatus.sent,
+    this.createdAt,
   });
 
   final String id;
@@ -36,7 +38,16 @@ class B2bQuoteReply {
   /// Alıcı bu teklifi seçti mi ("Bu teklifle ilerle").
   final bool accepted;
 
-  B2bQuoteReply copyWith({bool? accepted}) {
+  /// DB status: sent / accepted / declined. Yalnız b2b_accept_quote_reply
+  /// RPC'si değiştirir (sent → accepted/declined). Tedarikçi "Yanıtladıklarım"
+  /// kartında durum çipi için.
+  final B2bReplyStatus status;
+
+  /// Oluşturulma zamanı (created_at). Mock/yerel veride null.
+  final DateTime? createdAt;
+
+  B2bQuoteReply copyWith({bool? accepted, B2bReplyStatus? status}) {
+    final acc = accepted ?? this.accepted;
     return B2bQuoteReply(
       id: id,
       requestId: requestId,
@@ -46,7 +57,31 @@ class B2bQuoteReply {
       priceHint: priceHint,
       deliveryNote: deliveryNote,
       supplierShopId: supplierShopId,
-      accepted: accepted ?? this.accepted,
+      accepted: acc,
+      // accepted verildiğinde status da tutarlı kalır (yerel repo
+      // acceptQuoteReply: seçilen accepted, diğerleri declined).
+      status:
+          status ??
+          (accepted == null
+              ? this.status
+              : (acc ? B2bReplyStatus.accepted : B2bReplyStatus.declined)),
+      createdAt: createdAt,
     );
+  }
+}
+
+/// Teklif cevabı durumu (DB CHECK: sent / accepted / declined).
+enum B2bReplyStatus { sent, accepted, declined }
+
+extension B2bReplyStatusX on B2bReplyStatus {
+  static B2bReplyStatus fromText(String? s) {
+    switch (s) {
+      case 'accepted':
+        return B2bReplyStatus.accepted;
+      case 'declined':
+        return B2bReplyStatus.declined;
+      default:
+        return B2bReplyStatus.sent;
+    }
   }
 }

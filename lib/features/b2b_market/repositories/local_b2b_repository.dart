@@ -19,12 +19,11 @@ import 'b2b_repository.dart';
 
 class LocalB2bRepository implements B2bRepository {
   LocalB2bRepository()
-      : _stores = List<B2bStore>.of(B2bMockSeed.stores),
-        _products = List<B2bProduct>.of(B2bMockSeed.products),
-        _campaigns = List<B2bCampaign>.of(B2bMockSeed.campaigns),
-        _myQuoteRequests =
-            List<B2bQuoteRequest>.of(B2bMockSeed.myQuoteRequests),
-        _replies = List<B2bQuoteReply>.of(B2bMockSeed.replies);
+    : _stores = List<B2bStore>.of(B2bMockSeed.stores),
+      _products = List<B2bProduct>.of(B2bMockSeed.products),
+      _campaigns = List<B2bCampaign>.of(B2bMockSeed.campaigns),
+      _myQuoteRequests = List<B2bQuoteRequest>.of(B2bMockSeed.myQuoteRequests),
+      _replies = List<B2bQuoteReply>.of(B2bMockSeed.replies);
 
   final List<B2bStore> _stores;
   final List<B2bProduct> _products;
@@ -76,17 +75,23 @@ class LocalB2bRepository implements B2bRepository {
       List<String>.unmodifiable(B2bMockSeed.serviceRegions);
 
   @override
-  Future<List<B2bProduct>> listProducts({String? category, String? query}) async {
+  Future<List<B2bProduct>> listProducts({
+    String? category,
+    String? query,
+  }) async {
     final q = (query ?? '').trim().toLowerCase();
-    return _products.where((p) {
-      if (!p.published) return false;
-      final categoryOk = category == null || p.category == category;
-      final queryOk = q.isEmpty ||
-          p.name.toLowerCase().contains(q) ||
-          p.supplierName.toLowerCase().contains(q) ||
-          p.category.toLowerCase().contains(q);
-      return categoryOk && queryOk;
-    }).toList(growable: false);
+    return _products
+        .where((p) {
+          if (!p.published) return false;
+          final categoryOk = category == null || p.category == category;
+          final queryOk =
+              q.isEmpty ||
+              p.name.toLowerCase().contains(q) ||
+              p.supplierName.toLowerCase().contains(q) ||
+              p.category.toLowerCase().contains(q);
+          return categoryOk && queryOk;
+        })
+        .toList(growable: false);
   }
 
   @override
@@ -97,8 +102,9 @@ class LocalB2bRepository implements B2bRepository {
   @override
   Future<List<B2bCampaign>> listCampaigns({String? category}) async {
     return _campaigns
-        .where((c) =>
-            c.published && (category == null || c.category == category))
+        .where(
+          (c) => c.published && (category == null || c.category == category),
+        )
         .toList(growable: false);
   }
 
@@ -113,9 +119,11 @@ class LocalB2bRepository implements B2bRepository {
 
   @override
   Future<List<B2bQuoteRequest>> listMyQuoteRequests() async => _myQuoteRequests
-      .map((q) => q.copyWith(
-            replyCount: _replies.where((r) => r.requestId == q.id).length,
-          ))
+      .map(
+        (q) => q.copyWith(
+          replyCount: _replies.where((r) => r.requestId == q.id).length,
+        ),
+      )
       .toList(growable: false);
 
   @override
@@ -129,9 +137,17 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
-  Future<List<B2bQuoteReply>> repliesFor(String requestId) async => _replies
-      .where((r) => r.requestId == requestId)
-      .toList(growable: false);
+  Future<List<B2bQuoteReply>> repliesFor(String requestId) async =>
+      _replies.where((r) => r.requestId == requestId).toList(growable: false);
+
+  @override
+  Future<List<B2bQuoteReply>> listMyQuoteReplies() async {
+    final me = _stores[_myStoreIndex()];
+    // Seed cevaplarında shop id yok → ad eşleşmesi de kabul (yalnız mock).
+    return _replies
+        .where((r) => r.supplierShopId == me.id || r.supplierName == me.name)
+        .toList(growable: false);
+  }
 
   // ---- Write ----
 
@@ -376,27 +392,26 @@ class LocalB2bRepository implements B2bRepository {
         message: message,
         createdAtLabel: 'Az önce',
         priceHint: (priceNote == null || priceNote.isEmpty) ? null : priceNote,
-        deliveryNote:
-            (deliveryNote == null || deliveryNote.isEmpty) ? null : deliveryNote,
+        deliveryNote: (deliveryNote == null || deliveryNote.isEmpty)
+            ? null
+            : deliveryNote,
       ),
     );
   }
 
   @override
-  Future<void> closeQuoteRequest(String id) async => _setStatus(
-        id,
-        B2bQuoteStatus.closed,
-      );
+  Future<void> closeQuoteRequest(String id) async =>
+      _setStatus(id, B2bQuoteStatus.closed);
 
   @override
-  Future<void> cancelQuoteRequest(String id) async => _setStatus(
-        id,
-        B2bQuoteStatus.cancelled,
-      );
+  Future<void> cancelQuoteRequest(String id) async =>
+      _setStatus(id, B2bQuoteStatus.cancelled);
 
   void _setStatus(String id, B2bQuoteStatus status) {
     final i = _myQuoteRequests.indexWhere((q) => q.id == id);
-    if (i >= 0) _myQuoteRequests[i] = _myQuoteRequests[i].copyWith(status: status);
+    if (i >= 0) {
+      _myQuoteRequests[i] = _myQuoteRequests[i].copyWith(status: status);
+    }
   }
 
   // ---- Lead (ilgi) kanalı ----
@@ -412,8 +427,9 @@ class LocalB2bRepository implements B2bRepository {
       (r) => r.id == quoteReplyId,
       orElse: () => throw StateError('Teklif bulunamadı.'),
     );
-    final reqIndex =
-        _myQuoteRequests.indexWhere((q) => q.id == reply.requestId);
+    final reqIndex = _myQuoteRequests.indexWhere(
+      (q) => q.id == reply.requestId,
+    );
     if (reqIndex >= 0 && _myQuoteRequests[reqIndex].status.isTerminal) {
       throw StateError('Kapalı/iptal talebe ilgi gönderilemez.');
     }
@@ -421,21 +437,23 @@ class LocalB2bRepository implements B2bRepository {
       throw StateError('Bu teklife zaten yanıt verdin.');
     }
     final req = reqIndex >= 0 ? _myQuoteRequests[reqIndex] : null;
-    _leads.add(B2bQuoteLead(
-      id: 'lead_${++_seq}',
-      quoteRequestId: reply.requestId,
-      quoteReplyId: quoteReplyId,
-      supplierShopId: reply.supplierShopId ?? '',
-      status: status,
-      supplierName: reply.supplierName,
-      buyerMessage: message.isEmpty ? null : message,
-      phoneShared: phoneShared,
-      sharedPhone: phoneShared ? phone : null,
-      createdAtLabel: 'Az önce',
-      requestCategory: req?.productOrCategory ?? '',
-      requestQuantity: req?.quantity ?? '',
-      requestCity: req?.city ?? '',
-    ));
+    _leads.add(
+      B2bQuoteLead(
+        id: 'lead_${++_seq}',
+        quoteRequestId: reply.requestId,
+        quoteReplyId: quoteReplyId,
+        supplierShopId: reply.supplierShopId ?? '',
+        status: status,
+        supplierName: reply.supplierName,
+        buyerMessage: message.isEmpty ? null : message,
+        phoneShared: phoneShared,
+        sharedPhone: phoneShared ? phone : null,
+        createdAtLabel: 'Az önce',
+        requestCategory: req?.productOrCategory ?? '',
+        requestQuantity: req?.quantity ?? '',
+        requestCity: req?.city ?? '',
+      ),
+    );
   }
 
   @override
@@ -444,14 +462,13 @@ class LocalB2bRepository implements B2bRepository {
     String message = '',
     bool phoneShared = false,
     String? phone,
-  }) async =>
-      _addLead(
-        quoteReplyId: quoteReplyId,
-        status: B2bLeadStatus.interested,
-        message: message,
-        phoneShared: phoneShared,
-        phone: phone,
-      );
+  }) async => _addLead(
+    quoteReplyId: quoteReplyId,
+    status: B2bLeadStatus.interested,
+    message: message,
+    phoneShared: phoneShared,
+    phone: phone,
+  );
 
   @override
   Future<void> rejectQuoteReply(String quoteReplyId) async =>
@@ -459,18 +476,23 @@ class LocalB2bRepository implements B2bRepository {
 
   @override
   Future<List<B2bQuoteLead>> leadsForMyQuoteRequest(
-          String quoteRequestId) async =>
-      _leads
-          .where((l) => l.quoteRequestId == quoteRequestId)
-          .toList(growable: false);
+    String quoteRequestId,
+  ) async => _leads
+      .where((l) => l.quoteRequestId == quoteRequestId)
+      .toList(growable: false);
 
   @override
   Future<List<B2bQuoteLead>> leadsForMySupplierShop() async {
     final myShopId = _stores[_myStoreIndex()].id;
-    return _leads.where((l) => l.supplierShopId == myShopId).map((l) {
-      final accepted = _replies.any((r) => r.id == l.quoteReplyId && r.accepted);
-      return l.copyWith(replyAccepted: accepted);
-    }).toList(growable: false);
+    return _leads
+        .where((l) => l.supplierShopId == myShopId)
+        .map((l) {
+          final accepted = _replies.any(
+            (r) => r.id == l.quoteReplyId && r.accepted,
+          );
+          return l.copyWith(replyAccepted: accepted);
+        })
+        .toList(growable: false);
   }
 
   @override
@@ -479,20 +501,23 @@ class LocalB2bRepository implements B2bRepository {
       (r) => r.id == quoteReplyId,
       orElse: () => throw StateError('Teklif bulunamadı.'),
     );
-    final reqIndex =
-        _myQuoteRequests.indexWhere((q) => q.id == reply.requestId);
+    final reqIndex = _myQuoteRequests.indexWhere(
+      (q) => q.id == reply.requestId,
+    );
     if (reqIndex >= 0 && _myQuoteRequests[reqIndex].status.isTerminal) {
       throw StateError('Kapalı/iptal talepte teklif kabul edilemez.');
     }
     if (reqIndex >= 0) {
-      _myQuoteRequests[reqIndex] =
-          _myQuoteRequests[reqIndex].copyWith(acceptedReplyId: quoteReplyId);
+      _myQuoteRequests[reqIndex] = _myQuoteRequests[reqIndex].copyWith(
+        acceptedReplyId: quoteReplyId,
+      );
     }
     // Aynı talebin tek teklifi seçili olur.
     for (var i = 0; i < _replies.length; i++) {
       if (_replies[i].requestId == reply.requestId) {
-        _replies[i] =
-            _replies[i].copyWith(accepted: _replies[i].id == quoteReplyId);
+        _replies[i] = _replies[i].copyWith(
+          accepted: _replies[i].id == quoteReplyId,
+        );
       }
     }
   }
@@ -510,20 +535,20 @@ class LocalB2bRepository implements B2bRepository {
     }
     // Local (guest/demo): gönderen alıcı kabul edilir (gerçek rol Supabase
     // RPC'sinde lead üyeliğinden türetilir).
-    _leadMessages.add(B2bLeadMessage(
-      id: 'lmsg_${++_seq}',
-      leadId: leadId,
-      senderRole: B2bLeadSenderRole.buyer,
-      message: message.trim(),
-      createdAtLabel: 'Az önce',
-    ));
+    _leadMessages.add(
+      B2bLeadMessage(
+        id: 'lmsg_${++_seq}',
+        leadId: leadId,
+        senderRole: B2bLeadSenderRole.buyer,
+        message: message.trim(),
+        createdAtLabel: 'Az önce',
+      ),
+    );
   }
 
   @override
   Future<List<B2bLeadMessage>> messagesForLead(String leadId) async =>
-      _leadMessages
-          .where((m) => m.leadId == leadId)
-          .toList(growable: false);
+      _leadMessages.where((m) => m.leadId == leadId).toList(growable: false);
 
   static String _monogramFor(String name, {required String fallback}) {
     final words = name
