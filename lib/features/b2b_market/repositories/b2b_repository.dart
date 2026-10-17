@@ -12,6 +12,7 @@ import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
+import '../models/b2b_replied_request.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
 
@@ -67,6 +68,23 @@ abstract class B2bRepository {
   /// kaydıyla istemci tarafında eşlenir (bkz. SupplierRequestsInbox).
   Future<List<B2bQuoteReply>> listMyQuoteReplies();
 
+  /// S3 — Yanıtladığım talepler (kapanmış/karar verilmiş dahil, anonim).
+  /// Sunucuda RPC yoksa (migration uygulanmamış) `null` → çağıran S2
+  /// davranışına (listMyQuoteReplies + açık liste eşlemesi) düşer.
+  Future<List<B2bRepliedRequest>?> listMyRepliedRequests();
+
+  /// S3 — Açık talepler, sunucu tarafı filtre + sayfalama. RPC yoksa `null`.
+  Future<B2bOpenRequestsPage?> listOpenQuoteRequestsPage({
+    List<String>? categories,
+    List<String>? cities,
+    bool excludeReplied = true,
+    int limit = 20,
+    int offset = 0,
+  });
+
+  /// S3 — Yanıt bekleyen / ağdaki açık talep sayıları. RPC yoksa `null`.
+  Future<B2bSupplierRequestCounts?> supplierRequestCounts();
+
   // ---- Write ----
 
   /// Yeni ürün ekler; eklenen ürünü döner.
@@ -88,6 +106,7 @@ abstract class B2bRepository {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -101,6 +120,10 @@ abstract class B2bRepository {
     required List<String> categories,
     String? logoUrl,
     String? coverUrl,
+    String? phone,
+    String? whatsapp,
+    String? website,
+    String? address,
   });
 
   /// Id ile ürün/kampanya bul (form prefill için). Yoksa null.
@@ -128,6 +151,7 @@ abstract class B2bRepository {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -136,6 +160,13 @@ abstract class B2bRepository {
   /// Ürünü/kampanyayı yayına alır veya taslağa çeker (publish toggle).
   Future<void> setProductPublished(String id, bool published);
   Future<void> setCampaignPublished(String id, bool published);
+
+  /// S3 — Ürün/kampanya silme (RLS: yalnız sahip; kampanya FK on delete set null).
+  Future<void> deleteProduct(String id);
+  Future<void> deleteCampaign(String id);
+
+  /// S3 — Ürün çoğaltma: aynı alanlar, "(kopya)" ad, TASLAK olarak eklenir.
+  Future<B2bProduct> duplicateProduct(String id);
 
   // ---- Teklif akışları ----
 

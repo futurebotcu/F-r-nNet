@@ -26,6 +26,7 @@ import 'b2b_product.dart';
 import 'b2b_quote_lead.dart';
 import 'b2b_quote_reply.dart';
 import 'b2b_quote_request.dart';
+import 'b2b_replied_request.dart';
 
 /// Talebin tedarikçi açısından hedef bağlamı.
 enum SupplierRequestTarget {
@@ -41,9 +42,17 @@ enum SupplierRequestTarget {
 
 /// "Yanıtladıklarım" / "Kazanılan" satırı: cevabım + (varsa) talep bağlamı.
 class SupplierRepliedItem {
-  const SupplierRepliedItem({required this.reply, this.request, this.lead});
+  const SupplierRepliedItem({
+    required this.reply,
+    this.request,
+    this.lead,
+    this.decision,
+  });
 
   final B2bQuoteReply reply;
+
+  /// S3 — sunucu kararı (RPC varsa). null → S2 türetimi (reply.status).
+  final B2bReplyDecision? decision;
 
   /// Talep hâlâ açıksa RPC'den gelen tam satır; değilse null.
   final B2bQuoteRequest? request;
@@ -62,11 +71,22 @@ class SupplierRepliedItem {
   bool get requestUnavailable => request == null && lead == null;
 
   /// Talep hâlâ yanıt bekliyor (açık) ve kararı yok.
-  bool get requestStillOpen => request != null && !request!.hasAcceptedReply;
+  bool get requestStillOpen =>
+      request != null && !request!.hasAcceptedReply && !closed;
 
-  bool get won => reply.accepted || reply.status == B2bReplyStatus.accepted;
+  bool get won =>
+      decision == B2bReplyDecision.won ||
+      (decision == null &&
+          (reply.accepted || reply.status == B2bReplyStatus.accepted));
 
-  bool get lost => reply.status == B2bReplyStatus.declined;
+  bool get lost =>
+      decision == B2bReplyDecision.lost ||
+      (decision == null && reply.status == B2bReplyStatus.declined);
+
+  /// Alıcı talebi kapattı/iptal etti (karar vermeden).
+  bool get closed =>
+      decision == B2bReplyDecision.closed ||
+      (decision == null && (request?.status.isTerminal ?? false));
 }
 
 class SupplierRequestsInbox {
@@ -76,6 +96,8 @@ class SupplierRequestsInbox {
     required this.interested,
     required this.won,
     required this.networkOpenCount,
+    this.serverFreshCount,
+    this.historyAvailable = false,
   });
 
   /// Yanıtlamadığım, yanıta uygun açık talepler ("Yeni").
@@ -93,6 +115,14 @@ class SupplierRequestsInbox {
   /// Ağdaki toplam açık talep (yanıtladıklarım dahil) — KPI yardımcı metni.
   final int networkOpenCount;
 
+  /// S3 — sunucu "yanıt bekleyen" sayısı (RPC varsa); yoksa fresh.length.
+  final int? serverFreshCount;
+
+  /// S3 — geçmiş RPC'si çalışıyor mu (kapanmış talep ayrıntısı var).
+  final bool historyAvailable;
+
+  int get freshCount => serverFreshCount ?? fresh.length;
+
   static const empty = SupplierRequestsInbox(
     fresh: [],
     replied: [],
@@ -105,6 +135,9 @@ class SupplierRequestsInbox {
     required List<B2bQuoteRequest> openRequests,
     required List<B2bQuoteReply> myReplies,
     required List<B2bQuoteLead> leads,
+    // S3: sunucu geçmişi (null → S2 davranışı) ve sunucu sayaçları.
+    List<B2bRepliedRequest>? history,
+    B2bSupplierRequestCounts? serverCounts,
   }) {
     final repliedIds = myReplies.map((r) => r.requestId).toSet();
     final openById = {for (final r in openRequests) r.id: r};
@@ -115,21 +148,31 @@ class SupplierRequestsInbox {
     final fresh = openRequests
         .where((r) => r.status.isActive && !repliedIds.contains(r.id))
         .toList(growable: false);
+    final historyByReply = <String, B2bRepliedRequest>{
+      if (history != null)
+        for (final h in history) h.reply.id: h,
+    };
     final replied = myReplies
-        .map(
-          (rep) => SupplierRepliedItem(
+        .map((rep) {
+          final h = historyByReply[rep.id];
+          return SupplierRepliedItem(
             reply: rep,
-            request: openById[rep.requestId],
+            // Sunucu geçmişi varsa talep ayrıntısı her zaman mevcut.
+            request: h?.request ?? openById[rep.requestId],
             lead: leadByReply[rep.id],
-          ),
-        )
+            decision: h?.decision,
+          );
+        })
         .toList(growable: false);
     return SupplierRequestsInbox(
       fresh: fresh,
       replied: replied,
       interested: leads.where((l) => l.isInterested).toList(growable: false),
       won: replied.where((i) => i.won).toList(growable: false),
-      networkOpenCount: openRequests.where((r) => r.status.isActive).length,
+      networkOpenCount: serverCounts?.networkOpen ??
+          openRequests.where((r) => r.status.isActive).length,
+      serverFreshCount: serverCounts?.fresh,
+      historyAvailable: history != null,
     );
   }
 

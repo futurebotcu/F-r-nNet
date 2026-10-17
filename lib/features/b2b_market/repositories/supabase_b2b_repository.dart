@@ -20,6 +20,7 @@ import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
+import '../models/b2b_replied_request.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
 import 'b2b_repository.dart';
@@ -34,17 +35,19 @@ class SupabaseB2bRepository implements B2bRepository {
   static const _shopCols =
       'id, owner_id, shop_name, description, city, district, '
       'service_regions, categories, logo_url, cover_url, is_active, '
-      'is_verified, created_at, updated_at';
+      'is_verified, phone, whatsapp, website, address, created_at, updated_at';
 
   // Ürün/kampanya: tedarikçi adı + sahiplik için mağaza embed edilir.
   static const _productCols =
       'id, shop_id, name, category, min_order, delivery_regions, price_type, '
       'description, image_url, published, created_at, '
       'b2b_supplier_shops!inner(shop_name, owner_id)';
+  // S3 — bağlı ürün adı FK embed ile (linked_product_id gerçekten yazılır).
   static const _campaignCols =
       'id, shop_id, title, category, linked_product_id, regions, min_order, '
       'valid_until, description, image_url, published, created_at, '
-      'b2b_supplier_shops!inner(shop_name, owner_id)';
+      'b2b_supplier_shops!inner(shop_name, owner_id), '
+      'linked_product:b2b_products!b2b_campaigns_linked_product_id_fkey(name)';
 
   // ---- Sabit referans (DB tablosu değil) ----
   @override
@@ -127,7 +130,17 @@ class SupabaseB2bRepository implements B2bRepository {
       isMine: currentUserId != null && row['owner_id'] == currentUserId,
       logoUrl: row['logo_url'] as String?,
       coverUrl: row['cover_url'] as String?,
+      phone: _nullIfBlank(row['phone']),
+      whatsapp: _nullIfBlank(row['whatsapp']),
+      website: _nullIfBlank(row['website']),
+      address: _nullIfBlank(row['address']),
     );
+  }
+
+  static String? _nullIfBlank(dynamic v) {
+    if (v == null) return null;
+    final t = v.toString().trim();
+    return t.isEmpty ? null : t;
   }
 
   static B2bProduct productFromRow(
@@ -169,6 +182,10 @@ class SupabaseB2bRepository implements B2bRepository {
       published: (row['published'] as bool?) ?? true,
       isMine: currentUserId != null && shop?['owner_id'] == currentUserId,
       imageUrl: row['image_url'] as String?,
+      linkedProductId: row['linked_product_id']?.toString(),
+      linkedProduct: _nullIfBlank(
+        (row['linked_product'] as Map<String, dynamic>?)?['name'],
+      ),
     );
   }
 
@@ -361,6 +378,10 @@ class SupabaseB2bRepository implements B2bRepository {
     required List<String> categories,
     String? logoUrl,
     String? coverUrl,
+    String? phone,
+    String? whatsapp,
+    String? website,
+    String? address,
   }) async {
     final uid = _uid;
     if (uid == null) throw StateError('Oturum bulunamadı.');
@@ -374,6 +395,11 @@ class SupabaseB2bRepository implements B2bRepository {
           'categories': categories,
           if (logoUrl != null) 'logo_url': logoUrl,
           if (coverUrl != null) 'cover_url': coverUrl,
+          // İletişim: boş metin → null (temizleme mümkün). Sunucuda uzunluk CHECK.
+          'phone': _nullIfBlank(phone),
+          'whatsapp': _nullIfBlank(whatsapp),
+          'website': _nullIfBlank(website),
+          'address': _nullIfBlank(address),
         }, onConflict: 'owner_id')
         .select(_shopCols)
         .single();
@@ -551,6 +577,7 @@ class SupabaseB2bRepository implements B2bRepository {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -568,6 +595,9 @@ class SupabaseB2bRepository implements B2bRepository {
           'valid_until': _tryDate(validUntil),
           'description': description,
           'published': published,
+          // S3 fix: bağlı ürün id'si artık yazılıyor (FK; başka mağazanın
+          // ürünü verilse de RLS select izin vermediği için ad gösterilmez).
+          'linked_product_id': _nullIfBlank(linkedProductId),
           if (imageUrl != null) 'image_url': imageUrl,
         })
         .select(_campaignCols)
@@ -584,6 +614,7 @@ class SupabaseB2bRepository implements B2bRepository {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -598,6 +629,7 @@ class SupabaseB2bRepository implements B2bRepository {
           'valid_until': _tryDate(validUntil),
           'description': description,
           'published': published,
+          'linked_product_id': _nullIfBlank(linkedProductId),
           if (imageUrl != null) 'image_url': imageUrl,
         })
         .eq('id', id)
@@ -694,6 +726,132 @@ class SupabaseB2bRepository implements B2bRepository {
         .eq('quote_request_id', requestId)
         .order('created_at', ascending: false);
     return rows.map(quoteReplyFromRow).toList(growable: false);
+  }
+
+  /// PostgREST "function not found" (migration uygulanmamış) → null dön.
+  static bool isRpcMissing(sb.PostgrestException e) =>
+      e.code == 'PGRST202' || e.code == '42883';
+
+  @override
+  Future<List<B2bRepliedRequest>?> listMyRepliedRequests() async {
+    if (_uid == null) return const [];
+    try {
+      final rows = await _client.rpc('b2b_my_replied_requests') as List;
+      return rows
+          .map((r) => repliedRequestFromRow(Map<String, dynamic>.from(r as Map)))
+          .toList(growable: false);
+    } on sb.PostgrestException catch (e) {
+      if (isRpcMissing(e)) return null;
+      rethrow;
+    }
+  }
+
+  static B2bRepliedRequest repliedRequestFromRow(Map<String, dynamic> row) {
+    final request = B2bQuoteRequest(
+      id: (row['request_id'] ?? '').toString(),
+      productOrCategory: (row['category'] ?? '').toString(),
+      quantity: (row['quantity'] ?? '').toString(),
+      city: (row['city'] ?? '').toString(),
+      district: (row['district'] ?? '').toString(),
+      buyerType: (row['buyer_type'] ?? '').toString(),
+      deliveryTime: (row['delivery_time'] ?? '').toString(),
+      note: (row['note'] ?? '').toString(),
+      status: statusFromText(row['request_status'] as String?),
+      targetType: (row['target_type'] ?? 'category').toString(),
+      targetId: row['target_id']?.toString(),
+      createdAt: _tryDateTime(row['request_created_at']),
+      // Karar var mı bilgisi decision'dan türetilir; id sızdırılmaz.
+      acceptedReplyId: row['decision'] == 'won' || row['decision'] == 'lost'
+          ? (row['my_reply_id'] ?? '').toString()
+          : null,
+    );
+    final reply = B2bQuoteReply(
+      id: (row['my_reply_id'] ?? '').toString(),
+      requestId: request.id,
+      supplierName: '',
+      message: '',
+      createdAtLabel: _dateLabel(row['my_reply_created_at']),
+      accepted: (row['my_reply_accepted'] as bool?) ?? false,
+      status: B2bReplyStatusX.fromText(row['my_reply_status'] as String?),
+      createdAt: _tryDateTime(row['my_reply_created_at']),
+    );
+    return B2bRepliedRequest(
+      request: request,
+      reply: reply,
+      decision: B2bReplyDecisionX.fromText(row['decision'] as String?),
+    );
+  }
+
+  @override
+  Future<B2bOpenRequestsPage?> listOpenQuoteRequestsPage({
+    List<String>? categories,
+    List<String>? cities,
+    bool excludeReplied = true,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final rows = await _client.rpc('b2b_open_quote_requests_page', params: {
+        'p_categories': categories,
+        'p_cities': cities,
+        'p_exclude_replied': excludeReplied,
+        'p_limit': limit,
+        'p_offset': offset,
+      }) as List;
+      var total = 0;
+      final items = <B2bQuoteRequest>[];
+      for (final r in rows) {
+        final m = Map<String, dynamic>.from(r as Map);
+        total = (m['total_count'] as num?)?.toInt() ?? total;
+        items.add(quoteRequestFromRow(m, createdByMe: false));
+      }
+      return B2bOpenRequestsPage(items: items, totalCount: total);
+    } on sb.PostgrestException catch (e) {
+      if (isRpcMissing(e)) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<B2bSupplierRequestCounts?> supplierRequestCounts() async {
+    try {
+      final rows = await _client.rpc('b2b_supplier_request_counts') as List;
+      if (rows.isEmpty) return const B2bSupplierRequestCounts(fresh: 0, networkOpen: 0);
+      final m = Map<String, dynamic>.from(rows.first as Map);
+      return B2bSupplierRequestCounts(
+        fresh: (m['fresh_count'] as num?)?.toInt() ?? 0,
+        networkOpen: (m['network_open_count'] as num?)?.toInt() ?? 0,
+      );
+    } on sb.PostgrestException catch (e) {
+      if (isRpcMissing(e)) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteProduct(String id) async {
+    // RLS b2b_products_delete: yalnız sahip. Kampanya FK on delete set null.
+    await _client.from('b2b_products').delete().eq('id', id);
+  }
+
+  @override
+  Future<void> deleteCampaign(String id) async {
+    await _client.from('b2b_campaigns').delete().eq('id', id);
+  }
+
+  @override
+  Future<B2bProduct> duplicateProduct(String id) async {
+    final src = await productById(id);
+    if (src == null || !src.isMine) throw StateError('Ürün bulunamadı.');
+    return addProduct(
+      name: '${src.name} (kopya)',
+      category: src.category,
+      minOrder: src.minOrder,
+      deliveryRegion: src.deliveryRegion,
+      description: src.description,
+      published: false,
+      imageUrl: src.imageUrl,
+    );
   }
 
   @override
