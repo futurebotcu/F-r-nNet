@@ -1,8 +1,8 @@
-// B2B Pazar — Supabase repository (Adım B).
+// B2B Pazar — Supabase repository (CANLI).
 //
 // B2bRepository (async) interface'ini gerçek Supabase backend ile uygular.
-// Bu sınıf bu adımda HENÜZ AKTİF DEĞİL — provider varsayılanı LocalB2bRepository
-// kalır (Adım C). Burada amaç: tam mapping + metotların hazır olması.
+// Oturum açık + Supabase etkinken provider varsayılanı budur; LocalB2bRepository
+// yalnız misafir/yerel modda ve widget testlerinde kullanılır.
 //
 // ANONİMLİK: Teklif Ağı (tedarikçinin gördüğü açık talepler) DOĞRUDAN
 // b2b_quote_requests tablosundan OKUNMAZ; yalnız rpc('b2b_open_quote_requests')
