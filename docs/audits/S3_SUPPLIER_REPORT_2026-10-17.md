@@ -64,8 +64,8 @@ Dart tarafı: `b2b_s3_migration_contract_test.dart` (kaynak sözleşmesi) + `sup
 | `flutter analyze` | No issues found |
 | SQL harness (`run_tests.ps1`) | ALL B2B S3 TESTS PASSED |
 | S3 + S2 + panel test dosyaları | 48/48 |
-| `flutter test --exclude-tags golden` (CI komutu) | arka planda koşuyor — sonuç PR açıklamasına işlenecek (S3 test dosyaları 48/48, analyze temiz) |
-| `flutter build apk --debug` (CI adımı) | arka planda koşuyor — sonuç PR açıklamasına işlenecek |
+| `flutter test --exclude-tags golden` (CI komutu) | **3003/3003 geçti** (2026-10-19, final ağaç) |
+| `flutter build apk --debug` (CI adımı) | ✅ app-debug.apk üretildi (Gradle assembleDebug 107 s) |
 | S3 PNG yakalama | 5/5 → `docs/audits/s3/` |
 
 ## 6. S1–S3 entegrasyon durumu
