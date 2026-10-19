@@ -51,6 +51,23 @@ class B2bCampaign {
   /// Kampanya görseli public URL'i (opsiyonel — canlı upload).
   final String? imageUrl;
 
+  /// Geçerlilik tarihi geçmiş mi? [validUntil] ISO (`YYYY-MM-DD`) ise bugünle
+  /// karşılaştırılır; "Süresiz" veya ayrıştırılamayan serbest metin → false
+  /// (sunucu listelerinde zaten `valid_until >= today` filtresi var; bu
+  /// yardımcı sahibin kendi listesinde rozet/sayım için kullanılır).
+  bool get isExpired => isExpiredAt(DateTime.now());
+
+  /// [isExpired]'ın test edilebilir hali.
+  bool isExpiredAt(DateTime now) {
+    final d = DateTime.tryParse(validUntil.trim());
+    if (d == null) return false;
+    final today = DateTime(now.year, now.month, now.day);
+    return DateTime(d.year, d.month, d.day).isBefore(today);
+  }
+
+  /// Yayında ve süresi dolmamış → alıcı tarafında görünen "aktif" kampanya.
+  bool get isActive => published && !isExpired;
+
   B2bCampaign copyWith({
     String? title,
     String? category,

@@ -10,7 +10,6 @@ import 'package:firin_defter/core/constants/app_strings.dart';
 import 'package:firin_defter/core/widgets/premium/premium_bottom_nav.dart';
 import 'package:firin_defter/features/community/screens/community_screen.dart';
 import 'package:firin_defter/features/listings/screens/listings_screen.dart';
-import 'package:firin_defter/features/marketplace/screens/pazar_coming_soon_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,7 +64,7 @@ void main() {
       expect(router.contains('CommunityScreen('), isTrue);
       expect(router.contains('ListingsScreen('), isTrue);
       // Pazar artık B2B native modül shell'i (PazarComingSoonScreen yerine).
-      expect(router.contains('B2bShellScreen()'), isTrue);
+      expect(router.contains('B2bShellScreen('), isTrue);
       expect(router.contains('MessagesListScreen()'), isTrue);
     });
 
@@ -155,16 +154,6 @@ void main() {
       await t.pump();
       // "+" grup oluştur aksiyonu yalnız Gruplar segmentinde görünür.
       expect(find.byIcon(Icons.add_rounded), findsOneWidget);
-    });
-
-    testWidgets('Pazar yakında ekranı vizyon + Yakında rozeti', (t) async {
-      await t.pumpWidget(const ProviderScope(
-        child: MaterialApp(home: PazarComingSoonScreen()),
-      ));
-      await t.pump();
-      expect(find.text(AppStrings.pazarComingTitle), findsOneWidget);
-      expect(find.text(AppStrings.pazarComingBadge), findsOneWidget);
-      expect(find.text(AppStrings.pazarBulletSuppliersTitle), findsOneWidget);
     });
 
     testWidgets('İlanlar üç segment: Eleman / İş yeri / Ekipman', (t) async {

@@ -164,35 +164,21 @@ class RolePanelCards {
         ];
 
       case AccountType.wholesaler:
+        // Tedarikçi Paneli S1 — B2B yönetim özeti (mağaza durumu, KPI, hızlı
+        // işlemler) RoleDashboardScreen'de SupplierPanelHome ile gerçek
+        // veriden çizilir; burada yalnız "Diğer araçlar" kartları kalır.
+        // Kaldırılanlar: "Ürün/Hizmet İlanı Ver" (ekipman ilan formuna
+        // gidiyordu, B2B ürün değil), "Firma Profilim" (sosyal profile
+        // gidiyordu, mağaza değil), "Duyuru / Fiyat Listesi" (Yakında —
+        // boş vaat). B2B mağaza/ürün/kampanya/talep girişleri SupplierPanelHome.
         return const [
-          // Ana modül — toptancı da ticari gibi NORMAL Bayi Yönetimi shell'ine
-          // (/dealers) girer (fix/wholesaler-panel-card-to-dealers). Müşteri
-          // listesi wholesale_customer scope'lu; düz /wholesale/customers
-          // ekranı legacy route olarak kalır ama ana giriş DEĞİL.
+          // Toptancı da ticari gibi NORMAL Bayi Yönetimi shell'ine (/dealers)
+          // girer; müşteri listesi wholesale_customer scope'lu.
           PanelCard(
-            label: AppStrings.cardDealerPanel,
+            label: AppStrings.cardWholesaleCustomersPanel,
             subtitle: AppStrings.cardWholesaleDealerPanelSub,
             icon: Icons.storefront_rounded,
             route: AppRoutes.dealers,
-          ),
-          // V1 sprint sonrası — Marketplace yayını gerçek backend'e bağlandı.
-          PanelCard(
-            label: AppStrings.cardPostProductListing,
-            subtitle: AppStrings.cardPostProductListingSub,
-            icon: Icons.add_business_outlined,
-            route: AppRoutes.marketListingNew,
-          ),
-          PanelCard(
-            label: AppStrings.cardCompanyProfile,
-            subtitle: AppStrings.cardCompanyProfileSub,
-            icon: Icons.business_outlined,
-            route: AppRoutes.profile,
-          ),
-          PanelCard(
-            label: AppStrings.partnersTitle,
-            subtitle: AppStrings.partnersCardSub,
-            icon: Icons.handshake_outlined,
-            route: AppRoutes.partners,
           ),
           PanelCard(
             label: AppStrings.cardIncomingMessages,
@@ -201,10 +187,10 @@ class RolePanelCards {
             route: AppRoutes.messages,
           ),
           PanelCard(
-            label: AppStrings.cardPriceAnnouncements,
-            subtitle: AppStrings.cardPriceAnnouncementsSub,
-            icon: Icons.price_change_outlined,
-            comingSoon: true,
+            label: AppStrings.partnersTitle,
+            subtitle: AppStrings.partnersCardSub,
+            icon: Icons.handshake_outlined,
+            route: AppRoutes.partners,
           ),
         ];
     }

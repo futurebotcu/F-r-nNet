@@ -1,8 +1,9 @@
-// B2B Pazar — Tedarikçi > kampanya oluşturma formu (mock).
+// B2B Pazar — Tedarikçi > kampanya oluşturma/düzenleme formu.
 //
-// Mağazam içinden "Kampanya oluştur" ile açılır (shell dışı full-screen route).
-// Kaydet → in-memory repo'ya eklenir; Mağazam Aktif Kampanyalar'a ve (yayında
-// ise) genel Kampanyalar sekmesine yansır. Ticari fırsat kartı olarak kalır.
+// Mağazam veya Panel'den açılır (shell dışı full-screen route). Kaydet →
+// repo'ya (canlıda Supabase b2b_campaigns) yazılır; Mağazam Aktif
+// Kampanyalar'a ve (yayında + süresi dolmamışsa) genel Kampanyalar sekmesine
+// yansır. Ticari fırsat kartı olarak kalır.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

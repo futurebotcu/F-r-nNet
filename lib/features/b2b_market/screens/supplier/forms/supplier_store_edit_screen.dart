@@ -1,8 +1,8 @@
-// B2B Pazar — Tedarikçi > mağaza (vitrin) düzenleme formu (mock).
+// B2B Pazar — Tedarikçi > mağaza (vitrin) düzenleme formu.
 //
-// Mağazam içinden "Mağazanı düzenle" ile açılır. Bu B2B mağaza AYRI ticari
-// vitrindir; mevcut FırınNet profili / AccountType / auth / Supabase
-// DEĞİŞTİRİLMEZ. Kaydet → in-memory mock store güncellenir, Mağazam yansır.
+// Mağazam veya Panel'den açılır. Bu B2B mağaza AYRI ticari vitrindir
+// (b2b_supplier_shops, owner başına 1 satır, upsert); mevcut FırınNet profili /
+// AccountType / auth DEĞİŞTİRİLMEZ. Kaydet → repo upsert, Mağazam yansır.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

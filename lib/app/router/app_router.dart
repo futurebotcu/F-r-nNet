@@ -163,6 +163,13 @@ class AppRoutes {
   // Topluluk · Pazar · İlanlar · Mesajlar · Panel
   static const String community = '/community';
   static const String pazar = '/pazar';
+
+  /// Pazar shell'inde belirli sekmeyi açar (`?tab=`). Tedarikçi:
+  /// magazam · urunler · kampanyalar · talepler; alıcı: urunler · kampanyalar ·
+  /// tedarikciler · tekliflerim. Bilinmeyen değer → ilk sekme.
+  static String pazarTab(String tab) => '/pazar?tab=$tab';
+  static const String pazarTabStore = 'magazam';
+  static const String pazarTabRequests = 'talepler';
   // B2B Pazar — Tedarikçi Mağazam yönetim formları (shell dışı, full-screen).
   static const String b2bProductNew = '/pazar/magazam/urun-ekle';
   static const String b2bCampaignNew = '/pazar/magazam/kampanya-ekle';
@@ -456,13 +463,16 @@ GoRouter createRouter({bool Function()? isAuthed}) {
             },
           ),
           GoRoute(
-            // Pazar = B2B native modül (preview): Tedarikçi/Fırıncı toggle +
-            // 4+4 sekme, mock veri. (Eski PazarComingSoonScreen yerine geçti;
-            // dosya rollback için korunur. Nav sekmesindeki comingSoon rozeti
-            // ayrı bir adımda kaldırılacak.)
+            // Pazar = B2B native modül: rol profilden çözülür (tedarikçi /
+            // alıcı), 4+4 sekme, Supabase repo. `?tab=` ile belirli sekme
+            // (Panel hızlı işlemleri: magazam / talepler).
             path: AppRoutes.pazar,
-            pageBuilder: (_, state) =>
-                _noTransition(state, const B2bShellScreen()),
+            pageBuilder: (_, state) => _noTransition(
+              state,
+              B2bShellScreen(
+                initialTab: state.uri.queryParameters['tab'],
+              ),
+            ),
           ),
           GoRoute(
             // İlanlar = Eleman (jobs) + İş yeri + Ekipman (marketplace).
