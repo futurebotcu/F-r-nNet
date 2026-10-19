@@ -122,6 +122,21 @@ try {
   Invoke-Psql @('-d', $dbName, '-f', (Join-Path $sqlDir '15_concurrency_asserts.sql')) '15_concurrency_asserts'
   Write-Host 'OK: 15_concurrency_asserts.sql'
 
+  # Rollback senaryosu: S3 geri alınır → nesneler düşer, veri kalır, S3 öncesi
+  # akış (teklif → answered, kabul) çalışır.
+  $env:PGOPTIONS = '-c check_function_bodies=off'
+  Invoke-Psql @('-d', $dbName, '-f', (Join-Path $scriptDir 'rollback_s3.sql')) 'rollback_s3'
+  Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
+  Write-Host 'Uygulandı: rollback_s3.sql'
+  Invoke-Psql @('-d', $dbName, '-o', 'NUL', '-f', (Join-Path $sqlDir '16_rollback_asserts.sql')) '16_rollback_asserts'
+  Write-Host 'OK: 16_rollback_asserts.sql'
+
+  # Yeniden uygulama (rollback → migration tekrar) idempotent.
+  $env:PGOPTIONS = '-c check_function_bodies=off'
+  Invoke-Psql @('-d', $dbName, '-f', $s3) 'S3 migration (re-apply after rollback)'
+  Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
+  Write-Host 'Uygulandı: S3 migration (rollback sonrası yeniden)'
+
   Write-Host ''
   Write-Host 'ALL B2B S3 TESTS PASSED' -ForegroundColor Green
 }

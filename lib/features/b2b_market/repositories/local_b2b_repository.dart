@@ -322,7 +322,7 @@ class LocalB2bRepository implements B2bRepository {
         minPurchase: minPurchase,
         validUntil: validUntil,
         linkedProduct: _productName(linkedProductId) ?? linkedProduct,
-      linkedProductId: linkedProductId,
+        linkedProductId: linkedProductId,
         description: description,
         published: published,
         imageUrl: imageUrl,
@@ -428,10 +428,10 @@ class LocalB2bRepository implements B2bRepository {
       final decision = r.acceptedReplyId == rep.id
           ? B2bReplyDecision.won
           : (r.hasAcceptedReply
-              ? B2bReplyDecision.lost
-              : (r.status.isTerminal
-                  ? B2bReplyDecision.closed
-                  : B2bReplyDecision.pending));
+                ? B2bReplyDecision.lost
+                : (r.status.isTerminal
+                      ? B2bReplyDecision.closed
+                      : B2bReplyDecision.pending));
       out.add(B2bRepliedRequest(request: r, reply: rep, decision: decision));
     }
     return out;
@@ -446,10 +446,13 @@ class LocalB2bRepository implements B2bRepository {
     int offset = 0,
   }) async {
     final mine = (await listMyQuoteReplies()).map((r) => r.requestId).toSet();
-    final all = B2bMockSeed.openQuoteRequests
+    // listOpenQuoteRequests() üzerinden: alt sınıflar (test) listeyi genişletebilir.
+    final all = (await listOpenQuoteRequests())
         .where((r) => r.status.isActive && !r.hasAcceptedReply)
         .where((r) => !excludeReplied || !mine.contains(r.id))
-        .where((r) => categories == null || categories.contains(r.productOrCategory))
+        .where(
+          (r) => categories == null || categories.contains(r.productOrCategory),
+        )
         .where((r) => cities == null || cities.contains(r.city))
         .toList();
     final page = all.skip(offset).take(limit).toList(growable: false);
@@ -459,7 +462,7 @@ class LocalB2bRepository implements B2bRepository {
   @override
   Future<B2bSupplierRequestCounts?> supplierRequestCounts() async {
     final mine = (await listMyQuoteReplies()).map((r) => r.requestId).toSet();
-    final open = B2bMockSeed.openQuoteRequests
+    final open = (await listOpenQuoteRequests())
         .where((r) => r.status.isActive && !r.hasAcceptedReply)
         .toList();
     return B2bSupplierRequestCounts(

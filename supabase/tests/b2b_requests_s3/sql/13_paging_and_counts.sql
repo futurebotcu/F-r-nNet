@@ -44,6 +44,23 @@ begin
   select count(*) into n from public.b2b_open_quote_requests_page(null, null, true, 2, 6);
   if n <> 0 then raise exception 'P8: sayfa4 % (0)', n; end if;
 
+  -- Birleşik filtre: kategori + il (Ambalaj ∧ İzmir = R4 + R71..74 = 5;
+  -- Ambalaj ∧ Konya = 0); exclude_replied + filtre birlikte (Un ∧ yeni: R5
+  -- yalnız — R3 cevaplandı); filtre + sayfalama (limit 2 → total 5).
+  select count(*) into n from public.b2b_open_quote_requests_page(array['Ambalaj'], array['İzmir'], true, 100, 0);
+  if n <> 5 then raise exception 'P4b: Ambalaj∧İzmir % (5)', n; end if;
+  select count(*) into n from public.b2b_open_quote_requests_page(array['Ambalaj'], array['Konya'], true, 100, 0);
+  if n <> 0 then raise exception 'P4c: Ambalaj∧Konya % (0)', n; end if;
+  select count(*) into n from public.b2b_open_quote_requests_page(array['Un'], null, true, 100, 0);
+  if n <> 1 then raise exception 'P4d: Un∧yeni % (1: R5)', n; end if;
+  select count(*) into n from public.b2b_open_quote_requests_page(array['Un'], null, false, 100, 0);
+  if n <> 2 then raise exception 'P4e: Un∧tümü % (2: R3,R5)', n; end if;
+  select count(*), max(total_count) into n, tot from public.b2b_open_quote_requests_page(array['Ambalaj'], array['İzmir'], true, 2, 4);
+  if n <> 1 or tot <> 5 then raise exception 'P4f: filtre+sayfa %/% (1/5)', n, tot; end if;
+  -- Çoklu kategori / il dizileri.
+  select count(*) into n from public.b2b_open_quote_requests_page(array['Un','Maya'], array['Konya','Bursa'], false, 100, 0);
+  if n <> 2 then raise exception 'P4g: çoklu dizi % (2: R2 Maya/Bursa, R5 Un/Konya)', n; end if;
+
   -- Limit üst sınırı 100, negatif offset 0'a çekilir (hata yok).
   select count(*) into n from public.b2b_open_quote_requests_page(null, null, true, 100000, -5);
   if n <> 6 then raise exception 'P9: sınır normalizasyonu % (6)', n; end if;

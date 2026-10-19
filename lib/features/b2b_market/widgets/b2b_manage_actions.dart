@@ -9,9 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_confirm_dialog.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../models/b2b_campaign.dart';
 import '../models/b2b_product.dart';
 import '../providers/b2b_providers.dart';
+import '../services/b2b_media_upload_service.dart';
 
 Future<void> confirmAndDeleteProduct(
   BuildContext context,
@@ -27,6 +29,12 @@ Future<void> confirmAndDeleteProduct(
     icon: Icons.delete_outline_rounded,
   );
   if (!ok || !context.mounted) return;
+  // Silmeden ÖNCE: görsel başka ürün/kampanyamda da kullanılıyor mu?
+  // (Çoğalt aynı URL'yi paylaşır.) Paylaşılıyorsa storage'a dokunulmaz.
+  final imageUrl = product.imageUrl;
+  final shared =
+      imageUrl != null &&
+      await isB2bImageShared(ref, imageUrl, exceptProductId: product.id);
   try {
     await ref
         .read(b2bMarketControllerProvider.notifier)
@@ -36,6 +44,35 @@ Future<void> confirmAndDeleteProduct(
     }
   } catch (_) {
     if (context.mounted) AppFeedback.error(context, AppStrings.b2bDeleteError);
+    return;
+  }
+  // DB silme başarılıysa görseli temizle (best-effort; yalnız kendi yolum,
+  // yalnız paylaşılmıyorsa). Hata UI'a yansımaz; orphan kalırsa zararsız.
+  if (imageUrl != null && !shared) {
+    final uid = ref.read(currentAuthUserProvider)?.id;
+    if (uid != null) {
+      await ref
+          .read(b2bMediaUploadServiceProvider)
+          ?.deleteIfOwned(userId: uid, oldUrl: imageUrl);
+    }
+  }
+}
+
+/// Görsel URL'si çağıranın başka bir ürün/kampanyasında da kullanılıyor mu?
+/// Bilinmeyen durumda (listeler yüklenmemiş) `true` döner → silme ATLANIR
+/// (güvenli taraf).
+Future<bool> isB2bImageShared(
+  WidgetRef ref,
+  String url, {
+  String? exceptProductId,
+}) async {
+  try {
+    final products = await ref.read(b2bMyProductsProvider.future);
+    final campaigns = await ref.read(b2bMyCampaignsProvider.future);
+    return products.any((p) => p.id != exceptProductId && p.imageUrl == url) ||
+        campaigns.any((c) => c.imageUrl == url);
+  } catch (_) {
+    return true;
   }
 }
 
