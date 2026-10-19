@@ -59,6 +59,9 @@ class B2bQuoteRequest {
     this.replyCount = 0,
     this.createdByMe = false,
     this.acceptedReplyId,
+    this.targetType = 'category',
+    this.targetId,
+    this.createdAt,
   });
 
   final String id;
@@ -99,6 +102,17 @@ class B2bQuoteRequest {
   bool get hasAcceptedReply =>
       acceptedReplyId != null && acceptedReplyId!.isNotEmpty;
 
+  /// Talebin hedefi: product / campaign / shop / category (DB target_type).
+  /// Tedarikçi tarafında "hangi ürünüme/kampanyama/mağazama geldi" bağlamı
+  /// için kullanılır; kimlik bilgisi taşımaz.
+  final String targetType;
+
+  /// Hedef nesne id'si (ürün/kampanya/mağaza). category için null.
+  final String? targetId;
+
+  /// Oluşturulma zamanı (RPC/tablo created_at). Mock/yerel veride null.
+  final DateTime? createdAt;
+
   B2bQuoteRequest copyWith({
     int? replyCount,
     B2bQuoteStatus? status,
@@ -117,6 +131,9 @@ class B2bQuoteRequest {
       replyCount: replyCount ?? this.replyCount,
       createdByMe: createdByMe,
       acceptedReplyId: acceptedReplyId ?? this.acceptedReplyId,
+      targetType: targetType,
+      targetId: targetId,
+      createdAt: createdAt,
     );
   }
 }

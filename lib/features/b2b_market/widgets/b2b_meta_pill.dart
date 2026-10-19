@@ -199,25 +199,25 @@ class B2bStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final (Color bg, Color fg, IconData icon) = switch (status) {
       B2bQuoteStatus.waiting => (
-          const Color(0xFFFFF9EB),
-          const Color(0xFFB45309),
-          Icons.schedule_rounded,
-        ),
+        const Color(0xFFFFF9EB),
+        const Color(0xFFB45309),
+        Icons.schedule_rounded,
+      ),
       B2bQuoteStatus.replied => (
-          const Color(0xFFF3FBEF),
-          const Color(0xFF166534),
-          Icons.mark_chat_read_rounded,
-        ),
+        const Color(0xFFF3FBEF),
+        const Color(0xFF166534),
+        Icons.mark_chat_read_rounded,
+      ),
       B2bQuoteStatus.closed => (
-          AppColors.surfaceVariant,
-          AppColors.textMuted,
-          Icons.check_circle_outline_rounded,
-        ),
+        AppColors.surfaceVariant,
+        AppColors.textMuted,
+        Icons.check_circle_outline_rounded,
+      ),
       B2bQuoteStatus.cancelled => (
-          const Color(0xFFFDF2F2),
-          const Color(0xFF991B1B),
-          Icons.cancel_outlined,
-        ),
+        const Color(0xFFFDF2F2),
+        const Color(0xFF991B1B),
+        Icons.cancel_outlined,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
@@ -231,13 +231,17 @@ class B2bStatusPill extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: fg),
           const SizedBox(width: 4),
-          Text(
-            status.label,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-              color: fg,
-              letterSpacing: 0.1,
+          Flexible(
+            child: Text(
+              status.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: fg,
+                letterSpacing: 0.1,
+              ),
             ),
           ),
         ],

@@ -90,7 +90,7 @@ void main() {
       await t.pumpWidget(host(B2bRole.supplier));
       await t.pump();
       expect(find.text('Mağazam'), findsOneWidget);
-      expect(find.text('Teklif Ağı'), findsOneWidget);
+      expect(find.text('Talepler'), findsOneWidget);
       expect(
         find.text('Fırıncılar mağazanı böyle görüyor.'),
         findsOneWidget,
@@ -104,7 +104,7 @@ void main() {
       expect(find.text('Tekliflerim'), findsOneWidget);
       // Alıcı tedarikçi yüzeylerini görmez.
       expect(find.text('Mağazam'), findsNothing);
-      expect(find.text('Teklif Ağı'), findsNothing);
+      expect(find.text('Talepler'), findsNothing);
     });
 
     testWidgets('Varsayılan (profil/override yok) → alıcı görünümü', (t) async {
@@ -125,10 +125,10 @@ void main() {
       expect(find.text('Fırıncı'), findsNothing);
     });
 
-    testWidgets('Teklif Ağı segmenti anonimlik notu gösterir', (t) async {
+    testWidgets('Talepler segmenti anonimlik notu gösterir', (t) async {
       await t.pumpWidget(host(B2bRole.supplier));
       await t.pump();
-      await t.tap(find.text('Teklif Ağı'));
+      await t.tap(find.text('Talepler'));
       await t.pumpAndSettle();
       expect(find.textContaining('anonim'), findsWidgets);
     });

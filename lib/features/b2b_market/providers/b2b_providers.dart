@@ -23,6 +23,7 @@ import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
 import '../models/b2b_quote_request.dart';
+import '../models/supplier_requests_inbox.dart';
 import '../models/b2b_store.dart';
 import '../repositories/b2b_repository.dart';
 import '../repositories/local_b2b_repository.dart';
@@ -65,8 +66,9 @@ final b2bRepositoryProvider = Provider<B2bRepository>((ref) {
 
 /// Mağaza yönetim write akışlarının tek giriş noktası + reaktif sinyal.
 /// State bir revizyon sayacıdır; her write sonrası artar.
-final b2bMarketControllerProvider =
-    NotifierProvider<B2bMarketController, int>(B2bMarketController.new);
+final b2bMarketControllerProvider = NotifierProvider<B2bMarketController, int>(
+  B2bMarketController.new,
+);
 
 class B2bMarketController extends Notifier<int> {
   @override
@@ -293,14 +295,16 @@ final b2bMyStoreProvider = FutureProvider.autoDispose<B2bStore>((ref) {
   return ref.watch(b2bRepositoryProvider).myStore();
 });
 
-final b2bMyProductsProvider =
-    FutureProvider.autoDispose<List<B2bProduct>>((ref) {
+final b2bMyProductsProvider = FutureProvider.autoDispose<List<B2bProduct>>((
+  ref,
+) {
   ref.watch(b2bMarketControllerProvider);
   return ref.watch(b2bRepositoryProvider).listMyProducts();
 });
 
-final b2bMyCampaignsProvider =
-    FutureProvider.autoDispose<List<B2bCampaign>>((ref) {
+final b2bMyCampaignsProvider = FutureProvider.autoDispose<List<B2bCampaign>>((
+  ref,
+) {
   ref.watch(b2bMarketControllerProvider);
   return ref.watch(b2bRepositoryProvider).listMyCampaigns();
 });
@@ -312,99 +316,131 @@ final b2bStoresProvider = FutureProvider.autoDispose<List<B2bStore>>((ref) {
 
 final b2bProductsProvider = FutureProvider.autoDispose
     .family<List<B2bProduct>, B2bProductQuery>((ref, q) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref
-      .watch(b2bRepositoryProvider)
-      .listProducts(category: q.category, query: q.query);
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref
+          .watch(b2bRepositoryProvider)
+          .listProducts(category: q.category, query: q.query);
+    });
 
 final b2bCampaignsProvider = FutureProvider.autoDispose
     .family<List<B2bCampaign>, String?>((ref, category) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).listCampaigns(category: category);
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).listCampaigns(category: category);
+    });
 
 final b2bOpenQuoteRequestsProvider =
     FutureProvider.autoDispose<List<B2bQuoteRequest>>((ref) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).listOpenQuoteRequests();
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).listOpenQuoteRequests();
+    });
 
 final b2bMyQuoteRequestsProvider =
     FutureProvider.autoDispose<List<B2bQuoteRequest>>((ref) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).listMyQuoteRequests();
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).listMyQuoteRequests();
+    });
 
 /// Tek teklif talebi detayı (alıcı, kendi talebi).
 final b2bQuoteDetailProvider = FutureProvider.autoDispose
     .family<B2bQuoteRequest?, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).quoteRequestById(id);
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).quoteRequestById(id);
+    });
 
 /// Bir talebe gelen teklif cevapları (detay ekranı).
 final b2bRepliesProvider = FutureProvider.autoDispose
     .family<List<B2bQuoteReply>, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).repliesFor(id);
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).repliesFor(id);
+    });
 
 /// Alıcının kendi talebine ait lead'ler (her reply'in ilgi durumu).
 final b2bRequestLeadsProvider = FutureProvider.autoDispose
     .family<List<B2bQuoteLead>, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).leadsForMyQuoteRequest(id);
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).leadsForMyQuoteRequest(id);
+    });
 
 /// Tedarikçinin kendi mağazasına gelen lead'ler ("İlgilenenler").
-final b2bSupplierLeadsProvider =
-    FutureProvider.autoDispose<List<B2bQuoteLead>>((ref) {
+final b2bSupplierLeadsProvider = FutureProvider.autoDispose<List<B2bQuoteLead>>(
+  (ref) {
+    ref.watch(b2bMarketControllerProvider);
+    return ref.watch(b2bRepositoryProvider).leadsForMySupplierShop();
+  },
+);
+
+/// S2 — Tedarikçinin verdiği tüm teklif cevapları (kendi mağazası, RLS).
+final b2bMyRepliesProvider = FutureProvider.autoDispose<List<B2bQuoteReply>>((
+  ref,
+) {
   ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).leadsForMySupplierShop();
+  return ref.watch(b2bRepositoryProvider).listMyQuoteReplies();
 });
+
+/// S2 — Talepler gelen kutusu: açık talepler + cevaplarım + lead'ler tek
+/// hesapta (Yeni / Yanıtladıklarım / İlgilenenler / Kazanılan). Üç kaynaktan
+/// biri hata verirse bütün kutu hata (retry hepsini yeniler); yüklenirken
+/// loading. Panel KPI'sı ve Talepler sekmesi aynı kaynağı kullanır → sayılar
+/// birbirini tutar.
+final supplierRequestsInboxProvider =
+    FutureProvider.autoDispose<SupplierRequestsInbox>((ref) async {
+      final open = ref.watch(b2bOpenQuoteRequestsProvider.future);
+      final replies = ref.watch(b2bMyRepliesProvider.future);
+      final leads = ref.watch(b2bSupplierLeadsProvider.future);
+      return SupplierRequestsInbox.build(
+        openRequests: await open,
+        myReplies: await replies,
+        leads: await leads,
+      );
+    });
+
+void supplierRequestsInboxRefresh(WidgetRef ref) {
+  ref.invalidate(b2bOpenQuoteRequestsProvider);
+  ref.invalidate(b2bMyRepliesProvider);
+  ref.invalidate(b2bSupplierLeadsProvider);
+}
 
 /// Bir lead'in takip mesajları (mini görüşme).
 final b2bLeadMessagesProvider = FutureProvider.autoDispose
     .family<List<B2bLeadMessage>, String>((ref, leadId) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).messagesForLead(leadId);
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).messagesForLead(leadId);
+    });
 
 /// Tek ürün detayı.
-final b2bProductDetailProvider =
-    FutureProvider.autoDispose.family<B2bProduct?, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).productById(id);
-});
+final b2bProductDetailProvider = FutureProvider.autoDispose
+    .family<B2bProduct?, String>((ref, id) {
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).productById(id);
+    });
 
 /// Tek kampanya detayı.
-final b2bCampaignDetailProvider =
-    FutureProvider.autoDispose.family<B2bCampaign?, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).campaignById(id);
-});
+final b2bCampaignDetailProvider = FutureProvider.autoDispose
+    .family<B2bCampaign?, String>((ref, id) {
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).campaignById(id);
+    });
 
 /// Tek mağaza detayı.
-final b2bStoreDetailProvider =
-    FutureProvider.autoDispose.family<B2bStore?, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).storeById(id);
-});
+final b2bStoreDetailProvider = FutureProvider.autoDispose
+    .family<B2bStore?, String>((ref, id) {
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).storeById(id);
+    });
 
 /// Mağazanın yayındaki ürünleri (mağaza detayı).
-final b2bStoreProductsProvider =
-    FutureProvider.autoDispose.family<List<B2bProduct>, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).productsForStore(id);
-});
+final b2bStoreProductsProvider = FutureProvider.autoDispose
+    .family<List<B2bProduct>, String>((ref, id) {
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).productsForStore(id);
+    });
 
 /// Mağazanın yayındaki kampanyaları (mağaza detayı).
-final b2bStoreCampaignsProvider =
-    FutureProvider.autoDispose.family<List<B2bCampaign>, String>((ref, id) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).campaignsForStore(id);
-});
+final b2bStoreCampaignsProvider = FutureProvider.autoDispose
+    .family<List<B2bCampaign>, String>((ref, id) {
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).campaignsForStore(id);
+    });
 
 /// Pazar'a giren kullanıcının B2B görünüm rolü.
 enum B2bRole { supplier, buyer }

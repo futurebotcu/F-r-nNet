@@ -2278,8 +2278,60 @@ class AppStrings {
   static const String supPanelStepRegions = 'Hizmet bölgesi';
   static const String supPanelStepCategories = 'Kategori';
   static const String supPanelStepProduct = 'Yayında ürün';
-  static const String supPanelKpiOpenRequests = 'Açık talep';
-  static const String supPanelKpiOpenRequestsHelper = 'Ağdaki teklif talepleri';
+  // S2 — KPI: tedarikçinin GERÇEKTEN yanıtlayabileceği (henüz yanıtlamadığı)
+  // açık talepler; ağdaki toplam yalnız yardımcı metinde, karıştırılmaz.
+  static const String supPanelKpiOpenRequests = 'Yanıt bekleyen';
+  static const String supPanelKpiOpenRequestsHelper = 'Yanıtlamadığın talep';
+  static String supPanelKpiNetworkHelper(int n) => 'Ağda $n açık talep';
+  static const String supPanelKpiWon = 'Kazanılan';
+  static const String supPanelKpiWonHelper = 'Seçilen teklifin';
+
+  // S2 — Talepler sekmesi (tedarikçi).
+  static const String supReqTab = 'Talepler';
+  static const String supReqSegFresh = 'Yeni';
+  static const String supReqSegReplied = 'Yanıtladıklarım';
+  static const String supReqSegInterested = 'İlgilenenler';
+  static const String supReqSegWon = 'Kazanılan';
+  static const String supReqSearchHint = 'Ürün, kategori veya il ara';
+  static const String supReqFilterAll = 'Tümü';
+  static const String supReqFilterCity = 'İl';
+  static const String supReqFilterCategory = 'Kategori';
+  static const String supReqFilterClear = 'Filtreyi temizle';
+  static const String supReqAnonNote =
+      'Talepler anonimdir: işletme adı, telefon ve adres görünmez. '
+      'Teklif verdiğinde alıcı seni görür; ilgilenirse iletişim açılır.';
+  static const String supReqEmptyFreshTitle = 'Yeni talep yok';
+  static const String supReqEmptyFreshSub =
+      'Alıcıların açtığı yeni teklif talepleri burada listelenir.';
+  static const String supReqEmptyFreshFiltered = 'Filtreye uyan talep yok';
+  static const String supReqEmptyRepliedTitle = 'Henüz teklif vermedin';
+  static const String supReqEmptyRepliedSub =
+      'Yeni sekmesinden bir talebe teklif ver; burada takip et.';
+  static const String supReqEmptyInterestedTitle = 'Henüz ilgilenen yok';
+  static const String supReqEmptyInterestedSub =
+      'Verdiğin tekliflere gelen ilgiler burada görünür.';
+  static const String supReqEmptyWonTitle = 'Henüz seçilen teklifin yok';
+  static const String supReqEmptyWonSub =
+      'Alıcı "Bu teklifle ilerle" dediğinde burada görünür.';
+  static const String supReqGiveOffer = 'Teklif Ver';
+  static const String supReqReplied = 'Yanıtladın';
+  static const String supReqWon = 'Teklifin seçildi';
+  static const String supReqLost = 'Başka teklif seçildi';
+  static const String supReqWaiting = 'Alıcı kararı bekleniyor';
+  static const String supReqClosedUnknown = 'Talep artık açık değil';
+  static const String supReqUnknownTitle = 'Yanıtladığın talep';
+  static const String supReqClosedUnknownSub =
+      'Alıcı talebi kapattı veya karar verdi; talep ayrıntısı artık '
+      'görüntülenemiyor.';
+  static const String supReqMyOffer = 'Teklifin';
+  static const String supReqTargetMine = 'Mağazana yönelik';
+  static const String supReqTargetMineProduct = 'Ürünün';
+  static const String supReqTargetMineCampaign = 'Kampanyan';
+  static const String supReqTargetOther = 'Belirli bir tedarikçiye yönelik';
+  static const String supReqInterestedCta = 'Alıcıya yanıt yaz';
+  static const String supReqPhoneShared = 'Alıcı telefonunu paylaştı';
+  static const String supReqPhoneNotShared = 'Telefon paylaşılmadı';
+  static const String supReqInterestedLine = 'Alıcı teklifinle ilgileniyor.';
   static const String supPanelKpiProducts = 'Yayında ürün';
   static const String supPanelKpiCampaigns = 'Aktif kampanya';
   static const String supPanelKpiLeads = 'İlgilenen';
