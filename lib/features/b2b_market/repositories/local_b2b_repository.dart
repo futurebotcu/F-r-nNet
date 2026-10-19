@@ -13,6 +13,7 @@ import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
+import '../models/b2b_replied_request.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/b2b_store.dart';
 import 'b2b_repository.dart';
@@ -187,6 +188,7 @@ class LocalB2bRepository implements B2bRepository {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -201,7 +203,8 @@ class LocalB2bRepository implements B2bRepository {
       region: region,
       minPurchase: minPurchase,
       validUntil: validUntil,
-      linkedProduct: linkedProduct,
+      linkedProduct: _productName(linkedProductId) ?? linkedProduct,
+      linkedProductId: linkedProductId,
       description: description,
       published: published,
       isMine: true,
@@ -219,6 +222,10 @@ class LocalB2bRepository implements B2bRepository {
     required List<String> categories,
     String? logoUrl,
     String? coverUrl,
+    String? phone,
+    String? whatsapp,
+    String? website,
+    String? address,
   }) async {
     final i = _myStoreIndex();
     final old = _stores[i];
@@ -235,6 +242,10 @@ class LocalB2bRepository implements B2bRepository {
       isMine: old.isMine,
       logoUrl: logoUrl ?? old.logoUrl,
       coverUrl: coverUrl ?? old.coverUrl,
+      phone: (phone ?? '').trim().isEmpty ? null : phone!.trim(),
+      whatsapp: (whatsapp ?? '').trim().isEmpty ? null : whatsapp!.trim(),
+      website: (website ?? '').trim().isEmpty ? null : website!.trim(),
+      address: (address ?? '').trim().isEmpty ? null : address!.trim(),
     );
     _stores[i] = updated;
     return updated;
@@ -297,6 +308,7 @@ class LocalB2bRepository implements B2bRepository {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -309,7 +321,8 @@ class LocalB2bRepository implements B2bRepository {
         region: region,
         minPurchase: minPurchase,
         validUntil: validUntil,
-        linkedProduct: linkedProduct,
+        linkedProduct: _productName(linkedProductId) ?? linkedProduct,
+        linkedProductId: linkedProductId,
         description: description,
         published: published,
         imageUrl: imageUrl,
@@ -321,7 +334,8 @@ class LocalB2bRepository implements B2bRepository {
       region: region,
       minPurchase: minPurchase,
       validUntil: validUntil,
-      linkedProduct: linkedProduct,
+      linkedProduct: _productName(linkedProductId) ?? linkedProduct,
+      linkedProductId: linkedProductId,
       description: description,
       published: published,
       imageUrl: imageUrl,
@@ -340,6 +354,121 @@ class LocalB2bRepository implements B2bRepository {
   Future<void> setCampaignPublished(String id, bool published) async {
     final i = _campaigns.indexWhere((c) => c.id == id);
     if (i >= 0) _campaigns[i] = _campaigns[i].copyWith(published: published);
+  }
+
+  String? _productName(String? productId) {
+    if (productId == null) return null;
+    for (final p in _products) {
+      if (p.id == productId) return p.name;
+    }
+    return null;
+  }
+
+  @override
+  Future<void> deleteProduct(String id) async {
+    final me = _stores[_myStoreIndex()].id;
+    _products.removeWhere((p) => p.id == id && p.supplierId == me);
+    // FK on delete set null karşılığı.
+    for (var i = 0; i < _campaigns.length; i++) {
+      if (_campaigns[i].linkedProductId == id) {
+        _campaigns[i] = B2bCampaign(
+          id: _campaigns[i].id,
+          title: _campaigns[i].title,
+          supplierId: _campaigns[i].supplierId,
+          supplierName: _campaigns[i].supplierName,
+          category: _campaigns[i].category,
+          region: _campaigns[i].region,
+          minPurchase: _campaigns[i].minPurchase,
+          validUntil: _campaigns[i].validUntil,
+          description: _campaigns[i].description,
+          published: _campaigns[i].published,
+          isMine: _campaigns[i].isMine,
+          imageUrl: _campaigns[i].imageUrl,
+        );
+      }
+    }
+  }
+
+  @override
+  Future<void> deleteCampaign(String id) async {
+    final me = _stores[_myStoreIndex()].id;
+    _campaigns.removeWhere((c) => c.id == id && c.supplierId == me);
+  }
+
+  @override
+  Future<B2bProduct> duplicateProduct(String id) async {
+    final src = _products.firstWhere(
+      (p) => p.id == id,
+      orElse: () => throw StateError('Ürün bulunamadı.'),
+    );
+    return addProduct(
+      name: '${src.name} (kopya)',
+      category: src.category,
+      minOrder: src.minOrder,
+      deliveryRegion: src.deliveryRegion,
+      description: src.description,
+      published: false,
+      imageUrl: src.imageUrl,
+    );
+  }
+
+  @override
+  Future<List<B2bRepliedRequest>?> listMyRepliedRequests() async {
+    // Mock: cevaplarımı alıcının talepleri + açık taleplerle eşle.
+    final mine = await listMyQuoteReplies();
+    final all = <B2bQuoteRequest>[
+      ..._myQuoteRequests,
+      ...B2bMockSeed.openQuoteRequests,
+    ];
+    final out = <B2bRepliedRequest>[];
+    for (final rep in mine) {
+      final req = all.where((q) => q.id == rep.requestId).toList();
+      if (req.isEmpty) continue;
+      final r = req.first;
+      final decision = r.acceptedReplyId == rep.id
+          ? B2bReplyDecision.won
+          : (r.hasAcceptedReply
+                ? B2bReplyDecision.lost
+                : (r.status.isTerminal
+                      ? B2bReplyDecision.closed
+                      : B2bReplyDecision.pending));
+      out.add(B2bRepliedRequest(request: r, reply: rep, decision: decision));
+    }
+    return out;
+  }
+
+  @override
+  Future<B2bOpenRequestsPage?> listOpenQuoteRequestsPage({
+    List<String>? categories,
+    List<String>? cities,
+    bool excludeReplied = true,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final mine = (await listMyQuoteReplies()).map((r) => r.requestId).toSet();
+    // listOpenQuoteRequests() üzerinden: alt sınıflar (test) listeyi genişletebilir.
+    final all = (await listOpenQuoteRequests())
+        .where((r) => r.status.isActive && !r.hasAcceptedReply)
+        .where((r) => !excludeReplied || !mine.contains(r.id))
+        .where(
+          (r) => categories == null || categories.contains(r.productOrCategory),
+        )
+        .where((r) => cities == null || cities.contains(r.city))
+        .toList();
+    final page = all.skip(offset).take(limit).toList(growable: false);
+    return B2bOpenRequestsPage(items: page, totalCount: all.length);
+  }
+
+  @override
+  Future<B2bSupplierRequestCounts?> supplierRequestCounts() async {
+    final mine = (await listMyQuoteReplies()).map((r) => r.requestId).toSet();
+    final open = (await listOpenQuoteRequests())
+        .where((r) => r.status.isActive && !r.hasAcceptedReply)
+        .toList();
+    return B2bSupplierRequestCounts(
+      fresh: open.where((r) => !mine.contains(r.id)).length,
+      networkOpen: open.length,
+    );
   }
 
   @override

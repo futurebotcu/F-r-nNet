@@ -10,6 +10,8 @@
 // ROL ÇÖZÜMÜ — TEK NOKTA: [b2bRoleProvider] (profildeki AccountType'tan;
 // wholesaler → tedarikçi, diğerleri/guest → alıcı). AccountType DEĞİŞTİRİLMEZ.
 
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -22,6 +24,7 @@ import '../models/b2b_lead_message.dart';
 import '../models/b2b_product.dart';
 import '../models/b2b_quote_lead.dart';
 import '../models/b2b_quote_reply.dart';
+import '../models/b2b_replied_request.dart';
 import '../models/b2b_quote_request.dart';
 import '../models/supplier_requests_inbox.dart';
 import '../models/b2b_store.dart';
@@ -104,6 +107,7 @@ class B2bMarketController extends Notifier<int> {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -115,6 +119,7 @@ class B2bMarketController extends Notifier<int> {
       minPurchase: minPurchase,
       validUntil: validUntil,
       linkedProduct: linkedProduct,
+      linkedProductId: linkedProductId,
       description: description,
       published: published,
       imageUrl: imageUrl,
@@ -129,6 +134,10 @@ class B2bMarketController extends Notifier<int> {
     required List<String> categories,
     String? logoUrl,
     String? coverUrl,
+    String? phone,
+    String? whatsapp,
+    String? website,
+    String? address,
   }) async {
     await _repo.updateStore(
       name: name,
@@ -137,6 +146,10 @@ class B2bMarketController extends Notifier<int> {
       categories: categories,
       logoUrl: logoUrl,
       coverUrl: coverUrl,
+      phone: phone,
+      whatsapp: whatsapp,
+      website: website,
+      address: address,
     );
     state++;
   }
@@ -172,6 +185,7 @@ class B2bMarketController extends Notifier<int> {
     required String minPurchase,
     required String validUntil,
     String? linkedProduct,
+    String? linkedProductId,
     String description = '',
     bool published = true,
     String? imageUrl,
@@ -184,6 +198,7 @@ class B2bMarketController extends Notifier<int> {
       minPurchase: minPurchase,
       validUntil: validUntil,
       linkedProduct: linkedProduct,
+      linkedProductId: linkedProductId,
       description: description,
       published: published,
       imageUrl: imageUrl,
@@ -199,6 +214,23 @@ class B2bMarketController extends Notifier<int> {
   Future<void> setCampaignPublished(String id, bool published) async {
     await _repo.setCampaignPublished(id, published);
     state++;
+  }
+
+  /// S3 — silme / çoğaltma (RLS: yalnız sahip).
+  Future<void> deleteProduct(String id) async {
+    await _repo.deleteProduct(id);
+    state++;
+  }
+
+  Future<void> deleteCampaign(String id) async {
+    await _repo.deleteCampaign(id);
+    state++;
+  }
+
+  Future<B2bProduct> duplicateProduct(String id) async {
+    final p = await _repo.duplicateProduct(id);
+    state++;
+    return p;
   }
 
   Future<void> addQuoteRequest({
@@ -377,27 +409,89 @@ final b2bMyRepliesProvider = FutureProvider.autoDispose<List<B2bQuoteReply>>((
   return ref.watch(b2bRepositoryProvider).listMyQuoteReplies();
 });
 
-/// S2 — Talepler gelen kutusu: açık talepler + cevaplarım + lead'ler tek
-/// hesapta (Yeni / Yanıtladıklarım / İlgilenenler / Kazanılan). Üç kaynaktan
-/// biri hata verirse bütün kutu hata (retry hepsini yeniler); yüklenirken
-/// loading. Panel KPI'sı ve Talepler sekmesi aynı kaynağı kullanır → sayılar
-/// birbirini tutar.
+/// S3 — Yanıtladığım talepler (sunucu RPC; migration yoksa null → S2 eşleme).
+final b2bMyRepliedRequestsProvider =
+    FutureProvider.autoDispose<List<B2bRepliedRequest>?>((ref) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).listMyRepliedRequests();
+});
+
+/// S3 — Sunucu sayaçları (RPC yoksa null → gelen kutusundan hesap).
+final b2bSupplierRequestCountsProvider =
+    FutureProvider.autoDispose<B2bSupplierRequestCounts?>((ref) {
+  ref.watch(b2bMarketControllerProvider);
+  return ref.watch(b2bRepositoryProvider).supplierRequestCounts();
+});
+
+/// S2/S3 — Talepler gelen kutusu: açık talepler + cevaplarım + lead'ler (+ S3
+/// geçmiş RPC'si varsa kapanmış/karar verilmiş taleplerin ayrıntısı) tek
+/// hesapta (Yeni / Yanıtladıklarım / İlgilenenler / Kazanılan). Kaynaklardan
+/// biri hata verirse bütün kutu hata (retry hepsini yeniler). Panel KPI'sı ve
+/// Talepler sekmesi aynı kaynağı kullanır → sayılar birbirini tutar.
 final supplierRequestsInboxProvider =
     FutureProvider.autoDispose<SupplierRequestsInbox>((ref) async {
-      final open = ref.watch(b2bOpenQuoteRequestsProvider.future);
-      final replies = ref.watch(b2bMyRepliesProvider.future);
-      final leads = ref.watch(b2bSupplierLeadsProvider.future);
-      return SupplierRequestsInbox.build(
-        openRequests: await open,
-        myReplies: await replies,
-        leads: await leads,
-      );
-    });
+  final open = ref.watch(b2bOpenQuoteRequestsProvider.future);
+  final replies = ref.watch(b2bMyRepliesProvider.future);
+  final leads = ref.watch(b2bSupplierLeadsProvider.future);
+  final history = ref.watch(b2bMyRepliedRequestsProvider.future);
+  final counts = ref.watch(b2bSupplierRequestCountsProvider.future);
+  return SupplierRequestsInbox.build(
+    openRequests: await open,
+    myReplies: await replies,
+    leads: await leads,
+    history: await history,
+    serverCounts: await counts,
+  );
+});
 
 void supplierRequestsInboxRefresh(WidgetRef ref) {
   ref.invalidate(b2bOpenQuoteRequestsProvider);
   ref.invalidate(b2bMyRepliesProvider);
   ref.invalidate(b2bSupplierLeadsProvider);
+  ref.invalidate(b2bMyRepliedRequestsProvider);
+  ref.invalidate(b2bSupplierRequestCountsProvider);
+}
+
+/// S3 — Yeni talepler sayfası (sunucu filtre + sayfalama). Anahtar: filtre +
+/// offset. RPC yoksa null (UI gelen kutusundaki istemci listesine düşer).
+typedef B2bFreshPageKey = ({
+  List<String>? categories,
+  List<String>? cities,
+  int offset,
+  int limit,
+});
+
+final b2bFreshRequestsPageProvider = FutureProvider.autoDispose
+    .family<B2bOpenRequestsPage?, String>((ref, keyJson) {
+  ref.watch(b2bMarketControllerProvider);
+  final key = decodeFreshPageKey(keyJson);
+  return ref.watch(b2bRepositoryProvider).listOpenQuoteRequestsPage(
+        categories: key.categories,
+        cities: key.cities,
+        excludeReplied: true,
+        limit: key.limit,
+        offset: key.offset,
+      );
+});
+
+/// Family anahtarı JSON (record family anahtarı olarak equatable değil).
+String encodeFreshPageKey(B2bFreshPageKey k) => jsonEncode({
+      'c': k.categories,
+      't': k.cities,
+      'o': k.offset,
+      'l': k.limit,
+    });
+
+B2bFreshPageKey decodeFreshPageKey(String s) {
+  final m = jsonDecode(s) as Map<String, dynamic>;
+  List<String>? asList(dynamic v) =>
+      v == null ? null : (v as List).map((e) => e.toString()).toList();
+  return (
+    categories: asList(m['c']),
+    cities: asList(m['t']),
+    offset: (m['o'] as num).toInt(),
+    limit: (m['l'] as num).toInt(),
+  );
 }
 
 /// Bir lead'in takip mesajları (mini görüşme).

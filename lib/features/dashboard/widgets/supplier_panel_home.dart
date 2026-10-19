@@ -459,7 +459,7 @@ class _KpiGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = inbox.valueOrNull;
-    final openCount = box?.fresh.length;
+    final openCount = box?.freshCount;
     final networkCount = box?.networkOpenCount;
     final productList = products.valueOrNull;
     final campaignList = campaigns.valueOrNull;

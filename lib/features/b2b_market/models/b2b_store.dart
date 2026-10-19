@@ -17,6 +17,10 @@ class B2bStore {
     this.isMine = false,
     this.logoUrl,
     this.coverUrl,
+    this.phone,
+    this.whatsapp,
+    this.website,
+    this.address,
   });
 
   final String id;
@@ -49,6 +53,18 @@ class B2bStore {
   /// Preview tedarikçinin kendi mağazası mı (mock sahiplik).
   final bool isMine;
 
+  /// S3 — iletişim alanları (opsiyonel). Görünürlük: yalnız oturum açmış
+  /// kullanıcılar mağazayı okuyabilir (RLS); anonim/misafir göremez.
+  final String? phone;
+  final String? whatsapp;
+  final String? website;
+  final String? address;
+
+  bool get hasContact =>
+      (phone ?? '').trim().isNotEmpty ||
+      (whatsapp ?? '').trim().isNotEmpty ||
+      (website ?? '').trim().isNotEmpty;
+
   B2bStore copyWith({int? productCount, int? campaignCount}) {
     return B2bStore(
       id: id,
@@ -58,6 +74,10 @@ class B2bStore {
       description: description,
       categories: categories,
       serviceRegions: serviceRegions,
+      phone: phone,
+      whatsapp: whatsapp,
+      website: website,
+      address: address,
       productCount: productCount ?? this.productCount,
       campaignCount: campaignCount ?? this.campaignCount,
       isMine: isMine,

@@ -2351,6 +2351,48 @@ class AppStrings {
       'Taslak veya süresi dolmuş kampanyalar Kampanyalar sekmesinde';
   static const String cardWholesaleCustomersPanel = 'Müşteriler';
 
+  // S3 — ürün/kampanya yönetimi, mağaza iletişimi, sayfalama.
+  static const String b2bMenuDuplicate = 'Çoğalt';
+  static const String b2bMenuDelete = 'Sil';
+  static const String b2bDeleteProductTitle = 'Ürünü sil';
+  static const String b2bDeleteProductMessage =
+      'ürünü kalıcı olarak silinecek. Bu işlem geri alınamaz.';
+  static const String b2bDeleteCampaignTitle = 'Kampanyayı sil';
+  static const String b2bDeleteCampaignMessage =
+      'kampanyası kalıcı olarak silinecek. Bu işlem geri alınamaz.';
+  static const String b2bDeleteConfirm = 'Sil';
+  static const String b2bDeletedProduct = 'Ürün silindi.';
+  static const String b2bDeletedCampaign = 'Kampanya silindi.';
+  static const String b2bDeleteError = 'Silinemedi. Lütfen tekrar dene.';
+  static const String b2bDuplicatedProduct =
+      'Ürün taslak olarak kopyalandı. Düzenleyip yayına alabilirsin.';
+  static const String b2bDuplicateError =
+      'Kopyalanamadı. Ürün limitin dolmuş olabilir.';
+  static const String b2bLinkedProductLabel = 'Bağlı ürün (opsiyonel)';
+  static const String b2bLinkedProductNone = 'Ürün seçilmedi';
+  static const String b2bLinkedProductEmpty =
+      'Önce bir ürün ekle; kampanyayı ürüne bağlayabilirsin.';
+  static const String b2bLinkedProductClear = 'Bağı kaldır';
+  static const String b2bStoreContactSection = 'İletişim';
+  static const String b2bStorePhoneLabel = 'Telefon';
+  static const String b2bStorePhoneHint = '0532 000 00 00';
+  static const String b2bStoreWhatsappLabel = 'WhatsApp';
+  static const String b2bStoreWhatsappHint = '0532 000 00 00';
+  static const String b2bStoreWebsiteLabel = 'Web sitesi';
+  static const String b2bStoreWebsiteHint = 'www.firmaniz.com';
+  static const String b2bStoreAddressLabel = 'Adres';
+  static const String b2bStoreAddressHint = 'Depo / sevkiyat adresi (kısa)';
+  static const String b2bStoreContactPrivacy =
+      'İletişim bilgilerin yalnızca FırınNet\'e giriş yapmış kullanıcılara '
+      'mağaza sayfanda gösterilir.';
+  static const String b2bPhoneInvalid = 'Geçerli bir telefon gir (en az 10 rakam)';
+  static const String b2bWebsiteInvalid = 'Geçerli bir web adresi gir';
+  static const String b2bContactCall = 'Ara';
+  static const String b2bContactWhatsapp = 'WhatsApp';
+  static const String b2bContactWebsite = 'Web';
+  static const String supReqLoadMore = 'Daha fazla talep yükle';
+  static String supReqShownOf(int shown, int total) => '$shown / $total talep';
+
   // Panel
   static const String panelTitle = 'Panel';
   static const String panelHeroLabel = 'Bugünün özeti';

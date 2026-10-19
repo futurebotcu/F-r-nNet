@@ -26,6 +26,7 @@ import '../../models/b2b_product.dart';
 import '../../models/b2b_store.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_campaign_card.dart';
+import '../../widgets/b2b_manage_actions.dart';
 import '../../widgets/b2b_product_card.dart';
 import '../../../../core/widgets/firinnet_avatar.dart';
 
@@ -114,6 +115,9 @@ class SupplierStoreTab extends ConsumerWidget {
                 onTogglePublish: () => ref
                     .read(b2bMarketControllerProvider.notifier)
                     .setProductPublished(p.id, !p.published),
+                onDuplicate: () =>
+                    duplicateProductWithFeedback(context, ref, p),
+                onDelete: () => confirmAndDeleteProduct(context, ref, p),
               ),
               const SizedBox(height: AppSpacing.m),
             ],
@@ -155,6 +159,7 @@ class SupplierStoreTab extends ConsumerWidget {
                 onTogglePublish: () => ref
                     .read(b2bMarketControllerProvider.notifier)
                     .setCampaignPublished(c.id, !c.published),
+                onDelete: () => confirmAndDeleteCampaign(context, ref, c),
               ),
               const SizedBox(height: AppSpacing.m),
             ],

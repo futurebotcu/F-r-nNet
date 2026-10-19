@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/dirty_form_guard.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../models/b2b_product.dart';
 import '../../../providers/b2b_providers.dart';
 import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
@@ -33,7 +34,9 @@ class _SupplierCampaignFormScreenState
     extends ConsumerState<SupplierCampaignFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
-  final _linkedProduct = TextEditingController();
+
+  /// S3 — bağlı ürün artık serbest metin değil, kendi ürünlerimden seçim.
+  String? _linkedProductId;
   final _minPurchase = TextEditingController();
   final _description = TextEditingController();
 
@@ -77,20 +80,20 @@ class _SupplierCampaignFormScreenState
     final known = ref.read(b2bRepositoryProvider).serviceRegions().toSet();
     setState(() {
       _title.text = c.title;
-      _linkedProduct.text = c.linkedProduct ?? '';
+      _linkedProductId = c.linkedProductId;
       _minPurchase.text = c.minPurchase == 'Belirtilmedi' ? '' : c.minPurchase;
-      _validUntilDate =
-          c.validUntil == 'Süresiz' ? null : DateTime.tryParse(c.validUntil);
+      _validUntilDate = c.validUntil == 'Süresiz'
+          ? null
+          : DateTime.tryParse(c.validUntil);
       _description.text = c.description;
       _category = c.category;
       _published = c.published;
       _imageUrl = c.imageUrl;
       _regions
         ..clear()
-        ..addAll(c.region
-            .split(', ')
-            .map((e) => e.trim())
-            .where(known.contains));
+        ..addAll(
+          c.region.split(', ').map((e) => e.trim()).where(known.contains),
+        );
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _hydrating = false;
@@ -100,13 +103,13 @@ class _SupplierCampaignFormScreenState
   @override
   void dispose() {
     _title.dispose();
-    _linkedProduct.dispose();
     _minPurchase.dispose();
     _description.dispose();
     super.dispose();
   }
 
-  static String _isoDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
+  static String _isoDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 
@@ -136,15 +139,24 @@ class _SupplierCampaignFormScreenState
     if (!categoryOk) setState(() => _categoryTouched = true);
     if (!formOk || !categoryOk) return;
 
-    final linked = _linkedProduct.text.trim();
+    final myProducts =
+        ref.read(b2bMyProductsProvider).valueOrNull ?? const <B2bProduct>[];
+    final linkedId = _linkedProductId;
+    final linkedName = linkedId == null
+        ? null
+        : myProducts
+              .where((p) => p.id == linkedId)
+              .map((p) => p.name)
+              .firstOrNull;
     final region = _regions.isEmpty ? 'Belirtilmedi' : _regions.join(', ');
     final minPurchase = _minPurchase.text.trim().isEmpty
         ? 'Belirtilmedi'
         : _minPurchase.text.trim();
     // FN-AUDIT-006: ISO tarih (DB date kolonu) veya boş (Süresiz). Repo
     // `_tryDate` ISO'yu doğru parse eder; serbest metin belirsizliği yok.
-    final validUntil =
-        _validUntilDate == null ? '' : _isoDate(_validUntilDate!);
+    final validUntil = _validUntilDate == null
+        ? ''
+        : _isoDate(_validUntilDate!);
     setState(() => _saving = true);
     final controller = ref.read(b2bMarketControllerProvider.notifier);
     try {
@@ -156,7 +168,8 @@ class _SupplierCampaignFormScreenState
           region: region,
           minPurchase: minPurchase,
           validUntil: validUntil,
-          linkedProduct: linked.isEmpty ? null : linked,
+          linkedProduct: linkedName,
+          linkedProductId: linkedId,
           description: _description.text.trim(),
           published: _published,
           imageUrl: _imageUrl,
@@ -168,7 +181,8 @@ class _SupplierCampaignFormScreenState
           region: region,
           minPurchase: minPurchase,
           validUntil: validUntil,
-          linkedProduct: linked.isEmpty ? null : linked,
+          linkedProduct: linkedName,
+          linkedProductId: linkedId,
           description: _description.text.trim(),
           published: _published,
           imageUrl: _imageUrl,
@@ -238,10 +252,12 @@ class _SupplierCampaignFormScreenState
                     : null,
               ),
               const SizedBox(height: AppSpacing.l),
-              B2bTextField(
-                label: 'Bağlı ürün (opsiyonel)',
-                controller: _linkedProduct,
-                hint: 'Ör. Ekmeklik Un (Tip 650)',
+              _LinkedProductPicker(
+                selectedId: _linkedProductId,
+                onChanged: (id) => setState(() {
+                  _linkedProductId = id;
+                  _dirty = true;
+                }),
               ),
               const SizedBox(height: AppSpacing.l),
               B2bMultiSelectChips(
@@ -298,7 +314,9 @@ class _SupplierCampaignFormScreenState
               B2bSaveButton(
                 label: _saving
                     ? 'Kaydediliyor…'
-                    : (_editing ? 'Değişiklikleri kaydet' : 'Kampanyayı kaydet'),
+                    : (_editing
+                          ? 'Değişiklikleri kaydet'
+                          : 'Kampanyayı kaydet'),
                 onTap: _saving ? null : _save,
               ),
             ],
@@ -307,5 +325,69 @@ class _SupplierCampaignFormScreenState
       ),
     );
     return DirtyFormGuard(isDirty: _dirty, child: scaffold);
+  }
+}
+
+/// S3 — Kampanyayı kendi ürünlerimden birine bağlar (linked_product_id).
+/// Ürün yoksa yönlendirici metin; seçimi kaldırmak için "Bağı kaldır".
+class _LinkedProductPicker extends ConsumerWidget {
+  const _LinkedProductPicker({
+    required this.selectedId,
+    required this.onChanged,
+  });
+  final String? selectedId;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final products =
+        ref.watch(b2bMyProductsProvider).valueOrNull ?? const <B2bProduct>[];
+    if (products.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.b2bLinkedProductLabel,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            AppStrings.b2bLinkedProductEmpty,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      );
+    }
+    final names = products.map((p) => p.name).toList(growable: false);
+    final selectedName = products
+        .where((p) => p.id == selectedId)
+        .map((p) => p.name)
+        .firstOrNull;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        B2bSingleSelectChips(
+          key: const ValueKey('b2b_linked_product_picker'),
+          label: AppStrings.b2bLinkedProductLabel,
+          options: names,
+          selected: selectedName,
+          onSelect: (name) {
+            final p = products.firstWhere((p) => p.name == name);
+            onChanged(p.id == selectedId ? null : p.id);
+          },
+        ),
+        if (selectedId != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const ValueKey('b2b_linked_product_clear'),
+              onPressed: () => onChanged(null),
+              icon: const Icon(Icons.link_off_rounded, size: 16),
+              label: const Text(AppStrings.b2bLinkedProductClear),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 44)),
+            ),
+          ),
+      ],
+    );
   }
 }
