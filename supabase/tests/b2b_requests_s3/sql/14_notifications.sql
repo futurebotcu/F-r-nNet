@@ -109,6 +109,31 @@ begin
   raise notice 'PASS 14-N4 yoğunluk kapağı';
 end $$;
 
+-- N6) Aynı alıcı → aynı tedarikçi saatte en fazla 3 talep bildirimi.
+-- (u13 bu dosyada A'ya zaten Maya + Un + 85 için bildirim üretti → 3; yenisi atlanır.)
+begin;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000013', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+insert into public.b2b_quote_requests (id, buyer_id, target_type, category, quantity, city) values
+  ('30000000-0000-4000-8000-000000000087', auth.uid(), 'category', 'Un', '1', 'Bursa');
+commit;
+do $$
+declare n int;
+begin
+  select count(*) into n from public.notifications n2
+    join public.b2b_quote_requests q on q.id = n2.entity_id
+   where n2.recipient_id = '00000000-0000-4000-8000-000000000009'
+     and n2.type = 'b2b_quote_request_created'
+     and q.buyer_id = '00000000-0000-4000-8000-000000000013';
+  if n > 3 then raise exception 'N6: alıcı-tedarikçi kapağı aşıldı (%)', n; end if;
+  if exists (select 1 from public.notifications where entity_id = '30000000-0000-4000-8000-000000000087'
+             and recipient_id = '00000000-0000-4000-8000-000000000009') then
+    raise exception 'N6b: 4. bildirim atlanmalıydı';
+  end if;
+  raise notice 'PASS 14-N6 alıcı-tedarikçi bildirim kapağı';
+end $$;
+
 -- N5) Pasif mağaza bildirim almaz.
 begin;
 select set_config('request.jwt.claim.role', 'service_role', true);

@@ -20,6 +20,10 @@ drop index if exists public.idx_b2b_qr_open_cat_city;
 drop index if exists public.idx_b2b_replies_shop_created;
 drop index if exists public.idx_b2b_shops_owner_active;
 
+drop trigger if exists trg_b2b_qr_guard_insert on public.b2b_quote_requests;
+drop function if exists public.b2b_qr_guard_insert();
+drop trigger if exists trg_b2b_campaigns_guard_linked_product on public.b2b_campaigns;
+drop function if exists public.b2b_campaigns_guard_linked_product();
 drop trigger if exists trg_b2b_qr_guard_columns on public.b2b_quote_requests;
 drop function if exists public.b2b_qr_guard_columns();
 drop trigger if exists trg_b2b_replies_guard_insert on public.b2b_quote_replies;

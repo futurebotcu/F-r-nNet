@@ -162,17 +162,81 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  v_prev text := coalesce(current_setting('b2b.reply_write', true), '');
 begin
   perform set_config('b2b.reply_write', 'on', true);
   update public.b2b_quote_requests
      set status = 'answered', updated_at = now()
    where id = new.quote_request_id
      and status = 'open';
+  -- Bayrak transaction'ın geri kalanında açık kalmasın (yalnız bu UPDATE).
+  perform set_config('b2b.reply_write', v_prev, true);
   return new;
 end;
 $$;
 revoke execute on function public.b2b_mark_request_answered()
   from public, anon, authenticated;
+
+-- 2f) Talep INSERT guard'ı: alıcı yeni talebi yalnız 'open' ve kararsız
+--     açabilir (doğrudan answered/closed veya keyfi accepted_reply_id ile
+--     başlatamaz). Ayrıca alıcı başına saatlik talep sınırı (spam/bildirim
+--     yağmuru). Sınır aşımı: errcode P0001 + mesaj 'b2b_rate_limited'.
+create or replace function public.b2b_qr_guard_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_recent integer;
+begin
+  if public.b2b_is_privileged_session() then
+    return new;
+  end if;
+  new.status := 'open';
+  new.accepted_reply_id := null;
+  select count(*) into v_recent
+    from public.b2b_quote_requests q
+   where q.buyer_id = new.buyer_id
+     and q.created_at > now() - interval '1 hour';
+  if v_recent >= 10 then
+    raise exception 'b2b_rate_limited' using errcode = 'P0001',
+      hint = 'Saatte en fazla 10 teklif talebi açılabilir.';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function public.b2b_qr_guard_insert()
+  from public, anon, authenticated;
+drop trigger if exists trg_b2b_qr_guard_insert on public.b2b_quote_requests;
+create trigger trg_b2b_qr_guard_insert
+  before insert on public.b2b_quote_requests
+  for each row execute function public.b2b_qr_guard_insert();
+
+-- 2g) Kampanyanın bağlı ürünü aynı mağazaya ait olmalı (başka tedarikçinin
+--     yayındaki ürününü kendi kampanyasına bağlayamaz).
+create or replace function public.b2b_campaigns_guard_linked_product()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.linked_product_id is not null and not exists (
+       select 1 from public.b2b_products p
+        where p.id = new.linked_product_id and p.shop_id = new.shop_id) then
+    raise exception 'Bağlı ürün bu mağazaya ait değil' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function public.b2b_campaigns_guard_linked_product()
+  from public, anon, authenticated;
+drop trigger if exists trg_b2b_campaigns_guard_linked_product on public.b2b_campaigns;
+create trigger trg_b2b_campaigns_guard_linked_product
+  before insert or update of linked_product_id, shop_id on public.b2b_campaigns
+  for each row execute function public.b2b_campaigns_guard_linked_product();
 
 -- 2e) YARIŞ KOŞULU DÜZELTMESİ (harness conc_accept ile tespit edildi):
 --     Mevcut b2b_accept_quote_reply talep satırını kilitlemeden okuyor;
@@ -422,6 +486,18 @@ begin
     if v_recent >= 10 then
       continue;
     end if;
+    -- Aynı alıcıdan aynı tedarikçiye saatte en fazla 3 talep bildirimi: tek
+    -- hesabın kapağı doldurup gerçek alıcıları bastırmasını engeller.
+    select count(*) into v_recent
+      from public.notifications n
+      join public.b2b_quote_requests q on q.id = n.entity_id
+     where n.recipient_id = v_owner
+       and n.type = 'b2b_quote_request_created'
+       and n.created_at > now() - interval '1 hour'
+       and q.buyer_id = new.buyer_id;
+    if v_recent >= 3 then
+      continue;
+    end if;
     insert into public.notifications
       (recipient_id, actor_id, type, title, body, entity_type, entity_id, route)
     values
@@ -458,6 +534,10 @@ create trigger trg_notify_b2b_quote_request_created
 --   drop trigger trg_b2b_replies_guard_insert on public.b2b_quote_replies;
 --   drop function public.b2b_replies_guard_insert();
 --   drop trigger trg_b2b_shops_guard_columns on public.b2b_supplier_shops;
+--   drop trigger trg_b2b_qr_guard_insert on public.b2b_quote_requests;
+--   drop function public.b2b_qr_guard_insert();
+--   drop trigger trg_b2b_campaigns_guard_linked_product on public.b2b_campaigns;
+--   drop function public.b2b_campaigns_guard_linked_product();
 --   drop function public.b2b_shops_guard_columns();
 --   drop function public.b2b_is_privileged_session();
 --   alter table public.b2b_supplier_shops drop constraint b2b_shops_contact_len,
