@@ -41,6 +41,26 @@ alter table public.b2b_supplier_shops
 --    bayrak talep guard'ı için de meşru-yazıcı işareti olarak kullanılır.
 -- ─────────────────────────────────────────────────────────────
 
+-- 2·) Ayrıcalıklı oturum tespiti (guard'ların ortak bypass kuralı):
+--     * PostgREST service_role (edge function / admin script) → JWT rolü
+--     * Doğrudan DB oturumu (Dashboard SQL Editor, pg_cron, migration) →
+--       SET ROLE yapılmamış ('none') veya postgres/supabase_admin.
+--     PostgREST her istekte `set local role anon|authenticated|service_role`
+--     yaptığı için istemci bu dala giremez. SECURITY DEFINER fonksiyonlar
+--     current_user'ı değiştirir ama `role` GUC'unu DEĞİŞTİRMEZ (harness G1f/G1g).
+create or replace function public.b2b_is_privileged_session()
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select coalesce(auth.role(), '') = 'service_role'
+      or coalesce(current_setting('role', true), 'none')
+           in ('none', 'postgres', 'supabase_admin', 'service_role');
+$$;
+revoke execute on function public.b2b_is_privileged_session()
+  from public, anon, authenticated;
+
 -- 2a) Mağaza: is_verified yalnız service_role (backoffice).
 create or replace function public.b2b_shops_guard_columns()
 returns trigger
@@ -50,12 +70,12 @@ set search_path = ''
 as $$
 begin
   if new.is_verified is distinct from old.is_verified
-     and coalesce(auth.role(), '') <> 'service_role' then
+     and not public.b2b_is_privileged_session() then
     raise exception 'is_verified yalnız yönetim tarafından değiştirilebilir'
       using errcode = '42501';
   end if;
   if new.owner_id is distinct from old.owner_id
-     and coalesce(auth.role(), '') <> 'service_role' then
+     and not public.b2b_is_privileged_session() then
     raise exception 'owner_id değiştirilemez' using errcode = '42501';
   end if;
   return new;
@@ -78,7 +98,7 @@ set search_path = ''
 as $$
 begin
   if coalesce(current_setting('b2b.reply_write', true), '') = 'on'
-     or coalesce(auth.role(), '') = 'service_role' then
+     or public.b2b_is_privileged_session() then
     return new;
   end if;
   new.status := 'sent';
@@ -107,7 +127,7 @@ as $$
 declare
   v_bypass boolean :=
     coalesce(current_setting('b2b.reply_write', true), '') = 'on'
-    or coalesce(auth.role(), '') = 'service_role';
+    or public.b2b_is_privileged_session();
 begin
   if v_bypass then return new; end if;
   if new.buyer_id is distinct from old.buyer_id then
@@ -439,6 +459,7 @@ create trigger trg_notify_b2b_quote_request_created
 --   drop function public.b2b_replies_guard_insert();
 --   drop trigger trg_b2b_shops_guard_columns on public.b2b_supplier_shops;
 --   drop function public.b2b_shops_guard_columns();
+--   drop function public.b2b_is_privileged_session();
 --   alter table public.b2b_supplier_shops drop constraint b2b_shops_contact_len,
 --     drop column phone, drop column whatsapp, drop column website, drop column address;
 -- ─────────────────────────────────────────────────────────────

@@ -26,6 +26,7 @@ drop trigger if exists trg_b2b_replies_guard_insert on public.b2b_quote_replies;
 drop function if exists public.b2b_replies_guard_insert();
 drop trigger if exists trg_b2b_shops_guard_columns on public.b2b_supplier_shops;
 drop function if exists public.b2b_shops_guard_columns();
+drop function if exists public.b2b_is_privileged_session();
 
 -- b2b_mark_request_answered → 20260618120000_b2b_v1_closing.sql tanımı
 create or replace function public.b2b_mark_request_answered()

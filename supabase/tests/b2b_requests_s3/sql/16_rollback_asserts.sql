@@ -5,7 +5,7 @@ begin
   if exists (select 1 from pg_proc where proname in (
       'b2b_my_replied_requests','b2b_open_quote_requests_page','b2b_supplier_request_counts',
       'notify_b2b_quote_request_created','b2b_qr_guard_columns','b2b_replies_guard_insert',
-      'b2b_shops_guard_columns')) then
+      'b2b_shops_guard_columns','b2b_is_privileged_session')) then
     raise exception 'RB1: S3 fonksiyonları hâlâ var';
   end if;
   if exists (select 1 from pg_trigger where tgname in (

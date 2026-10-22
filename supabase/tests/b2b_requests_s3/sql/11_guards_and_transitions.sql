@@ -52,6 +52,41 @@ do $$ begin
 end $$;
 rollback;
 
+-- G1f) Doğrudan DB oturumu (Dashboard SQL Editor / cron; SET ROLE yok)
+-- backoffice olarak is_verified yazabilir.
+begin;
+update public.b2b_supplier_shops set is_verified = true
+  where id = '20000000-0000-4000-8000-000000000011';
+do $$ begin
+  if not (select is_verified from public.b2b_supplier_shops where id = '20000000-0000-4000-8000-000000000011') then
+    raise exception 'G1f: postgres oturumu is_verified yazamadı';
+  end if;
+  raise notice 'PASS 11-G1f postgres oturumu (backoffice) is_verified';
+end $$;
+rollback;
+
+-- G1g) authenticated: helper'ı çağıramaz; SECURITY DEFINER trigger içinde
+-- `role` GUC'u çağıranınki (authenticated) kalır → guard reddeder.
+begin;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000011', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+do $$ begin
+  begin
+    perform public.b2b_is_privileged_session();
+    raise exception 'G1g: helper authenticated rolüne açık';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.b2b_supplier_shops set is_verified = true
+      where id = '20000000-0000-4000-8000-000000000011';
+    raise exception 'G1g: authenticated sahip is_verified yazabildi';
+  exception when insufficient_privilege then null;
+  end;
+  raise notice 'PASS 11-G1g authenticated ayrıcalıksız (helper kapalı + guard)';
+end $$;
+rollback;
+
 -- G2) Tedarikçi INSERT'te accepted/status zorla yazamaz → sent/false'a çekilir.
 begin;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000009', true);
