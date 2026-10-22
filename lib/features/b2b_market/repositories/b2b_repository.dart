@@ -161,6 +161,11 @@ abstract class B2bRepository {
   Future<void> setProductPublished(String id, bool published);
   Future<void> setCampaignPublished(String id, bool published);
 
+  /// S3 — Mağaza iletişim alanları (telefon/WhatsApp/web/adres) sunucuda
+  /// destekleniyor mu? Supabase'de S3 migration'ı uygulanmamışsa false →
+  /// form bu bölümü göstermez (veri kaybolmasın diye).
+  bool get supportsStoreContact => true;
+
   /// S3 — Ürün/kampanya silme (RLS: yalnız sahip; kampanya FK on delete set null).
   Future<void> deleteProduct(String id);
   Future<void> deleteCampaign(String id);

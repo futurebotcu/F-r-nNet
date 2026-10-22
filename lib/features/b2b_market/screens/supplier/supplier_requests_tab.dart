@@ -28,6 +28,7 @@ import '../../../../core/widgets/premium/premium_card.dart';
 import '../../../../core/widgets/premium/premium_list_skeleton.dart';
 import '../../models/b2b_quote_lead.dart';
 import '../../models/b2b_quote_request.dart';
+import '../../models/b2b_replied_request.dart';
 import '../../models/supplier_requests_inbox.dart';
 import '../../providers/b2b_providers.dart';
 import '../../widgets/b2b_lead_card.dart';
@@ -54,9 +55,11 @@ class _SupplierRequestsTabState extends ConsumerState<SupplierRequestsTab> {
   SupplierRequestFilter _filter = const SupplierRequestFilter();
 
   /// S3 — sunucu sayfalama: ilk sayfa provider'dan, sonraki sayfalar burada
-  /// birikir (filtre anahtarına göre). Yazma revizyonunda sıfırlanır.
+  /// birikir (filtre anahtarına göre). Biriken sayfalar, ilk sayfa yeniden
+  /// çekildiğinde (yenile/segment dönüşü/yazma) geçersiz sayılır; tekrar eden
+  /// kayıtlar id ile ayıklanır; boş sayfa gelirse liste "tükendi" sayılır.
   static const _pageSize = 20;
-  final Map<String, List<B2bQuoteRequest>> _extraPages = {};
+  final Map<String, _ExtraPages> _extraPages = {};
   bool _loadingMore = false;
 
   String get _serverFilterKey => encodeFreshPageKey((
@@ -66,23 +69,38 @@ class _SupplierRequestsTabState extends ConsumerState<SupplierRequestsTab> {
     limit: _pageSize,
   ));
 
-  Future<void> _loadMore(int loaded) async {
+  /// [key] ve [base] istek ANINDA yakalanır: istek sürerken filtre değişirse
+  /// sonuç eski filtrenin anahtarına yazılır (yanlış listeye karışmaz).
+  Future<void> _loadMore(
+    String key,
+    B2bOpenRequestsPage base,
+    int rawOffset,
+  ) async {
     if (_loadingMore) return;
+    final cats = _filter.category == null ? null : [_filter.category!];
+    final cities = _filter.city == null ? null : [_filter.city!];
     setState(() => _loadingMore = true);
     try {
       final page = await ref
           .read(b2bRepositoryProvider)
           .listOpenQuoteRequestsPage(
-            categories: _filter.category == null ? null : [_filter.category!],
-            cities: _filter.city == null ? null : [_filter.city!],
+            categories: cats,
+            cities: cities,
             excludeReplied: true,
             limit: _pageSize,
-            offset: loaded,
+            offset: rawOffset,
           );
       if (!mounted) return;
       setState(() {
         if (page != null) {
-          (_extraPages[_serverFilterKey] ??= []).addAll(page.items);
+          var ex = _extraPages[key];
+          if (ex == null || !identical(ex.base, base)) {
+            ex = _ExtraPages(base);
+            _extraPages[key] = ex;
+          }
+          ex.items.addAll(page.items);
+          ex.latestTotal = page.totalCount;
+          if (page.items.isEmpty) ex.exhausted = true;
         }
         _loadingMore = false;
       });
@@ -169,17 +187,27 @@ class _SupplierRequestsTabState extends ConsumerState<SupplierRequestsTab> {
         final page = ref.watch(b2bFreshRequestsPageProvider(key)).valueOrNull;
         final textOnly = SupplierRequestFilter(query: _filter.query);
         if (page != null) {
-          final extra = _extraPages[key] ?? const <B2bQuoteRequest>[];
-          final loaded = [...page.items, ...extra];
+          // İlk sayfa yeniden çekildiyse biriken sayfalar bayat → yok say.
+          final ex = _extraPages[key];
+          final valid = ex != null && identical(ex.base, page) ? ex : null;
+          final rawCount = page.items.length + (valid?.items.length ?? 0);
+          final seen = <String>{};
+          final loaded = <B2bQuoteRequest>[
+            for (final r in [...page.items, ...?valid?.items])
+              if (seen.add(r.id)) r,
+          ];
+          final total = valid?.latestTotal ?? page.totalCount;
+          final hasMore = !(valid?.exhausted ?? false) && rawCount < total;
           return _FreshList(
             items: loaded.where(textOnly.matchesRequest).toList(),
             filtered: !_filter.isEmpty,
             onClearFilter: () =>
                 setState(() => _filter = const SupplierRequestFilter()),
-            totalCount: page.totalCount,
-            hasMore: loaded.length < page.totalCount,
+            totalCount: total,
+            loadedCount: loaded.length,
+            hasMore: hasMore,
             loadingMore: _loadingMore,
-            onLoadMore: () => _loadMore(loaded.length),
+            onLoadMore: () => _loadMore(key, page, rawCount),
           );
         }
         return _FreshList(
@@ -459,6 +487,7 @@ class _FreshList extends ConsumerWidget {
     required this.filtered,
     required this.onClearFilter,
     this.totalCount,
+    this.loadedCount,
     this.hasMore = false,
     this.loadingMore = false,
     this.onLoadMore,
@@ -466,6 +495,10 @@ class _FreshList extends ConsumerWidget {
   final List<B2bQuoteRequest> items;
   final bool filtered;
   final VoidCallback onClearFilter;
+
+  /// Sunucudan yüklenen (metin aramasından ÖNCE) benzersiz kayıt sayısı —
+  /// "yüklenen / toplam" sayacı bununla gösterilir.
+  final int? loadedCount;
 
   /// S3 — sunucu sayfalama (null → istemci modu, sayfa yok).
   final int? totalCount;
@@ -475,7 +508,9 @@ class _FreshList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (items.isEmpty) {
+    // Sayfalama modunda metin araması yalnız yüklenen sayfaları süzer;
+    // eşleşme yoksa ama daha fazla sayfa varsa "Daha fazla yükle" kalır.
+    if (items.isEmpty && !hasMore) {
       return EmptyState(
         icon: Icons.hub_outlined,
         title: filtered
@@ -507,7 +542,7 @@ class _FreshList extends ConsumerWidget {
         if (i == 0) return const _AnonymityNote();
         if (i == items.length + 1) {
           return _LoadMoreRow(
-            shown: items.length,
+            shown: loadedCount ?? items.length,
             total: totalCount ?? items.length,
             loading: loadingMore,
             onTap: onLoadMore,
@@ -951,4 +986,16 @@ class _LoadMoreRow extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Sunucudan "Daha fazla" ile yüklenen sayfalar (ilk sayfa nesnesine bağlı).
+class _ExtraPages {
+  _ExtraPages(this.base);
+
+  /// Bu sayfaların eklendiği ilk sayfa (identity) — ilk sayfa yeniden
+  /// çekilince birikenler geçersiz olur.
+  final B2bOpenRequestsPage base;
+  final List<B2bQuoteRequest> items = <B2bQuoteRequest>[];
+  int? latestTotal;
+  bool exhausted = false;
 }

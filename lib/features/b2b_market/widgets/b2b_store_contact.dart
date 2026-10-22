@@ -22,6 +22,16 @@ class B2bStoreContact extends StatelessWidget {
 
   static String digitsOf(String s) => s.replaceAll(RegExp(r'[^0-9]'), '');
 
+  /// wa.me uluslararası format ister (ülke kodu, başında 0/+ yok).
+  /// Türkiye için: 0532… → 90532…, 532… (10 hane) → 90532…, 0090… → 90….
+  static String whatsappNumber(String raw) {
+    var d = digitsOf(raw);
+    if (d.startsWith('00')) d = d.substring(2);
+    if (d.length == 11 && d.startsWith('0')) return '90${d.substring(1)}';
+    if (d.length == 10 && d.startsWith('5')) return '90$d';
+    return d;
+  }
+
   static Uri? websiteUri(String? raw) {
     final t = (raw ?? '').trim();
     if (t.isEmpty) return null;
@@ -70,8 +80,11 @@ class B2bStoreContact extends StatelessWidget {
           key: const ValueKey('b2b_store_whatsapp'),
           icon: Icons.chat_outlined,
           label: AppStrings.b2bContactWhatsapp,
-          onTap: () =>
-              _open(context, Uri.parse('https://wa.me/${digitsOf(wa)}'), wa),
+          onTap: () => _open(
+            context,
+            Uri.parse('https://wa.me/${whatsappNumber(wa)}'),
+            wa,
+          ),
         ),
       if (web != null)
         _ContactButton(

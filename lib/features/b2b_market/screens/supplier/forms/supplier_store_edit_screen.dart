@@ -9,7 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/widgets/dirty_form_guard.dart';
+import '../../../../../core/widgets/error_retry_state.dart';
 import '../../../../../core/widgets/premium/premium_scaffold.dart';
+import '../../../models/b2b_store.dart';
 import '../../../providers/b2b_providers.dart';
 import '../../../services/b2b_media_upload_service.dart';
 import '../../../widgets/b2b_form_field.dart';
@@ -42,6 +44,11 @@ class _SupplierStoreEditScreenState
   bool _saving = false; // çift-submit guard (ürün/kampanya formlarıyla aynı)
   bool _dirty = false;
   bool _hydrating = true;
+
+  /// Mevcut mağaza yüklenemediyse kaydetme kapalı: boş formla kaydetmek
+  /// mevcut logo/bölge/iletişim bilgilerini silerdi (denetim LOW-10).
+  bool _loaded = false;
+  bool _loadFailed = false;
   void _markDirty() {
     if (_hydrating || _dirty) return;
     setState(() => _dirty = true);
@@ -54,9 +61,21 @@ class _SupplierStoreEditScreenState
   }
 
   Future<void> _prefill() async {
-    final store = await ref.read(b2bRepositoryProvider).myStore();
+    final B2bStore store;
+    try {
+      store = await ref.read(b2bRepositoryProvider).myStore();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadFailed = true;
+        _hydrating = false;
+      });
+      return;
+    }
     if (!mounted) return;
     setState(() {
+      _loaded = true;
+      _loadFailed = false;
       _name.text = store.name;
       _description.text = store.description;
       _regions
@@ -94,7 +113,7 @@ class _SupplierStoreEditScreenState
       SupplierStoreEditScreenValidators.website(v);
 
   Future<void> _save() async {
-    if (_saving) return;
+    if (_saving || !_loaded) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
     try {
@@ -181,53 +200,74 @@ class _SupplierStoreEditScreenState
                 }),
               ),
               const SizedBox(height: AppSpacing.l),
+              if (_loadFailed) ...[
+                ErrorRetryState(
+                  key: const ValueKey('b2b_store_edit_load_error'),
+                  compact: true,
+                  onRetry: () {
+                    setState(() => _loadFailed = false);
+                    _prefill();
+                  },
+                ),
+                const SizedBox(height: AppSpacing.l),
+              ],
               // S3 — İletişim (opsiyonel). Yalnız oturum açmış kullanıcılara
-              // mağaza sayfasında gösterilir (RLS).
-              Text(
-                AppStrings.b2bStoreContactSection,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: AppSpacing.s),
-              B2bTextField(
-                key: const ValueKey('b2b_store_phone'),
-                label: AppStrings.b2bStorePhoneLabel,
-                controller: _phone,
-                hint: AppStrings.b2bStorePhoneHint,
-                validator: validatePhone,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: AppSpacing.l),
-              B2bTextField(
-                key: const ValueKey('b2b_store_whatsapp'),
-                label: AppStrings.b2bStoreWhatsappLabel,
-                controller: _whatsapp,
-                hint: AppStrings.b2bStoreWhatsappHint,
-                validator: validatePhone,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: AppSpacing.l),
-              B2bTextField(
-                key: const ValueKey('b2b_store_website'),
-                label: AppStrings.b2bStoreWebsiteLabel,
-                controller: _website,
-                hint: AppStrings.b2bStoreWebsiteHint,
-                validator: validateWebsite,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: AppSpacing.l),
-              B2bTextField(
-                key: const ValueKey('b2b_store_address'),
-                label: AppStrings.b2bStoreAddressLabel,
-                controller: _address,
-                hint: AppStrings.b2bStoreAddressHint,
-                maxLines: 2,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                AppStrings.b2bStoreContactPrivacy,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppSpacing.l),
+              // mağaza sayfasında gösterilir (RLS). Sunucu desteklemiyorsa
+              // (migration öncesi) bölüm gizlenir.
+              if (ref.read(b2bRepositoryProvider).supportsStoreContact) ...[
+                Text(
+                  AppStrings.b2bStoreContactSection,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: AppSpacing.s),
+                B2bTextField(
+                  key: const ValueKey('b2b_store_phone'),
+                  maxLength: 32,
+                  keyboardType: TextInputType.phone,
+                  label: AppStrings.b2bStorePhoneLabel,
+                  controller: _phone,
+                  hint: AppStrings.b2bStorePhoneHint,
+                  validator: validatePhone,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: AppSpacing.l),
+                B2bTextField(
+                  key: const ValueKey('b2b_store_whatsapp'),
+                  maxLength: 32,
+                  keyboardType: TextInputType.phone,
+                  label: AppStrings.b2bStoreWhatsappLabel,
+                  controller: _whatsapp,
+                  hint: AppStrings.b2bStoreWhatsappHint,
+                  validator: validatePhone,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: AppSpacing.l),
+                B2bTextField(
+                  key: const ValueKey('b2b_store_website'),
+                  maxLength: 200,
+                  keyboardType: TextInputType.url,
+                  label: AppStrings.b2bStoreWebsiteLabel,
+                  controller: _website,
+                  hint: AppStrings.b2bStoreWebsiteHint,
+                  validator: validateWebsite,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: AppSpacing.l),
+                B2bTextField(
+                  key: const ValueKey('b2b_store_address'),
+                  maxLength: 300,
+                  label: AppStrings.b2bStoreAddressLabel,
+                  controller: _address,
+                  hint: AppStrings.b2bStoreAddressHint,
+                  maxLines: 2,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  AppStrings.b2bStoreContactPrivacy,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.l),
+              ],
               B2bImageUploadField(
                 kind: B2bMediaKind.shopLogo,
                 label: 'Logo',
@@ -245,7 +285,7 @@ class _SupplierStoreEditScreenState
               const SizedBox(height: AppSpacing.xl),
               B2bSaveButton(
                 label: _saving ? 'Kaydediliyor…' : 'Mağazayı kaydet',
-                onTap: _saving ? null : _save,
+                onTap: (_saving || !_loaded) ? null : _save,
               ),
             ],
           ),

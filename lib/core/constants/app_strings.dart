@@ -2332,7 +2332,8 @@ class AppStrings {
   static const String supReqPhoneShared = 'Alıcı telefonunu paylaştı';
   static const String supReqPhoneNotShared = 'Telefon paylaşılmadı';
   static const String supReqInterestedLine = 'Alıcı teklifinle ilgileniyor.';
-  static const String supPanelKpiProducts = 'Yayında ürün';
+  static const String supPanelKpiProducts = 'Ürün';
+  static const String supPanelKpiPublished = 'yayında';
   static const String supPanelKpiCampaigns = 'Aktif kampanya';
   static const String supPanelKpiLeads = 'İlgilenen';
   static const String supPanelKpiLeadsHelper = 'Teklifine olumlu dönüş';
@@ -2391,6 +2392,8 @@ class AppStrings {
   static const String b2bContactWhatsapp = 'WhatsApp';
   static const String b2bContactWebsite = 'Web';
   static const String supReqLoadMore = 'Daha fazla talep yükle';
+  static const String b2bQuoteRateLimited =
+      'Kısa sürede çok fazla talep açtın. Lütfen biraz sonra tekrar dene.';
   static String supReqShownOf(int shown, int total) => '$shown / $total talep';
 
   // Panel

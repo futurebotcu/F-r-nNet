@@ -365,6 +365,9 @@ class LocalB2bRepository implements B2bRepository {
   }
 
   @override
+  bool get supportsStoreContact => true;
+
+  @override
   Future<void> deleteProduct(String id) async {
     final me = _stores[_myStoreIndex()].id;
     _products.removeWhere((p) => p.id == id && p.supplierId == me);
