@@ -470,9 +470,6 @@ class _KpiGrid extends StatelessWidget {
         ? null
         : productList.length - publishedProducts!;
     final activeCampaigns = campaignList?.where((c) => c.isActive).length;
-    final inactiveCampaigns = campaignList == null
-        ? null
-        : campaignList.length - activeCampaigns!;
 
     final tiles = <Widget>[
       _KpiTile(
@@ -489,9 +486,14 @@ class _KpiGrid extends StatelessWidget {
       _KpiTile(
         key: const ValueKey('supplier_kpi_products'),
         icon: Icons.inventory_2_outlined,
+        // Sunucu ürün kotası taslaklar DAHİL tüm ürünleri sayar
+        // (can_add_b2b_product) → değer toplam/limit; yayındakiler yardımcıda.
         label: AppStrings.supPanelKpiProducts,
-        value: _withLimit(publishedProducts, entitlement?.supplierProductLimit),
-        helper: _countHint(draftProducts, AppStrings.supPanelKpiDrafts),
+        value: _withLimit(
+          productList?.length,
+          entitlement?.supplierProductLimit,
+        ),
+        helper: _productHint(publishedProducts, draftProducts),
         onTap: () => context.go(AppRoutes.pazarTab('urunler')),
       ),
       _KpiTile(
@@ -499,7 +501,7 @@ class _KpiGrid extends StatelessWidget {
         icon: Icons.campaign_outlined,
         label: AppStrings.supPanelKpiCampaigns,
         value: _withLimit(activeCampaigns, entitlement?.supplierCampaignLimit),
-        helper: _countHint(inactiveCampaigns, AppStrings.supPanelKpiExpired),
+        helper: _campaignHint(campaignList),
         onTap: () => context.go(AppRoutes.pazarTab('kampanyalar')),
       ),
       _KpiTile(
@@ -550,10 +552,27 @@ class _KpiGrid extends StatelessWidget {
   }
 
   /// Yardımcı satır: "2 taslak" gibi; sıfır/bilinmiyor → boş (satır gizlenir).
-  static String? _countHint(int? n, String suffix) {
-    if (n == null || n <= 0) return null;
-    return '$n $suffix';
+  static String? _productHint(int? published, int? drafts) {
+    if (published == null) return null;
+    final parts = <String>[
+      '$published ${AppStrings.supPanelKpiPublished}',
+      if ((drafts ?? 0) > 0) '$drafts ${AppStrings.supPanelKpiDrafts}',
+    ];
+    return parts.join(' · ');
   }
+
+  /// "n taslak · m süresi dolmuş" — taslaklar ve süresi dolanlar AYRI sayılır.
+  static String? _campaignHint(List<B2bCampaign>? list) {
+    if (list == null) return null;
+    final drafts = list.where((c) => !c.published).length;
+    final expired = list.where((c) => c.published && c.isExpired).length;
+    final parts = <String>[
+      if (drafts > 0) '$drafts ${AppStrings.supPanelKpiDrafts}',
+      if (expired > 0) '$expired ${AppStrings.supPanelKpiExpired}',
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
+
 }
 
 class _KpiTile extends StatelessWidget {

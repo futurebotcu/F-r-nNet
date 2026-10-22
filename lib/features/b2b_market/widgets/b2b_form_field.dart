@@ -18,6 +18,8 @@ class B2bTextField extends StatelessWidget {
     this.maxLines = 1,
     this.validator,
     this.textInputAction,
+    this.maxLength,
+    this.keyboardType,
   });
 
   final String label;
@@ -26,6 +28,10 @@ class B2bTextField extends StatelessWidget {
   final int maxLines;
   final String? Function(String?)? validator;
   final TextInputAction? textInputAction;
+
+  /// Sunucu CHECK sınırıyla aynı istemci sınırı (null → sınırsız, sayaç yok).
+  final int? maxLength;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +45,8 @@ class B2bTextField extends StatelessWidget {
           maxLines: maxLines,
           validator: validator,
           textInputAction: textInputAction,
+          maxLength: maxLength,
+          keyboardType: keyboardType,
           style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
@@ -64,9 +72,9 @@ class B2bTextField extends StatelessWidget {
   }
 
   OutlineInputBorder _border(Color c, double w) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        borderSide: BorderSide(color: c, width: w),
-      );
+    borderRadius: BorderRadius.circular(AppRadius.m),
+    borderSide: BorderSide(color: c, width: w),
+  );
 }
 
 /// Etiketli tarih seçici alanı (opsiyonel — boş = "Süresiz"). Serbest metin
@@ -115,8 +123,11 @@ class B2bDateField extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_today_rounded,
-                    size: 16, color: AppColors.textMuted),
+                const Icon(
+                  Icons.calendar_today_rounded,
+                  size: 16,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -132,8 +143,11 @@ class B2bDateField extends StatelessWidget {
                   GestureDetector(
                     onTap: onClear,
                     behavior: HitTestBehavior.opaque,
-                    child: const Icon(Icons.close_rounded,
-                        size: 16, color: AppColors.textMuted),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 16,
+                      color: AppColors.textMuted,
+                    ),
                   ),
               ],
             ),
@@ -323,7 +337,9 @@ class _SelectChip extends StatelessWidget {
           color: selected ? AppColors.brandLemon : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.m),
           border: Border.all(
-            color: selected ? AppColors.brandLemonPressed : AppColors.borderHairline,
+            color: selected
+                ? AppColors.brandLemonPressed
+                : AppColors.borderHairline,
             width: 0.8,
           ),
         ),

@@ -52,6 +52,41 @@ do $$ begin
 end $$;
 rollback;
 
+-- G1f) Doğrudan DB oturumu (Dashboard SQL Editor / cron; SET ROLE yok)
+-- backoffice olarak is_verified yazabilir.
+begin;
+update public.b2b_supplier_shops set is_verified = true
+  where id = '20000000-0000-4000-8000-000000000011';
+do $$ begin
+  if not (select is_verified from public.b2b_supplier_shops where id = '20000000-0000-4000-8000-000000000011') then
+    raise exception 'G1f: postgres oturumu is_verified yazamadı';
+  end if;
+  raise notice 'PASS 11-G1f postgres oturumu (backoffice) is_verified';
+end $$;
+rollback;
+
+-- G1g) authenticated: helper'ı çağıramaz; SECURITY DEFINER trigger içinde
+-- `role` GUC'u çağıranınki (authenticated) kalır → guard reddeder.
+begin;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000011', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+do $$ begin
+  begin
+    perform public.b2b_is_privileged_session();
+    raise exception 'G1g: helper authenticated rolüne açık';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.b2b_supplier_shops set is_verified = true
+      where id = '20000000-0000-4000-8000-000000000011';
+    raise exception 'G1g: authenticated sahip is_verified yazabildi';
+  exception when insufficient_privilege then null;
+  end;
+  raise notice 'PASS 11-G1g authenticated ayrıcalıksız (helper kapalı + guard)';
+end $$;
+rollback;
+
 -- G2) Tedarikçi INSERT'te accepted/status zorla yazamaz → sent/false'a çekilir.
 begin;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000009', true);
@@ -112,6 +147,76 @@ begin
     raise exception 'G3e: alıcı iptal edemedi';
   end if;
   raise notice 'PASS 11-G3 talep kolon/durum guard';
+end $$;
+rollback;
+
+-- G3f) Talep INSERT: alıcı answered/closed veya accepted_reply_id ile
+-- başlatamaz → open/null'a zorlanır.
+begin;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000013', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+insert into public.b2b_quote_requests (id, buyer_id, target_type, category, quantity, city, status, accepted_reply_id)
+values ('30000000-0000-4000-8000-0000000000f1', auth.uid(), 'category', 'Un', '1', 'Bursa', 'closed',
+        '40000000-0000-4000-8000-000000000111');
+do $$
+declare r record;
+begin
+  select status, accepted_reply_id into r from public.b2b_quote_requests
+   where id = '30000000-0000-4000-8000-0000000000f1';
+  if r.status <> 'open' or r.accepted_reply_id is not null then
+    raise exception 'G3f: talep insert guard çalışmadı (status=% acc=%)', r.status, r.accepted_reply_id;
+  end if;
+  raise notice 'PASS 11-G3f talep insert guard';
+end $$;
+rollback;
+
+-- G3g) Alıcı başına saatlik talep sınırı (10): 11. talep reddedilir.
+begin;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000010', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+do $$
+declare i int;
+begin
+  for i in 1..10 loop
+    insert into public.b2b_quote_requests (buyer_id, target_type, category, quantity, city)
+    values (auth.uid(), 'category', 'Yağ', '1', 'Ankara');
+  end loop;
+  begin
+    insert into public.b2b_quote_requests (buyer_id, target_type, category, quantity, city)
+    values (auth.uid(), 'category', 'Yağ', '1', 'Ankara');
+    raise exception 'G3g: 11. talep kabul edildi';
+  exception when raise_exception then
+    if sqlerrm <> 'b2b_rate_limited' then raise; end if;
+  end;
+  raise notice 'PASS 11-G3g alıcı başına saatlik talep sınırı';
+end $$;
+rollback;
+
+-- G3h) Kampanya başka mağazanın ürününe bağlanamaz; kendi ürününe bağlanabilir.
+begin;
+select set_config('request.jwt.claim.role', 'service_role', true);
+set local role service_role;
+insert into public.b2b_products (id, shop_id, name, category, published)
+values ('50000000-0000-4000-8000-000000000009', '20000000-0000-4000-8000-000000000009', 'A ürün', 'Un', true),
+       ('50000000-0000-4000-8000-000000000011', '20000000-0000-4000-8000-000000000011', 'B ürün', 'Un', true);
+commit;
+begin;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000009', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+do $$
+begin
+  begin
+    insert into public.b2b_campaigns (shop_id, title, category, linked_product_id, published)
+    values ('20000000-0000-4000-8000-000000000009', 'K', 'Un', '50000000-0000-4000-8000-000000000011', false);
+    raise exception 'G3h: başka mağazanın ürünü bağlanabildi';
+  exception when insufficient_privilege then null;
+  end;
+  insert into public.b2b_campaigns (shop_id, title, category, linked_product_id, published)
+  values ('20000000-0000-4000-8000-000000000009', 'K2', 'Un', '50000000-0000-4000-8000-000000000009', false);
+  raise notice 'PASS 11-G3h kampanya bağlı ürün sahipliği';
 end $$;
 rollback;
 
@@ -233,8 +338,10 @@ end $$;
 -- G7) Kota: lansman kapalıyken Free toptancı (u12) ayda 3 cevap; 4. reddedilir.
 update public.app_runtime_config set value = 'null'::jsonb, updated_at = now()
   where key = 'supplier_launch_free_start';
+-- (Talepler u10 adına: u1 bu saat içinde zaten 7 talep açtı; alıcı başına
+-- saatlik 10 sınırına takılmasın.)
 begin;
-select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000010', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 insert into public.b2b_quote_requests (id, buyer_id, target_type, category, quantity, city, status) values

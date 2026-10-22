@@ -32,10 +32,44 @@ class SupabaseB2bRepository implements B2bRepository {
 
   String? get _uid => _client.auth.currentUser?.id;
 
-  static const _shopCols =
+  static const _shopColsLegacy =
       'id, owner_id, shop_name, description, city, district, '
       'service_regions, categories, logo_url, cover_url, is_active, '
-      'is_verified, phone, whatsapp, website, address, created_at, updated_at';
+      'is_verified, created_at, updated_at';
+  static const _shopColsWithContact =
+      '$_shopColsLegacy, phone, whatsapp, website, address';
+
+  /// S3 iletişim kolonları sunucuda var mı? İlk 42703/PGRST204 hatasında
+  /// false'a düşer (S3 migration'ı henüz uygulanmamış sunucu) → eski kolon
+  /// listesiyle tekrar denenir. Uygulama sürümü ile migration sırası
+  /// birbirinden bağımsız olur (denetim 2026-10-23, BLOCKER-1).
+  static bool contactColumnsAvailable = true;
+
+  static String get _shopCols =>
+      contactColumnsAvailable ? _shopColsWithContact : _shopColsLegacy;
+
+  @override
+  bool get supportsStoreContact => contactColumnsAvailable;
+
+  /// Kolon bulunamadı hatası mı (PostgreSQL 42703 / PostgREST PGRST204)?
+  static bool isMissingColumn(sb.PostgrestException e) =>
+      e.code == '42703' ||
+      e.code == 'PGRST204' ||
+      (e.message.contains('column') && e.message.contains('does not exist'));
+
+  /// Mağaza sorgusunu çalıştırır; iletişim kolonları yoksa eski listeyle
+  /// bir kez daha dener.
+  Future<T> _withShopCols<T>(Future<T> Function(String cols) run) async {
+    try {
+      return await run(_shopCols);
+    } on sb.PostgrestException catch (e) {
+      if (contactColumnsAvailable && isMissingColumn(e)) {
+        contactColumnsAvailable = false;
+        return run(_shopCols);
+      }
+      rethrow;
+    }
+  }
 
   // Ürün/kampanya: tedarikçi adı + sahiplik için mağaza embed edilir.
   static const _productCols =
@@ -248,11 +282,13 @@ class SupabaseB2bRepository implements B2bRepository {
   Future<Map<String, dynamic>?> _myShopRow() async {
     final uid = _uid;
     if (uid == null) return null;
-    return _client
-        .from('b2b_supplier_shops')
-        .select(_shopCols)
-        .eq('owner_id', uid)
-        .maybeSingle();
+    return _withShopCols(
+      (cols) => _client
+          .from('b2b_supplier_shops')
+          .select(cols)
+          .eq('owner_id', uid)
+          .maybeSingle(),
+    );
   }
 
   Future<String?> _myShopId() async => (await _myShopRow())?['id'] as String?;
@@ -280,11 +316,13 @@ class SupabaseB2bRepository implements B2bRepository {
 
   @override
   Future<List<B2bStore>> listStores() async {
-    final rows = await _client
-        .from('b2b_supplier_shops')
-        .select(_shopCols)
-        .eq('is_active', true)
-        .order('created_at', ascending: false);
+    final rows = await _withShopCols(
+      (cols) => _client
+          .from('b2b_supplier_shops')
+          .select(cols)
+          .eq('is_active', true)
+          .order('created_at', ascending: false),
+    );
     final uid = _uid;
     final stores = rows
         .map((r) => storeFromRow(r, currentUserId: uid))
@@ -332,11 +370,13 @@ class SupabaseB2bRepository implements B2bRepository {
 
   @override
   Future<B2bStore?> storeById(String id) async {
-    final row = await _client
-        .from('b2b_supplier_shops')
-        .select(_shopCols)
-        .eq('id', id)
-        .maybeSingle();
+    final row = await _withShopCols(
+      (cols) => _client
+          .from('b2b_supplier_shops')
+          .select(cols)
+          .eq('id', id)
+          .maybeSingle(),
+    );
     return row == null ? null : storeFromRow(row, currentUserId: _uid);
   }
 
@@ -385,24 +425,39 @@ class SupabaseB2bRepository implements B2bRepository {
   }) async {
     final uid = _uid;
     if (uid == null) throw StateError('Oturum bulunamadı.');
-    final row = await _client
+    Map<String, dynamic> payload() => {
+      'owner_id': uid,
+      'shop_name': name,
+      'description': description,
+      'service_regions': serviceRegions,
+      'categories': categories,
+      if (logoUrl != null) 'logo_url': logoUrl,
+      if (coverUrl != null) 'cover_url': coverUrl,
+      // İletişim: boş metin → null (temizleme mümkün). Sunucuda uzunluk
+      // CHECK. Kolonlar yoksa (S3 migration öncesi) gönderilmez.
+      if (contactColumnsAvailable) ...{
+        'phone': _nullIfBlank(phone),
+        'whatsapp': _nullIfBlank(whatsapp),
+        'website': _nullIfBlank(website),
+        'address': _nullIfBlank(address),
+      },
+    };
+    Future<Map<String, dynamic>> run() => _client
         .from('b2b_supplier_shops')
-        .upsert({
-          'owner_id': uid,
-          'shop_name': name,
-          'description': description,
-          'service_regions': serviceRegions,
-          'categories': categories,
-          if (logoUrl != null) 'logo_url': logoUrl,
-          if (coverUrl != null) 'cover_url': coverUrl,
-          // İletişim: boş metin → null (temizleme mümkün). Sunucuda uzunluk CHECK.
-          'phone': _nullIfBlank(phone),
-          'whatsapp': _nullIfBlank(whatsapp),
-          'website': _nullIfBlank(website),
-          'address': _nullIfBlank(address),
-        }, onConflict: 'owner_id')
+        .upsert(payload(), onConflict: 'owner_id')
         .select(_shopCols)
         .single();
+    Map<String, dynamic> row;
+    try {
+      row = await run();
+    } on sb.PostgrestException catch (e) {
+      if (contactColumnsAvailable && isMissingColumn(e)) {
+        contactColumnsAvailable = false;
+        row = await run();
+      } else {
+        rethrow;
+      }
+    }
     return storeFromRow(row, currentUserId: uid);
   }
 
@@ -738,7 +793,9 @@ class SupabaseB2bRepository implements B2bRepository {
     try {
       final rows = await _client.rpc('b2b_my_replied_requests') as List;
       return rows
-          .map((r) => repliedRequestFromRow(Map<String, dynamic>.from(r as Map)))
+          .map(
+            (r) => repliedRequestFromRow(Map<String, dynamic>.from(r as Map)),
+          )
           .toList(growable: false);
     } on sb.PostgrestException catch (e) {
       if (isRpcMissing(e)) return null;
@@ -791,13 +848,18 @@ class SupabaseB2bRepository implements B2bRepository {
     int offset = 0,
   }) async {
     try {
-      final rows = await _client.rpc('b2b_open_quote_requests_page', params: {
-        'p_categories': categories,
-        'p_cities': cities,
-        'p_exclude_replied': excludeReplied,
-        'p_limit': limit,
-        'p_offset': offset,
-      }) as List;
+      final rows =
+          await _client.rpc(
+                'b2b_open_quote_requests_page',
+                params: {
+                  'p_categories': categories,
+                  'p_cities': cities,
+                  'p_exclude_replied': excludeReplied,
+                  'p_limit': limit,
+                  'p_offset': offset,
+                },
+              )
+              as List;
       var total = 0;
       final items = <B2bQuoteRequest>[];
       for (final r in rows) {
@@ -816,7 +878,9 @@ class SupabaseB2bRepository implements B2bRepository {
   Future<B2bSupplierRequestCounts?> supplierRequestCounts() async {
     try {
       final rows = await _client.rpc('b2b_supplier_request_counts') as List;
-      if (rows.isEmpty) return const B2bSupplierRequestCounts(fresh: 0, networkOpen: 0);
+      if (rows.isEmpty) {
+        return const B2bSupplierRequestCounts(fresh: 0, networkOpen: 0);
+      }
       final m = Map<String, dynamic>.from(rows.first as Map);
       return B2bSupplierRequestCounts(
         fresh: (m['fresh_count'] as num?)?.toInt() ?? 0,

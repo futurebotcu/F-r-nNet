@@ -114,6 +114,7 @@ void main() {
         'b2b_qr_guard_columns()',
         'b2b_mark_request_answered()',
         'notify_b2b_quote_request_created()',
+        'b2b_is_privileged_session()',
       ]) {
         // Satır sonu CRLF/LF ve girinti farklarına dayanıklı.
         final normalized = lower.replaceAll(RegExp(r'\s+'), ' ');

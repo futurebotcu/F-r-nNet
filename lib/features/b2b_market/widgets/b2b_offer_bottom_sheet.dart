@@ -326,7 +326,9 @@ class _B2bOfferBottomSheetState extends ConsumerState<B2bOfferBottomSheet> {
         // hatası kullanıcıya gösterilmez.
         _error = (_isReply && _looksLikeRlsError(err))
             ? AppStrings.supErrorReplyQuota
-            : AppStrings.polishQuoteSendError;
+            : (!_isReply && err.toString().contains('b2b_rate_limited'))
+                ? AppStrings.b2bQuoteRateLimited
+                : AppStrings.polishQuoteSendError;
       });
     }
   }

@@ -81,10 +81,12 @@ class _SupplierProductFormScreenState
       _imageUrl = p.imageUrl;
       _regions
         ..clear()
-        ..addAll(p.deliveryRegion
-            .split(', ')
-            .map((e) => e.trim())
-            .where(known.contains));
+        ..addAll(
+          p.deliveryRegion
+              .split(', ')
+              .map((e) => e.trim())
+              .where(known.contains),
+        );
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _hydrating = false;
@@ -107,8 +109,9 @@ class _SupplierProductFormScreenState
     if (!formOk || !categoryOk) return;
 
     final regions = _regions.isEmpty ? 'Belirtilmedi' : _regions.join(', ');
-    final minOrder =
-        _minOrder.text.trim().isEmpty ? 'Belirtilmedi' : _minOrder.text.trim();
+    final minOrder = _minOrder.text.trim().isEmpty
+        ? 'Belirtilmedi'
+        : _minOrder.text.trim();
     setState(() => _saving = true);
     final controller = ref.read(b2bMarketControllerProvider.notifier);
     try {
@@ -177,9 +180,8 @@ class _SupplierProductFormScreenState
                 controller: _name,
                 hint: 'Ör. Tam Buğday Unu (Tip 850)',
                 textInputAction: TextInputAction.next,
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Ürün adı gerekli'
-                    : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Ürün adı gerekli' : null,
               ),
               const SizedBox(height: AppSpacing.l),
               B2bSingleSelectChips(
@@ -260,7 +262,11 @@ class _PriceTypeInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    // Wrap: dar ekran + büyük yazıda pil alt satıra iner (taşma yok).
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: AppSpacing.m,
+      runSpacing: AppSpacing.xs,
       children: [
         const Text(
           'Fiyat tipi',
@@ -271,7 +277,6 @@ class _PriceTypeInfo extends StatelessWidget {
             letterSpacing: 0.2,
           ),
         ),
-        const SizedBox(width: AppSpacing.m),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(

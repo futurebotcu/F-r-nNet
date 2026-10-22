@@ -106,18 +106,19 @@ class _B2bShellScreenState extends ConsumerState<B2bShellScreen> {
     });
   }
 
-  void _resetSegments() {
-    setState(() {
-      _segment = 0;
-      _visited = <int>{0};
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final role = ref.watch(b2bRoleProvider);
-    // Rol (profil) oturum içinde değişirse segmenti başa al — tab seti değişir.
-    ref.listen<B2bRole>(b2bRoleProvider, (_, __) => _resetSegments());
+    // Rol (profil) oturum içinde değişirse tab seti değişir: istenen sekme
+    // (?tab=) yeni role göre yeniden çözülür. Soğuk açılışta profil geç
+    // yüklenip rol buyer→supplier dönerse bildirimden gelen 'talepler'
+    // kaybolmaz (denetim 2026-10-23, MEDIUM-2).
+    ref.listen<B2bRole>(b2bRoleProvider, (_, __) {
+      setState(() {
+        _visited = <int>{};
+        _applyInitialTab();
+      });
+    });
 
     final isSupplier = role == B2bRole.supplier;
     final labels = isSupplier ? _supplierLabels : _buyerLabels;

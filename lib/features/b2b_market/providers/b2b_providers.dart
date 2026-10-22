@@ -412,16 +412,16 @@ final b2bMyRepliesProvider = FutureProvider.autoDispose<List<B2bQuoteReply>>((
 /// S3 — Yanıtladığım talepler (sunucu RPC; migration yoksa null → S2 eşleme).
 final b2bMyRepliedRequestsProvider =
     FutureProvider.autoDispose<List<B2bRepliedRequest>?>((ref) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).listMyRepliedRequests();
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).listMyRepliedRequests();
+    });
 
 /// S3 — Sunucu sayaçları (RPC yoksa null → gelen kutusundan hesap).
 final b2bSupplierRequestCountsProvider =
     FutureProvider.autoDispose<B2bSupplierRequestCounts?>((ref) {
-  ref.watch(b2bMarketControllerProvider);
-  return ref.watch(b2bRepositoryProvider).supplierRequestCounts();
-});
+      ref.watch(b2bMarketControllerProvider);
+      return ref.watch(b2bRepositoryProvider).supplierRequestCounts();
+    });
 
 /// S2/S3 — Talepler gelen kutusu: açık talepler + cevaplarım + lead'ler (+ S3
 /// geçmiş RPC'si varsa kapanmış/karar verilmiş taleplerin ayrıntısı) tek
@@ -430,19 +430,23 @@ final b2bSupplierRequestCountsProvider =
 /// Talepler sekmesi aynı kaynağı kullanır → sayılar birbirini tutar.
 final supplierRequestsInboxProvider =
     FutureProvider.autoDispose<SupplierRequestsInbox>((ref) async {
-  final open = ref.watch(b2bOpenQuoteRequestsProvider.future);
-  final replies = ref.watch(b2bMyRepliesProvider.future);
-  final leads = ref.watch(b2bSupplierLeadsProvider.future);
-  final history = ref.watch(b2bMyRepliedRequestsProvider.future);
-  final counts = ref.watch(b2bSupplierRequestCountsProvider.future);
-  return SupplierRequestsInbox.build(
-    openRequests: await open,
-    myReplies: await replies,
-    leads: await leads,
-    history: await history,
-    serverCounts: await counts,
-  );
-});
+      // Hepsi birlikte beklenir: biri hata verirse diğerleri "unhandled"
+      // kalmaz (Future.wait eagerError: false → ilk hata yeniden fırlatılır).
+      final results = await Future.wait<Object?>([
+        ref.watch(b2bOpenQuoteRequestsProvider.future),
+        ref.watch(b2bMyRepliesProvider.future),
+        ref.watch(b2bSupplierLeadsProvider.future),
+        ref.watch(b2bMyRepliedRequestsProvider.future),
+        ref.watch(b2bSupplierRequestCountsProvider.future),
+      ]);
+      return SupplierRequestsInbox.build(
+        openRequests: results[0]! as List<B2bQuoteRequest>,
+        myReplies: results[1]! as List<B2bQuoteReply>,
+        leads: results[2]! as List<B2bQuoteLead>,
+        history: results[3] as List<B2bRepliedRequest>?,
+        serverCounts: results[4] as B2bSupplierRequestCounts?,
+      );
+    });
 
 void supplierRequestsInboxRefresh(WidgetRef ref) {
   ref.invalidate(b2bOpenQuoteRequestsProvider);
