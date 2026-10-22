@@ -56,7 +56,10 @@ class B2bStoreCard extends StatelessWidget {
                       store.tagline,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.body.copyWith(fontSize: 12.5, height: 1.3),
+                      style: AppTypography.body.copyWith(
+                        fontSize: 12.5,
+                        height: 1.3,
+                      ),
                     ),
                   ],
                 ),
@@ -77,18 +80,19 @@ class B2bStoreCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.m),
-          Row(
+          // Wrap: dar ekranda sayaç çipleri alt satıra iner (320px taşma fix).
+          Wrap(
+            spacing: AppSpacing.s,
+            runSpacing: AppSpacing.xs,
             children: [
               _CountChip(
                 icon: Icons.inventory_2_outlined,
                 label: '${store.productCount} ürün',
               ),
-              const SizedBox(width: AppSpacing.s),
               _CountChip(
                 icon: Icons.campaign_outlined,
                 label: '${store.campaignCount} kampanya',
               ),
-              const Spacer(),
             ],
           ),
           const SizedBox(height: AppSpacing.m),
